@@ -42,6 +42,7 @@
     "assignee": "Assignee",
     "assigneePlaceholder": "Assignee name",
     "linkedTo": "Linked To",
+    "category": "Category",
     "tags": "Tags",
     "subtasks": "Sub-tasks"
   },
@@ -120,6 +121,7 @@
     "all": "All Tasks",
     "add": "Add Category",
     "newPlaceholder": "Category name...",
+    "noCategory": "No Category",
     "empty": "No categories yet",
     "expand": "Expand categories",
     "collapse": "Collapse categories",

@@ -42,6 +42,7 @@
     "assignee": "Responsavel",
     "assigneePlaceholder": "Nome do responsavel",
     "linkedTo": "Vinculado a",
+    "category": "Categoria",
     "tags": "Tags",
     "subtasks": "Subtarefas"
   },
@@ -120,6 +121,7 @@
     "all": "Todas as Tarefas",
     "add": "Adicionar Categoria",
     "newPlaceholder": "Nome da categoria...",
+    "noCategory": "Sem Categoria",
     "empty": "Nenhuma categoria ainda",
     "expand": "Expandir categorias",
     "collapse": "Recolher categorias",

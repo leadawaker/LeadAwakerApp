@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, Check, Trash2, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
-import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks } from "../api/tasksApi";
+import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks, useTaskCategories } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 import { hapticSave, hapticDelete } from "@/lib/haptics";
 import type { TaskSubtask } from "@shared/schema";
@@ -40,6 +40,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
+  const { data: categories = [] } = useTaskCategories();
   const { data: subtasks = [] } = useSubtasks(taskId);
   const createSubtaskMutation = useCreateSubtask();
   const updateSubtaskMutation = useUpdateSubtask();
@@ -59,6 +60,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
   const [priority, setPriority] = useState("medium");
   const [taskType, setTaskType] = useState("admin");
   const [dueDate, setDueDate] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!task) return;
@@ -68,6 +70,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
     setPriority(task.priority ?? "medium");
     setTaskType(task.taskType ?? "admin");
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "");
+    setCategoryId(task.categoryId ?? null);
   }, [task]);
 
   // ── Dirty tracking ───────────────────────────────────────────────────────────
@@ -80,9 +83,10 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
       status !== (task.status ?? "todo") ||
       priority !== (task.priority ?? "medium") ||
       taskType !== (task.taskType ?? "admin") ||
-      dueDate !== origDue
+      dueDate !== origDue ||
+      categoryId !== (task.categoryId ?? null)
     );
-  }, [task, title, description, status, priority, taskType, dueDate]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId]);
 
   // ── Subtask handlers ────────────────────────────────────────────────────────
   const handleAddSubtask = useCallback(() => {
@@ -122,6 +126,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
         priority,
         taskType,
         dueDate: dueDate ? new Date(dueDate) : null,
+        categoryId,
       },
     });
   };
@@ -289,6 +294,22 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-1.5">
+              <label className={labelCls}>Category</label>
+              <select
+                className={selectCls}
+                value={categoryId ?? ""}
+                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+                data-testid="mobile-task-edit-category"
+              >
+                <option value="">No Category</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
+                ))}
+              </select>
             </div>
 
             {/* Assignee (read-only) */}

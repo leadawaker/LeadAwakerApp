@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCreateTask } from "../api/tasksApi";
+import { useCreateTask, useTaskCategories } from "../api/tasksApi";
 import { PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 import { hapticSave } from "@/lib/haptics";
 
@@ -29,6 +29,7 @@ interface Props {
 
 export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const createMutation = useCreateTask();
+  const { data: categories = [] } = useTaskCategories();
 
   // ── Form state ───────────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -38,6 +39,7 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const [taskType, setTaskType] = useState("admin");
   const [assigneeName, setAssigneeName] = useState("");
   const [leadName, setLeadName] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const canCreate = title.trim().length > 0 && !createMutation.isPending;
 
@@ -62,6 +64,7 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
         taskType,
         dueDate: dueDate ? new Date(dueDate) : null,
         assigneeName: assigneeName.trim() || null,
+        categoryId,
       });
       // Extract new task ID from response
       try {
@@ -205,6 +208,22 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Category */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>Category</label>
+            <select
+              className={selectCls}
+              value={categoryId ?? ""}
+              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+              data-testid="mobile-task-create-category"
+            >
+              <option value="">No Category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Assignee */}

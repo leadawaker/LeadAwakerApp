@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn, relativeTime } from "@/lib/utils";
-import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks } from "../api/tasksApi";
+import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks, useTaskCategories } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 import type { TaskSubtask } from "@shared/schema";
 
@@ -53,6 +53,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
+  const { data: categories = [] } = useTaskCategories();
   const { data: subtasks = [] } = useSubtasks(taskId);
   const createSubtaskMutation = useCreateSubtask();
   const updateSubtaskMutation = useUpdateSubtask();
@@ -72,6 +73,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const [priority, setPriority] = useState("medium");
   const [taskType, setTaskType] = useState("admin");
   const [dueDate, setDueDate] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
   // Initialize form from task data
   useEffect(() => {
@@ -82,6 +84,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     setPriority(task.priority ?? "medium");
     setTaskType(task.taskType ?? "admin");
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "");
+    setCategoryId(task.categoryId ?? null);
   }, [task]);
 
   // ── Dirty tracking ──────────────────────────────────────────────────────────
@@ -94,9 +97,10 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
       status !== (task.status ?? "todo") ||
       priority !== (task.priority ?? "medium") ||
       taskType !== (task.taskType ?? "admin") ||
-      dueDate !== origDue
+      dueDate !== origDue ||
+      categoryId !== (task.categoryId ?? null)
     );
-  }, [task, title, description, status, priority, taskType, dueDate]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -137,6 +141,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
         priority,
         taskType,
         dueDate: dueDate ? new Date(dueDate) : null,
+        categoryId,
       },
     });
   };
@@ -275,6 +280,22 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
+          </div>
+
+          {/* Category */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>{t("fields.category")}</label>
+            <select
+              className={selectCls}
+              value={categoryId ?? ""}
+              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+              data-testid="task-edit-category"
+            >
+              <option value="">{t("categories.noCategory")}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Assignee (read-only) */}

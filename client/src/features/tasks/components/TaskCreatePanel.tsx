@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X, Check } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
-import { useCreateTask } from "../api/tasksApi";
+import { useCreateTask, useTaskCategories } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 
 // ── i18n key maps for select options (module-level, safe for constants) ────────
@@ -45,6 +45,7 @@ interface TaskCreatePanelProps {
 export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelProps) {
   const { t } = useTranslation("tasks");
   const createMutation = useCreateTask();
+  const { data: categories = [] } = useTaskCategories();
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -57,6 +58,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
   const [taskType, setTaskType] = useState("admin");
   const [dueDate, setDueDate] = useState("");
   const [assigneeName, setAssigneeName] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
   // ── Handler ─────────────────────────────────────────────────────────────────
 
@@ -75,6 +77,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
         taskType,
         dueDate: dueDate ? new Date(dueDate) : null,
         assigneeName: assigneeName.trim() || null,
+        categoryId,
       });
       // apiRequest returns a Response — try to extract the new task ID
       try {
@@ -228,15 +231,31 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
             </div>
           </div>
 
-          {/* Assignee */}
-          <div className="space-y-1.5">
-            <label className={labelCls}>{t("fields.assignee")}</label>
-            <input
-              className={inputCls}
-              value={assigneeName}
-              onChange={(e) => setAssigneeName(e.target.value)}
-              placeholder={t("fields.assigneePlaceholder")}
-            />
+          {/* Category + Assignee — side by side */}
+          <div className="flex gap-3">
+            <div className="flex-1 space-y-1.5">
+              <label className={labelCls}>{t("fields.category")}</label>
+              <select
+                className={selectCls}
+                value={categoryId ?? ""}
+                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+                data-testid="task-create-category"
+              >
+                <option value="">{t("categories.noCategory")}</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <label className={labelCls}>{t("fields.assignee")}</label>
+              <input
+                className={inputCls}
+                value={assigneeName}
+                onChange={(e) => setAssigneeName(e.target.value)}
+                placeholder={t("fields.assigneePlaceholder")}
+              />
+            </div>
           </div>
 
         </div>

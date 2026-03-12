@@ -42,6 +42,7 @@
     "assignee": "Toegewezen aan",
     "assigneePlaceholder": "Naam toegewezene",
     "linkedTo": "Gekoppeld aan",
+    "category": "Categorie",
     "tags": "Tags",
     "subtasks": "Subtaken"
   },
@@ -120,6 +121,7 @@
     "all": "Alle Taken",
     "add": "Categorie Toevoegen",
     "newPlaceholder": "Categorienaam...",
+    "noCategory": "Geen Categorie",
     "empty": "Nog geen categorieen",
     "expand": "Categorieen uitvouwen",
     "collapse": "Categorieen invouwen",
