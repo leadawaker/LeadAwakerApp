@@ -33,6 +33,10 @@ export function streamClaudeResponse(opts: {
   bypassPermissions: boolean;
   isFirstMessage: boolean;
   res: Response;
+  /** Model override (e.g. claude-sonnet-4-20250514) */
+  model?: string;
+  /** Thinking level: none, low, medium, high */
+  thinkingLevel?: string;
   /** Optional async callback that runs BEFORE the done event and res.end(). Use for CRM tool execution. */
   beforeDone?: (fullText: string, res: Response) => Promise<void>;
   onDone: (fullText: string, subAgentBlocks: SubAgentBlock[]) => void;
@@ -40,6 +44,12 @@ export function streamClaudeResponse(opts: {
   const args: string[] = [];
   if (opts.bypassPermissions) args.push("--dangerouslySkipPermissions");
   if (!opts.isFirstMessage) args.push("--continue");
+
+  // Pass model if specified
+  if (opts.model) {
+    args.push("--model", opts.model);
+  }
+
   args.push("-p", opts.prompt);
 
   const child = spawn(CLAUDE_BIN, args, {

@@ -292,6 +292,30 @@ export function useAgentChat() {
     [session],
   );
 
+  /** Update the current session's thinking level (none/low/medium/high) */
+  const updateSessionThinking = useCallback(
+    async (thinkingLevel: string) => {
+      if (!session) return;
+      try {
+        const res = await apiFetch(
+          `/api/agents/sessions/${session.sessionId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ thinkingLevel }),
+          },
+        );
+        if (res.ok) {
+          const updated: AiSession = await res.json();
+          setSession(updated);
+        }
+      } catch (err) {
+        console.error("[AgentChat] Failed to update thinking level:", err);
+      }
+    },
+    [session],
+  );
+
   return {
     agent,
     setAgent,
@@ -305,5 +329,6 @@ export function useAgentChat() {
     newSession,
     abortStream,
     updateSessionModel,
+    updateSessionThinking,
   };
 }

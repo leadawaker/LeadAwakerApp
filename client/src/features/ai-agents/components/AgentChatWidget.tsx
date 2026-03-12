@@ -6,6 +6,7 @@ import { useAgentChat } from "../hooks/useAgentChat";
 import { AgentChatView } from "./AgentChatView";
 import { AgentSettingsSheet } from "./AgentSettingsSheet";
 import { ModelSwitcher } from "./ModelSwitcher";
+import { ThinkingToggle } from "./ThinkingToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { apiFetch } from "@/lib/apiUtils";
 import type { AiAgent } from "../hooks/useAgentChat";
@@ -88,6 +89,7 @@ export function AgentChatWidget() {
     sendMessage,
     newSession,
     updateSessionModel,
+    updateSessionThinking,
   } = useAgentChat();
 
   // Initialize when activeAgentId changes
@@ -178,12 +180,20 @@ export function AgentChatWidget() {
                 )}
               </div>
               {session && (
-                <ModelSwitcher
-                  currentModel={session.model}
-                  onModelChange={updateSessionModel}
-                  disabled={streaming}
-                  compact
-                />
+                <>
+                  <ModelSwitcher
+                    currentModel={session.model}
+                    onModelChange={updateSessionModel}
+                    disabled={streaming}
+                    compact
+                  />
+                  <ThinkingToggle
+                    currentLevel={session.thinkingLevel}
+                    onLevelChange={updateSessionThinking}
+                    disabled={streaming}
+                    compact
+                  />
+                </>
               )}
               <button
                 onClick={() => setSettingsOpen(true)}

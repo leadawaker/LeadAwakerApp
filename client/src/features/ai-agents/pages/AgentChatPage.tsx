@@ -6,6 +6,7 @@ import { useAgentChat } from "../hooks/useAgentChat";
 import { AgentChatView } from "../components/AgentChatView";
 import { AgentSettingsSheet } from "../components/AgentSettingsSheet";
 import { ModelSwitcher } from "../components/ModelSwitcher";
+import { ThinkingToggle } from "../components/ThinkingToggle";
 
 export function AgentChatPage() {
   const params = useParams<{ agentId: string }>();
@@ -25,6 +26,7 @@ export function AgentChatPage() {
     sendMessage,
     newSession,
     updateSessionModel,
+    updateSessionThinking,
   } = useAgentChat();
 
   useEffect(() => {
@@ -65,11 +67,18 @@ export function AgentChatPage() {
         </div>
 
         {session && (
-          <ModelSwitcher
-            currentModel={session.model}
-            onModelChange={updateSessionModel}
-            disabled={streaming}
-          />
+          <>
+            <ModelSwitcher
+              currentModel={session.model}
+              onModelChange={updateSessionModel}
+              disabled={streaming}
+            />
+            <ThinkingToggle
+              currentLevel={session.thinkingLevel}
+              onLevelChange={updateSessionThinking}
+              disabled={streaming}
+            />
+          </>
         )}
 
         <button

@@ -3680,6 +3680,10 @@ GUARDRAILS
         role: "user",
         content: content.trim(),
         pageContext: pageContext || null,
+        metadata: {
+          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          thinkingLevel: session.thinkingLevel || agent.thinkingLevel || "medium",
+        },
       });
 
       // 3. Fetch conversation history (all previous messages for context)
@@ -3730,11 +3734,16 @@ GUARDRAILS
       const cwd = getSessionCwd(sessionId, agent.type);
 
       // 7. Initiate Claude CLI call with streaming
+      // Use session-level model/thinking (which inherit from agent defaults on creation)
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
       streamClaudeResponse({
         prompt: fullPrompt,
         cwd,
         bypassPermissions: agent.type !== "code_runner", // non-code agents skip permissions
         isFirstMessage,
+        model: sessionModel,
+        thinkingLevel: sessionThinking,
         res,
         // CRM tool execution: detect tool calls in Claude's response, execute them,
         // and send results as SSE events before the stream closes
@@ -3766,19 +3775,22 @@ GUARDRAILS
         },
         onDone: async (fullText, subAgentBlocks) => {
           try {
-            // Store assistant response in database
+            // Store assistant response in database with metadata
+            const inputTokens = Math.ceil(fullPrompt.length / 4);
+            const outputTokens = Math.ceil(fullText.length / 4);
             if (fullText.trim()) {
               await storage.createAiMessage({
                 sessionId,
                 role: "assistant",
                 content: fullText.trim(),
                 subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
+                metadata: {
+                  model: agent.model || "claude-sonnet-4-20250514",
+                  inputTokens,
+                  outputTokens,
+                },
               });
             }
-
-            // Update session token counts (approximate: 4 chars ≈ 1 token)
-            const inputTokens = Math.ceil(fullPrompt.length / 4);
-            const outputTokens = Math.ceil(fullText.length / 4);
             await storage.updateAiSession(session.id, {
               totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
               totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
