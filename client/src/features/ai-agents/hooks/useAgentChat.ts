@@ -267,6 +267,47 @@ export function useAgentChat() {
     streamingTextRef.current = "";
   }, []);
 
+  /** Load a specific existing session by sessionId (for switching between conversations) */
+  const loadSession = useCallback(async (sessionId: string) => {
+    setLoading(true);
+    try {
+      // Get session details
+      const sessRes = await apiFetch(`/api/agents/sessions/${sessionId}`);
+      if (!sessRes.ok) throw new Error("Session not found");
+      const sess: AiSession = await sessRes.json();
+      setSession(sess);
+
+      // Load agent if not already loaded or different agent
+      if (!agent || agent.id !== sess.agentId) {
+        const agentRes = await apiFetch(`/api/agents/${sess.agentId}`);
+        if (agentRes.ok) {
+          const found: AiAgent = await agentRes.json();
+          setAgent(found);
+        }
+      }
+
+      // Load message history
+      const msgsRes = await apiFetch(`/api/agents/sessions/${sessionId}/messages`);
+      if (msgsRes.ok) {
+        const rawMsgs = await msgsRes.json();
+        const msgs: AgentMessage[] = rawMsgs.map((m: unknown) => {
+          const msg = m as Record<string, unknown>;
+          return {
+            ...msg,
+            subAgentBlocks: typeof msg.subAgentBlocks === "string"
+              ? JSON.parse(msg.subAgentBlocks as string)
+              : (msg.subAgentBlocks ?? []),
+          };
+        });
+        setMessages(msgs);
+      }
+    } catch (err) {
+      console.error("[AgentChat] Load session error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [agent]);
+
   const newSession = useCallback(async () => {
     if (!session) return;
     // Close current session
@@ -343,6 +384,7 @@ export function useAgentChat() {
     initialize,
     sendMessage,
     newSession,
+    loadSession,
     abortStream,
     updateSessionModel,
     updateSessionThinking,

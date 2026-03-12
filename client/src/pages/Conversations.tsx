@@ -15,6 +15,7 @@ import { InboxPanel, type ChatGroupBy, type ChatSortBy, type InboxTab, GROUP_LAB
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
 import { AgentChatView } from "@/features/ai-agents/components/AgentChatView";
+import { AgentConversationList } from "@/features/ai-agents/components/AgentConversationList";
 import { AgentSettingsSheet } from "@/features/ai-agents/components/AgentSettingsSheet";
 import { ModelSwitcher } from "@/features/ai-agents/components/ModelSwitcher";
 import { ThinkingToggle } from "@/features/ai-agents/components/ThinkingToggle";
@@ -106,6 +107,7 @@ export default function ConversationsPage() {
     initialize: agentInitialize,
     sendMessage: agentSendMessage,
     newSession: agentNewSession,
+    loadSession: agentLoadSession,
     updateSessionModel: agentUpdateSessionModel,
     updateSessionThinking: agentUpdateSessionThinking,
   } = useAgentChat();
@@ -394,35 +396,67 @@ export default function ConversationsPage() {
             data-testid="layout-conversations"
             data-onboarding="conversations-inbox"
           >
-            <InboxPanel
-              threads={threads}
-              loading={loading}
-              selectedLeadId={selected?.lead.id ?? null}
-              scrollToLeadId={selectedLeadId}
-              onSelectLead={handleSelectLead}
-              tab={tab}
-              onTabChange={setTab}
-              searchQuery={searchQuery}
-              groupBy={groupBy}
-              sortBy={sortBy}
-              filterStatus={filterStatus}
-              selectedCampaignId={campaignId}
-              selectedAccountId={filterAccountId}
-              isAgencyUser={isAgencyUser}
-              onClearAll={handleClearFilters}
-              onRefresh={refresh}
-              supportBotConfig={supportBotConfig}
-              onSelectSupport={() => setMobileView("chat")}
-              onSearchChange={setSearchQuery}
-              aiAgents={isAgencyUser ? aiAgents : []}
-              selectedAgentId={selectedAgentId}
-              onSelectAgent={handleSelectAgent}
-              className={cn(
-                "w-full md:w-[340px] flex-shrink-0",
-                mobileView === "chat" ? "hidden md:flex" : "flex"
-              )}
-              data-testid="mobile-inbox-panel"
-            />
+            {/* Left panel: InboxPanel (default) or AgentConversationList (when agent selected) */}
+            {isAgentSelected && selectedAgentId !== null ? (
+              <div
+                className={cn(
+                  "w-full md:w-[340px] flex-shrink-0 bg-muted rounded-lg overflow-hidden h-full",
+                  mobileView === "chat" ? "hidden md:flex" : "flex"
+                )}
+                data-testid="agent-conversations-panel"
+              >
+                <AgentConversationList
+                  agentId={selectedAgentId}
+                  agentName={chatAgent?.name ?? aiAgents.find(a => a.id === selectedAgentId)?.name ?? "AI Agent"}
+                  agentType={chatAgent?.type ?? aiAgents.find(a => a.id === selectedAgentId)?.type ?? "custom"}
+                  agentPhotoUrl={chatAgent?.photoUrl ?? aiAgents.find(a => a.id === selectedAgentId)?.photoUrl ?? null}
+                  currentSessionId={agentSession?.sessionId ?? null}
+                  onSelectConversation={(sessionId) => {
+                    agentLoadSession(sessionId);
+                    setMobileView("chat");
+                  }}
+                  onNewConversation={() => {
+                    agentNewSession();
+                    setMobileView("chat");
+                  }}
+                  onBack={() => {
+                    setSelectedAgentId(null);
+                    setTab("support");
+                  }}
+                  className="w-full"
+                />
+              </div>
+            ) : (
+              <InboxPanel
+                threads={threads}
+                loading={loading}
+                selectedLeadId={selected?.lead.id ?? null}
+                scrollToLeadId={selectedLeadId}
+                onSelectLead={handleSelectLead}
+                tab={tab}
+                onTabChange={setTab}
+                searchQuery={searchQuery}
+                groupBy={groupBy}
+                sortBy={sortBy}
+                filterStatus={filterStatus}
+                selectedCampaignId={campaignId}
+                selectedAccountId={filterAccountId}
+                isAgencyUser={isAgencyUser}
+                onClearAll={handleClearFilters}
+                onRefresh={refresh}
+                supportBotConfig={supportBotConfig}
+                onSelectSupport={() => setMobileView("chat")}
+                onSearchChange={setSearchQuery}
+                aiAgents={isAgencyUser ? aiAgents : []}
+                selectedAgentId={selectedAgentId}
+                onSelectAgent={handleSelectAgent}
+                className={cn(
+                  "w-full md:w-[340px] flex-shrink-0",
+                  mobileView === "chat" ? "hidden md:flex" : "flex"
+                )}
+                data-testid="mobile-inbox-panel"
+              />
+            )}
 
             {/* Support chat (inline) */}
             {isSupport && (
