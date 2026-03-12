@@ -3039,17 +3039,20 @@ GUARDRAILS
     res.json(agents);
   }));
 
-  // POST /api/ai-agents — create custom agent
+  // POST /api/ai-agents — create custom agent (clones Code Runner template defaults)
   app.post("/api/ai-agents", requireAgency, wrapAsync(async (req, res) => {
-    const { name, systemPrompt, photoUrl } = req.body;
+    const { DEFAULT_SYSTEM_PROMPTS } = await import("./aiAgents");
+    const { name, systemPrompt, photoUrl, model, thinkingLevel } = req.body;
     if (!name?.trim()) return res.status(400).json({ message: "name required" });
     const agent = await storage.createAiAgent({
       name: name.trim(),
       type: "custom",
-      systemPrompt: systemPrompt || null,
+      systemPrompt: systemPrompt || DEFAULT_SYSTEM_PROMPTS.code_runner,
       photoUrl: photoUrl || null,
       enabled: true,
       displayOrder: 99,
+      model: model || "claude-sonnet-4-20250514",
+      thinkingLevel: thinkingLevel || "medium",
     });
     res.status(201).json(agent);
   }));
@@ -3234,7 +3237,7 @@ GUARDRAILS
   await seedDefaultAiAgents(db, aiAgents);
 
   // List all agents
-  app.get("/api/agents", requireAuth, async (_req, res) => {
+  app.get("/api/agents", requireAgency, async (_req, res) => {
     try {
       const rows = await db.select().from(aiAgents).orderBy(aiAgents.displayOrder);
       res.json(rows);
@@ -3245,7 +3248,7 @@ GUARDRAILS
   });
 
   // Get single agent
-  app.get("/api/agents/:id", requireAuth, async (req, res) => {
+  app.get("/api/agents/:id", requireAgency, async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
@@ -3258,10 +3261,21 @@ GUARDRAILS
     }
   });
 
-  // Create agent
-  app.post("/api/agents", requireAuth, requireAgency, async (req, res) => {
+  // Create agent — clones Code Runner template defaults (system prompt, model, thinking level)
+  app.post("/api/agents", requireAgency, async (req, res) => {
     try {
-      const parsed = insertAiAgentSchema.parse(req.body);
+      const { DEFAULT_SYSTEM_PROMPTS } = await import("./aiAgents");
+      // Apply Code Runner defaults for fields not provided
+      const body = {
+        ...req.body,
+        type: req.body.type || "custom",
+        systemPrompt: req.body.systemPrompt || DEFAULT_SYSTEM_PROMPTS.code_runner,
+        model: req.body.model || "claude-sonnet-4-20250514",
+        thinkingLevel: req.body.thinkingLevel || "medium",
+        enabled: req.body.enabled !== undefined ? req.body.enabled : true,
+        displayOrder: req.body.displayOrder || 99,
+      };
+      const parsed = insertAiAgentSchema.parse(body);
       const agent = await storage.createAiAgent(parsed);
       res.status(201).json(agent);
     } catch (err: any) {
@@ -3272,7 +3286,7 @@ GUARDRAILS
   });
 
   // Update agent
-  app.patch("/api/agents/:id", requireAuth, requireAgency, async (req, res) => {
+  app.patch("/api/agents/:id", requireAgency, async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
@@ -3286,7 +3300,7 @@ GUARDRAILS
   });
 
   // Delete agent (soft-delete by disabling)
-  app.delete("/api/agents/:id", requireAuth, requireAgency, async (req, res) => {
+  app.delete("/api/agents/:id", requireAgency, async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
@@ -3302,7 +3316,7 @@ GUARDRAILS
   // ─── AI Sessions (conversations) ──────────────────────────────────────
 
   // List sessions for current user
-  app.get("/api/agents/sessions/list", requireAuth, async (req, res) => {
+  app.get("/api/agents/sessions/list", requireAgency, async (req, res) => {
     try {
       const userId = (req.user as any)?.id;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -3315,7 +3329,7 @@ GUARDRAILS
   });
 
   // Get or create active session for user + agent
-  app.post("/api/agents/:agentId/sessions", requireAuth, async (req, res) => {
+  app.post("/api/agents/:agentId/sessions", requireAgency, async (req, res) => {
     try {
       const userId = (req.user as any)?.id;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -3343,7 +3357,7 @@ GUARDRAILS
   });
 
   // Get session by sessionId
-  app.get("/api/agents/sessions/:sessionId", requireAuth, async (req, res) => {
+  app.get("/api/agents/sessions/:sessionId", requireAgency, async (req, res) => {
     try {
       const session = await storage.getAiSessionBySessionId(req.params.sessionId);
       if (!session) return res.status(404).json({ message: "Session not found" });
@@ -3355,7 +3369,7 @@ GUARDRAILS
   });
 
   // Update session (e.g. title, status)
-  app.patch("/api/agents/sessions/:sessionId", requireAuth, async (req, res) => {
+  app.patch("/api/agents/sessions/:sessionId", requireAgency, async (req, res) => {
     try {
       const session = await storage.getAiSessionBySessionId(req.params.sessionId);
       if (!session) return res.status(404).json({ message: "Session not found" });
@@ -3368,7 +3382,7 @@ GUARDRAILS
   });
 
   // Close/delete session
-  app.delete("/api/agents/sessions/:sessionId", requireAuth, async (req, res) => {
+  app.delete("/api/agents/sessions/:sessionId", requireAgency, async (req, res) => {
     try {
       const session = await storage.getAiSessionBySessionId(req.params.sessionId);
       if (!session) return res.status(404).json({ message: "Session not found" });
@@ -3383,7 +3397,7 @@ GUARDRAILS
   // ─── AI Messages ──────────────────────────────────────────────────────
 
   // Get messages for a session
-  app.get("/api/agents/sessions/:sessionId/messages", requireAuth, async (req, res) => {
+  app.get("/api/agents/sessions/:sessionId/messages", requireAgency, async (req, res) => {
     try {
       const messages = await storage.getAiMessagesBySessionId(req.params.sessionId);
       res.json(messages);
@@ -3394,7 +3408,7 @@ GUARDRAILS
   });
 
   // Create a message (persist user or assistant message)
-  app.post("/api/agents/sessions/:sessionId/messages", requireAuth, async (req, res) => {
+  app.post("/api/agents/sessions/:sessionId/messages", requireAgency, async (req, res) => {
     try {
       const parsed = insertAiMessageSchema.parse({
         ...req.body,
@@ -3410,7 +3424,7 @@ GUARDRAILS
   });
 
   // Delete all messages for a session (clear history)
-  app.delete("/api/agents/sessions/:sessionId/messages", requireAuth, async (req, res) => {
+  app.delete("/api/agents/sessions/:sessionId/messages", requireAgency, async (req, res) => {
     try {
       await db.delete(aiMessages).where(eq(aiMessages.sessionId, req.params.sessionId));
       res.json({ success: true });
