@@ -108,7 +108,10 @@
     "assignee": "Toegewezen aan",
     "account": "Account",
     "due": "Vervalt",
-    "created": "Aangemaakt"
+    "created": "Aangemaakt",
+    "category": "Categorie",
+    "timeEstimate": "Schatting",
+    "parentTask": "Bovenliggende"
   },
   "card": {
     "newTask": "Nieuwe Taak",

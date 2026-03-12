@@ -108,7 +108,10 @@
     "assignee": "Assignee",
     "account": "Account",
     "due": "Due",
-    "created": "Created"
+    "created": "Created",
+    "category": "Category",
+    "timeEstimate": "Estimate",
+    "parentTask": "Parent Task"
   },
   "card": {
     "newTask": "New Task",

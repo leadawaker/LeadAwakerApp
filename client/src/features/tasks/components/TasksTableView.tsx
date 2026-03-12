@@ -2,7 +2,7 @@ import { useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn, relativeTime } from "@/lib/utils";
-import { useUpdateTask } from "../api/tasksApi";
+import { useUpdateTask, useTaskCategories } from "../api/tasksApi";
 import {
   sortTasks,
   groupTasks,
@@ -19,16 +19,19 @@ import type { Task, SortOption, GroupOption, TaskStatus } from "../types";
 // tKey stores the i18n translation key; empty string = no header label (priority dot column)
 const COLUMNS = [
   { key: "priority", tKey: "", width: 40 },
-  { key: "title", tKey: "columns.title", width: 280, sortable: true },
+  { key: "title", tKey: "columns.title", width: 260, sortable: true },
+  { key: "category", tKey: "columns.category", width: 130 },
   { key: "taskType", tKey: "columns.type", width: 100 },
   { key: "status", tKey: "columns.status", width: 120 },
-  { key: "assigneeName", tKey: "columns.assignee", width: 140 },
-  { key: "accountName", tKey: "columns.account", width: 140 },
+  { key: "timeEstimate", tKey: "columns.timeEstimate", width: 90 },
+  { key: "parentTask", tKey: "columns.parentTask", width: 150 },
+  { key: "assigneeName", tKey: "columns.assignee", width: 130 },
+  { key: "accountName", tKey: "columns.account", width: 130 },
   { key: "dueDate", tKey: "columns.due", width: 100 },
   { key: "createdAt", tKey: "columns.created", width: 100 },
 ] as const;
 
-const TABLE_MIN_WIDTH = 1060;
+const TABLE_MIN_WIDTH = COLUMNS.reduce((sum, c) => sum + c.width, 0);
 const ROW_HEIGHT = 52;
 const HEADER_ROW_HEIGHT = 32;
 
@@ -75,6 +78,15 @@ function getTypeLabel(taskType: string): string {
   return TYPE_OPTIONS.find((o) => o.value === taskType)?.label ?? taskType;
 }
 
+function formatTimeEstimate(minutes: number | null | undefined): string {
+  if (minutes == null || minutes <= 0) return "—";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
 // ─── Component ───────────────────────────────────────────────────────
 export default function TasksTableView({
   tasks,
@@ -87,6 +99,26 @@ export default function TasksTableView({
   const { t } = useTranslation("tasks");
   const scrollRef = useRef<HTMLDivElement>(null);
   const updateTask = useUpdateTask();
+  const { data: categories } = useTaskCategories();
+
+  // Build lookup maps
+  const categoryMap = useMemo(() => {
+    const map = new Map<number, { name: string; color: string | null; icon: string | null }>();
+    if (categories) {
+      for (const cat of categories) {
+        map.set(cat.id, { name: cat.name, color: cat.color, icon: cat.icon });
+      }
+    }
+    return map;
+  }, [categories]);
+
+  const parentTaskMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const task of tasks) {
+      map.set(task.id, task.title);
+    }
+    return map;
+  }, [tasks]);
 
   // 1. Filter → 2. Sort → 3. Group → 4. Flatten
   const flatRows = useMemo<FlatRow[]>(() => {
@@ -208,6 +240,8 @@ export default function TasksTableView({
             const TypeIcon =
               TYPE_ICONS[task.taskType as keyof typeof TYPE_ICONS] ?? TYPE_ICONS.custom;
             const overdue = isOverdue(task);
+            const category = (task as any).categoryId ? categoryMap.get((task as any).categoryId) : null;
+            const parentTitle = (task as any).parentTaskId ? parentTaskMap.get((task as any).parentTaskId) : null;
 
             return (
               <div
@@ -236,14 +270,38 @@ export default function TasksTableView({
                   />
                 </div>
 
-                {/* Title */}
+                {/* Title (with emoji if present) */}
                 <div
                   className="px-3 min-w-0"
-                  style={{ width: 280, minWidth: 280 }}
+                  style={{ width: 260, minWidth: 260 }}
                 >
                   <span className="text-[13px] font-medium truncate block">
+                    {(task as any).emoji ? <span className="mr-1">{(task as any).emoji}</span> : null}
                     {task.title}
                   </span>
+                </div>
+
+                {/* Category */}
+                <div
+                  className="px-3 min-w-0 flex items-center gap-1.5"
+                  style={{ width: 130, minWidth: 130 }}
+                >
+                  {category ? (
+                    <>
+                      {category.color && (
+                        <div
+                          className="h-2.5 w-2.5 rounded-sm shrink-0"
+                          style={{ backgroundColor: category.color }}
+                        />
+                      )}
+                      {category.icon && (
+                        <span className="text-[12px] shrink-0">{category.icon}</span>
+                      )}
+                      <span className="text-[12px] truncate">{category.name}</span>
+                    </>
+                  ) : (
+                    <span className="text-[12px] text-muted-foreground">—</span>
+                  )}
                 </div>
 
                 {/* Type */}
@@ -276,10 +334,30 @@ export default function TasksTableView({
                   </button>
                 </div>
 
+                {/* Time Estimate */}
+                <div
+                  className="px-3"
+                  style={{ width: 90, minWidth: 90 }}
+                >
+                  <span className="text-[12px] text-muted-foreground">
+                    {formatTimeEstimate((task as any).timeEstimate)}
+                  </span>
+                </div>
+
+                {/* Parent Task */}
+                <div
+                  className="px-3 min-w-0"
+                  style={{ width: 150, minWidth: 150 }}
+                >
+                  <span className="text-[12px] text-muted-foreground truncate block">
+                    {parentTitle ?? "—"}
+                  </span>
+                </div>
+
                 {/* Assignee */}
                 <div
                   className="px-3 min-w-0"
-                  style={{ width: 140, minWidth: 140 }}
+                  style={{ width: 130, minWidth: 130 }}
                 >
                   <span className="text-[12px] truncate block">
                     {task.assigneeName ?? "—"}
@@ -289,7 +367,7 @@ export default function TasksTableView({
                 {/* Account */}
                 <div
                   className="px-3 min-w-0"
-                  style={{ width: 140, minWidth: 140 }}
+                  style={{ width: 130, minWidth: 130 }}
                 >
                   <span className="text-[12px] truncate block">
                     {task.accountName ?? "—"}

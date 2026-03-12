@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Calendar, Trash2, Copy, Plus, Minus, ListChecks } from "lucide-react";
+import { Calendar, Trash2, Copy, Plus, Minus, ListChecks, Clock } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
@@ -112,12 +112,12 @@ export default function TaskCard({ task }: TaskCardProps) {
   const { data: subtaskCounts } = useSubtaskCounts();
   const { data: categories } = useTaskCategories();
 
-  // Category color accent
-  const categoryColor = useMemo(() => {
+  // Category info (color + name)
+  const category = useMemo(() => {
     if (!task.categoryId || !categories) return null;
-    const cat = categories.find((c) => c.id === task.categoryId);
-    return cat?.color ?? null;
+    return categories.find((c) => c.id === task.categoryId) ?? null;
   }, [task.categoryId, categories]);
+  const categoryColor = category?.color ?? null;
   const subtaskCount = useMemo(() => subtaskCounts?.find((c) => c.taskId === task.id), [subtaskCounts, task.id]);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
@@ -451,6 +451,41 @@ export default function TaskCard({ task }: TaskCardProps) {
             </div>
           </PopoverContent>
         </Popover>
+        )}
+
+        {/* Category name badge */}
+        {category && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0 bg-foreground/[0.05] text-muted-foreground"
+            data-testid="task-category-badge"
+          >
+            {category.color && (
+              <span
+                className="inline-block h-2 w-2 rounded-sm shrink-0"
+                style={{ backgroundColor: category.color }}
+              />
+            )}
+            {category.icon && <span className="text-[10px]">{category.icon}</span>}
+            {category.name}
+          </span>
+        )}
+
+        {/* Time estimate */}
+        {(task as any).timeEstimate != null && (task as any).timeEstimate > 0 && (
+          <span
+            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0 bg-foreground/[0.05] text-muted-foreground"
+            data-testid="task-time-estimate"
+          >
+            <Clock className="h-2.5 w-2.5" />
+            {(() => {
+              const mins = (task as any).timeEstimate as number;
+              const h = Math.floor(mins / 60);
+              const m = mins % 60;
+              if (h > 0 && m > 0) return `${h}h ${m}m`;
+              if (h > 0) return `${h}h`;
+              return `${m}m`;
+            })()}
+          </span>
         )}
 
         {/* Subtask progress indicator */}

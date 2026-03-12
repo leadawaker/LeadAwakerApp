@@ -108,7 +108,10 @@
     "assignee": "Responsavel",
     "account": "Conta",
     "due": "Vencimento",
-    "created": "Criado"
+    "created": "Criado",
+    "category": "Categoria",
+    "timeEstimate": "Estimativa",
+    "parentTask": "Tarefa Pai"
   },
   "card": {
     "newTask": "Nova Tarefa",
