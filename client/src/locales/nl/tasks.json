@@ -111,7 +111,8 @@
     "created": "Aangemaakt",
     "category": "Categorie",
     "timeEstimate": "Schatting",
-    "parentTask": "Bovenliggende"
+    "parentTask": "Bovenliggende",
+    "tags": "Tags"
   },
   "card": {
     "newTask": "Nieuwe Taak",

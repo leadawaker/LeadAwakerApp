@@ -111,7 +111,8 @@
     "created": "Created",
     "category": "Category",
     "timeEstimate": "Estimate",
-    "parentTask": "Parent Task"
+    "parentTask": "Parent Task",
+    "tags": "Tags"
   },
   "card": {
     "newTask": "New Task",

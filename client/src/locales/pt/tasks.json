@@ -111,7 +111,8 @@
     "created": "Criado",
     "category": "Categoria",
     "timeEstimate": "Estimativa",
-    "parentTask": "Tarefa Pai"
+    "parentTask": "Tarefa Pai",
+    "tags": "Tags"
   },
   "card": {
     "newTask": "Nova Tarefa",

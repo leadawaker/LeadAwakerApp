@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn, relativeTime } from "@/lib/utils";
 import { useUpdateTask, useTaskCategories } from "../api/tasksApi";
+import { useTheme } from "@/hooks/useTheme";
+import { useTagVisibility } from "../context/TagVisibilityContext";
 import {
   sortTasks,
   groupTasks,
@@ -12,6 +14,9 @@ import {
   TYPE_OPTIONS,
   TYPE_ICONS,
   TASK_STATUSES,
+  parseTags,
+  TAG_COLORS,
+  TAG_COLORS_DARK,
 } from "../types";
 import type { Task, SortOption, GroupOption, TaskStatus } from "../types";
 
@@ -21,6 +26,7 @@ const COLUMNS = [
   { key: "priority", tKey: "", width: 40 },
   { key: "title", tKey: "columns.title", width: 260, sortable: true },
   { key: "category", tKey: "columns.category", width: 130 },
+  { key: "tags", tKey: "columns.tags", width: 150 },
   { key: "taskType", tKey: "columns.type", width: 100 },
   { key: "status", tKey: "columns.status", width: 120 },
   { key: "timeEstimate", tKey: "columns.timeEstimate", width: 90 },
@@ -100,6 +106,8 @@ export default function TasksTableView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const updateTask = useUpdateTask();
   const { data: categories } = useTaskCategories();
+  const showTags = useTagVisibility();
+  const { isDark } = useTheme();
 
   // Build lookup maps
   const categoryMap = useMemo(() => {
@@ -302,6 +310,30 @@ export default function TasksTableView({
                   ) : (
                     <span className="text-[12px] text-muted-foreground">—</span>
                   )}
+                </div>
+
+                {/* Tags (respects tag visibility toggle) */}
+                <div
+                  className="px-3 min-w-0 flex items-center gap-1 overflow-hidden"
+                  style={{ width: 150, minWidth: 150 }}
+                >
+                  {showTags ? (() => {
+                    const tags = parseTags((task as any).tags);
+                    const colorMap = isDark ? TAG_COLORS_DARK : TAG_COLORS;
+                    const fallback = { bg: isDark ? "rgba(100,116,139,0.15)" : "#F1F5F9", text: isDark ? "#94A3B8" : "#475569" };
+                    return tags.length > 0 ? tags.map((tag) => {
+                      const c = colorMap[tag] ?? fallback;
+                      return (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0"
+                          style={{ backgroundColor: c.bg, color: c.text }}
+                        >
+                          {tag}
+                        </span>
+                      );
+                    }) : <span className="text-[12px] text-muted-foreground">—</span>;
+                  })() : <span className="text-[12px] text-muted-foreground/40">—</span>}
                 </div>
 
                 {/* Type */}
