@@ -824,6 +824,10 @@ export const tasks = nocodb.table("Tasks", {
   campaignName: text("campaign_name"),
   leadName: text("lead_name"),
   assigneeName: text("assignee_name"),
+  categoryId: integer("category_id").references(() => taskCategories.id, { onDelete: "set null" }),
+  parentTaskId: integer("parent_task_id").references((): any => tasks.id, { onDelete: "set null" }),
+  emoji: text("emoji"),
+  timeEstimate: integer("time_estimate"), // minutes
   tags: text("tags"), // JSON string array e.g. '["Frontend","Bug"]'
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -832,6 +836,8 @@ export const tasks = nocodb.table("Tasks", {
   index("tasks_assignee_idx").on(t.assignedToUserId),
   index("tasks_status_idx").on(t.status),
   index("tasks_due_date_idx").on(t.dueDate),
+  index("tasks_category_id_idx").on(t.categoryId),
+  index("tasks_parent_task_id_idx").on(t.parentTaskId),
 ]);
 
 export const insertTaskSchema = createInsertSchema(tasks, {
@@ -873,7 +879,7 @@ export type InsertTaskCategory = z.infer<typeof insertTaskCategorySchema>;
 
 export const taskSubtasks = nocodb.table("Task_Subtasks", {
   id: serial("id").primaryKey(),
-  taskId: integer("task_id").notNull().references(() => tasks.id),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   isCompleted: boolean("is_completed").notNull().default(false),
   sortOrder: integer("sort_order"),
