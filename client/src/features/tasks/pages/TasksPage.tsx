@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, CalendarDays, ClipboardList, Plus, Tag } from "lucide-react";
+import { ArrowUpDown, CalendarDays, ClipboardList, GitBranch, Columns3, Plus, Tag } from "lucide-react";
 
 import { SearchPill } from "@/components/ui/search-pill";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTasks, useCreateTask } from "../api/tasksApi";
 import TasksKanbanView from "../components/TasksKanbanView";
+import TasksTreeView from "../components/TasksTreeView";
 import MobileTaskListCard from "../components/MobileTaskListCard";
 import MobileTaskDetailPanel from "../components/MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "../components/MobileTaskCreatePanel";
@@ -47,6 +48,9 @@ function loadLocal<T>(key: string, fallback: T): T {
 function saveLocal(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
+
+// ── Desktop view mode ────────────────────────────────────────────────
+type ViewMode = "kanban" | "tree";
 
 // ── Date range filter ────────────────────────────────────────────────
 type DateRange = "all" | "today" | "this_week" | "this_month" | "this_year";
@@ -107,6 +111,7 @@ export default function TasksPage() {
 
   // Persisted state
   const [sort, setSort] = useState<SortOption>(() => loadLocal("tasks-sort", "due_date_asc"));
+  const [viewMode, setViewMode] = useState<ViewMode>(() => loadLocal("tasks-view-mode", "kanban"));
 
   // Transient state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -127,6 +132,11 @@ export default function TasksPage() {
   const handleSort = useCallback((v: SortOption) => {
     setSort(v);
     saveLocal("tasks-sort", v);
+  }, []);
+
+  const handleViewMode = useCallback((v: ViewMode) => {
+    setViewMode(v);
+    saveLocal("tasks-view-mode", v);
   }, []);
 
   const toggleFilterTag = useCallback((tag: string) => {
@@ -287,6 +297,29 @@ export default function TasksPage() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* View mode toggle (desktop only) */}
+      {!isMobile && (
+        <>
+          <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+          <button
+            onClick={() => handleViewMode("kanban")}
+            className={cn(xBase, "hover:max-w-[90px]", viewMode === "kanban" ? xActive : xDefault)}
+            title="Kanban view"
+          >
+            <Columns3 className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Kanban</span>
+          </button>
+          <button
+            onClick={() => handleViewMode("tree")}
+            className={cn(xBase, "hover:max-w-[80px]", viewMode === "tree" ? xActive : xDefault)}
+            title="Tree view"
+          >
+            <GitBranch className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Tree</span>
+          </button>
+        </>
+      )}
     </>
   );
 
@@ -369,13 +402,20 @@ export default function TasksPage() {
             </button>
           </div>
         ) : (
-          /* ── Desktop: kanban board ── */
+          /* ── Desktop: view area ── */
           <div className="flex-1 min-h-0 overflow-hidden p-[6px] pt-0">
-            <TasksKanbanView
-              tasks={filteredTasks}
-              searchQuery={searchQuery}
-              sort={sort}
-            />
+            {viewMode === "tree" ? (
+              <TasksTreeView
+                tasks={filteredTasks}
+                searchQuery={searchQuery}
+              />
+            ) : (
+              <TasksKanbanView
+                tasks={filteredTasks}
+                searchQuery={searchQuery}
+                sort={sort}
+              />
+            )}
           </div>
         )}
       </div>
