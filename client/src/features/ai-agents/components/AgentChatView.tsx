@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2 } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -191,10 +191,12 @@ function MessageBubble({
   msg,
   agent,
   onApplyCampaign,
+  fullPage = false,
 }: {
   msg: AgentMessage;
   agent: AiAgent;
   onApplyCampaign?: (campaignId: string, fields: Record<string, string>) => void;
+  fullPage?: boolean;
 }) {
   const isUser = msg.role === "user";
   const isSkill = !!(msg.metadata?.skillId);
@@ -219,7 +221,8 @@ function MessageBubble({
         )}
         <div
           className={cn(
-            "max-w-[85%] sm:max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg overflow-hidden",
+            "px-3 pt-2 pb-1.5 leading-relaxed shadow-sm rounded-lg overflow-hidden",
+            fullPage ? "max-w-[90%] sm:max-w-[85%] text-sm" : "max-w-[85%] sm:max-w-[80%] text-[13px]",
             isUser
               ? "bg-brand-indigo text-white rounded-tr-none whitespace-pre-wrap break-words"
               : isSkillError
@@ -286,7 +289,7 @@ function MessageBubble({
 }
 
 // ─── Streaming bubble ─────────────────────────────────────────────────────────
-function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
+function StreamingBubble({ text, agent, fullPage = false }: { text: string; agent: AiAgent; fullPage?: boolean }) {
   if (!text) return <TypingDots />;
   return (
     <div className="flex items-start gap-1.5">
@@ -296,7 +299,10 @@ function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
           {agent.type === "code_runner" ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
         </AvatarFallback>
       </Avatar>
-      <div className="max-w-[85%] sm:max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground overflow-hidden">
+      <div className={cn(
+        "px-3 pt-2 pb-1.5 leading-relaxed shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground overflow-hidden",
+        fullPage ? "max-w-[90%] sm:max-w-[85%] text-sm" : "max-w-[85%] sm:max-w-[80%] text-[13px]",
+      )}>
         <div className="agent-markdown-content min-w-0 overflow-hidden">
           <MarkdownRenderer content={text} />
         </div>
@@ -319,6 +325,7 @@ export function AgentChatView({
   pendingConfirmation,
   onConfirmDestructive,
   onCancelDestructive,
+  fullPage = false,
 }: {
   agent: AiAgent;
   messages: AgentMessage[];
@@ -331,6 +338,7 @@ export function AgentChatView({
   pendingConfirmation?: PendingConfirmation | null;
   onConfirmDestructive?: () => void;
   onCancelDestructive?: () => void;
+  fullPage?: boolean;
 }) {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
@@ -338,6 +346,7 @@ export function AgentChatView({
   const [transcribing, setTranscribing] = useState(false);
   const [pendingFile, setPendingFile] = useState<{ id: number; name: string; fileType?: string; thumbnailUrl?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // 0-100
   const [pendingVoiceFile, setPendingVoiceFile] = useState<{ id: number; name: string } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -346,6 +355,10 @@ export function AgentChatView({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Detect mobile for camera capture button
+  const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   // Suppress unused variable warning — onNewSession is available for parent use
   void onNewSession;
@@ -470,16 +483,72 @@ export function AgentChatView({
     };
   }, []);
 
-  // Voice recording — start capturing audio
+  // Detect best supported audio MIME type for mobile compatibility
+  // iOS Safari: supports mp4/aac but not webm
+  // Android Chrome: supports webm/opus
+  // Desktop: supports webm/opus
+  const getSupportedMimeType = useCallback((): string | undefined => {
+    const candidates = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4;codecs=aac",
+      "audio/mp4",
+      "audio/ogg;codecs=opus",
+      "audio/ogg",
+      "audio/aac",
+    ];
+    for (const mime of candidates) {
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(mime)) {
+        return mime;
+      }
+    }
+    return undefined; // Let browser pick default
+  }, []);
+
+  // Voice recording — start capturing audio (mobile-compatible)
   const startRecording = useCallback(async () => {
+    // Check if MediaRecorder is available
+    if (typeof MediaRecorder === "undefined") {
+      console.warn("[AgentChat] MediaRecorder not supported in this browser");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000, // Optimal for speech recognition
+        },
+      });
       streamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
+
+      // Create recorder with best supported codec for this browser/platform
+      const mimeType = getSupportedMimeType();
+      const recorderOptions: MediaRecorderOptions = {};
+      if (mimeType) {
+        recorderOptions.mimeType = mimeType;
+      }
+
+      const recorder = new MediaRecorder(stream, recorderOptions);
       audioChunksRef.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
+
+      // Handle unexpected errors (mobile browsers can interrupt recording)
+      recorder.onerror = () => {
+        console.error("[AgentChat] MediaRecorder error");
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+        setRecording(false);
+        setRecordingDuration(0);
+      };
+
       recorder.onstop = async () => {
         // Stop all tracks
         streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -492,8 +561,9 @@ export function AgentChatView({
         setRecordingDuration(0);
         setRecording(false);
 
-        // Build blob from chunks
-        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
+        // Build blob from chunks using the actual recorder mimeType
+        const actualMime = recorder.mimeType || mimeType || "audio/webm";
+        const blob = new Blob(audioChunksRef.current, { type: actualMime });
         if (blob.size === 0) return; // cancelled — no data
 
         // Transcribe via backend
@@ -509,7 +579,7 @@ export function AgentChatView({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   audio_data: dataUrl,
-                  mime_type: recorder.mimeType,
+                  mime_type: actualMime,
                   session_id: sessionId,
                 }),
               });
@@ -523,9 +593,10 @@ export function AgentChatView({
                     textareaRef.current.focus();
                   }
                 }
-                // Store voice file reference for sending with message
+                // Store voice file reference — use correct extension for platform
+                const defaultExt = actualMime.includes("mp4") ? "voice-memo.mp4" : "voice-memo.webm";
                 if (data.fileId) {
-                  setPendingVoiceFile({ id: data.fileId, name: data.filename || "voice-memo.webm" });
+                  setPendingVoiceFile({ id: data.fileId, name: data.filename || defaultExt });
                 }
               }
             } catch (err) {
@@ -538,7 +609,9 @@ export function AgentChatView({
           setTranscribing(false);
         }
       };
-      recorder.start();
+
+      // Use timeslice for more reliable data capture on mobile (push data every 1s)
+      recorder.start(1000);
       mediaRecorderRef.current = recorder;
       setRecording(true);
       setRecordingDuration(0);
@@ -546,10 +619,11 @@ export function AgentChatView({
       recordingTimerRef.current = setInterval(() => {
         setRecordingDuration((d) => d + 1);
       }, 1000);
-    } catch {
-      /* mic permission denied — silent */
+    } catch (err) {
+      // Log permission denial for debugging on mobile
+      console.warn("[AgentChat] Microphone access denied or unavailable:", err);
     }
-  }, [sessionId]);
+  }, [sessionId, getSupportedMimeType]);
 
   // Stop recording — finish and transcribe
   const stopRecording = useCallback(() => {
@@ -584,7 +658,11 @@ export function AgentChatView({
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0 overscroll-contain">
+      <div className={cn(
+        "flex-1 overflow-y-auto space-y-3 min-h-0 overscroll-contain",
+        fullPage ? "p-4 sm:p-6 lg:p-8" : "p-3 sm:p-4",
+      )}>
+        <div className={cn(fullPage && "max-w-4xl mx-auto w-full")}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -599,7 +677,10 @@ export function AgentChatView({
                     {isCodeRunner ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div className="max-w-[80%] px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-tl-none text-[13px] leading-relaxed shadow-sm">
+                <div className={cn(
+                  "px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-tl-none leading-relaxed shadow-sm",
+                  fullPage ? "max-w-[70%] text-sm" : "max-w-[80%] text-[13px]",
+                )}>
                   {isCodeRunner
                     ? "I'm connected to the Pi. I can read and modify the LeadAwakerApp codebase and changes apply immediately via pm2. What would you like to change?"
                     : `Hi! I'm the ${agent.name}. I can help craft and improve your campaign messages. Share a campaign name or paste a URL for me to reference.`}
@@ -612,16 +693,22 @@ export function AgentChatView({
                 msg={msg}
                 agent={agent}
                 onApplyCampaign={agent.type === "campaign_crafter" ? handleApplyCampaign : undefined}
+                fullPage={fullPage}
               />
             ))}
-            {streaming && <StreamingBubble text={streamingText} agent={agent} />}
+            {streaming && <StreamingBubble text={streamingText} agent={agent} fullPage={fullPage} />}
             <div ref={messagesEndRef} />
           </>
         )}
+        </div>
       </div>
 
       {/* Input area */}
-      <div className="border-t border-border/50 bg-background p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0">
+      <div className={cn(
+        "border-t border-border/50 bg-background shrink-0",
+        fullPage ? "p-4 sm:p-6 lg:px-8 pb-[max(1rem,env(safe-area-inset-bottom))]" : "p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+      )}>
+        <div className={cn(fullPage && "max-w-4xl mx-auto w-full")}>
         {/* Pending file indicator */}
         {pendingFile && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg text-[12px]">
@@ -641,10 +728,10 @@ export function AgentChatView({
             <span className="truncate text-foreground/80">{pendingFile.name}</span>
             <button
               onClick={() => setPendingFile(null)}
-              className="ml-auto text-muted-foreground hover:text-foreground shrink-0"
+              className="ml-auto text-muted-foreground hover:text-foreground shrink-0 h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center"
               title="Remove attachment"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
             </button>
           </div>
         )}
@@ -656,10 +743,10 @@ export function AgentChatView({
             <span className="text-muted-foreground/60 text-[10px]">transcribed</span>
             <button
               onClick={() => setPendingVoiceFile(null)}
-              className="ml-auto text-muted-foreground hover:text-foreground shrink-0"
+              className="ml-auto text-muted-foreground hover:text-foreground shrink-0 h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center"
               title="Remove voice memo"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
             </button>
           </div>
         )}
@@ -686,21 +773,21 @@ export function AgentChatView({
               {/* Cancel button */}
               <button
                 onClick={cancelRecording}
-                className="h-7 px-2.5 rounded-full text-[11px] font-medium text-muted-foreground hover:text-foreground bg-white/80 dark:bg-background/80 border border-border/50 hover:border-border transition-colors flex items-center gap-1"
+                className="h-7 max-md:h-11 px-2.5 max-md:px-4 rounded-full text-[11px] max-md:text-sm font-medium text-muted-foreground hover:text-foreground bg-white/80 dark:bg-background/80 border border-border/50 hover:border-border transition-colors flex items-center gap-1"
                 data-testid="recording-cancel"
                 title="Cancel recording"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3 w-3 max-md:h-4 max-md:w-4" />
                 Cancel
               </button>
               {/* Stop button */}
               <button
                 onClick={stopRecording}
-                className="h-7 px-2.5 rounded-full text-[11px] font-medium text-white bg-red-500 hover:bg-red-600 transition-colors flex items-center gap-1"
+                className="h-7 max-md:h-11 px-2.5 max-md:px-4 rounded-full text-[11px] max-md:text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors flex items-center gap-1"
                 data-testid="recording-stop"
                 title="Stop recording"
               >
-                <Square className="h-2.5 w-2.5 fill-white" />
+                <Square className="h-2.5 w-2.5 max-md:h-3.5 max-md:w-3.5 fill-white" />
                 Stop
               </button>
             </div>
@@ -737,7 +824,10 @@ export function AgentChatView({
             placeholder={recording ? "Recording..." : isCodeRunner ? "Tell me what to change..." : "Ask about campaigns..."}
             rows={1}
             disabled={streaming || loading || recording}
-            className="flex-1 resize-none bg-transparent text-[13px] placeholder:text-muted-foreground/50 focus:outline-none min-h-[28px] max-h-[120px] py-0.5"
+            className={cn(
+              "flex-1 resize-none bg-transparent placeholder:text-muted-foreground/50 focus:outline-none py-0.5",
+              fullPage ? "text-sm min-h-[32px] max-h-[160px]" : "text-[13px] min-h-[28px] max-h-[120px]",
+            )}
           />
 
           {/* Attach file button */}
@@ -745,10 +835,10 @@ export function AgentChatView({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={streaming || loading || uploading || recording}
-            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
+            className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
             title="Attach file (PDF, image, or spreadsheet)"
           >
-            <Paperclip className="h-4 w-4" />
+            <Paperclip className="h-4 w-4 max-md:h-5 max-md:w-5" />
           </button>
 
           {/* Send / Mic button */}
@@ -756,42 +846,43 @@ export function AgentChatView({
             <button
               onClick={handleSend}
               disabled={streaming || loading}
-              className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
               data-testid="send-button"
             >
               {streaming ? (
                 <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
-                <Send className="h-3.5 w-3.5" />
+                <Send className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
               )}
             </button>
           ) : transcribing ? (
             <button
               disabled
-              className="h-8 w-8 rounded-full bg-brand-indigo/40 text-white flex items-center justify-center shrink-0"
+              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo/40 text-white flex items-center justify-center shrink-0"
             >
               <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             </button>
           ) : recording ? (
             <button
               onClick={stopRecording}
-              className="h-8 w-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
+              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
               style={{ animation: "micPulseAgent 1s ease-in-out infinite" }}
               data-testid="mic-stop-button"
             >
-              <CircleStop className="h-4 w-4" />
+              <CircleStop className="h-4 w-4 max-md:h-5 max-md:w-5" />
               <style>{`@keyframes micPulseAgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
             </button>
           ) : (
             <button
               onClick={startRecording}
               disabled={streaming || loading}
-              className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
               data-testid="mic-button"
             >
-              <Mic className="h-3.5 w-3.5" />
+              <Mic className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
             </button>
           )}
+        </div>
         </div>
       </div>
 

@@ -77,7 +77,7 @@ export function ModelSwitcher({
           "flex items-center gap-1 rounded-full border border-border/50 transition-all",
           "hover:border-border hover:bg-muted/50",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]",
+          compact ? "px-2 py-0.5 text-[10px] max-md:px-3 max-md:py-2 max-md:text-xs max-md:min-h-[44px]" : "px-2.5 py-1 text-[11px]",
         )}
         data-testid="model-switcher-trigger"
       >
@@ -113,7 +113,7 @@ export function ModelSwitcher({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors",
+                  "flex items-center gap-2.5 w-full px-3 py-2 max-md:py-3 max-md:min-h-[44px] text-left transition-colors",
                   "hover:bg-muted/50",
                   isSelected && "bg-muted/30",
                 )}
