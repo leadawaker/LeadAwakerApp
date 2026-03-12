@@ -82,7 +82,10 @@ export function streamClaudeResponse(opts: {
       subAgentBlocks.push({ name, content: match[1].trim() });
     }
 
-    opts.res.write(`data: ${JSON.stringify({ type: "done", subAgentBlocks })}\n\n`);
+    // Approximate token counts (4 chars ≈ 1 token)
+    const inputTokens = Math.ceil(opts.prompt.length / 4);
+    const outputTokens = Math.ceil(fullText.length / 4);
+    opts.res.write(`data: ${JSON.stringify({ type: "done", subAgentBlocks, usage: { inputTokens, outputTokens } })}\n\n`);
     opts.res.end();
     opts.onDone(fullText, subAgentBlocks);
   });

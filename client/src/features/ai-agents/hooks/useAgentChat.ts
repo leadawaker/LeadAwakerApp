@@ -44,6 +44,10 @@ export interface AiSession {
   agentId: number;
   title: string | null;
   status: string;
+  model?: string;
+  thinkingLevel?: string;
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
   createdAt: string;
 }
 
@@ -55,35 +59,45 @@ export function useAgentChat() {
   const [streamingText, setStreamingText] = useState("");
   const [loading, setLoading] = useState(false);
   const streamingTextRef = useRef("");
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Keep ref in sync with state
   useEffect(() => {
     streamingTextRef.current = streamingText;
   }, [streamingText]);
 
+  // Cleanup on unmount — abort any in-flight stream
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
+
   const initialize = useCallback(async (agentId: number) => {
     setLoading(true);
     try {
       // Load agent info
-      const agentsRes = await apiFetch("/api/ai-agents");
-      if (agentsRes.ok) {
-        const agents: AiAgent[] = await agentsRes.json();
-        const found = agents.find((a) => a.id === agentId);
-        if (found) setAgent(found);
+      const agentRes = await apiFetch(`/api/agents/${agentId}`);
+      if (agentRes.ok) {
+        const found: AiAgent = await agentRes.json();
+        setAgent(found);
       }
 
-      // Create or resume session
-      const sessRes = await apiFetch("/api/ai-sessions", {
+      // Create or resume session for this agent
+      const sessRes = await apiFetch(`/api/agents/${agentId}/sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId }),
+        body: JSON.stringify({}),
       });
       if (!sessRes.ok) throw new Error("Failed to create session");
       const sess: AiSession = await sessRes.json();
       setSession(sess);
 
       // Load message history
-      const msgsRes = await apiFetch(`/api/ai-sessions/${sess.sessionId}/messages`);
+      const msgsRes = await apiFetch(`/api/agents/sessions/${sess.sessionId}/messages`);
       if (msgsRes.ok) {
         const rawMsgs = await msgsRes.json();
         const msgs: AgentMessage[] = rawMsgs.map((m: unknown) => {
@@ -91,7 +105,7 @@ export function useAgentChat() {
           return {
             ...msg,
             subAgentBlocks: typeof msg.subAgentBlocks === "string"
-              ? JSON.parse(msg.subAgentBlocks)
+              ? JSON.parse(msg.subAgentBlocks as string)
               : (msg.subAgentBlocks ?? []),
           };
         });
@@ -121,19 +135,26 @@ export function useAgentChat() {
     setStreamingText("");
     streamingTextRef.current = "";
 
+    // Create AbortController for this stream
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const res = await apiFetch("/api/ai-chat", {
+      // POST to the agent-conversations endpoint which stores the message
+      // and streams the Claude response via SSE
+      const res = await apiFetch(`/api/agent-conversations/${session.sessionId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: session.sessionId,
-          message: trimmed,
-          attachmentBase64: attachment,
+          content: trimmed,
+          ...(attachment ? { attachment } : {}),
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok || !res.body) throw new Error("Failed to start stream");
 
+      // Read SSE stream using fetch ReadableStream API
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -148,12 +169,29 @@ export function useAgentChat() {
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           try {
-            const evt = JSON.parse(line.slice(6)) as { type: string; text?: string; subAgentBlocks?: SubAgentBlock[]; message?: string };
-            if (evt.type === "token") {
+            const evt = JSON.parse(line.slice(6)) as {
+              type: string;
+              id?: number;
+              text?: string;
+              subAgentBlocks?: SubAgentBlock[];
+              usage?: { inputTokens: number; outputTokens: number };
+              message?: string;
+            };
+
+            if (evt.type === "message_id") {
+              // Update the optimistic user message with the real ID
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m === optimistic ? { ...m, id: evt.id } : m
+                )
+              );
+            } else if (evt.type === "token") {
+              // Append token text incrementally for real-time rendering
               const newText = streamingTextRef.current + (evt.text ?? "");
               streamingTextRef.current = newText;
               setStreamingText(newText);
             } else if (evt.type === "done") {
+              // Final event — add the complete assistant message
               const finalText = streamingTextRef.current;
               const subAgentBlocks: SubAgentBlock[] = evt.subAgentBlocks || [];
               setMessages((prev) => [
@@ -173,11 +211,16 @@ export function useAgentChat() {
               console.error("[AgentChat] Stream error:", evt.message);
             }
           } catch {
-            // ignore parse errors
+            // ignore parse errors for incomplete JSON
           }
         }
       }
     } catch (err) {
+      // Don't show error message if user intentionally aborted
+      if (err instanceof DOMException && err.name === "AbortError") {
+        console.log("[AgentChat] Stream aborted by user");
+        return;
+      }
       console.error("[AgentChat] Send error:", err);
       setMessages((prev) => [
         ...prev,
@@ -190,17 +233,29 @@ export function useAgentChat() {
         },
       ]);
     } finally {
+      abortControllerRef.current = null;
       setStreaming(false);
       setStreamingText("");
       streamingTextRef.current = "";
     }
   }, [session, streaming]);
 
+  /** Abort current streaming response (connection drop cleanup) */
+  const abortStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setStreaming(false);
+    setStreamingText("");
+    streamingTextRef.current = "";
+  }, []);
+
   const newSession = useCallback(async () => {
     if (!session) return;
     // Close current session
     try {
-      await apiFetch(`/api/ai-sessions/${session.sessionId}/close`, { method: "POST" });
+      await apiFetch(`/api/agents/sessions/${session.sessionId}`, { method: "DELETE" });
     } catch {
       // ignore
     }
@@ -224,5 +279,6 @@ export function useAgentChat() {
     initialize,
     sendMessage,
     newSession,
+    abortStream,
   };
 }
