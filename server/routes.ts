@@ -3527,5 +3527,117 @@ GUARDRAILS
     }
   });
 
+  // ─── Send message to agent (store + initiate Claude API call) ─────────
+  // POST /api/agent-conversations/:id/messages
+  // Accepts { content, pageContext? }
+  // Stores user message, builds prompt with history + system prompt, streams Claude response via SSE
+  app.post("/api/agent-conversations/:id/messages", requireAgency, async (req, res) => {
+    const sessionId = req.params.id;
+    const { content, pageContext } = req.body;
+
+    if (!content?.trim()) {
+      return res.status(400).json({ message: "content is required" });
+    }
+
+    try {
+      // 1. Look up the session + agent
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, session.agentId));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      // 2. Store user message in AI_Messages with role='user'
+      const userMessage = await storage.createAiMessage({
+        sessionId,
+        role: "user",
+        content: content.trim(),
+        pageContext: pageContext || null,
+      });
+
+      // 3. Fetch conversation history (all previous messages for context)
+      const history = await storage.getAiMessagesBySessionId(sessionId);
+
+      // 4. Build prompt: system prompt + conversation history context
+      const systemPrompt = agent.systemPrompt || "";
+      const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
+
+      // Build the full prompt with conversation context for the CLI
+      // The CLI doesn't have multi-turn context, so we include history in the prompt
+      let fullPrompt = "";
+      if (isFirstMessage && systemPrompt) {
+        fullPrompt += `[System Instructions]\n${systemPrompt}\n\n`;
+      }
+
+      // Add page context if provided
+      if (pageContext) {
+        fullPrompt += `[Current Page Context]\n${JSON.stringify(pageContext)}\n\n`;
+      }
+
+      fullPrompt += content.trim();
+
+      // 5. Set up SSE headers for streaming
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      // Send the user message ID as the first event
+      res.write(`data: ${JSON.stringify({ type: "message_id", id: userMessage.id })}\n\n`);
+
+      // 6. Determine working directory based on agent type
+      const cwd = getSessionCwd(sessionId, agent.type);
+
+      // 7. Initiate Claude CLI call with streaming
+      streamClaudeResponse({
+        prompt: fullPrompt,
+        cwd,
+        bypassPermissions: agent.type !== "code_runner", // non-code agents skip permissions
+        isFirstMessage,
+        res,
+        onDone: async (fullText, subAgentBlocks) => {
+          try {
+            // Store assistant response in database
+            if (fullText.trim()) {
+              await storage.createAiMessage({
+                sessionId,
+                role: "assistant",
+                content: fullText.trim(),
+                subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
+              });
+            }
+
+            // Update session token counts (approximate: 4 chars ≈ 1 token)
+            const inputTokens = Math.ceil(fullPrompt.length / 4);
+            const outputTokens = Math.ceil(fullText.length / 4);
+            await storage.updateAiSession(session.id, {
+              totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
+              totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
+            });
+
+            // Auto-generate title from first message if not set
+            if (!session.title && isFirstMessage && content.trim().length > 0) {
+              const autoTitle = content.trim().slice(0, 60) + (content.trim().length > 60 ? "…" : "");
+              await storage.updateAiSession(session.id, { title: autoTitle });
+            }
+          } catch (err) {
+            console.error("[Agent Conversations] onDone error:", err);
+          }
+        },
+      });
+    } catch (err: any) {
+      console.error("[Agent Conversations] send error:", err);
+      // If headers haven't been sent yet, return JSON error
+      if (!res.headersSent) {
+        return res.status(500).json({ message: "Failed to send message" });
+      }
+      // If already streaming, send error event
+      res.write(`data: ${JSON.stringify({ type: "error", message: err.message || "Internal error" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "done", subAgentBlocks: [] })}\n\n`);
+      res.end();
+    }
+  });
+
   return httpServer;
 }

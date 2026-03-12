@@ -1,17 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, Plus, Cpu, Zap } from "lucide-react";
+import { ArrowLeft, Plus, Cpu, Zap, Settings } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { AgentChatView } from "../components/AgentChatView";
+import { AgentSettingsSheet } from "../components/AgentSettingsSheet";
 
 export function AgentChatPage() {
   const params = useParams<{ agentId: string }>();
   const [, setLocation] = useLocation();
   const agentId = parseInt(params.agentId || "0", 10);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const {
     agent,
+    setAgent,
     session,
     messages,
     streaming,
@@ -59,6 +62,15 @@ export function AgentChatPage() {
           )}
         </div>
 
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+          title="Agent settings"
+          data-testid="agent-settings-btn"
+        >
+          <Settings className="h-4 w-4" />
+        </button>
+
         {session && (
           <button
             onClick={newSession}
@@ -72,15 +84,23 @@ export function AgentChatPage() {
 
       {/* Chat area */}
       {agent && (
-        <AgentChatView
-          agent={agent}
-          messages={messages}
-          streaming={streaming}
-          streamingText={streamingText}
-          loading={loading}
-          onSend={sendMessage}
-          onNewSession={newSession}
-        />
+        <>
+          <AgentChatView
+            agent={agent}
+            messages={messages}
+            streaming={streaming}
+            streamingText={streamingText}
+            loading={loading}
+            onSend={sendMessage}
+            onNewSession={newSession}
+          />
+          <AgentSettingsSheet
+            agent={agent}
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+            onAgentUpdated={(updated) => setAgent(updated)}
+          />
+        </>
       )}
     </div>
   );

@@ -15,6 +15,13 @@ export interface SubAgentBlock {
   content: string;
 }
 
+export interface AgentPermissions {
+  read: boolean;
+  write: boolean;
+  create: boolean;
+  delete: boolean;
+}
+
 export interface AiAgent {
   id: number;
   name: string;
@@ -23,6 +30,11 @@ export interface AiAgent {
   photoUrl: string | null;
   enabled: boolean;
   displayOrder: number;
+  model?: string;
+  thinkingLevel?: string;
+  permissions?: AgentPermissions;
+  pageAwarenessEnabled?: boolean;
+  createdAt?: string;
 }
 
 export interface AiSession {
@@ -203,6 +215,7 @@ export function useAgentChat() {
 
   return {
     agent,
+    setAgent,
     session,
     messages,
     streaming,
