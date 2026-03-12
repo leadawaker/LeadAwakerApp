@@ -530,7 +530,7 @@ export default function ConversationsPage() {
                               <Cpu className="h-4 w-4 text-brand-indigo" />
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 cursor-default" title={agentSession?.title ? `${chatAgent.name} \u2014 ${agentSession.title}` : chatAgent.name}>
                             <div className="font-semibold text-sm truncate">{chatAgent.name}</div>
                             {agentSession?.title && (
                               <div className="text-[10px] text-muted-foreground font-medium truncate mt-0.5" data-testid="conversation-title">

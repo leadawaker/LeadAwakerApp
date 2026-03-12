@@ -257,7 +257,7 @@ function ConversationTabs({
             key={agentId}
             onClick={() => onSelect(agentId)}
             className={cn(
-              "group relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all shrink-0",
+              "group relative flex items-center gap-1.5 px-2 py-1.5 max-md:px-3 max-md:py-2.5 max-md:min-h-[44px] rounded-lg transition-all shrink-0",
               isActive
                 ? "bg-brand-indigo/10 text-brand-indigo ring-1 ring-brand-indigo/20"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -314,11 +314,11 @@ function ConversationTabs({
                 e.stopPropagation();
                 onClose(agentId);
               }}
-              className="h-4 w-4 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+              className="h-4 w-4 max-md:h-7 max-md:w-7 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors shrink-0 opacity-0 group-hover:opacity-100 max-md:opacity-100"
               title="Close conversation"
               data-testid={`close-tab-${agentId}`}
             >
-              <X className="h-2.5 w-2.5" />
+              <X className="h-2.5 w-2.5 max-md:h-3.5 max-md:w-3.5" />
             </button>
           </button>
         );
@@ -592,10 +592,10 @@ export function AgentChatWidget() {
             <>
               <button
                 onClick={handleBack}
-                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
                 data-testid="widget-back-btn"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 max-md:h-5 max-md:w-5" />
               </button>
               <Avatar className="h-8 w-8 shrink-0">
                 {activeAgent.photoUrl ? (
@@ -605,7 +605,7 @@ export function AgentChatWidget() {
                   {isCodeRunner ? <Zap className="h-3.5 w-3.5" /> : <Cpu className="h-3.5 w-3.5" />}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 cursor-default" title={activeSession?.title ? `${activeAgent.name} \u2014 ${activeSession.title}` : activeAgent.name}>
                 <div className="font-semibold text-xs truncate">{activeAgent.name}</div>
                 {activeSession?.title ? (
                   <div
@@ -655,7 +655,7 @@ export function AgentChatWidget() {
               <button
                 onClick={togglePageAwareness}
                 className={cn(
-                  "h-7 w-7 rounded-full flex items-center justify-center transition-colors shrink-0",
+                  "h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center transition-colors shrink-0",
                   activePageAwareness
                     ? "text-brand-indigo bg-brand-indigo/10 hover:bg-brand-indigo/20"
                     : "text-muted-foreground hover:bg-muted",
@@ -664,25 +664,25 @@ export function AgentChatWidget() {
                 data-testid="widget-page-awareness-toggle"
               >
                 {activePageAwareness ? (
-                  <MapPin className="h-3.5 w-3.5" />
+                  <MapPin className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
                 ) : (
-                  <MapPinOff className="h-3.5 w-3.5" />
+                  <MapPinOff className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
                 )}
               </button>
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
                 data-testid="widget-settings-btn"
               >
-                <Settings className="h-3.5 w-3.5" />
+                <Settings className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
               </button>
               <button
                 onClick={() => setDeleteConfirmOpen(true)}
-                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
                 title="Clear conversation history"
                 data-testid="widget-clear-history-btn"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
               </button>
               <button
                 onClick={() => {
@@ -690,20 +690,20 @@ export function AgentChatWidget() {
                     new CustomEvent("agent-new-session", { detail: { agentId: activeAgentId } }),
                   );
                 }}
-                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
                 title="New conversation"
                 data-testid="widget-new-session-btn"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
               </button>
               {/* Close this conversation (removes tab, data preserved) */}
               <button
                 onClick={() => activeAgentId && closeConversation(activeAgentId)}
-                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
                 title="Close conversation"
                 data-testid="widget-close-conversation-btn"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
               </button>
             </>
           ) : (
@@ -717,11 +717,11 @@ export function AgentChatWidget() {
           )}
           <button
             onClick={closeWidget}
-            className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+            className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
             data-testid="agent-widget-close"
             aria-label="Close AI Agent chat"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 max-md:h-5 max-md:w-5" />
           </button>
         </div>
 
