@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
+import { usePageEntity } from "@/contexts/PageEntityContext";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { usePageContext } from "../hooks/usePageContext";
 import { AgentChatView } from "./AgentChatView";
@@ -78,7 +79,20 @@ export function AgentChatWidget() {
   const { isOpen, activeAgentId, closeWidget, toggleWidget, selectAgent, clearAgent } = useAgentWidget();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const pageContext = usePageContext();
+  const routeContext = usePageContext();
+  const { entityData } = usePageEntity();
+
+  // Merge route context with on-screen entity data for full page awareness
+  const pageContext = useMemo(() => ({
+    ...routeContext,
+    ...(entityData ? { entityData: {
+      entityType: entityData.entityType,
+      entityId: entityData.entityId,
+      entityName: entityData.entityName,
+      summary: entityData.summary,
+      filters: entityData.filters,
+    } } : {}),
+  }), [routeContext, entityData]);
 
   const {
     agent,
@@ -95,7 +109,7 @@ export function AgentChatWidget() {
     updateSessionThinking,
   } = useAgentChat();
 
-  // Wrap sendMessage to automatically include page context
+  // Wrap sendMessage to automatically include page context + entity data
   const sendMessageWithContext = useCallback(
     (text: string, attachment?: string, fileId?: number) => {
       return sendMessage(text, attachment, fileId, pageContext);
@@ -183,12 +197,16 @@ export function AgentChatWidget() {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-xs truncate">{agent.name}</div>
-                {isCodeRunner && (
+                {session?.title ? (
+                  <div className="text-[9px] text-muted-foreground truncate" data-testid="conversation-title">
+                    {session.title}
+                  </div>
+                ) : isCodeRunner ? (
                   <div className="flex items-center gap-1">
                     <span className="w-1 h-1 rounded-full bg-green-500" />
                     <span className="text-[9px] text-muted-foreground">Connected</span>
                   </div>
-                )}
+                ) : null}
               </div>
               {session && (
                 <>

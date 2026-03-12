@@ -58,12 +58,16 @@ export function AgentChatPage() {
 
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm truncate">{agent?.name ?? "Agent"}</div>
-          {isCodeRunner && (
+          {session?.title ? (
+            <div className="text-[10px] text-muted-foreground font-medium truncate mt-0.5" data-testid="conversation-title">
+              {session.title}
+            </div>
+          ) : isCodeRunner ? (
             <div className="flex items-center gap-1 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               <span className="text-[10px] text-muted-foreground font-medium">Pi connected · live reload on</span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {session && (

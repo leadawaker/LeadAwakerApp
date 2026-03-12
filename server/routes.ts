@@ -55,7 +55,7 @@ import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
-import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd } from "./aiAgents";
+import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
   parseCrmToolCalls,
@@ -3607,6 +3607,17 @@ GUARDRAILS
   // POST /api/agent-conversations/:id/files
   // Accepts JSON: { filename, mimeType, data (base64) }
   // Stores file on disk, records in AI_Files table
+  // Supported: PDF, images (JPEG, PNG, GIF, WebP), spreadsheets (CSV, XLSX, XLS)
+
+  const ALLOWED_FILE_EXTENSIONS = new Set([
+    ".pdf",
+    ".jpg", ".jpeg", ".png", ".gif", ".webp",
+    ".csv", ".xlsx", ".xls",
+  ]);
+  const ALLOWED_IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp"]);
+  const ALLOWED_SPREADSHEET_EXTENSIONS = new Set([".csv", ".xlsx", ".xls"]);
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
   app.post("/api/agent-conversations/:id/files", requireAgency, async (req, res) => {
     const sessionId = req.params.id;
     const { filename, mimeType, data } = req.body as { filename?: string; mimeType?: string; data?: string };
@@ -3615,19 +3626,20 @@ GUARDRAILS
       return res.status(400).json({ message: "filename and data (base64) are required" });
     }
 
-    // Only accept PDF files
     const ext = path.extname(filename).toLowerCase();
-    if (ext !== ".pdf" && mimeType !== "application/pdf") {
-      return res.status(400).json({ message: "Only PDF files are supported" });
+    if (!ALLOWED_FILE_EXTENSIONS.has(ext)) {
+      return res.status(400).json({ message: "Unsupported file type. Allowed: PDF, images (JPEG, PNG, GIF, WebP), spreadsheets (CSV, XLSX, XLS)" });
     }
 
     try {
-      // Verify session exists
       const session = await storage.getAiSessionBySessionId(sessionId);
       if (!session) return res.status(404).json({ message: "Conversation not found" });
 
-      // Decode base64 data
       const buffer = Buffer.from(data, "base64");
+
+      if (buffer.length > MAX_FILE_SIZE) {
+        return res.status(400).json({ message: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` });
+      }
 
       // Store file on disk
       const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "agent-files", sessionId);
@@ -3636,19 +3648,87 @@ GUARDRAILS
       const filePath = path.join(uploadsDir, safeFilename);
       fs.writeFileSync(filePath, buffer);
 
-      // Record in AI_Files table
+      const isImage = ALLOWED_IMAGE_EXTENSIONS.has(ext);
+      const isSpreadsheet = ALLOWED_SPREADSHEET_EXTENSIONS.has(ext);
+
+      // For spreadsheets, extract text content for Claude context
+      let transcription: string | null = null;
+      if (isSpreadsheet) {
+        try {
+          if (ext === ".csv") {
+            transcription = buffer.toString("utf-8");
+            if (transcription.length > 50000) {
+              const lines = transcription.split("\n");
+              const header = lines[0] || "";
+              transcription = lines.slice(0, 500).join("\n") + `\n\n[... truncated: showing 500 of ${lines.length} rows. Header: ${header}]`;
+            }
+          } else {
+            const XLSX = await import("xlsx");
+            const workbook = XLSX.read(buffer, { type: "buffer" });
+            const sheets: string[] = [];
+            for (const sheetName of workbook.SheetNames.slice(0, 5)) {
+              const sheet = workbook.Sheets[sheetName];
+              const csvContent = XLSX.utils.sheet_to_csv(sheet);
+              sheets.push(`[Sheet: ${sheetName}]\n${csvContent}`);
+            }
+            transcription = sheets.join("\n\n");
+            if (transcription.length > 50000) {
+              transcription = transcription.slice(0, 50000) + "\n\n[... truncated at 50000 characters]";
+            }
+          }
+        } catch (parseErr) {
+          console.error("[AI Files] Spreadsheet parse error:", parseErr);
+          transcription = `[Error parsing spreadsheet: ${(parseErr as Error).message}]`;
+        }
+      }
+
+      const resolvedMimeType = mimeType
+        || (ext === ".pdf" ? "application/pdf"
+          : ext === ".jpg" || ext === ".jpeg" ? "image/jpeg"
+          : ext === ".png" ? "image/png"
+          : ext === ".gif" ? "image/gif"
+          : ext === ".webp" ? "image/webp"
+          : ext === ".csv" ? "text/csv"
+          : ext === ".xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          : ext === ".xls" ? "application/vnd.ms-excel"
+          : "application/octet-stream");
+
       const fileRecord = await storage.createAiFile({
         conversationId: sessionId,
         filename,
-        mimeType: mimeType || "application/pdf",
+        mimeType: resolvedMimeType,
         filePath,
         fileSize: buffer.length,
+        ...(transcription ? { transcription } : {}),
       });
 
-      res.status(201).json(fileRecord);
+      res.status(201).json({
+        ...fileRecord,
+        fileType: isImage ? "image" : isSpreadsheet ? "spreadsheet" : "pdf",
+        ...(isImage ? { thumbnailUrl: `/api/agent-files/${fileRecord.id}/thumbnail` } : {}),
+      });
     } catch (err: any) {
       console.error("[AI Files] upload error:", err);
       res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  // GET /api/agent-files/:id/thumbnail — serve image file for thumbnail preview
+  app.get("/api/agent-files/:id/thumbnail", requireAgency, async (req, res) => {
+    try {
+      const fileId = parseInt(req.params.id, 10);
+      if (isNaN(fileId)) return res.status(400).json({ message: "Invalid file ID" });
+      const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, fileId));
+      if (!fileRecord || !fileRecord.filePath) return res.status(404).json({ message: "File not found" });
+      const ext = path.extname(fileRecord.filename).toLowerCase();
+      if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) return res.status(400).json({ message: "Not an image file" });
+      if (!fs.existsSync(fileRecord.filePath)) return res.status(404).json({ message: "File not found on disk" });
+      res.setHeader("Content-Type", fileRecord.mimeType || "image/jpeg");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      fs.createReadStream(fileRecord.filePath).pipe(res);
+    } catch (err: any) {
+      console.error("[AI Files] thumbnail error:", err);
+      res.status(500).json({ message: "Failed to serve thumbnail" });
     }
   });
 
@@ -3805,9 +3885,26 @@ GUARDRAILS
       if (fileId) {
         const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, Number(fileId)));
         if (fileRecord && fileRecord.filePath && fs.existsSync(fileRecord.filePath)) {
-          // Read PDF as base64 for context (Claude CLI can process text from it)
-          const pdfBuffer = fs.readFileSync(fileRecord.filePath);
-          fullPrompt += `\n\n[Attached PDF Document: ${fileRecord.filename}]\nThe user has attached a PDF file (${fileRecord.filename}, ${Math.round(pdfBuffer.length / 1024)}KB). The file is stored at: ${fileRecord.filePath}\nPlease analyze this document as requested.\n\n`;
+          const fileExt = path.extname(fileRecord.filename).toLowerCase();
+          const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
+          const isSpreadsheet = [".csv", ".xlsx", ".xls"].includes(fileExt);
+
+          if (isImage) {
+            // For images, encode as base64 data URL for Claude vision analysis
+            const imgBuffer = fs.readFileSync(fileRecord.filePath);
+            const base64Data = imgBuffer.toString("base64");
+            const imgMimeType = fileRecord.mimeType || "image/jpeg";
+            fullPrompt += `\n\n[Attached Image: ${fileRecord.filename}]\nThe user has attached an image. Here is the image as a base64 data URL for your analysis:\ndata:${imgMimeType};base64,${base64Data}\n\nPlease analyze this image as requested.\n\n`;
+          } else if (isSpreadsheet) {
+            // For spreadsheets, include the extracted text content
+            const spreadsheetContent = fileRecord.transcription || "[Spreadsheet content could not be extracted]";
+            fullPrompt += `\n\n[Attached Spreadsheet: ${fileRecord.filename}]\nThe user has attached a spreadsheet file. Here is the content:\n\n${spreadsheetContent}\n\nPlease analyze this data as requested.\n\n`;
+          } else {
+            // PDF or other files
+            const fileBuffer = fs.readFileSync(fileRecord.filePath);
+            fullPrompt += `\n\n[Attached PDF Document: ${fileRecord.filename}]\nThe user has attached a PDF file (${fileRecord.filename}, ${Math.round(fileBuffer.length / 1024)}KB). The file is stored at: ${fileRecord.filePath}\nPlease analyze this document as requested.\n\n`;
+          }
+
           // Update file record to link to the user message
           await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, fileRecord.id));
         }
@@ -3891,10 +3988,19 @@ GUARDRAILS
               totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
             });
 
-            // Auto-generate title from first message if not set
-            if (!session.title && isFirstMessage && content.trim().length > 0) {
-              const autoTitle = content.trim().slice(0, 60) + (content.trim().length > 60 ? "…" : "");
-              await storage.updateAiSession(session.id, { title: autoTitle });
+            // Auto-generate title using AI after first assistant response (non-blocking)
+            if (!session.title && isFirstMessage && content.trim().length > 0 && fullText.trim().length > 0) {
+              generateConversationTitle(content.trim(), fullText.trim())
+                .then((aiTitle) => {
+                  storage.updateAiSession(session.id, { title: aiTitle });
+                  console.log(`[Agent Conversations] Auto-generated title: "${aiTitle}" for session ${session.id}`);
+                })
+                .catch((err) => {
+                  console.error("[Agent Conversations] Title generation failed:", err);
+                  // Fallback: use truncated user message
+                  const fallback = content.trim().slice(0, 60) + (content.trim().length > 60 ? "\u2026" : "");
+                  storage.updateAiSession(session.id, { title: fallback });
+                });
             }
           } catch (err) {
             console.error("[Agent Conversations] onDone error:", err);

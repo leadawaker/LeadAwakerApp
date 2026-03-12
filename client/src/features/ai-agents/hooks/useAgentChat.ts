@@ -210,6 +210,19 @@ export function useAgentChat() {
               setStreamingText("");
               streamingTextRef.current = "";
               setStreaming(false);
+
+              // Refresh session after a delay to pick up AI-generated title
+              setTimeout(async () => {
+                try {
+                  const sessRes = await apiFetch(`/api/agents/sessions/${session.sessionId}`);
+                  if (sessRes.ok) {
+                    const updated: AiSession = await sessRes.json();
+                    setSession(updated);
+                  }
+                } catch {
+                  // ignore - title will appear on next load
+                }
+              }, 5000);
             } else if (evt.type === "error") {
               console.error("[AgentChat] Stream error:", evt.message);
             }

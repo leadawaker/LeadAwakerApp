@@ -119,6 +119,57 @@ export function streamClaudeResponse(opts: {
   });
 }
 
+/**
+ * Generate a concise conversation title (3-6 words) using Claude Haiku.
+ * Returns the title string, or a truncated fallback if the API call fails.
+ * Non-blocking: runs Claude CLI as a child process.
+ */
+export function generateConversationTitle(
+  userMessage: string,
+  assistantResponse: string,
+): Promise<string> {
+  const fallback = userMessage.trim().slice(0, 60) + (userMessage.trim().length > 60 ? "\u2026" : "");
+  return new Promise((resolve) => {
+    try {
+      const truncatedUser = userMessage.slice(0, 500);
+      const truncatedAssistant = assistantResponse.slice(0, 500);
+      const prompt = "Generate a very short title (3-6 words) for a conversation that starts with this exchange. Return ONLY the title text, nothing else. No quotes, no punctuation at the end, no explanation.\n\nUser: " + truncatedUser + "\n\nAssistant: " + truncatedAssistant;
+
+      const child = spawn(CLAUDE_BIN, [
+        "--model", "claude-haiku-235-20241022",
+        "--dangerouslySkipPermissions",
+        "-p", prompt,
+      ], {
+        cwd: "/tmp",
+        env: { ...process.env },
+        timeout: 30000,
+      });
+
+      let output = "";
+      child.stdout.on("data", (data: Buffer) => {
+        output += data.toString();
+      });
+      child.stderr.on("data", () => {
+        // ignore stderr
+      });
+      child.on("close", () => {
+        const title = output.trim().replace(/^["']|["']$/g, "").slice(0, 100);
+        resolve(title || fallback);
+      });
+      child.on("error", () => {
+        resolve(fallback);
+      });
+      // Safety timeout
+      setTimeout(() => {
+        try { child.kill(); } catch {}
+        resolve(fallback);
+      }, 30000);
+    } catch {
+      resolve(fallback);
+    }
+  });
+}
+
 /** Default system prompts for built-in agent types */
 export const DEFAULT_SYSTEM_PROMPTS: Record<string, string> = {
   campaign_crafter: `You are a Campaign Crafter for LeadAwaker CRM, a WhatsApp-based lead reactivation platform. You are an expert at crafting high-converting outreach campaigns that re-engage dormant leads and drive bookings.
