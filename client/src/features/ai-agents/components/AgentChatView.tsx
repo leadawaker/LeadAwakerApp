@@ -836,9 +836,18 @@ export function AgentChatView({
           </div>
         )}
         {uploading && (
-          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 text-[12px] text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span>Uploading file…</span>
+          <div className="mb-2 px-3 py-1.5 text-[12px] text-muted-foreground" data-testid="upload-progress">
+            <div className="flex items-center gap-2 mb-1">
+              <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+              <span>{uploadProgress < 30 ? "Preparing file…" : uploadProgress < 90 ? "Uploading…" : "Processing…"}</span>
+              <span className="ml-auto tabular-nums font-medium">{uploadProgress}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-brand-indigo rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
           </div>
         )}
 
@@ -888,11 +897,20 @@ export function AgentChatView({
         )}
 
         <div className="flex items-end gap-2 bg-muted/40 rounded-2xl px-3 py-2 border border-border/40">
-          {/* Hidden file input */}
+          {/* Hidden file input — file picker (documents, images from gallery) */}
           <input
             ref={fileInputRef}
             type="file"
             accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.csv,.xlsx,.xls,application/pdf,image/*,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          {/* Hidden camera input — direct camera capture on mobile */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -915,13 +933,28 @@ export function AgentChatView({
             )}
           />
 
-          {/* Attach file button */}
+          {/* Camera capture button — visible on mobile only */}
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={streaming || loading || uploading || recording}
+              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
+              title="Take photo"
+              data-testid="camera-capture-btn"
+            >
+              <Camera className="h-4 w-4 max-md:h-5 max-md:w-5" />
+            </button>
+          )}
+
+          {/* Attach file button (file picker / photo library / documents) */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={streaming || loading || uploading || recording}
             className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
-            title="Attach file (PDF, image, or spreadsheet)"
+            title={isMobile ? "Attach file or photo" : "Attach file (PDF, image, or spreadsheet)"}
+            data-testid="attach-file-btn"
           >
             <Paperclip className="h-4 w-4 max-md:h-5 max-md:w-5" />
           </button>
