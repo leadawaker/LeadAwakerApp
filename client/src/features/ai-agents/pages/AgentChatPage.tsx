@@ -27,6 +27,9 @@ export function AgentChatPage() {
     newSession,
     updateSessionModel,
     updateSessionThinking,
+    pendingConfirmation,
+    confirmDestructiveActions,
+    cancelDestructiveActions,
   } = useAgentChat();
 
   useEffect(() => {
@@ -117,6 +120,9 @@ export function AgentChatPage() {
             onSend={sendMessage}
             onNewSession={newSession}
             sessionId={session?.sessionId}
+            pendingConfirmation={pendingConfirmation}
+            onConfirmDestructive={confirmDestructiveActions}
+            onCancelDestructive={cancelDestructiveActions}
           />
           <AgentSettingsSheet
             agent={agent}

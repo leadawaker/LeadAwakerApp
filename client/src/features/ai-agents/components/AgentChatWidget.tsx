@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Trash2, MapPin, MapPinOff } from "lucide-react";
+import { useEffect, useState, useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Trash2, MapPin, MapPinOff, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
@@ -44,11 +44,14 @@ function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }
     streaming,
     streamingText,
     loading,
+    pendingConfirmation,
     initialize,
     sendMessage,
     newSession,
     updateSessionModel,
     updateSessionThinking,
+    confirmDestructiveActions,
+    cancelDestructiveActions,
   } = useAgentChat();
 
   const routeContext = usePageContext();
@@ -117,6 +120,9 @@ function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }
         onSend={sendMessageWithContext}
         onNewSession={newSession}
         sessionId={session?.sessionId}
+        pendingConfirmation={pendingConfirmation}
+        onConfirmDestructive={confirmDestructiveActions}
+        onCancelDestructive={cancelDestructiveActions}
       />
     </div>
   );
@@ -319,6 +325,36 @@ function ConversationTabs({
       })}
     </div>
   );
+}
+
+// ─── Widget resize constants ─────────────────────────────────────────────────
+
+const WIDGET_SIZE_KEY = "leadawaker_widget_size";
+const DEFAULT_WIDTH = 400;
+const DEFAULT_HEIGHT = 560;
+const MIN_WIDTH = 320;
+const MIN_HEIGHT = 400;
+const MAX_WIDTH = 800;
+const MAX_HEIGHT = 900;
+
+interface WidgetSize { width: number; height: number }
+
+function loadWidgetSize(): WidgetSize {
+  try {
+    const raw = localStorage.getItem(WIDGET_SIZE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as WidgetSize;
+      return {
+        width: Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, parsed.width)),
+        height: Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, parsed.height)),
+      };
+    }
+  } catch { /* ignore */ }
+  return { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT };
+}
+
+function saveWidgetSize(size: WidgetSize) {
+  localStorage.setItem(WIDGET_SIZE_KEY, JSON.stringify(size));
 }
 
 // ─── Main Widget Component ───────────────────────────────────────────────────
@@ -743,12 +779,15 @@ function ConversationPanelWithEvents({
     streaming,
     streamingText,
     loading,
+    pendingConfirmation,
     initialize,
     sendMessage,
     newSession,
     deleteConversation,
     updateSessionModel,
     updateSessionThinking,
+    confirmDestructiveActions,
+    cancelDestructiveActions,
   } = useAgentChat();
 
   const routeContext = usePageContext();
@@ -872,6 +911,9 @@ function ConversationPanelWithEvents({
         onSend={sendMessageWithContext}
         onNewSession={newSession}
         sessionId={session?.sessionId}
+        pendingConfirmation={pendingConfirmation}
+        onConfirmDestructive={confirmDestructiveActions}
+        onCancelDestructive={cancelDestructiveActions}
       />
     </div>
   );

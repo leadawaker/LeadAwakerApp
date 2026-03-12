@@ -1,8 +1,18 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import type { AiAgent, AgentMessage, AgentFile } from "../hooks/useAgentChat";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import type { AiAgent, AgentMessage, AgentFile, PendingConfirmation } from "../hooks/useAgentChat";
 import { SubAgentPill } from "./SubAgentPill";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
@@ -306,6 +316,9 @@ export function AgentChatView({
   onSend,
   onNewSession,
   sessionId,
+  pendingConfirmation,
+  onConfirmDestructive,
+  onCancelDestructive,
 }: {
   agent: AiAgent;
   messages: AgentMessage[];
@@ -315,6 +328,9 @@ export function AgentChatView({
   onSend: (text: string, attachment?: string, fileId?: number) => void;
   onNewSession: () => void;
   sessionId?: string;
+  pendingConfirmation?: PendingConfirmation | null;
+  onConfirmDestructive?: () => void;
+  onCancelDestructive?: () => void;
 }) {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
@@ -778,6 +794,58 @@ export function AgentChatView({
           )}
         </div>
       </div>
+
+      {/* Destructive Action Confirmation Dialog */}
+      <AlertDialog
+        open={!!pendingConfirmation && pendingConfirmation.actions.length > 0}
+        onOpenChange={(open) => {
+          if (!open) onCancelDestructive?.();
+        }}
+      >
+        <AlertDialogContent data-testid="destructive-action-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-red-500" />
+              Confirm Destructive Action
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <p className="mb-3">
+                  The agent wants to perform the following destructive action{(pendingConfirmation?.actions?.length ?? 0) > 1 ? "s" : ""}:
+                </p>
+                <div className="space-y-2">
+                  {pendingConfirmation?.actions?.map((action, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500 shrink-0" />
+                      <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                        {action.description}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  This action cannot be undone. Are you sure you want to proceed?
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => onCancelDestructive?.()}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onConfirmDestructive?.()}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              data-testid="confirm-destructive-action"
+            >
+              Confirm &amp; Execute
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

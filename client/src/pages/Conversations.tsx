@@ -121,6 +121,9 @@ export default function ConversationsPage() {
     loadSession: agentLoadSession,
     updateSessionModel: agentUpdateSessionModel,
     updateSessionThinking: agentUpdateSessionThinking,
+    pendingConfirmation: agentPendingConfirmation,
+    confirmDestructiveActions: agentConfirmDestructive,
+    cancelDestructiveActions: agentCancelDestructive,
   } = useAgentChat();
 
   // Agent settings sheet state
@@ -577,6 +580,9 @@ export default function ConversationsPage() {
                           onSend={agentSendMessage}
                           onNewSession={agentNewSession}
                           sessionId={agentSession?.sessionId}
+                          pendingConfirmation={agentPendingConfirmation}
+                          onConfirmDestructive={agentConfirmDestructive}
+                          onCancelDestructive={agentCancelDestructive}
                         />
                         <AgentSettingsSheet
                           agent={chatAgent}

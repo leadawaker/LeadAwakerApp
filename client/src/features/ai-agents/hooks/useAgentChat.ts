@@ -1,6 +1,7 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { apiFetch } from "@/lib/apiUtils";
 import type { PageContext } from "./usePageContext";
+import { subscribeSyncBus, broadcastSync, listenerCount } from "./chatSyncBus";
 
 export interface AgentMessage {
   id?: number;
@@ -71,6 +72,18 @@ export interface AiSession {
   createdAt: string;
 }
 
+export interface PendingDestructiveAction {
+  toolName: string;
+  args: Record<string, unknown>;
+  description: string;
+}
+
+export interface PendingConfirmation {
+  sessionId: string;
+  agentId: number;
+  actions: PendingDestructiveAction[];
+}
+
 export function useAgentChat() {
   const [agent, setAgent] = useState<AiAgent | null>(null);
   const [session, setSession] = useState<AiSession | null>(null);
@@ -78,13 +91,56 @@ export function useAgentChat() {
   const [streaming, setStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const streamingTextRef = useRef("");
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Unique identity for this hook instance (stable across re-renders)
+  const syncId = useMemo(() => Symbol("useAgentChat"), []);
+  // Flag to suppress broadcast when update came from sync bus
+  const fromSyncRef = useRef(false);
 
   // Keep ref in sync with state
   useEffect(() => {
     streamingTextRef.current = streamingText;
   }, [streamingText]);
+
+  // --- Cross-view sync bus ---
+  // Subscribe to the bus whenever sessionId changes; receive peer updates
+  useEffect(() => {
+    const sid = session?.sessionId;
+    if (!sid) return;
+
+    const unsub = subscribeSyncBus(
+      sid,
+      (data) => {
+        // Incoming sync from peer — apply without re-broadcasting
+        fromSyncRef.current = true;
+        setMessages(data.messages);
+        setStreaming(data.streaming);
+        setStreamingText(data.streaming ? data.streamingText : "");
+        streamingTextRef.current = data.streaming ? data.streamingText : "";
+        // Reset flag after React batches the state updates
+        queueMicrotask(() => {
+          fromSyncRef.current = false;
+        });
+      },
+      syncId,
+    );
+
+    return unsub;
+  }, [session?.sessionId, syncId]);
+
+  // Broadcast helper — only sends if peers exist and update is local
+  const maybeBroadcast = useCallback(
+    (msgs: AgentMessage[], isStreaming: boolean, sText: string) => {
+      const sid = session?.sessionId;
+      if (!sid || fromSyncRef.current) return;
+      if (listenerCount(sid) <= 1) return; // no peer
+      broadcastSync(sid, { messages: msgs, streaming: isStreaming, streamingText: sText }, syncId);
+    },
+    [session?.sessionId, syncId],
+  );
 
   // Cleanup on unmount — abort any in-flight stream
   useEffect(() => {
@@ -166,10 +222,15 @@ export function useAgentChat() {
       content: trimmed,
       createdAt: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, optimistic]);
+    const newMsgs = [...messages, optimistic];
+    setMessages(newMsgs);
     setStreaming(true);
     setStreamingText("");
     streamingTextRef.current = "";
+    // Sync: broadcast the optimistic user message to peer views
+    maybeBroadcast(newMsgs, true, "");
+    // Throttle token broadcasts (~100ms)
+    let lastTokenBroadcast = 0;
 
     // Create AbortController for this stream
     const controller = new AbortController();
@@ -214,6 +275,9 @@ export function useAgentChat() {
               subAgentBlocks?: SubAgentBlock[];
               usage?: { inputTokens: number; outputTokens: number };
               message?: string;
+              sessionId?: string;
+              agentId?: number;
+              actions?: PendingDestructiveAction[];
             };
 
             if (evt.type === "message_id") {
@@ -228,20 +292,36 @@ export function useAgentChat() {
               const newText = streamingTextRef.current + (evt.text ?? "");
               streamingTextRef.current = newText;
               setStreamingText(newText);
+              // Sync: throttle streaming text broadcasts (~100ms)
+              const now = Date.now();
+              if (now - lastTokenBroadcast > 100) {
+                lastTokenBroadcast = now;
+                maybeBroadcast(messages, true, newText);
+              }
+            } else if (evt.type === "pending_confirmation") {
+              // Destructive action requires user confirmation before execution
+              setPendingConfirmation({
+                sessionId: evt.sessionId || session.sessionId,
+                agentId: evt.agentId || 0,
+                actions: evt.actions || [],
+              });
             } else if (evt.type === "done") {
               // Final event — add the complete assistant message
               const finalText = streamingTextRef.current;
               const subAgentBlocks: SubAgentBlock[] = evt.subAgentBlocks || [];
-              setMessages((prev) => [
-                ...prev,
-                {
-                  sessionId: session.sessionId,
-                  role: "assistant",
-                  content: finalText,
-                  subAgentBlocks,
-                  createdAt: new Date().toISOString(),
-                },
-              ]);
+              const assistantMsg: AgentMessage = {
+                sessionId: session.sessionId,
+                role: "assistant",
+                content: finalText,
+                subAgentBlocks,
+                createdAt: new Date().toISOString(),
+              };
+              setMessages((prev) => {
+                const updated = [...prev, assistantMsg];
+                // Sync: broadcast final messages to peer views
+                maybeBroadcast(updated, false, "");
+                return updated;
+              });
               setStreamingText("");
               streamingTextRef.current = "";
               setStreaming(false);
@@ -273,23 +353,25 @@ export function useAgentChat() {
         return;
       }
       console.error("[AgentChat] Send error:", err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          sessionId: session.sessionId,
-          role: "assistant",
-          content: "Something went wrong. Please try again.",
-          subAgentBlocks: [],
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      const errMsg: AgentMessage = {
+        sessionId: session.sessionId,
+        role: "assistant",
+        content: "Something went wrong. Please try again.",
+        subAgentBlocks: [],
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => {
+        const updated = [...prev, errMsg];
+        maybeBroadcast(updated, false, "");
+        return updated;
+      });
     } finally {
       abortControllerRef.current = null;
       setStreaming(false);
       setStreamingText("");
       streamingTextRef.current = "";
     }
-  }, [session, streaming]);
+  }, [session, streaming, messages, maybeBroadcast]);
 
   /** Execute a skill in the current conversation, streaming results */
   const executeSkill = useCallback(async (skillId: string, skillName: string, content?: string) => {
@@ -304,10 +386,13 @@ export function useAgentChat() {
       metadata: { skillId, skillName },
       createdAt: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, optimistic]);
+    const skillMsgs = [...messages, optimistic];
+    setMessages(skillMsgs);
     setStreaming(true);
     setStreamingText("");
     streamingTextRef.current = "";
+    maybeBroadcast(skillMsgs, true, "");
+    let lastSkillTokenBroadcast = 0;
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -357,23 +442,30 @@ export function useAgentChat() {
               const newText = streamingTextRef.current + (evt.text ?? "");
               streamingTextRef.current = newText;
               setStreamingText(newText);
+              const now = Date.now();
+              if (now - lastSkillTokenBroadcast > 100) {
+                lastSkillTokenBroadcast = now;
+                maybeBroadcast(messages, true, newText);
+              }
             } else if (evt.type === "done") {
               const finalText = streamingTextRef.current;
               const subAgentBlocks: SubAgentBlock[] = evt.subAgentBlocks || [];
-              setMessages((prev) => [
-                ...prev,
-                {
-                  sessionId: session.sessionId,
-                  role: "assistant",
-                  content: finalText,
-                  subAgentBlocks,
-                  metadata: {
-                    skillId: receivedSkillMeta.skillId || skillId,
-                    skillName: receivedSkillMeta.skillName || skillName,
-                  },
-                  createdAt: new Date().toISOString(),
+              const skillAssistantMsg: AgentMessage = {
+                sessionId: session.sessionId,
+                role: "assistant",
+                content: finalText,
+                subAgentBlocks,
+                metadata: {
+                  skillId: receivedSkillMeta.skillId || skillId,
+                  skillName: receivedSkillMeta.skillName || skillName,
                 },
-              ]);
+                createdAt: new Date().toISOString(),
+              };
+              setMessages((prev) => {
+                const updated = [...prev, skillAssistantMsg];
+                maybeBroadcast(updated, false, "");
+                return updated;
+              });
               setStreamingText("");
               streamingTextRef.current = "";
               setStreaming(false);
@@ -398,23 +490,25 @@ export function useAgentChat() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       console.error("[AgentChat] Skill execution error:", err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          sessionId: session.sessionId,
-          role: "assistant",
-          content: `⚠️ **Skill Failed** (${skillName})\n\nThe skill could not be executed. Please try again.`,
-          metadata: { skillId, skillName, error: true },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      const failMsg: AgentMessage = {
+        sessionId: session.sessionId,
+        role: "assistant",
+        content: `⚠️ **Skill Failed** (${skillName})\n\nThe skill could not be executed. Please try again.`,
+        metadata: { skillId, skillName, error: true },
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => {
+        const updated = [...prev, failMsg];
+        maybeBroadcast(updated, false, "");
+        return updated;
+      });
     } finally {
       abortControllerRef.current = null;
       setStreaming(false);
       setStreamingText("");
       streamingTextRef.current = "";
     }
-  }, [session, streaming]);
+  }, [session, streaming, messages, maybeBroadcast]);
 
   /** Abort current streaming response (connection drop cleanup) */
   const abortStream = useCallback(() => {
@@ -560,6 +654,80 @@ export function useAgentChat() {
     [session],
   );
 
+  /** Confirm and execute pending destructive CRM actions */
+  const confirmDestructiveActions = useCallback(async () => {
+    if (!pendingConfirmation) return;
+    try {
+      const res = await apiFetch(
+        `/api/agent-conversations/${pendingConfirmation.sessionId}/confirm-tools`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            actions: pendingConfirmation.actions,
+            agentId: pendingConfirmation.agentId,
+          }),
+        },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        // Add confirmation result as a system message in the chat
+        const resultText = (data.results || []).map((r: { success: boolean; tool: string; data?: unknown; error?: string }) => {
+          if (r.success) return `✅ ${r.tool}: completed successfully`;
+          return `❌ ${r.tool}: ${r.error}`;
+        }).join("\n");
+
+        const confirmMsg: AgentMessage = {
+          sessionId: pendingConfirmation.sessionId,
+          role: "assistant",
+          content: `**Destructive action(s) confirmed and executed:**\n\n${resultText}`,
+          createdAt: new Date().toISOString(),
+        };
+        setMessages((prev) => {
+          const updated = [...prev, confirmMsg];
+          maybeBroadcast(updated, false, "");
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("[AgentChat] Confirm destructive actions error:", err);
+    } finally {
+      setPendingConfirmation(null);
+    }
+  }, [pendingConfirmation, maybeBroadcast]);
+
+  /** Cancel pending destructive CRM actions */
+  const cancelDestructiveActions = useCallback(async () => {
+    if (!pendingConfirmation) return;
+    try {
+      await apiFetch(
+        `/api/agent-conversations/${pendingConfirmation.sessionId}/cancel-tools`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            actions: pendingConfirmation.actions,
+          }),
+        },
+      );
+      const cancelMsg: AgentMessage = {
+        sessionId: pendingConfirmation.sessionId,
+        role: "assistant",
+        content: "**Destructive action(s) cancelled.** No data was deleted.",
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => {
+        const updated = [...prev, cancelMsg];
+        maybeBroadcast(updated, false, "");
+        return updated;
+      });
+    } catch (err) {
+      console.error("[AgentChat] Cancel destructive actions error:", err);
+    } finally {
+      setPendingConfirmation(null);
+    }
+  }, [pendingConfirmation, maybeBroadcast]);
+
   return {
     agent,
     setAgent,
@@ -568,6 +736,7 @@ export function useAgentChat() {
     streaming,
     streamingText,
     loading,
+    pendingConfirmation,
     initialize,
     sendMessage,
     executeSkill,
@@ -577,5 +746,7 @@ export function useAgentChat() {
     abortStream,
     updateSessionModel,
     updateSessionThinking,
+    confirmDestructiveActions,
+    cancelDestructiveActions,
   };
 }

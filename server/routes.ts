@@ -61,6 +61,8 @@ import {
   parseCrmToolCalls,
   executeCrmTool,
   executeCrmToolCalls,
+  isDestructiveToolCall,
+  describeToolCall,
   ALL_TOOLS,
   type AgentPermissions,
   type CrmToolCall,
@@ -4293,6 +4295,97 @@ GUARDRAILS
     }
   });
 
+  // ─── Confirm Destructive CRM Actions ────────────────────────────────────
+  // POST /api/agent-conversations/:id/confirm-tools
+  // Executes destructive CRM tool calls after user confirmation.
+  // Accepts { actions: [{ toolName, args }], agentId }
+  app.post("/api/agent-conversations/:id/confirm-tools", requireAgency, async (req, res) => {
+    try {
+      const sessionId = req.params.id;
+      const { actions, agentId } = req.body;
+
+      if (!Array.isArray(actions) || actions.length === 0) {
+        return res.status(400).json({ message: "actions array is required" });
+      }
+      if (!agentId) {
+        return res.status(400).json({ message: "agentId is required" });
+      }
+
+      // Verify session exists
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      // Get agent for permissions
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, Number(agentId)));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      const permissions = (agent.permissions || {}) as AgentPermissions;
+
+      // Build tool calls from the confirmed actions
+      const toolCalls: CrmToolCall[] = actions.map((a: { toolName: string; args: Record<string, unknown> }) => ({
+        name: a.toolName,
+        args: a.args || {},
+      }));
+
+      // Execute the confirmed destructive actions
+      const results = await executeCrmToolCalls(toolCalls, permissions);
+
+      // Log confirmed actions
+      console.log(`[CRM Tools] User confirmed ${results.length} destructive action(s) for session ${sessionId}`);
+
+      // Store tool results as a message in the conversation
+      const toolResultsText = results.map((r) => {
+        if (r.success) {
+          return `[Tool: ${r.tool}] ✓ Confirmed & executed:\n${JSON.stringify(r.data, null, 2)}`;
+        }
+        return `[Tool: ${r.tool}] Error: ${r.error}`;
+      }).join("\n\n");
+
+      await storage.createAiMessage({
+        sessionId,
+        role: "tool",
+        content: toolResultsText,
+      });
+
+      res.json({ results });
+    } catch (err: any) {
+      console.error("[CRM Tools] confirm-tools error:", err);
+      res.status(500).json({ message: "Failed to execute confirmed actions" });
+    }
+  });
+
+  // ─── Cancel Destructive CRM Actions ────────────────────────────────────
+  // POST /api/agent-conversations/:id/cancel-tools
+  // Logs that the user cancelled destructive actions (no execution).
+  app.post("/api/agent-conversations/:id/cancel-tools", requireAgency, async (req, res) => {
+    try {
+      const sessionId = req.params.id;
+      const { actions } = req.body;
+
+      // Verify session exists
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      const descriptions = (actions || []).map((a: { description?: string; toolName?: string }) =>
+        a.description || a.toolName || "unknown action"
+      );
+
+      console.log(`[CRM Tools] User cancelled destructive action(s) for session ${sessionId}: ${descriptions.join(", ")}`);
+
+      // Store cancellation as a tool message so the agent knows
+      await storage.createAiMessage({
+        sessionId,
+        role: "tool",
+        content: `[User Action] The user cancelled the following destructive action(s):\n${descriptions.map((d: string) => `- ${d}`).join("\n")}\n\nThe actions were NOT executed.`,
+      });
+
+      res.json({ cancelled: true });
+    } catch (err: any) {
+      console.error("[CRM Tools] cancel-tools error:", err);
+      res.status(500).json({ message: "Failed to log cancellation" });
+    }
+  });
+
   // ─── Send message to agent (store + initiate Claude API call) ─────────
   // POST /api/agent-conversations/:id/messages
   // Accepts { content, pageContext?, fileId? }
@@ -4506,30 +4599,57 @@ GUARDRAILS
         thinkingLevel: sessionThinking,
         res,
         // CRM tool execution: detect tool calls in Claude's response, execute them,
-        // and send results as SSE events before the stream closes
+        // and send results as SSE events before the stream closes.
+        // Destructive actions (delete) require user confirmation — sent as pending_confirmation events.
         beforeDone: async (fullText, sseRes) => {
           // Execute CRM tool calls
           const toolCalls = parseCrmToolCalls(fullText);
           if (toolCalls.length > 0) {
-            console.log(`[CRM Tools] Detected ${toolCalls.length} tool call(s) in agent response`);
-            const results = await executeCrmToolCalls(toolCalls, agentPermissions);
+            // Separate safe vs destructive tool calls
+            const safeCalls = toolCalls.filter((tc) => !isDestructiveToolCall(tc));
+            const destructiveCalls = toolCalls.filter((tc) => isDestructiveToolCall(tc));
 
-            for (const result of results) {
-              sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+            console.log(`[CRM Tools] Detected ${toolCalls.length} tool call(s): ${safeCalls.length} safe, ${destructiveCalls.length} destructive`);
+
+            // Execute safe calls immediately
+            if (safeCalls.length > 0) {
+              const results = await executeCrmToolCalls(safeCalls, agentPermissions);
+
+              for (const result of results) {
+                sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+              }
+
+              const toolResultsText = results.map((r) => {
+                if (r.success) {
+                  return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
+                }
+                return `[Tool: ${r.tool}] Error: ${r.error}`;
+              }).join("\n\n");
+
+              await storage.createAiMessage({
+                sessionId,
+                role: "tool",
+                content: toolResultsText,
+              });
             }
 
-            const toolResultsText = results.map((r) => {
-              if (r.success) {
-                return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
-              }
-              return `[Tool: ${r.tool}] Error: ${r.error}`;
-            }).join("\n\n");
+            // Send destructive calls as pending confirmation events — NOT executed yet
+            if (destructiveCalls.length > 0) {
+              const pendingActions = destructiveCalls.map((tc) => ({
+                toolName: tc.name,
+                args: tc.args,
+                description: describeToolCall(tc),
+              }));
 
-            await storage.createAiMessage({
-              sessionId,
-              role: "tool",
-              content: toolResultsText,
-            });
+              sseRes.write(`data: ${JSON.stringify({
+                type: "pending_confirmation",
+                sessionId,
+                agentId: agent.id,
+                actions: pendingActions,
+              })}\n\n`);
+
+              console.log(`[CRM Tools] Sent ${destructiveCalls.length} destructive action(s) for user confirmation`);
+            }
           }
 
           // Execute GOG (Google Workspace) commands
