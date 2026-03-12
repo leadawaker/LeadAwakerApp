@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { AgentChatView } from "../components/AgentChatView";
 import { AgentSettingsSheet } from "../components/AgentSettingsSheet";
+import { ModelSwitcher } from "../components/ModelSwitcher";
 
 export function AgentChatPage() {
   const params = useParams<{ agentId: string }>();
@@ -23,6 +24,7 @@ export function AgentChatPage() {
     initialize,
     sendMessage,
     newSession,
+    updateSessionModel,
   } = useAgentChat();
 
   useEffect(() => {
@@ -61,6 +63,14 @@ export function AgentChatPage() {
             </div>
           )}
         </div>
+
+        {session && (
+          <ModelSwitcher
+            currentModel={session.model}
+            onModelChange={updateSessionModel}
+            disabled={streaming}
+          />
+        )}
 
         <button
           onClick={() => setSettingsOpen(true)}

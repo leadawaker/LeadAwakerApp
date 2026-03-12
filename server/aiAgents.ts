@@ -33,6 +33,8 @@ export function streamClaudeResponse(opts: {
   bypassPermissions: boolean;
   isFirstMessage: boolean;
   res: Response;
+  /** Optional async callback that runs BEFORE the done event and res.end(). Use for CRM tool execution. */
+  beforeDone?: (fullText: string, res: Response) => Promise<void>;
   onDone: (fullText: string, subAgentBlocks: SubAgentBlock[]) => void;
 }): void {
   const args: string[] = [];
@@ -68,7 +70,7 @@ export function streamClaudeResponse(opts: {
     }
   });
 
-  child.on("close", () => {
+  child.on("close", async () => {
     // Parse sub-agent blocks from full output
     const subAgentBlocks: SubAgentBlock[] = [];
     const blockRegex = /╔═+[^╗]*╗([\s\S]*?)╚═+/g;
@@ -80,6 +82,15 @@ export function streamClaudeResponse(opts: {
                         headerLine.match(/╔═+\s*([^═╗]+?)\s*═*╗/);
       const name = nameMatch ? nameMatch[1]?.trim() || "Agent" : "Agent";
       subAgentBlocks.push({ name, content: match[1].trim() });
+    }
+
+    // Run beforeDone hook (e.g., CRM tool execution) before closing the stream
+    try {
+      if (opts.beforeDone) {
+        await opts.beforeDone(fullText, opts.res);
+      }
+    } catch (err) {
+      console.error("[StreamClaude] beforeDone error:", err);
     }
 
     // Approximate token counts (4 chars ≈ 1 token)

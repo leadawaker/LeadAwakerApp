@@ -268,6 +268,30 @@ export function useAgentChat() {
     if (agent) await initialize(agent.id);
   }, [session, agent, initialize]);
 
+  /** Update the current session's model (Sonnet/Opus/Haiku) */
+  const updateSessionModel = useCallback(
+    async (model: string) => {
+      if (!session) return;
+      try {
+        const res = await apiFetch(
+          `/api/agents/sessions/${session.sessionId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model }),
+          },
+        );
+        if (res.ok) {
+          const updated: AiSession = await res.json();
+          setSession(updated);
+        }
+      } catch (err) {
+        console.error("[AgentChat] Failed to update model:", err);
+      }
+    },
+    [session],
+  );
+
   return {
     agent,
     setAgent,
@@ -280,5 +304,6 @@ export function useAgentChat() {
     sendMessage,
     newSession,
     abortStream,
+    updateSessionModel,
   };
 }

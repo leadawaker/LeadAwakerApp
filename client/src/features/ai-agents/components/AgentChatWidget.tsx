@@ -5,6 +5,7 @@ import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { AgentChatView } from "./AgentChatView";
 import { AgentSettingsSheet } from "./AgentSettingsSheet";
+import { ModelSwitcher } from "./ModelSwitcher";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { apiFetch } from "@/lib/apiUtils";
 import type { AiAgent } from "../hooks/useAgentChat";
@@ -86,6 +87,7 @@ export function AgentChatWidget() {
     initialize,
     sendMessage,
     newSession,
+    updateSessionModel,
   } = useAgentChat();
 
   // Initialize when activeAgentId changes
@@ -175,6 +177,14 @@ export function AgentChatWidget() {
                   </div>
                 )}
               </div>
+              {session && (
+                <ModelSwitcher
+                  currentModel={session.model}
+                  onModelChange={updateSessionModel}
+                  disabled={streaming}
+                  compact
+                />
+              )}
               <button
                 onClick={() => setSettingsOpen(true)}
                 className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"

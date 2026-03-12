@@ -3504,6 +3504,8 @@ GUARDRAILS
       // Check if there's already an active session
       let session = await storage.getActiveAiSessionByUserAndAgent(userId, agentId);
       if (!session) {
+        // Look up agent to inherit model + thinking level defaults
+        const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, agentId));
         const sessionId = crypto.randomUUID();
         session = await storage.createAiSession({
           sessionId,
@@ -3512,6 +3514,8 @@ GUARDRAILS
           title: req.body.title || null,
           status: "active",
           cliSessionId: null,
+          model: agent?.model || "claude-sonnet-4-20250514",
+          thinkingLevel: agent?.thinkingLevel || "medium",
         });
       }
       res.json(session);
