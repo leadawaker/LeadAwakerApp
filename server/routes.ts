@@ -3033,6 +3033,14 @@ GUARDRAILS
     console.error("[AI Agents] Seed error:", err);
   }
 
+  // Valid thinking levels and model identifiers for agents
+  const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
+  const VALID_MODELS = [
+    "claude-sonnet-4-20250514",
+    "claude-opus-4-20250514",
+    "claude-haiku-235-20241022",
+  ];
+
   // GET /api/ai-agents — list all enabled agents
   app.get("/api/ai-agents", requireAgency, wrapAsync(async (req, res) => {
     const agents = await storage.getAiAgents();
@@ -3044,6 +3052,14 @@ GUARDRAILS
     const { DEFAULT_SYSTEM_PROMPTS } = await import("./aiAgents");
     const { name, systemPrompt, photoUrl, model, thinkingLevel } = req.body;
     if (!name?.trim()) return res.status(400).json({ message: "name required" });
+    const resolvedModel = model || "claude-sonnet-4-20250514";
+    if (!VALID_MODELS.includes(resolvedModel)) {
+      return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
+    }
+    const resolvedThinking = thinkingLevel || "medium";
+    if (!VALID_THINKING_LEVELS.includes(resolvedThinking)) {
+      return res.status(400).json({ message: `Invalid thinking_level. Must be one of: ${VALID_THINKING_LEVELS.join(", ")}` });
+    }
     const agent = await storage.createAiAgent({
       name: name.trim(),
       type: "custom",
@@ -3051,8 +3067,8 @@ GUARDRAILS
       photoUrl: photoUrl || null,
       enabled: true,
       displayOrder: 99,
-      model: model || "claude-sonnet-4-20250514",
-      thinkingLevel: thinkingLevel || "medium",
+      model: resolvedModel,
+      thinkingLevel: resolvedThinking,
       permissions: { read: true, write: false, create: false, delete: false },
     });
     res.status(201).json(agent);
@@ -3262,9 +3278,6 @@ GUARDRAILS
     }
   });
 
-  // Valid thinking levels for agents
-  const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
-
   // Create agent — clones Code Runner template defaults (system prompt, model, thinking level)
   app.post("/api/agents", requireAgency, async (req, res) => {
     try {
@@ -3276,12 +3289,18 @@ GUARDRAILS
         return res.status(400).json({ message: `Invalid thinking_level. Must be one of: ${VALID_THINKING_LEVELS.join(", ")}` });
       }
 
+      // Validate model if provided
+      const model = req.body.model || "claude-sonnet-4-20250514";
+      if (!VALID_MODELS.includes(model)) {
+        return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
+      }
+
       // Apply Code Runner defaults for fields not provided
       const body = {
         ...req.body,
         type: req.body.type || "custom",
         systemPrompt: req.body.systemPrompt || DEFAULT_SYSTEM_PROMPTS.code_runner,
-        model: req.body.model || "claude-sonnet-4-20250514",
+        model,
         thinkingLevel,
         enabled: req.body.enabled !== undefined ? req.body.enabled : true,
         displayOrder: req.body.displayOrder || 99,
@@ -3306,6 +3325,11 @@ GUARDRAILS
       // Validate thinkingLevel if provided
       if (req.body.thinkingLevel !== undefined && !VALID_THINKING_LEVELS.includes(req.body.thinkingLevel)) {
         return res.status(400).json({ message: `Invalid thinking_level. Must be one of: ${VALID_THINKING_LEVELS.join(", ")}` });
+      }
+
+      // Validate model if provided
+      if (req.body.model !== undefined && !VALID_MODELS.includes(req.body.model)) {
+        return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
       }
 
       const agent = await storage.updateAiAgent(id, req.body);
