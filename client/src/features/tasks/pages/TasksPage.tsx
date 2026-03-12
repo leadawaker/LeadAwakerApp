@@ -313,7 +313,7 @@ export default function TasksPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* View switcher (desktop only) */}
+      {/* View switcher (desktop only in toolbar) */}
       {!isMobile && (
         <>
           <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
@@ -353,57 +353,86 @@ export default function TasksPage() {
 
         {/* Mobile list view / Desktop kanban board */}
         {isMobile ? (
-          /* ── Mobile: 3 tabs (Todo / In Progress / Done) ── */
+          /* ── Mobile: view switcher + content ── */
           <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
 
-            {/* Tab bar */}
-            <div className="flex gap-1 px-3 pt-2 pb-1.5 shrink-0">
-              {MOBILE_TABS.map((tab) => {
-                const count = mobileTasks.filter((t) => t.status === tab.key).length;
-                const isActive = mobileTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setMobileTab(tab.key)}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-[13px] font-medium transition-all duration-150",
-                      isActive
-                        ? tab.key === "in_progress"
-                          ? "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300"
-                          : tab.key === "done"
-                          ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
-                          : "bg-foreground/10 text-foreground"
-                        : "text-muted-foreground hover:bg-muted/50"
-                    )}
-                  >
-                    {tab.label}
-                    {count > 0 && (
-                      <span className="text-[11px] tabular-nums opacity-60">
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            {/* Mobile view switcher */}
+            <div className="shrink-0 border-b border-border/30 bg-background/40 dark:bg-white/[0.02]">
+              <ViewSwitcher value={viewMode} onChange={handleViewMode} compact />
             </div>
 
-            {/* Task list for active tab */}
-            <div className="flex-1 overflow-y-auto px-3 pb-20 flex flex-col gap-2" data-testid="mobile-tasks-list">
-              {tabTasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground py-16">
-                  <ClipboardList className="h-8 w-8 opacity-30" />
-                  <p className="text-sm font-medium">{t("page.noTasksFound")}</p>
-                </div>
-              ) : (
-                tabTasks.map((task) => (
-                  <MobileTaskListCard
-                    key={task.id}
-                    task={task}
-                    onClick={() => setSelectedTaskId(task.id)}
-                  />
-                ))
-              )}
-            </div>
+            {/* Status tab bar (only for kanban/list views) */}
+            {(viewMode === "kanban" || viewMode === "list") && (
+              <div className="flex gap-1 px-3 pt-2 pb-1.5 shrink-0">
+                {MOBILE_TABS.map((tab) => {
+                  const count = mobileTasks.filter((t) => t.status === tab.key).length;
+                  const isActive = mobileTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setMobileTab(tab.key)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-[13px] font-medium transition-all duration-150",
+                        isActive
+                          ? tab.key === "in_progress"
+                            ? "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300"
+                            : tab.key === "done"
+                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
+                            : "bg-foreground/10 text-foreground"
+                          : "text-muted-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      {tab.label}
+                      {count > 0 && (
+                        <span className="text-[11px] tabular-nums opacity-60">
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Mobile content based on view mode */}
+            {(viewMode === "kanban" || viewMode === "list") ? (
+              /* Card list grouped by status tab */
+              <div className="flex-1 overflow-y-auto px-3 pb-20 flex flex-col gap-2" data-testid="mobile-tasks-list">
+                {tabTasks.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground py-16">
+                    <ClipboardList className="h-8 w-8 opacity-30" />
+                    <p className="text-sm font-medium">{t("page.noTasksFound")}</p>
+                  </div>
+                ) : (
+                  tabTasks.map((task) => (
+                    <MobileTaskListCard
+                      key={task.id}
+                      task={task}
+                      onClick={() => setSelectedTaskId(task.id)}
+                    />
+                  ))
+                )}
+              </div>
+            ) : viewMode === "simple" ? (
+              <div className="flex-1 min-h-0 overflow-hidden pb-16">
+                <SimpleDailyView tasks={filteredTasks} />
+              </div>
+            ) : viewMode === "tree" ? (
+              <div className="flex-1 min-h-0 overflow-hidden pb-16">
+                <TasksTreeView tasks={filteredTasks} searchQuery={searchQuery} />
+              </div>
+            ) : viewMode === "table" ? (
+              <div className="flex-1 min-h-0 overflow-hidden pb-16">
+                <TasksTableView
+                  tasks={filteredTasks}
+                  searchQuery={searchQuery}
+                  sort={sort}
+                  groupBy="none"
+                  onSelectTask={(id) => setSelectedTaskId(id)}
+                  selectedTaskId={selectedTaskId}
+                />
+              </div>
+            ) : null}
 
             {/* Mobile FAB — New Task */}
             <button

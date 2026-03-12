@@ -14,10 +14,42 @@ const VIEW_TABS: { key: ViewMode; icon: typeof Columns3; tKey: string }[] = [
 interface ViewSwitcherProps {
   value: ViewMode;
   onChange: (mode: ViewMode) => void;
+  /** Render compact icon-only variant for mobile */
+  compact?: boolean;
 }
 
-export default function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
+export default function ViewSwitcher({ value, onChange, compact }: ViewSwitcherProps) {
   const { t } = useTranslation("tasks");
+
+  if (compact) {
+    return (
+      <div
+        className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] px-1"
+        data-testid="view-switcher-mobile"
+      >
+        {VIEW_TABS.map(({ key, icon: Icon, tKey }) => {
+          const isActive = value === key;
+          return (
+            <button
+              key={key}
+              onClick={() => onChange(key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium transition-all duration-150 shrink-0",
+                isActive
+                  ? "bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-indigo shadow-sm"
+                  : "text-muted-foreground active:bg-muted/60"
+              )}
+              title={t(tKey)}
+              data-testid={`view-tab-${key}`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="text-[11px]">{t(tKey)}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div
