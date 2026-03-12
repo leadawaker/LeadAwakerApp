@@ -76,16 +76,16 @@ function MessageBubble({
         )}
         <div
           className={cn(
-            "max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg",
+            "max-w-[85%] sm:max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg overflow-hidden",
             isUser
-              ? "bg-brand-indigo text-white rounded-tr-none whitespace-pre-wrap"
+              ? "bg-brand-indigo text-white rounded-tr-none whitespace-pre-wrap break-words"
               : "bg-white dark:bg-card text-foreground rounded-tl-none",
           )}
         >
           {isUser ? (
             <span>{displayContent}</span>
           ) : (
-            <div className="agent-markdown-content">
+            <div className="agent-markdown-content min-w-0 overflow-hidden">
               <MarkdownRenderer content={displayContent} />
             </div>
           )}
@@ -126,8 +126,8 @@ function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
           {agent.type === "code_runner" ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
         </AvatarFallback>
       </Avatar>
-      <div className="max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground">
-        <div className="agent-markdown-content">
+      <div className="max-w-[85%] sm:max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground overflow-hidden">
+        <div className="agent-markdown-content min-w-0 overflow-hidden">
           <MarkdownRenderer content={text} />
         </div>
         <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />
@@ -406,9 +406,9 @@ export function AgentChatView({
   const isCodeRunner = agent.type === "code_runner";
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0 overscroll-contain">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -445,7 +445,7 @@ export function AgentChatView({
       </div>
 
       {/* Input area */}
-      <div className="border-t border-border/50 bg-background p-3">
+      <div className="border-t border-border/50 bg-background p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0">
         {/* Pending file indicator */}
         {pendingFile && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg text-[12px]">

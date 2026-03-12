@@ -471,7 +471,7 @@ export default function ConversationsPage() {
                     {chatAgent && (
                       <>
                         {/* Agent chat header with controls */}
-                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-background shrink-0" data-testid="agent-chat-header">
+                        <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 border-b border-border/50 bg-background shrink-0 overflow-hidden" data-testid="agent-chat-header">
                           <div className="h-8 w-8 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
                             {chatAgent.photoUrl ? (
                               <img src={chatAgent.photoUrl} alt={chatAgent.name} className="h-8 w-8 rounded-full object-cover" />
@@ -490,7 +490,7 @@ export default function ConversationsPage() {
                             )}
                           </div>
                           {agentSession && (
-                            <>
+                            <div className="hidden sm:flex items-center gap-1.5 shrink-0">
                               <ModelSwitcher
                                 currentModel={agentSession.model}
                                 onModelChange={agentUpdateSessionModel}
@@ -501,7 +501,7 @@ export default function ConversationsPage() {
                                 onLevelChange={agentUpdateSessionThinking}
                                 disabled={agentStreaming}
                               />
-                            </>
+                            </div>
                           )}
                           <button
                             onClick={() => setAgentSettingsOpen(true)}
