@@ -120,6 +120,14 @@ const READ_TOOLS: CrmToolDef[] = [
       { name: "lead_id", type: "number", description: "Lead ID", required: true },
     ],
   },
+  {
+    name: "get_account_analysis",
+    description: "Get a comprehensive analysis of a client account including account details, all campaigns (with performance metrics), lead summary by status, engagement statistics, and tag usage. Ideal for understanding a client's history and generating tailored campaign suggestions.",
+    requiredPermission: "read",
+    parameters: [
+      { name: "account_id", type: "number", description: "Account ID to analyze", required: true },
+    ],
+  },
 ];
 
 const DELETE_TOOLS: CrmToolDef[] = [
@@ -626,6 +634,124 @@ async function executeToolFunction(toolCall: CrmToolCall, permissions?: AgentPer
     case "get_lead_tags": {
       const leadTags = await storage.getTagsByLeadId(Number(args.lead_id));
       return leadTags;
+    }
+
+    case "get_account_analysis": {
+      const accountId = Number(args.account_id);
+      const account = await storage.getAccountById(accountId);
+      if (!account) throw new Error(`Account #${accountId} not found`);
+
+      // Pull all related data in parallel
+      const [campaigns, leads, interactions, tags] = await Promise.all([
+        storage.getCampaignsByAccountId(accountId),
+        storage.getLeadsByAccountId(accountId),
+        storage.getInteractionsByAccountId(accountId),
+        storage.getTagsByAccountId(accountId),
+      ]);
+
+      // Account summary
+      const accountSummary = {
+        id: account.id,
+        name: (account as any).name,
+        phone: (account as any).phone,
+        ownerEmail: (account as any).ownerEmail,
+        type: (account as any).type,
+        status: (account as any).status,
+        timezone: (account as any).timezone,
+        businessNiche: (account as any).businessNiche,
+        businessDescription: (account as any).businessDescription,
+        serviceCategories: (account as any).serviceCategories,
+        defaultAiName: (account as any).defaultAiName,
+        defaultAiRole: (account as any).defaultAiRole,
+        website: (account as any).website,
+      };
+
+      // Campaign summary with performance metrics
+      const campaignSummary = campaigns.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        status: c.status,
+        channel: c.channel,
+        description: c.description,
+        dailyLeadLimit: c.dailyLeadLimit,
+        maxBumps: c.maxBumps,
+        useAiBumps: c.useAiBumps,
+        targetAudience: c.targetAudience,
+        campaignService: c.campaignService,
+        campaignUsp: c.campaignUsp,
+        totalLeadsTargeted: c.totalLeadsTargeted,
+        totalMessagesSent: c.totalMessagesSent,
+        totalResponsesReceived: c.totalResponsesReceived,
+        responseRatePercent: c.responseRatePercent,
+        bookingsGenerated: c.bookingsGenerated,
+        bookingRatePercent: c.bookingRatePercent,
+        createdAt: c.createdAt,
+      }));
+
+      // Lead status breakdown
+      const leadStatusBreakdown: Record<string, number> = {};
+      const leadScores: number[] = [];
+      for (const lead of leads) {
+        const status = (lead as any).conversionStatus || "Unknown";
+        leadStatusBreakdown[status] = (leadStatusBreakdown[status] || 0) + 1;
+        if ((lead as any).leadScore != null) {
+          leadScores.push(Number((lead as any).leadScore));
+        }
+      }
+      const avgLeadScore = leadScores.length > 0
+        ? Math.round(leadScores.reduce((a, b) => a + b, 0) / leadScores.length)
+        : null;
+
+      // Engagement stats
+      const totalInteractions = interactions.length;
+      const inbound = interactions.filter((i: any) => i.direction === "inbound").length;
+      const outbound = interactions.filter((i: any) => i.direction === "outbound").length;
+      const aiGenerated = interactions.filter((i: any) => i.aiGenerated).length;
+
+      // Recent interactions (last 20 for context)
+      const recentInteractions = interactions.slice(0, 20).map((i: any) => ({
+        id: i.id,
+        leadId: i.leadsId,
+        direction: i.direction,
+        content: i.content ? (i.content.length > 200 ? i.content.slice(0, 200) + "…" : i.content) : null,
+        type: i.type,
+        aiGenerated: i.aiGenerated,
+        createdAt: i.createdAt,
+      }));
+
+      // Tag usage
+      const tagSummary = tags.map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        color: t.color,
+        category: t.category,
+      }));
+
+      return {
+        account: accountSummary,
+        campaigns: {
+          total: campaigns.length,
+          byStatus: campaigns.reduce((acc: Record<string, number>, c: any) => {
+            const s = c.status || "Unknown";
+            acc[s] = (acc[s] || 0) + 1;
+            return acc;
+          }, {}),
+          list: campaignSummary,
+        },
+        leads: {
+          total: leads.length,
+          byStatus: leadStatusBreakdown,
+          averageLeadScore: avgLeadScore,
+        },
+        engagement: {
+          totalInteractions,
+          inbound,
+          outbound,
+          aiGenerated,
+          recentInteractions,
+        },
+        tags: tagSummary,
+      };
     }
 
     // ─── Write tools ────────────────────────────────────────────────
