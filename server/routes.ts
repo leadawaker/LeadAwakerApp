@@ -4558,5 +4558,187 @@ GUARDRAILS
     }
   });
 
+  // ─── Agent Skills ───────────────────────────────────────────────────────────
+
+  // GET /api/agent-skills — list global skills from ~/.claude/skills/
+  app.get("/api/agent-skills", requireAgency, async (_req, res) => {
+    try {
+      const skillsDir = path.join(process.env.HOME || "/home/gabriel", ".claude", "skills");
+      if (!fs.existsSync(skillsDir)) {
+        return res.json([]);
+      }
+      const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+      const skills: { id: string; name: string; description: string; path: string }[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name === "learned") continue;
+        const skillMdPath = path.join(skillsDir, entry.name, "SKILL.md");
+        if (!fs.existsSync(skillMdPath)) continue;
+        try {
+          const raw = fs.readFileSync(skillMdPath, "utf-8");
+          // Parse YAML frontmatter
+          const fmMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+          let name = entry.name;
+          let description = "";
+          if (fmMatch) {
+            const fm = fmMatch[1];
+            const nameMatch = fm.match(/^name:\s*(.+)$/m);
+            const descMatch = fm.match(/^description:\s*(.+)$/m);
+            if (nameMatch) name = nameMatch[1].trim();
+            if (descMatch) description = descMatch[1].trim();
+          }
+          skills.push({ id: entry.name, name, description, path: skillMdPath });
+        } catch {
+          // Skip unreadable skill files
+        }
+      }
+      skills.sort((a, b) => a.name.localeCompare(b.name));
+      res.json(skills);
+    } catch (err) {
+      console.error("[Agent Skills] Error listing skills:", err);
+      res.json([]);
+    }
+  });
+
+  // POST /api/agent-skills/execute — execute a skill in the context of an agent conversation
+  app.post("/api/agent-skills/execute", requireAgency, async (req, res) => {
+    const { skillId, sessionId, content } = req.body;
+
+    if (!skillId) return res.status(400).json({ message: "skillId is required" });
+    if (!sessionId) return res.status(400).json({ message: "sessionId is required" });
+
+    // Load skill file
+    const skillsDir = path.join(process.env.HOME || "/home/gabriel", ".claude", "skills");
+    const skillMdPath = path.join(skillsDir, skillId, "SKILL.md");
+    if (!fs.existsSync(skillMdPath)) {
+      return res.status(404).json({ message: `Skill '${skillId}' not found` });
+    }
+
+    // Verify session exists
+    const session = await storage.getAiSessionBySessionId(sessionId);
+    if (!session) return res.status(404).json({ message: "Session not found" });
+
+    const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, session.agentId));
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+    try {
+      const raw = fs.readFileSync(skillMdPath, "utf-8");
+      // Parse YAML frontmatter for name
+      const fmMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+      let skillName = skillId;
+      let skillInstructions = raw;
+      if (fmMatch) {
+        const nameMatch = fmMatch[1].match(/^name:\s*(.+)$/m);
+        if (nameMatch) skillName = nameMatch[1].trim();
+        // Strip frontmatter from instructions
+        skillInstructions = raw.slice(fmMatch[0].length).trim();
+      }
+
+      // Store user message with skill metadata
+      const userContent = content?.trim() || `Execute skill: ${skillName}`;
+      const userMessage = await storage.createAiMessage({
+        sessionId,
+        role: "user",
+        content: userContent,
+        metadata: {
+          skillId,
+          skillName,
+          model: session.model || agent.model || "claude-sonnet-4-20250514",
+        },
+      });
+
+      // Build prompt with skill instructions injected
+      const history = await storage.getAiMessagesBySessionId(sessionId);
+      const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
+
+      let systemPrompt = agent.systemPrompt || "";
+      if (agent.systemPromptId) {
+        const linkedPrompt = await storage.getPromptById(agent.systemPromptId);
+        if (linkedPrompt?.promptText) systemPrompt = linkedPrompt.promptText;
+      }
+
+      let fullPrompt = "";
+      if (isFirstMessage && systemPrompt) {
+        fullPrompt += systemPrompt + "\n\n";
+      }
+
+      // Inject skill instructions
+      fullPrompt += `[Skill Instructions: ${skillName}]\n${skillInstructions}\n\n`;
+      fullPrompt += userContent;
+
+      // Set up SSE headers
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      // Send user message ID
+      res.write(`data: ${JSON.stringify({ type: "message_id", id: userMessage.id })}\n\n`);
+      // Send skill metadata so frontend knows this is a skill execution
+      res.write(`data: ${JSON.stringify({ type: "skill_metadata", skillId, skillName })}\n\n`);
+
+      const cwd = getSessionCwd(sessionId, agent.type);
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
+
+      streamClaudeResponse({
+        prompt: fullPrompt,
+        cwd,
+        bypassPermissions: agent.type !== "code_runner",
+        isFirstMessage,
+        model: sessionModel,
+        thinkingLevel: sessionThinking,
+        res,
+        onDone: async (fullText, subAgentBlocks) => {
+          try {
+            const inputTokens = Math.ceil(fullPrompt.length / 4);
+            const outputTokens = Math.ceil(fullText.length / 4);
+            if (fullText.trim()) {
+              await storage.createAiMessage({
+                sessionId,
+                role: "assistant",
+                content: fullText.trim(),
+                subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
+                metadata: {
+                  skillId,
+                  skillName,
+                  model: sessionModel,
+                  inputTokens,
+                  outputTokens,
+                },
+              });
+            }
+            await storage.updateAiSession(session.id, {
+              totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
+              totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
+            });
+
+            // Auto-generate title if needed
+            if (!session.title && isFirstMessage && userContent.length > 0 && fullText.trim().length > 0) {
+              generateConversationTitle(userContent, fullText.trim())
+                .then((aiTitle) => {
+                  storage.updateAiSession(session.id, { title: aiTitle });
+                })
+                .catch(() => {
+                  storage.updateAiSession(session.id, { title: `Skill: ${skillName}` });
+                });
+            }
+          } catch (err) {
+            console.error("[Agent Skills] onDone error:", err);
+          }
+        },
+      });
+    } catch (err: any) {
+      console.error("[Agent Skills] Execute error:", err);
+      if (!res.headersSent) {
+        return res.status(500).json({ message: "Failed to execute skill" });
+      }
+      res.write(`data: ${JSON.stringify({ type: "error", message: err.message || "Skill execution failed" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "done", subAgentBlocks: [] })}\n\n`);
+      res.end();
+    }
+  });
+
   return httpServer;
 }

@@ -9,7 +9,10 @@ export interface AgentMessage {
   content: string;
   subAgentBlocks?: SubAgentBlock[];
   createdAt?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> & {
+    skillId?: string;
+    skillName?: string;
+  };
   attachments?: Record<string, unknown>;
   files?: AgentFile[];
 }
@@ -288,6 +291,131 @@ export function useAgentChat() {
     }
   }, [session, streaming]);
 
+  /** Execute a skill in the current conversation, streaming results */
+  const executeSkill = useCallback(async (skillId: string, skillName: string, content?: string) => {
+    if (!session || streaming) return;
+
+    // Optimistic user message with skill metadata
+    const userContent = content?.trim() || `Execute skill: ${skillName}`;
+    const optimistic: AgentMessage = {
+      sessionId: session.sessionId,
+      role: "user",
+      content: userContent,
+      metadata: { skillId, skillName },
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+    setStreaming(true);
+    setStreamingText("");
+    streamingTextRef.current = "";
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const res = await apiFetch("/api/agent-skills/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skillId, sessionId: session.sessionId, content: userContent }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) throw new Error("Failed to execute skill");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let receivedSkillMeta: { skillId?: string; skillName?: string } = {};
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const evt = JSON.parse(line.slice(6)) as {
+              type: string;
+              id?: number;
+              text?: string;
+              skillId?: string;
+              skillName?: string;
+              subAgentBlocks?: SubAgentBlock[];
+              message?: string;
+            };
+
+            if (evt.type === "message_id") {
+              setMessages((prev) =>
+                prev.map((m) => m === optimistic ? { ...m, id: evt.id } : m)
+              );
+            } else if (evt.type === "skill_metadata") {
+              receivedSkillMeta = { skillId: evt.skillId, skillName: evt.skillName };
+            } else if (evt.type === "token") {
+              const newText = streamingTextRef.current + (evt.text ?? "");
+              streamingTextRef.current = newText;
+              setStreamingText(newText);
+            } else if (evt.type === "done") {
+              const finalText = streamingTextRef.current;
+              const subAgentBlocks: SubAgentBlock[] = evt.subAgentBlocks || [];
+              setMessages((prev) => [
+                ...prev,
+                {
+                  sessionId: session.sessionId,
+                  role: "assistant",
+                  content: finalText,
+                  subAgentBlocks,
+                  metadata: {
+                    skillId: receivedSkillMeta.skillId || skillId,
+                    skillName: receivedSkillMeta.skillName || skillName,
+                  },
+                  createdAt: new Date().toISOString(),
+                },
+              ]);
+              setStreamingText("");
+              streamingTextRef.current = "";
+              setStreaming(false);
+            } else if (evt.type === "error") {
+              console.error("[AgentChat] Skill error:", evt.message);
+              setMessages((prev) => [
+                ...prev,
+                {
+                  sessionId: session.sessionId,
+                  role: "assistant",
+                  content: `⚠️ **Skill Error** (${skillName})\n\n${evt.message || "An unexpected error occurred while executing this skill."}`,
+                  metadata: { skillId, skillName, error: true },
+                  createdAt: new Date().toISOString(),
+                },
+              ]);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      console.error("[AgentChat] Skill execution error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sessionId: session.sessionId,
+          role: "assistant",
+          content: `⚠️ **Skill Failed** (${skillName})\n\nThe skill could not be executed. Please try again.`,
+          metadata: { skillId, skillName, error: true },
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      abortControllerRef.current = null;
+      setStreaming(false);
+      setStreamingText("");
+      streamingTextRef.current = "";
+    }
+  }, [session, streaming]);
+
   /** Abort current streaming response (connection drop cleanup) */
   const abortStream = useCallback(() => {
     if (abortControllerRef.current) {
@@ -442,6 +570,7 @@ export function useAgentChat() {
     loading,
     initialize,
     sendMessage,
+    executeSkill,
     deleteConversation,
     newSession,
     loadSession,

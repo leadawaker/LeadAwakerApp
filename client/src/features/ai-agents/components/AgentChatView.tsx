@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import type { AiAgent, AgentMessage } from "../hooks/useAgentChat";
+import type { AiAgent, AgentMessage, AgentFile } from "../hooks/useAgentChat";
 import { SubAgentPill } from "./SubAgentPill";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
@@ -46,6 +46,136 @@ function extractCampaignUpdate(content: string): { campaignId: string; fields: R
   }
 }
 
+// ─── File type helpers ────────────────────────────────────────────────────────
+function getFileCategory(file: AgentFile): "image" | "pdf" | "spreadsheet" | "audio" | "other" {
+  const mime = file.mimeType?.toLowerCase() || "";
+  const ext = file.filename.toLowerCase().split(".").pop() || "";
+  if (mime.startsWith("image/") || ["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+  if (mime === "application/pdf" || ext === "pdf") return "pdf";
+  if (["csv", "xlsx", "xls"].includes(ext) || mime.includes("spreadsheet") || mime === "text/csv") return "spreadsheet";
+  if (mime.startsWith("audio/") || ["mp3", "wav", "ogg", "webm", "mp4", "m4a"].includes(ext)) return "audio";
+  return "other";
+}
+
+function formatFileSize(bytes: number | null): string {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// ─── File preview component ──────────────────────────────────────────────────
+function FilePreview({ file, isUser }: { file: AgentFile; isUser: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const category = getFileCategory(file);
+  const downloadUrl = `/api/agent-files/${file.id}/download`;
+  const thumbnailUrl = `/api/agent-files/${file.id}/thumbnail`;
+
+  const handleClick = () => {
+    if (category === "image") {
+      setExpanded(!expanded);
+    } else {
+      window.open(downloadUrl, "_blank");
+    }
+  };
+
+  const baseClass = cn(
+    "flex items-center gap-2 rounded-lg cursor-pointer transition-colors mt-1.5 overflow-hidden",
+    isUser
+      ? "bg-white/15 hover:bg-white/25 p-2"
+      : "bg-muted/60 hover:bg-muted p-2",
+  );
+
+  if (category === "image") {
+    return (
+      <div className="mt-1.5">
+        <div
+          className="cursor-pointer rounded-lg overflow-hidden"
+          onClick={handleClick}
+          title={expanded ? "Click to collapse" : "Click to expand"}
+        >
+          <img
+            src={thumbnailUrl}
+            alt={file.filename}
+            className={cn(
+              "rounded-lg object-cover transition-all",
+              expanded ? "max-w-full max-h-[400px]" : "max-w-[200px] max-h-[150px]",
+            )}
+          />
+        </div>
+        <div className={cn("flex items-center gap-1.5 mt-1 text-[10px]", isUser ? "text-white/70" : "text-muted-foreground")}>
+          <ImageIcon className="h-3 w-3" />
+          <span className="truncate max-w-[150px]">{file.filename}</span>
+          {file.fileSize ? <span>· {formatFileSize(file.fileSize)}</span> : null}
+          <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className={cn("ml-auto", isUser ? "text-white/60 hover:text-white" : "text-muted-foreground hover:text-foreground")}
+            title="Download"
+          >
+            <Download className="h-3 w-3" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (category === "audio") {
+    return (
+      <div className="mt-1.5">
+        <div className={baseClass}>
+          <Volume2 className={cn("h-4 w-4 shrink-0", isUser ? "text-white/80" : "text-purple-500")} />
+          <div className="flex-1 min-w-0">
+            <div className={cn("text-[11px] font-medium truncate", isUser ? "text-white" : "text-foreground")}>
+              {file.filename}
+            </div>
+            {file.fileSize ? (
+              <div className={cn("text-[10px]", isUser ? "text-white/60" : "text-muted-foreground")}>
+                {formatFileSize(file.fileSize)}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        <audio
+          controls
+          preload="metadata"
+          className="w-full mt-1 h-8"
+          style={{ maxWidth: "280px" }}
+        >
+          <source src={downloadUrl} type={file.mimeType || "audio/webm"} />
+        </audio>
+      </div>
+    );
+  }
+
+  // PDF, spreadsheet, other files
+  const icon = category === "pdf" ? (
+    <FileText className={cn("h-4 w-4 shrink-0", isUser ? "text-white/80" : "text-red-500")} />
+  ) : category === "spreadsheet" ? (
+    <FileSpreadsheet className={cn("h-4 w-4 shrink-0", isUser ? "text-white/80" : "text-green-600")} />
+  ) : (
+    <FileIcon className={cn("h-4 w-4 shrink-0", isUser ? "text-white/80" : "text-blue-500")} />
+  );
+
+  return (
+    <div className={baseClass} onClick={handleClick} title="Click to view file">
+      {icon}
+      <div className="flex-1 min-w-0">
+        <div className={cn("text-[11px] font-medium truncate", isUser ? "text-white" : "text-foreground")}>
+          {file.filename}
+        </div>
+        <div className={cn("text-[10px]", isUser ? "text-white/60" : "text-muted-foreground")}>
+          {category === "pdf" ? "PDF" : category === "spreadsheet" ? "Spreadsheet" : "File"}
+          {file.fileSize ? ` · ${formatFileSize(file.fileSize)}` : ""}
+        </div>
+      </div>
+      <Download className={cn("h-3.5 w-3.5 shrink-0", isUser ? "text-white/50" : "text-muted-foreground/50")} />
+    </div>
+  );
+}
+
 // ─── Message bubble ───────────────────────────────────────────────────────────
 function MessageBubble({
   msg,
@@ -57,6 +187,9 @@ function MessageBubble({
   onApplyCampaign?: (campaignId: string, fields: Record<string, string>) => void;
 }) {
   const isUser = msg.role === "user";
+  const isSkill = !!(msg.metadata?.skillId);
+  const isSkillError = !!(msg.metadata?.error);
+  const skillName = msg.metadata?.skillName as string | undefined;
   const campaignUpdate = !isUser ? extractCampaignUpdate(msg.content) : null;
   // Strip campaign_update XML from displayed content
   const displayContent = msg.content.replace(/<campaign_update[\s\S]*?<\/campaign_update>/g, "").trim();
@@ -79,14 +212,41 @@ function MessageBubble({
             "max-w-[85%] sm:max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg overflow-hidden",
             isUser
               ? "bg-brand-indigo text-white rounded-tr-none whitespace-pre-wrap break-words"
-              : "bg-white dark:bg-card text-foreground rounded-tl-none",
+              : isSkillError
+                ? "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 text-foreground rounded-tl-none"
+                : "bg-white dark:bg-card text-foreground rounded-tl-none",
           )}
         >
+          {/* Skill badge indicator */}
+          {isSkill && skillName && (
+            <div className={cn(
+              "flex items-center gap-1 mb-1.5 text-[10px] font-medium",
+              isUser
+                ? "text-white/70"
+                : isSkillError
+                  ? "text-red-500 dark:text-red-400"
+                  : "text-purple-600 dark:text-purple-400",
+            )}>
+              {isSkillError ? (
+                <AlertTriangle className="h-3 w-3" />
+              ) : (
+                <Sparkles className="h-3 w-3" />
+              )}
+              <span>{isSkillError ? `Skill Failed: ${skillName}` : `Skill: ${skillName}`}</span>
+            </div>
+          )}
           {isUser ? (
             <span>{displayContent}</span>
           ) : (
             <div className="agent-markdown-content min-w-0 overflow-hidden">
               <MarkdownRenderer content={displayContent} />
+            </div>
+          )}
+          {msg.files && msg.files.length > 0 && (
+            <div className="flex flex-col gap-1">
+              {msg.files.map((file) => (
+                <FilePreview key={file.id} file={file} isUser={isUser} />
+              ))}
             </div>
           )}
           {msg.subAgentBlocks && msg.subAgentBlocks.length > 0 && (
