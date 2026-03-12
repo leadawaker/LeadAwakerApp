@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCreateTask, useTaskCategories } from "../api/tasksApi";
+import { useCreateTask, useTaskCategories, useTasks } from "../api/tasksApi";
 import { PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 import { hapticSave } from "@/lib/haptics";
 
@@ -30,6 +30,7 @@ interface Props {
 export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const createMutation = useCreateTask();
   const { data: categories = [] } = useTaskCategories();
+  const { data: allTasks = [] } = useTasks();
 
   // ── Form state ───────────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -40,6 +41,7 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const [assigneeName, setAssigneeName] = useState("");
   const [leadName, setLeadName] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [parentTaskId, setParentTaskId] = useState<number | null>(null);
 
   const canCreate = title.trim().length > 0 && !createMutation.isPending;
 
@@ -65,6 +67,7 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
         dueDate: dueDate ? new Date(dueDate) : null,
         assigneeName: assigneeName.trim() || null,
         categoryId,
+        parentTaskId,
       });
       // Extract new task ID from response
       try {
@@ -248,6 +251,22 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
               placeholder="Lead name (optional)"
               data-testid="mobile-task-create-lead"
             />
+          </div>
+
+          {/* Parent task */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>Parent Task</label>
+            <select
+              className={selectCls}
+              value={parentTaskId ?? ""}
+              onChange={(e) => setParentTaskId(e.target.value ? Number(e.target.value) : null)}
+              data-testid="mobile-task-create-parent"
+            >
+              <option value="">No Parent</option>
+              {(allTasks as any[]).map((tk: any) => (
+                <option key={tk.id} value={tk.id}>{tk.title}</option>
+              ))}
+            </select>
           </div>
 
         </div>

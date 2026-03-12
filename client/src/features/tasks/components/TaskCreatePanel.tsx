@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X, Check } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
-import { useCreateTask, useTaskCategories } from "../api/tasksApi";
+import { useCreateTask, useTaskCategories, useTasks } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 
 // ── i18n key maps for select options (module-level, safe for constants) ────────
@@ -46,6 +46,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
   const { t } = useTranslation("tasks");
   const createMutation = useCreateTask();
   const { data: categories = [] } = useTaskCategories();
+  const { data: allTasks = [] } = useTasks();
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -59,6 +60,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
   const [dueDate, setDueDate] = useState("");
   const [assigneeName, setAssigneeName] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [parentTaskId, setParentTaskId] = useState<number | null>(null);
 
   // ── Handler ─────────────────────────────────────────────────────────────────
 
@@ -78,6 +80,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
         dueDate: dueDate ? new Date(dueDate) : null,
         assigneeName: assigneeName.trim() || null,
         categoryId,
+        parentTaskId,
       });
       // apiRequest returns a Response — try to extract the new task ID
       try {
@@ -256,6 +259,22 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
                 placeholder={t("fields.assigneePlaceholder")}
               />
             </div>
+          </div>
+
+          {/* Parent task */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>{t("fields.parentTask")}</label>
+            <select
+              className={selectCls}
+              value={parentTaskId ?? ""}
+              onChange={(e) => setParentTaskId(e.target.value ? Number(e.target.value) : null)}
+              data-testid="task-create-parent"
+            >
+              <option value="">{t("fields.noParent")}</option>
+              {(allTasks as any[]).map((tk: any) => (
+                <option key={tk.id} value={tk.id}>{tk.title}</option>
+              ))}
+            </select>
           </div>
 
         </div>

@@ -61,6 +61,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
   const [taskType, setTaskType] = useState("admin");
   const [dueDate, setDueDate] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [parentTaskId, setParentTaskId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!task) return;
@@ -71,6 +72,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
     setTaskType(task.taskType ?? "admin");
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "");
     setCategoryId(task.categoryId ?? null);
+    setParentTaskId(task.parentTaskId ?? null);
   }, [task]);
 
   // ── Dirty tracking ───────────────────────────────────────────────────────────
@@ -84,9 +86,10 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
       priority !== (task.priority ?? "medium") ||
       taskType !== (task.taskType ?? "admin") ||
       dueDate !== origDue ||
-      categoryId !== (task.categoryId ?? null)
+      categoryId !== (task.categoryId ?? null) ||
+      parentTaskId !== (task.parentTaskId ?? null)
     );
-  }, [task, title, description, status, priority, taskType, dueDate, categoryId]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId]);
 
   // ── Subtask handlers ────────────────────────────────────────────────────────
   const handleAddSubtask = useCallback(() => {
@@ -127,6 +130,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
         taskType,
         dueDate: dueDate ? new Date(dueDate) : null,
         categoryId,
+        parentTaskId,
       },
     });
   };
@@ -308,6 +312,22 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
                 <option value="">No Category</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Parent task */}
+            <div className="space-y-1.5">
+              <label className={labelCls}>Parent Task</label>
+              <select
+                className={selectCls}
+                value={parentTaskId ?? ""}
+                onChange={(e) => setParentTaskId(e.target.value ? Number(e.target.value) : null)}
+                data-testid="mobile-task-edit-parent"
+              >
+                <option value="">No Parent</option>
+                {(tasks as any[])?.filter((tk: any) => tk.id !== taskId).map((tk: any) => (
+                  <option key={tk.id} value={tk.id}>{tk.title}</option>
                 ))}
               </select>
             </div>

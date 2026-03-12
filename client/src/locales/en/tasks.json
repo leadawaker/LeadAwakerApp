@@ -43,6 +43,8 @@
     "assigneePlaceholder": "Assignee name",
     "linkedTo": "Linked To",
     "category": "Category",
+    "parentTask": "Parent Task",
+    "noParent": "No Parent",
     "tags": "Tags",
     "subtasks": "Sub-tasks"
   },

@@ -43,6 +43,8 @@
     "assigneePlaceholder": "Naam toegewezene",
     "linkedTo": "Gekoppeld aan",
     "category": "Categorie",
+    "parentTask": "Bovenliggende Taak",
+    "noParent": "Geen Bovenliggende",
     "tags": "Tags",
     "subtasks": "Subtaken"
   },

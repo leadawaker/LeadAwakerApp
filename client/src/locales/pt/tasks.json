@@ -43,6 +43,8 @@
     "assigneePlaceholder": "Nome do responsavel",
     "linkedTo": "Vinculado a",
     "category": "Categoria",
+    "parentTask": "Tarefa Pai",
+    "noParent": "Sem Pai",
     "tags": "Tags",
     "subtasks": "Subtarefas"
   },
