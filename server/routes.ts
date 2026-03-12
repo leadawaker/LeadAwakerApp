@@ -3262,17 +3262,27 @@ GUARDRAILS
     }
   });
 
+  // Valid thinking levels for agents
+  const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
+
   // Create agent — clones Code Runner template defaults (system prompt, model, thinking level)
   app.post("/api/agents", requireAgency, async (req, res) => {
     try {
       const { DEFAULT_SYSTEM_PROMPTS } = await import("./aiAgents");
+
+      // Validate thinkingLevel if provided
+      const thinkingLevel = req.body.thinkingLevel || "medium";
+      if (!VALID_THINKING_LEVELS.includes(thinkingLevel)) {
+        return res.status(400).json({ message: `Invalid thinking_level. Must be one of: ${VALID_THINKING_LEVELS.join(", ")}` });
+      }
+
       // Apply Code Runner defaults for fields not provided
       const body = {
         ...req.body,
         type: req.body.type || "custom",
         systemPrompt: req.body.systemPrompt || DEFAULT_SYSTEM_PROMPTS.code_runner,
         model: req.body.model || "claude-sonnet-4-20250514",
-        thinkingLevel: req.body.thinkingLevel || "medium",
+        thinkingLevel,
         enabled: req.body.enabled !== undefined ? req.body.enabled : true,
         displayOrder: req.body.displayOrder || 99,
         permissions: req.body.permissions || { read: true, write: false, create: false, delete: false },
@@ -3292,6 +3302,12 @@ GUARDRAILS
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      // Validate thinkingLevel if provided
+      if (req.body.thinkingLevel !== undefined && !VALID_THINKING_LEVELS.includes(req.body.thinkingLevel)) {
+        return res.status(400).json({ message: `Invalid thinking_level. Must be one of: ${VALID_THINKING_LEVELS.join(", ")}` });
+      }
+
       const agent = await storage.updateAiAgent(id, req.body);
       if (!agent) return res.status(404).json({ message: "Agent not found" });
       res.json(agent);
