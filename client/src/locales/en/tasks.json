@@ -42,7 +42,8 @@
     "assignee": "Assignee",
     "assigneePlaceholder": "Assignee name",
     "linkedTo": "Linked To",
-    "tags": "Tags"
+    "tags": "Tags",
+    "subtasks": "Sub-tasks"
   },
   "linked": {
     "account": "Account:",
@@ -104,6 +105,15 @@
     "duplicate": "Duplicate"
   },
   "clickToChangeStatus": "Click to change status",
+  "subtask": {
+    "check": "Mark complete",
+    "uncheck": "Mark incomplete",
+    "add": "Add",
+    "addPlaceholder": "Add a sub-task...",
+    "delete": "Delete sub-task",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
+  },
   "categories": {
     "title": "Categories",
     "label": "Categories",

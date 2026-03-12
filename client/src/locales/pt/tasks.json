@@ -42,7 +42,8 @@
     "assignee": "Responsavel",
     "assigneePlaceholder": "Nome do responsavel",
     "linkedTo": "Vinculado a",
-    "tags": "Tags"
+    "tags": "Tags",
+    "subtasks": "Subtarefas"
   },
   "linked": {
     "account": "Conta:",
@@ -104,6 +105,15 @@
     "duplicate": "Duplicar"
   },
   "clickToChangeStatus": "Clique para alterar status",
+  "subtask": {
+    "check": "Marcar como concluida",
+    "uncheck": "Desmarcar",
+    "add": "Adicionar",
+    "addPlaceholder": "Adicionar uma subtarefa...",
+    "delete": "Excluir subtarefa",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo"
+  },
   "categories": {
     "title": "Categorias",
     "label": "Categorias",

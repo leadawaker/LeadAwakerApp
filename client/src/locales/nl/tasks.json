@@ -42,7 +42,8 @@
     "assignee": "Toegewezen aan",
     "assigneePlaceholder": "Naam toegewezene",
     "linkedTo": "Gekoppeld aan",
-    "tags": "Tags"
+    "tags": "Tags",
+    "subtasks": "Subtaken"
   },
   "linked": {
     "account": "Account:",
@@ -104,6 +105,15 @@
     "duplicate": "Dupliceren"
   },
   "clickToChangeStatus": "Klik om status te wijzigen",
+  "subtask": {
+    "check": "Markeer als voltooid",
+    "uncheck": "Markering opheffen",
+    "add": "Toevoegen",
+    "addPlaceholder": "Subtaak toevoegen...",
+    "delete": "Subtaak verwijderen",
+    "moveUp": "Omhoog",
+    "moveDown": "Omlaag"
+  },
   "categories": {
     "title": "Categorieen",
     "label": "Categorieen",
