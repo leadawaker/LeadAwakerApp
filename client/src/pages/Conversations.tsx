@@ -9,12 +9,15 @@ import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCampaigns } from "@/hooks/useApiData";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, Layers, ArrowUpDown, Filter, Check } from "lucide-react";
+import { ChevronLeft, Layers, ArrowUpDown, Filter, Check, Plus, Settings, Zap, Cpu } from "lucide-react";
 import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
 import { InboxPanel, type ChatGroupBy, type ChatSortBy, type InboxTab, GROUP_LABELS, SORT_LABELS } from "@/features/conversations/components/InboxPanel";
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
 import { AgentChatView } from "@/features/ai-agents/components/AgentChatView";
+import { AgentSettingsSheet } from "@/features/ai-agents/components/AgentSettingsSheet";
+import { ModelSwitcher } from "@/features/ai-agents/components/ModelSwitcher";
+import { ThinkingToggle } from "@/features/ai-agents/components/ThinkingToggle";
 import { useAgentChat } from "@/features/ai-agents/hooks/useAgentChat";
 import { SearchPill } from "@/components/ui/search-pill";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
@@ -94,6 +97,7 @@ export default function ConversationsPage() {
   // Agent chat hook — used when an agent is selected in the right panel
   const {
     agent: chatAgent,
+    setAgent: setChatAgent,
     session: agentSession,
     messages: agentMessages,
     streaming: agentStreaming,
@@ -102,7 +106,12 @@ export default function ConversationsPage() {
     initialize: agentInitialize,
     sendMessage: agentSendMessage,
     newSession: agentNewSession,
+    updateSessionModel: agentUpdateSessionModel,
+    updateSessionThinking: agentUpdateSessionThinking,
   } = useAgentChat();
+
+  // Agent settings sheet state
+  const [agentSettingsOpen, setAgentSettingsOpen] = useState(false);
 
   // Initialize agent chat when agent selection changes
   useEffect(() => {
@@ -460,16 +469,76 @@ export default function ConversationsPage() {
                 {isAgentSelected ? (
                   <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                     {chatAgent && (
-                      <AgentChatView
-                        agent={chatAgent}
-                        messages={agentMessages}
-                        streaming={agentStreaming}
-                        streamingText={agentStreamingText}
-                        loading={agentLoading}
-                        onSend={agentSendMessage}
-                        onNewSession={agentNewSession}
-                        sessionId={agentSession?.sessionId}
-                      />
+                      <>
+                        {/* Agent chat header with controls */}
+                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-background shrink-0" data-testid="agent-chat-header">
+                          <div className="h-8 w-8 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
+                            {chatAgent.photoUrl ? (
+                              <img src={chatAgent.photoUrl} alt={chatAgent.name} className="h-8 w-8 rounded-full object-cover" />
+                            ) : chatAgent.type === "code_runner" ? (
+                              <Zap className="h-4 w-4 text-brand-indigo" />
+                            ) : (
+                              <Cpu className="h-4 w-4 text-brand-indigo" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{chatAgent.name}</div>
+                            {agentSession?.title && (
+                              <div className="text-[10px] text-muted-foreground font-medium truncate mt-0.5" data-testid="conversation-title">
+                                {agentSession.title}
+                              </div>
+                            )}
+                          </div>
+                          {agentSession && (
+                            <>
+                              <ModelSwitcher
+                                currentModel={agentSession.model}
+                                onModelChange={agentUpdateSessionModel}
+                                disabled={agentStreaming}
+                              />
+                              <ThinkingToggle
+                                currentLevel={agentSession.thinkingLevel}
+                                onLevelChange={agentUpdateSessionThinking}
+                                disabled={agentStreaming}
+                              />
+                            </>
+                          )}
+                          <button
+                            onClick={() => setAgentSettingsOpen(true)}
+                            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                            title="Agent settings"
+                            data-testid="agent-settings-btn"
+                          >
+                            <Settings className="h-3.5 w-3.5" />
+                          </button>
+                          {agentSession && (
+                            <button
+                              onClick={agentNewSession}
+                              className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                              title="New conversation"
+                              data-testid="agent-new-session-btn"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <AgentChatView
+                          agent={chatAgent}
+                          messages={agentMessages}
+                          streaming={agentStreaming}
+                          streamingText={agentStreamingText}
+                          loading={agentLoading}
+                          onSend={agentSendMessage}
+                          onNewSession={agentNewSession}
+                          sessionId={agentSession?.sessionId}
+                        />
+                        <AgentSettingsSheet
+                          agent={chatAgent}
+                          open={agentSettingsOpen}
+                          onOpenChange={setAgentSettingsOpen}
+                          onAgentUpdated={(updated) => setChatAgent(updated)}
+                        />
+                      </>
                     )}
                   </div>
                 ) : (
