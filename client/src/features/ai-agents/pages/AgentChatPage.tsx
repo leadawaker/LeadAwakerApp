@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { ArrowLeft, Plus, Cpu, Zap, Settings } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { CrmShell } from "@/components/crm/CrmShell";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { AgentChatView } from "../components/AgentChatView";
 import { AgentSettingsSheet } from "../components/AgentSettingsSheet";
@@ -10,8 +11,9 @@ import { ThinkingToggle } from "../components/ThinkingToggle";
 
 export function AgentChatPage() {
   const params = useParams<{ agentId: string }>();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const agentId = parseInt(params.agentId || "0", 10);
+  const prefix = location.startsWith("/agency") ? "/agency" : "/subaccount";
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const {
@@ -40,11 +42,12 @@ export function AgentChatPage() {
   const isCodeRunner = agent?.type === "code_runner";
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <CrmShell>
+    <div className="flex flex-col h-full bg-background" data-testid="agent-chat-fullpage">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background shrink-0">
+      <div className="flex items-center gap-3 px-4 lg:px-6 py-3 border-b border-border/50 bg-background shrink-0">
         <button
-          onClick={() => setLocation("/agency/ai-agents")}
+          onClick={() => setLocation(`${prefix}/ai-agents`)}
           className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -108,7 +111,7 @@ export function AgentChatPage() {
         )}
       </div>
 
-      {/* Chat area */}
+      {/* Chat area — full width with comfortable reading width */}
       {agent && (
         <>
           <AgentChatView
@@ -123,16 +126,18 @@ export function AgentChatPage() {
             pendingConfirmation={pendingConfirmation}
             onConfirmDestructive={confirmDestructiveActions}
             onCancelDestructive={cancelDestructiveActions}
+            fullPage
           />
           <AgentSettingsSheet
             agent={agent}
             open={settingsOpen}
             onOpenChange={setSettingsOpen}
             onAgentUpdated={(updated) => setAgent(updated)}
-            onAgentDeleted={() => setLocation("/agency/ai-agents")}
+            onAgentDeleted={() => setLocation(`${prefix}/ai-agents`)}
           />
         </>
       )}
     </div>
+    </CrmShell>
   );
 }

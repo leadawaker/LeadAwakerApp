@@ -20,6 +20,8 @@ import BillingPage from "@/pages/Billing";
 import SettingsPage from "@/pages/Settings";
 import DocsPage from "@/pages/Docs";
 import TasksPage from "@/features/tasks/pages/TasksPage";
+import { AgentsPage } from "@/features/ai-agents/pages/AgentsPage";
+import { AgentChatPage } from "@/features/ai-agents/pages/AgentChatPage";
 // OpportunitiesPage merged into Leads as "Pipeline" tab — route redirects below
 
 function isAuthed() {
@@ -82,6 +84,13 @@ export default function AppArea() {
           <Route path="/agency/calendar" component={CalendarPage} />
           <Route path="/agency/settings" component={SettingsPage} />
 
+          <Route path="/agency/ai-agents/:agentId">
+            <AgencyOnly prefix="/agency"><AgentChatPage /></AgencyOnly>
+          </Route>
+          <Route path="/agency/ai-agents">
+            <AgencyOnly prefix="/agency"><AgentsPage /></AgencyOnly>
+          </Route>
+
           {/* Agency-only routes (admin pages) */}
           <Route path="/agency/accounts">
             <AgencyOnly prefix="/agency"><AppAccounts /></AgencyOnly>
@@ -124,6 +133,13 @@ export default function AppArea() {
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/calendar" component={CalendarPage} />
           <Route path="/subaccount/settings" component={SettingsPage} />
+
+          <Route path="/subaccount/ai-agents/:agentId">
+            <AgencyOnly prefix="/subaccount"><AgentChatPage /></AgencyOnly>
+          </Route>
+          <Route path="/subaccount/ai-agents">
+            <AgencyOnly prefix="/subaccount"><AgentsPage /></AgencyOnly>
+          </Route>
 
           {/* Subaccount agency-only routes (admin pages) */}
           <Route path="/subaccount/accounts">

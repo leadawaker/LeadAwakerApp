@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Cpu, Zap, Plus, MessageSquare, Loader2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { apiFetch } from "@/lib/apiUtils";
+import { CrmShell } from "@/components/crm/CrmShell";
 import type { AiAgent } from "../hooks/useAgentChat";
 
 function AgentIcon({ agent }: { agent: AiAgent }) {
@@ -30,7 +31,8 @@ function AgentIcon({ agent }: { agent: AiAgent }) {
 }
 
 function AgentCard({ agent }: { agent: AiAgent }) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const prefix = location.startsWith("/agency") ? "/agency" : "/subaccount";
 
   const tagline =
     agent.type === "code_runner"
@@ -41,7 +43,7 @@ function AgentCard({ agent }: { agent: AiAgent }) {
 
   return (
     <button
-      onClick={() => setLocation(`/agency/ai-agents/${agent.id}`)}
+      onClick={() => setLocation(`${prefix}/ai-agents/${agent.id}`)}
       className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card border border-border/50 hover:border-brand-indigo/30 hover:shadow-md transition-all text-center"
     >
       <AgentIcon agent={agent} />
@@ -79,6 +81,7 @@ export function AgentsPage() {
   }, []);
 
   return (
+    <CrmShell>
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold font-heading text-foreground">AI Agents</h1>
@@ -107,5 +110,6 @@ export function AgentsPage() {
         </div>
       )}
     </div>
+    </CrmShell>
   );
 }

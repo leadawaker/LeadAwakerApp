@@ -380,29 +380,84 @@ export function AgentChatView({
     }
   };
 
-  // File upload handler — supports PDF, images, spreadsheets
+  // File upload handler — supports PDF, images, spreadsheets, camera capture
   const ALLOWED_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".csv", ".xlsx", ".xls"];
+  const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+  // Compress large images for mobile uploads (reduces upload time on slow connections)
+  const compressImage = useCallback(async (file: File | Blob, fileName: string, maxDim = 2048, quality = 0.85): Promise<{ blob: Blob; name: string }> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width <= maxDim && height <= maxDim && file.size <= 2 * 1024 * 1024) {
+          resolve({ blob: file, name: fileName });
+          return;
+        }
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve({ blob: file, name: fileName }); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => blob ? resolve({ blob, name: fileName }) : resolve({ blob: file, name: fileName }),
+          "image/jpeg",
+          quality,
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+      img.src = url;
+    });
+  }, []);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !sessionId) return;
 
-    // Validate file extension
-    const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    // Determine file extension; camera captures may lack one
+    let ext = file.name.includes(".") ? file.name.toLowerCase().substring(file.name.lastIndexOf(".")) : "";
+    const isCameraCapture = !ext && file.type.startsWith("image/");
+    if (isCameraCapture) ext = ".jpg";
+
+    if (!ALLOWED_EXTENSIONS.includes(ext) && !isCameraCapture) {
       alert("Unsupported file type. Allowed: PDF, images (JPEG, PNG, GIF, WebP), spreadsheets (CSV, XLSX, XLS)");
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
       return;
     }
 
-    // Validate file size (20MB max)
     if (file.size > 20 * 1024 * 1024) {
       alert("File too large. Maximum size is 20MB.");
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
       return;
     }
 
     setUploading(true);
+    setUploadProgress(0);
     try {
+      // Compress images on mobile to speed up upload over slow connections
+      let uploadFile: Blob = file;
+      let uploadName = isCameraCapture ? `photo-${Date.now()}.jpg` : file.name;
+      const isImage = IMAGE_EXTENSIONS.includes(ext) || isCameraCapture;
+      if (isImage && file.size > 1 * 1024 * 1024) {
+        try {
+          setUploadProgress(5);
+          const compressed = await compressImage(file, uploadName);
+          uploadFile = compressed.blob;
+          uploadName = compressed.name;
+        } catch { /* fall back to original */ }
+      }
+
+      setUploadProgress(10);
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -410,38 +465,68 @@ export function AgentChatView({
           resolve(result.split(",")[1]);
         };
         reader.onerror = reject;
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(uploadFile);
       });
 
-      const { apiFetch } = await import("@/lib/apiUtils");
-      const res = await apiFetch(`/api/agent-conversations/${sessionId}/files`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: file.name,
+      setUploadProgress(30);
+
+      // Use XMLHttpRequest for upload progress tracking (visible on mobile)
+      const uploadResult = await new Promise<{ ok: boolean; data: Record<string, unknown> }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `/api/agent-conversations/${sessionId}/files`);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.withCredentials = true;
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const pct = Math.round(30 + (event.loaded / event.total) * 60);
+            setUploadProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            resolve({ ok: xhr.status >= 200 && xhr.status < 300, data });
+          } catch {
+            resolve({ ok: false, data: { message: "Invalid server response" } });
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error — check your connection and try again."));
+        xhr.ontimeout = () => reject(new Error("Upload timed out. Try a smaller file or check your connection."));
+        xhr.timeout = 120000; // 2 min timeout for large files on mobile
+
+        xhr.send(JSON.stringify({
+          filename: uploadName,
           mimeType: file.type || "application/octet-stream",
           data: base64,
-        }),
+        }));
       });
 
-      if (res.ok) {
-        const fileRecord = await res.json() as { id: number; filename: string; fileType?: string; thumbnailUrl?: string };
+      setUploadProgress(95);
+
+      if (uploadResult.ok) {
+        const fileRecord = uploadResult.data as { id: number; filename: string; fileType?: string; thumbnailUrl?: string };
         setPendingFile({
           id: fileRecord.id,
           name: fileRecord.filename,
           fileType: fileRecord.fileType,
           thumbnailUrl: fileRecord.thumbnailUrl,
         });
+        setUploadProgress(100);
       } else {
-        const err = await res.json().catch(() => ({ message: "Upload failed" }));
-        alert((err as { message: string }).message || "Failed to upload file.");
+        const errMsg = (uploadResult.data as { message?: string }).message || "Failed to upload file.";
+        alert(errMsg);
       }
     } catch (err) {
       console.error("[AgentChat] File upload error:", err);
-      alert("Failed to upload file.");
+      const msg = err instanceof Error ? err.message : "Failed to upload file.";
+      alert(msg);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
   };
 
