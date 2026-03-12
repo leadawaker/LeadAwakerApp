@@ -11,6 +11,7 @@ import {
 } from "./auth";
 import {
   accounts,
+  prospects,
   campaigns,
   leads,
   interactions,
@@ -24,6 +25,7 @@ import {
   invoices,
   contracts,
   insertAccountsSchema,
+  insertProspectsSchema,
   insertCampaignsSchema,
   insertLeadsSchema,
   insertInteractionsSchema,
@@ -39,6 +41,9 @@ import {
   insertSupportSessionSchema,
   insertSupportMessageSchema,
   insertTaskSchema,
+  insertTaskSubtaskSchema,
+  insertTaskCategorySchema,
+  tasks,
   aiAgents,
   aiSessions,
   aiMessages,
@@ -309,6 +314,45 @@ export async function registerRoutes(
     } catch {
       res.status(502).json({ message: "Could not reach automation engine" });
     }
+  }));
+
+  // ─── Prospects ───────────────────────────────────────────────────────
+
+  app.get("/api/prospects", requireAgency, wrapAsync(async (req, res) => {
+    const pagination = getPagination(req);
+    if (pagination) {
+      const result = await paginatedQuery(prospects, pagination);
+      return res.json({ ...result, data: toDbKeysArray(result.data as any, prospects) });
+    }
+    const data = await storage.getProspects();
+    res.json(toDbKeysArray(data as any, prospects));
+  }));
+
+  app.get("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
+    const prospect = await storage.getProspectById(Number(req.params.id));
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+    res.json(toDbKeys(prospect as any, prospects));
+  }));
+
+  app.post("/api/prospects", requireAgency, wrapAsync(async (req, res) => {
+    const parsed = insertProspectsSchema.safeParse(fromDbKeys(req.body, prospects));
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const prospect = await storage.createProspect(parsed.data);
+    res.status(201).json(toDbKeys(prospect as any, prospects));
+  }));
+
+  app.patch("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
+    const parsed = insertProspectsSchema.partial().safeParse(fromDbKeys(req.body, prospects));
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const prospect = await storage.updateProspect(Number(req.params.id), parsed.data);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+    res.json(toDbKeys(prospect as any, prospects));
+  }));
+
+  app.delete("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
+    const ok = await storage.deleteProspect(Number(req.params.id));
+    if (!ok) return res.status(404).json({ message: "Prospect not found" });
+    res.status(204).end();
   }));
 
   // ─── Campaigns ────────────────────────────────────────────────────
@@ -2007,6 +2051,97 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     res.json({ success: true });
   }));
 
+  // ─── Task Subtasks ──────────────────────────────────────────────────
+
+  app.get("/api/tasks/:id/subtasks", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    // Verify the task exists first
+    const task = await storage.getTaskById(taskId);
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    const subtasks = await storage.getSubtasksByTaskId(taskId);
+    res.json(subtasks);
+  }));
+
+  app.post("/api/tasks/:id/subtasks", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    // Verify the task exists first
+    const task = await storage.getTaskById(taskId);
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    // Auto-assign sortOrder if not provided
+    let sortOrder = req.body.sortOrder;
+    if (sortOrder == null) {
+      const existing = await storage.getSubtasksByTaskId(taskId);
+      const maxSort = existing.reduce((max, s) => Math.max(max, s.sortOrder ?? 0), 0);
+      sortOrder = maxSort + 1;
+    }
+    const parsed = insertTaskSubtaskSchema.safeParse({ ...req.body, taskId, sortOrder });
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const subtask = await storage.createSubtask(parsed.data);
+    res.status(201).json(subtask);
+  }));
+
+  app.patch("/api/subtasks/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const parsed = insertTaskSubtaskSchema.partial().safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const updated = await storage.updateSubtask(id, parsed.data);
+    if (!updated) return res.status(404).json({ error: "Subtask not found" });
+    res.json(updated);
+  }));
+
+  app.delete("/api/subtasks/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const deleted = await storage.deleteSubtask(id);
+    if (!deleted) return res.status(404).json({ error: "Subtask not found" });
+    res.json({ success: true });
+  }));
+
+  // ─── Task Categories ────────────────────────────────────────────────
+
+  app.get("/api/task-categories", requireAgency, wrapAsync(async (_req, res) => {
+    const data = await storage.getTaskCategories();
+    res.json(data);
+  }));
+
+  app.post("/api/task-categories", requireAgency, wrapAsync(async (req, res) => {
+    const { name, icon, color } = req.body;
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(422).json({ message: "Validation error", errors: [{ path: "name", message: "Name is required" }] });
+    }
+    // Auto-assign sortOrder: max existing + 1
+    const existing = await storage.getTaskCategories();
+    const maxSort = existing.reduce((max, c) => Math.max(max, c.sortOrder ?? 0), 0);
+    const category = await storage.createTaskCategory({
+      name: name.trim(),
+      icon: icon || null,
+      color: color || null,
+      sortOrder: maxSort + 1,
+      isDefault: false,
+    });
+    res.status(201).json(category);
+  }));
+
+  app.patch("/api/task-categories/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const parsed = insertTaskCategorySchema.partial().safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const updated = await storage.updateTaskCategory(id, parsed.data);
+    if (!updated) return res.status(404).json({ error: "Category not found" });
+    res.json(updated);
+  }));
+
+  app.delete("/api/task-categories/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    // Verify category exists
+    const category = await storage.getTaskCategoryById(id);
+    if (!category) return res.status(404).json({ error: "Category not found" });
+    // Nullify categoryId on all tasks referencing this category
+    await db.update(tasks).set({ categoryId: null }).where(eq(tasks.categoryId, id));
+    // Delete the category
+    await storage.deleteTaskCategory(id);
+    res.json({ success: true });
+  }));
+
   // ─── Lead Score History ────────────────────────────────────────────
 
   app.get("/api/lead-score-history", requireAuth, wrapAsync(async (req, res) => {
@@ -3205,7 +3340,7 @@ GUARDRAILS
       streamClaudeResponse({
         prompt: fullPrompt,
         cwd,
-        bypassPermissions: agent.type !== "code_runner",
+        bypassPermissions: true, // all agents need this — no interactive terminal for approval
         isFirstMessage,
         model: sessionModel,
         thinkingLevel: sessionThinking,
@@ -3457,7 +3592,7 @@ GUARDRAILS
     streamClaudeResponse({
       prompt: fullPrompt,
       cwd,
-      bypassPermissions: agent.type === "code_runner",
+      bypassPermissions: true, // all agents need this — no interactive terminal for approval
       isFirstMessage,
       res,
       onDone: async (fullText, subAgentBlocks) => {
@@ -4593,7 +4728,7 @@ GUARDRAILS
       streamClaudeResponse({
         prompt: fullPrompt,
         cwd,
-        bypassPermissions: agent.type !== "code_runner", // non-code agents skip permissions
+        bypassPermissions: true, // all agents need this — no interactive terminal for approval
         isFirstMessage,
         model: sessionModel,
         thinkingLevel: sessionThinking,
@@ -4858,7 +4993,7 @@ GUARDRAILS
       streamClaudeResponse({
         prompt: fullPrompt,
         cwd,
-        bypassPermissions: agent.type !== "code_runner",
+        bypassPermissions: true, // all agents need this — no interactive terminal for approval
         isFirstMessage,
         model: sessionModel,
         thinkingLevel: sessionThinking,
@@ -4915,3 +5050,4 @@ GUARDRAILS
 
   return httpServer;
 }
+
