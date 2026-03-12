@@ -1,7 +1,7 @@
 /**
  * CRM Tool Definitions and Executors for AI Agents
  *
- * Provides read and delete CRM tools that agents can use to query/modify
+ * Provides read, write, and delete CRM tools that agents can use to query/modify
  * leads, campaigns, conversations, tags, and accounts data in PostgreSQL.
  *
  * Tool calls are embedded in Claude's response using XML-like tags:
@@ -40,7 +40,7 @@ export interface CrmToolResult {
 export interface CrmToolDef {
   name: string;
   description: string;
-  requiredPermission: "read" | "delete";
+  requiredPermission: "read" | "write" | "delete";
   parameters: { name: string; type: string; description: string; required: boolean }[];
 }
 
@@ -157,7 +157,58 @@ const DELETE_TOOLS: CrmToolDef[] = [
   },
 ];
 
-export const ALL_TOOLS = [...READ_TOOLS, ...DELETE_TOOLS];
+const WRITE_TOOLS: CrmToolDef[] = [
+  {
+    name: "update_lead",
+    description: "Update an existing lead's fields. Only include the fields you want to change. Updatable fields: firstName, lastName, phone, email, conversionStatus (New/Contacted/Qualified/Converted/Lost), leadScore (0-100), notes, automationStatus (idle/running/paused/completed/error).",
+    requiredPermission: "write",
+    parameters: [
+      { name: "id", type: "number", description: "Lead ID to update", required: true },
+      { name: "firstName", type: "string", description: "First name", required: false },
+      { name: "lastName", type: "string", description: "Last name", required: false },
+      { name: "phone", type: "string", description: "Phone number", required: false },
+      { name: "email", type: "string", description: "Email address", required: false },
+      { name: "conversionStatus", type: "string", description: "Status: New, Contacted, Qualified, Converted, or Lost", required: false },
+      { name: "leadScore", type: "number", description: "Lead score 0-100", required: false },
+      { name: "notes", type: "string", description: "Notes about the lead", required: false },
+      { name: "automationStatus", type: "string", description: "Automation status: idle, running, paused, completed, error", required: false },
+    ],
+  },
+  {
+    name: "update_campaign",
+    description: "Update an existing campaign's fields. Only include the fields you want to change. Updatable fields: name, description, status (Draft/Active/Paused/Completed), dailyLeadLimit.",
+    requiredPermission: "write",
+    parameters: [
+      { name: "id", type: "number", description: "Campaign ID to update", required: true },
+      { name: "name", type: "string", description: "Campaign name", required: false },
+      { name: "description", type: "string", description: "Campaign description", required: false },
+      { name: "status", type: "string", description: "Status: Draft, Active, Paused, or Completed", required: false },
+      { name: "dailyLeadLimit", type: "number", description: "Max leads per day", required: false },
+    ],
+  },
+  {
+    name: "update_tag",
+    description: "Update an existing tag's fields. Only include the fields you want to change.",
+    requiredPermission: "write",
+    parameters: [
+      { name: "id", type: "number", description: "Tag ID to update", required: true },
+      { name: "name", type: "string", description: "Tag name", required: false },
+      { name: "color", type: "string", description: "Tag color (hex code like #FF5733)", required: false },
+      { name: "category", type: "string", description: "Tag category", required: false },
+    ],
+  },
+  {
+    name: "add_lead_tag",
+    description: "Add a tag to a lead. Links an existing tag to an existing lead.",
+    requiredPermission: "write",
+    parameters: [
+      { name: "lead_id", type: "number", description: "Lead ID", required: true },
+      { name: "tag_id", type: "number", description: "Tag ID to add to the lead", required: true },
+    ],
+  },
+];
+
+export const ALL_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS, ...DELETE_TOOLS];
 
 // ─── Tool Descriptions for System Prompt ────────────────────────────────────
 
@@ -170,6 +221,9 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
 
   if (permissions.read) {
     availableTools.push(...READ_TOOLS);
+  }
+  if (permissions.write) {
+    availableTools.push(...WRITE_TOOLS);
   }
   if (permissions.delete) {
     availableTools.push(...DELETE_TOOLS);
@@ -189,7 +243,13 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
     }
   }
 
-  prompt += `\n\nIMPORTANT: Always use CRM tools to fetch real data. Never guess or make up CRM data. If you need data to answer a question, use the appropriate tool first.\n`;
+  prompt += `\n\nIMPORTANT: Always use CRM tools to fetch real data. Never guess or make up CRM data. If you need data to answer a question, use the appropriate tool first.`;
+
+  if (permissions.write) {
+    prompt += `\nWhen updating records, always fetch the record first (using a read tool) to confirm it exists and show the user what will change. Only include fields that need to be modified in your update call. Log all changes by describing what was updated in your response.`;
+  }
+
+  prompt += `\n`;
 
   return prompt;
 }
@@ -237,6 +297,9 @@ export async function executeCrmTool(
   const perm = toolDef.requiredPermission;
   if (perm === "read" && !permissions.read) {
     return { tool: toolCall.name, success: false, error: "Agent does not have read permission" };
+  }
+  if (perm === "write" && !permissions.write) {
+    return { tool: toolCall.name, success: false, error: "Agent does not have write permission" };
   }
   if (perm === "delete" && !permissions.delete) {
     return { tool: toolCall.name, success: false, error: "Agent does not have delete permission" };
@@ -402,6 +465,141 @@ async function executeToolFunction(toolCall: CrmToolCall): Promise<unknown> {
     case "get_lead_tags": {
       const leadTags = await storage.getTagsByLeadId(Number(args.lead_id));
       return leadTags;
+    }
+
+    // ─── Write tools ────────────────────────────────────────────────
+
+    case "update_lead": {
+      const id = Number(args.id);
+      const existing = await storage.getLeadById(id);
+      if (!existing) throw new Error(`Lead #${id} not found`);
+
+      // Build update payload from allowed fields only
+      const updateData: Record<string, unknown> = {};
+      const allowedFields = ["firstName", "lastName", "phone", "email", "conversionStatus", "leadScore", "notes", "automationStatus"];
+      for (const field of allowedFields) {
+        if (args[field] !== undefined) {
+          updateData[field] = args[field];
+        }
+      }
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No valid fields to update. Provide at least one of: " + allowedFields.join(", "));
+      }
+
+      // Validate conversionStatus if provided
+      const validStatuses = ["New", "Contacted", "Qualified", "Converted", "Lost"];
+      if (updateData.conversionStatus && !validStatuses.includes(updateData.conversionStatus as string)) {
+        throw new Error(`Invalid conversionStatus. Must be one of: ${validStatuses.join(", ")}`);
+      }
+
+      // Validate leadScore if provided
+      if (updateData.leadScore !== undefined) {
+        const score = Number(updateData.leadScore);
+        if (isNaN(score) || score < 0 || score > 100) {
+          throw new Error("leadScore must be a number between 0 and 100");
+        }
+        updateData.leadScore = score;
+      }
+
+      const updated = await storage.updateLead(id, updateData);
+      if (!updated) throw new Error(`Failed to update lead #${id}`);
+      console.log(`[CRM Tool] update_lead #${id}: ${JSON.stringify(updateData)}`);
+      return {
+        updated: true,
+        id,
+        type: "lead",
+        changes: updateData,
+        lead: {
+          id: (updated as any).id,
+          firstName: (updated as any).firstName,
+          lastName: (updated as any).lastName,
+          conversionStatus: (updated as any).conversionStatus,
+          leadScore: (updated as any).leadScore,
+        },
+      };
+    }
+
+    case "update_campaign": {
+      const id = Number(args.id);
+      const existing = await storage.getCampaignById(id);
+      if (!existing) throw new Error(`Campaign #${id} not found`);
+
+      const updateData: Record<string, unknown> = {};
+      const allowedFields = ["name", "description", "status", "dailyLeadLimit"];
+      for (const field of allowedFields) {
+        if (args[field] !== undefined) {
+          updateData[field] = args[field];
+        }
+      }
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No valid fields to update. Provide at least one of: " + allowedFields.join(", "));
+      }
+
+      // Validate status if provided
+      const validCampaignStatuses = ["Draft", "Active", "Paused", "Completed"];
+      if (updateData.status && !validCampaignStatuses.includes(updateData.status as string)) {
+        throw new Error(`Invalid status. Must be one of: ${validCampaignStatuses.join(", ")}`);
+      }
+
+      const updated = await storage.updateCampaign(id, updateData);
+      if (!updated) throw new Error(`Failed to update campaign #${id}`);
+      console.log(`[CRM Tool] update_campaign #${id}: ${JSON.stringify(updateData)}`);
+      return {
+        updated: true,
+        id,
+        type: "campaign",
+        changes: updateData,
+        campaign: {
+          id: (updated as any).id,
+          name: (updated as any).name,
+          status: (updated as any).status,
+        },
+      };
+    }
+
+    case "update_tag": {
+      const id = Number(args.id);
+      const updateData: Record<string, unknown> = {};
+      const allowedFields = ["name", "color", "category"];
+      for (const field of allowedFields) {
+        if (args[field] !== undefined) {
+          updateData[field] = args[field];
+        }
+      }
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No valid fields to update. Provide at least one of: " + allowedFields.join(", "));
+      }
+
+      const updated = await storage.updateTag(id, updateData);
+      if (!updated) throw new Error(`Tag #${id} not found`);
+      console.log(`[CRM Tool] update_tag #${id}: ${JSON.stringify(updateData)}`);
+      return {
+        updated: true,
+        id,
+        type: "tag",
+        changes: updateData,
+        tag: { id: (updated as any).id, name: (updated as any).name, color: (updated as any).color },
+      };
+    }
+
+    case "add_lead_tag": {
+      const leadId = Number(args.lead_id);
+      const tagId = Number(args.tag_id);
+
+      // Verify lead exists
+      const lead = await storage.getLeadById(leadId);
+      if (!lead) throw new Error(`Lead #${leadId} not found`);
+
+      // Verify tag exists
+      const existingTags = await storage.getTagsByLeadId(leadId);
+      const alreadyHasTag = existingTags.some((t: any) => t.id === tagId || t.tagsId === tagId);
+      if (alreadyHasTag) {
+        return { added: false, leadId, tagId, type: "lead_tag", message: "Tag already assigned to this lead" };
+      }
+
+      const row = await storage.createLeadTag({ leadsId: leadId, tagsId: tagId });
+      console.log(`[CRM Tool] add_lead_tag: lead #${leadId} + tag #${tagId}`);
+      return { added: true, leadId, tagId, type: "lead_tag" };
     }
 
     // ─── Delete tools ───────────────────────────────────────────────
