@@ -42,9 +42,11 @@ import {
   aiAgents,
   aiSessions,
   aiMessages,
+  aiFiles,
   insertAiAgentSchema,
   insertAiSessionSchema,
   insertAiMessageSchema,
+  insertAiFileSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import fs from "fs";

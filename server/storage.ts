@@ -992,6 +992,21 @@ export class DatabaseStorage implements IStorage {
   async getAiMessagesBySessionId(sessionId: string): Promise<AiMessage[]> {
     return db.select().from(aiMessages).where(eq(aiMessages.sessionId, sessionId)).orderBy(asc(aiMessages.createdAt));
   }
+
+  // ─── AI Files ────────────────────────────────────────────────────────
+
+  async createAiFile(data: InsertAiFile): Promise<AiFile> {
+    const [row] = await db.insert(aiFiles).values(data as any).returning();
+    return row;
+  }
+
+  async getAiFilesByConversationId(conversationId: string): Promise<AiFile[]> {
+    return db.select().from(aiFiles).where(eq(aiFiles.conversationId, conversationId)).orderBy(asc(aiFiles.createdAt));
+  }
+
+  async getAiFilesByMessageId(messageId: number): Promise<AiFile[]> {
+    return db.select().from(aiFiles).where(eq(aiFiles.messageId, messageId)).orderBy(asc(aiFiles.createdAt));
+  }
 }
 
 // ─── Pagination helpers ───────────────────────────────────────────────────
