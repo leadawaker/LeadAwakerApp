@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import type { Task } from "@shared/schema";
 import { useTheme } from "@/hooks/useTheme";
-import { useUpdateTask, useDeleteTask, useCreateTask, useSubtaskCounts } from "../api/tasksApi";
+import { useUpdateTask, useDeleteTask, useCreateTask, useSubtaskCounts, useTaskCategories } from "../api/tasksApi";
 import {
   PRIORITY_OPTIONS,
   PRIORITY_BADGE,
@@ -108,6 +108,14 @@ export default function TaskCard({ task }: TaskCardProps) {
   const deleteMutation = useDeleteTask();
   const createMutation = useCreateTask();
   const { data: subtaskCounts } = useSubtaskCounts();
+  const { data: categories } = useTaskCategories();
+
+  // Category color accent
+  const categoryColor = useMemo(() => {
+    if (!task.categoryId || !categories) return null;
+    const cat = categories.find((c) => c.id === task.categoryId);
+    return cat?.color ?? null;
+  }, [task.categoryId, categories]);
   const subtaskCount = useMemo(() => subtaskCounts?.find((c) => c.taskId === task.id), [subtaskCounts, task.id]);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
@@ -237,6 +245,7 @@ export default function TaskCard({ task }: TaskCardProps) {
         CARD_BG[status],
         CARD_BORDER[status],
       )}
+      style={categoryColor ? { borderLeftWidth: "3px", borderLeftColor: categoryColor } : undefined}
     >
       {/* Row 1: title + priority bars + action buttons */}
       <div className="flex items-start gap-1 min-w-0">
@@ -262,6 +271,7 @@ export default function TaskCard({ task }: TaskCardProps) {
               className="text-[15px] font-semibold leading-snug cursor-text select-none"
               style={{ color: titleColor }}
             >
+              {(task as any).emoji && <span className="mr-1" data-testid="task-emoji">{(task as any).emoji}</span>}
               {task.title || t("card.newTask")}
             </p>
           )}
