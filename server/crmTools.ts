@@ -40,7 +40,7 @@ export interface CrmToolResult {
 export interface CrmToolDef {
   name: string;
   description: string;
-  requiredPermission: "read" | "write" | "delete";
+  requiredPermission: "read" | "write" | "create" | "delete";
   parameters: { name: string; type: string; description: string; required: boolean }[];
 }
 
@@ -208,7 +208,51 @@ const WRITE_TOOLS: CrmToolDef[] = [
   },
 ];
 
-export const ALL_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS, ...DELETE_TOOLS];
+const CREATE_TOOLS: CrmToolDef[] = [
+  {
+    name: "create_lead",
+    description: "Create a new lead in the CRM. At minimum provide firstName. Other fields are optional but recommended for a complete record.",
+    requiredPermission: "create",
+    parameters: [
+      { name: "firstName", type: "string", description: "First name (required)", required: true },
+      { name: "lastName", type: "string", description: "Last name", required: false },
+      { name: "phone", type: "string", description: "Phone number", required: false },
+      { name: "email", type: "string", description: "Email address", required: false },
+      { name: "conversionStatus", type: "string", description: "Status: New, Contacted, Qualified, Converted, or Lost (default: New)", required: false },
+      { name: "leadScore", type: "number", description: "Lead score 0-100", required: false },
+      { name: "notes", type: "string", description: "Notes about the lead", required: false },
+      { name: "source", type: "string", description: "Lead source (e.g. Website, Referral, LinkedIn)", required: false },
+      { name: "campaign_id", type: "number", description: "Campaign ID to assign the lead to", required: false },
+      { name: "account_id", type: "number", description: "Account ID the lead belongs to", required: false },
+    ],
+  },
+  {
+    name: "create_campaign",
+    description: "Create a new campaign in the CRM. Provide a name at minimum.",
+    requiredPermission: "create",
+    parameters: [
+      { name: "name", type: "string", description: "Campaign name (required)", required: true },
+      { name: "description", type: "string", description: "Campaign description", required: false },
+      { name: "status", type: "string", description: "Status: Draft, Active, Paused, or Completed (default: Draft)", required: false },
+      { name: "account_id", type: "number", description: "Account ID the campaign belongs to", required: false },
+      { name: "dailyLeadLimit", type: "number", description: "Max leads per day", required: false },
+      { name: "channel", type: "string", description: "Communication channel (e.g. sms, email, whatsapp)", required: false },
+    ],
+  },
+  {
+    name: "create_tag",
+    description: "Create a new tag in the CRM. Provide a name at minimum.",
+    requiredPermission: "create",
+    parameters: [
+      { name: "name", type: "string", description: "Tag name (required)", required: true },
+      { name: "color", type: "string", description: "Tag color (hex code like #FF5733)", required: false },
+      { name: "category", type: "string", description: "Tag category", required: false },
+      { name: "account_id", type: "number", description: "Account ID the tag belongs to", required: false },
+    ],
+  },
+];
+
+export const ALL_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS, ...CREATE_TOOLS, ...DELETE_TOOLS];
 
 // ─── Tool Descriptions for System Prompt ────────────────────────────────────
 
@@ -224,6 +268,9 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
   }
   if (permissions.write) {
     availableTools.push(...WRITE_TOOLS);
+  }
+  if (permissions.create) {
+    availableTools.push(...CREATE_TOOLS);
   }
   if (permissions.delete) {
     availableTools.push(...DELETE_TOOLS);
@@ -247,6 +294,10 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
 
   if (permissions.write) {
     prompt += `\nWhen updating records, always fetch the record first (using a read tool) to confirm it exists and show the user what will change. Only include fields that need to be modified in your update call. Log all changes by describing what was updated in your response.`;
+  }
+
+  if (permissions.create) {
+    prompt += `\nWhen creating new records, confirm the details with the user before creating. After creation, report the new record's ID and key fields so the user can reference it.`;
   }
 
   prompt += `\n`;
@@ -300,6 +351,9 @@ export async function executeCrmTool(
   }
   if (perm === "write" && !permissions.write) {
     return { tool: toolCall.name, success: false, error: "Agent does not have write permission" };
+  }
+  if (perm === "create" && !permissions.create) {
+    return { tool: toolCall.name, success: false, error: "Agent does not have create permission" };
   }
   if (perm === "delete" && !permissions.delete) {
     return { tool: toolCall.name, success: false, error: "Agent does not have delete permission" };
@@ -600,6 +654,116 @@ async function executeToolFunction(toolCall: CrmToolCall): Promise<unknown> {
       const row = await storage.createLeadTag({ leadsId: leadId, tagsId: tagId });
       console.log(`[CRM Tool] add_lead_tag: lead #${leadId} + tag #${tagId}`);
       return { added: true, leadId, tagId, type: "lead_tag" };
+    }
+
+    // ─── Create tools ────────────────────────────────────────────────
+
+    case "create_lead": {
+      const leadData: Record<string, unknown> = {
+        firstName: args.firstName as string,
+      };
+
+      // Optional fields
+      if (args.lastName) leadData.lastName = args.lastName;
+      if (args.phone) leadData.phone = args.phone;
+      if (args.email) leadData.email = args.email;
+      if (args.notes) leadData.notes = args.notes;
+      if (args.source) leadData.source = args.source;
+      if (args.campaign_id) leadData.campaignsId = Number(args.campaign_id);
+      if (args.account_id) leadData.accountsId = Number(args.account_id);
+
+      // Validate and set conversionStatus
+      if (args.conversionStatus) {
+        const validStatuses = ["New", "Contacted", "Qualified", "Converted", "Lost"];
+        if (!validStatuses.includes(args.conversionStatus as string)) {
+          throw new Error(`Invalid conversionStatus. Must be one of: ${validStatuses.join(", ")}`);
+        }
+        leadData.conversionStatus = args.conversionStatus;
+      } else {
+        leadData.conversionStatus = "New";
+      }
+
+      // Validate leadScore if provided
+      if (args.leadScore !== undefined) {
+        const score = Number(args.leadScore);
+        if (isNaN(score) || score < 0 || score > 100) {
+          throw new Error("leadScore must be a number between 0 and 100");
+        }
+        leadData.leadScore = score;
+      }
+
+      const created = await storage.createLead(leadData as any);
+      console.log(`[CRM Tool] create_lead: ${JSON.stringify({ id: (created as any).id, firstName: args.firstName })}`);
+      return {
+        created: true,
+        type: "lead",
+        lead: {
+          id: (created as any).id,
+          firstName: (created as any).firstName,
+          lastName: (created as any).lastName,
+          email: (created as any).email,
+          phone: (created as any).phone,
+          conversionStatus: (created as any).conversionStatus,
+        },
+      };
+    }
+
+    case "create_campaign": {
+      const campaignData: Record<string, unknown> = {
+        name: args.name as string,
+      };
+
+      if (args.description) campaignData.description = args.description;
+      if (args.account_id) campaignData.accountsId = Number(args.account_id);
+      if (args.dailyLeadLimit) campaignData.dailyLeadLimit = Number(args.dailyLeadLimit);
+      if (args.channel) campaignData.channel = args.channel;
+
+      // Validate status if provided
+      if (args.status) {
+        const validStatuses = ["Draft", "Active", "Paused", "Completed"];
+        if (!validStatuses.includes(args.status as string)) {
+          throw new Error(`Invalid status. Must be one of: ${validStatuses.join(", ")}`);
+        }
+        campaignData.status = args.status;
+      } else {
+        campaignData.status = "Draft";
+      }
+
+      const created = await storage.createCampaign(campaignData as any);
+      console.log(`[CRM Tool] create_campaign: ${JSON.stringify({ id: (created as any).id, name: args.name })}`);
+      return {
+        created: true,
+        type: "campaign",
+        campaign: {
+          id: (created as any).id,
+          name: (created as any).name,
+          status: (created as any).status,
+          description: (created as any).description,
+        },
+      };
+    }
+
+    case "create_tag": {
+      const tagData: Record<string, unknown> = {
+        name: args.name as string,
+      };
+
+      if (args.color) tagData.color = args.color;
+      if (args.category) tagData.category = args.category;
+      if (args.account_id) tagData.accountsId = Number(args.account_id);
+
+      const created = await storage.createTag(tagData as any);
+      console.log(`[CRM Tool] create_tag: ${JSON.stringify({ id: (created as any).id, name: args.name })}`);
+      return {
+        created: true,
+        type: "tag",
+        tag: {
+          id: (created as any).id,
+          name: (created as any).name,
+          color: (created as any).color,
+          category: (created as any).category,
+        },
+      };
     }
 
     // ─── Delete tools ───────────────────────────────────────────────
