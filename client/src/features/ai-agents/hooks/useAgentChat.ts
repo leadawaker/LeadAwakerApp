@@ -9,6 +9,21 @@ export interface AgentMessage {
   content: string;
   subAgentBlocks?: SubAgentBlock[];
   createdAt?: string;
+  metadata?: Record<string, unknown>;
+  attachments?: Record<string, unknown>;
+  files?: AgentFile[];
+}
+
+export interface AgentFile {
+  id: number;
+  conversationId: string;
+  messageId: number | null;
+  filename: string;
+  mimeType: string | null;
+  filePath: string;
+  fileSize: number | null;
+  transcription: string | null;
+  createdAt: string;
 }
 
 export interface SubAgentBlock {
@@ -35,6 +50,7 @@ export interface AiAgent {
   thinkingLevel?: string;
   permissions?: AgentPermissions;
   pageAwarenessEnabled?: boolean;
+  systemPromptId?: number | null;
   createdAt?: string;
 }
 
@@ -97,19 +113,35 @@ export function useAgentChat() {
       const sess: AiSession = await sessRes.json();
       setSession(sess);
 
-      // Load message history
-      const msgsRes = await apiFetch(`/api/agents/sessions/${sess.sessionId}/messages`);
-      if (msgsRes.ok) {
-        const rawMsgs = await msgsRes.json();
-        const msgs: AgentMessage[] = rawMsgs.map((m: unknown) => {
-          const msg = m as Record<string, unknown>;
-          return {
-            ...msg,
-            subAgentBlocks: typeof msg.subAgentBlocks === "string"
-              ? JSON.parse(msg.subAgentBlocks as string)
-              : (msg.subAgentBlocks ?? []),
-          };
+      // Load full conversation with messages and attachments in one call
+      const convRes = await apiFetch(`/api/agent-conversations/${sess.sessionId}`);
+      if (convRes.ok) {
+        const conv = await convRes.json();
+        // Update session with latest metadata from combined endpoint
+        setSession({
+          id: conv.id,
+          sessionId: conv.sessionId,
+          userId: conv.userId,
+          agentId: conv.agentId,
+          title: conv.title,
+          status: conv.status,
+          model: conv.model,
+          thinkingLevel: conv.thinkingLevel,
+          totalInputTokens: conv.totalInputTokens,
+          totalOutputTokens: conv.totalOutputTokens,
+          createdAt: conv.createdAt,
         });
+        const msgs: AgentMessage[] = (conv.messages || []).map((msg: any) => ({
+          id: msg.id,
+          sessionId: msg.sessionId,
+          role: msg.role,
+          content: msg.content,
+          subAgentBlocks: msg.subAgentBlocks ?? [],
+          createdAt: msg.createdAt,
+          metadata: msg.metadata,
+          attachments: msg.attachments,
+          files: msg.files ?? [],
+        }));
         setMessages(msgs);
       }
     } catch (err) {
@@ -271,36 +303,46 @@ export function useAgentChat() {
   const loadSession = useCallback(async (sessionId: string) => {
     setLoading(true);
     try {
-      // Get session details
-      const sessRes = await apiFetch(`/api/agents/sessions/${sessionId}`);
-      if (!sessRes.ok) throw new Error("Session not found");
-      const sess: AiSession = await sessRes.json();
-      setSession(sess);
+      // Load full conversation with messages and attachments in one call
+      const convRes = await apiFetch(`/api/agent-conversations/${sessionId}`);
+      if (!convRes.ok) throw new Error("Conversation not found");
+      const conv = await convRes.json();
+
+      setSession({
+        id: conv.id,
+        sessionId: conv.sessionId,
+        userId: conv.userId,
+        agentId: conv.agentId,
+        title: conv.title,
+        status: conv.status,
+        model: conv.model,
+        thinkingLevel: conv.thinkingLevel,
+        totalInputTokens: conv.totalInputTokens,
+        totalOutputTokens: conv.totalOutputTokens,
+        createdAt: conv.createdAt,
+      });
 
       // Load agent if not already loaded or different agent
-      if (!agent || agent.id !== sess.agentId) {
-        const agentRes = await apiFetch(`/api/agents/${sess.agentId}`);
+      if (!agent || agent.id !== conv.agentId) {
+        const agentRes = await apiFetch(`/api/agents/${conv.agentId}`);
         if (agentRes.ok) {
           const found: AiAgent = await agentRes.json();
           setAgent(found);
         }
       }
 
-      // Load message history
-      const msgsRes = await apiFetch(`/api/agents/sessions/${sessionId}/messages`);
-      if (msgsRes.ok) {
-        const rawMsgs = await msgsRes.json();
-        const msgs: AgentMessage[] = rawMsgs.map((m: unknown) => {
-          const msg = m as Record<string, unknown>;
-          return {
-            ...msg,
-            subAgentBlocks: typeof msg.subAgentBlocks === "string"
-              ? JSON.parse(msg.subAgentBlocks as string)
-              : (msg.subAgentBlocks ?? []),
-          };
-        });
-        setMessages(msgs);
-      }
+      const msgs: AgentMessage[] = (conv.messages || []).map((msg: any) => ({
+        id: msg.id,
+        sessionId: msg.sessionId,
+        role: msg.role,
+        content: msg.content,
+        subAgentBlocks: msg.subAgentBlocks ?? [],
+        createdAt: msg.createdAt,
+        metadata: msg.metadata,
+        attachments: msg.attachments,
+        files: msg.files ?? [],
+      }));
+      setMessages(msgs);
     } catch (err) {
       console.error("[AgentChat] Load session error:", err);
     } finally {

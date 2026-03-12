@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Shield, Eye, Pencil, PlusCircle, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Settings, Shield, Eye, Pencil, PlusCircle, Trash2, Loader2, AlertTriangle, BookOpen, X, ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -81,11 +81,33 @@ export function AgentSettingsSheet({
   const [savedMessage, setSavedMessage] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [prompts, setPrompts] = useState<{ id: number; name: string | null; useCase: string | null }[]>([]);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [selectedPromptId, setSelectedPromptId] = useState<number | null>(agent.systemPromptId ?? null);
+  const [promptSaving, setPromptSaving] = useState(false);
+  const [promptDropdownOpen, setPromptDropdownOpen] = useState(false);
 
-  // Reset permissions when agent changes
+  // Fetch prompts when sheet opens
+  useEffect(() => {
+    if (open && prompts.length === 0) {
+      setPromptsLoading(true);
+      apiFetch("/api/prompts")
+        .then((r) => r.json())
+        .then((data: unknown) => {
+          if (Array.isArray(data)) {
+            setPrompts(data.map((p: any) => ({ id: p.id, name: p.name, useCase: p.useCase })));
+          }
+        })
+        .catch(console.error)
+        .finally(() => setPromptsLoading(false));
+    }
+  }, [open]);
+
+  // Reset permissions and prompt selection when agent changes
   useEffect(() => {
     setPermissions(agent.permissions || DEFAULT_PERMISSIONS);
-  }, [agent.id, agent.permissions]);
+    setSelectedPromptId(agent.systemPromptId ?? null);
+  }, [agent.id, agent.permissions, agent.systemPromptId]);
 
   const handleToggle = useCallback(
     async (key: keyof AgentPermissions, checked: boolean) => {
@@ -118,6 +140,30 @@ export function AgentSettingsSheet({
       }
     },
     [agent.id, permissions, onAgentUpdated]
+  );
+
+  const handlePromptChange = useCallback(
+    async (promptId: number | null) => {
+      setSelectedPromptId(promptId);
+      setPromptDropdownOpen(false);
+      setPromptSaving(true);
+      try {
+        const res = await apiFetch(`/api/agents/${agent.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ systemPromptId: promptId }),
+        });
+        if (!res.ok) throw new Error("Failed to update prompt");
+        const updatedAgent = await res.json();
+        onAgentUpdated?.(updatedAgent);
+      } catch (err) {
+        console.error("[AgentSettings] Prompt update error:", err);
+        setSelectedPromptId(agent.systemPromptId ?? null);
+      } finally {
+        setPromptSaving(false);
+      }
+    },
+    [agent.id, agent.systemPromptId, onAgentUpdated]
   );
 
   const handleDeleteAgent = useCallback(async () => {
@@ -185,6 +231,68 @@ export function AgentSettingsSheet({
                 />
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* System Prompt Link Section */}
+        <div className="mt-6 pt-4 border-t border-border/50" data-testid="agent-prompt-section">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Custom Prompt</h3>
+            {promptSaving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Link a prompt from your Prompts library to override the default system prompt.
+          </p>
+
+          {/* Prompt dropdown */}
+          <div className="relative" data-testid="prompt-selector">
+            <button
+              onClick={() => setPromptDropdownOpen(!promptDropdownOpen)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm border border-border/50 bg-card/50 hover:bg-card transition-colors text-left"
+              disabled={promptsLoading}
+            >
+              <span className={selectedPromptId ? "text-foreground" : "text-muted-foreground"}>
+                {promptsLoading
+                  ? "Loading prompts…"
+                  : selectedPromptId
+                  ? prompts.find((p) => p.id === selectedPromptId)?.name || `Prompt #${selectedPromptId}`
+                  : "None (use default)"}
+              </span>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${promptDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {promptDropdownOpen && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-lg max-h-48 overflow-y-auto">
+                {/* Unlink option */}
+                <button
+                  onClick={() => handlePromptChange(null)}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center gap-2 ${
+                    !selectedPromptId ? "bg-muted/50 font-medium text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  <X className="h-3.5 w-3.5 shrink-0" />
+                  None (use default)
+                </button>
+                {prompts.map((prompt) => (
+                  <button
+                    key={prompt.id}
+                    onClick={() => handlePromptChange(prompt.id)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${
+                      selectedPromptId === prompt.id ? "bg-muted/50 font-medium text-brand-indigo" : "text-foreground"
+                    }`}
+                  >
+                    <div className="truncate">{prompt.name || `Prompt #${prompt.id}`}</div>
+                    {prompt.useCase && (
+                      <div className="text-[10px] text-muted-foreground truncate">{prompt.useCase}</div>
+                    )}
+                  </button>
+                ))}
+                {prompts.length === 0 && !promptsLoading && (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">No prompts in library</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
