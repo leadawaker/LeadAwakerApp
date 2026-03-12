@@ -530,6 +530,45 @@ export function AgentChatWidget() {
     }
   }, [activeAgentId]);
 
+  // Lock body scroll on mobile when widget is open
+  useEffect(() => {
+    const isMobileView = window.matchMedia("(max-width: 767px)").matches;
+    if (isOpen && isMobileView) {
+      const prevOverflow = document.body.style.overflow;
+      const prevPosition = document.body.style.position;
+      const prevTop = document.body.style.top;
+      const scrollY = window.scrollY;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        document.body.style.position = prevPosition;
+        document.body.style.top = prevTop;
+        document.body.style.width = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
+  // Close widget on browser back button (mobile UX)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePopState = () => {
+      if (isOpen) {
+        closeWidget();
+      }
+    };
+    // Push a history entry so back button closes widget instead of navigating
+    window.history.pushState({ agentWidgetOpen: true }, "");
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   // Check if user is agency user (admin)
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
   const isAgency = role === "Admin" || role === "Operator";
@@ -543,7 +582,8 @@ export function AgentChatWidget() {
       <button
         onClick={toggleWidget}
         className={cn(
-          "fixed bottom-6 right-6 z-[9998] h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
+          "fixed z-[9998] h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
+          "bottom-6 right-6 max-md:bottom-[max(1.5rem,env(safe-area-inset-bottom))] max-md:right-4",
           "bg-brand-indigo text-white hover:bg-brand-indigo/90 hover:scale-105 active:scale-95",
           isOpen && "scale-0 opacity-0 pointer-events-none",
           !isOpen && "scale-100 opacity-100",
@@ -562,12 +602,14 @@ export function AgentChatWidget() {
       {/* ── Chat panel ── */}
       <div
         className={cn(
-          "fixed z-[9999] flex flex-col bg-background border border-border/60 shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 ease-out",
-          "bottom-6 right-6",
-          "max-md:bottom-0 max-md:right-0 max-md:left-0 max-md:top-0 max-md:w-full max-md:h-full max-md:rounded-none",
+          "fixed z-[9999] flex flex-col bg-background border border-border/60 shadow-2xl overflow-hidden transition-all duration-300 ease-out",
+          // Desktop: floating panel anchored bottom-right
+          "bottom-6 right-6 rounded-2xl",
+          // Mobile: full-screen overlay with slide-up animation
+          "max-md:bottom-0 max-md:right-0 max-md:left-0 max-md:top-0 max-md:w-full max-md:h-full max-md:rounded-none max-md:border-0",
           isOpen
             ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
-            : "translate-y-4 opacity-0 scale-95 pointer-events-none",
+            : "md:translate-y-4 md:opacity-0 md:scale-95 max-md:translate-y-full max-md:opacity-100 pointer-events-none",
         )}
         style={{
           width: `${widgetSize.width}px`,
