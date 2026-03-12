@@ -847,6 +847,51 @@ export const insertTaskSchema = createInsertSchema(tasks, {
 export type Task = typeof tasks.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 
+// ─── Task Categories ────────────────────────────────────────────────────────
+
+export const taskCategories = nocodb.table("Task_Categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  icon: text("icon"),
+  color: text("color"),
+  sortOrder: integer("sort_order"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTaskCategorySchema = createInsertSchema(taskCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type TaskCategory = typeof taskCategories.$inferSelect;
+export type InsertTaskCategory = z.infer<typeof insertTaskCategorySchema>;
+
+
+// ─── Task Subtasks ──────────────────────────────────────────────────────────
+
+export const taskSubtasks = nocodb.table("Task_Subtasks", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id),
+  title: text("title").notNull(),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  sortOrder: integer("sort_order"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (t) => [
+  index("task_subtasks_task_id_idx").on(t.taskId),
+]);
+
+export const insertTaskSubtaskSchema = createInsertSchema(taskSubtasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type TaskSubtask = typeof taskSubtasks.$inferSelect;
+export type InsertTaskSubtask = z.infer<typeof insertTaskSubtaskSchema>;
+
+
 // ─── AI Agents ──────────────────────────────────────────────────────────────
 
 export const aiAgents = nocodb.table("AI_Agents", {
