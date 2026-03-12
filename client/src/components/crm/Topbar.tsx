@@ -86,6 +86,25 @@ export function Topbar({
     setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
   };
 
+  // AI agents (agency users only) — fetched for the Sophie "Switch to" footer
+  const { data: topbarAiAgents = [] } = useQuery<{ id: number; name: string; type: string; photoUrl: string | null; enabled: boolean }[]>({
+    queryKey: ["/api/ai-agents"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/ai-agents");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAgencyUser,
+    staleTime: 60_000,
+  });
+
+  const handleOpenAgent = (agentId: number) => {
+    try { sessionStorage.setItem("selected-agent-id", String(agentId)); } catch {}
+    setSupportOpen(false);
+    setMobileSupportOpen(false);
+    setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
+  };
+
   // Sync open state with hook so it knows when to count unreads
   useEffect(() => {
     const isOpen = supportOpen || mobileSupportOpen;
@@ -887,6 +906,8 @@ export function Topbar({
         onClose={() => setSupportOpen(false)}
         mode="floating"
         onOpenInChats={handleSupportOpenInChats}
+        aiAgents={topbarAiAgents}
+        onOpenAgent={handleOpenAgent}
       />
     )}
 

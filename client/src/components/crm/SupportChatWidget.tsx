@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { hapticSend } from "@/lib/haptics";
-import { Send, Headphones, Loader2, X, Maximize2, Camera, Pencil, Eraser, Smile, Paperclip, Wallpaper } from "lucide-react";
+import { Send, Headphones, Loader2, X, Maximize2, Camera, Pencil, Eraser, Smile, Paperclip, Wallpaper, Mic, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SupportChatMessage, type SupportBotConfig } from "@/hooks/useSupportChat";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -141,6 +141,10 @@ function TypingDots() {
               0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
               30% { transform: translateY(-4px); opacity: 1; }
             }
+            @keyframes micPulse {
+              0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+              50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+            }
           `}</style>
         </div>
       </div>
@@ -208,11 +212,13 @@ function ChatBubble({
   botConfig,
   isFirstInGroup,
   avatarSize,
+  showBubbleAvatar,
 }: {
   msg: SupportChatMessage;
   botConfig: SupportBotConfig;
   isFirstInGroup: boolean;
   avatarSize: number;
+  showBubbleAvatar: boolean;
 }) {
   const isUser = msg.role === "user";
   const time = formatTime(msg.createdAt);
@@ -224,8 +230,8 @@ function ChatBubble({
   return (
     <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
       <div className={cn("flex gap-1.5", isUser ? "justify-end" : "justify-start")}>
-        {!isUser && isFirstInGroup && <BotAvatarFull config={botConfig} size={avatarSize} />}
-        {!isUser && !isFirstInGroup && <div style={{ width: avatarSize }} className="shrink-0" />}
+        {showBubbleAvatar && !isUser && isFirstInGroup && <BotAvatarFull config={botConfig} size={avatarSize} />}
+        {showBubbleAvatar && !isUser && !isFirstInGroup && <div style={{ width: avatarSize }} className="shrink-0" />}
         <div
           className={cn(
             "max-w-[80%] px-3 pt-2 pb-1 text-[13px] leading-relaxed whitespace-pre-wrap shadow-sm",
@@ -268,6 +274,10 @@ interface SupportChatWidgetProps {
   mode?: "floating" | "inline";
   /** Only used in floating mode: navigates to the Chats page with the support tab active. */
   onOpenInChats?: () => void;
+  /** AI agents to show in "Switch to:" footer links (agency users only) */
+  aiAgents?: { id: number; name: string }[];
+  /** Called when user clicks "Switch to: [Agent]" in the footer */
+  onOpenAgent?: (id: number) => void;
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
@@ -286,6 +296,8 @@ export function SupportChatWidget({
   onClose,
   mode = "floating",
   onOpenInChats,
+  aiAgents,
+  onOpenAgent,
 }: SupportChatWidgetProps) {
   const isAgencyUser = isAdmin;
   const isInline = mode === "inline";
@@ -301,6 +313,62 @@ export function SupportChatWidget({
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const botPhotoInputRef = useRef<HTMLInputElement>(null);
   const [clearing, setClearing] = useState(false);
+
+  // Voice recording
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
+        setTranscribing(true);
+        try {
+          const reader = new FileReader();
+          reader.onload = async (ev) => {
+            const dataUrl = ev.target?.result as string;
+            try {
+              const { apiFetch } = await import("@/lib/apiUtils");
+              const res = await apiFetch("/api/support-chat/transcribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ audio_data: dataUrl, mime_type: recorder.mimeType }),
+              });
+              if (res.ok) {
+                const { transcription } = await res.json() as { transcription: string };
+                if (transcription) {
+                  setInput(transcription);
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = "auto";
+                    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
+                    textareaRef.current.focus();
+                  }
+                }
+              }
+            } catch { /* silent */ }
+            setTranscribing(false);
+          };
+          reader.readAsDataURL(blob);
+        } catch { setTranscribing(false); }
+        setRecording(false);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setRecording(true);
+    } catch { /* mic permission denied */ }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+  };
 
   // Background / doodle — shared with ChatPanel via localStorage
   const { isDark } = useTheme();
@@ -408,6 +476,8 @@ export function SupportChatWidget({
 
   // Avatar size: 36px for inline (full chat), 28px for floating (compact)
   const avatarSize = isInline ? 36 : 28;
+  // In inline mode the header already shows the bot — don't repeat avatar on every bubble
+  const showBubbleAvatar = !isInline;
 
   return (
     <>
@@ -670,7 +740,7 @@ export function SupportChatWidget({
                 {messages.length === 0 && (
                   <div className="flex flex-col items-start">
                     <div className="flex gap-1.5 justify-start">
-                      <BotAvatarFull config={botConfig} size={avatarSize} />
+                      {!isInline && <BotAvatarFull config={botConfig} size={avatarSize} />}
                       <div className="max-w-[80%] px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-tl-none text-[13px] leading-relaxed shadow-sm">
                         Hi! I&apos;m {botConfig.name}, your Lead Awaker assistant. How can I help you today?
                       </div>
@@ -687,6 +757,7 @@ export function SupportChatWidget({
                       botConfig={botConfig}
                       isFirstInGroup={item.isFirstInGroup}
                       avatarSize={avatarSize}
+                      showBubbleAvatar={showBubbleAvatar}
                     />
                   ),
                 )}
@@ -752,21 +823,61 @@ export function SupportChatWidget({
                 <Paperclip className="h-5 w-5" />
               </button>
 
-              {/* Send button */}
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || sending || loading}
-                className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
-                title="Send message"
-              >
-                {sending ? (
+              {/* Send / Mic / Stop button */}
+              {input.trim() ? (
+                <button
+                  onClick={handleSend}
+                  disabled={sending || loading}
+                  className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                  title="Send message"
+                >
+                  {sending ? (
+                    <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 text-white" />
+                  )}
+                </button>
+              ) : transcribing ? (
+                <button disabled className="h-9 w-9 rounded-full bg-brand-indigo/40 text-white flex items-center justify-center shrink-0">
                   <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 text-white" />
-                )}
-              </button>
+                </button>
+              ) : recording ? (
+                <button
+                  onClick={stopRecording}
+                  className="h-9 w-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
+                  title="Stop recording"
+                  style={{ animation: "micPulse 1s ease-in-out infinite" }}
+                >
+                  <Square className="h-3.5 w-3.5 fill-white text-white" />
+                </button>
+              ) : (
+                <button
+                  onClick={startRecording}
+                  disabled={sending || loading}
+                  className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                  title="Record voice message"
+                >
+                  <Mic className="h-4 w-4 text-white" />
+                </button>
+              )}
             </div>
           </div>
+
+          {/* ── "Switch to agent" footer (agency users only) ── */}
+          {isAgencyUser && aiAgents && aiAgents.length > 0 && (
+            <div className="px-3 py-1.5 border-t border-border/40 flex items-center gap-2 flex-wrap shrink-0">
+              <span className="text-[11px] text-muted-foreground">Switch to:</span>
+              {aiAgents.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => onOpenAgent?.(a.id)}
+                  className="text-[11px] text-brand-indigo hover:underline"
+                >
+                  {a.name} →
+                </button>
+              ))}
+            </div>
+          )}
 
         </div>
       </section>

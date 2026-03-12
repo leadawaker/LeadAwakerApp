@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, Headphones, Search, X } from "lucide-react";
+import { Inbox, BellDot, Headphones, Search, X, BotMessageSquare, MessageSquare, Zap, Bot } from "lucide-react";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
@@ -86,6 +86,79 @@ export type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
 export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
 export type InboxTab = "all" | "unread" | "support";
 
+// ── Agent inbox row ────────────────────────────────────────────────────────────
+type AgentRowProps = {
+  agent: { id: number; name: string; type: string; photoUrl: string | null };
+  isSelected: boolean;
+  onClick: () => void;
+};
+
+function AgentInboxRow({ agent, isSelected, onClick }: AgentRowProps) {
+  const typeChip: Record<string, string> = {
+    campaign_crafter: "Campaign Crafter",
+    code_runner: "Code Runner",
+    custom: "Custom",
+  };
+  const chipLabel = typeChip[agent.type] ?? agent.type;
+
+  const AgentIcon = () => {
+    if (agent.photoUrl) {
+      return (
+        <img
+          src={agent.photoUrl}
+          alt={agent.name}
+          className="h-9 w-9 rounded-full object-cover"
+        />
+      );
+    }
+    if (agent.type === "campaign_crafter") {
+      return (
+        <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
+          <MessageSquare className="h-4 w-4 text-brand-indigo" />
+        </div>
+      );
+    }
+    if (agent.type === "code_runner") {
+      return (
+        <div className="h-9 w-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+          <Zap className="h-4 w-4 text-green-600" />
+        </div>
+      );
+    }
+    return (
+      <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+        <Bot className="h-4 w-4 text-muted-foreground" />
+      </div>
+    );
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      className={cn(
+        "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
+        isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+      )}
+      data-testid={`button-agent-${agent.id}`}
+    >
+      <div className="shrink-0">
+        <AgentIcon />
+      </div>
+      <div className="flex-1 min-w-0 pt-0.5">
+        <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+          {agent.name}
+        </p>
+        <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+          {chipLabel}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface InboxPanelProps {
   threads: Thread[];
   loading: boolean;
@@ -115,6 +188,12 @@ interface InboxPanelProps {
   onSelectSupport?: () => void;
   /** Mobile: called when user types in the inline search input */
   onSearchChange?: (q: string) => void;
+  /** AI agents to show as pinned rows above the thread list (agency users only) */
+  aiAgents?: { id: number; name: string; type: string; photoUrl: string | null }[];
+  /** Currently selected agent id */
+  selectedAgentId?: number | null;
+  /** Called when user clicks an agent row */
+  onSelectAgent?: (id: number) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -140,6 +219,9 @@ export function InboxPanel({
   onRefresh,
   onSelectSupport,
   onSearchChange,
+  aiAgents = [],
+  selectedAgentId,
+  onSelectAgent,
 }: InboxPanelProps) {
   const hasNonDefaultControls =
     groupBy !== "date" ||
@@ -244,8 +326,6 @@ export function InboxPanel({
   }, [sorted, groupBy]);
 
   const listContainerRef = useRef<HTMLDivElement>(null);
-  // Track which thread lead IDs have been animated — only animate on initial load
-  const seenThreadIds = useRef<Set<number>>(new Set());
 
   // ── Pull-to-refresh (mobile) ─────────────────────────────────────────────
   const { pullDistance: convoPullDistance, isRefreshing: convoIsRefreshing } = usePullToRefresh({
@@ -513,6 +593,24 @@ export function InboxPanel({
         </div>
       )}
 
+      {/* ── Pinned AI Assistants section (agency users only, not in support tab) ── */}
+      {tab !== "support" && aiAgents.length > 0 && onSelectAgent && (
+        <div className="shrink-0 border-b border-border/50 px-[3px] pb-[3px]">
+          <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <BotMessageSquare className="h-3 w-3" />
+            AI Assistants
+          </div>
+          {aiAgents.map((agent) => (
+            <AgentInboxRow
+              key={agent.id}
+              agent={agent}
+              isSelected={selectedAgentId === agent.id}
+              onClick={() => onSelectAgent(agent.id)}
+            />
+          ))}
+        </div>
+      )}
+
       {/* ── Thread list (all / unread tabs) ── */}
       {/* Outer wrapper: relative so absolute overlay can pin to top */}
       <div className={cn("flex-1 min-h-0 relative", tab === "support" && "hidden")}>
@@ -615,14 +713,12 @@ export function InboxPanel({
               const lastTs = last?.created_at ?? last?.createdAt;
               const tags = getLeadTagNames(lead);
 
-              const isNewThread = !seenThreadIds.current.has(lead.id);
-              if (isNewThread) seenThreadIds.current.add(lead.id);
               return (
                 <div
                   key={lead.id}
                   data-index={virtualRow.index}
                   ref={threadVirtualizer.measureElement}
-                  className={isNewThread ? "animate-fade-in" : undefined}
+                  className="animate-fade-in"
                   style={{
                     position: "absolute",
                     top: 0,
@@ -630,7 +726,6 @@ export function InboxPanel({
                     right: 0,
                     paddingBottom: 3,
                     transform: `translateY(${virtualRow.start}px)`,
-                    animationDelay: isNewThread ? `${Math.min(virtualRow.index, 8) * 50}ms` : undefined,
                   }}
                 >
                   <div
