@@ -3603,6 +3603,126 @@ GUARDRAILS
     }
   });
 
+  // ─── Voice Transcription ────────────────────────────────────────────
+  // POST /api/agent-voice/transcribe
+  // Accepts JSON: { audio_data (data URL), mime_type, session_id }
+  // Returns { transcription, fileId?, filename? }
+  app.post("/api/agent-voice/transcribe", requireAgency, async (req, res) => {
+    const { audio_data, mime_type, session_id } = req.body as {
+      audio_data?: string;
+      mime_type?: string;
+      session_id?: string;
+    };
+
+    if (!audio_data) {
+      return res.status(400).json({ message: "audio_data is required" });
+    }
+
+    try {
+      // Extract base64 from data URL
+      const base64Match = audio_data.match(/^data:[^;]+;base64,(.+)$/);
+      const base64Data = base64Match ? base64Match[1] : audio_data;
+      const buffer = Buffer.from(base64Data, "base64");
+
+      if (buffer.length === 0) {
+        return res.status(400).json({ message: "Empty audio data" });
+      }
+
+      // Determine file extension from mime type
+      const mimeStr = mime_type || "audio/webm";
+      const extMap: Record<string, string> = {
+        "audio/webm": ".webm",
+        "audio/mp4": ".mp4",
+        "audio/mpeg": ".mp3",
+        "audio/mp3": ".mp3",
+        "audio/wav": ".wav",
+        "audio/ogg": ".ogg",
+        "audio/ogg; codecs=opus": ".ogg",
+      };
+      const ext = extMap[mimeStr] || ".webm";
+      const filename = `voice-memo-${Date.now()}${ext}`;
+
+      // Store audio file on disk
+      let fileRecord: any = null;
+      if (session_id) {
+        const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "agent-files", session_id);
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        const filePath = path.join(uploadsDir, filename);
+        fs.writeFileSync(filePath, buffer);
+
+        fileRecord = await storage.createAiFile({
+          conversationId: session_id,
+          filename,
+          mimeType: mimeStr,
+          filePath,
+          fileSize: buffer.length,
+        });
+      }
+
+      // Transcribe using OpenAI Whisper API
+      const openaiKey = process.env.OPEN_AI_API_KEY;
+      if (!openaiKey) {
+        return res.status(500).json({ message: "OpenAI API key not configured" });
+      }
+
+      // Build multipart form data for Whisper API
+      const boundary = `----FormBoundary${crypto.randomBytes(16).toString("hex")}`;
+      const formParts: Buffer[] = [];
+
+      // File part
+      formParts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimeStr}\r\n\r\n`
+      ));
+      formParts.push(buffer);
+      formParts.push(Buffer.from("\r\n"));
+
+      // Model part
+      formParts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n`
+      ));
+
+      // Response format part
+      formParts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\ntext\r\n`
+      ));
+
+      // End boundary
+      formParts.push(Buffer.from(`--${boundary}--\r\n`));
+
+      const formBody = Buffer.concat(formParts);
+
+      const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          "Content-Type": `multipart/form-data; boundary=${boundary}`,
+        },
+        body: formBody,
+      });
+
+      if (!whisperRes.ok) {
+        const errBody = await whisperRes.text();
+        console.error("[Voice Transcribe] Whisper API error:", whisperRes.status, errBody);
+        return res.status(502).json({ message: "Transcription service error" });
+      }
+
+      const transcription = (await whisperRes.text()).trim();
+
+      // Update file record with transcription if stored
+      if (fileRecord) {
+        await db.update(aiFiles).set({ transcription }).where(eq(aiFiles.id, fileRecord.id));
+      }
+
+      res.json({
+        transcription,
+        ...(fileRecord ? { fileId: fileRecord.id, filename } : {}),
+      });
+    } catch (err: any) {
+      console.error("[Voice Transcribe] error:", err);
+      res.status(500).json({ message: "Transcription failed" });
+    }
+  });
+
   // ─── AI File Upload ──────────────────────────────────────────────────
   // POST /api/agent-conversations/:id/files
   // Accepts JSON: { filename, mimeType, data (base64) }

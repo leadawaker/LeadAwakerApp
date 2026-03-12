@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X } from "lucide-react";
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
+import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { AiAgent, AgentMessage } from "../hooks/useAgentChat";
@@ -158,11 +158,15 @@ export function AgentChatView({
 }) {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [transcribing, setTranscribing] = useState(false);
   const [pendingFile, setPendingFile] = useState<{ id: number; name: string; fileType?: string; thumbnailUrl?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [pendingVoiceFile, setPendingVoiceFile] = useState<{ id: number; name: string } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -177,9 +181,11 @@ export function AgentChatView({
 
   const handleSend = () => {
     if (!input.trim() || streaming) return;
-    onSend(input.trim(), undefined, pendingFile?.id);
+    const fileId = pendingFile?.id ?? pendingVoiceFile?.id;
+    onSend(input.trim(), undefined, fileId);
     setInput("");
     setPendingFile(null);
+    setPendingVoiceFile(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -274,18 +280,47 @@ export function AgentChatView({
     }
   };
 
-  // Voice recording
-  const startRecording = async () => {
+  // Format seconds as mm:ss
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // Clean up recording timer on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    };
+  }, []);
+
+  // Voice recording — start capturing audio
+  const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       audioChunksRef.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
       recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
+        // Stop all tracks
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        // Clear timer
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+        setRecordingDuration(0);
+        setRecording(false);
+
+        // Build blob from chunks
         const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
+        if (blob.size === 0) return; // cancelled — no data
+
+        // Transcribe via backend
         setTranscribing(true);
         try {
           const reader = new FileReader();
@@ -293,41 +328,80 @@ export function AgentChatView({
             const dataUrl = ev.target?.result as string;
             try {
               const { apiFetch } = await import("@/lib/apiUtils");
-              const res = await apiFetch("/api/support-chat/transcribe", {
+              const res = await apiFetch("/api/agent-voice/transcribe", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ audio_data: dataUrl, mime_type: recorder.mimeType }),
+                body: JSON.stringify({
+                  audio_data: dataUrl,
+                  mime_type: recorder.mimeType,
+                  session_id: sessionId,
+                }),
               });
               if (res.ok) {
-                const { transcription } = await res.json() as { transcription: string };
-                if (transcription) {
-                  setInput(transcription);
+                const data = await res.json() as { transcription: string; fileId?: number; filename?: string };
+                if (data.transcription) {
+                  setInput(data.transcription);
                   if (textareaRef.current) {
                     textareaRef.current.style.height = "auto";
                     textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
                     textareaRef.current.focus();
                   }
                 }
+                // Store voice file reference for sending with message
+                if (data.fileId) {
+                  setPendingVoiceFile({ id: data.fileId, name: data.filename || "voice-memo.webm" });
+                }
               }
-            } catch { /* silent */ }
+            } catch (err) {
+              console.error("[AgentChat] Transcription error:", err);
+            }
             setTranscribing(false);
           };
           reader.readAsDataURL(blob);
         } catch {
           setTranscribing(false);
         }
-        setRecording(false);
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       setRecording(true);
-    } catch { /* mic denied */ }
-  };
+      setRecordingDuration(0);
+      // Start duration timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration((d) => d + 1);
+      }, 1000);
+    } catch {
+      /* mic permission denied — silent */
+    }
+  }, [sessionId]);
 
-  const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
+  // Stop recording — finish and transcribe
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
     mediaRecorderRef.current = null;
-  };
+  }, []);
+
+  // Cancel recording — discard audio
+  const cancelRecording = useCallback(() => {
+    // Stop recorder without processing (clear chunks first)
+    audioChunksRef.current = [];
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
+    // Stop all media tracks
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    // Clear timer
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    setRecording(false);
+    setRecordingDuration(0);
+  }, []);
 
   const isCodeRunner = agent.type === "code_runner";
 
@@ -398,12 +472,73 @@ export function AgentChatView({
             </button>
           </div>
         )}
+        {/* Pending voice file indicator (after transcription) */}
+        {pendingVoiceFile && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-lg text-[12px]">
+            <Mic className="h-3.5 w-3.5 text-red-500 shrink-0" />
+            <span className="truncate text-foreground/80">{pendingVoiceFile.name}</span>
+            <span className="text-muted-foreground/60 text-[10px]">transcribed</span>
+            <button
+              onClick={() => setPendingVoiceFile(null)}
+              className="ml-auto text-muted-foreground hover:text-foreground shrink-0"
+              title="Remove voice memo"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
         {uploading && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 text-[12px] text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             <span>Uploading file…</span>
           </div>
         )}
+
+        {/* Recording indicator with duration timer */}
+        {recording && (
+          <div className="flex items-center gap-3 mb-2 px-3 py-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-xl" data-testid="recording-indicator">
+            {/* Pulsing red dot */}
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+            </span>
+            <span className="text-[13px] font-medium text-red-600 dark:text-red-400">Recording</span>
+            <span className="text-[13px] font-mono text-red-500/80 tabular-nums" data-testid="recording-duration">
+              {formatDuration(recordingDuration)}
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              {/* Cancel button */}
+              <button
+                onClick={cancelRecording}
+                className="h-7 px-2.5 rounded-full text-[11px] font-medium text-muted-foreground hover:text-foreground bg-white/80 dark:bg-background/80 border border-border/50 hover:border-border transition-colors flex items-center gap-1"
+                data-testid="recording-cancel"
+                title="Cancel recording"
+              >
+                <X className="h-3 w-3" />
+                Cancel
+              </button>
+              {/* Stop button */}
+              <button
+                onClick={stopRecording}
+                className="h-7 px-2.5 rounded-full text-[11px] font-medium text-white bg-red-500 hover:bg-red-600 transition-colors flex items-center gap-1"
+                data-testid="recording-stop"
+                title="Stop recording"
+              >
+                <Square className="h-2.5 w-2.5 fill-white" />
+                Stop
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Transcribing indicator */}
+        {transcribing && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-brand-indigo/5 border border-brand-indigo/20 rounded-xl text-[12px]" data-testid="transcribing-indicator">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-indigo" />
+            <span className="text-brand-indigo font-medium">Transcribing voice memo…</span>
+          </div>
+        )}
+
         <div className="flex items-end gap-2 bg-muted/40 rounded-2xl px-3 py-2 border border-border/40">
           {/* Hidden file input */}
           <input
@@ -423,9 +558,9 @@ export function AgentChatView({
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
             }}
             onKeyDown={handleKeyDown}
-            placeholder={isCodeRunner ? "Tell me what to change..." : "Ask about campaigns..."}
+            placeholder={recording ? "Recording..." : isCodeRunner ? "Tell me what to change..." : "Ask about campaigns..."}
             rows={1}
-            disabled={streaming || loading}
+            disabled={streaming || loading || recording}
             className="flex-1 resize-none bg-transparent text-[13px] placeholder:text-muted-foreground/50 focus:outline-none min-h-[28px] max-h-[120px] py-0.5"
           />
 
@@ -433,19 +568,20 @@ export function AgentChatView({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={streaming || loading || uploading}
+            disabled={streaming || loading || uploading || recording}
             className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
             title="Attach file (PDF, image, or spreadsheet)"
           >
             <Paperclip className="h-4 w-4" />
           </button>
 
-          {/* Send / Mic / Stop */}
+          {/* Send / Mic button */}
           {input.trim() ? (
             <button
               onClick={handleSend}
               disabled={streaming || loading}
               className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+              data-testid="send-button"
             >
               {streaming ? (
                 <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -465,8 +601,9 @@ export function AgentChatView({
               onClick={stopRecording}
               className="h-8 w-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
               style={{ animation: "micPulseAgent 1s ease-in-out infinite" }}
+              data-testid="mic-stop-button"
             >
-              <Square className="h-3 w-3 fill-white text-white" />
+              <CircleStop className="h-4 w-4" />
               <style>{`@keyframes micPulseAgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
             </button>
           ) : (
@@ -474,6 +611,7 @@ export function AgentChatView({
               onClick={startRecording}
               disabled={streaming || loading}
               className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+              data-testid="mic-button"
             >
               <Mic className="h-3.5 w-3.5" />
             </button>

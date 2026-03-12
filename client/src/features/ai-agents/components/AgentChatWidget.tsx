@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Circle } from "lucide-react";
+import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
@@ -23,6 +23,7 @@ interface ConversationPanelProps {
   isActive: boolean;
   onAgentLoaded: (agentId: number, agent: AiAgent) => void;
   onSessionUpdate: (agentId: number, session: AiSession | null, streaming: boolean) => void;
+  onMessageCountUpdate: (agentId: number, count: number) => void;
 }
 
 function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }: ConversationPanelProps) {
@@ -196,6 +197,17 @@ interface ConversationMeta {
   agent: AiAgent;
   session: AiSession | null;
   streaming: boolean;
+  /** Number of messages when user last viewed this conversation */
+  lastSeenMessageCount: number;
+  /** Total message count (user + assistant) */
+  totalMessageCount: number;
+}
+
+/** Get icon for agent type */
+function AgentIcon({ agent, className }: { agent: AiAgent; className?: string }) {
+  if (agent.type === "code_runner") return <Zap className={className} />;
+  if (agent.type === "campaign_crafter") return <MessageSquare className={className} />;
+  return <Cpu className={className} />;
 }
 
 function ConversationTabs({
@@ -210,26 +222,71 @@ function ConversationTabs({
   if (conversations.size < 2) return null;
 
   return (
-    <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border/30 bg-muted/20 overflow-x-auto shrink-0">
+    <div
+      className="flex items-center gap-1 px-2 py-1.5 border-b border-border/30 bg-muted/20 overflow-x-auto shrink-0"
+      data-testid="conversation-tabs"
+    >
       {Array.from(conversations.entries()).map(([agentId, meta]) => {
         const isActive = agentId === activeAgentId;
         const isStreaming = meta.streaming;
+        const unreadCount = Math.max(0, meta.totalMessageCount - meta.lastSeenMessageCount);
+        const hasUnread = !isActive && unreadCount > 0;
+
         return (
           <button
             key={agentId}
             onClick={() => onSelect(agentId)}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all shrink-0",
+              "relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all shrink-0",
               isActive
-                ? "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent",
+                ? "bg-brand-indigo/10 text-brand-indigo ring-1 ring-brand-indigo/20"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             data-testid={`conversation-tab-${agentId}`}
+            title={meta.agent.name}
           >
-            {isStreaming && (
-              <Circle className="h-1.5 w-1.5 fill-green-500 text-green-500 animate-pulse shrink-0" />
-            )}
-            <span className="truncate max-w-[80px]">{meta.agent.name}</span>
+            {/* Agent icon */}
+            <div className="relative">
+              {meta.agent.photoUrl ? (
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarImage src={meta.agent.photoUrl} alt={meta.agent.name} />
+                  <AvatarFallback className="bg-brand-indigo/10 text-brand-indigo text-[9px] font-bold">
+                    <AgentIcon agent={meta.agent} className="h-3 w-3" />
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <div
+                  className={cn(
+                    "h-6 w-6 rounded-full flex items-center justify-center shrink-0",
+                    isActive
+                      ? "bg-brand-indigo/20 text-brand-indigo"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  <AgentIcon agent={meta.agent} className="h-3 w-3" />
+                </div>
+              )}
+
+              {/* Streaming indicator dot */}
+              {isStreaming && !isActive && (
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 animate-pulse ring-1 ring-background" />
+              )}
+
+              {/* Unread notification badge */}
+              {hasUnread && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center px-0.5 ring-1 ring-background"
+                  data-testid={`tab-unread-${agentId}`}
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </div>
+
+            {/* Agent name (compact) */}
+            <span className="text-[11px] font-medium truncate max-w-[70px]">
+              {meta.agent.name}
+            </span>
           </button>
         );
       })}
@@ -261,6 +318,18 @@ export function AgentChatWidget() {
     }
   }, [activeAgentId]);
 
+  // Mark current active conversation as "seen" whenever active agent changes
+  useEffect(() => {
+    if (activeAgentId) {
+      const meta = conversationsRef.current.get(activeAgentId);
+      if (meta) {
+        meta.lastSeenMessageCount = meta.totalMessageCount;
+        conversationsRef.current.set(activeAgentId, { ...meta });
+        setConversationsMeta(new Map(conversationsRef.current));
+      }
+    }
+  }, [activeAgentId]);
+
   // Callbacks from ConversationPanel children
   const handleAgentLoaded = useCallback((agentId: number, agent: AiAgent) => {
     const existing = conversationsRef.current.get(agentId);
@@ -268,6 +337,8 @@ export function AgentChatWidget() {
       agent,
       session: existing?.session ?? null,
       streaming: existing?.streaming ?? false,
+      lastSeenMessageCount: existing?.lastSeenMessageCount ?? 0,
+      totalMessageCount: existing?.totalMessageCount ?? 0,
     });
     setConversationsMeta(new Map(conversationsRef.current));
   }, []);
@@ -283,9 +354,29 @@ export function AgentChatWidget() {
         agent: { id: agentId, name: "Agent", type: "", systemPrompt: null, photoUrl: null, enabled: true, displayOrder: 0 },
         session,
         streaming,
+        lastSeenMessageCount: 0,
+        totalMessageCount: 0,
       });
     }
     setConversationsMeta(new Map(conversationsRef.current));
+  }, []);
+
+  // Handle message count updates from conversation panels
+  // Use a ref to access current activeAgentId without re-creating the callback
+  const activeAgentIdRef = useRef(activeAgentId);
+  activeAgentIdRef.current = activeAgentId;
+
+  const handleMessageCountUpdate = useCallback((agentId: number, count: number) => {
+    const meta = conversationsRef.current.get(agentId);
+    if (meta) {
+      meta.totalMessageCount = count;
+      // If this is the currently active (visible) agent, auto-mark as seen
+      if (agentId === activeAgentIdRef.current) {
+        meta.lastSeenMessageCount = count;
+      }
+      conversationsRef.current.set(agentId, { ...meta });
+      setConversationsMeta(new Map(conversationsRef.current));
+    }
   }, []);
 
   const handleSelectAgent = (selected: AiAgent) => {
@@ -471,6 +562,7 @@ export function AgentChatWidget() {
               isActive={agentId === activeAgentId}
               onAgentLoaded={handleAgentLoaded}
               onSessionUpdate={handleSessionUpdate}
+              onMessageCountUpdate={handleMessageCountUpdate}
             />
           ))}
         </div>
@@ -499,6 +591,7 @@ function ConversationPanelWithEvents({
   isActive,
   onAgentLoaded,
   onSessionUpdate,
+  onMessageCountUpdate,
 }: ConversationPanelProps) {
   const {
     agent,
@@ -560,6 +653,12 @@ function ConversationPanelWithEvents({
     onSessionUpdate(agentId, session, streaming);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, streaming]);
+
+  // Notify parent of message count changes (for unread indicators)
+  useEffect(() => {
+    onMessageCountUpdate(agentId, messages.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length]);
 
   // Listen for header events (model change, thinking change, new session)
   useEffect(() => {
