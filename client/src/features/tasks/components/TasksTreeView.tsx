@@ -1,15 +1,14 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   ChevronRight,
-  ChevronDown,
   CheckCircle2,
   Circle,
   Clock,
   XCircle,
   ListChecks,
 } from "lucide-react";
-import type { Task, TaskSubtask } from "@shared/schema";
+import type { Task } from "@shared/schema";
 import { useSubtasks } from "../api/tasksApi";
 import {
   STATUS_COLORS,
@@ -17,6 +16,70 @@ import {
   type TaskStatus,
   type TaskPriority,
 } from "../types";
+
+// ── Expand/collapse persistence ─────────────────────────────────────
+const EXPANDED_KEY = "tasks-tree-expanded";
+
+function loadExpanded(): Set<number> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_KEY);
+    if (raw) return new Set(JSON.parse(raw) as number[]);
+  } catch {}
+  return new Set();
+}
+
+function saveExpanded(ids: Set<number>) {
+  try {
+    localStorage.setItem(EXPANDED_KEY, JSON.stringify(Array.from(ids)));
+  } catch {}
+}
+
+// ── Animated collapse wrapper ───────────────────────────────────────
+function AnimatedCollapse({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | "auto">(open ? "auto" : 0);
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      setHeight(open ? "auto" : 0);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+
+    if (open) {
+      // Measure then animate to full height
+      const h = el.scrollHeight;
+      setHeight(0);
+      requestAnimationFrame(() => {
+        setHeight(h);
+        // After transition, set auto so new children can expand naturally
+        const onEnd = () => { setHeight("auto"); el.removeEventListener("transitionend", onEnd); };
+        el.addEventListener("transitionend", onEnd, { once: true });
+      });
+    } else {
+      // Snapshot current height then animate to 0
+      const h = el.scrollHeight;
+      setHeight(h);
+      requestAnimationFrame(() => setHeight(0));
+    }
+  }, [open]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        height: height === "auto" ? "auto" : `${height}px`,
+        overflow: "hidden",
+        transition: height === "auto" ? undefined : "height 200ms ease-in-out",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -84,12 +147,19 @@ function SubtaskLeaves({ taskId }: { taskId: number }) {
   if (!subtasks || subtasks.length === 0) return null;
 
   return (
-    <div className="ml-6 border-l border-border/40 dark:border-white/10 pl-4 space-y-1 mt-1">
-      {subtasks.map((st) => (
+    <div className="relative ml-6 pl-4 space-y-1 mt-1">
+      {/* Vertical connector line */}
+      <span
+        className="absolute left-0 top-0 w-px bg-border/50 dark:bg-white/15"
+        style={{ bottom: "12px" }}
+      />
+      {subtasks.map((st, i) => (
         <div
           key={st.id}
-          className="flex items-center gap-2 py-0.5 text-xs text-muted-foreground"
+          className="relative flex items-center gap-2 py-0.5 text-xs text-muted-foreground"
         >
+          {/* Horizontal connector branch */}
+          <span className="absolute left-[-16px] top-1/2 w-3 h-px bg-border/50 dark:bg-white/15" />
           {/* Connector dot */}
           <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
           <span className={cn(st.isCompleted && "line-through opacity-60")}>
@@ -112,12 +182,14 @@ function TreeNodeRow({
   expanded,
   onToggle,
   onTaskClick,
+  isLast,
 }: {
   node: TreeNode;
   depth: number;
   expanded: Set<number>;
   onToggle: (id: number) => void;
   onTaskClick?: (taskId: number) => void;
+  isLast?: boolean;
 }) {
   const { task, children } = node;
   const isExpanded = expanded.has(task.id);
@@ -128,9 +200,18 @@ function TreeNodeRow({
 
   // Determine if this is a "goal" (root with children)
   const isGoal = depth === 0 && hasChildren;
+  const connectorLeft = depth * 24 + 18;
 
   return (
-    <div>
+    <div className="relative">
+      {/* Horizontal branch connector (for non-root nodes) */}
+      {depth > 0 && (
+        <span
+          className="absolute w-3 h-px bg-border/50 dark:bg-white/15"
+          style={{ left: "-12px", top: "16px" }}
+        />
+      )}
+
       {/* Node row */}
       <div
         className={cn(
@@ -140,6 +221,7 @@ function TreeNodeRow({
         )}
         style={{ paddingLeft: `${depth * 24 + 8}px` }}
         onClick={() => onTaskClick?.(task.id)}
+        data-testid={`tree-node-${task.id}`}
       >
         {/* Expand/collapse toggle */}
         <button
@@ -148,18 +230,20 @@ function TreeNodeRow({
             onToggle(task.id);
           }}
           className={cn(
-            "shrink-0 h-5 w-5 flex items-center justify-center rounded transition-colors",
+            "shrink-0 h-5 w-5 flex items-center justify-center rounded transition-all",
             hasChildren
               ? "hover:bg-muted dark:hover:bg-white/10 text-muted-foreground"
               : "invisible",
           )}
           aria-label={isExpanded ? "Collapse" : "Expand"}
+          data-testid={`tree-toggle-${task.id}`}
         >
-          {isExpanded ? (
-            <ChevronDown className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronRight className="h-3.5 w-3.5" />
-          )}
+          <ChevronRight
+            className={cn(
+              "h-3.5 w-3.5 transition-transform duration-200",
+              isExpanded && "rotate-90",
+            )}
+          />
         </button>
 
         {/* Status icon */}
@@ -199,27 +283,40 @@ function TreeNodeRow({
         )}
       </div>
 
-      {/* Connector line + children */}
-      {isExpanded && hasChildren && (
-        <div className="border-l border-border/40 dark:border-white/10" style={{ marginLeft: `${depth * 24 + 18}px` }}>
-          {children.map((child) => (
-            <TreeNodeRow
-              key={child.task.id}
-              node={child}
-              depth={depth + 1}
-              expanded={expanded}
-              onToggle={onToggle}
-              onTaskClick={onTaskClick}
+      {/* Connector line + children (animated) */}
+      {hasChildren && (
+        <AnimatedCollapse open={isExpanded}>
+          <div
+            className="relative"
+            style={{ marginLeft: `${connectorLeft}px` }}
+          >
+            {/* Vertical connector line (stops at last child center) */}
+            <span
+              className="absolute left-0 top-0 w-px bg-border/50 dark:bg-white/15"
+              style={{ bottom: "16px" }}
             />
-          ))}
-        </div>
+            {children.map((child, i) => (
+              <TreeNodeRow
+                key={child.task.id}
+                node={child}
+                depth={depth + 1}
+                expanded={expanded}
+                onToggle={onToggle}
+                onTaskClick={onTaskClick}
+                isLast={i === children.length - 1}
+              />
+            ))}
+          </div>
+        </AnimatedCollapse>
       )}
 
-      {/* Subtask leaves (only when expanded and no child tasks) */}
-      {isExpanded && !hasChildren && (
-        <div style={{ marginLeft: `${depth * 24 + 18}px` }}>
-          <SubtaskLeaves taskId={task.id} />
-        </div>
+      {/* Subtask leaves (animated) */}
+      {!hasChildren && (
+        <AnimatedCollapse open={isExpanded}>
+          <div style={{ marginLeft: `${connectorLeft}px` }}>
+            <SubtaskLeaves taskId={task.id} />
+          </div>
+        </AnimatedCollapse>
       )}
     </div>
   );
@@ -243,7 +340,11 @@ function SubtaskCountBadge({ taskId }: { taskId: number }) {
 
 export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: TasksTreeViewProps) {
   const [expanded, setExpanded] = useState<Set<number>>(() => {
-    // Auto-expand root nodes that have children
+    // Load persisted expanded state first
+    const persisted = loadExpanded();
+    if (persisted.size > 0) return persisted;
+
+    // Fallback: auto-expand root nodes that have children
     const roots = new Set<number>();
     const childIds = new Set(tasks.filter((t) => t.parentTaskId).map((t) => t.parentTaskId!));
     for (const t of tasks) {
@@ -261,6 +362,7 @@ export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: Tasks
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      saveExpanded(next);
       return next;
     });
   }, []);
@@ -277,7 +379,7 @@ export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: Tasks
   return (
     <div className="h-full overflow-y-auto px-2 py-2" data-testid="tasks-tree-view">
       <div className="space-y-0.5">
-        {tree.map((node) => (
+        {tree.map((node, i) => (
           <TreeNodeRow
             key={node.task.id}
             node={node}
@@ -285,6 +387,7 @@ export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: Tasks
             expanded={expanded}
             onToggle={onToggle}
             onTaskClick={onTaskClick}
+            isLast={i === tree.length - 1}
           />
         ))}
       </div>
