@@ -59,7 +59,7 @@ import path from "path";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
-import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
+import { eq, count, and, gte, lte, isNotNull, type SQL, desc, sql } from "drizzle-orm";
 import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
@@ -2043,6 +2043,43 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
 
     const data = await storage.getTasks();
     res.json(data);
+  }));
+
+  // ─── Task Stats (completion over time) ───────────────────────────
+  app.get("/api/tasks/stats", requireAgency, wrapAsync(async (req, res) => {
+    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+
+    // Build WHERE conditions
+    const conditions: SQL[] = [
+      isNotNull(tasks.completedAt),
+      eq(tasks.status, "done"),
+    ];
+
+    if (categoryId !== undefined) {
+      conditions.push(eq(tasks.categoryId, categoryId));
+    }
+    if (startDate !== undefined) {
+      conditions.push(gte(tasks.completedAt, startDate));
+    }
+    if (endDate !== undefined) {
+      conditions.push(lte(tasks.completedAt, endDate));
+    }
+
+    // Group by completion date (truncated to day)
+    const dateCol = sql<string>`DATE(${tasks.completedAt})`.as("date");
+    const rows = await db
+      .select({
+        date: dateCol,
+        completedCount: count(),
+      })
+      .from(tasks)
+      .where(and(...conditions))
+      .groupBy(dateCol)
+      .orderBy(dateCol);
+
+    res.json(rows);
   }));
 
   app.post("/api/tasks", requireAgency, wrapAsync(async (req, res) => {
