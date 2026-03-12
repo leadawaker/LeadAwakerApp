@@ -83,11 +83,10 @@ Read this file to locate any component without running grep/glob searches.
 |-----------|------|-------|
 | LeadsPage | `pages/LeadsPage.tsx` | Feature page wrapper |
 | LeadsTable | `components/LeadsTable.tsx` | **Main container** — view switching, filters, search, data |
-| LeadsCardView | `components/LeadsCardView.tsx` | D365-style split-pane list view (default) |
+| LeadsCardView | `components/LeadsCardView.tsx` | D365-style split-pane **list view** — also contains `LeadDetailView` (desktop detail panel) and `MobileLeadDetailPanel` (mobile full-screen overlay). **Edit lead detail for list view here, NOT in LeadDetailPanel.tsx.** |
 | LeadsKanban | `components/LeadsKanban.tsx` | Drag-drop kanban columns |
 | LeadsInlineTable | `components/LeadsInlineTable.tsx` | Virtualized table view |
-| LeadDetailPanel | `components/LeadDetailPanel.tsx` | Full slide-over Sheet (edit + timeline) |
-| LeadInfoPanel | `components/LeadInfoPanel.tsx` | 288px right sidebar (table/kanban) |
+| LeadDetailPanel | `components/LeadDetailPanel.tsx` | Full slide-over Sheet used in **table view, kanban, calendar, and opportunities only** — NOT used in list view |
 | LeadFilters | `components/LeadFilters.tsx` | Filter UI |
 | PipelineToolbar | `components/PipelineToolbar.tsx` | Kanban pipeline toolbar (legacy ToolbarPill usage) |
 | CsvImportWizard | `components/CsvImportWizard.tsx` | CSV lead import flow |

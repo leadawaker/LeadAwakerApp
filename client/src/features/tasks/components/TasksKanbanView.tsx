@@ -29,12 +29,50 @@ import {
 } from "../types";
 import TaskCard from "./TaskCard";
 
-// Data-as-labels pattern: map raw status values → i18n keys (translate only at render time)
+// Data-as-labels pattern: map raw status values → i18n keys
 const STATUS_I18N_KEY: Record<string, string> = {
   todo: "status.todo",
   in_progress: "status.inProgress",
   done: "status.done",
   cancelled: "status.cancelled",
+};
+
+// ── Column theming (Notion-style) ──────────────────────────────────────
+const COLUMN_THEME: Record<TaskStatus, {
+  bg: string;
+  border: string;
+  headerText: string;
+  countBg: string;
+  countText: string;
+}> = {
+  todo: {
+    bg: "bg-card",
+    border: "border-border/30",
+    headerText: "text-foreground",
+    countBg: "bg-muted",
+    countText: "text-muted-foreground",
+  },
+  in_progress: {
+    bg: "bg-blue-50/50 dark:bg-blue-950/15",
+    border: "border-blue-200/50 dark:border-blue-800/25",
+    headerText: "text-blue-700 dark:text-blue-300",
+    countBg: "bg-blue-100/80 dark:bg-blue-900/30",
+    countText: "text-blue-600 dark:text-blue-400",
+  },
+  done: {
+    bg: "bg-emerald-50/50 dark:bg-emerald-950/15",
+    border: "border-emerald-200/50 dark:border-emerald-800/25",
+    headerText: "text-emerald-700 dark:text-emerald-300",
+    countBg: "bg-emerald-100/80 dark:bg-emerald-900/30",
+    countText: "text-emerald-600 dark:text-emerald-400",
+  },
+  cancelled: {
+    bg: "bg-card",
+    border: "border-border/30",
+    headerText: "text-muted-foreground",
+    countBg: "bg-muted",
+    countText: "text-muted-foreground",
+  },
 };
 
 interface TasksKanbanViewProps {
@@ -45,19 +83,9 @@ interface TasksKanbanViewProps {
 
 // ── Sortable card wrapper ──────────────────────────────────────────────
 
-function SortableTaskCard({
-  task,
-}: {
-  task: Task;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
+function SortableTaskCard({ task }: { task: Task }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: task.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -66,7 +94,13 @@ function SortableTaskCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="cursor-grab active:cursor-grabbing"
+    >
       <TaskCard task={task} />
     </div>
   );
@@ -80,7 +114,7 @@ function KanbanColumn({
   color,
   tasks,
 }: {
-  status: string;
+  status: TaskStatus;
   label: string;
   color: string;
   tasks: Task[];
@@ -91,12 +125,16 @@ function KanbanColumn({
     data: { type: "column", status },
   });
 
+  const theme = COLUMN_THEME[status];
+
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col rounded-2xl flex-shrink-0 h-full min-w-[260px] flex-1",
-        "bg-card border border-border/30 transition-shadow duration-150",
+        "flex flex-col rounded-2xl h-full",
+        "border transition-shadow duration-150",
+        theme.bg,
+        theme.border,
         isOver && "ring-2 ring-brand-indigo/20"
       )}
     >
@@ -106,30 +144,30 @@ function KanbanColumn({
           className="h-2.5 w-2.5 rounded-full shrink-0"
           style={{ backgroundColor: color }}
         />
-        <span className="text-[13px] font-semibold text-foreground">
+        <span className={cn("text-[13px] font-semibold", theme.headerText)}>
           {label}
         </span>
-        <span className="text-[12px] font-medium tabular-nums ml-auto bg-muted rounded-full px-2 py-0.5 text-muted-foreground">
+        <span
+          className={cn(
+            "text-[12px] font-medium tabular-nums ml-auto rounded-full px-2 py-0.5",
+            theme.countBg,
+            theme.countText
+          )}
+        >
           {tasks.length}
         </span>
       </div>
 
       {/* Column body */}
-      <SortableContext
-        items={tasks.map((t) => t.id)}
-        strategy={verticalListSortingStrategy}
-      >
+      <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <div className="flex-1 overflow-y-auto px-2 pb-3 min-h-0">
           <div className="flex flex-col gap-3">
             {tasks.length > 0 ? (
               tasks.map((task) => (
-                <SortableTaskCard
-                  key={task.id}
-                  task={task}
-                />
+                <SortableTaskCard key={task.id} task={task} />
               ))
             ) : (
-              <div className="flex items-center justify-center py-12 text-[13px] text-muted-foreground">
+              <div className="flex items-center justify-center py-12 text-[13px] text-muted-foreground/50">
                 {t("page.noTasks")}
               </div>
             )}
@@ -181,7 +219,7 @@ export default function TasksKanbanView({
       else grouped.todo.push(task);
     }
 
-    return TASK_STATUSES.map((s) => ({
+    return TASK_STATUSES.filter((s) => s !== "cancelled").map((s) => ({
       status: s,
       label: t(STATUS_I18N_KEY[s] ?? s),
       color: STATUS_COLORS[s],
@@ -189,9 +227,7 @@ export default function TasksKanbanView({
     }));
   }, [tasks, searchQuery, sort, t]);
 
-  const activeTask = activeId
-    ? tasks.find((t) => t.id === activeId) ?? null
-    : null;
+  const activeTask = activeId ? tasks.find((t) => t.id === activeId) ?? null : null;
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as number);
@@ -220,14 +256,10 @@ export default function TasksKanbanView({
       }
 
       if (!targetStatus) return;
-
       const task = tasks.find((t) => t.id === taskId);
       if (!task || task.status === targetStatus) return;
 
-      updateMutation.mutate({
-        id: taskId,
-        data: { status: targetStatus },
-      });
+      updateMutation.mutate({ id: taskId, data: { status: targetStatus } });
     },
     [tasks, columns, updateMutation]
   );
@@ -239,8 +271,9 @@ export default function TasksKanbanView({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      {/* Grid: 3 equal columns filling the full panel width */}
       <div
-        className="flex flex-1 gap-4 overflow-x-auto scroll-smooth min-h-0 h-full p-1 max-w-[1386px] w-full mr-auto"
+        className="grid grid-cols-3 gap-4 flex-1 min-h-0 h-full p-1 w-full"
         data-testid="tasks-kanban-board"
       >
         {columns.map((col) => (
@@ -254,7 +287,7 @@ export default function TasksKanbanView({
         ))}
       </div>
 
-      {/* Drag overlay — ghost card while dragging */}
+      {/* Drag overlay */}
       <DragOverlay>
         {activeTask ? (
           <div className="opacity-80 rotate-2 scale-105">

@@ -54,6 +54,15 @@ import {
   type Task,
   type InsertTask,
   insertTaskSchema,
+  aiAgents,
+  aiSessions,
+  aiMessages,
+  type AiAgent,
+  type InsertAiAgent,
+  type AiSession,
+  type InsertAiSession,
+  type AiMessage,
+  type InsertAiMessage,
 } from "@shared/schema";
 
 
@@ -196,6 +205,23 @@ export interface IStorage {
   createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
   getSupportMessagesBySessionId(sessionId: string): Promise<SupportMessage[]>;
   cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }>;
+
+  // AI Agents
+  getAiAgents(): Promise<AiAgent[]>;
+  getAiAgentById(id: number): Promise<AiAgent | undefined>;
+  createAiAgent(data: InsertAiAgent): Promise<AiAgent>;
+  updateAiAgent(id: number, data: Partial<InsertAiAgent>): Promise<AiAgent | undefined>;
+
+  // AI Sessions
+  createAiSession(data: InsertAiSession): Promise<AiSession>;
+  getAiSessionsByUserId(userId: number): Promise<AiSession[]>;
+  getAiSessionBySessionId(sessionId: string): Promise<AiSession | undefined>;
+  getActiveAiSessionByUserAndAgent(userId: number, agentId: number): Promise<AiSession | undefined>;
+  updateAiSession(id: number, data: Partial<InsertAiSession>): Promise<AiSession | undefined>;
+
+  // AI Messages
+  createAiMessage(data: InsertAiMessage): Promise<AiMessage>;
+  getAiMessagesBySessionId(sessionId: string): Promise<AiMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -294,6 +320,11 @@ export class DatabaseStorage implements IStorage {
 
   async getInteractions(): Promise<Interactions[]> {
     return db.select().from(interactions).orderBy(desc(interactions.createdAt));
+  }
+
+  async getInteractionById(id: number): Promise<Interactions | undefined> {
+    const [row] = await db.select().from(interactions).where(eq(interactions.id, id));
+    return row;
   }
 
   async getInteractionsByLeadId(leadId: number): Promise<Interactions[]> {
@@ -824,6 +855,69 @@ export class DatabaseStorage implements IStorage {
       .where(lt(supportSessions.createdAt, cutoff))
       .returning({ id: supportSessions.id });
     return { sessions: deletedSessions.length, messages: deletedMsgs.length };
+  }
+
+  // ─── AI Agents ────────────────────────────────────────────────────────
+
+  async getAiAgents(): Promise<AiAgent[]> {
+    return db.select().from(aiAgents).where(eq(aiAgents.enabled, true)).orderBy(asc(aiAgents.displayOrder));
+  }
+
+  async getAiAgentById(id: number): Promise<AiAgent | undefined> {
+    const [row] = await db.select().from(aiAgents).where(eq(aiAgents.id, id));
+    return row;
+  }
+
+  async createAiAgent(data: InsertAiAgent): Promise<AiAgent> {
+    const [row] = await db.insert(aiAgents).values(data as any).returning();
+    return row;
+  }
+
+  async updateAiAgent(id: number, data: Partial<InsertAiAgent>): Promise<AiAgent | undefined> {
+    const [row] = await db.update(aiAgents).set(data as any).where(eq(aiAgents.id, id)).returning();
+    return row;
+  }
+
+  // ─── AI Sessions ──────────────────────────────────────────────────────
+
+  async createAiSession(data: InsertAiSession): Promise<AiSession> {
+    const [row] = await db.insert(aiSessions).values(data as any).returning();
+    return row;
+  }
+
+  async getAiSessionsByUserId(userId: number): Promise<AiSession[]> {
+    return db.select().from(aiSessions).where(eq(aiSessions.userId, userId)).orderBy(desc(aiSessions.createdAt));
+  }
+
+  async getAiSessionBySessionId(sessionId: string): Promise<AiSession | undefined> {
+    const [row] = await db.select().from(aiSessions).where(eq(aiSessions.sessionId, sessionId));
+    return row;
+  }
+
+  async getActiveAiSessionByUserAndAgent(userId: number, agentId: number): Promise<AiSession | undefined> {
+    const [row] = await db
+      .select()
+      .from(aiSessions)
+      .where(and(eq(aiSessions.userId, userId), eq(aiSessions.agentId, agentId), eq(aiSessions.status, "active")))
+      .orderBy(desc(aiSessions.createdAt))
+      .limit(1);
+    return row;
+  }
+
+  async updateAiSession(id: number, data: Partial<InsertAiSession>): Promise<AiSession | undefined> {
+    const [row] = await db.update(aiSessions).set(data as any).where(eq(aiSessions.id, id)).returning();
+    return row;
+  }
+
+  // ─── AI Messages ──────────────────────────────────────────────────────
+
+  async createAiMessage(data: InsertAiMessage): Promise<AiMessage> {
+    const [row] = await db.insert(aiMessages).values(data as any).returning();
+    return row;
+  }
+
+  async getAiMessagesBySessionId(sessionId: string): Promise<AiMessage[]> {
+    return db.select().from(aiMessages).where(eq(aiMessages.sessionId, sessionId)).orderBy(asc(aiMessages.createdAt));
   }
 }
 

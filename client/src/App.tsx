@@ -189,11 +189,16 @@ function Router() {
       {!isAppArea && <Navbar />}
 
       <main className="flex-grow">
-        {/* English routes (no prefix) */}
-        {!lang && <AppRoutes />}
-
-        {/* Language-prefixed routes */}
-        {lang && <LanguageRouter lang={lang} />}
+        {isAppArea ? (
+          /* CRM app — theme controlled by the manual toggle */
+          !lang && <AppRoutes />
+        ) : (
+          /* Public pages — theme follows system preference */
+          <div id="public-shell">
+            {!lang && <AppRoutes />}
+            {lang && <LanguageRouter lang={lang} />}
+          </div>
+        )}
       </main>
 
       {!isAppArea && <Footer />}

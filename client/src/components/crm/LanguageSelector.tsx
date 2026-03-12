@@ -28,7 +28,7 @@ export function LanguageSelector() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-2 h-9 min-w-[160px] px-4 rounded-lg border border-border bg-background text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 h-9 min-w-[160px] px-4 rounded-lg border border-border/40 bg-white dark:bg-card text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
           data-testid="language-selector-trigger"
         >
           <span className="text-base leading-none">{current.flag}</span>

@@ -711,6 +711,21 @@ export function SupportChatWidget({
                 </div>
               </div>
             </div>
+
+            {/* ── Agent switcher tabs (agency users — header row) ── */}
+            {isAgencyUser && aiAgents && aiAgents.length > 0 && (
+              <div className="px-4 pb-2.5 flex items-center gap-1.5 flex-wrap">
+                {aiAgents.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => onOpenAgent?.(a.id)}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border border-black/[0.1] text-foreground/60 hover:text-brand-indigo hover:border-brand-indigo/30 hover:bg-brand-indigo/5 transition-colors"
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── Escalation banner — top of chat view ── */}
@@ -863,21 +878,6 @@ export function SupportChatWidget({
             </div>
           </div>
 
-          {/* ── "Switch to agent" footer (agency users only) ── */}
-          {isAgencyUser && aiAgents && aiAgents.length > 0 && (
-            <div className="px-3 py-1.5 border-t border-border/40 flex items-center gap-2 flex-wrap shrink-0">
-              <span className="text-[11px] text-muted-foreground">Switch to:</span>
-              {aiAgents.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => onOpenAgent?.(a.id)}
-                  className="text-[11px] text-brand-indigo hover:underline"
-                >
-                  {a.name} →
-                </button>
-              ))}
-            </div>
-          )}
 
         </div>
       </section>

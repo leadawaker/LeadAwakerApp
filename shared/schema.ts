@@ -812,3 +812,56 @@ export const insertTaskSchema = createInsertSchema(tasks, {
 });
 export type Task = typeof tasks.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
+
+// ─── AI Agents ──────────────────────────────────────────────────────────────
+
+export const aiAgents = nocodb.table("AI_Agents", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("custom"), // 'campaign_crafter' | 'code_runner' | 'custom'
+  systemPrompt: text("system_prompt"),
+  photoUrl: text("photo_url"),
+  config: text("config"), // JSON string for extra config
+  enabled: boolean("enabled").notNull().default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAiAgentSchema = createInsertSchema(aiAgents).omit({ id: true, createdAt: true });
+export type AiAgent = typeof aiAgents.$inferSelect;
+export type InsertAiAgent = z.infer<typeof insertAiAgentSchema>;
+
+export const aiSessions = nocodb.table("AI_Sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  userId: integer("user_id").notNull(),
+  agentId: integer("agent_id").notNull(),
+  title: text("title"),
+  cliSessionId: text("cli_session_id"), // unused for now, kept for future --resume support
+  status: text("status").notNull().default("active"), // 'active' | 'closed'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("ai_sessions_user_id_idx").on(t.userId),
+  index("ai_sessions_agent_id_idx").on(t.agentId),
+  index("ai_sessions_session_id_idx").on(t.sessionId),
+]);
+
+export const insertAiSessionSchema = createInsertSchema(aiSessions).omit({ id: true, createdAt: true });
+export type AiSession = typeof aiSessions.$inferSelect;
+export type InsertAiSession = z.infer<typeof insertAiSessionSchema>;
+
+export const aiMessages = nocodb.table("AI_Messages", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  role: text("role").notNull(), // 'user' | 'assistant'
+  content: text("content").notNull(),
+  subAgentBlocks: text("sub_agent_blocks"), // JSON array of {name, content}
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("ai_messages_session_id_idx").on(t.sessionId),
+  index("ai_messages_created_at_idx").on(t.createdAt),
+]);
+
+export const insertAiMessageSchema = createInsertSchema(aiMessages).omit({ id: true, createdAt: true });
+export type AiMessage = typeof aiMessages.$inferSelect;
+export type InsertAiMessage = z.infer<typeof insertAiMessageSchema>;

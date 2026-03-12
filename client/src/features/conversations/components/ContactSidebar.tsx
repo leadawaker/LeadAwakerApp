@@ -439,6 +439,8 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                     if (!res.ok) throw new Error("Failed");
                     toast({ title: "Demo started!", description: `Reset + first message sent for ${lead.name || lead.Name || "this lead"}` });
                     onRefresh?.();
+                    // Delayed refresh to pick up the first automation message after it's written to DB
+                    setTimeout(() => onRefresh?.(), 4000);
                   } catch {
                     toast({ title: "Demo reset failed", description: "Automation service may be offline", variant: "destructive" });
                   }

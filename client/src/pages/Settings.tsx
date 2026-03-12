@@ -13,10 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
-  Mail, MessageSquare, Globe, Lock, Eye, EyeOff, Building2,
+  Mail, MessageSquare, Globe, Eye, EyeOff, Building2,
   User, Shield, Bell, Clock, Receipt, FileText, CheckCircle, PenLine,
   Phone, CalendarCheck, MessageSquareWarning, Bot, AlertTriangle,
-  Megaphone, TrendingDown, Camera, X, Users,
+  Megaphone, TrendingDown, Camera, X, Users, ChevronDown,
   ChevronRight, ArrowLeft, Sun, Moon, Instagram, Facebook, BookOpen,
   Palette, Languages, Cpu, ExternalLink,
 } from "lucide-react";
@@ -42,6 +42,7 @@ type UserProfile = {
   role: string | null;
   status: string | null;
   accountsId: number | null;
+  lastLoginAt: string | null;
 };
 
 // ── Notification types ───────────────────────────────────────────────
@@ -92,12 +93,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 // ── Settings sections ────────────────────────────────────────────────
-type SettingsSection = "profile" | "security" | "notifications" | "dashboard" | "team" | "account";
+type SettingsSection = "profile" | "notifications" | "dashboard" | "team" | "account";
 
 const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.ElementType; agencyOnly?: boolean; scopedOnly?: boolean }[] = [
   { id: "account", labelKey: "sections.account", icon: Building2, scopedOnly: true },
   { id: "profile", labelKey: "sections.profile", icon: User },
-  { id: "security", labelKey: "sections.security", icon: Shield },
   { id: "notifications", labelKey: "sections.notifications", icon: Bell },
   { id: "dashboard", labelKey: "sections.dashboard", icon: Clock },
   { id: "team", labelKey: "sections.team", icon: Users, agencyOnly: true },
@@ -131,7 +131,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-input-bg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+        className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-white dark:bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
         data-testid={testId}
         placeholder={placeholder}
       />
@@ -168,7 +168,7 @@ function PasswordField({
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-full rounded-xl border border-border/40 bg-input-bg px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+          className="h-10 w-full rounded-xl border border-border/40 bg-white dark:bg-card px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
           data-testid={testId}
           placeholder={placeholder}
           autoComplete={autoComplete}
@@ -345,6 +345,7 @@ function SettingsContent() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
 
   // ── Notification state ─────────────────────────────────────────────
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(getDefaultNotifPrefs);
@@ -632,31 +633,19 @@ function SettingsContent() {
 
   // ── Render sections ────────────────────────────────────────────────
   const renderProfile = () => (
-    <div className="space-y-6" data-testid="section-profile">
-      {/* Language */}
-      <div className="flex items-center gap-3">
-        <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-sm font-medium text-foreground">{t("language.label")}</span>
-        <div className="ml-auto"><LanguageSelector /></div>
-      </div>
-
-      <p className="text-sm text-muted-foreground">
-        {t("profile.description")}
-      </p>
-
+    <div className="space-y-8" data-testid="section-profile">
       {profileLoading ? (
         <SkeletonSettingsSection rows={4} />
       ) : profileError ? (
         <div className="text-sm text-red-500 py-4">{profileError}</div>
       ) : (
         <>
-          {/* Avatar display — clickable with upload */}
-          <div className="flex items-center gap-4">
+          {/* Avatar + Identity Card */}
+          <div className="flex items-center gap-5 rounded-2xl bg-muted/40 p-5">
             <div className="relative shrink-0 group/avatar">
-              {/* Avatar circle — click to upload */}
               <div
                 className={cn(
-                  "h-[72px] w-[72px] rounded-full overflow-hidden cursor-pointer",
+                  "h-[72px] w-[72px] rounded-full overflow-hidden cursor-pointer ring-2 ring-border/20 ring-offset-2 ring-offset-card",
                   !avatarUrl && "flex items-center justify-center text-xl font-bold"
                 )}
                 onClick={() => avatarInputRef.current?.click()}
@@ -772,21 +761,33 @@ function SettingsContent() {
               </DialogContent>
             </Dialog>
 
-            <div>
-              <div className="text-sm font-semibold text-foreground">{name || t("profile.noName")}</div>
-              <div className="text-xs text-muted-foreground">{profile?.role || t("profile.userFallback")}</div>
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                className="mt-1 text-xs font-semibold text-brand-indigo hover:opacity-80 transition-opacity"
-              >
-                {t("profile.uploadPhoto")}
-              </button>
+            <div className="flex-1 min-w-0">
+              <div className="text-xl font-bold font-heading text-foreground truncate">{name || t("profile.noName")}</div>
+              <span className={cn(
+                "inline-block mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full",
+                profile?.role === "Admin" ? "bg-brand-indigo/10 text-brand-indigo" :
+                profile?.role === "Manager" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                profile?.role === "Editor" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+                "bg-muted text-muted-foreground"
+              )}>
+                {profile?.role || t("profile.userFallback")}
+              </span>
+              {profile?.lastLoginAt && (
+                <div className="text-[11px] text-muted-foreground/60 mt-1.5 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {t("profile.lastLogin")}: {new Date(profile.lastLoginAt).toLocaleDateString(undefined, { dateStyle: "medium" })}{", "}{new Date(profile.lastLoginAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Form fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-onboarding="profile-name">
+          {/* Personal Information */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold font-heading text-foreground">{t("profile.description")}</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-onboarding="profile-name">
             <Field
               label={t("profile.fullName")}
               value={name}
@@ -826,7 +827,7 @@ function SettingsContent() {
                 id="profile-timezone-select"
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-input-bg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+                className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-white dark:bg-card px-3 pr-8 text-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
                 data-testid="select-profile-timezone"
                 aria-label={t("profile.timezone")}
               >
@@ -843,30 +844,143 @@ function SettingsContent() {
           </div>
 
           {/* Save button */}
-          <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                className="h-11 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+                data-testid="button-save-profile"
+                data-onboarding="save-profile"
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+              >
+                {isSaving ? t("profile.saving") : t("profile.saveChanges")}
+              </button>
+            </div>
+          </div>
+
+          {/* Security — collapsible password section */}
+          <div className="rounded-2xl bg-muted/40 overflow-hidden" data-testid="section-security">
             <button
               type="button"
-              className="h-11 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
-              data-testid="button-save-profile"
-              data-onboarding="save-profile"
-              onClick={handleSaveProfile}
-              disabled={isSaving}
+              onClick={() => setShowPasswordSection((p) => !p)}
+              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/60 transition-colors duration-150"
+              data-testid="toggle-password-section"
             >
-              {isSaving ? t("profile.saving") : t("profile.saveChanges")}
+              <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-semibold text-foreground">{t("security.changePassword")}</div>
+                <div className="text-xs text-muted-foreground">{t("security.changePasswordDescription")}</div>
+              </div>
+              <ChevronDown className={cn(
+                "h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200",
+                showPasswordSection && "rotate-180"
+              )} />
             </button>
+
+            <div
+              className="grid transition-[grid-template-rows] duration-200 ease-out"
+              style={{ gridTemplateRows: showPasswordSection ? "1fr" : "0fr" }}
+            >
+              <div className="overflow-hidden">
+                <div className="px-5 pb-5 pt-1 space-y-4">
+                  {passwordError && (
+                    <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2" data-testid="text-password-error">
+                      {passwordError}
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <PasswordField
+                      label={t("security.currentPassword")}
+                      value={currentPassword}
+                      onChange={setCurrentPassword}
+                      show={showCurrentPassword}
+                      onToggleShow={() => setShowCurrentPassword((p) => !p)}
+                      testId="input-current-password"
+                      placeholder={t("security.currentPasswordPlaceholder")}
+                      autoComplete="current-password"
+                    />
+                    <PasswordField
+                      label={t("security.newPassword")}
+                      value={newPassword}
+                      onChange={setNewPassword}
+                      show={showNewPassword}
+                      onToggleShow={() => setShowNewPassword((p) => !p)}
+                      testId="input-new-password"
+                      placeholder={t("security.newPasswordPlaceholder")}
+                      autoComplete="new-password"
+                    />
+                    <PasswordField
+                      label={t("security.confirmPassword")}
+                      value={confirmPassword}
+                      onChange={setConfirmPassword}
+                      show={showConfirmPassword}
+                      onToggleShow={() => setShowConfirmPassword((p) => !p)}
+                      testId="input-confirm-password"
+                      placeholder={t("security.confirmPasswordPlaceholder")}
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={handleResetEmail}
+                      disabled={isResetting}
+                      className="text-xs font-semibold text-brand-indigo hover:opacity-80 disabled:opacity-50 transition-opacity duration-150"
+                      data-testid="button-reset-password"
+                    >
+                      {isResetting ? t("security.sendingReset") : t("security.forgotSendReset")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleChangePassword}
+                      disabled={isChangingPassword}
+                      className="h-11 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+                      data-testid="button-change-password"
+                    >
+                      {isChangingPassword ? t("security.changing") : t("security.updatePassword")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Language selector */}
+          <div className="rounded-2xl bg-muted/40 px-5 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{t("language.label")}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t("language.description")}</p>
+                </div>
+              </div>
+              <LanguageSelector />
+            </div>
           </div>
 
           {/* Tutorial restart — only for subaccount users */}
           {!isAgencyUser && (
-            <div className="pt-4 mt-4 border-t border-border/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{t("profile.onboardingTutorial")}</p>
-                  <p className="text-xs text-muted-foreground">{t("profile.onboardingDescription")}</p>
+            <div className="rounded-2xl bg-muted/40 px-5 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{t("profile.onboardingTutorial")}</p>
+                    <p className="text-xs text-muted-foreground truncate">{t("profile.onboardingDescription")}</p>
+                  </div>
                 </div>
                 <button
                   type="button"
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                  className="text-xs font-semibold px-4 py-2 rounded-full border border-border/60 hover:bg-background transition-colors shrink-0"
                   data-testid="button-restart-tutorial"
                   onClick={async () => {
                     try {
@@ -875,8 +989,6 @@ function SettingsContent() {
                         const data = await res.json();
                         queryClient.setQueryData(["/api/onboarding/status"], data);
                         toast({ title: t("profile.tutorialRestarted"), description: t("profile.tutorialRestartedDescription") });
-                        // Navigate to campaigns, then fire the restart event so the
-                        // persistent OnboardingProvider (in CrmShell) shows the WelcomeModal
                         setLocation("/subaccount/campaigns");
                         setTimeout(() => window.dispatchEvent(new CustomEvent("onboarding-restart")), 50);
                       } else {
@@ -894,87 +1006,6 @@ function SettingsContent() {
           )}
         </>
       )}
-    </div>
-  );
-
-  const renderSecurity = () => (
-    <div className="space-y-6" data-testid="section-security">
-      <p className="text-sm text-muted-foreground">
-        {t("security.description")}
-      </p>
-
-      {/* Change Password */}
-      <div className="rounded-xl bg-muted/60 p-5 space-y-4">
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
-            <Lock className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">{t("security.changePassword")}</div>
-            <div className="text-xs text-muted-foreground">{t("security.changePasswordDescription")}</div>
-          </div>
-        </div>
-
-        {passwordError && (
-          <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2" data-testid="text-password-error">
-            {passwordError}
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <PasswordField
-            label={t("security.currentPassword")}
-            value={currentPassword}
-            onChange={setCurrentPassword}
-            show={showCurrentPassword}
-            onToggleShow={() => setShowCurrentPassword((p) => !p)}
-            testId="input-current-password"
-            placeholder={t("security.currentPasswordPlaceholder")}
-            autoComplete="current-password"
-          />
-          <PasswordField
-            label={t("security.newPassword")}
-            value={newPassword}
-            onChange={setNewPassword}
-            show={showNewPassword}
-            onToggleShow={() => setShowNewPassword((p) => !p)}
-            testId="input-new-password"
-            placeholder={t("security.newPasswordPlaceholder")}
-            autoComplete="new-password"
-          />
-          <PasswordField
-            label={t("security.confirmPassword")}
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            show={showConfirmPassword}
-            onToggleShow={() => setShowConfirmPassword((p) => !p)}
-            testId="input-confirm-password"
-            placeholder={t("security.confirmPasswordPlaceholder")}
-            autoComplete="new-password"
-          />
-        </div>
-
-        <div className="flex items-center justify-between pt-1">
-          <button
-            type="button"
-            onClick={handleResetEmail}
-            disabled={isResetting}
-            className="text-xs font-semibold text-brand-indigo hover:opacity-80 disabled:opacity-50 transition-opacity duration-150"
-            data-testid="button-reset-password"
-          >
-            {isResetting ? t("security.sendingReset") : t("security.forgotSendReset")}
-          </button>
-          <button
-            type="button"
-            onClick={handleChangePassword}
-            disabled={isChangingPassword}
-            className="h-11 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
-            data-testid="button-change-password"
-          >
-            {isChangingPassword ? t("security.changing") : t("security.updatePassword")}
-          </button>
-        </div>
-      </div>
     </div>
   );
 
@@ -1024,7 +1055,7 @@ function SettingsContent() {
                 value={telegramChatIdInput}
                 onChange={(e) => setTelegramChatIdInput(e.target.value)}
                 placeholder={t("notifications.telegram.chatIdPlaceholder")}
-                className="h-10 flex-1 rounded-xl border border-border/40 bg-input-bg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40 transition-shadow duration-200"
+                className="h-10 flex-1 rounded-xl border border-border/40 bg-white dark:bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40 transition-shadow duration-200"
                 data-testid="input-telegram-chat-id"
               />
               <button
@@ -1277,7 +1308,6 @@ function SettingsContent() {
           />
         );
       case "profile": return renderProfile();
-      case "security": return renderSecurity();
       case "notifications": return renderNotifications();
       case "dashboard": return renderDashboard();
       case "team": return <SettingsTeamSection />;

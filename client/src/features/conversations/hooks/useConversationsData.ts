@@ -128,6 +128,18 @@ export function useConversationsData(
       : `${API_BASE}/api/interactions/stream`;
     const es = new EventSource(url, { withCredentials: true });
 
+    es.addEventListener("lead_reset", (e: MessageEvent) => {
+      try {
+        const { leads_id } = JSON.parse(e.data);
+        if (!leads_id) return;
+        setInteractions((prev) =>
+          prev.filter((i) => (i.leads_id ?? i.lead_id ?? (i as any).Leads_id) !== leads_id)
+        );
+      } catch (err) {
+        console.error("[sse] Failed to parse lead_reset event:", err);
+      }
+    });
+
     es.addEventListener("new_interaction", (e: MessageEvent) => {
       try {
         const raw = JSON.parse(e.data);
@@ -152,6 +164,19 @@ export function useConversationsData(
           if (prev.some((i) => i.id === newMsg.id)) return prev; // dedupe
           return [...prev, newMsg];
         });
+
+        // Fetch the full interaction record to get attachment (image/audio data URLs are excluded
+        // from the SSE payload due to Postgres NOTIFY's 8kb limit)
+        fetch(`${API_BASE}/api/interactions/${newMsg.id}`, { credentials: "include" })
+          .then((r) => r.ok ? r.json() : null)
+          .then((full) => {
+            if (full) {
+              setInteractions((prev) =>
+                prev.map((i) => i.id === newMsg.id ? { ...i, ...full } : i)
+              );
+            }
+          })
+          .catch(() => {/* silently ignore */});
 
         // Re-fetch the lead to pick up any status changes (e.g. Conversion_Status updated by automation)
         const leadId = newMsg.leads_id ?? newMsg.lead_id;

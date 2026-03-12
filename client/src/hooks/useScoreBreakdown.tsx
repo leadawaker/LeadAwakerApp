@@ -48,8 +48,39 @@ export const TIER_ARC_COLOR: Record<string, string> = {
   Lost:     "#9CA3AF",
 };
 
+export const TIER_BAR_COLOR: Record<string, string> = {
+  Hot:      "#EF4444",
+  Awake:    "#10B981",
+  Lukewarm: "#F59E0B",
+  Cold:     "#3B82F6",
+  Sleeping: "#9CA3AF",
+  Lost:     "#9CA3AF",
+};
+
 export function TrendIcon({ trend }: { trend: "up" | "down" | "stable" }) {
   if (trend === "up")   return <TrendingUp   className="h-3.5 w-3.5 text-green-500" />;
   if (trend === "down") return <TrendingDown  className="h-3.5 w-3.5 text-red-400" />;
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+}
+
+export interface ScoreHistoryPoint {
+  date: string;
+  score: number;
+}
+
+export function useScoreHistory(leadId: number | null) {
+  const [history, setHistory] = useState<ScoreHistoryPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!leadId) return;
+    setLoading(true);
+    apiFetch(`/api/leads/${leadId}/score-history?days=14`)
+      .then((r) => r.json())
+      .then((data) => setHistory(Array.isArray(data) ? data : []))
+      .catch(() => setHistory([]))
+      .finally(() => setLoading(false));
+  }, [leadId]);
+
+  return { history, loading };
 }

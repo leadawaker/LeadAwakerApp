@@ -74,7 +74,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   // during render (before the memo runs), avoiding all async state timing issues.
   const onConversations = location.includes('/conversations');
   const lastChatVisitRef = useRef<string | null>(localStorage.getItem("leadawaker_lastChatVisitedAt"));
-  const prevOnConversations = useRef(onConversations);
+  // Initialize to false so the transition always fires on mount (even when page loads directly
+  // on /conversations), ensuring the cutoff is set to "now" rather than a stale localStorage value.
+  const prevOnConversations = useRef(false);
 
   if (prevOnConversations.current !== onConversations) {
     prevOnConversations.current = onConversations;
@@ -87,6 +89,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   }
 
   const unreadChatCount = useMemo(() => {
+    // If the user is currently viewing conversations, there's nothing to alert them to.
+    if (onConversations) return 0;
     const cutoff = lastChatVisitRef.current ? new Date(lastChatVisitRef.current) : null;
     const items = Array.isArray(notifData) ? notifData : [];
     return items.filter(n => n.type === 'inbound' && (!cutoff || new Date(n.at) > cutoff)).length;

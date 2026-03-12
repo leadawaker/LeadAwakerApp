@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, ClipboardList, Filter, Plus } from "lucide-react";
+import { ArrowUpDown, CalendarDays, ClipboardList, Plus, Tag } from "lucide-react";
 
 import { SearchPill } from "@/components/ui/search-pill";
 import {
@@ -19,7 +19,8 @@ import MobileTaskCreatePanel from "../components/MobileTaskCreatePanel";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   SORT_OPTIONS,
-  STATUS_OPTIONS,
+  TASK_TAG_PRESETS,
+  parseTags,
   sortTasks,
   type SortOption,
   type TaskStatus,
@@ -47,8 +48,45 @@ function saveLocal(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ── Component ────────────────────────────────────────────────────────
-// Map sort option values to translation keys
+// ── Date range filter ────────────────────────────────────────────────
+type DateRange = "all" | "today" | "this_week" | "this_month" | "this_year";
+
+const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: "all",        label: "All time" },
+  { value: "today",      label: "Today" },
+  { value: "this_week",  label: "This week" },
+  { value: "this_month", label: "This month" },
+  { value: "this_year",  label: "This year" },
+];
+
+function matchesDateRange(date: Date, range: DateRange): boolean {
+  const now = new Date();
+  const sod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  switch (range) {
+    case "today":
+      return date >= sod && date < new Date(sod.getTime() + 86_400_000);
+    case "this_week": {
+      const sw = new Date(sod);
+      sw.setDate(sod.getDate() - sod.getDay());
+      return date >= sw && date < new Date(sw.getTime() + 7 * 86_400_000);
+    }
+    case "this_month":
+      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    case "this_year":
+      return date.getFullYear() === now.getFullYear();
+    default:
+      return true;
+  }
+}
+
+function taskInRange(task: Task, range: DateRange): boolean {
+  if (range === "all") return true;
+  const raw = task.dueDate ?? task.createdAt;
+  if (!raw) return true;
+  return matchesDateRange(new Date(raw), range);
+}
+
+// ── Sort key map ─────────────────────────────────────────────────────
 const SORT_KEYS: Record<string, string> = {
   due_date_asc: "sort.dueDateAsc",
   due_date_desc: "sort.dueDateDesc",
@@ -58,14 +96,6 @@ const SORT_KEYS: Record<string, string> = {
   created_asc: "sort.createdAsc",
   title_asc: "sort.titleAsc",
   title_desc: "sort.titleDesc",
-};
-
-// Map status option values to translation keys
-const STATUS_KEYS: Record<string, string> = {
-  todo: "status.todo",
-  in_progress: "status.inProgress",
-  done: "status.done",
-  cancelled: "status.cancelled",
 };
 
 export default function TasksPage() {
@@ -81,7 +111,11 @@ export default function TasksPage() {
   // Transient state
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<TaskStatus[]>([]);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange>("all");
+
+  // Mobile tab state
+  const [mobileTab, setMobileTab] = useState<TaskStatus>("todo");
 
   // Mobile detail panel state
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
@@ -95,37 +129,60 @@ export default function TasksPage() {
     saveLocal("tasks-sort", v);
   }, []);
 
-  const toggleFilterStatus = useCallback((s: TaskStatus) => {
-    setFilterStatus((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+  const toggleFilterTag = useCallback((tag: string) => {
+    setFilterTags((prev) =>
+      prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]
     );
   }, []);
 
-  // Filtered tasks (for desktop kanban)
-  const filteredTasks = filterStatus.length
-    ? tasks.filter((t) => filterStatus.includes(t.status as TaskStatus))
-    : tasks;
+  // Filtered tasks (desktop kanban)
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      if (!taskInRange(t, dateRange)) return false;
+      if (filterTags.length > 0) {
+        const taskTags = parseTags((t as any).tags);
+        if (!filterTags.some((tag) => taskTags.includes(tag))) return false;
+      }
+      return true;
+    });
+  }, [tasks, dateRange, filterTags]);
 
   // Mobile tasks: filtered + searched + sorted
   const mobileTasks = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const statusFiltered = filterStatus.length
-      ? tasks.filter((t) => filterStatus.includes(t.status as TaskStatus))
-      : tasks;
+    const rangeFiltered = tasks.filter((t) => taskInRange(t, dateRange));
+    const tagFiltered = filterTags.length
+      ? rangeFiltered.filter((t) => {
+          const taskTags = parseTags((t as any).tags);
+          return filterTags.some((tag) => taskTags.includes(tag));
+        })
+      : rangeFiltered;
     const searched = q
-      ? statusFiltered.filter(
+      ? tagFiltered.filter(
           (t) =>
             t.title?.toLowerCase().includes(q) ||
             t.description?.toLowerCase().includes(q) ||
             t.leadName?.toLowerCase().includes(q) ||
             t.accountName?.toLowerCase().includes(q)
         )
-      : statusFiltered;
+      : tagFiltered;
     return sortTasks(searched, sort);
-  }, [tasks, filterStatus, searchQuery, sort]);
+  }, [tasks, filterTags, dateRange, searchQuery, sort]);
+
+  // Mobile: tasks filtered to the active tab
+  const tabTasks = useMemo(
+    () => mobileTasks.filter((t) => t.status === mobileTab),
+    [mobileTasks, mobileTab]
+  );
+
+  // Mobile tab definitions
+  const MOBILE_TABS: { key: TaskStatus; label: string }[] = [
+    { key: "todo",        label: t("status.todo") },
+    { key: "in_progress", label: t("status.inProgress") },
+    { key: "done",        label: t("status.done") },
+  ];
 
   const handleCreate = useCallback(async () => {
-    // On mobile, open the full-screen create form instead of silently creating
     if (isMobile) {
       setMobileCreateOpen(true);
       return;
@@ -182,26 +239,54 @@ export default function TasksPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Filter */}
+      {/* Tags filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[100px]", filterStatus.length > 0 ? xActive : xDefault)} title={t("toolbar.filter")}>
-            <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
+          <button className={cn(xBase, "hover:max-w-[80px]", filterTags.length > 0 ? xActive : xDefault)} title="Filter by tags">
+            <Tag className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Tags</span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          {STATUS_OPTIONS.map((o) => (
-            <DropdownMenuItem key={o.value} onClick={() => toggleFilterStatus(o.value)} className={cn(filterStatus.includes(o.value) && "font-bold text-brand-indigo")}>
-              {t(STATUS_KEYS[o.value] ?? o.label)}
+        <DropdownMenuContent align="end" className="w-44 max-h-72 overflow-y-auto">
+          {TASK_TAG_PRESETS.map((tag) => (
+            <DropdownMenuItem
+              key={tag}
+              onClick={() => toggleFilterTag(tag)}
+              className={cn(filterTags.includes(tag) && "font-bold text-brand-indigo")}
+            >
+              {tag}
             </DropdownMenuItem>
           ))}
-          {filterStatus.length > 0 && (
-            <DropdownMenuItem onClick={() => setFilterStatus([])} className="text-red-500">{t("toolbar.clearFilters")}</DropdownMenuItem>
+          {filterTags.length > 0 && (
+            <DropdownMenuItem onClick={() => setFilterTags([])} className="text-red-500 border-t border-border/40 mt-1">
+              Clear tags
+            </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Date range filter */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[110px]", dateRange !== "all" ? xActive : xDefault)} title="Filter by date">
+            <CalendarDays className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>
+              {DATE_RANGE_OPTIONS.find((o) => o.value === dateRange)?.label ?? "Date"}
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          {DATE_RANGE_OPTIONS.map((o) => (
+            <DropdownMenuItem
+              key={o.value}
+              onClick={() => setDateRange(o.value)}
+              className={cn(dateRange === o.value && "font-bold text-brand-indigo")}
+            >
+              {o.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   );
 
@@ -221,16 +306,49 @@ export default function TasksPage() {
 
         {/* Mobile list view / Desktop kanban board */}
         {isMobile ? (
-          /* ── Mobile: vertical scrollable task list ── */
+          /* ── Mobile: 3 tabs (Todo / In Progress / Done) ── */
           <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
+
+            {/* Tab bar */}
+            <div className="flex gap-1 px-3 pt-2 pb-1.5 shrink-0">
+              {MOBILE_TABS.map((tab) => {
+                const count = mobileTasks.filter((t) => t.status === tab.key).length;
+                const isActive = mobileTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setMobileTab(tab.key)}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-[13px] font-medium transition-all duration-150",
+                      isActive
+                        ? tab.key === "in_progress"
+                          ? "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300"
+                          : tab.key === "done"
+                          ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
+                          : "bg-foreground/10 text-foreground"
+                        : "text-muted-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    {tab.label}
+                    {count > 0 && (
+                      <span className="text-[11px] tabular-nums opacity-60">
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Task list for active tab */}
             <div className="flex-1 overflow-y-auto px-3 pb-20 flex flex-col gap-2" data-testid="mobile-tasks-list">
-              {mobileTasks.length === 0 ? (
+              {tabTasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground py-16">
                   <ClipboardList className="h-8 w-8 opacity-30" />
                   <p className="text-sm font-medium">{t("page.noTasksFound")}</p>
                 </div>
               ) : (
-                mobileTasks.map((task) => (
+                tabTasks.map((task) => (
                   <MobileTaskListCard
                     key={task.id}
                     task={task}
@@ -239,6 +357,7 @@ export default function TasksPage() {
                 ))
               )}
             </div>
+
             {/* Mobile FAB — New Task */}
             <button
               onClick={() => setMobileCreateOpen(true)}
@@ -250,7 +369,7 @@ export default function TasksPage() {
             </button>
           </div>
         ) : (
-          /* ── Desktop: kanban board (unchanged) ── */
+          /* ── Desktop: kanban board ── */
           <div className="flex-1 min-h-0 overflow-hidden p-[6px] pt-0">
             <TasksKanbanView
               tasks={filteredTasks}
@@ -261,7 +380,7 @@ export default function TasksPage() {
         )}
       </div>
 
-      {/* Mobile full-screen task detail panel (portal → document.body) */}
+      {/* Mobile full-screen task detail panel */}
       {isMobile && selectedTaskId !== null && (
         <MobileTaskDetailPanel
           taskId={selectedTaskId}
@@ -269,7 +388,7 @@ export default function TasksPage() {
         />
       )}
 
-      {/* Mobile full-screen task create panel (portal → document.body) */}
+      {/* Mobile full-screen task create panel */}
       {isMobile && mobileCreateOpen && (
         <MobileTaskCreatePanel
           onClose={() => setMobileCreateOpen(false)}

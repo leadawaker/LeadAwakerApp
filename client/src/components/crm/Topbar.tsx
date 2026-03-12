@@ -102,6 +102,7 @@ export function Topbar({
     try { sessionStorage.setItem("selected-agent-id", String(agentId)); } catch {}
     setSupportOpen(false);
     setMobileSupportOpen(false);
+    window.dispatchEvent(new CustomEvent("select-agent", { detail: { agentId } }));
     setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
   };
 

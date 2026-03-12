@@ -46,5 +46,10 @@ test-results/
 about-*.png
 claude-progress.txt
 01-after-login.png
+
+# AI-generated / attached images — never commit raw PNGs here
+# Use WebP (converted) or reference from attached_assets/ instead
+Generated_Image_*.png
+Generated_Image_*.jpg
 .autoforge/
 core.*

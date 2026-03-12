@@ -84,6 +84,7 @@ export default function ConversationsPage() {
   const handleSelectAgent = (agentId: number) => {
     setSelectedAgentId(agentId);
     setSelectedLeadId(null);
+    setTab("all");
     setMobileView("chat");
   };
 
@@ -108,6 +109,17 @@ export default function ConversationsPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAgentId]);
+
+  // Listen for agent selection dispatched by the floating support widget (same-page navigation)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { agentId } = (e as CustomEvent<{ agentId: number }>).detail;
+      handleSelectAgent(agentId);
+    };
+    window.addEventListener("select-agent", handler);
+    return () => window.removeEventListener("select-agent", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [mobileView, setMobileView] = useState<"inbox" | "chat">("inbox");
   const [mobileTransitioning, setMobileTransitioning] = useState(false);

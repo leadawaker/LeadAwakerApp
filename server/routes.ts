@@ -976,6 +976,13 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     res.json(toDbKeysArray(data as any, interactions));
   }));
 
+  app.get("/api/interactions/:id", requireAuth, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const row = await storage.getInteractionById(id);
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json(toDbKeys(row as any, interactions));
+  }));
+
   app.post("/api/interactions", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertInteractionsSchema.safeParse(fromDbKeys(req.body, interactions));
     if (!parsed.success) return handleZodError(res, parsed.error);
@@ -1199,8 +1206,42 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       tier,
       signals: signals.slice(0, 4),
       trend,
-      last_updated: null,
+      last_updated: new Date().toISOString(),
     });
+  }));
+
+  // GET /api/leads/:id/score-history — historical lead score over time
+  app.get("/api/leads/:id/score-history", requireAuth, wrapAsync(async (req, res) => {
+    const leadId = Number(req.params.id);
+    const lead = await storage.getLeadById(leadId);
+    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (req.user!.accountsId !== 1 && lead.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const days = Number(req.query.days) || 14;
+
+    try {
+      const result = await pool.query(
+        `SELECT score_date, lead_score
+         FROM p2mxx34fvbf3ll6."Lead_Score_History"
+         WHERE leads_id = $1
+           AND score_date >= CURRENT_DATE - ($2 || ' days')::INTERVAL
+         ORDER BY score_date ASC`,
+        [leadId, days]
+      );
+
+      const history = result.rows.map((row: { score_date: Date | string; lead_score: number }) => ({
+        date: typeof row.score_date === "string"
+          ? row.score_date.slice(0, 10)
+          : row.score_date.toISOString().slice(0, 10),
+        score: Number(row.lead_score),
+      }));
+
+      res.json(history);
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to fetch score history", error: err.message });
+    }
   }));
 
   // ─── Demo / Testing Endpoints ─────────────────────────────────────
@@ -1214,6 +1255,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       storage.deleteInteractionsByLeadId(leadId),
       storage.deleteAllLeadTags(leadId),
     ]);
+    broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
     await storage.updateLead(leadId, {
       currentBumpStage: 0,
       messageCountSent: 0,
@@ -1245,6 +1287,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       storage.deleteInteractionsByLeadId(leadId),
       storage.deleteAllLeadTags(leadId),
     ]);
+    broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
     await storage.updateLead(leadId, {
       currentBumpStage: 0,
       messageCountSent: 0,
@@ -2734,7 +2777,7 @@ GUARDRAILS
     // Bot config is stored as JSON in the agency account (id=1) metadata
     try {
       const account = await storage.getAccountById(1);
-      const raw = (account as any)?.support_bot_config;
+      const raw = (account as any)?.supportBotConfig;
       if (raw) {
         const config = typeof raw === "string" ? JSON.parse(raw) : raw;
         return res.json(config);
@@ -2751,6 +2794,43 @@ GUARDRAILS
     const config = { name: name || "Sophie", photoUrl: photoUrl || null, enabled: enabled !== false };
     await storage.updateAccount(1, { supportBotConfig: JSON.stringify(config) } as any);
     res.json(config);
+  }));
+
+  // POST /api/support-chat/transcribe — Groq Whisper transcription (no lead required)
+  app.post("/api/support-chat/transcribe", requireAuth, wrapAsync(async (req, res) => {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return res.status(503).json({ error: "Transcription not configured" });
+
+    const { audio_data, mime_type } = req.body;
+    if (!audio_data) return res.status(400).json({ error: "No audio data provided" });
+
+    try {
+      const base64Clean = (audio_data as string).replace(/^data:[^,]+,/, "");
+      const audioBuffer = Buffer.from(base64Clean, "base64");
+      const rawMime = (mime_type || "audio/webm") as string;
+      const mimeBase = rawMime.split(";")[0].trim();
+      const ext = mimeBase.includes("webm") ? "webm" : mimeBase.includes("ogg") ? "ogg" : mimeBase.includes("mp4") ? "mp4" : mimeBase.includes("wav") ? "wav" : "webm";
+      const file = new File([audioBuffer], `recording.${ext}`, { type: mimeBase });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("model", "whisper-large-v3-turbo");
+      formData.append("response_format", "json");
+      formData.append("temperature", "0");
+      const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: formData,
+      });
+      if (!response.ok) {
+        const errBody = await response.text();
+        return res.status(500).json({ error: "Transcription failed", detail: errBody });
+      }
+      const json = await response.json() as { text?: string };
+      return res.json({ transcription: json.text?.trim() ?? "" });
+    } catch (err) {
+      console.error("[support-chat/transcribe] Error:", err);
+      return res.status(500).json({ error: "Internal error" });
+    }
   }));
 
   // POST /api/support-chat/close — close a session
@@ -2856,6 +2936,184 @@ GUARDRAILS
     if (!updated) return res.status(500).json({ message: "Failed to restart onboarding" });
     res.json(parseOnboarding(updated));
   }));
+
+  // ── AI Agents ────────────────────────────────────────────────────────────
+
+  // Seed default agents on startup
+  try {
+    const { db } = await import("./db");
+    const { aiAgents: aiAgentsTable } = await import("@shared/schema");
+    const { seedDefaultAiAgents } = await import("./aiAgents");
+    await seedDefaultAiAgents(db, aiAgentsTable);
+  } catch (err) {
+    console.error("[AI Agents] Seed error:", err);
+  }
+
+  // GET /api/ai-agents — list all enabled agents
+  app.get("/api/ai-agents", requireAgency, wrapAsync(async (req, res) => {
+    const agents = await storage.getAiAgents();
+    res.json(agents);
+  }));
+
+  // POST /api/ai-agents — create custom agent
+  app.post("/api/ai-agents", requireAgency, wrapAsync(async (req, res) => {
+    const { name, systemPrompt, photoUrl } = req.body;
+    if (!name?.trim()) return res.status(400).json({ message: "name required" });
+    const agent = await storage.createAiAgent({
+      name: name.trim(),
+      type: "custom",
+      systemPrompt: systemPrompt || null,
+      photoUrl: photoUrl || null,
+      enabled: true,
+      displayOrder: 99,
+    });
+    res.status(201).json(agent);
+  }));
+
+  // GET /api/ai-sessions — list user's sessions
+  app.get("/api/ai-sessions", requireAgency, wrapAsync(async (req, res) => {
+    const sessions = await storage.getAiSessionsByUserId(req.user!.id!);
+    res.json(sessions);
+  }));
+
+  // POST /api/ai-sessions — start or resume a session
+  app.post("/api/ai-sessions", requireAgency, wrapAsync(async (req, res) => {
+    const { agentId } = req.body;
+    if (!agentId) return res.status(400).json({ message: "agentId required" });
+
+    const agent = await storage.getAiAgentById(agentId);
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+    // Try to find an existing active session for this user+agent
+    const existing = await storage.getActiveAiSessionByUserAndAgent(req.user!.id!, agentId);
+    if (existing) return res.json(existing);
+
+    // Create new session
+    const session = await storage.createAiSession({
+      sessionId: crypto.randomUUID(),
+      userId: req.user!.id!,
+      agentId,
+      title: `Chat with ${agent.name}`,
+      status: "active",
+    });
+    res.status(201).json(session);
+  }));
+
+  // GET /api/ai-sessions/:sessionId/messages — get message history
+  app.get("/api/ai-sessions/:sessionId/messages", requireAgency, wrapAsync(async (req, res) => {
+    const { sessionId } = req.params;
+    const session = await storage.getAiSessionBySessionId(sessionId);
+    if (!session || session.userId !== req.user!.id!) return res.status(404).json({ message: "Session not found" });
+    const messages = await storage.getAiMessagesBySessionId(sessionId);
+    res.json(messages);
+  }));
+
+  // POST /api/ai-sessions/:sessionId/close — close a session
+  app.post("/api/ai-sessions/:sessionId/close", requireAgency, wrapAsync(async (req, res) => {
+    const { sessionId } = req.params;
+    const session = await storage.getAiSessionBySessionId(sessionId);
+    if (!session || session.userId !== req.user!.id!) return res.status(404).json({ message: "Session not found" });
+    await storage.updateAiSession(session.id, { status: "closed" });
+    res.json({ ok: true });
+  }));
+
+  // POST /api/ai-chat — SSE streaming endpoint
+  app.post("/api/ai-chat", requireAgency, async (req, res) => {
+    const { sessionId, message, attachmentBase64 } = req.body;
+    if (!sessionId || !message?.trim()) {
+      return res.status(400).json({ message: "sessionId and message required" });
+    }
+
+    const session = await storage.getAiSessionBySessionId(sessionId);
+    if (!session || session.userId !== req.user!.id!) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    const agent = await storage.getAiAgentById(session.agentId);
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+    // Count existing messages to determine if this is the first message
+    const existingMessages = await storage.getAiMessagesBySessionId(sessionId);
+    const isFirstMessage = existingMessages.length === 0;
+
+    // Save user message immediately
+    await storage.createAiMessage({
+      sessionId,
+      role: "user",
+      content: message.trim(),
+      subAgentBlocks: null,
+    });
+
+    // Build prompt with context injection
+    let fullPrompt = message.trim();
+
+    if (agent.type === "campaign_crafter") {
+      try {
+        const campaigns = await storage.getCampaigns();
+        const campaignSummary = campaigns.slice(0, 20).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description?.slice(0, 100),
+          aiName: c.aiName,
+        }));
+        fullPrompt = `[Current campaigns: ${JSON.stringify(campaignSummary)}]\n\n${fullPrompt}`;
+      } catch {
+        // campaigns context injection failed — proceed without it
+      }
+
+      // Pre-fetch URL if message contains one
+      const urlMatch = message.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        try {
+          const urlRes = await fetch(urlMatch[0], { signal: AbortSignal.timeout(8000) });
+          if (urlRes.ok) {
+            const text = await urlRes.text();
+            const stripped = text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 3000);
+            fullPrompt = `[Website content from ${urlMatch[0]}:\n${stripped}]\n\n${fullPrompt}`;
+          }
+        } catch {
+          // URL fetch failed — proceed without it
+        }
+      }
+    }
+
+    // If attachment, prepend to prompt
+    if (attachmentBase64) {
+      fullPrompt = `[User attached a file (base64): ${attachmentBase64.slice(0, 100)}...]\n\n${fullPrompt}`;
+    }
+
+    // SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    // Get session cwd
+    const { getSessionCwd, streamClaudeResponse } = await import("./aiAgents");
+    const cwd = getSessionCwd(sessionId, agent.type);
+
+    streamClaudeResponse({
+      prompt: fullPrompt,
+      cwd,
+      bypassPermissions: agent.type === "code_runner",
+      isFirstMessage,
+      res,
+      onDone: async (fullText, subAgentBlocks) => {
+        // Save assistant message to DB
+        try {
+          await storage.createAiMessage({
+            sessionId,
+            role: "assistant",
+            content: fullText,
+            subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
+          });
+        } catch (err) {
+          console.error("[AI Chat] Failed to save assistant message:", err);
+        }
+      },
+    });
+  });
 
   // ── Automation failure notifier ──────────────────────────────────────────
   let lastAutomationFailureCheck = new Date();

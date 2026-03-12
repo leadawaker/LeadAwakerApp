@@ -11,8 +11,18 @@ const viteLogger = createLogger();
 export async function setupVite(server: Server, app: Express) {
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server, path: "/vite-hmr" },
+    hmr: {
+      server,
+      path: "/vite-hmr",
+      host: "app.leadawaker.com",
+      protocol: "wss",
+      clientPort: 443,
+    },
     allowedHosts: true as const,
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
   };
 
   const vite = await createViteServer({
@@ -22,7 +32,7 @@ export async function setupVite(server: Server, app: Express) {
       ...viteLogger,
       error: (msg, options) => {
         viteLogger.error(msg, options);
-        process.exit(1);
+        // Don't exit — let Vite show the error overlay in the browser
       },
     },
     server: serverOptions,

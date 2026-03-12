@@ -26,6 +26,7 @@ import {
   Paperclip,
   Smile,
   Mic,
+  Image as ImageIcon,
   Square,
   Tag,
   CircleDot,
@@ -766,10 +767,10 @@ export function ChatPanel({
                         lastDateKey = dk;
                       }
 
-                      tokens.push({ kind: "msg", msgIdx: flatIdx });
                       if (mi === 0 && isMeaningfulThread && (m.direction || "").toLowerCase() === "outbound") {
                         tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
                       }
+                      tokens.push({ kind: "msg", msgIdx: flatIdx });
 
                       // Inline synthetic status events after inbound messages
                       const dir = (m.direction || "").toLowerCase();
@@ -789,13 +790,17 @@ export function ChatPanel({
                     }
                   }
 
-                  // Merge real tag events (DB) into tokens by timestamp
-                  const allTagEvents = [...tagEvents].sort((a: any, b: any) => {
-                    if (!a.created_at && !b.created_at) return 0;
-                    if (!a.created_at) return 1;
-                    if (!b.created_at) return -1;
-                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-                  });
+                  // Merge real tag events (DB) into tokens by timestamp — skip "removed" events and
+                  // bump-sequence tags (Bump 1/2/3/…) since ThreadDivider already labels those.
+                  const allTagEvents = [...tagEvents]
+                    .filter((te: any) => te.event_type !== "removed")
+                    .filter((te: any) => !/^bump\s*\d/i.test(te.tag_name ?? ""))
+                    .sort((a: any, b: any) => {
+                      if (!a.created_at && !b.created_at) return 0;
+                      if (!a.created_at) return 1;
+                      if (!b.created_at) return -1;
+                      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                    });
 
                   // Merge tag events into tokens by timestamp
                   if (allTagEvents.length > 0) {
@@ -1270,19 +1275,13 @@ const TAG_HEX: Record<string, string> = {
   gray: "#6B7280",
 };
 
-function TagEventChip({ tagName, tagColor, time, eventType }: { tagName: string; tagColor: string; time: string; eventType?: "added" | "removed" }) {
-  const isRemoved = eventType === "removed";
-  const colorClasses = TAG_COLOR_MAP[tagColor] ?? TAG_COLOR_MAP.gray;
-  const iconColor = TAG_HEX[tagColor] ?? "#6B7280";
+function TagEventChip({ tagName, tagColor, time }: { tagName: string; tagColor: string; time: string; eventType?: "added" | "removed" }) {
+  const hex = TAG_HEX[tagColor] ?? "#6B7280";
   return (
     <div className="flex justify-center py-1.5">
-      <span className={cn("inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3 py-1 select-none", colorClasses, isRemoved && "opacity-50")}>
-        {isRemoved
-          ? <XIcon className="w-3 h-3" style={{ color: iconColor }} />
-          : <Tag className="w-3 h-3" style={{ color: iconColor }} />
-        }
-        <span className={cn(isRemoved && "line-through")}>{tagName}</span>
-        {time && <><span className="opacity-60">&middot;</span><span className="opacity-60">{time}</span></>}
+      <span className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3 py-1 select-none bg-white dark:bg-gray-900 shadow-sm" style={{ color: hex }}>
+        {tagName}
+        {time && <><span className="opacity-50">&middot;</span><span className="opacity-50">{time}</span></>}
       </span>
     </div>
   );
@@ -2170,6 +2169,31 @@ function ChatBubble({
                   {transcription
                     ? <span className="whitespace-pre-wrap leading-relaxed break-words text-[13px] italic opacity-80 flex-1 min-w-0">{transcription}</span>
                     : <span className="text-[12px] opacity-50 italic flex-1 min-w-0">Transcription unavailable</span>
+                  }
+                  {timeStamp}
+                </div>
+              </div>
+            );
+          }
+          if (item.type === "image") {
+            const IMAGE_PREFIX = "[Image]: ";
+            const caption = content.startsWith(IMAGE_PREFIX)
+              ? content.slice(IMAGE_PREFIX.length).trim()
+              : content.replace(/^\[Image\]:\s*/i, "").trim();
+            const imageUrl = typeof attachment === "string" && attachment.startsWith("data:image/") ? attachment : null;
+            return (
+              <div className="flex flex-col gap-1.5">
+                {imageUrl
+                  ? <AttachmentPreview url={imageUrl} outbound={outbound} />
+                  : <div className="flex items-center gap-1.5 opacity-70">
+                      <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-[11px] font-medium uppercase tracking-wide">Image</span>
+                    </div>
+                }
+                <div className="flex items-end gap-1.5">
+                  {caption
+                    ? <span className="whitespace-pre-wrap leading-relaxed break-words text-[12px] italic opacity-70 flex-1 min-w-0">{caption}</span>
+                    : null
                   }
                   {timeStamp}
                 </div>

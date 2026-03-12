@@ -50,7 +50,8 @@
     "restartTutorial": "Tutorial Herstarten",
     "tutorialRestarted": "Tutorial herstart",
     "tutorialRestartedDescription": "De introductie tutorial begint bij het volgende laden van de pagina.",
-    "tutorialRestartFailed": "Kan tutorial niet herstarten"
+    "tutorialRestartFailed": "Kan tutorial niet herstarten",
+    "lastLogin": "Laatste login"
   },
   "notifications": {
     "title": "Meldingen",

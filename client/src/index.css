@@ -257,6 +257,115 @@
   --sidebar-active-foreground: 0 0% 100%;
 }
 
+/* ── Public pages: theme follows system preference, not the CRM toggle ──────── */
+/*
+ * #public-shell wraps all non-CRM routes (Home, About, Login, etc.).
+ * Strategy:
+ *   1. When CRM is in dark mode (.dark on html), reset public pages to light vars.
+ *   2. Then, when system prefers dark, re-apply dark vars regardless of CRM toggle.
+ * This means the CRM toggle has no effect on public pages — only the OS preference does.
+ */
+
+html.dark #public-shell {
+  --background: 0 0% 87%;
+  --foreground: 0 0% 12%;
+  --bg-main: 0 0% 87%;
+  --card: 0 0% 97%;
+  --card-foreground: 0 0% 12%;
+  --card-hover: 0 0% 100%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 12%;
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 93%;
+  --secondary-foreground: 0 0% 15%;
+  --muted: 0 0% 93%;
+  --muted-foreground: 0 0% 38%;
+  --accent: 50 100% 75%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 228 100% 68%;
+  --success-foreground: 0 0% 100%;
+  --info: 243 75% 59%;
+  --info-foreground: 0 0% 100%;
+  --border: 0 0% 75%;
+  --input: 0 0% 93%;
+  --ring: 243 75% 59%;
+  --brand-blue: 243 75% 59%;
+  --brand-blue-foreground: 0 0% 100%;
+  --brand-deep-blue: 231 59% 18%;
+  --brand-deep-blue-foreground: 0 0% 100%;
+  --brand-yellow: 50 100% 62%;
+  --brand-yellow-foreground: 231 59% 18%;
+  --brand-soft-yellow: 43 97% 63%;
+  --brand-soft-yellow-foreground: 231 59% 18%;
+  --brand-indigo: 243 75% 59%;
+  --brand-indigo-foreground: 0 0% 100%;
+  --brand-indian-yellow: 0 0% 100%;
+  --brand-indian-yellow-foreground: 231 59% 18%;
+  --highlight-active: 53 100% 78%;
+  --highlight-selected: 51 100% 93%;
+  --highlight-hover: 236 100% 79%;
+  --input-bg: 0 0% 95%;
+  --sidebar-bg: 0 0% 87%;
+  --sidebar-foreground: 0 0% 25%;
+  --sidebar-active: 243 75% 59%;
+  --sidebar-active-foreground: 0 0% 100%;
+}
+
+/* When system prefers dark — apply dark vars to public pages (overrides the light reset above) */
+@media (prefers-color-scheme: dark) {
+  html.dark #public-shell,
+  html:not(.dark) #public-shell {
+    --background: 217 43% 13%;
+    --foreground: 0 0% 100%;
+    --bg-main: 217 43% 13%;
+    --card: 217 34% 21%;
+    --card-foreground: 0 0% 100%;
+    --card-hover: 225 26% 32%;
+    --popover: 217 23% 18%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 243 85% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 44% 17%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 215 44% 17%;
+    --muted-foreground: 225 23% 59%;
+    --accent: 38 90% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --info: 243 85% 68%;
+    --info-foreground: 0 0% 100%;
+    --border: 237 21% 59%;
+    --input: 237 21% 59%;
+    --ring: 243 85% 68%;
+    --brand-blue: 243 85% 68%;
+    --brand-blue-foreground: 0 0% 100%;
+    --brand-deep-blue: 217 43% 13%;
+    --brand-deep-blue-foreground: 223 20% 93%;
+    --brand-yellow: 44 98% 55%;
+    --brand-yellow-foreground: 218 41% 12%;
+    --brand-soft-yellow: 43 97% 65%;
+    --brand-soft-yellow-foreground: 218 41% 12%;
+    --brand-indigo: 243 85% 68%;
+    --brand-indigo-foreground: 0 0% 100%;
+    --brand-indian-yellow: 35 60% 52%;
+    --brand-indian-yellow-foreground: 0 0% 100%;
+    --highlight-active: 40 50% 24%;
+    --highlight-selected: 40 55% 30%;
+    --highlight-hover: 243 40% 36%;
+    --input-bg: 224 38% 22%;
+    --sidebar-bg: 217 45% 9%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-active: 243 85% 68%;
+    --sidebar-active-foreground: 0 0% 100%;
+  }
+}
+
 /* Agency mode: swap blue accent to yellow globally */
 .agency-mode {
   --brand-blue: 44 98% 50%;
@@ -265,11 +374,20 @@
 
 /* ── Card entrance stagger — lightweight fade+slide for left-panel lists ────── */
 @keyframes card-enter {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-card-enter {
-  animation: card-enter 0.22s ease-out both;
+  animation: card-enter 0.35s ease-out both;
+}
+
+/* ── Status dot pulse — subtle glow ring for active/hot lead statuses ────────── */
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%       { box-shadow: 0 0 0 3px transparent; opacity: 0.6; }
+}
+.animate-status-pulse {
+  animation: status-pulse 2.4s ease-in-out infinite;
 }
 
 /* ── Fade-only entrance — safe for virtualized lists (no transform conflict) ── */

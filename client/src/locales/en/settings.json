@@ -50,7 +50,8 @@
     "restartTutorial": "Restart Tutorial",
     "tutorialRestarted": "Tutorial restarted",
     "tutorialRestartedDescription": "The onboarding walkthrough will start on your next page load.",
-    "tutorialRestartFailed": "Failed to restart tutorial"
+    "tutorialRestartFailed": "Failed to restart tutorial",
+    "lastLogin": "Last login"
   },
   "notifications": {
     "title": "Notifications",

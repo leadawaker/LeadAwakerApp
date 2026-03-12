@@ -556,7 +556,7 @@ export function InboxPanel({
         </div>
       )}
 
-      {/* ── Support tab: single bot card ── */}
+      {/* ── Support tab: bot card + AI Assistants below ── */}
       {tab === "support" && (
         <div className="flex-1 overflow-y-auto p-[3px]">
           <div
@@ -590,24 +590,26 @@ export function InboxPanel({
               </p>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* ── Pinned AI Assistants section (agency users only, not in support tab) ── */}
-      {tab !== "support" && aiAgents.length > 0 && onSelectAgent && (
-        <div className="shrink-0 border-b border-border/50 px-[3px] pb-[3px]">
-          <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            <BotMessageSquare className="h-3 w-3" />
-            AI Assistants
-          </div>
-          {aiAgents.map((agent) => (
-            <AgentInboxRow
-              key={agent.id}
-              agent={agent}
-              isSelected={selectedAgentId === agent.id}
-              onClick={() => onSelectAgent(agent.id)}
-            />
-          ))}
+          {/* AI Assistants — below the Sophie card */}
+          {aiAgents.length > 0 && onSelectAgent && (
+            <div className="mt-4">
+              <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <BotMessageSquare className="h-3 w-3" />
+                AI Assistants
+              </div>
+              <div className="flex flex-col gap-[3px]">
+                {aiAgents.map((agent) => (
+                  <AgentInboxRow
+                    key={agent.id}
+                    agent={agent}
+                    isSelected={selectedAgentId === agent.id}
+                    onClick={() => onSelectAgent(agent.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

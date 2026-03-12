@@ -50,7 +50,8 @@
     "restartTutorial": "Reiniciar Tutorial",
     "tutorialRestarted": "Tutorial reiniciado",
     "tutorialRestartedDescription": "O tutorial de integracao comecara no proximo carregamento da pagina.",
-    "tutorialRestartFailed": "Falha ao reiniciar tutorial"
+    "tutorialRestartFailed": "Falha ao reiniciar tutorial",
+    "lastLogin": "Ultimo login"
   },
   "notifications": {
     "title": "Notificacoes",
