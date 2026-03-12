@@ -112,6 +112,9 @@
     "newPlaceholder": "Category name...",
     "empty": "No categories yet",
     "expand": "Expand categories",
-    "collapse": "Collapse categories"
+    "collapse": "Collapse categories",
+    "pickIcon": "Pick icon",
+    "clearIcon": "Clear icon",
+    "pickColor": "Color"
   }
 }

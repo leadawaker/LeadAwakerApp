@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
@@ -7,7 +7,6 @@ import {
   Layers,
   Plus,
   Trash2,
-  Pencil,
   Check,
   X,
 } from "lucide-react";
@@ -18,8 +17,28 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { useTaskCategories, useCreateTaskCategory, useDeleteTaskCategory } from "../api/tasksApi";
 import type { TaskCategory } from "@shared/schema";
+
+/* ── Emoji & color presets ── */
+const EMOJI_OPTIONS = [
+  "📋", "📁", "📌", "⭐", "🎯", "🔥", "💡", "🚀",
+  "📊", "🎨", "🔧", "📝", "💬", "📅", "🏷️", "✅",
+  "🐛", "🔒", "📦", "🏠", "💰", "📞", "🎉", "⚡",
+  "🌐", "🛠️", "📱", "🖥️", "👤", "🤝", "📈", "🔔",
+];
+
+const COLOR_PRESETS = [
+  "#4F46E5", "#7C3AED", "#EC4899", "#EF4444",
+  "#F97316", "#EAB308", "#22C55E", "#14B8A6",
+  "#06B6D4", "#3B82F6", "#6366F1", "#8B5CF6",
+  "#A855F7", "#D946EF", "#F43F5E", "#64748B",
+];
 
 interface CategorySidebarProps {
   collapsed: boolean;
@@ -56,16 +75,31 @@ export default function CategorySidebar({
 
   const [addingNew, setAddingNew] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newIcon, setNewIcon] = useState("");
+  const [newColor, setNewColor] = useState("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const resetForm = useCallback(() => {
+    setNewName("");
+    setNewIcon("");
+    setNewColor("");
+    setAddingNew(false);
+    setEmojiPickerOpen(false);
+  }, []);
 
   const handleCreate = useCallback(async () => {
     const name = newName.trim();
     if (!name || createMutation.isPending) return;
     try {
-      await createMutation.mutateAsync({ name });
-      setNewName("");
-      setAddingNew(false);
+      await createMutation.mutateAsync({
+        name,
+        ...(newIcon ? { icon: newIcon } : {}),
+        ...(newColor ? { color: newColor } : {}),
+      });
+      resetForm();
     } catch { /* handled by TanStack */ }
-  }, [newName, createMutation]);
+  }, [newName, newIcon, newColor, createMutation, resetForm]);
 
   const handleDelete = useCallback(async (id: number) => {
     if (deleteMutation.isPending) return;
@@ -270,33 +304,123 @@ export default function CategorySidebar({
       {/* Add new category */}
       <div className={cn("shrink-0 border-t border-border/30 pt-2 pb-3", collapsed ? "px-1.5" : "px-2.5")}>
         {addingNew && !collapsed ? (
-          <div className="flex items-center gap-1.5">
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreate();
-                if (e.key === "Escape") { setAddingNew(false); setNewName(""); }
-              }}
-              placeholder={t("categories.newPlaceholder")}
-              className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-lg bg-muted border border-border/50 focus:border-brand-indigo focus:outline-none transition-colors"
-              autoFocus
-              data-testid="category-new-input"
-            />
-            <button
-              onClick={handleCreate}
-              disabled={!newName.trim() || createMutation.isPending}
-              className="h-7 w-7 rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-40 transition-colors"
-            >
-              <Check className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => { setAddingNew(false); setNewName(""); }}
-              className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+          <div className="flex flex-col gap-2" data-testid="category-create-form">
+            {/* Row 1: Emoji button + Name input + confirm/cancel */}
+            <div className="flex items-center gap-1.5">
+              {/* Emoji picker trigger */}
+              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-8 w-8 shrink-0 rounded-lg flex items-center justify-center border transition-colors",
+                      newIcon
+                        ? "border-brand-indigo/30 bg-brand-indigo/5"
+                        : "border-border/50 bg-muted hover:bg-card"
+                    )}
+                    title={t("categories.pickIcon")}
+                    data-testid="category-emoji-trigger"
+                  >
+                    {newIcon ? (
+                      <span className="text-sm">{newIcon}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">😀</span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="right"
+                  align="start"
+                  className="w-[220px] p-2"
+                  data-testid="category-emoji-picker"
+                >
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1.5 px-0.5">
+                    {t("categories.pickIcon")}
+                  </p>
+                  <div className="grid grid-cols-8 gap-0.5">
+                    {EMOJI_OPTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => {
+                          setNewIcon(newIcon === emoji ? "" : emoji);
+                          setEmojiPickerOpen(false);
+                          nameInputRef.current?.focus();
+                        }}
+                        className={cn(
+                          "h-7 w-7 rounded flex items-center justify-center text-sm hover:bg-card transition-colors",
+                          newIcon === emoji && "bg-highlight-active ring-1 ring-brand-indigo/30"
+                        )}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                  {newIcon && (
+                    <button
+                      type="button"
+                      onClick={() => { setNewIcon(""); setEmojiPickerOpen(false); }}
+                      className="mt-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-0.5"
+                    >
+                      {t("categories.clearIcon")}
+                    </button>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              <input
+                ref={nameInputRef}
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreate();
+                  if (e.key === "Escape") resetForm();
+                }}
+                placeholder={t("categories.newPlaceholder")}
+                className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-lg bg-muted border border-border/50 focus:border-brand-indigo focus:outline-none transition-colors"
+                autoFocus
+                data-testid="category-new-input"
+              />
+              <button
+                onClick={handleCreate}
+                disabled={!newName.trim() || createMutation.isPending}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-40 transition-colors"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={resetForm}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Row 2: Color picker swatches */}
+            <div className="px-0.5">
+              <p className="text-[11px] font-medium text-muted-foreground mb-1">
+                {t("categories.pickColor")}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {COLOR_PRESETS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setNewColor(newColor === color ? "" : color)}
+                    className={cn(
+                      "h-5 w-5 rounded-full border-2 transition-all",
+                      newColor === color
+                        ? "border-foreground scale-110"
+                        : "border-transparent hover:border-foreground/30 hover:scale-105"
+                    )}
+                    style={{ backgroundColor: color }}
+                    title={color}
+                    data-testid={`category-color-${color.slice(1)}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <Tooltip>

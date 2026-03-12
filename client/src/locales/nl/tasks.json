@@ -112,6 +112,9 @@
     "newPlaceholder": "Categorienaam...",
     "empty": "Nog geen categorieen",
     "expand": "Categorieen uitvouwen",
-    "collapse": "Categorieen invouwen"
+    "collapse": "Categorieen invouwen",
+    "pickIcon": "Kies icoon",
+    "clearIcon": "Icoon wissen",
+    "pickColor": "Kleur"
   }
 }
