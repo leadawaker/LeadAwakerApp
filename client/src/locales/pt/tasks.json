@@ -115,6 +115,13 @@
     "collapse": "Recolher categorias",
     "pickIcon": "Escolher \u00edcone",
     "clearIcon": "Limpar \u00edcone",
-    "pickColor": "Cor"
+    "pickColor": "Cor",
+    "edit": "Editar categoria",
+    "editPlaceholder": "Nome da categoria...",
+    "deleteTitle": "Excluir Categoria",
+    "deleteDesc": "Tem certeza que deseja excluir \"{{name}}\"? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.",
+    "deleteDescWithTasks": "Tem certeza que deseja excluir \"{{name}}\"? {{count}} tarefa(s) nesta categoria ficar\u00e3o sem categoria.",
+    "confirmDelete": "Excluir",
+    "cancelDelete": "Cancelar"
   }
 }

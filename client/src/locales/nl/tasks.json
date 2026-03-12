@@ -115,6 +115,13 @@
     "collapse": "Categorieen invouwen",
     "pickIcon": "Kies icoon",
     "clearIcon": "Icoon wissen",
-    "pickColor": "Kleur"
+    "pickColor": "Kleur",
+    "edit": "Categorie bewerken",
+    "editPlaceholder": "Categorienaam...",
+    "deleteTitle": "Categorie Verwijderen",
+    "deleteDesc": "Weet je zeker dat je \"{{name}}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "deleteDescWithTasks": "Weet je zeker dat je \"{{name}}\" wilt verwijderen? {{count}} ta(a)k(en) in deze categorie worden ongecategoriseerd.",
+    "confirmDelete": "Verwijderen",
+    "cancelDelete": "Annuleren"
   }
 }

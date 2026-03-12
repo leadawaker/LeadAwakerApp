@@ -7,6 +7,7 @@ import {
   Layers,
   Plus,
   Trash2,
+  Pencil,
   Check,
   X,
 } from "lucide-react";
@@ -22,7 +23,17 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { useTaskCategories, useCreateTaskCategory, useDeleteTaskCategory } from "../api/tasksApi";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { useTaskCategories, useCreateTaskCategory, useUpdateTaskCategory, useDeleteTaskCategory } from "../api/tasksApi";
 import type { TaskCategory } from "@shared/schema";
 
 /* ── Emoji & color presets ── */
@@ -59,6 +70,7 @@ export default function CategorySidebar({
   const { t } = useTranslation("tasks");
   const { data: categories = [] } = useTaskCategories();
   const createMutation = useCreateTaskCategory();
+  const updateMutation = useUpdateTaskCategory();
   const deleteMutation = useDeleteTaskCategory();
 
   // Count tasks per category for badges
@@ -79,6 +91,25 @@ export default function CategorySidebar({
   const [newColor, setNewColor] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete confirmation state
+  const [deletePendingId, setDeletePendingId] = useState<number | null>(null);
+  const deletePendingCategory = useMemo(
+    () => categories.find((c) => c.id === deletePendingId) ?? null,
+    [categories, deletePendingId]
+  );
+  const deletePendingTaskCount = useMemo(
+    () => (deletePendingId ? countByCategory.get(deletePendingId) ?? 0 : 0),
+    [deletePendingId, countByCategory]
+  );
+
+  // Edit state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editIcon, setEditIcon] = useState("");
+  const [editColor, setEditColor] = useState("");
+  const [editEmojiPickerOpen, setEditEmojiPickerOpen] = useState(false);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = useCallback(() => {
     setNewName("");
@@ -101,15 +132,179 @@ export default function CategorySidebar({
     } catch { /* handled by TanStack */ }
   }, [newName, newIcon, newColor, createMutation, resetForm]);
 
-  const handleDelete = useCallback(async (id: number) => {
-    if (deleteMutation.isPending) return;
+  const handleDeleteRequest = useCallback((id: number) => {
+    setDeletePendingId(id);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deletePendingId || deleteMutation.isPending) return;
     try {
-      await deleteMutation.mutateAsync(id);
-      if (selectedCategoryId === id) onSelectCategory(null);
+      await deleteMutation.mutateAsync(deletePendingId);
+      if (selectedCategoryId === deletePendingId) onSelectCategory(null);
     } catch { /* handled by TanStack */ }
-  }, [deleteMutation, selectedCategoryId, onSelectCategory]);
+    setDeletePendingId(null);
+  }, [deletePendingId, deleteMutation, selectedCategoryId, onSelectCategory]);
+
+  const startEditing = useCallback((cat: TaskCategory) => {
+    setEditingId(cat.id);
+    setEditName(cat.name);
+    setEditIcon(cat.icon ?? "");
+    setEditColor(cat.color ?? "");
+    setEditEmojiPickerOpen(false);
+    // Close create form if open
+    if (addingNew) resetForm();
+    // Focus input after render
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  }, [addingNew, resetForm]);
+
+  const cancelEditing = useCallback(() => {
+    setEditingId(null);
+    setEditName("");
+    setEditIcon("");
+    setEditColor("");
+    setEditEmojiPickerOpen(false);
+  }, []);
+
+  const handleUpdate = useCallback(async () => {
+    if (!editingId || !editName.trim() || updateMutation.isPending) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: editingId,
+        data: {
+          name: editName.trim(),
+          icon: editIcon || null,
+          color: editColor || null,
+        },
+      });
+      cancelEditing();
+    } catch { /* handled by TanStack */ }
+  }, [editingId, editName, editIcon, editColor, updateMutation, cancelEditing]);
+
+  const renderEditForm = (cat: TaskCategory) => (
+    <div key={cat.id} className="flex flex-col gap-2 px-0.5 py-1" data-testid={`category-edit-form-${cat.id}`}>
+      {/* Row 1: Emoji button + Name input + confirm/cancel */}
+      <div className="flex items-center gap-1.5">
+        <Popover open={editEmojiPickerOpen} onOpenChange={setEditEmojiPickerOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "h-8 w-8 shrink-0 rounded-lg flex items-center justify-center border transition-colors",
+                editIcon
+                  ? "border-brand-indigo/30 bg-brand-indigo/5"
+                  : "border-border/50 bg-muted hover:bg-card"
+              )}
+              title={t("categories.pickIcon")}
+              data-testid="category-edit-emoji-trigger"
+            >
+              {editIcon ? (
+                <span className="text-sm">{editIcon}</span>
+              ) : (
+                <span className="text-xs text-muted-foreground">😀</span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="right"
+            align="start"
+            className="w-[220px] p-2"
+            data-testid="category-edit-emoji-picker"
+          >
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5 px-0.5">
+              {t("categories.pickIcon")}
+            </p>
+            <div className="grid grid-cols-8 gap-0.5">
+              {EMOJI_OPTIONS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    setEditIcon(editIcon === emoji ? "" : emoji);
+                    setEditEmojiPickerOpen(false);
+                    editInputRef.current?.focus();
+                  }}
+                  className={cn(
+                    "h-7 w-7 rounded flex items-center justify-center text-sm hover:bg-card transition-colors",
+                    editIcon === emoji && "bg-highlight-active ring-1 ring-brand-indigo/30"
+                  )}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            {editIcon && (
+              <button
+                type="button"
+                onClick={() => { setEditIcon(""); setEditEmojiPickerOpen(false); }}
+                className="mt-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-0.5"
+              >
+                {t("categories.clearIcon")}
+              </button>
+            )}
+          </PopoverContent>
+        </Popover>
+
+        <input
+          ref={editInputRef}
+          type="text"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleUpdate();
+            if (e.key === "Escape") cancelEditing();
+          }}
+          placeholder={t("categories.newPlaceholder")}
+          className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-lg bg-muted border border-border/50 focus:border-brand-indigo focus:outline-none transition-colors"
+          data-testid="category-edit-input"
+        />
+        <button
+          onClick={handleUpdate}
+          disabled={!editName.trim() || updateMutation.isPending}
+          className="h-7 w-7 rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-40 transition-colors"
+        >
+          <Check className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={cancelEditing}
+          className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Row 2: Color picker swatches */}
+      <div className="px-0.5">
+        <p className="text-[11px] font-medium text-muted-foreground mb-1">
+          {t("categories.pickColor")}
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {COLOR_PRESETS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => setEditColor(editColor === color ? "" : color)}
+              className={cn(
+                "h-5 w-5 rounded-full border-2 transition-all",
+                editColor === color
+                  ? "border-foreground scale-110"
+                  : "border-transparent hover:border-foreground/30 hover:scale-105"
+              )}
+              style={{ backgroundColor: color }}
+              title={color}
+              data-testid={`category-edit-color-${color.slice(1)}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   const renderCategoryItem = (cat: TaskCategory) => {
+    // If editing this category, show edit form instead
+    if (editingId === cat.id && !collapsed) {
+      return renderEditForm(cat);
+    }
+
     const isSelected = selectedCategoryId === cat.id;
     const colorDot = cat.color ? (
       <span
@@ -155,14 +350,24 @@ export default function CategorySidebar({
                     {countByCategory.get(cat.id)}
                   </span>
                 )}
-                {/* Delete button on hover */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(cat.id); }}
-                  className="hidden group-hover:flex h-6 w-6 rounded-full items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all shrink-0"
-                  title={t("detail.delete")}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+                {/* Edit + Delete buttons on hover */}
+                <span className="hidden group-hover:flex items-center gap-0.5 shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startEditing(cat); }}
+                    className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-brand-indigo hover:bg-brand-indigo/10 transition-all"
+                    title={t("categories.edit")}
+                    data-testid={`category-edit-btn-${cat.id}`}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteRequest(cat.id); }}
+                    className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
+                    title={t("detail.delete")}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </span>
               </>
             )}
           </button>
@@ -459,6 +664,34 @@ export default function CategorySidebar({
           </Tooltip>
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deletePendingId !== null} onOpenChange={(open) => { if (!open) setDeletePendingId(null); }}>
+        <AlertDialogContent data-testid="category-delete-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("categories.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletePendingTaskCount > 0
+                ? t("categories.deleteDescWithTasks", {
+                    name: deletePendingCategory?.name ?? "",
+                    count: deletePendingTaskCount,
+                  })
+                : t("categories.deleteDesc", {
+                    name: deletePendingCategory?.name ?? "",
+                  })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("categories.cancelDelete")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {t("categories.confirmDelete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 }

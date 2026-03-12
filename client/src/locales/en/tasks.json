@@ -115,6 +115,13 @@
     "collapse": "Collapse categories",
     "pickIcon": "Pick icon",
     "clearIcon": "Clear icon",
-    "pickColor": "Color"
+    "pickColor": "Color",
+    "edit": "Edit category",
+    "editPlaceholder": "Category name...",
+    "deleteTitle": "Delete Category",
+    "deleteDesc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "deleteDescWithTasks": "Are you sure you want to delete \"{{name}}\"? {{count}} task(s) in this category will become uncategorized.",
+    "confirmDelete": "Delete",
+    "cancelDelete": "Cancel"
   }
 }
