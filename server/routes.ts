@@ -3053,6 +3053,7 @@ GUARDRAILS
       displayOrder: 99,
       model: model || "claude-sonnet-4-20250514",
       thinkingLevel: thinkingLevel || "medium",
+      permissions: { read: true, write: false, create: false, delete: false },
     });
     res.status(201).json(agent);
   }));
@@ -3310,6 +3311,39 @@ GUARDRAILS
     } catch (err: any) {
       console.error("[AI Agents] delete error:", err);
       res.status(500).json({ message: "Failed to delete agent" });
+    }
+  });
+
+  // ─── AI Conversations ────────────────────────────────────────────────
+
+  // Create a new conversation for an agent
+  app.post("/api/agents/:id/conversations", requireAgency, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const agentId = parseInt(req.params.id, 10);
+      if (isNaN(agentId)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      // Look up the agent to copy its model and thinking level defaults
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, agentId));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      const sessionId = crypto.randomUUID();
+      const session = await storage.createAiSession({
+        sessionId,
+        userId,
+        agentId,
+        title: req.body.title || null,
+        status: "active",
+        isActive: true,
+        model: agent.model,
+        thinkingLevel: agent.thinkingLevel,
+        cliSessionId: null,
+      });
+      res.status(201).json(session);
+    } catch (err: any) {
+      console.error("[AI Conversations] create error:", err);
+      res.status(500).json({ message: "Failed to create conversation" });
     }
   });
 
