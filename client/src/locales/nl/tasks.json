@@ -103,5 +103,15 @@
     "copy": "(kopie)",
     "duplicate": "Dupliceren"
   },
-  "clickToChangeStatus": "Klik om status te wijzigen"
+  "clickToChangeStatus": "Klik om status te wijzigen",
+  "categories": {
+    "title": "Categorieen",
+    "label": "Categorieen",
+    "all": "Alle Taken",
+    "add": "Categorie Toevoegen",
+    "newPlaceholder": "Categorienaam...",
+    "empty": "Nog geen categorieen",
+    "expand": "Categorieen uitvouwen",
+    "collapse": "Categorieen invouwen"
+  }
 }

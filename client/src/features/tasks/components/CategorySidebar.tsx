@@ -1,0 +1,340 @@
+import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FolderOpen,
+  Layers,
+  Plus,
+  Trash2,
+  Pencil,
+  Check,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { useTaskCategories, useCreateTaskCategory, useDeleteTaskCategory } from "../api/tasksApi";
+import type { TaskCategory } from "@shared/schema";
+
+interface CategorySidebarProps {
+  collapsed: boolean;
+  onCollapse: (v: boolean) => void;
+  selectedCategoryId: number | null;
+  onSelectCategory: (id: number | null) => void;
+  /** All tasks (unfiltered) — used for count badges */
+  tasks?: Array<{ id: number; categoryId?: number | null }>;
+}
+
+export default function CategorySidebar({
+  collapsed,
+  onCollapse,
+  selectedCategoryId,
+  onSelectCategory,
+  tasks = [],
+}: CategorySidebarProps) {
+  const { t } = useTranslation("tasks");
+  const { data: categories = [] } = useTaskCategories();
+  const createMutation = useCreateTaskCategory();
+  const deleteMutation = useDeleteTaskCategory();
+
+  // Count tasks per category for badges
+  const totalCount = tasks.length;
+  const countByCategory = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const t of tasks) {
+      if (t.categoryId) {
+        map.set(t.categoryId, (map.get(t.categoryId) || 0) + 1);
+      }
+    }
+    return map;
+  }, [tasks]);
+
+  const [addingNew, setAddingNew] = useState(false);
+  const [newName, setNewName] = useState("");
+
+  const handleCreate = useCallback(async () => {
+    const name = newName.trim();
+    if (!name || createMutation.isPending) return;
+    try {
+      await createMutation.mutateAsync({ name });
+      setNewName("");
+      setAddingNew(false);
+    } catch { /* handled by TanStack */ }
+  }, [newName, createMutation]);
+
+  const handleDelete = useCallback(async (id: number) => {
+    if (deleteMutation.isPending) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      if (selectedCategoryId === id) onSelectCategory(null);
+    } catch { /* handled by TanStack */ }
+  }, [deleteMutation, selectedCategoryId, onSelectCategory]);
+
+  const renderCategoryItem = (cat: TaskCategory) => {
+    const isSelected = selectedCategoryId === cat.id;
+    const colorDot = cat.color ? (
+      <span
+        className="h-2.5 w-2.5 rounded-full shrink-0"
+        style={{ backgroundColor: cat.color }}
+      />
+    ) : null;
+
+    return (
+      <Tooltip key={cat.id}>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => onSelectCategory(isSelected ? null : cat.id)}
+            className={cn(
+              "group relative flex items-center rounded-full transition-colors w-full",
+              collapsed
+                ? "h-[40px] w-[40px] justify-center mx-auto"
+                : "h-[40px] pl-[6px] pr-2 gap-2",
+              isSelected
+                ? "bg-highlight-active text-foreground font-semibold"
+                : "text-foreground/70 hover:bg-card hover:text-foreground"
+            )}
+            data-testid={`category-item-${cat.id}`}
+          >
+            {/* Icon / color dot */}
+            <div className="relative h-8 w-8 rounded-full flex items-center justify-center shrink-0 border border-black/[0.08] dark:border-white/[0.08]">
+              {cat.icon ? (
+                <span className="text-sm">{cat.icon}</span>
+              ) : colorDot ? (
+                colorDot
+              ) : (
+                <FolderOpen className="h-3.5 w-3.5" />
+              )}
+            </div>
+            {!collapsed && (
+              <>
+                <span className="text-[13px] font-medium truncate flex-1 text-left">
+                  {cat.name}
+                </span>
+                {/* Count badge */}
+                {(countByCategory.get(cat.id) ?? 0) > 0 && (
+                  <span className="text-[11px] tabular-nums text-muted-foreground font-medium shrink-0 group-hover:hidden">
+                    {countByCategory.get(cat.id)}
+                  </span>
+                )}
+                {/* Delete button on hover */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(cat.id); }}
+                  className="hidden group-hover:flex h-6 w-6 rounded-full items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all shrink-0"
+                  title={t("detail.delete")}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </>
+            )}
+          </button>
+        </TooltipTrigger>
+        {collapsed && (
+          <TooltipContent
+            side="right"
+            className={cn(
+              "rounded-lg px-3 h-9 flex items-center text-sm font-semibold shadow-md border-0 ml-1",
+              isSelected
+                ? "bg-highlight-active text-foreground"
+                : "bg-card text-foreground"
+            )}
+          >
+            {cat.name}
+          </TooltipContent>
+        )}
+      </Tooltip>
+    );
+  };
+
+  return (
+    <aside
+      className={cn(
+        "h-full shrink-0 bg-background flex flex-col overflow-hidden transition-[width] duration-200 border-r border-border/30",
+        collapsed ? "w-[56px]" : "w-[225px]"
+      )}
+      data-testid="category-sidebar"
+    >
+      {/* Header — label + collapse */}
+      <div
+        className={cn(
+          "flex items-center shrink-0 mt-3 mb-3 h-9",
+          collapsed ? "px-1.5 justify-center" : "px-2.5 justify-between"
+        )}
+      >
+        {!collapsed && (
+          <span className="text-base font-semibold font-heading text-foreground pl-1">
+            {t("categories.title")}
+          </span>
+        )}
+        <button
+          onClick={() => onCollapse(!collapsed)}
+          className="h-8 w-8 rounded-full flex items-center justify-center border border-black/[0.08] dark:border-white/[0.08] text-foreground/60 hover:text-foreground hover:bg-card transition-colors"
+          title={collapsed ? t("categories.expand") : t("categories.collapse")}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronLeft className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
+
+      {/* "All" category */}
+      <TooltipProvider delayDuration={300}>
+        <div className={cn("shrink-0", collapsed ? "px-1.5" : "px-2.5")}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => onSelectCategory(null)}
+                className={cn(
+                  "flex items-center rounded-full transition-colors w-full",
+                  collapsed
+                    ? "h-[40px] w-[40px] justify-center mx-auto"
+                    : "h-[40px] pl-[6px] pr-2 gap-2",
+                  selectedCategoryId === null
+                    ? "bg-highlight-active text-foreground font-semibold"
+                    : "text-foreground/70 hover:bg-card hover:text-foreground"
+                )}
+                data-testid="category-item-all"
+              >
+                <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 border border-black/[0.08] dark:border-white/[0.08]">
+                  <Layers className="h-3.5 w-3.5" />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className="text-[13px] font-medium flex-1">
+                      {t("categories.all")}
+                    </span>
+                    {totalCount > 0 && (
+                      <span className="text-[11px] tabular-nums text-muted-foreground font-medium shrink-0">
+                        {totalCount}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent
+                side="right"
+                className={cn(
+                  "rounded-lg px-3 h-9 flex items-center gap-2 text-sm font-semibold shadow-md border-0 ml-1",
+                  selectedCategoryId === null
+                    ? "bg-highlight-active text-foreground"
+                    : "bg-card text-foreground"
+                )}
+              >
+                {t("categories.all")}
+                {totalCount > 0 && (
+                  <span className="text-xs text-muted-foreground">{totalCount}</span>
+                )}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </div>
+
+        {/* Separator */}
+        {collapsed ? (
+          <div className="mx-auto w-5 border-t border-border/30 my-2" />
+        ) : (
+          <div className="px-2.5 pt-2 pb-1.5">
+            <span className="text-[11px] font-bold tracking-wide text-foreground/50 pl-1">
+              {t("categories.label")}
+            </span>
+          </div>
+        )}
+
+        {/* Category list */}
+        <nav
+          className={cn(
+            "flex-1 overflow-y-auto min-h-0 pb-2 space-y-0.5",
+            collapsed ? "px-1.5" : "px-2.5"
+          )}
+          data-testid="category-list"
+        >
+          {categories.map(renderCategoryItem)}
+
+          {/* Empty state */}
+          {categories.length === 0 && !collapsed && (
+            <p className="text-xs text-muted-foreground/60 px-2 py-3 text-center">
+              {t("categories.empty")}
+            </p>
+          )}
+        </nav>
+      </TooltipProvider>
+
+      {/* Add new category */}
+      <div className={cn("shrink-0 border-t border-border/30 pt-2 pb-3", collapsed ? "px-1.5" : "px-2.5")}>
+        {addingNew && !collapsed ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreate();
+                if (e.key === "Escape") { setAddingNew(false); setNewName(""); }
+              }}
+              placeholder={t("categories.newPlaceholder")}
+              className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-lg bg-muted border border-border/50 focus:border-brand-indigo focus:outline-none transition-colors"
+              autoFocus
+              data-testid="category-new-input"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!newName.trim() || createMutation.isPending}
+              className="h-7 w-7 rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-40 transition-colors"
+            >
+              <Check className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => { setAddingNew(false); setNewName(""); }}
+              className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => {
+                  if (collapsed) onCollapse(false);
+                  setAddingNew(true);
+                }}
+                className={cn(
+                  "flex items-center rounded-full transition-colors text-foreground/60 hover:text-foreground hover:bg-card",
+                  collapsed
+                    ? "h-[40px] w-[40px] justify-center mx-auto"
+                    : "h-[40px] pl-[6px] pr-2 gap-2 w-full"
+                )}
+                data-testid="category-add-btn"
+              >
+                <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 border border-dashed border-border/50">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                {!collapsed && (
+                  <span className="text-[13px] font-medium">
+                    {t("categories.add")}
+                  </span>
+                )}
+              </button>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent
+                side="right"
+                className="rounded-lg px-3 h-9 flex items-center text-sm font-semibold shadow-md border-0 ml-1 bg-card text-foreground"
+              >
+                {t("categories.add")}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        )}
+      </div>
+    </aside>
+  );
+}

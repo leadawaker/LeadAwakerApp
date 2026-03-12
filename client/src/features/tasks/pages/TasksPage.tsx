@@ -15,6 +15,7 @@ import { useTasks, useCreateTask } from "../api/tasksApi";
 import TasksKanbanView from "../components/TasksKanbanView";
 import TasksTreeView from "../components/TasksTreeView";
 import ProgressChart from "../components/ProgressChart";
+import CategorySidebar from "../components/CategorySidebar";
 import MobileTaskListCard from "../components/MobileTaskListCard";
 import MobileTaskDetailPanel from "../components/MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "../components/MobileTaskCreatePanel";
@@ -113,6 +114,8 @@ export default function TasksPage() {
   // Persisted state
   const [sort, setSort] = useState<SortOption>(() => loadLocal("tasks-sort", "due_date_asc"));
   const [viewMode, setViewMode] = useState<ViewMode>(() => loadLocal("tasks-view-mode", "kanban"));
+  const [catSidebarCollapsed, setCatSidebarCollapsed] = useState<boolean>(() => loadLocal("tasks-cat-sidebar-collapsed", false));
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   // Transient state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -140,6 +143,11 @@ export default function TasksPage() {
     saveLocal("tasks-view-mode", v);
   }, []);
 
+  const handleCatSidebarCollapse = useCallback((v: boolean) => {
+    setCatSidebarCollapsed(v);
+    saveLocal("tasks-cat-sidebar-collapsed", v);
+  }, []);
+
   const toggleFilterTag = useCallback((tag: string) => {
     setFilterTags((prev) =>
       prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]
@@ -154,9 +162,10 @@ export default function TasksPage() {
         const taskTags = parseTags((t as any).tags);
         if (!filterTags.some((tag) => taskTags.includes(tag))) return false;
       }
+      if (selectedCategoryId !== null && (t as any).categoryId !== selectedCategoryId) return false;
       return true;
     });
-  }, [tasks, dateRange, filterTags]);
+  }, [tasks, dateRange, filterTags, selectedCategoryId]);
 
   // Mobile tasks: filtered + searched + sorted
   const mobileTasks = useMemo(() => {
@@ -327,7 +336,21 @@ export default function TasksPage() {
   // ── Render ─────────────────────────────────────────────────────────
   return (
     <CrmShell>
-      <div className="h-full min-h-0 flex flex-col overflow-hidden bg-muted rounded-lg" data-testid="page-tasks">
+      <div className="h-full min-h-0 flex overflow-hidden" data-testid="page-tasks">
+
+        {/* Category sidebar — desktop only */}
+        {!isMobile && (
+          <CategorySidebar
+            collapsed={catSidebarCollapsed}
+            onCollapse={handleCatSidebarCollapse}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+            tasks={tasks}
+          />
+        )}
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden bg-muted rounded-lg">
 
         {/* Header: title + toolbar inline */}
         <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none] max-w-[1386px] w-full mr-auto">
@@ -426,6 +449,7 @@ export default function TasksPage() {
             </div>
           </div>
         )}
+        </div>{/* end main content */}
       </div>
 
       {/* Mobile full-screen task detail panel */}

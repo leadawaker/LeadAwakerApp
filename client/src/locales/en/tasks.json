@@ -103,5 +103,15 @@
     "copy": "(copy)",
     "duplicate": "Duplicate"
   },
-  "clickToChangeStatus": "Click to change status"
+  "clickToChangeStatus": "Click to change status",
+  "categories": {
+    "title": "Categories",
+    "label": "Categories",
+    "all": "All Tasks",
+    "add": "Add Category",
+    "newPlaceholder": "Category name...",
+    "empty": "No categories yet",
+    "expand": "Expand categories",
+    "collapse": "Collapse categories"
+  }
 }

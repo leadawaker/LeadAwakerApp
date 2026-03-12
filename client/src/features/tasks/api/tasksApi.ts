@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
-import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask } from "@shared/schema";
+import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask, TaskCategory, InsertTaskCategory } from "@shared/schema";
 
 const TASKS_KEY = ["/api/tasks"];
+const CATEGORIES_KEY = ["/api/task-categories"];
 
 export function useTasks() {
   return useQuery<Task[]>({
@@ -136,6 +137,49 @@ export function useTaskStats(params?: { categoryId?: number; startDate?: string;
         date: r.date,
         completedCount: Number(r.completedCount),
       }));
+    },
+  });
+}
+
+// ─── Task Categories ──────────────────────────────────────────────────────────
+
+export function useTaskCategories() {
+  return useQuery<TaskCategory[]>({
+    queryKey: CATEGORIES_KEY,
+    queryFn: async () => {
+      const res = await apiFetch("/api/task-categories");
+      if (!res.ok) throw new Error("Failed to fetch task categories");
+      return res.json();
+    },
+  });
+}
+
+export function useCreateTaskCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<InsertTaskCategory>) =>
+      apiRequest("POST", "/api/task-categories", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: CATEGORIES_KEY }),
+  });
+}
+
+export function useUpdateTaskCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<InsertTaskCategory> }) =>
+      apiRequest("PATCH", `/api/task-categories/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: CATEGORIES_KEY }),
+  });
+}
+
+export function useDeleteTaskCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiRequest("DELETE", `/api/task-categories/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: CATEGORIES_KEY });
+      qc.invalidateQueries({ queryKey: TASKS_KEY });
     },
   });
 }

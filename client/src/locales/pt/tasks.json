@@ -103,5 +103,15 @@
     "copy": "(copia)",
     "duplicate": "Duplicar"
   },
-  "clickToChangeStatus": "Clique para alterar status"
+  "clickToChangeStatus": "Clique para alterar status",
+  "categories": {
+    "title": "Categorias",
+    "label": "Categorias",
+    "all": "Todas as Tarefas",
+    "add": "Adicionar Categoria",
+    "newPlaceholder": "Nome da categoria...",
+    "empty": "Nenhuma categoria ainda",
+    "expand": "Expandir categorias",
+    "collapse": "Recolher categorias"
+  }
 }
