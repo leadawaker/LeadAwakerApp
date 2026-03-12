@@ -3050,6 +3050,231 @@ GUARDRAILS
     "claude-haiku-235-20241022",
   ];
 
+  // GET /api/agent-skills — list available Claude Code global skills from ~/.claude/skills/
+  app.get("/api/agent-skills", requireAgency, wrapAsync(async (req, res) => {
+    const skillsDir = path.join(process.env.HOME || "/home/gabriel", ".claude", "skills");
+    const skills: Array<{ id: string; name: string; description: string; path: string }> = [];
+
+    try {
+      const entries = await fs.promises.readdir(skillsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        // Skip 'learned' directory — those are individual knowledge files, not skills
+        if (entry.name === "learned") continue;
+
+        const skillFile = path.join(skillsDir, entry.name, "SKILL.md");
+        try {
+          const content = await fs.promises.readFile(skillFile, "utf-8");
+          // Parse YAML frontmatter
+          const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          let name = entry.name;
+          let description = "";
+          if (fmMatch) {
+            const fm = fmMatch[1];
+            const nameMatch = fm.match(/^name:\s*(.+)$/m);
+            const descMatch = fm.match(/^description:\s*(.+)$/m);
+            if (nameMatch) name = nameMatch[1].trim();
+            if (descMatch) description = descMatch[1].trim();
+          }
+          skills.push({ id: entry.name, name, description, path: skillFile });
+        } catch {
+          // SKILL.md doesn't exist or unreadable — skip this directory
+        }
+      }
+    } catch {
+      // Skills directory doesn't exist or is unreadable — return empty list
+    }
+
+    // Sort by name alphabetically
+    skills.sort((a, b) => a.name.localeCompare(b.name));
+    res.json(skills);
+  }));
+
+  // POST /api/agent-skills/execute — execute a skill within an agent conversation
+  // Loads skill SKILL.md content, injects into system prompt, and streams Claude response via SSE
+  app.post("/api/agent-skills/execute", requireAgency, async (req, res) => {
+    const { skillId, sessionId, content } = req.body;
+
+    if (!skillId?.trim()) {
+      return res.status(400).json({ message: "skillId is required" });
+    }
+    if (!sessionId?.trim()) {
+      return res.status(400).json({ message: "sessionId is required" });
+    }
+
+    try {
+      // 1. Load skill content from ~/.claude/skills/{skillId}/SKILL.md
+      const skillsDir = path.join(process.env.HOME || "/home/gabriel", ".claude", "skills");
+      const skillFile = path.join(skillsDir, skillId, "SKILL.md");
+
+      let skillContent: string;
+      try {
+        skillContent = await fs.promises.readFile(skillFile, "utf-8");
+      } catch {
+        return res.status(404).json({ message: `Skill "${skillId}" not found` });
+      }
+
+      // Strip YAML frontmatter to get just the skill instructions
+      const fmMatch = skillContent.match(/^---\n[\s\S]*?\n---\n*/);
+      const skillInstructions = fmMatch
+        ? skillContent.slice(fmMatch[0].length).trim()
+        : skillContent.trim();
+
+      // Parse skill name from frontmatter
+      let skillName = skillId;
+      if (fmMatch) {
+        const nameMatch = fmMatch[0].match(/^name:\s*(.+)$/m);
+        if (nameMatch) skillName = nameMatch[1].trim();
+      }
+
+      // 2. Look up the session + agent
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, session.agentId));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      // 3. Build user message content with skill invocation note
+      const userContent = content?.trim()
+        ? `[Skill: ${skillName}] ${content.trim()}`
+        : `[Skill: ${skillName}] Execute this skill.`;
+
+      // 4. Store user message
+      const userMessage = await storage.createAiMessage({
+        sessionId,
+        role: "user",
+        content: userContent,
+        metadata: {
+          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          thinkingLevel: session.thinkingLevel || agent.thinkingLevel || "medium",
+          skillId,
+          skillName,
+        },
+      });
+
+      // 5. Fetch conversation history
+      const history = await storage.getAiMessagesBySessionId(sessionId);
+      const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
+
+      // 6. Build prompt with skill instructions injected
+      let systemPrompt = agent.systemPrompt || "";
+      if (agent.systemPromptId) {
+        const linkedPrompt = await storage.getPromptById(agent.systemPromptId);
+        if (linkedPrompt?.promptText) {
+          systemPrompt = linkedPrompt.promptText;
+        }
+      }
+
+      // Append CRM tool descriptions
+      const agentPermissions = (agent.permissions || {}) as AgentPermissions;
+      const crmToolsPrompt = buildCrmToolsPrompt(agentPermissions);
+      if (crmToolsPrompt) {
+        systemPrompt += crmToolsPrompt;
+      }
+
+      let fullPrompt = "";
+      if (isFirstMessage && systemPrompt) {
+        fullPrompt += `[System Instructions]\n${systemPrompt}\n\n`;
+      }
+
+      // Inject skill instructions as a dedicated context block
+      fullPrompt += `[Skill Instructions: ${skillName}]\nYou are now executing the "${skillName}" skill. Follow these instructions:\n\n${skillInstructions}\n\n[End of Skill Instructions]\n\n`;
+
+      // Add user content
+      fullPrompt += userContent;
+
+      // 7. Set up SSE headers for streaming
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      // Send the user message ID as the first event
+      res.write(`data: ${JSON.stringify({ type: "message_id", id: userMessage.id })}\n\n`);
+
+      // 8. Determine working directory
+      const cwd = getSessionCwd(sessionId, agent.type);
+
+      // 9. Stream Claude response with skill context
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
+
+      streamClaudeResponse({
+        prompt: fullPrompt,
+        cwd,
+        bypassPermissions: agent.type !== "code_runner",
+        isFirstMessage,
+        model: sessionModel,
+        thinkingLevel: sessionThinking,
+        res,
+        beforeDone: async (fullText, sseRes) => {
+          const toolCalls = parseCrmToolCalls(fullText);
+          if (toolCalls.length === 0) return;
+
+          console.log(`[Skill Execute] Detected ${toolCalls.length} tool call(s)`);
+          const results = await executeCrmToolCalls(toolCalls, agentPermissions);
+          for (const result of results) {
+            sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+          }
+
+          const toolResultsText = results.map((r) => {
+            if (r.success) {
+              return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
+            }
+            return `[Tool: ${r.tool}] Error: ${r.error}`;
+          }).join("\n\n");
+
+          await storage.createAiMessage({
+            sessionId,
+            role: "tool",
+            content: toolResultsText,
+          });
+        },
+        onDone: async (fullText, subAgentBlocks) => {
+          try {
+            const inputTokens = Math.ceil(fullPrompt.length / 4);
+            const outputTokens = Math.ceil(fullText.length / 4);
+            if (fullText.trim()) {
+              await storage.createAiMessage({
+                sessionId,
+                role: "assistant",
+                content: fullText.trim(),
+                subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
+                metadata: {
+                  model: sessionModel,
+                  inputTokens,
+                  outputTokens,
+                  skillId,
+                  skillName,
+                },
+              });
+            }
+            await storage.updateAiSession(session.id, {
+              totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
+              totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
+            });
+          } catch (err) {
+            console.error("[Skill Execute] Failed to store response:", err);
+          }
+        },
+        onError: (errMsg) => {
+          console.error("[Skill Execute] Stream error:", errMsg);
+        },
+      });
+    } catch (err: any) {
+      console.error("[Skill Execute] Error:", err);
+      // If headers already sent (SSE started), send error as SSE event
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ type: "error", message: err.message || "Skill execution failed" })}\n\n`);
+        res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ message: err.message || "Skill execution failed" });
+      }
+    }
+  });
+
   // GET /api/ai-agents — list all enabled agents
   app.get("/api/ai-agents", requireAgency, wrapAsync(async (req, res) => {
     const agents = await storage.getAiAgents();
@@ -3771,9 +3996,28 @@ GUARDRAILS
       const isImage = ALLOWED_IMAGE_EXTENSIONS.has(ext);
       const isSpreadsheet = ALLOWED_SPREADSHEET_EXTENSIONS.has(ext);
 
-      // For spreadsheets, extract text content for Claude context
+      // Extract text content for Claude context (PDFs and spreadsheets)
       let transcription: string | null = null;
-      if (isSpreadsheet) {
+      if (ext === ".pdf") {
+        try {
+          const { PDFParse } = await import("pdf-parse") as any;
+          const parser = new PDFParse({ data: buffer });
+          await parser.load();
+          const pdfResult = await parser.getText();
+          parser.destroy();
+          let pdfText: string = pdfResult.text || "";
+          if (pdfText.length > 80000) {
+            pdfText = pdfText.slice(0, 80000) + "\n\n[... truncated at 80000 characters]";
+          }
+          if (!pdfText.trim()) {
+            pdfText = "[PDF contains no extractable text — may be scanned/image-based]";
+          }
+          transcription = pdfText;
+        } catch (parseErr) {
+          console.error("[AI Files] PDF parse error:", parseErr);
+          transcription = `[Error parsing PDF: ${(parseErr as Error).message}]`;
+        }
+      } else if (isSpreadsheet) {
         try {
           if (ext === ".csv") {
             transcription = buffer.toString("utf-8");
@@ -4028,32 +4272,57 @@ GUARDRAILS
         }
       }
 
-      // If a file was attached, include its content in the prompt
-      if (fileId) {
-        const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, Number(fileId)));
-        if (fileRecord && fileRecord.filePath && fs.existsSync(fileRecord.filePath)) {
-          const fileExt = path.extname(fileRecord.filename).toLowerCase();
-          const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
-          const isSpreadsheet = [".csv", ".xlsx", ".xls"].includes(fileExt);
+      // Include file context: current attachment + previous files in this conversation
+      // This ensures file context persists across conversation turns
+      const allConversationFiles = await storage.getAiFilesByConversationId(sessionId);
+      const currentFileId = fileId ? Number(fileId) : null;
 
-          if (isImage) {
-            // For images, encode as base64 data URL for Claude vision analysis
-            const imgBuffer = fs.readFileSync(fileRecord.filePath);
+      // Helper to build file context block for any file record
+      const buildFileContext = (fr: typeof allConversationFiles[0], isCurrent: boolean): string => {
+        const fileExt = path.extname(fr.filename).toLowerCase();
+        const isImg = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
+        const isSsheet = [".csv", ".xlsx", ".xls"].includes(fileExt);
+        const prefix = isCurrent ? "[Attached" : "[Previously Uploaded";
+        const suffix = isCurrent ? "Please analyze as requested." : "This file was shared earlier in the conversation — reference it if relevant.";
+
+        if (isImg) {
+          // For images, encode as base64 data URL for Claude vision analysis
+          if (fr.filePath && fs.existsSync(fr.filePath)) {
+            const imgBuffer = fs.readFileSync(fr.filePath);
             const base64Data = imgBuffer.toString("base64");
-            const imgMimeType = fileRecord.mimeType || "image/jpeg";
-            fullPrompt += `\n\n[Attached Image: ${fileRecord.filename}]\nThe user has attached an image. Here is the image as a base64 data URL for your analysis:\ndata:${imgMimeType};base64,${base64Data}\n\nPlease analyze this image as requested.\n\n`;
-          } else if (isSpreadsheet) {
-            // For spreadsheets, include the extracted text content
-            const spreadsheetContent = fileRecord.transcription || "[Spreadsheet content could not be extracted]";
-            fullPrompt += `\n\n[Attached Spreadsheet: ${fileRecord.filename}]\nThe user has attached a spreadsheet file. Here is the content:\n\n${spreadsheetContent}\n\nPlease analyze this data as requested.\n\n`;
-          } else {
-            // PDF or other files
-            const fileBuffer = fs.readFileSync(fileRecord.filePath);
-            fullPrompt += `\n\n[Attached PDF Document: ${fileRecord.filename}]\nThe user has attached a PDF file (${fileRecord.filename}, ${Math.round(fileBuffer.length / 1024)}KB). The file is stored at: ${fileRecord.filePath}\nPlease analyze this document as requested.\n\n`;
+            const imgMimeType = fr.mimeType || "image/jpeg";
+            return `\n\n${prefix} Image: ${fr.filename}]\ndata:${imgMimeType};base64,${base64Data}\n\n${suffix}\n`;
           }
+          return `\n\n${prefix} Image: ${fr.filename}]\n[Image file not found on disk]\n`;
+        } else if (isSsheet) {
+          const spreadsheetContent = fr.transcription || "[Spreadsheet content could not be extracted]";
+          return `\n\n${prefix} Spreadsheet: ${fr.filename}]\n${spreadsheetContent}\n\n${suffix}\n`;
+        } else {
+          // PDF — use extracted text from transcription field
+          const pdfContent = fr.transcription || "[PDF content could not be extracted]";
+          return `\n\n${prefix} PDF Document: ${fr.filename}]\n${pdfContent}\n\n${suffix}\n`;
+        }
+      };
 
-          // Update file record to link to the user message
-          await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, fileRecord.id));
+      // On first message or when --continue is NOT used, include ALL previous files for context
+      // On subsequent messages (--continue), the CLI remembers previous turns, so only include the current file
+      // Link current file to user message if provided
+      if (currentFileId) {
+        await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, currentFileId));
+      }
+
+      if (isFirstMessage && allConversationFiles.length > 0) {
+        // First message: include ALL files uploaded in this conversation for full context
+        for (const fr of allConversationFiles) {
+          const isCurrent = currentFileId !== null && fr.id === currentFileId;
+          fullPrompt += buildFileContext(fr, isCurrent);
+        }
+      } else if (currentFileId) {
+        // Subsequent message with a new file: only include the new file
+        // (previous file context is preserved by CLI's --continue flag)
+        const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, currentFileId));
+        if (fileRecord) {
+          fullPrompt += buildFileContext(fileRecord, true);
         }
       }
 

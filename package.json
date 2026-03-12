@@ -94,6 +94,7 @@
     "papaparse": "^5.5.3",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.16.3",
     "playwright-cli": "^0.262.0",
     "prettier": "^3.8.1",
