@@ -350,6 +350,23 @@ export function useAgentChat() {
     }
   }, [agent]);
 
+  /** Delete the current conversation (hard delete: files, messages, session) and start fresh */
+  const deleteConversation = useCallback(async () => {
+    if (!session) return;
+    try {
+      await apiFetch(`/api/agent-conversations/${session.sessionId}`, { method: "DELETE" });
+    } catch {
+      // ignore
+    }
+    setSession(null);
+    setMessages([]);
+    setStreaming(false);
+    setStreamingText("");
+    streamingTextRef.current = "";
+    // Reinitialize with a new session
+    if (agent) await initialize(agent.id);
+  }, [session, agent, initialize]);
+
   const newSession = useCallback(async () => {
     if (!session) return;
     // Close current session
@@ -425,6 +442,7 @@ export function useAgentChat() {
     loading,
     initialize,
     sendMessage,
+    deleteConversation,
     newSession,
     loadSession,
     abortStream,

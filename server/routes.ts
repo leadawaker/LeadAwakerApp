@@ -3779,6 +3779,33 @@ GUARDRAILS
     }
   });
 
+  // Delete a conversation and all its messages and files (hard delete)
+  app.delete("/api/agent-conversations/:id", requireAgency, async (req, res) => {
+    try {
+      const sessionId = req.params.id;
+
+      // Verify the session exists
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      // Cascade delete: files → messages → session
+      // 1. Delete all files associated with this conversation
+      await db.delete(aiFiles).where(eq(aiFiles.conversationId, sessionId));
+
+      // 2. Delete all messages for this conversation
+      await db.delete(aiMessages).where(eq(aiMessages.sessionId, sessionId));
+
+      // 3. Delete the session/conversation record itself
+      await db.delete(aiSessions).where(eq(aiSessions.id, session.id));
+
+      console.log(`[AI Conversations] Deleted conversation ${sessionId} (files, messages, session)`);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[AI Conversations] delete error:", err);
+      res.status(500).json({ message: "Failed to delete conversation" });
+    }
+  });
+
   // ─── AI Sessions (conversations) ──────────────────────────────────────
 
   // List sessions for current user
@@ -4169,6 +4196,25 @@ GUARDRAILS
     } catch (err: any) {
       console.error("[AI Files] thumbnail error:", err);
       res.status(500).json({ message: "Failed to serve thumbnail" });
+    }
+  });
+
+  // GET /api/agent-files/:id/download — serve full file for download/viewing
+  app.get("/api/agent-files/:id/download", requireAgency, async (req, res) => {
+    try {
+      const fileId = parseInt(req.params.id, 10);
+      if (isNaN(fileId)) return res.status(400).json({ message: "Invalid file ID" });
+      const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, fileId));
+      if (!fileRecord || !fileRecord.filePath) return res.status(404).json({ message: "File not found" });
+      if (!fs.existsSync(fileRecord.filePath)) return res.status(404).json({ message: "File not found on disk" });
+      const contentType = fileRecord.mimeType || "application/octet-stream";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `inline; filename="${fileRecord.filename}"`);
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      fs.createReadStream(fileRecord.filePath).pipe(res);
+    } catch (err: any) {
+      console.error("[AI Files] download error:", err);
+      res.status(500).json({ message: "Failed to serve file" });
     }
   });
 

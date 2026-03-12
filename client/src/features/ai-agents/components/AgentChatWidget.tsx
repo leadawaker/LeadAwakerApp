@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings } from "lucide-react";
+import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
@@ -10,6 +10,16 @@ import { AgentSettingsSheet } from "./AgentSettingsSheet";
 import { ModelSwitcher } from "./ModelSwitcher";
 import { ThinkingToggle } from "./ThinkingToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { apiFetch } from "@/lib/apiUtils";
 import type { AiAgent, AiSession } from "../hooks/useAgentChat";
 import type { PageContext } from "../hooks/usePageContext";
@@ -314,6 +324,7 @@ function ConversationTabs({
 export function AgentChatWidget() {
   const { isOpen, activeAgentId, closeWidget, toggleWidget, selectAgent, clearAgent } = useAgentWidget();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   // Track all open agent conversations (persisted across agent switches)
   const [openAgentIds, setOpenAgentIds] = useState<Set<number>>(new Set());
@@ -545,6 +556,14 @@ export function AgentChatWidget() {
                 <Settings className="h-3.5 w-3.5" />
               </button>
               <button
+                onClick={() => setDeleteConfirmOpen(true)}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                title="Clear conversation history"
+                data-testid="widget-clear-history-btn"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <button
                 onClick={() => {
                   window.dispatchEvent(
                     new CustomEvent("agent-new-session", { detail: { agentId: activeAgentId } }),
@@ -636,6 +655,33 @@ export function AgentChatWidget() {
           }}
         />
       )}
+
+      {/* ── Delete Conversation Confirmation Dialog ── */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear conversation history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all messages and uploaded files in this conversation. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (activeAgentId) {
+                  window.dispatchEvent(
+                    new CustomEvent("agent-delete-conversation", { detail: { agentId: activeAgentId } }),
+                  );
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -660,6 +706,7 @@ function ConversationPanelWithEvents({
     initialize,
     sendMessage,
     newSession,
+    deleteConversation,
     updateSessionModel,
     updateSessionThinking,
   } = useAgentChat();
@@ -731,17 +778,23 @@ function ConversationPanelWithEvents({
       const detail = (e as CustomEvent).detail;
       if (detail.agentId === agentId) newSession();
     };
+    const handleDeleteConversation = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.agentId === agentId) deleteConversation();
+    };
 
     window.addEventListener("agent-model-change", handleModelChange);
     window.addEventListener("agent-thinking-change", handleThinkingChange);
     window.addEventListener("agent-new-session", handleNewSession);
+    window.addEventListener("agent-delete-conversation", handleDeleteConversation);
     return () => {
       window.removeEventListener("agent-model-change", handleModelChange);
       window.removeEventListener("agent-thinking-change", handleThinkingChange);
       window.removeEventListener("agent-new-session", handleNewSession);
+      window.removeEventListener("agent-delete-conversation", handleDeleteConversation);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agentId, updateSessionModel, updateSessionThinking, newSession]);
+  }, [agentId, updateSessionModel, updateSessionThinking, newSession, deleteConversation]);
 
   if (!agent) return null;
 
