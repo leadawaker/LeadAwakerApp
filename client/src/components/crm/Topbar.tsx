@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { Bell, Search, Moon, Sun, Menu, X, LogOut, Check, BookOpen, User, Headphones, Instagram, Facebook, Mail, Phone, ChevronDown, Sparkles, Tag, BarChart3, ClipboardList } from "lucide-react";
+import { Bell, Search, Moon, Sun, Menu, X, LogOut, Check, BookOpen, User, Headphones, Instagram, Facebook, Mail, Phone, ChevronDown, Sparkles, Tag, BarChart3, ClipboardList, Bot } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -24,6 +24,7 @@ import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { MobileSupportPanel } from "@/components/crm/MobileSupportPanel";
 import { MobileNotificationsPanel } from "@/components/crm/MobileNotificationsPanel";
 import { useSupportChat } from "@/hooks/useSupportChat";
+import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useQuery } from "@tanstack/react-query";
 
 const TOPBAR_HELP_UPDATES = [
@@ -34,7 +35,7 @@ const TOPBAR_HELP_UPDATES = [
 
 export function Topbar({
   onOpenPanel,
-  collapsed: _collapsed,
+  collapsed,
   isMobileMenuOpen,
   onToggleMobileMenu,
   onLogout,
@@ -49,6 +50,7 @@ export function Topbar({
   const [location, setLocation] = useLocation();
   const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount } = useWorkspace();
   const { isDark, toggleTheme } = useTheme();
+  const { toggleWidget: toggleAiWidget } = useAgentWidget();
 
   // ── Support Chat ─────────────────────────────────────────────────────────────
   const {
@@ -314,6 +316,16 @@ export function Topbar({
             </div>
           )}
         </div>
+
+        {/* AI Agent */}
+        <IconBtn
+          onClick={toggleAiWidget}
+          data-testid="button-ai-agent-mobile"
+          aria-label="AI Agent"
+          className="shrink-0 min-h-[44px] min-w-[44px]"
+        >
+          <Bot className="h-4 w-4" />
+        </IconBtn>
 
         {/* User Avatar */}
         <DropdownMenu>
@@ -670,6 +682,24 @@ export function Topbar({
             </Tooltip>
           </span>
 
+          {/* AI Agent — hidden on mobile */}
+          <span className="hidden md:contents">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <IconBtn
+                  onClick={toggleAiWidget}
+                  data-testid="button-ai-agent"
+                  aria-label="AI Agent"
+                >
+                  <Bot className="h-4 w-4" />
+                </IconBtn>
+              </TooltipTrigger>
+              <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                AI Agent
+              </TooltipContent>
+            </Tooltip>
+          </span>
+
           {/* Help — hidden on mobile */}
           <span className="hidden md:contents">
             <DropdownMenu>
@@ -885,9 +915,13 @@ export function Topbar({
       </TooltipProvider>
 
       {/* Right gutter — aligns buttons with leads detail panel edge on ultra-wide screens.
-          Formula: max(20px, 50vw - 967px) mirrors the leads panel max-w centering:
-          sidebar(225) + leads-max-w(1729) + pr-5(20) = 1974px transition point → 1974/2 - 20 = 967 */}
-      <div className="hidden md:block shrink-0 grow-0" style={{ flexBasis: "max(20px, calc(50vw - 967px))" }} />
+          Formula: max(20px, 50vw - Xpx) mirrors the leads panel max-w centering:
+          sidebar + leads-max-w(1729) + pr-5(20) = transition point → point/2 - 20 = X
+          Expanded: (225+1729+20)/2 - 20 = 967   Collapsed: (56+1729+20)/2 - 20 = 882.5 */}
+      <div
+        className="hidden md:block shrink-0 grow-0 transition-[flex-basis] duration-200"
+        style={{ flexBasis: collapsed ? "max(20px, calc(50vw - 882.5px))" : "max(20px, calc(50vw - 967px))" }}
+      />
 
     </header>
     {/* Desktop floating widget (hidden on mobile) */}

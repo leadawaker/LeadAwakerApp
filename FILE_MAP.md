@@ -282,12 +282,83 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 
 ---
 
+## Tasks Feature (`features/tasks/`)
+
+| Component | File | Notes |
+|-----------|------|-------|
+| TasksPage | `pages/TasksPage.tsx` | Feature page — all view modes, toolbar, filters |
+| ViewSwitcher | `components/ViewSwitcher.tsx` | Tab switcher: kanban/table/tree/list/simple-daily/gantt |
+| TasksKanbanView | `components/TasksKanbanView.tsx` | Drag-drop kanban by status |
+| TasksTableView | `components/TasksTableView.tsx` | Column-based table with group headers |
+| TasksInlineTable | `components/TasksInlineTable.tsx` | Inline-editable data table |
+| TasksTreeView | `components/TasksTreeView.tsx` | Hierarchical tree with expand/collapse, category colors |
+| TasksVisualTree | `components/TasksVisualTree.tsx` | Visual tree with connector lines |
+| TasksListView | `components/TasksListView.tsx` | Simple list with category/time badges |
+| TasksGanttView | `components/TasksGanttView.tsx` | Gantt chart — left tree panel + right timeline |
+| SimpleDailyView | `components/SimpleDailyView.tsx` | Daily focus view |
+| TaskCard | `components/TaskCard.tsx` | Kanban card with emoji/category |
+| CategorySidebar | `components/CategorySidebar.tsx` | Left sidebar — category filter |
+| TaskCreatePanel | `components/TaskCreatePanel.tsx` | Task creation form (desktop) |
+| TaskDetailPanel | `components/TaskDetailPanel.tsx` | Task detail slide-over |
+| MobileTaskCreatePanel | `components/MobileTaskCreatePanel.tsx` | Task creation (mobile) |
+| MobileTaskDetailPanel | `components/MobileTaskDetailPanel.tsx` | Task detail (mobile) |
+| MobileTaskListCard | `components/MobileTaskListCard.tsx` | Task card for mobile list |
+| ProgressChart | `components/ProgressChart.tsx` | Task completion progress chart |
+| TagVisibilityContext | `context/TagVisibilityContext.tsx` | Tag visibility toggle state |
+| types | `types.ts` | `Task`, `VIEW_MODES`, `ViewMode`, `STATUS_COLORS`, category types |
+
+---
+
+## AI Agents Feature (`features/ai-agents/`)
+
+| Component | File | Notes |
+|-----------|------|-------|
+| AgentsPage | `pages/AgentsPage.tsx` | Feature page |
+| AgentChatPage | `pages/AgentChatPage.tsx` | Full-page chat view |
+| AgentChatView | `components/AgentChatView.tsx` | Chat messages + streaming UI |
+| AgentChatWidget | `components/AgentChatWidget.tsx` | Floating widget version |
+| AgentConversationList | `components/AgentConversationList.tsx` | Conversation list panel |
+| AgentSettingsSheet | `components/AgentSettingsSheet.tsx` | Agent settings slide-over |
+| SubAgentPill | `components/SubAgentPill.tsx` | Sub-agent status pill |
+| MarkdownRenderer | `components/MarkdownRenderer.tsx` | Markdown output renderer |
+| ModelSwitcher | `components/ModelSwitcher.tsx` | Claude model selector |
+| ThinkingToggle | `components/ThinkingToggle.tsx` | Extended thinking toggle |
+| ElementPickerOverlay | `components/ElementPickerOverlay.tsx` | DOM element picker overlay for agent context |
+| useAgentChat | `hooks/useAgentChat.ts` | Chat state, streaming, session management |
+| useElementPicker | `hooks/useElementPicker.ts` | Element picker interaction logic |
+| usePageContext | `hooks/usePageContext.ts` | Current page context for agent |
+| chatSyncBus | `hooks/chatSyncBus.ts` | Cross-component chat event bus |
+
+---
+
+## Prospects Feature (`features/prospects/`)
+
+| Component | File | Notes |
+|-----------|------|-------|
+| ProspectsPage | `pages/ProspectsPage.tsx` | Feature page |
+| AppProspects | `pages/AppProspects.tsx` *(in `pages/`)* | Route wrapper |
+| ProspectListView | `components/ProspectListView.tsx` | Split-pane list view |
+| ProspectsInlineTable | `components/ProspectsInlineTable.tsx` | **Reference implementation** for inline-editable tables |
+| OutreachPipelineView | `components/OutreachPipelineView.tsx` | Outreach pipeline kanban |
+| ProspectDetailView | `components/ProspectDetailView.tsx` | Right panel detail |
+| ProspectSlidePanel | `components/ProspectSlidePanel.tsx` | Slide-over panel |
+| ProspectCreatePanel | `components/ProspectCreatePanel.tsx` | Creation form |
+| InteractionTimeline | `components/InteractionTimeline.tsx` | Outreach interaction history |
+| ProspectTasks | `components/ProspectTasks.tsx` | Tasks linked to a prospect |
+| OutreachTemplatesView | `components/OutreachTemplatesView.tsx` | Outreach message templates |
+| useProspectsData | `hooks/useProspectsData.ts` | Prospects data hook |
+| prospectsApi | `api/prospectsApi.ts` | API calls for prospects |
+| outreachTemplatesApi | `api/outreachTemplatesApi.ts` | API calls for outreach templates |
+
+---
+
 ## Documentation Index
 
 | Doc | Purpose |
 |-----|---------|
-| `CLAUDE.md` | Project overview, critical rules, tech stack |
+| `CLAUDE.md` | Project overview, critical rules, tech stack, key reference files |
 | `UI_STANDARDS.md` | Design system — colors, spacing, typography, coding rules |
 | `UI_PATTERNS.md` | Implementation patterns — exact markup, component anatomy |
 | `FILE_MAP.md` | This file — quick component lookup |
 | `EXPENSES.md` | Expenses feature: DB, BTW/VAT, PDF parsing, architecture |
+| `specs/<feature>/` | Feature specs: requirements.md, implementation-plan.md, action-required.md |

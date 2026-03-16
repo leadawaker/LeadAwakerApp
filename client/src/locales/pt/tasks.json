@@ -12,7 +12,8 @@
     "filter": "Filtrar",
     "clearFilters": "Limpar filtros",
     "showTags": "Mostrar Tags",
-    "hideTags": "Ocultar Tags"
+    "hideTags": "Ocultar Tags",
+    "groupBy": "Grupo"
   },
   "create": {
     "title": "Nova Tarefa",
@@ -98,10 +99,12 @@
     "type": "Tipo",
     "assignee": "Responsavel",
     "account": "Conta",
+    "category": "Categoria",
     "all": "Todos",
     "unassigned": "Nao atribuido"
   },
   "columns": {
+    "id": "ID",
     "title": "Titulo",
     "type": "Tipo",
     "status": "Status",
@@ -112,7 +115,9 @@
     "category": "Categoria",
     "timeEstimate": "Estimativa",
     "parentTask": "Tarefa Pai",
-    "tags": "Tags"
+    "tags": "Tags",
+    "priority": "Prioridade",
+    "description": "Descri\u00e7\u00e3o"
   },
   "card": {
     "newTask": "Nova Tarefa",
@@ -136,10 +141,26 @@
     "table": "Tabela",
     "simple": "Simples",
     "tree": "Arvore",
+    "gantt": "Gantt",
     "overdue": "Atrasadas",
     "today": "Hoje",
     "unscheduled": "Sem data",
     "noDailyTasks": "Sem tarefas para hoje"
+  },
+  "gantt": {
+    "today": "Hoje",
+    "unscheduled": "N\u00e3o agendado",
+    "noDate": "Sem datas definidas",
+    "zoomDay": "Dia",
+    "zoomWeek": "Semana",
+    "zoomMonth": "M\u00eas",
+    "startDate": "Data de in\u00edcio",
+    "duration": "Dura\u00e7\u00e3o",
+    "openTask": "Abrir tarefa",
+    "colorBy": "Cor por",
+    "colorModeCategory": "Categoria",
+    "colorModeStatus": "Status",
+    "colorModePriority": "Prioridade"
   },
   "categories": {
     "title": "Categorias",

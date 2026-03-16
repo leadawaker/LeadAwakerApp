@@ -210,7 +210,7 @@ export function ChatPanel({
   }, []);
 
   // Track whether we just switched conversations (for bubble entrance animation)
-  const [isInitialLoad, setIsInitialLoad] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const initialLoadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Takeover flow state
@@ -308,15 +308,13 @@ export function ChatPanel({
     if (leadId !== prevLeadId.current) {
       prevLeadId.current = leadId;
       prevMsgCount.current = selected?.msgs.length ?? 0;
-      setTimeout(() => scrollToBottom("instant"), 0);
+      scrollToBottom("instant");
       setShowScrollButton(false);
 
-      // Trigger bubble entrance animation for 800ms after switching
-      if (leadId !== null) {
-        setIsInitialLoad(true);
-        if (initialLoadTimer.current) clearTimeout(initialLoadTimer.current);
-        initialLoadTimer.current = setTimeout(() => setIsInitialLoad(false), 800);
-      }
+      // Trigger bubble entrance animation for 600ms after switching
+      setIsInitialLoad(true);
+      if (initialLoadTimer.current) clearTimeout(initialLoadTimer.current);
+      initialLoadTimer.current = setTimeout(() => setIsInitialLoad(false), 600);
     }
   }, [selected?.lead.id, scrollToBottom]);
 
@@ -950,6 +948,7 @@ export function ChatPanel({
                           currentUser={currentUser}
                           isInitialLoad={isInitialLoad}
                           startIdx={runStartIdx}
+                          totalMsgCount={allMsgs.length}
                         />
                       );
                     } else if (senderType === "inbound") {
@@ -964,6 +963,7 @@ export function ChatPanel({
                           currentUser={currentUser}
                           isInitialLoad={isInitialLoad}
                           startIdx={runStartIdx}
+                          totalMsgCount={allMsgs.length}
                           onNavigateToLead={selected ? () => onNavigateToLead?.(selected.lead.id) : undefined}
                         />
                       );
@@ -979,6 +979,7 @@ export function ChatPanel({
                           currentUser={currentUser}
                           isInitialLoad={isInitialLoad}
                           startIdx={runStartIdx}
+                          totalMsgCount={allMsgs.length}
                         />
                       );
                     }
@@ -1371,6 +1372,7 @@ function AgentRunWrapper({
   currentUser,
   isInitialLoad,
   startIdx,
+  totalMsgCount,
 }: {
   msgs: Interaction[];
   metas: MsgMeta[];
@@ -1381,14 +1383,15 @@ function AgentRunWrapper({
   currentUser: SessionUser | null;
   isInitialLoad: boolean;
   startIdx: number;
+  totalMsgCount: number;
 }) {
   return (
     <div
       className={cn(
         "flex justify-end gap-1.5",
-        isInitialLoad && "animate-bubble-right",
+        isInitialLoad && startIdx >= totalMsgCount - 15 && "animate-bubble-right",
       )}
-      style={isInitialLoad ? { animationDelay: `${Math.min(startIdx, 20) * 25}ms` } : undefined}
+      style={isInitialLoad && startIdx >= totalMsgCount - 15 ? { animationDelay: `${Math.min(totalMsgCount - startIdx, 15) * 20}ms` } : undefined}
     >
       {/* Bubbles column — full width so max-w-[78%] resolves correctly */}
       <div className="flex flex-col min-w-0 flex-1">
@@ -1427,6 +1430,7 @@ function LeadRunWrapper({
   currentUser,
   isInitialLoad,
   startIdx,
+  totalMsgCount,
   onNavigateToLead,
 }: {
   msgs: Interaction[];
@@ -1437,13 +1441,14 @@ function LeadRunWrapper({
   currentUser: SessionUser | null;
   isInitialLoad: boolean;
   startIdx: number;
+  totalMsgCount: number;
   onNavigateToLead?: () => void;
 }) {
   const hideAvatars = useHideAvatars();
   return (
     <div
-      className={cn("flex justify-start gap-1.5", isInitialLoad && "animate-bubble-left")}
-      style={isInitialLoad ? { animationDelay: `${Math.min(startIdx, 20) * 25}ms` } : undefined}
+      className={cn("flex justify-start gap-1.5", isInitialLoad && startIdx >= totalMsgCount - 15 && "animate-bubble-left")}
+      style={isInitialLoad && startIdx >= totalMsgCount - 15 ? { animationDelay: `${Math.min(totalMsgCount - startIdx, 15) * 20}ms` } : undefined}
     >
       {/* Avatar column — sticky to bottom, left side */}
       {!hideAvatars && (
@@ -1490,6 +1495,7 @@ function BotRunWrapper({
   currentUser,
   isInitialLoad,
   startIdx,
+  totalMsgCount,
 }: {
   msgs: Interaction[];
   metas: MsgMeta[];
@@ -1499,12 +1505,13 @@ function BotRunWrapper({
   currentUser: SessionUser | null;
   isInitialLoad: boolean;
   startIdx: number;
+  totalMsgCount: number;
 }) {
   const hideAvatars = useHideAvatars();
   return (
     <div
-      className={cn("flex justify-end gap-1.5", isInitialLoad && "animate-bubble-right")}
-      style={isInitialLoad ? { animationDelay: `${Math.min(startIdx, 20) * 25}ms` } : undefined}
+      className={cn("flex justify-end gap-1.5", isInitialLoad && startIdx >= totalMsgCount - 15 && "animate-bubble-right")}
+      style={isInitialLoad && startIdx >= totalMsgCount - 15 ? { animationDelay: `${Math.min(totalMsgCount - startIdx, 15) * 20}ms` } : undefined}
     >
       {/* Bubbles column */}
       <div className="flex flex-col min-w-0 flex-1">

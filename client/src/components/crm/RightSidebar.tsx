@@ -20,6 +20,7 @@ import {
   Menu,
   X,
   Building2,
+  UserSearch,
   ClipboardList,
   LogOut,
   Receipt,
@@ -126,7 +127,7 @@ export function RightSidebar({
       : location.replace(/^\/(agency|subaccount)/, "");
 
     // Agency-only pages don't exist in subaccount view — always go to campaigns
-    const agencyOnlyPaths = ["/accounts", "/tasks", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
+    const agencyOnlyPaths = ["/accounts", "/prospects", "/tasks", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
     const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
     const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/campaigns" : tail;
 
@@ -180,6 +181,7 @@ export function RightSidebar({
       testId: "nav-tasks",
       agencyOnly: true,
     },
+    { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", agencyOnly: true },
     {
       href: `${prefix}/automation-logs`,
       label: t("sidebar.automations"),
@@ -204,6 +206,7 @@ export function RightSidebar({
     conversations: t("sidebar.chats"),
     calendar: t("sidebar.calendar"),
     accounts: t("sidebar.accounts"),
+    prospects: t("sidebar.prospects"),
     invoices: t("sidebar.billing"),
     expenses: t("sidebar.billing"),
     contracts: t("sidebar.billing"),
@@ -632,7 +635,7 @@ export function RightSidebar({
               {/* Section: Admin (agency only) + Billing */}
               {(() => {
                 const adminItems = visibleNavItems.filter(it =>
-                  ["Accounts", "Tasks", "Billing"].includes(it.labelKey)
+                  ["Accounts", "Prospects", "Tasks", "Billing"].includes(it.labelKey)
                 );
                 if (adminItems.length === 0) return null;
                 return (

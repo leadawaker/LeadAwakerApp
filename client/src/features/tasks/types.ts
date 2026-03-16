@@ -145,7 +145,7 @@ export function parseTags(raw: string | null | undefined): string[] {
 }
 
 // ─── View Mode ──────────────────────────────────────────────────────
-export const VIEW_MODES = ["kanban", "list", "table", "simple", "tree"] as const;
+export const VIEW_MODES = ["kanban", "table", "gantt"] as const;
 export type ViewMode = (typeof VIEW_MODES)[number];
 
 // ─── Sort / Filter / Group ───────────────────────────────────────────
@@ -167,6 +167,7 @@ export const GROUP_OPTIONS = [
   { value: "status", label: "Status" },
   { value: "priority", label: "Priority" },
   { value: "taskType", label: "Type" },
+  { value: "category", label: "Category" },
   { value: "assigneeName", label: "Assignee" },
   { value: "accountName", label: "Account" },
 ] as const;
@@ -204,6 +205,15 @@ export function sortTasks(tasks: Task[], sort: SortOption): Task[] {
 export function groupTasks(tasks: Task[], groupBy: GroupOption): Map<string, Task[]> {
   if (groupBy === "none") return new Map([["All", tasks]]);
   const map = new Map<string, Task[]>();
+  if (groupBy === "category") {
+    for (const t of tasks) {
+      const key = String((t as any).categoryId ?? "Unassigned");
+      const arr = map.get(key);
+      if (arr) arr.push(t);
+      else map.set(key, [t]);
+    }
+    return map;
+  }
   for (const t of tasks) {
     const key = String((t as any)[groupBy] ?? "Unassigned");
     const arr = map.get(key);

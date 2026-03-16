@@ -57,10 +57,10 @@ export const TIER_BAR_COLOR: Record<string, string> = {
   Lost:     "#9CA3AF",
 };
 
-export function TrendIcon({ trend }: { trend: "up" | "down" | "stable" }) {
-  if (trend === "up")   return <TrendingUp   className="h-3.5 w-3.5 text-green-500" />;
-  if (trend === "down") return <TrendingDown  className="h-3.5 w-3.5 text-red-400" />;
-  return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+export function TrendIcon({ trend, upClass, downClass }: { trend: "up" | "down" | "stable"; upClass?: string; downClass?: string }) {
+  if (trend === "up")   return <TrendingUp className={upClass ?? "h-4 w-4 text-green-500"} />;
+  if (trend === "down") return <TrendingDown className={downClass ?? "h-4 w-4 text-red-400"} />;
+  return <Minus className="h-4 w-4 text-muted-foreground" />;
 }
 
 export interface ScoreHistoryPoint {

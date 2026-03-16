@@ -84,6 +84,14 @@ export interface PendingConfirmation {
   actions: PendingDestructiveAction[];
 }
 
+/** Activity indicator for what the AI is currently doing */
+export interface AgentActivity {
+  type: "thinking" | "tool";
+  tool?: string;
+  label?: string;
+  timestamp: number;
+}
+
 export function useAgentChat() {
   const [agent, setAgent] = useState<AiAgent | null>(null);
   const [session, setSession] = useState<AiSession | null>(null);
@@ -92,6 +100,7 @@ export function useAgentChat() {
   const [streamingText, setStreamingText] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
+  const [activity, setActivity] = useState<AgentActivity | null>(null);
   const streamingTextRef = useRef("");
   const messagesRef = useRef<AgentMessage[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -277,11 +286,15 @@ export function useAgentChat() {
               id?: number;
               text?: string;
               subAgentBlocks?: SubAgentBlock[];
-              usage?: { inputTokens: number; outputTokens: number };
+              usage?: { inputTokens: number; outputTokens: number; costUsd?: number };
+              cliSessionId?: string;
               message?: string;
               sessionId?: string;
               agentId?: number;
               actions?: PendingDestructiveAction[];
+              activity?: string;
+              tool?: string;
+              label?: string;
             };
 
             if (evt.type === "message_id") {
@@ -302,6 +315,14 @@ export function useAgentChat() {
                 lastTokenBroadcast = now;
                 maybeBroadcast(messagesRef.current, true, newText);
               }
+            } else if (evt.type === "activity") {
+              // Activity indicator: thinking, tool use, etc.
+              setActivity({
+                type: evt.activity === "tool" ? "tool" : "thinking",
+                tool: evt.tool as string | undefined,
+                label: evt.label as string | undefined,
+                timestamp: Date.now(),
+              });
             } else if (evt.type === "pending_confirmation") {
               // Destructive action requires user confirmation before execution
               setPendingConfirmation({
@@ -329,6 +350,7 @@ export function useAgentChat() {
               setStreamingText("");
               streamingTextRef.current = "";
               setStreaming(false);
+              setActivity(null);
 
               // Refresh session after a delay to pick up AI-generated title
               setTimeout(async () => {
@@ -434,6 +456,9 @@ export function useAgentChat() {
               skillName?: string;
               subAgentBlocks?: SubAgentBlock[];
               message?: string;
+              activity?: string;
+              tool?: string;
+              label?: string;
             };
 
             if (evt.type === "message_id") {
@@ -451,7 +476,15 @@ export function useAgentChat() {
                 lastSkillTokenBroadcast = now;
                 maybeBroadcast(messagesRef.current, true, newText);
               }
+            } else if (evt.type === "activity") {
+              setActivity({
+                type: evt.activity === "tool" ? "tool" : "thinking",
+                tool: evt.tool as string | undefined,
+                label: evt.label as string | undefined,
+                timestamp: Date.now(),
+              });
             } else if (evt.type === "done") {
+              setActivity(null);
               const finalText = streamingTextRef.current;
               const subAgentBlocks: SubAgentBlock[] = evt.subAgentBlocks || [];
               const skillAssistantMsg: AgentMessage = {
@@ -523,6 +556,7 @@ export function useAgentChat() {
     setStreaming(false);
     setStreamingText("");
     streamingTextRef.current = "";
+    setActivity(null);
   }, []);
 
   /** Load a specific existing session by sessionId (for switching between conversations) */
@@ -594,19 +628,20 @@ export function useAgentChat() {
   }, [session, agent, initialize]);
 
   const newSession = useCallback(async () => {
-    if (!session) return;
-    // Close current session
-    try {
-      await apiFetch(`/api/agents/sessions/${session.sessionId}`, { method: "DELETE" });
-    } catch {
-      // ignore
+    // Close current session if one exists
+    if (session) {
+      try {
+        await apiFetch(`/api/agents/sessions/${session.sessionId}`, { method: "DELETE" });
+      } catch {
+        // ignore
+      }
     }
     setSession(null);
     setMessages([]);
     setStreaming(false);
     setStreamingText("");
     streamingTextRef.current = "";
-    // Reinitialize
+    // Reinitialize with a fresh session
     if (agent) await initialize(agent.id);
   }, [session, agent, initialize]);
 
@@ -732,6 +767,7 @@ export function useAgentChat() {
     }
   }, [pendingConfirmation, maybeBroadcast]);
 
+
   return {
     agent,
     setAgent,
@@ -741,6 +777,7 @@ export function useAgentChat() {
     streamingText,
     loading,
     pendingConfirmation,
+    activity,
     initialize,
     sendMessage,
     executeSkill,

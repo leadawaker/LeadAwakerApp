@@ -5,7 +5,7 @@ import {
   Plus, Loader2, Check, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Maximize2,
   CircleDot, Send, Users, Star, Ban, AlertTriangle, RotateCcw, Trash2, Bot, Zap,
 } from "lucide-react";
-import { useScoreBreakdown, TIER_COLORS, TrendIcon, type ScoreBreakdown } from "@/hooks/useScoreBreakdown";
+import { useScoreBreakdown, TIER_COLORS, TIER_BAR_COLOR, TrendIcon, type ScoreBreakdown } from "@/hooks/useScoreBreakdown";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonContactPanel } from "@/components/ui/skeleton";
@@ -106,64 +106,54 @@ function scoreTextColor(score: number): string {
 }
 
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
+/** Single thick segmented bar — Engagement | Activity | Funnel as proportional segments */
+function SegmentedScoreBar({ breakdown, tierColor }: { breakdown: ScoreBreakdown; tierColor: string }) {
+  const segments = [
+    { label: "Engagement", value: breakdown.engagement_score },
+    { label: "Activity",   value: breakdown.activity_score },
+    { label: "Funnel",     value: breakdown.funnel_weight },
+  ];
+  const total = segments.reduce((s, seg) => s + seg.value, 0);
+  // Each segment gets a proportional width (min 0)
+  const widths = segments.map((seg) => (total > 0 ? (seg.value / (3 * 100)) * 100 : 0));
+  // Slightly different shades so segments are distinguishable
+  const shades = [tierColor, tierColor + "CC", tierColor + "99"];
+
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] text-muted-foreground">{label}</span>
-        <span className="text-[10px] font-semibold tabular-nums text-foreground">{value}</span>
+    <div className="w-full">
+      {/* Bar */}
+      <div className="flex h-6 w-full rounded-lg overflow-hidden bg-muted">
+        {segments.map((seg, i) => (
+          <div
+            key={seg.label}
+            className="h-full flex items-center justify-center transition-all duration-500 relative"
+            style={{
+              width: `${widths[i]}%`,
+              backgroundColor: shades[i],
+              borderRight: i < 2 ? "1px solid rgba(255,255,255,0.3)" : undefined,
+            }}
+          >
+            {widths[i] > 8 && (
+              <span className="text-[10px] font-bold text-white tabular-nums drop-shadow-sm">
+                {seg.value}
+              </span>
+            )}
+          </div>
+        ))}
       </div>
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-        <div
-          className="h-full rounded-full bg-indigo-500 transition-all duration-500"
-          style={{ width: `${value}%` }}
-        />
+      {/* Labels below */}
+      <div className="flex mt-1">
+        {segments.map((seg, i) => (
+          <div
+            key={seg.label}
+            className="flex flex-col items-center"
+            style={{ width: `${widths[i]}%` }}
+          >
+            <span className="text-[9px] text-muted-foreground leading-tight truncate">{seg.label}</span>
+          </div>
+        ))}
       </div>
     </div>
-  );
-}
-
-function ScoreBars({ breakdown }: { breakdown: ScoreBreakdown }) {
-  return (
-    <div className="flex flex-col gap-2 w-full mt-2">
-      <ScoreBar label="Engagement" value={breakdown.engagement_score} />
-      <ScoreBar label="Activity"   value={breakdown.activity_score} />
-      <ScoreBar label="Funnel"     value={breakdown.funnel_weight} />
-    </div>
-  );
-}
-
-// ── Score Arc — half-circle gauge using stroke-dasharray ─────────────────────
-function ScoreArc({ score, status }: { score: number; status?: string }) {
-  const fillColor = (status && PIPELINE_HEX[status]) || "#4F46E5";
-  const pct = Math.max(0, Math.min(100, score)) / 100;
-
-  const cx = 100, cy = 85, r = 58, sw = 14;
-  const arcLen = Math.PI * r;
-  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
-
-  return (
-    <svg viewBox="0 0 200 100" className="w-full max-w-[140px] mx-auto">
-      {/* Track */}
-      <path d={arcPath} fill="none" stroke="#E5E7EB" strokeWidth={sw} strokeLinecap="round" />
-      {/* Fill */}
-      {pct > 0 && (
-        <path
-          d={arcPath}
-          fill="none"
-          stroke={fillColor}
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeDasharray={`${arcLen}`}
-          strokeDashoffset={`${arcLen * (1 - pct)}`}
-        />
-      )}
-      {/* Score number */}
-      <text x={cx} y={cy - 12} textAnchor="middle" dominantBaseline="central"
-        style={{ fontSize: 34, fontWeight: 900, fill: "#111827", letterSpacing: -2 }}>
-        {score}
-      </text>
-    </svg>
   );
 }
 
@@ -585,25 +575,31 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("score") && (
               <div className="px-4 pb-4">
-                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col items-center gap-3" data-testid="lead-score">
-                  <ScoreArc score={score} status={status} />
-
-                  {/* Tier + trend */}
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-3 relative" data-testid="lead-score">
+                  {/* Tier tag — top-right corner */}
                   {breakdown && (
-                    <div className="flex items-center gap-2">
-                      <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
-                        {breakdown.tier}
-                      </span>
-                      <TrendIcon trend={breakdown.trend} />
-                    </div>
+                    <span className={cn("absolute -top-2 -right-1 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
+                      {breakdown.tier}
+                    </span>
                   )}
 
-                  {/* Sub-score bars */}
-                  {breakdown && <ScoreBars breakdown={breakdown} />}
+                  {/* Score + trend */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-black tabular-nums text-foreground leading-none">{score}</span>
+                    {breakdown && <TrendIcon trend={breakdown.trend} />}
+                  </div>
+
+                  {/* Segmented bar: Engagement | Activity | Funnel */}
+                  {breakdown && (
+                    <SegmentedScoreBar
+                      breakdown={breakdown}
+                      tierColor={TIER_BAR_COLOR[breakdown.tier] ?? "#9CA3AF"}
+                    />
+                  )}
 
                   {/* Signal chips */}
                   {breakdown && breakdown.signals.length > 0 && (
-                    <div className="flex flex-wrap gap-1 justify-center">
+                    <div className="flex flex-wrap gap-1">
                       {breakdown.signals.map((sig) => (
                         <span key={sig} className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">
                           {sig}

@@ -13,6 +13,25 @@ import type { VirtualListItem } from "./LeadsCardView";
 import { PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
 import { getLeadStatusAvatarColor, getInitials } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+/** Convert hex to a desaturated opaque tint (for group header backgrounds).
+ *  Reduces saturation by 70%, then blends at 18% over white. */
+function opaqueTint(hex: string): string {
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+  // Desaturate: blend each channel 70% toward its luminance gray
+  const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+  r = Math.round(r + (gray - r) * 0.7);
+  g = Math.round(g + (gray - g) * 0.7);
+  b = Math.round(b + (gray - b) * 0.7);
+  // Blend at 18% alpha over white
+  const blend = (c: number) => Math.round(c * 0.18 + 255 * 0.82);
+  return `rgb(${blend(r)}, ${blend(g)}, ${blend(b)})`;
+}
 
 // ── Column definitions ─────────────────────────────────────────────────────────
 type ColKey =
@@ -119,7 +138,7 @@ function TableSkeleton() {
   );
 }
 
-// ── Editable cell ─────────────────────────────────────────────────────────────
+// ── Editable cell (textarea overlay pattern from Prospects) ──────────────────
 interface EditableCellProps {
   value: string;
   type: "text" | "select";
@@ -157,18 +176,32 @@ function EditableCell({
 
   if (isEditing) {
     return (
-      <input
-        autoFocus
-        type="text"
-        value={editValue}
-        onChange={(e) => onEditChange(e.target.value)}
-        onBlur={() => onSave(editValue)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") e.currentTarget.blur();
-          if (e.key === "Escape") onCancel();
-        }}
-        className="w-full h-[28px] text-[11px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
-      />
+      <div style={{ position: "relative" }}>
+        {/* Invisible spacer keeps the row height stable */}
+        <div className="h-[26px]" />
+        <textarea
+          autoFocus
+          value={editValue}
+          onChange={(e) => {
+            onEditChange(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = Math.max(32, e.target.scrollHeight) + "px";
+          }}
+          onBlur={() => onSave(editValue)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.blur(); }
+            if (e.key === "Escape") onCancel();
+          }}
+          ref={(ta) => {
+            if (!ta) return;
+            ta.style.height = "auto";
+            ta.style.height = Math.max(32, ta.scrollHeight) + "px";
+            ta.selectionStart = ta.selectionEnd = ta.value.length;
+          }}
+          className="absolute top-0 left-0 w-full min-h-[32px] max-h-[300px] text-[12px] leading-relaxed bg-white px-2.5 py-1.5 ring-2 ring-brand-indigo/50 shadow-[0_4px_24px_rgba(0,0,0,0.12)] outline-none resize-none rounded-none"
+          style={{ zIndex: 9999, minWidth: 240, borderRadius: 0 }}
+        />
+      </div>
     );
   }
 
@@ -185,7 +218,7 @@ function EditableCell({
       <span className="truncate flex-1">
         {value
           ? (type === "select" ? t(`kanban.stageLabels.${value.replace(/ /g, "")}`, value) : value)
-          : <span className="text-muted-foreground/35 italic not-italic">—</span>}
+          : <span className="text-muted-foreground/35 italic not-italic">&mdash;</span>}
       </span>
       {isSaving && (
         <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
@@ -194,6 +227,39 @@ function EditableCell({
         <span className="text-red-500 ml-1 shrink-0 text-[9px] font-bold">!</span>
       )}
     </div>
+  );
+}
+
+// ── Sortable header cell for drag-to-reorder ────────────────────────────────
+function SortableHeaderCell({ col, isFirst, t, onResizeStart }: { col: ColumnDef; isFirst: boolean; t: any; onResizeStart: (colKey: string, e: React.MouseEvent) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: col.key });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: "relative",
+  };
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
+        isFirst && "sticky left-[36px] z-30",
+      )}
+    >
+      {/* Drag handle = the label area only */}
+      <div className="flex items-center gap-1 cursor-grab" {...attributes} {...listeners}>
+        {t(`table.columns.${col.key}`)}
+      </div>
+      {/* Resize handle — isolated from DnD listeners */}
+      <div
+        className="absolute right-0 top-0 bottom-0 w-[6px] cursor-col-resize hover:bg-brand-indigo/30"
+        onMouseDown={(e) => { e.stopPropagation(); onResizeStart(col.key, e); }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </th>
   );
 }
 
@@ -211,6 +277,14 @@ interface LeadsInlineTableProps {
   /** Multi-select state — lifted to parent */
   selectedIds: Set<number>;
   onSelectionChange: (ids: Set<number>) => void;
+  /** Column order/width props for DnD reorder + resize */
+  columnOrder?: string[];
+  onColumnOrderChange?: (order: string[]) => void;
+  columnWidths?: Record<string, number>;
+  onColumnWidthsChange?: (widths: Record<string, number>) => void;
+  showVerticalLines?: boolean;
+  fullWidthTable?: boolean;
+  groupBy?: string;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -224,6 +298,13 @@ export function LeadsInlineTable({
   tableSearch,
   selectedIds,
   onSelectionChange,
+  columnOrder,
+  onColumnOrderChange,
+  columnWidths,
+  onColumnWidthsChange,
+  showVerticalLines,
+  fullWidthTable,
+  groupBy,
 }: LeadsInlineTableProps) {
   const { t } = useTranslation("leads");
 
@@ -251,12 +332,75 @@ export function LeadsInlineTable({
       return next;
     });
 
-  // ── Compute visible columns from prop ─────────────────────────────────────
-  const visibleColumns = useMemo(
-    () => ALL_TABLE_COLUMNS.filter((c) => visibleCols.has(c.key)),
-    [visibleCols]
-  );
+  // ── Compute visible columns from prop (with column order) ──────────────────
+  const visibleColumns = useMemo(() => {
+    const base = ALL_TABLE_COLUMNS.filter((c) => visibleCols.has(c.key));
+
+    // Apply custom column order if set
+    if (columnOrder && columnOrder.length > 0) {
+      const orderMap = new Map(columnOrder.map((key, idx) => [key, idx]));
+      base.sort((a, b) => {
+        const ai = orderMap.get(a.key) ?? 999;
+        const bi = orderMap.get(b.key) ?? 999;
+        return ai - bi;
+      });
+    }
+
+    return base;
+  }, [visibleCols, columnOrder]);
+
   const colSpan = visibleColumns.length + 1; // +1 for select-all checkbox column
+
+  // ── Column resize (live widths for instant visual feedback) ─────────────
+  const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
+
+  const getColWidth = useCallback((col: ColumnDef) => {
+    if (liveWidths[col.key]) return liveWidths[col.key];
+    return columnWidths?.[col.key] ?? col.width;
+  }, [columnWidths, liveWidths]);
+
+  const handleResizeStart = useCallback((colKey: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const col = visibleColumns.find(c => c.key === colKey);
+    if (!col) return;
+    const startWidth = columnWidths?.[colKey] ?? col.width;
+    const startX = e.clientX;
+
+    const onMouseMove = (ev: MouseEvent) => {
+      const delta = ev.clientX - startX;
+      const newWidth = Math.max(60, startWidth + delta);
+      setLiveWidths(prev => ({ ...prev, [colKey]: newWidth }));
+    };
+    const onMouseUp = (ev: MouseEvent) => {
+      const delta = ev.clientX - startX;
+      const newWidth = Math.max(60, startWidth + delta);
+      const updated = { ...columnWidths, [colKey]: newWidth };
+      onColumnWidthsChange?.(updated);
+      setLiveWidths({});
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [columnWidths, visibleColumns, onColumnWidthsChange]);
+
+  // ── DnD column reorder ──────────────────────────────────────────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = visibleColumns.findIndex((c) => c.key === active.id);
+    const newIndex = visibleColumns.findIndex((c) => c.key === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    // First column (name/avatar) excluded from reorder — always stays first
+    if (oldIndex === 0 || newIndex === 0) return;
+    const newOrder = arrayMove(visibleColumns.map((c) => c.key), oldIndex, newIndex);
+    onColumnOrderChange?.(newOrder);
+  }, [visibleColumns, onColumnOrderChange]);
 
   // ── Filter by text search (parent manages sort/filter; we only do text) ───
   const displayItems = useMemo(() => {
@@ -469,15 +613,26 @@ export function LeadsInlineTable({
         <TableSkeleton />
       ) : (
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 600 }}>
+          <table
+            className={cn("min-w-full w-full", showVerticalLines && "[&_td]:border-r [&_td]:border-border/10 [&_th]:border-r [&_th]:border-border/10")}
+            style={{ borderCollapse: "separate", borderSpacing: "0 2px", tableLayout: "fixed" }}
+          >
 
-            {/* Sticky header with select-all checkbox */}
-            <thead className="sticky top-0 z-20">
+            {/* Enforce column widths + trailing fill column */}
+            <colgroup>
+              <col style={{ width: 36 }} />
+              {visibleColumns.map((col) => (
+                <col key={col.key} style={{ width: getColWidth(col) }} />
+              ))}
+              <col />
+            </colgroup>
+
+            {/* Sticky header with select-all checkbox + boxShadow */}
+            <thead className="sticky top-0 z-20" style={{ boxShadow: "0 2px 0 0 hsl(var(--muted))" }}>
               <tr>
                 {/* Select-all checkbox */}
                 <th
-                  className="px-2 py-2 bg-muted border-b border-border/20 sticky left-0 z-30"
-                  style={{ width: 36, minWidth: 36 }}
+                  className="sticky left-0 z-30 w-[36px] px-2 py-2 bg-muted border-b border-border/20"
                 >
                   <button
                     onClick={handleSelectAll}
@@ -495,18 +650,15 @@ export function LeadsInlineTable({
                     {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
                   </button>
                 </th>
-                {visibleColumns.map((col) => (
-                  <th
-                    key={col.key}
-                    className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20"
-                    style={{
-                      width:    col.key === "notes" ? undefined : col.width,
-                      minWidth: col.width,
-                    }}
-                  >
-                    {t(`table.columns.${col.key}`)}
-                  </th>
-                ))}
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={visibleColumns.map(c => c.key)} strategy={horizontalListSortingStrategy}>
+                    {visibleColumns.map((col, ci) => (
+                      <SortableHeaderCell key={col.key} col={col} isFirst={ci === 0} t={t} onResizeStart={handleResizeStart} />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+                {/* Trailing fill header cell */}
+                <th className="bg-muted border-b border-border/20" />
               </tr>
             </thead>
 
@@ -514,7 +666,7 @@ export function LeadsInlineTable({
               {/* Empty state */}
               {leadCount === 0 && (
                 <tr>
-                  <td colSpan={colSpan} className="py-12 text-center text-xs text-muted-foreground">
+                  <td colSpan={colSpan + 1} className="py-12 text-center text-xs text-muted-foreground">
                     {tableSearch ? t("table.empty.noResults") : t("table.empty.noLeads")}
                   </td>
                 </tr>
@@ -528,6 +680,7 @@ export function LeadsInlineTable({
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
                     const hexColor    = PIPELINE_HEX[item.label] || "#6B7280";
+                    const groupBg     = opaqueTint(hexColor);
                     const groupIds = getGroupLeadIds(item.label);
                     const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
                     return (
@@ -539,7 +692,7 @@ export function LeadsInlineTable({
                         {/* Cell 1: Checkbox */}
                         <td
                           className="sticky left-0 z-30 w-[36px] px-0"
-                          style={{ backgroundColor: `${hexColor}12` }}
+                          style={{ backgroundColor: groupBg }}
                         >
                           <div className="flex items-center justify-center h-full">
                             <div
@@ -560,7 +713,7 @@ export function LeadsInlineTable({
                         {/* Cell 2: Label (arrow + name + count) */}
                         <td
                           className="sticky left-[36px] z-30 pl-1 pr-3"
-                          style={{ backgroundColor: `${hexColor}12` }}
+                          style={{ backgroundColor: groupBg }}
                         >
                           <div className="flex items-center gap-2">
                             {isCollapsed
@@ -573,8 +726,8 @@ export function LeadsInlineTable({
 
                         {/* Cell 3: Spacer */}
                         <td
-                          colSpan={Math.max(1, visibleColumns.length - 1)}
-                          style={{ backgroundColor: `${hexColor}12` }}
+                          colSpan={visibleColumns.length}
+                          style={{ backgroundColor: groupBg }}
                         />
                       </tr>
                     );
@@ -591,7 +744,9 @@ export function LeadsInlineTable({
                   const score            = getScore(lead);
                   const leadStatus       = getStatus(lead);
                   const avatarColor      = getLeadStatusAvatarColor(leadStatus);
+                  const bgClass          = isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover";
 
+                  const isRowEditing = editingCell?.leadId === leadId;
                   const currentRowIdx = rowIdx++;
                   return (
                     <tr
@@ -600,14 +755,17 @@ export function LeadsInlineTable({
                         "group/row cursor-pointer h-[52px] animate-card-enter",
                         isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
-                      style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
+                      style={{
+                        animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms`,
+                        ...(isRowEditing ? { position: "relative" as const, zIndex: 50 } : {}),
+                      }}
                       onClick={(e) => handleRowClick(lead, e)}
                     >
-                      {/* Checkbox cell */}
+                      {/* Checkbox cell — opaque sticky background */}
                       <td
                         className={cn(
                           "sticky left-0 z-10 w-[36px] px-0",
-                          isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"
+                          bgClass,
                         )}
                       >
                         <div className="flex items-center justify-center h-full">
@@ -636,13 +794,13 @@ export function LeadsInlineTable({
                         const isFirst = ci === 0;
                         const tdClass = cn(
                           isFirst && "sticky left-[36px] z-10",
-                          isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
+                          isFirst && bgClass,
                         );
 
                         // ── Name ──
                         if (col.key === "name") {
                           return (
-                            <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
+                            <td key="name" className={cn("px-2.5", tdClass)}>
                               <div className="flex items-center gap-2 min-w-0">
                                 <EntityAvatar
                                   name={name}
@@ -660,7 +818,7 @@ export function LeadsInlineTable({
                           const cellVal = getCellValue(lead, "status");
                           const isEdit  = editingCell?.leadId === leadId && editingCell?.field === "status";
                           return (
-                            <td key="status" className={cn("px-1", tdClass)} style={{ width: 140, minWidth: 140 }}>
+                            <td key="status" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {!isEdit && (
                                   <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[cellVal] ?? "bg-zinc-400")} />
@@ -685,11 +843,11 @@ export function LeadsInlineTable({
                         // ── Score (read-only) ──
                         if (col.key === "score") {
                           return (
-                            <td key="score" className={cn("px-2.5", tdClass)} style={{ width: 70, minWidth: 70 }}>
+                            <td key="score" className={cn("px-2.5", tdClass)}>
                               {score > 0 ? (
                                 <ListScoreRing score={score} status={leadStatus} />
                               ) : (
-                                <span className="text-muted-foreground/30 text-[11px]">—</span>
+                                <span className="text-muted-foreground/30 text-[11px]">&mdash;</span>
                               )}
                             </td>
                           );
@@ -698,9 +856,9 @@ export function LeadsInlineTable({
                         // ── Campaign (read-only) ──
                         if (col.key === "campaign") {
                           return (
-                            <td key="campaign" className={cn("px-2.5", tdClass)} style={{ width: 130, minWidth: 130 }}>
+                            <td key="campaign" className={cn("px-2.5", tdClass)}>
                               <span className="text-[11px] text-muted-foreground truncate block">
-                                {getCellValue(lead, "campaign") || <span className="text-muted-foreground/30">—</span>}
+                                {getCellValue(lead, "campaign") || <span className="text-muted-foreground/30">&mdash;</span>}
                               </span>
                             </td>
                           );
@@ -709,7 +867,7 @@ export function LeadsInlineTable({
                         // ── Tags (read-only pills) ──
                         if (col.key === "tags") {
                           return (
-                            <td key="tags" className={cn("px-2", tdClass)} style={{ width: 160, minWidth: 160 }}>
+                            <td key="tags" className={cn("px-2", tdClass)}>
                               <div className="flex items-center gap-1 overflow-hidden">
                                 {tags.slice(0, 2).map((t) => {
                                   const hex = resolveColor(t.color);
@@ -734,9 +892,9 @@ export function LeadsInlineTable({
                         // ── Last Activity (read-only) ──
                         if (col.key === "lastActivity") {
                           return (
-                            <td key="lastActivity" className={cn("px-2.5 tabular-nums", tdClass)} style={{ width: 110, minWidth: 110 }}>
+                            <td key="lastActivity" className={cn("px-2.5 tabular-nums", tdClass)}>
                               <span className="text-[11px] text-muted-foreground">
-                                {getCellValue(lead, "lastActivity") || <span className="text-muted-foreground/30">—</span>}
+                                {getCellValue(lead, "lastActivity") || <span className="text-muted-foreground/30">&mdash;</span>}
                               </span>
                             </td>
                           );
@@ -751,7 +909,7 @@ export function LeadsInlineTable({
                             <td
                               key={col.key}
                               className={cn("px-1", tdClass)}
-                              style={col.key === "notes" ? { minWidth: col.width } : { width: col.width, minWidth: col.width }}
+                              style={isEdit ? { overflow: "visible" } : undefined}
                             >
                               <EditableCell
                                 value={cellVal}
@@ -771,13 +929,15 @@ export function LeadsInlineTable({
 
                         // ── Read-only text fallback (extended columns) ──
                         return (
-                          <td key={col.key} className={cn("px-2.5", tdClass)} style={{ width: col.width, minWidth: col.width }}>
+                          <td key={col.key} className={cn("px-2.5", tdClass)}>
                             <span className="text-[11px] text-muted-foreground truncate block">
-                              {getCellValue(lead, col.key) || <span className="text-muted-foreground/30">—</span>}
+                              {getCellValue(lead, col.key) || <span className="text-muted-foreground/30">&mdash;</span>}
                             </span>
                           </td>
                         );
                       })}
+                      {/* Trailing fill cell — opaque background */}
+                      <td className={bgClass} />
                     </tr>
                   );
                 });

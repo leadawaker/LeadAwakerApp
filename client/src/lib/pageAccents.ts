@@ -17,6 +17,7 @@ export const PAGE_ACCENTS: Record<string, { active: string; selected: string }> 
   conversations:      { active: "146 100% 81%", selected: "148 100% 91%" }, // #9FFFC9 / #D0FFE6
   calendar:           { active: "169 100% 86%", selected: "166 100% 94%" }, // #B8FFF2 / #E0FFF8
   accounts:           { active: "192 100% 82%", selected: "190 100% 94%" }, // #A3EDFF / #E0FAFF
+  prospects:          { active: "280 80% 82%",  selected: "280 85% 93%"  }, // purple-pink
   invoices:           { active: "214 100% 83%", selected: "215 100% 92%" }, // #A8CEFF / #D6E7FF
   expenses:           { active: "214 100% 83%", selected: "215 100% 92%" }, // #A8CEFF / #D6E7FF
   contracts:          { active: "214 100% 83%", selected: "215 100% 92%" }, // #A8CEFF / #D6E7FF
@@ -36,6 +37,7 @@ export const PAGE_ACCENTS_DARK: Record<string, { active: string; selected: strin
   conversations:      { active: "146 40% 22%",  selected: "146 45% 28%"  }, // deep mint
   calendar:           { active: "169 40% 22%",  selected: "169 45% 28%"  }, // deep teal
   accounts:           { active: "192 40% 22%",  selected: "192 45% 28%"  }, // deep cyan
+  prospects:          { active: "280 40% 24%",   selected: "280 45% 30%"  }, // deep purple-pink
   invoices:           { active: "214 40% 24%",  selected: "214 45% 30%"  }, // deep blue
   expenses:           { active: "214 40% 24%",  selected: "214 45% 30%"  }, // deep blue
   contracts:          { active: "214 40% 24%",  selected: "214 45% 30%"  }, // deep blue

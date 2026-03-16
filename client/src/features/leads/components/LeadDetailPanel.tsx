@@ -51,6 +51,9 @@ import {
   Ban,
   Mic,
   Square,
+  RotateCcw,
+  Trash2,
+  Zap,
 } from "lucide-react";
 import { useScoreBreakdown, TIER_COLORS, TIER_ARC_COLOR, TrendIcon } from "@/hooks/useScoreBreakdown";
 import { useLocation } from "wouter";
@@ -792,6 +795,31 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     }
   };
 
+  // ── Campaigns state (filtered by lead's account, agency view only) ──
+  const isAgencyPanel = window.location.pathname.startsWith("/agency");
+  const leadAccountId = Number(lead?.Accounts_id || lead?.account_id || lead?.accounts_id || 0);
+  const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!open || !isAgencyPanel) return;
+    apiFetch("/api/campaigns")
+      .then((r) => r.ok ? r.json() : Promise.resolve([]))
+      .then((data: any) => {
+        const arr: any[] = Array.isArray(data) ? data : data?.list || data?.data || [];
+        const mapped = arr.map((c: any) => ({
+          id: c.Id ?? c.id,
+          name: c.Name ?? c.name ?? `Campaign #${c.Id ?? c.id}`,
+          accountId: Number(c.Accounts_id ?? c.accounts_id ?? c.account_id ?? 0),
+        }));
+        // Filter to only campaigns belonging to this lead's account
+        const filtered = leadAccountId
+          ? mapped.filter((c) => c.accountId === leadAccountId)
+          : mapped;
+        setCampaigns(filtered.map(({ id, name }) => ({ id, name })));
+      })
+      .catch(() => {});
+  }, [open, isAgencyPanel, leadAccountId]);
+
   // Derive available tags that aren't yet assigned
   const unassignedTags = availableTags.filter(
     (t) => !leadTags.some((lt) => lt.id === t.id)
@@ -1086,6 +1114,85 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           </button>
         </SheetHeader>
 
+        {/* Action buttons row */}
+        <div className="shrink-0 px-4 py-2.5 border-b border-border flex items-center justify-center gap-1.5 md:px-5">
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiFetch(`/api/leads/${leadId}/trigger-bump`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                toast({ title: t("detail.actions.bumpTriggered"), description: fullName });
+              } catch {
+                toast({ title: t("detail.actions.bumpFailed"), variant: "destructive" });
+              }
+            }}
+            className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[140px]"
+            title={t("detail.actions.triggerBump")}
+          >
+            <RotateCcw className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              {t("detail.actions.bump")} {lead.current_bump_stage ? `${lead.current_bump_stage}/3` : ""}
+            </span>
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiFetch(`/api/leads/${leadId}/reset-demo`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                toast({ title: t("detail.actions.leadReset"), description: fullName });
+              } catch {
+                toast({ title: t("detail.actions.resetFailed"), variant: "destructive" });
+              }
+            }}
+            className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]"
+            title={t("detail.actions.resetLead")}
+          >
+            <Trash2 className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              {t("detail.actions.resetLead")}
+            </span>
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiFetch(`/api/leads/${leadId}/demo-reset-and-send`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                toast({ title: t("detail.actions.demoStarted"), description: fullName });
+              } catch {
+                toast({ title: t("detail.actions.demoFailed"), variant: "destructive" });
+              }
+            }}
+            className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-amber-400/60 text-amber-600 dark:text-amber-400 hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-300 text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]"
+            title={t("detail.actions.demoResetTitle")}
+          >
+            <Zap className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              {t("detail.actions.demoReset")}
+            </span>
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiFetch(`/api/leads/${leadId}/ai-send`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                toast({ title: t("detail.actions.aiSent"), description: fullName });
+              } catch {
+                toast({ title: t("detail.actions.aiFailed"), variant: "destructive" });
+              }
+            }}
+            className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]"
+            title={t("detail.actions.aiSendMessage")}
+          >
+            <Bot className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              {t("detail.actions.aiSend")}
+            </span>
+          </button>
+        </div>
+
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 py-4 md:px-5" data-testid="lead-detail-panel-body">
 
@@ -1134,18 +1241,32 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               label={t("detail.fields.source")}
               value={source}
             />
-            <InfoRow
-              label={t("detail.fields.campaign")}
-              value={
-                lead.account_name || lead.campaign_name ? (
-                  <span>
-                    {lead.account_name && <span>{lead.account_name}</span>}
-                    {lead.account_name && lead.campaign_name && <span className="mx-1 text-muted-foreground/40">·</span>}
-                    {lead.campaign_name && <span>{lead.campaign_name}</span>}
-                  </span>
-                ) : null
-              }
-            />
+            {/* Campaign — editable dropdown (#31, agency view only) */}
+            {isAgencyPanel && (
+              <div
+                className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0 group"
+                data-testid="inline-edit-campaign"
+              >
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-muted-foreground/60"><Layers className="h-3 w-3" /></span>
+                  <span className="text-[11px] text-muted-foreground">{t("detail.fields.campaign")}</span>
+                </div>
+                <select
+                  value={String(lead.campaignsId ?? lead.campaigns_id ?? "")}
+                  onChange={async (e) => {
+                    const val = e.target.value;
+                    await handleInlineFieldSave("campaignsId", val ? val : (null as any));
+                  }}
+                  className="text-[12px] bg-transparent border border-dashed border-border/60 rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50 text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
+                  data-testid="inline-edit-campaign-select"
+                >
+                  <option value="">—</option>
+                  {campaigns.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Status */}
@@ -1249,23 +1370,29 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           <>
             <SectionTitle icon={<BarChart2 className="h-3.5 w-3.5" />} title={t("detail.sections.scores")} />
             <div
-              className="rounded-xl border border-border/40 bg-muted/20 px-4 py-4 flex flex-col gap-4"
+              className="rounded-xl border border-border/40 bg-muted/20 px-4 py-4 flex flex-col gap-4 relative"
               data-testid="lead-score-gauges"
             >
-              {/* Arc + tier/trend row */}
+              {/* Tier tag — top-right corner */}
+              {scoreBreakdown && (
+                <span className={cn("absolute -top-2.5 -right-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm z-10", TIER_COLORS[scoreBreakdown.tier] ?? TIER_COLORS.Sleeping)}>
+                  {scoreBreakdown.tier}
+                </span>
+              )}
+
+              {/* Arc + trend row */}
               <div className="flex items-center gap-4">
                 <ScoreArcPanel score={panelScore} tier={scoreBreakdown?.tier} />
                 <div className="flex flex-col gap-1.5">
                   {scoreBreakdown && (
-                    <>
-                      <span className={cn("text-xs font-bold px-2.5 py-1 rounded-full self-start", TIER_COLORS[scoreBreakdown.tier] ?? TIER_COLORS.Sleeping)}>
-                        {scoreBreakdown.tier}
-                      </span>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <TrendIcon trend={scoreBreakdown.trend} />
-                        <span>{scoreBreakdown.trend === "up" ? "Trending up" : scoreBreakdown.trend === "down" ? "Trending down" : "Stable"}</span>
-                      </div>
-                    </>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <TrendIcon
+                        trend={scoreBreakdown.trend}
+                        upClass="h-4 w-4 text-blue-500"
+                        downClass="h-4 w-4 text-gray-400"
+                      />
+                      <span>{scoreBreakdown.trend === "up" ? "Trending up" : scoreBreakdown.trend === "down" ? "Trending down" : "Stable"}</span>
+                    </div>
                   )}
                   {!scoreBreakdown && scoreLoading && (
                     <div className="flex flex-col gap-2">
@@ -1276,9 +1403,9 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 </div>
               </div>
 
-              {/* Sub-score bars with context */}
+              {/* Sub-score bars with context — extra spacing */}
               {scoreBreakdown && (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-5">
                   <ScoreDetailBar
                     label="Engagement"
                     rawScore={scoreBreakdown.engagement_score}

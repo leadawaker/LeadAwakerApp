@@ -23,6 +23,32 @@ import { useNotificationStream } from "@/hooks/useNotificationStream";
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { currentAccount, currentAccountId } = useWorkspace();
+
+  const [prospectsFullWidth, setProspectsFullWidth] = useState(() => {
+    try { return localStorage.getItem("prospects-full-width") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = () => {
+      try { setProspectsFullWidth(localStorage.getItem("prospects-full-width") === "true"); } catch {}
+    };
+    window.addEventListener("prospects-fullwidth-change", handler);
+    return () => window.removeEventListener("prospects-fullwidth-change", handler);
+  }, []);
+
+  const [leadsFullWidth, setLeadsFullWidth] = useState(() => {
+    try { return localStorage.getItem("leads-full-width") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = () => {
+      try { setLeadsFullWidth(localStorage.getItem("leads-full-width") === "true"); } catch {}
+    };
+    window.addEventListener("leads-fullwidth-change", handler);
+    return () => window.removeEventListener("leads-fullwidth-change", handler);
+  }, []);
+
+  const isProspectsFullWidth = prospectsFullWidth && location.includes("/prospects");
+  const isLeadsFullWidth = leadsFullWidth && location.includes("/leads");
+  const isAnyFullWidth = isProspectsFullWidth || isLeadsFullWidth;
   // Use reactive wouter location (not the stale useMemo in useWorkspace) so the
   // agency-mode class updates immediately when navigating between /agency and /subaccount routes.
   const isAgencyView = location.startsWith("/agency");
@@ -209,7 +235,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div className="h-full w-full max-w-[1729px] mx-auto px-3 md:pl-0 md:pr-5 pt-2 pb-0 overflow-y-auto">
+        <div id="crm-content-wrapper" className={cn("h-full w-full mx-auto pt-2 pb-0 overflow-y-auto", isAnyFullWidth ? "px-1 md:px-1" : "px-3 md:pl-0 md:pr-5 max-w-[1729px]")}>
           <ErrorBoundary>
             <PageTransition>
               {children}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Calendar, Trash2, Copy, Plus, Minus, ListChecks, Clock } from "lucide-react";
+import { Calendar, Trash2, Copy, Plus, ListChecks, Clock, ChevronDown } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
@@ -117,7 +117,6 @@ export default function TaskCard({ task }: TaskCardProps) {
     if (!task.categoryId || !categories) return null;
     return categories.find((c) => c.id === task.categoryId) ?? null;
   }, [task.categoryId, categories]);
-  const categoryColor = category?.color ?? null;
   const subtaskCount = useMemo(() => subtaskCounts?.find((c) => c.taskId === task.id), [subtaskCounts, task.id]);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
@@ -247,9 +246,8 @@ export default function TaskCard({ task }: TaskCardProps) {
         CARD_BG[status],
         CARD_BORDER[status],
       )}
-      style={categoryColor ? { borderLeftWidth: "3px", borderLeftColor: categoryColor } : undefined}
     >
-      {/* Row 1: title + priority bars + action buttons */}
+      {/* Row 1: title + action buttons + priority bars */}
       <div className="flex items-start gap-1 min-w-0">
         {/* Title */}
         <div className="flex-1 min-w-0">
@@ -279,7 +277,47 @@ export default function TaskCard({ task }: TaskCardProps) {
           )}
         </div>
 
-        {/* Priority signal bars — always visible */}
+        {/* Delete */}
+        <button
+          onClick={handleDelete}
+          onPointerDown={(e) => e.stopPropagation()}
+          className={cn(
+            "shrink-0 p-1 rounded-md transition-all duration-150",
+            deleteArmed
+              ? "opacity-100 text-red-500 bg-red-50 dark:bg-red-500/10"
+              : "opacity-0 group-hover/card:opacity-100 text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+          )}
+          title={deleteArmed ? t("card.clickAgainToDelete") : t("detail.delete")}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Expand/collapse description (down arrow) */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className={cn(
+            "shrink-0 h-5 w-5 rounded-full border flex items-center justify-center transition-all duration-150",
+            expanded
+              ? "border-brand-indigo/50 text-brand-indigo bg-brand-indigo/8 opacity-100"
+              : "border-border/40 text-muted-foreground/40 opacity-0 group-hover/card:opacity-100 hover:border-brand-indigo/40 hover:text-brand-indigo"
+          )}
+          title={expanded ? "Collapse" : "Expand"}
+        >
+          <ChevronDown className={cn("h-3 w-3 transition-transform duration-150", expanded && "rotate-180")} />
+        </button>
+
+        {/* Duplicate */}
+        <button
+          onClick={handleDuplicate}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="shrink-0 p-1 rounded-md opacity-0 group-hover/card:opacity-100 text-muted-foreground/30 hover:text-brand-indigo hover:bg-brand-indigo/5 dark:hover:bg-brand-indigo/10 transition-all duration-150"
+          title={t("card.duplicate")}
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Priority signal bars — far right corner */}
         <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
           <PopoverTrigger asChild>
             <button
@@ -316,46 +354,6 @@ export default function TaskCard({ task }: TaskCardProps) {
             })}
           </PopoverContent>
         </Popover>
-
-        {/* Pin description */}
-        <button
-          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className={cn(
-            "shrink-0 h-5 w-5 rounded-full border flex items-center justify-center transition-all duration-150",
-            expanded
-              ? "border-brand-indigo/50 text-brand-indigo bg-brand-indigo/8 opacity-100"
-              : "border-border/40 text-muted-foreground/40 opacity-0 group-hover/card:opacity-100 hover:border-brand-indigo/40 hover:text-brand-indigo"
-          )}
-          title={expanded ? "Unpin description" : "Pin description"}
-        >
-          {expanded ? <Minus className="h-2.5 w-2.5" /> : <Plus className="h-2.5 w-2.5" />}
-        </button>
-
-        {/* Delete */}
-        <button
-          onClick={handleDelete}
-          onPointerDown={(e) => e.stopPropagation()}
-          className={cn(
-            "shrink-0 p-1 rounded-md transition-all duration-150",
-            deleteArmed
-              ? "opacity-100 text-red-500 bg-red-50 dark:bg-red-500/10"
-              : "opacity-0 group-hover/card:opacity-100 text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-          )}
-          title={deleteArmed ? t("card.clickAgainToDelete") : t("detail.delete")}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-
-        {/* Duplicate */}
-        <button
-          onClick={handleDuplicate}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="shrink-0 p-1 rounded-md opacity-0 group-hover/card:opacity-100 text-muted-foreground/30 hover:text-brand-indigo hover:bg-brand-indigo/5 dark:hover:bg-brand-indigo/10 transition-all duration-150"
-          title={t("card.duplicate")}
-        >
-          <Copy className="h-3.5 w-3.5" />
-        </button>
       </div>
 
       {/* Description — expands on hover OR when pinned */}

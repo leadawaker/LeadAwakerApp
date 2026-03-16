@@ -27,6 +27,7 @@ import enCampaigns from "./locales/en/campaigns.json";
 import enConversations from "./locales/en/conversations.json";
 import enBilling from "./locales/en/billing.json";
 import enAccounts from "./locales/en/accounts.json";
+import enProspects from "./locales/en/prospects.json";
 import enTasks from "./locales/en/tasks.json";
 import enAutomation from "./locales/en/automation.json";
 import enPrompts from "./locales/en/prompts.json";
@@ -56,6 +57,7 @@ import ptCampaigns from "./locales/pt/campaigns.json";
 import ptConversations from "./locales/pt/conversations.json";
 import ptBilling from "./locales/pt/billing.json";
 import ptAccounts from "./locales/pt/accounts.json";
+import ptProspects from "./locales/pt/prospects.json";
 import ptTasks from "./locales/pt/tasks.json";
 import ptAutomation from "./locales/pt/automation.json";
 import ptPrompts from "./locales/pt/prompts.json";
@@ -85,6 +87,7 @@ import nlCampaigns from "./locales/nl/campaigns.json";
 import nlConversations from "./locales/nl/conversations.json";
 import nlBilling from "./locales/nl/billing.json";
 import nlAccounts from "./locales/nl/accounts.json";
+import nlProspects from "./locales/nl/prospects.json";
 import nlTasks from "./locales/nl/tasks.json";
 import nlAutomation from "./locales/nl/automation.json";
 import nlPrompts from "./locales/nl/prompts.json";
@@ -115,6 +118,7 @@ const resources = {
     conversations: enConversations,
     billing: enBilling,
     accounts: enAccounts,
+    prospects: enProspects,
     tasks: enTasks,
     automation: enAutomation,
     prompts: enPrompts,
@@ -144,6 +148,7 @@ const resources = {
     conversations: ptConversations,
     billing: ptBilling,
     accounts: ptAccounts,
+    prospects: ptProspects,
     tasks: ptTasks,
     automation: ptAutomation,
     prompts: ptPrompts,
@@ -173,6 +178,7 @@ const resources = {
     conversations: nlConversations,
     billing: nlBilling,
     accounts: nlAccounts,
+    prospects: nlProspects,
     tasks: nlTasks,
     automation: nlAutomation,
     prompts: nlPrompts,
@@ -213,6 +219,7 @@ i18n
       "conversations",
       "billing",
       "accounts",
+      "prospects",
       "tasks",
       "automation",
       "prompts",

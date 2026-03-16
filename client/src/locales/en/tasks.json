@@ -12,7 +12,8 @@
     "filter": "Filter",
     "clearFilters": "Clear filters",
     "showTags": "Show Tags",
-    "hideTags": "Hide Tags"
+    "hideTags": "Hide Tags",
+    "groupBy": "Group"
   },
   "create": {
     "title": "New Task",
@@ -98,10 +99,12 @@
     "type": "Type",
     "assignee": "Assignee",
     "account": "Account",
+    "category": "Category",
     "all": "All",
     "unassigned": "Unassigned"
   },
   "columns": {
+    "id": "ID",
     "title": "Title",
     "type": "Type",
     "status": "Status",
@@ -112,7 +115,9 @@
     "category": "Category",
     "timeEstimate": "Estimate",
     "parentTask": "Parent Task",
-    "tags": "Tags"
+    "tags": "Tags",
+    "priority": "Priority",
+    "description": "Description"
   },
   "card": {
     "newTask": "New Task",
@@ -136,10 +141,26 @@
     "table": "Table",
     "simple": "Simple",
     "tree": "Tree",
+    "gantt": "Gantt",
     "overdue": "Overdue",
     "today": "Today",
     "unscheduled": "Unscheduled",
     "noDailyTasks": "No tasks for today"
+  },
+  "gantt": {
+    "today": "Today",
+    "unscheduled": "Unscheduled",
+    "noDate": "No dates set",
+    "zoomDay": "Day",
+    "zoomWeek": "Week",
+    "zoomMonth": "Month",
+    "startDate": "Start date",
+    "duration": "Duration",
+    "openTask": "Open task",
+    "colorBy": "Color by",
+    "colorModeCategory": "Category",
+    "colorModeStatus": "Status",
+    "colorModePriority": "Priority"
   },
   "categories": {
     "title": "Categories",

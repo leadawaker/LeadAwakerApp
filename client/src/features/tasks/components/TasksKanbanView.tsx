@@ -131,7 +131,7 @@ function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col rounded-2xl h-full",
+        "flex flex-col rounded-2xl min-h-0 h-full",
         "border transition-shadow duration-150",
         theme.bg,
         theme.border,
@@ -273,7 +273,7 @@ export default function TasksKanbanView({
     >
       {/* Grid: 3 equal columns filling the full panel width */}
       <div
-        className="grid grid-cols-3 gap-4 flex-1 min-h-0 h-full p-1 w-full"
+        className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-4 min-h-0 h-full p-1 w-full overflow-hidden"
         data-testid="tasks-kanban-board"
       >
         {columns.map((col) => (

@@ -1,14 +1,16 @@
 import { useEffect, useState, useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
-import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Trash2, MapPin, MapPinOff, GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Bot, X, ChevronLeft, Loader2, Plus, MapPin, MapPinOff, Minimize2, ChevronRight, Clock, MoreVertical, MousePointerClick, Check } from "lucide-react";
+import { cn, relativeTime } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { usePageContext } from "../hooks/usePageContext";
 import { usePageEntity } from "@/contexts/PageEntityContext";
 import { AgentChatView } from "./AgentChatView";
 import { AgentSettingsSheet } from "./AgentSettingsSheet";
-import { ModelSwitcher } from "./ModelSwitcher";
-import { ThinkingToggle } from "./ThinkingToggle";
+import { useElementPicker } from "../hooks/useElementPicker";
+import { ElementPickerOverlay } from "./ElementPickerOverlay";
+import { MODEL_OPTIONS } from "./ModelSwitcher";
+import { THINKING_OPTIONS } from "./ThinkingToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   AlertDialog,
@@ -20,6 +22,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { apiFetch } from "@/lib/apiUtils";
 import type { AiAgent, AiSession } from "../hooks/useAgentChat";
 import type { PageContext } from "../hooks/usePageContext";
@@ -34,9 +41,11 @@ interface ConversationPanelProps {
   onAgentLoaded: (agentId: number, agent: AiAgent) => void;
   onSessionUpdate: (agentId: number, session: AiSession | null, streaming: boolean) => void;
   onMessageCountUpdate: (agentId: number, count: number) => void;
+  selectedElement?: import("../hooks/useElementPicker").SelectedElementInfo | null;
+  onClearElement?: () => void;
 }
 
-function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }: ConversationPanelProps) {
+function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate, selectedElement, onClearElement }: ConversationPanelProps) {
   const {
     agent,
     session,
@@ -45,6 +54,7 @@ function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }
     streamingText,
     loading,
     pendingConfirmation,
+    activity,
     initialize,
     sendMessage,
     newSession,
@@ -52,6 +62,7 @@ function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }
     updateSessionThinking,
     confirmDestructiveActions,
     cancelDestructiveActions,
+    abortStream,
   } = useAgentChat();
 
   const routeContext = usePageContext();
@@ -121,8 +132,12 @@ function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }
         onNewSession={newSession}
         sessionId={session?.sessionId}
         pendingConfirmation={pendingConfirmation}
+        activity={activity}
         onConfirmDestructive={confirmDestructiveActions}
         onCancelDestructive={cancelDestructiveActions}
+        onAbort={abortStream}
+        selectedElement={selectedElement}
+        onClearElement={onClearElement}
       />
     </div>
   );
@@ -130,22 +145,73 @@ function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate }
 
 // ─── Agent Picker ────────────────────────────────────────────────────────────
 
+interface ConversationPreview {
+  id: number;
+  sessionId: string;
+  title: string | null;
+  updatedAt: string | null;
+  lastMessage: { content: string; role: string; createdAt: string | null } | null;
+}
+
 function AgentPicker({
   onSelect,
-  openAgentIds,
+  onNewConversation,
 }: {
-  onSelect: (agent: AiAgent) => void;
-  openAgentIds: Set<number>;
+  onSelect: (agent: AiAgent, sessionId?: string) => void;
+  onNewConversation: (agent: AiAgent) => void;
 }) {
   const [agents, setAgents] = useState<AiAgent[]>([]);
+  const [allConversations, setAllConversations] = useState<(ConversationPreview & { agent: AiAgent })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch("/api/ai-agents")
-      .then((r) => r.json())
-      .then((data: unknown) => setAgents(Array.isArray(data) ? (data as AiAgent[]) : []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch("/api/ai-agents");
+        const data = await res.json() as AiAgent[];
+        const agentList = Array.isArray(data) ? data.filter((a) => a.type === "code_runner") : [];
+        if (cancelled) return;
+        setAgents(agentList);
+
+        // Fetch conversations for all agents in parallel
+        const allConvs: (ConversationPreview & { agent: AiAgent })[] = [];
+        await Promise.all(
+          agentList.map(async (agent) => {
+            try {
+              const cRes = await apiFetch(`/api/agents/${agent.id}/conversations`);
+              const cData = await cRes.json();
+              if (Array.isArray(cData)) {
+                for (const c of cData.slice(0, 10) as any[]) {
+                  allConvs.push({
+                    id: c.id,
+                    sessionId: c.sessionId,
+                    title: c.title,
+                    updatedAt: c.updatedAt,
+                    lastMessage: c.lastMessage,
+                    agent,
+                  });
+                }
+              }
+            } catch { /* skip */ }
+          }),
+        );
+
+        // Sort by most recent first
+        allConvs.sort((a, b) => {
+          const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return tb - ta;
+        });
+
+        if (!cancelled) setAllConversations(allConvs);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {
@@ -157,52 +223,73 @@ function AgentPicker({
   }
 
   return (
-    <div className="flex flex-col gap-2 p-4">
-      <div className="text-sm font-semibold text-foreground mb-1">Choose an agent</div>
-      {agents.map((agent) => {
-        const hasActive = openAgentIds.has(agent.id);
-        const tagline =
-          agent.type === "code_runner"
-            ? "Codebase access · Live reload"
-            : agent.type === "campaign_crafter"
-            ? "Campaigns · Messaging"
-            : "Custom AI assistant";
+    <div className="flex flex-col gap-1 p-3 overflow-y-auto h-full">
+      {/* New conversation buttons — one per agent */}
+      {agents.map((agent) => (
+        <button
+          key={`new-${agent.id}`}
+          onClick={() => onNewConversation(agent)}
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-indigo hover:bg-brand-indigo/5 transition-colors"
+          data-testid={`widget-agent-${agent.id}-new`}
+        >
+          <div className={cn("h-7 w-7 rounded-full flex items-center justify-center shrink-0", getAgentColor(agent.id).bg)}>
+            <Bot className={cn("h-3.5 w-3.5", getAgentColor(agent.id).text)} />
+          </div>
+          <Plus className="h-3.5 w-3.5" />
+          <span>New conversation</span>
+          <span className="text-[10px] text-muted-foreground font-normal">({agent.name})</span>
+        </button>
+      ))}
+
+      {allConversations.length > 0 && (
+        <div className="h-px bg-border/40 mx-2 my-1" />
+      )}
+
+      {/* Flat conversation list sorted by recency */}
+      {allConversations.map((conv) => {
+        const color = getAgentColor(conv.agent.id);
+
         return (
           <button
-            key={agent.id}
-            onClick={() => onSelect(agent)}
-            className={cn(
-              "flex items-center gap-3 p-3 rounded-xl bg-card border transition-all text-left",
-              hasActive
-                ? "border-brand-indigo/40 bg-brand-indigo/5 shadow-sm"
-                : "border-border/50 hover:border-brand-indigo/30 hover:shadow-sm",
-            )}
-            data-testid={`widget-agent-${agent.id}`}
+            key={conv.sessionId}
+            onClick={() => onSelect(conv.agent, conv.sessionId)}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left hover:bg-muted/50 transition-colors group"
+            data-testid={`widget-conv-${conv.sessionId}`}
           >
-            <Avatar className="h-10 w-10 shrink-0">
-              {agent.photoUrl ? <AvatarImage src={agent.photoUrl} alt={agent.name} /> : null}
-              <AvatarFallback className="bg-brand-indigo/10 text-brand-indigo font-bold text-sm">
-                {agent.type === "code_runner" ? (
-                  <Zap className="h-5 w-5" />
-                ) : agent.type === "campaign_crafter" ? (
-                  <MessageSquare className="h-5 w-5" />
-                ) : (
-                  <Cpu className="h-5 w-5" />
-                )}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm truncate">{agent.name}</div>
-              <div className="text-[11px] text-muted-foreground">{tagline}</div>
+            {/* Agent avatar with per-agent color */}
+            <div className={cn("h-7 w-7 rounded-full flex items-center justify-center shrink-0", color.bg)}>
+              <Bot className={cn("h-3.5 w-3.5", color.text)} />
             </div>
-            {hasActive && (
-              <span className="text-[10px] font-medium text-brand-indigo bg-brand-indigo/10 px-2 py-0.5 rounded-full shrink-0">
-                Active
+
+            {/* Title + preview */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-foreground truncate">
+                  {conv.title || "Untitled"}
+                </span>
+              </div>
+              {conv.lastMessage && (
+                <div className="text-[11px] text-muted-foreground truncate">
+                  {conv.lastMessage.content.slice(0, 60)}
+                </div>
+              )}
+            </div>
+
+            {/* Time */}
+            {conv.updatedAt && (
+              <span className="text-[10px] text-muted-foreground shrink-0">
+                {relativeTime(conv.updatedAt)}
               </span>
             )}
           </button>
         );
       })}
+
+      {allConversations.length === 0 && (
+        <div className="text-center text-xs text-muted-foreground py-8">
+          No conversations yet. Start a new one above.
+        </div>
+      )}
     </div>
   );
 }
@@ -221,11 +308,21 @@ interface ConversationMeta {
   pageAwarenessEnabled: boolean;
 }
 
-/** Get icon for agent type */
+/** Per-agent color palette (cycles by agent ID) */
+const AGENT_COLORS = [
+  { bg: "bg-blue-500/10", text: "text-blue-500", dot: "bg-blue-500" },
+  { bg: "bg-purple-500/10", text: "text-purple-500", dot: "bg-purple-500" },
+  { bg: "bg-amber-500/10", text: "text-amber-500", dot: "bg-amber-500" },
+  { bg: "bg-emerald-500/10", text: "text-emerald-500", dot: "bg-emerald-500" },
+  { bg: "bg-rose-500/10", text: "text-rose-500", dot: "bg-rose-500" },
+];
+function getAgentColor(agentId: number) {
+  return AGENT_COLORS[agentId % AGENT_COLORS.length];
+}
+
+/** Get icon for agent type — always Bot (robot head) with per-agent color */
 function AgentIcon({ agent, className }: { agent: AiAgent; className?: string }) {
-  if (agent.type === "code_runner") return <Zap className={className} />;
-  if (agent.type === "campaign_crafter") return <MessageSquare className={className} />;
-  return <Cpu className={className} />;
+  return <Bot className={cn(className, getAgentColor(agent.id).text)} />;
 }
 
 function ConversationTabs({
@@ -337,6 +434,36 @@ const MIN_HEIGHT = 400;
 const MAX_WIDTH = 800;
 const MAX_HEIGHT = 900;
 
+const WIDGET_POS_KEY = "leadawaker_widget_pos";
+const DEFAULT_RIGHT = 24;
+const DEFAULT_BOTTOM = 24;
+
+interface WidgetPos { right: number; bottom: number }
+
+function loadWidgetPos(): WidgetPos {
+  try {
+    const raw = localStorage.getItem(WIDGET_POS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as WidgetPos;
+      return { right: parsed.right, bottom: parsed.bottom };
+    }
+  } catch { /* ignore */ }
+  return { right: DEFAULT_RIGHT, bottom: DEFAULT_BOTTOM };
+}
+
+function saveWidgetPos(pos: WidgetPos) {
+  localStorage.setItem(WIDGET_POS_KEY, JSON.stringify(pos));
+}
+
+function clampPos(pos: WidgetPos, widgetW: number, widgetH: number): WidgetPos {
+  const maxRight = Math.max(0, window.innerWidth - widgetW);
+  const maxBottom = Math.max(0, window.innerHeight - widgetH);
+  return {
+    right: Math.max(0, Math.min(maxRight, pos.right)),
+    bottom: Math.max(0, Math.min(maxBottom, pos.bottom)),
+  };
+}
+
 interface WidgetSize { width: number; height: number }
 
 function loadWidgetSize(): WidgetSize {
@@ -364,34 +491,89 @@ export function AgentChatWidget() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  // ── Element picker ──
+  const elementPicker = useElementPicker();
+
   // ── Resize state ──
   const [widgetSize, setWidgetSize] = useState<WidgetSize>(loadWidgetSize);
   const resizingRef = useRef(false);
-  const resizeStartRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  const resizeStartRef = useRef<{ x: number; y: number; w: number; h: number; right: number; bottom: number; corner: string } | null>(null);
+
+  // ── Drag-to-reposition state (desktop only) ──
+  const [widgetPos, setWidgetPos] = useState<WidgetPos>(loadWidgetPos);
+  const draggingRef = useRef(false);
+  const dragStartRef = useRef<{ x: number; y: number; right: number; bottom: number } | null>(null);
+
+  const onDragPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (window.innerWidth < 768) return;
+    // Don't start drag when clicking buttons inside the header
+    if ((e.target as HTMLElement).closest("button")) return;
+    e.preventDefault();
+    draggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, y: e.clientY, right: widgetPos.right, bottom: widgetPos.bottom };
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  }, [widgetPos]);
+
+  const onDragPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current || !dragStartRef.current) return;
+    const { x, y, right, bottom } = dragStartRef.current;
+    const newRight = right - (e.clientX - x);
+    const newBottom = bottom - (e.clientY - y);
+    setWidgetPos(clampPos({ right: newRight, bottom: newBottom }, widgetSize.width, widgetSize.height));
+  }, [widgetSize]);
+
+  const onDragPointerUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+    setWidgetPos((cur) => { saveWidgetPos(cur); return cur; });
+  }, []);
 
   const onResizePointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     resizingRef.current = true;
-    resizeStartRef.current = { x: e.clientX, y: e.clientY, w: widgetSize.width, h: widgetSize.height };
-    (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
-  }, [widgetSize]);
+    const corner = (e.currentTarget as HTMLDivElement).dataset.corner || "tl";
+    resizeStartRef.current = { x: e.clientX, y: e.clientY, w: widgetSize.width, h: widgetSize.height, right: widgetPos.right, bottom: widgetPos.bottom, corner };
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  }, [widgetSize, widgetPos]);
 
   const onResizePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!resizingRef.current || !resizeStartRef.current) return;
-    const { x, y, w, h } = resizeStartRef.current;
-    // Widget is anchored bottom-right, so dragging left increases width, dragging up increases height
-    const newW = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w + (x - e.clientX)));
-    const newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h + (y - e.clientY)));
+    const { x, y, w, h, right, bottom, corner } = resizeStartRef.current;
+    const dx = e.clientX - x;
+    const dy = e.clientY - y;
+    // Compute new size based on which corner is being dragged
+    let newW = w, newH = h, newRight = right, newBottom = bottom;
+    if (corner === "tl") {
+      newW = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w - dx));
+      newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h - dy));
+    } else if (corner === "tr") {
+      newW = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w + dx));
+      newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h - dy));
+      newRight = right - (newW - w);
+    } else if (corner === "bl") {
+      newW = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w - dx));
+      newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h + dy));
+      newBottom = bottom - (newH - h);
+    } else {
+      newW = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w + dx));
+      newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h + dy));
+      newRight = right - (newW - w);
+      newBottom = bottom - (newH - h);
+    }
     setWidgetSize({ width: newW, height: newH });
+    if (newRight !== right || newBottom !== bottom) {
+      setWidgetPos(clampPos({ right: newRight, bottom: newBottom }, newW, newH));
+    }
   }, []);
 
   const onResizePointerUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!resizingRef.current) return;
     resizingRef.current = false;
-    (e.target as HTMLDivElement).releasePointerCapture(e.pointerId);
-    // Save final size to localStorage
+    (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
     setWidgetSize((cur) => { saveWidgetSize(cur); return cur; });
+    setWidgetPos((cur) => { saveWidgetPos(cur); return cur; });
   }, []);
 
   // Track all open agent conversations (persisted across agent switches)
@@ -496,9 +678,28 @@ export function AgentChatWidget() {
     }
   }, [activeAgentId, openAgentIds, selectAgent, clearAgent]);
 
-  const handleSelectAgent = (selected: AiAgent) => {
+  const handleSelectAgent = (selected: AiAgent, sessionId?: string) => {
     selectAgent(selected.id);
+    if (sessionId) {
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("agent-load-session", { detail: { agentId: selected.id, sessionId } }),
+        );
+      }, 100);
+    }
   };
+
+  // Create a brand new conversation for the given agent
+  const handleNewConversation = useCallback((agent: AiAgent) => {
+    selectAgent(agent.id);
+    // Always dispatch new-session event — longer delay if panel needs to mount first
+    const delay = openAgentIds.has(agent.id) ? 100 : 600;
+    setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent("agent-new-session", { detail: { agentId: agent.id } }),
+      );
+    }, delay);
+  }, [selectAgent, openAgentIds]);
 
   const handleBack = () => {
     // Go to agent picker without destroying the conversation
@@ -578,58 +779,52 @@ export function AgentChatWidget() {
 
   return (
     <>
-      {/* ── Floating toggle button ── */}
-      <button
-        onClick={toggleWidget}
-        className={cn(
-          "fixed z-[9998] h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
-          "bottom-6 right-6 max-md:bottom-[max(1.5rem,env(safe-area-inset-bottom))] max-md:right-4",
-          "bg-brand-indigo text-white hover:bg-brand-indigo/90 hover:scale-105 active:scale-95",
-          isOpen && "scale-0 opacity-0 pointer-events-none",
-          !isOpen && "scale-100 opacity-100",
-        )}
-        data-testid="agent-widget-toggle"
-        aria-label="Open AI Agent chat"
-      >
-        <Bot className="h-6 w-6" />
-        {/* Pulse ring */}
-        <span
-          className="absolute inset-0 rounded-full animate-ping bg-brand-indigo/30 pointer-events-none"
-          style={{ animationDuration: "3s" }}
-        />
-      </button>
-
       {/* ── Chat panel ── */}
       <div
+        data-agent-widget
         className={cn(
-          "fixed z-[9999] flex flex-col bg-background border border-border/60 shadow-2xl overflow-hidden transition-all duration-300 ease-out",
-          // Desktop: floating panel anchored bottom-right
-          "bottom-6 right-6 rounded-2xl",
-          // Mobile: full-screen overlay with slide-up animation
+          "fixed z-[9999] flex flex-col bg-[#f5f5f5] dark:bg-[#1a1a2e] border border-border/60 shadow-2xl overflow-hidden transition-all duration-300 ease-out",
+          "rounded-2xl",
           "max-md:bottom-0 max-md:right-0 max-md:left-0 max-md:top-0 max-md:w-full max-md:h-full max-md:rounded-none max-md:border-0",
           isOpen
             ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
             : "md:translate-y-4 md:opacity-0 md:scale-95 max-md:translate-y-full max-md:opacity-100 pointer-events-none",
         )}
         style={{
+          right: widgetPos.right,
+          bottom: widgetPos.bottom,
           width: `${widgetSize.width}px`,
           height: `${widgetSize.height}px`,
         }}
         data-testid="agent-widget-panel"
       >
-        {/* ── Resize handle (top-left corner) ── */}
-        <div
-          onPointerDown={onResizePointerDown}
-          onPointerMove={onResizePointerMove}
-          onPointerUp={onResizePointerUp}
-          className="absolute top-0 left-0 z-10 w-6 h-6 cursor-nw-resize items-center justify-center hidden md:flex group touch-none"
-          title="Drag to resize"
-          data-testid="widget-resize-handle"
-        >
-          <GripVertical className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors -rotate-45" />
-        </div>
+        {/* ── Resize handles (all 4 corners, invisible) ── */}
+        {(["tl", "tr", "bl", "br"] as const).map((corner) => (
+          <div
+            key={corner}
+            data-corner={corner}
+            onPointerDown={onResizePointerDown}
+            onPointerMove={onResizePointerMove}
+            onPointerUp={onResizePointerUp}
+            className={cn(
+              "absolute z-10 w-5 h-5 hidden md:block touch-none",
+              corner === "tl" && "top-0 left-0 cursor-nw-resize",
+              corner === "tr" && "top-0 right-0 cursor-ne-resize",
+              corner === "bl" && "bottom-0 left-0 cursor-sw-resize",
+              corner === "br" && "bottom-0 right-0 cursor-se-resize",
+            )}
+          />
+        ))}
         {/* ── Widget Header ── */}
-        <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-background shrink-0">
+        <div
+          className={cn(
+            "flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-white dark:bg-card shrink-0 touch-none select-none",
+            draggingRef.current ? "md:cursor-grabbing" : "md:cursor-grab",
+          )}
+          onPointerDown={onDragPointerDown}
+          onPointerMove={onDragPointerMove}
+          onPointerUp={onDragPointerUp}
+        >
           {activeAgentId && activeAgent ? (
             <>
               <button
@@ -639,22 +834,17 @@ export function AgentChatWidget() {
               >
                 <ChevronLeft className="h-4 w-4 max-md:h-5 max-md:w-5" />
               </button>
-              <Avatar className="h-8 w-8 shrink-0">
-                {activeAgent.photoUrl ? (
-                  <AvatarImage src={activeAgent.photoUrl} alt={activeAgent.name} />
-                ) : null}
-                <AvatarFallback className="bg-brand-indigo/10 text-brand-indigo font-bold text-xs">
-                  {isCodeRunner ? <Zap className="h-3.5 w-3.5" /> : <Cpu className="h-3.5 w-3.5" />}
-                </AvatarFallback>
-              </Avatar>
+              {/* Per-agent colored robot icon */}
+              <div className={cn("h-7 w-7 rounded-full flex items-center justify-center shrink-0", getAgentColor(activeAgent.id).bg)}>
+                <AgentIcon agent={activeAgent} className="h-3.5 w-3.5" />
+              </div>
               <div className="flex-1 min-w-0 cursor-default" title={activeSession?.title ? `${activeAgent.name} \u2014 ${activeSession.title}` : activeAgent.name}>
-                <div className="font-semibold text-xs truncate">{activeAgent.name}</div>
+                <div className="font-semibold text-xs truncate">
+                  {activeSession?.title || activeAgent.name}
+                </div>
                 {activeSession?.title ? (
-                  <div
-                    className="text-[9px] text-muted-foreground truncate"
-                    data-testid="conversation-title"
-                  >
-                    {activeSession.title}
+                  <div className="text-[9px] text-muted-foreground truncate">
+                    {activeAgent.name}
                   </div>
                 ) : isCodeRunner ? (
                   <div className="flex items-center gap-1">
@@ -663,90 +853,169 @@ export function AgentChatWidget() {
                   </div>
                 ) : null}
               </div>
-              {activeSession && (
-                <>
-                  <ModelSwitcher
-                    currentModel={activeSession.model}
-                    onModelChange={(model) => {
-                      // The ConversationPanel handles this internally
-                      // We trigger a re-render via a custom event
-                      window.dispatchEvent(
-                        new CustomEvent("agent-model-change", {
-                          detail: { agentId: activeAgentId, model },
-                        }),
-                      );
-                    }}
-                    disabled={activeStreaming}
-                    compact
-                  />
-                  <ThinkingToggle
-                    currentLevel={activeSession.thinkingLevel}
-                    onLevelChange={(level) => {
-                      window.dispatchEvent(
-                        new CustomEvent("agent-thinking-change", {
-                          detail: { agentId: activeAgentId, thinkingLevel: level },
-                        }),
-                      );
-                    }}
-                    disabled={activeStreaming}
-                    compact
-                  />
-                </>
-              )}
-              {/* Page awareness toggle — per-session override */}
-              <button
-                onClick={togglePageAwareness}
-                className={cn(
-                  "h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center transition-colors shrink-0",
-                  activePageAwareness
-                    ? "text-brand-indigo bg-brand-indigo/10 hover:bg-brand-indigo/20"
-                    : "text-muted-foreground hover:bg-muted",
+              {/* Context usage % indicator in header */}
+              {activeSession && ((activeSession.totalInputTokens || 0) + (activeSession.totalOutputTokens || 0)) > 0 && (() => {
+                const total = (activeSession.totalInputTokens || 0) + (activeSession.totalOutputTokens || 0);
+                const maxTokens = 200_000;
+                const pct = Math.min(100, Math.round((total / maxTokens) * 100));
+                const color = pct > 80 ? "text-red-500" : pct > 50 ? "text-amber-500" : "text-muted-foreground";
+                return (
+                  <div
+                    className={cn("flex items-center gap-1 shrink-0 cursor-default", color)}
+                    title={`Context: ${total.toLocaleString()} / ${maxTokens.toLocaleString()} tokens (${pct}%)`}
+                  >
+                    <div className="w-8 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          pct > 80 ? "bg-red-500" : pct > 50 ? "bg-amber-500" : "bg-brand-indigo",
+                        )}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-[9px] font-mono font-medium">{pct}%</span>
+                  </div>
+                );
+              })()}
+              {/* Element picker toggle (desktop only) */}
+              <div className="hidden md:flex items-center gap-0.5 shrink-0">
+                <button
+                  onClick={() => elementPicker.pickerActive ? elementPicker.deactivate() : elementPicker.activate()}
+                  className={cn(
+                    "h-7 w-7 rounded-full flex items-center justify-center transition-colors shrink-0",
+                    elementPicker.pickerActive
+                      ? "bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
+                      : elementPicker.confirmedInfo
+                        ? "text-violet-500 hover:bg-muted"
+                        : "text-muted-foreground hover:bg-muted",
+                  )}
+                  title={elementPicker.pickerActive ? "Cancel element picker" : elementPicker.confirmedInfo ? "Re-select element" : "Select a page element"}
+                >
+                  <MousePointerClick className="h-3.5 w-3.5" />
+                </button>
+                {elementPicker.pickerActive && elementPicker.selectedInfo && (
+                  <button
+                    onClick={() => elementPicker.confirm()}
+                    className="h-7 w-7 rounded-full flex items-center justify-center text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors shrink-0"
+                    title="Confirm selection"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                  </button>
                 )}
-                title={activePageAwareness ? "Page awareness ON — click to disable" : "Page awareness OFF — click to enable"}
-                data-testid="widget-page-awareness-toggle"
-              >
-                {activePageAwareness ? (
-                  <MapPin className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-                ) : (
-                  <MapPinOff className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+                {elementPicker.pickerActive && (
+                  <button
+                    onClick={() => elementPicker.deactivate()}
+                    className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                    title="Cancel"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 )}
-              </button>
-              <button
-                onClick={() => setSettingsOpen(true)}
-                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-                data-testid="widget-settings-btn"
-              >
-                <Settings className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-              </button>
-              <button
-                onClick={() => setDeleteConfirmOpen(true)}
-                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
-                title="Clear conversation history"
-                data-testid="widget-clear-history-btn"
-              >
-                <Trash2 className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-              </button>
-              <button
-                onClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent("agent-new-session", { detail: { agentId: activeAgentId } }),
-                  );
-                }}
-                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-                title="New conversation"
-                data-testid="widget-new-session-btn"
-              >
-                <Plus className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-              </button>
-              {/* Close this conversation (removes tab, data preserved) */}
-              <button
-                onClick={() => activeAgentId && closeConversation(activeAgentId)}
-                className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
-                title="Close conversation"
-                data-testid="widget-close-conversation-btn"
-              >
-                <X className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-              </button>
+              </div>
+              {/* "..." overflow menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                    data-testid="widget-overflow-menu"
+                  >
+                    <MoreVertical className="h-4 w-4 max-md:h-5 max-md:w-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-xl z-[10000] p-1.5 min-w-0 w-auto">
+                  {activeSession && (() => {
+                    const modelOpts = MODEL_OPTIONS;
+                    const thinkingOpts = THINKING_OPTIONS;
+                    const curModel = modelOpts.find((m) => m.id === activeSession.model) || modelOpts[0];
+                    const curThinking = thinkingOpts.find((t) => t.id === activeSession.thinkingLevel) || thinkingOpts[2];
+                    const ModelIcon = curModel.icon;
+                    const ThinkingIcon = curThinking.icon;
+                    const nextModel = modelOpts[(modelOpts.indexOf(curModel) + 1) % modelOpts.length];
+                    const nextThinking = thinkingOpts[(thinkingOpts.indexOf(curThinking) + 1) % thinkingOpts.length];
+                    return (
+                      <div className="flex items-center gap-1">
+                        {/* Model cycle */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.dispatchEvent(
+                              new CustomEvent("agent-model-change", {
+                                detail: { agentId: activeAgentId, model: nextModel.id },
+                              }),
+                            );
+                          }}
+                          disabled={activeStreaming}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-lg border border-border/50 px-2.5 py-2 max-md:py-2.5 text-[10px] font-medium transition-colors",
+                            "hover:bg-muted/50 hover:border-border disabled:opacity-50 disabled:cursor-not-allowed",
+                          )}
+                          title={`Model: ${curModel.label} — tap to switch to ${nextModel.label}`}
+                        >
+                          <ModelIcon className={cn("h-3.5 w-3.5 shrink-0", curModel.color)} />
+                          <span>{curModel.shortLabel}</span>
+                        </button>
+                        {/* Thinking cycle */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.dispatchEvent(
+                              new CustomEvent("agent-thinking-change", {
+                                detail: { agentId: activeAgentId, thinkingLevel: nextThinking.id },
+                              }),
+                            );
+                          }}
+                          disabled={activeStreaming}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-lg border border-border/50 px-2.5 py-2 max-md:py-2.5 text-[10px] font-medium transition-colors",
+                            "hover:bg-muted/50 hover:border-border disabled:opacity-50 disabled:cursor-not-allowed",
+                          )}
+                          title={`Thinking: ${curThinking.label} — tap to switch to ${nextThinking.label}`}
+                        >
+                          <ThinkingIcon className={cn("h-3.5 w-3.5 shrink-0", curThinking.color)} />
+                          <span>{curThinking.label}</span>
+                        </button>
+                        {/* Page awareness toggle */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            togglePageAwareness();
+                          }}
+                          className={cn(
+                            "flex items-center justify-center rounded-lg border px-2 py-2 max-md:py-2.5 transition-colors",
+                            activePageAwareness
+                              ? "border-brand-indigo/30 bg-brand-indigo/5 text-brand-indigo"
+                              : "border-border/50 text-muted-foreground hover:bg-muted/50",
+                          )}
+                          title={activePageAwareness ? "Page awareness ON — tap to disable" : "Page awareness OFF — tap to enable"}
+                        >
+                          {activePageAwareness ? (
+                            <MapPin className="h-3.5 w-3.5" />
+                          ) : (
+                            <MapPinOff className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                        {/* New conversation */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.dispatchEvent(
+                              new CustomEvent("agent-new-session", { detail: { agentId: activeAgentId } }),
+                            );
+                          }}
+                          className="flex items-center justify-center rounded-lg border border-border/50 px-2 py-2 max-md:py-2.5 text-muted-foreground hover:bg-muted/50 hover:border-border transition-colors"
+                          title="New conversation"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -760,10 +1029,11 @@ export function AgentChatWidget() {
           <button
             onClick={closeWidget}
             className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-            data-testid="agent-widget-close"
-            aria-label="Close AI Agent chat"
+            title="Minimize"
+            data-testid="agent-widget-minimize"
+            aria-label="Minimize AI Agent chat"
           >
-            <X className="h-4 w-4 max-md:h-5 max-md:w-5" />
+            <Minimize2 className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
           </button>
         </div>
 
@@ -779,7 +1049,10 @@ export function AgentChatWidget() {
         <div className="flex-1 min-h-0 overflow-hidden">
           {/* Agent picker (shown when no active agent) */}
           {!activeAgentId && (
-            <AgentPicker onSelect={handleSelectAgent} openAgentIds={openAgentIds} />
+            <AgentPicker
+              onSelect={handleSelectAgent}
+              onNewConversation={handleNewConversation}
+            />
           )}
 
           {/* Render all open conversation panels — hidden ones stay mounted */}
@@ -791,6 +1064,8 @@ export function AgentChatWidget() {
               onAgentLoaded={handleAgentLoaded}
               onSessionUpdate={handleSessionUpdate}
               onMessageCountUpdate={handleMessageCountUpdate}
+              selectedElement={agentId === activeAgentId ? elementPicker.confirmedInfo : undefined}
+              onClearElement={elementPicker.clear}
             />
           ))}
         </div>
@@ -845,6 +1120,14 @@ export function AgentChatWidget() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Element picker overlay (rendered above app, below widget) */}
+      {elementPicker.pickerActive && (
+        <ElementPickerOverlay
+          hoveredInfo={elementPicker.hoveredInfo}
+          selectedInfo={elementPicker.selectedInfo}
+        />
+      )}
     </>
   );
 }
@@ -858,6 +1141,8 @@ function ConversationPanelWithEvents({
   onAgentLoaded,
   onSessionUpdate,
   onMessageCountUpdate,
+  selectedElement,
+  onClearElement,
 }: ConversationPanelProps) {
   const {
     agent,
@@ -867,14 +1152,17 @@ function ConversationPanelWithEvents({
     streamingText,
     loading,
     pendingConfirmation,
+    activity,
     initialize,
     sendMessage,
     newSession,
+    loadSession,
     deleteConversation,
     updateSessionModel,
     updateSessionThinking,
     confirmDestructiveActions,
     cancelDestructiveActions,
+    abortStream,
   } = useAgentChat();
 
   const routeContext = usePageContext();
@@ -965,21 +1253,34 @@ function ConversationPanelWithEvents({
       const detail = (e as CustomEvent).detail;
       if (detail.agentId === agentId) setPageAwarenessEnabled(detail.enabled);
     };
+    // Toggle request from slash command (doesn't know current state)
+    const handlePageAwarenessToggleRequest = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.agentId === agentId) setPageAwarenessEnabled((prev) => !prev);
+    };
+    const handleLoadSession = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.agentId === agentId && detail.sessionId) loadSession(detail.sessionId);
+    };
 
     window.addEventListener("agent-model-change", handleModelChange);
     window.addEventListener("agent-thinking-change", handleThinkingChange);
     window.addEventListener("agent-new-session", handleNewSession);
     window.addEventListener("agent-delete-conversation", handleDeleteConversation);
     window.addEventListener("agent-page-awareness-toggle", handlePageAwarenessToggle);
+    window.addEventListener("agent-page-awareness-toggle-request", handlePageAwarenessToggleRequest);
+    window.addEventListener("agent-load-session", handleLoadSession);
     return () => {
       window.removeEventListener("agent-model-change", handleModelChange);
       window.removeEventListener("agent-thinking-change", handleThinkingChange);
       window.removeEventListener("agent-new-session", handleNewSession);
       window.removeEventListener("agent-delete-conversation", handleDeleteConversation);
       window.removeEventListener("agent-page-awareness-toggle", handlePageAwarenessToggle);
+      window.removeEventListener("agent-page-awareness-toggle-request", handlePageAwarenessToggleRequest);
+      window.removeEventListener("agent-load-session", handleLoadSession);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agentId, updateSessionModel, updateSessionThinking, newSession, deleteConversation]);
+  }, [agentId, updateSessionModel, updateSessionThinking, newSession, deleteConversation, loadSession]);
 
   if (!agent) return null;
 
@@ -999,8 +1300,12 @@ function ConversationPanelWithEvents({
         onNewSession={newSession}
         sessionId={session?.sessionId}
         pendingConfirmation={pendingConfirmation}
+        activity={activity}
         onConfirmDestructive={confirmDestructiveActions}
         onCancelDestructive={cancelDestructiveActions}
+        onAbort={abortStream}
+        selectedElement={selectedElement}
+        onClearElement={onClearElement}
       />
     </div>
   );

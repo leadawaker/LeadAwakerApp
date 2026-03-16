@@ -760,7 +760,7 @@ function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger, bo
   const showSparkline = trendData && trendData.length > 1;
   return (
     <div
-      className={cn("rounded-xl bg-white/80 dark:bg-white/[0.08] p-4 md:p-8 flex flex-col items-center justify-center text-center", borderColor && "border-t-2")}
+      className={cn("rounded-xl bg-white/50 dark:bg-white/[0.08] p-4 md:p-8 flex flex-col items-center justify-center text-center", borderColor && "border-t-2")}
       style={borderColor ? { borderTopColor: borderColor } : undefined}
     >
       <div className="text-[22px] md:text-[28px] font-black text-foreground tabular-nums leading-none">{display}</div>
@@ -992,11 +992,11 @@ function FinancialsWidget({
       {/* 2-up: Total Spend + Cost / Booking — agency only */}
       {isAgencyUser && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
+          <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.totalSpend")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrency(totalCost)}</div>
           </div>
-          <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
+          <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.costPerBooking")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrencyDecimals(costPerBooking)}</div>
           </div>
@@ -1005,13 +1005,13 @@ function FinancialsWidget({
 
       {/* 2-up: Value / Booking + Payment Trigger */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
+        <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.valuePerBooking")}</div>
           <div className="text-[18px] font-bold tabular-nums text-foreground">
             {valuePB > 0 ? fmtCurrency(valuePB) : "—"}
           </div>
         </div>
-        <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
+        <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.paymentTrigger")}</div>
           <div className="text-[13px] font-semibold text-foreground leading-snug">
             {paymentTrigger ? (paymentTriggerLabel[paymentTrigger] ?? paymentTrigger) : "—"}
@@ -1021,7 +1021,7 @@ function FinancialsWidget({
 
       {/* Projected Revenue — agency only */}
       {isAgencyUser && hasContractOrValue && (
-        <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
+        <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider">{t("financials.projectedRevenue")}</div>
             {paymentTrigger === "sale_closed" && (
@@ -1044,7 +1044,7 @@ function FinancialsWidget({
       )}
 
       {/* ROI — large display */}
-      <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
+      <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
         <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.returnOnInvestment")}</div>
         <div className={cn("text-[28px] font-black tabular-nums leading-none", getRoiColor(roiValue))}>
           {roiValue != null ? `${roiValue >= 0 ? "+" : ""}${roiValue.toFixed(0)}%` : "—"}
@@ -2638,10 +2638,10 @@ export function CampaignDetailView({
 
             {/* Column 1: Configuration / Settings */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("config.configuration")}</span>
+              <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.configuration")}</h3>
 
               {/* Status + Type + Booking Mode + Business Description + extra fields */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                 <InfoRow label={t("columns.status")} value={String(campaign.status || "—")}
                   editChild={isEditing ? <EditSelect value={String(draft.status ?? campaign.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Active", "Paused", "Draft", "Completed", "Inactive"]} /> : undefined}
                 />
@@ -2711,7 +2711,7 @@ export function CampaignDetailView({
               </div>
 
               {/* Schedule group */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                 <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-2">{t("config.schedule")}</p>
                 <InfoRow label={t("config.startDate")} value={formatDate(campaign.start_date)}
                   editChild={isEditing ? <EditDate value={String(draft.start_date ?? "")} onChange={(v) => setDraft(d => ({...d, start_date: v}))} /> : undefined}
@@ -2743,8 +2743,8 @@ export function CampaignDetailView({
 
             {/* Column 2: AI Settings */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("config.aiSettings")}</span>
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+              <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.aiSettings")}</h3>
+              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                 <InfoRow label={t("config.agent")} value={campaign.agent_name}
                   editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} /> : undefined}
                 />
@@ -2752,230 +2752,232 @@ export function CampaignDetailView({
                   editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} /> : undefined}
                 />
               </div>
-              {/* Prompt library link */}
-              <div className="space-y-1.5">
-                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-1">{t("config.promptLinked")}</p>
-                {isEditing ? (
-                  <select
-                    value={String(draft.prompt_linked_id ?? "")}
-                    onChange={(e) => setDraft(d => ({ ...d, prompt_linked_id: e.target.value }))}
-                    className="w-full h-9 rounded-lg border border-input bg-background px-2.5 text-[12px] text-foreground outline-none focus:ring-2 focus:ring-brand-indigo/30 transition-colors"
-                  >
-                    <option value="">{t("config.noPromptLinked")}</option>
-                    {conversationPrompts.map((p) => (
-                      <option key={p.id || p.Id} value={String(p.id || p.Id)}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : linkedPrompt ? (
-                  <div
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 dark:bg-white/[0.06] cursor-pointer hover:bg-white dark:hover:bg-white/[0.10] transition-colors"
-                    onClick={() => {
-                      localStorage.setItem("prompt-library-initial-id", String(linkedPrompt.id || linkedPrompt.Id));
-                      navigate(isAgencyUser ? "/agency/prompt-library" : "/subaccount/prompt-library");
-                    }}
-                  >
-                    {/* AI icon circle */}
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-brand-indigo/10 text-brand-indigo flex-shrink-0">
-                      <Bot className="w-4 h-4" />
+              {/* Templates — linked prompt + message templates in one card */}
+              <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] p-3 md:p-6 space-y-5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Templates</span>
+
+                {/* Linked Prompt */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">{t("config.promptLinked")}</p>
+                  {isEditing ? (
+                    <select
+                      value={String(draft.prompt_linked_id ?? "")}
+                      onChange={(e) => setDraft(d => ({ ...d, prompt_linked_id: e.target.value }))}
+                      className="w-full h-9 rounded-lg border border-input bg-background px-2.5 text-[12px] text-foreground outline-none focus:ring-2 focus:ring-brand-indigo/30 transition-colors"
+                    >
+                      <option value="">{t("config.noPromptLinked")}</option>
+                      {conversationPrompts.map((p) => (
+                        <option key={p.id || p.Id} value={String(p.id || p.Id)}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : linkedPrompt ? (
+                    <div
+                      className="flex items-center gap-2 p-2.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.04] cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors"
+                      onClick={() => {
+                        localStorage.setItem("prompt-library-initial-id", String(linkedPrompt.id || linkedPrompt.Id));
+                        navigate(isAgencyUser ? "/agency/prompt-library" : "/subaccount/prompt-library");
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-brand-indigo/10 text-brand-indigo flex-shrink-0">
+                        <Bot className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-medium flex-1 truncate">{linkedPrompt.name || linkedPrompt.Name}</span>
+                      <span className={cn(
+                        "text-xs px-1.5 py-0.5 rounded-full font-medium",
+                        (linkedPrompt.status || linkedPrompt.Status) === "active"
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {linkedPrompt.status || linkedPrompt.Status || "unknown"}
+                      </span>
                     </div>
-                    {/* name */}
-                    <span className="text-sm font-medium flex-1 truncate">{linkedPrompt.name || linkedPrompt.Name}</span>
-                    {/* status badge */}
-                    <span className={cn(
-                      "text-xs px-1.5 py-0.5 rounded-full font-medium",
-                      (linkedPrompt.status || linkedPrompt.Status) === "active"
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-muted text-muted-foreground"
-                    )}>
-                      {linkedPrompt.status || linkedPrompt.Status || "unknown"}
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-foreground/40 italic">{t("config.noPromptLinked")}</p>
-                )}
-              </div>
-              {/* Message Templates — merged into col 2 */}
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("config.messageTemplates")}</span>
-
-              {/* First message */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("config.firstMessage")}</span>
-                  {!isEditing && (campaign.first_message_template || campaign.First_Message) && (
-                    <CopyButton value={campaign.first_message_template || campaign.First_Message || ""} />
+                  ) : (
+                    <p className="text-[11px] text-foreground/40 italic">{t("config.noPromptLinked")}</p>
                   )}
                 </div>
-                {isEditing ? (
-                  <EditText
-                    value={String(draft.first_message_template ?? "")}
-                    onChange={(v) => setDraft(d => ({...d, first_message_template: v}))}
-                    multiline
-                    placeholder="Hi {name}, we noticed…"
-                  />
-                ) : (
-                  campaign.first_message_template || campaign.First_Message
-                    ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-                        {campaign.first_message_template || campaign.First_Message}
-                      </p>
-                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
-                )}
-              </div>
 
-              {/* Second message (auto-sent on first reply) */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Second Message</span>
-                  {!isEditing && campaign.second_message && (
-                    <CopyButton value={campaign.second_message} />
+                <hr className="border-border/20" />
+
+                {/* First message */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("config.firstMessage")}</span>
+                    {!isEditing && (campaign.first_message_template || campaign.First_Message) && (
+                      <CopyButton value={campaign.first_message_template || campaign.First_Message || ""} />
+                    )}
+                  </div>
+                  {isEditing ? (
+                    <EditText
+                      value={String(draft.first_message_template ?? "")}
+                      onChange={(v) => setDraft(d => ({...d, first_message_template: v}))}
+                      multiline
+                      placeholder="Hi {name}, we noticed…"
+                    />
+                  ) : (
+                    campaign.first_message_template || campaign.First_Message
+                      ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                          {campaign.first_message_template || campaign.First_Message}
+                        </p>
+                      : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
                   )}
                 </div>
-                <p className="text-[10px] text-foreground/40 italic">Auto-sent on first lead reply, before AI takes over</p>
-                {isEditing ? (
-                  <EditText
-                    value={String(draft.second_message ?? "")}
-                    onChange={(v) => setDraft(d => ({...d, second_message: v}))}
-                    multiline
-                    placeholder="Nice! My manager asked me to reach out but I didn't want to spam you. Are you still looking?"
-                  />
-                ) : (
-                  campaign.second_message
-                    ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-                        {campaign.second_message}
-                      </p>
-                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
-                )}
-              </div>
 
-              {/* Bump 1 */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 1</span>
-                    <ChevronRight className="w-3 h-3 text-foreground/30" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isEditing ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
-                        <input
-                          type="number"
-                          value={String(draft.bump_1_delay_hours ?? "")}
-                          onChange={(e) => setDraft(d => ({...d, bump_1_delay_hours: e.target.value === "" ? "" : Number(e.target.value)}))}
-                          className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
-                          placeholder="24"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-[11px] text-foreground/50">
-                        <Clock className="w-3 h-3" />
-                        <span>{t("config.delayLabel", { value: formatHours(campaign.bump_1_delay_hours) })}</span>
-                      </div>
+                {/* Second message */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Second Message</span>
+                    {!isEditing && campaign.second_message && (
+                      <CopyButton value={campaign.second_message} />
                     )}
-                    {!isEditing && campaign.bump_1_template && <CopyButton value={campaign.bump_1_template} />}
                   </div>
+                  <p className="text-[10px] text-foreground/40 italic">Auto-sent on first lead reply, before AI takes over</p>
+                  {isEditing ? (
+                    <EditText
+                      value={String(draft.second_message ?? "")}
+                      onChange={(v) => setDraft(d => ({...d, second_message: v}))}
+                      multiline
+                      placeholder="Nice! My manager asked me to reach out but I didn't want to spam you. Are you still looking?"
+                    />
+                  ) : (
+                    campaign.second_message
+                      ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                          {campaign.second_message}
+                        </p>
+                      : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+                  )}
                 </div>
-                {isEditing ? (
-                  <EditText
-                    value={String(draft.bump_1_template ?? "")}
-                    onChange={(v) => setDraft(d => ({...d, bump_1_template: v}))}
-                    multiline
-                    placeholder="Follow-up message…"
-                  />
-                ) : (
-                  campaign.bump_1_template
-                    ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_1_template}</p>
-                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
-                )}
-              </div>
 
-              {/* Bump 2 */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 2</span>
-                    <ChevronRight className="w-3 h-3 text-foreground/30" />
+                {/* Bump 1 */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 1</span>
+                      <ChevronRight className="w-3 h-3 text-foreground/30" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
+                          <input
+                            type="number"
+                            value={String(draft.bump_1_delay_hours ?? "")}
+                            onChange={(e) => setDraft(d => ({...d, bump_1_delay_hours: e.target.value === "" ? "" : Number(e.target.value)}))}
+                            className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
+                            placeholder="24"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-[11px] text-foreground/50">
+                          <Clock className="w-3 h-3" />
+                          <span>{t("config.delayLabel", { value: formatHours(campaign.bump_1_delay_hours) })}</span>
+                        </div>
+                      )}
+                      {!isEditing && campaign.bump_1_template && <CopyButton value={campaign.bump_1_template} />}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isEditing ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
-                        <input
-                          type="number"
-                          value={String(draft.bump_2_delay_hours ?? "")}
-                          onChange={(e) => setDraft(d => ({...d, bump_2_delay_hours: e.target.value === "" ? "" : Number(e.target.value)}))}
-                          className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
-                          placeholder="48"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-[11px] text-foreground/50">
-                        <Clock className="w-3 h-3" />
-                        <span>{t("config.delayLabel", { value: formatHours(campaign.bump_2_delay_hours) })}</span>
-                      </div>
-                    )}
-                    {!isEditing && campaign.bump_2_template && <CopyButton value={campaign.bump_2_template} />}
-                  </div>
+                  {isEditing ? (
+                    <EditText
+                      value={String(draft.bump_1_template ?? "")}
+                      onChange={(v) => setDraft(d => ({...d, bump_1_template: v}))}
+                      multiline
+                      placeholder="Follow-up message…"
+                    />
+                  ) : (
+                    campaign.bump_1_template
+                      ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_1_template}</p>
+                      : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+                  )}
                 </div>
-                {isEditing ? (
-                  <EditText
-                    value={String(draft.bump_2_template ?? "")}
-                    onChange={(v) => setDraft(d => ({...d, bump_2_template: v}))}
-                    multiline
-                    placeholder="Second follow-up…"
-                  />
-                ) : (
-                  campaign.bump_2_template
-                    ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_2_template}</p>
-                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
-                )}
-              </div>
 
-              {/* Bump 3 */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 3</span>
-                    <ChevronRight className="w-3 h-3 text-foreground/30" />
+                {/* Bump 2 */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 2</span>
+                      <ChevronRight className="w-3 h-3 text-foreground/30" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
+                          <input
+                            type="number"
+                            value={String(draft.bump_2_delay_hours ?? "")}
+                            onChange={(e) => setDraft(d => ({...d, bump_2_delay_hours: e.target.value === "" ? "" : Number(e.target.value)}))}
+                            className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
+                            placeholder="48"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-[11px] text-foreground/50">
+                          <Clock className="w-3 h-3" />
+                          <span>{t("config.delayLabel", { value: formatHours(campaign.bump_2_delay_hours) })}</span>
+                        </div>
+                      )}
+                      {!isEditing && campaign.bump_2_template && <CopyButton value={campaign.bump_2_template} />}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isEditing ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
-                        <input
-                          type="number"
-                          value={String(draft.bump_3_delay_hours ?? "")}
-                          onChange={(e) => setDraft(d => ({...d, bump_3_delay_hours: e.target.value === "" ? "" : Number(e.target.value)}))}
-                          className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
-                          placeholder="72"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-[11px] text-foreground/50">
-                        <Clock className="w-3 h-3" />
-                        <span>{t("config.delayLabel", { value: formatHours(campaign.bump_3_delay_hours) })}</span>
-                      </div>
-                    )}
-                    {!isEditing && campaign.bump_3_template && <CopyButton value={campaign.bump_3_template} />}
-                  </div>
+                  {isEditing ? (
+                    <EditText
+                      value={String(draft.bump_2_template ?? "")}
+                      onChange={(v) => setDraft(d => ({...d, bump_2_template: v}))}
+                      multiline
+                      placeholder="Second follow-up…"
+                    />
+                  ) : (
+                    campaign.bump_2_template
+                      ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_2_template}</p>
+                      : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+                  )}
                 </div>
-                {isEditing ? (
-                  <EditText
-                    value={String(draft.bump_3_template ?? "")}
-                    onChange={(v) => setDraft(d => ({...d, bump_3_template: v}))}
-                    multiline
-                    placeholder="Third follow-up…"
-                  />
-                ) : (
-                  campaign.bump_3_template
-                    ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_3_template}</p>
-                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
-                )}
+
+                {/* Bump 3 */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 3</span>
+                      <ChevronRight className="w-3 h-3 text-foreground/30" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
+                          <input
+                            type="number"
+                            value={String(draft.bump_3_delay_hours ?? "")}
+                            onChange={(e) => setDraft(d => ({...d, bump_3_delay_hours: e.target.value === "" ? "" : Number(e.target.value)}))}
+                            className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
+                            placeholder="72"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-[11px] text-foreground/50">
+                          <Clock className="w-3 h-3" />
+                          <span>{t("config.delayLabel", { value: formatHours(campaign.bump_3_delay_hours) })}</span>
+                        </div>
+                      )}
+                      {!isEditing && campaign.bump_3_template && <CopyButton value={campaign.bump_3_template} />}
+                    </div>
+                  </div>
+                  {isEditing ? (
+                    <EditText
+                      value={String(draft.bump_3_template ?? "")}
+                      onChange={(v) => setDraft(d => ({...d, bump_3_template: v}))}
+                      multiline
+                      placeholder="Third follow-up…"
+                    />
+                  ) : (
+                    campaign.bump_3_template
+                      ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_3_template}</p>
+                      : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+                  )}
+                </div>
               </div>
 
               {/* AI Model + Temperature — at bottom of templates section */}
-              <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                 <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-2">{t("config.aiSettings")}</p>
                 <InfoRow label={t("config.model")} value={campaign.ai_model || "Default"}
                   editChild={isEditing ? <EditText value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} placeholder="Model name" /> : undefined}
@@ -2989,9 +2991,9 @@ export function CampaignDetailView({
 
             {/* Column 3: Behavior */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Behavior</span>
+              <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Behavior</h3>
                 {/* Channel + toggles */}
-                <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+                <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                   <InfoRow label={t("config.channel")} value={campaign.channel || "WhatsApp"}
                     editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} /> : undefined}
                   />
@@ -3019,7 +3021,7 @@ export function CampaignDetailView({
                 </div>
 
                 {/* Voice Notes */}
-                <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+                <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 pb-2">Voice Notes</p>
                   <BoolRow label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false}
                     editChild={isEditing ? <EditToggle value={Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)} onChange={(v) => setDraft(d => ({...d, first_message_voice_note: v}))} /> : undefined}
@@ -3042,7 +3044,7 @@ export function CampaignDetailView({
                 </div>
 
                 {/* Contract */}
-                <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
+                <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 pb-2">{t("config.contract")}</p>
                   <InfoRow
                     label={t("config.deal")}

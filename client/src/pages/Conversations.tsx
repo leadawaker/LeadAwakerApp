@@ -24,6 +24,11 @@ import { SearchPill } from "@/components/ui/search-pill";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { useSupportChat } from "@/hooks/useSupportChat";
 import { apiFetch } from "@/lib/apiUtils";
+import { useChatDoodle } from "@/hooks/useChatDoodle";
+import { useTheme } from "@/hooks/useTheme";
+import { getDoodleStyle } from "@/components/ui/doodle-patterns";
+import { useBgSlotLayers } from "@/hooks/useBgSlots";
+import { layerToStyle } from "@/components/ui/gradient-tester";
 
 type AiAgent = { id: number; name: string; type: string; photoUrl: string | null; enabled: boolean };
 import {
@@ -93,6 +98,20 @@ export default function ConversationsPage() {
     setMobileView("chat");
   };
 
+  /** Select an agent chat from the support tab — stays on the support tab */
+  const handleSelectAgentChat = useCallback((agentId: number, sessionId?: string) => {
+    setSelectedAgentId(agentId);
+    setSelectedLeadId(null);
+    // Stay on support tab — don't switch to "all"
+    setMobileView("chat");
+    // If a specific session was picked, load it after agent initializes
+    if (sessionId) {
+      // Small delay to let agentInitialize run from the useEffect
+      setTimeout(() => agentLoadSession(sessionId), 50);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAgentSettings = (agentId: number) => {
     // Select the agent first (loads its data), then open settings
     if (selectedAgentId !== agentId) {
@@ -122,12 +141,19 @@ export default function ConversationsPage() {
     updateSessionModel: agentUpdateSessionModel,
     updateSessionThinking: agentUpdateSessionThinking,
     pendingConfirmation: agentPendingConfirmation,
+    activity: agentActivity,
     confirmDestructiveActions: agentConfirmDestructive,
     cancelDestructiveActions: agentCancelDestructive,
+    abortStream: agentAbortStream,
   } = useAgentChat();
 
   // Agent settings sheet state
   const [agentSettingsOpen, setAgentSettingsOpen] = useState(false);
+
+  // Chat background (gradient/doodle) — shared with SupportChatWidget & ChatPanel
+  const { config: doodleConfig } = useChatDoodle();
+  const { isDark } = useTheme();
+  const activeSlotLayers = useBgSlotLayers("social1", isDark);
 
   // Initialize agent chat when agent selection changes
   useEffect(() => {
@@ -370,7 +396,11 @@ export default function ConversationsPage() {
           {mobileView === "chat" && (
             <button
               onClick={() => {
-                if (isAgentSelected) {
+                if (isAgentSelected && isSupport) {
+                  // Back from agent chat to support tab inbox
+                  setSelectedAgentId(null);
+                  setMobileView("inbox");
+                } else if (isAgentSelected) {
                   setSelectedAgentId(null);
                   setMobileView("inbox");
                 } else {
@@ -410,8 +440,8 @@ export default function ConversationsPage() {
             data-testid="layout-conversations"
             data-onboarding="conversations-inbox"
           >
-            {/* Left panel: InboxPanel (default) or AgentConversationList (when agent selected) */}
-            {isAgentSelected && selectedAgentId !== null ? (
+            {/* Left panel: AgentConversationList (agent selected, NOT support tab) or InboxPanel */}
+            {isAgentSelected && selectedAgentId !== null && !isSupport ? (
               <div
                 className={cn(
                   "w-full md:w-[340px] flex-shrink-0 bg-muted rounded-lg overflow-hidden h-full",
@@ -459,12 +489,18 @@ export default function ConversationsPage() {
                 onClearAll={handleClearFilters}
                 onRefresh={refresh}
                 supportBotConfig={supportBotConfig}
-                onSelectSupport={() => setMobileView("chat")}
+                onSelectSupport={() => {
+                  setSelectedAgentId(null);
+                  setMobileView("chat");
+                }}
                 onSearchChange={setSearchQuery}
                 aiAgents={isAgencyUser ? aiAgents : []}
                 selectedAgentId={selectedAgentId}
                 onSelectAgent={handleSelectAgent}
+                onSelectAgentChat={handleSelectAgentChat}
+                activeAgentSessionId={agentSession?.sessionId ?? null}
                 onAgentSettings={handleAgentSettings}
+                onDeselectAgent={() => setSelectedAgentId(null)}
                 className={cn(
                   "w-full md:w-[340px] flex-shrink-0",
                   mobileView === "chat" ? "hidden md:flex" : "flex"
@@ -473,104 +509,113 @@ export default function ConversationsPage() {
               />
             )}
 
-            {/* Support chat (inline) */}
-            {isSupport && (
-              <div className={cn(
-                "flex-1 min-w-0",
-                mobileView === "inbox"
-                  ? "hidden md:block"
-                  : mobileTransitioning
-                  ? "block animate-slide-out-to-right md:animate-none"
-                  : "block animate-slide-in-from-right md:animate-none"
-              )}>
-                <SupportChatWidget
-                  mode="inline"
-                  messages={supportMessages}
-                  sending={supportSending}
-                  loading={supportLoading}
-                  escalated={supportEscalated}
-                  botConfig={supportBotConfig}
-                  initialize={supportInitialize}
-                  sendMessage={supportSendMessage}
-                  closeSession={supportCloseSession}
-                  updateBotConfig={supportUpdateBotConfig}
-                  clearContext={supportClearContext}
-                  isAdmin={isAdmin}
-                  onClose={() => setTab("all")}
-                />
-              </div>
-            )}
-
-            {/* Normal chat area */}
-            {!isSupport && (
+            {/* Right panel — single persistent container, all views toggled via CSS to prevent layout reflow */}
               <div
                 className={cn(
-                  "flex-1 min-w-0 flex flex-col max-w-[1386px]",
-                  mobileView === "inbox"
-                    ? "hidden md:flex"
-                    : mobileTransitioning
-                    ? "flex animate-slide-out-to-right md:animate-none"
-                    : "flex animate-slide-in-from-right md:animate-none"
+                  "flex-1 min-w-0 flex flex-col overflow-hidden",
+                  mobileView === "inbox" ? "hidden md:flex" : "flex"
                 )}
                 data-testid="mobile-chat-panel"
                 data-onboarding="conversations-chat"
               >
-                {isAgentSelected ? (
-                  <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                {/* Bob support chat — visible on support tab when no agent selected */}
+                <div className={cn("flex-1 min-h-0 flex flex-col", isSupport && !isAgentSelected ? "flex" : "hidden")}>
+                  <SupportChatWidget
+                    mode="inline"
+                    messages={supportMessages}
+                    sending={supportSending}
+                    loading={supportLoading}
+                    escalated={supportEscalated}
+                    botConfig={supportBotConfig}
+                    initialize={supportInitialize}
+                    sendMessage={supportSendMessage}
+                    closeSession={supportCloseSession}
+                    updateBotConfig={supportUpdateBotConfig}
+                    clearContext={supportClearContext}
+                    isAdmin={isAdmin}
+                    onClose={() => setTab("all")}
+                  />
+                </div>
+
+                {/* Agent chat — visible when any agent is selected on any tab */}
+                <div className={cn("flex-1 min-h-0 flex flex-col rounded-lg overflow-hidden relative", isAgentSelected && chatAgent ? "flex" : "hidden")}>
+                  {/* Gradient / doodle background — matches SupportChatWidget & ChatPanel */}
+                  {doodleConfig.bgStyle === "crm" && (
+                    <div className="absolute inset-0 bg-card" />
+                  )}
+                  {doodleConfig.bgStyle !== "crm" && activeSlotLayers.map((layer: any) => {
+                    const style = layerToStyle(layer);
+                    if (!style) return null;
+                    return <div key={layer.id} className="absolute inset-0" style={style} />;
+                  })}
+                  {doodleConfig.enabled && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={getDoodleStyle(doodleConfig.patternId, doodleConfig.color, doodleConfig.size, isDark ? 100 : 0, isDark ? "screen" : "multiply")}
+                    />
+                  )}
+
+                  {/* Content above background */}
+                  <div className="relative flex flex-col h-full overflow-hidden">
                     {chatAgent && (
                       <>
-                        {/* Agent chat header with controls */}
-                        <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 border-b border-border/50 bg-background shrink-0 overflow-hidden" data-testid="agent-chat-header">
-                          <div className="h-8 w-8 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-2.5 px-4 py-3 bg-white dark:bg-card border-b border-black/[0.06] shrink-0">
+                          <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0 overflow-hidden">
                             {chatAgent.photoUrl ? (
-                              <img src={chatAgent.photoUrl} alt={chatAgent.name} className="h-8 w-8 rounded-full object-cover" />
+                              <img src={chatAgent.photoUrl} alt={chatAgent.name} className="h-9 w-9 rounded-full object-cover" />
                             ) : chatAgent.type === "code_runner" ? (
-                              <Zap className="h-4 w-4 text-brand-indigo" />
+                              <Zap className="h-4 w-4 text-green-600" />
                             ) : (
                               <Cpu className="h-4 w-4 text-brand-indigo" />
                             )}
                           </div>
-                          <div className="flex-1 min-w-0 cursor-default" title={agentSession?.title ? `${chatAgent.name} \u2014 ${agentSession.title}` : chatAgent.name}>
-                            <div className="font-semibold text-sm truncate">{chatAgent.name}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[27px] font-heading font-semibold leading-tight truncate text-foreground">
+                              {chatAgent.name}
+                            </p>
                             {agentSession?.title && (
-                              <div className="text-[10px] text-muted-foreground font-medium truncate mt-0.5" data-testid="conversation-title">
+                              <p className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
                                 {agentSession.title}
-                              </div>
+                              </p>
                             )}
                           </div>
-                          {agentSession && (
-                            <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                              <ModelSwitcher
-                                currentModel={agentSession.model}
-                                onModelChange={agentUpdateSessionModel}
-                                disabled={agentStreaming}
-                              />
-                              <ThinkingToggle
-                                currentLevel={agentSession.thinkingLevel}
-                                onLevelChange={agentUpdateSessionThinking}
-                                disabled={agentStreaming}
-                              />
-                            </div>
-                          )}
-                          <button
-                            onClick={() => setAgentSettingsOpen(true)}
-                            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-                            title="Agent settings"
-                            data-testid="agent-settings-btn"
-                          >
-                            <Settings className="h-3.5 w-3.5" />
-                          </button>
-                          {agentSession && (
+
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            {agentSession && (
+                              <>
+                                <div className="hidden sm:flex items-center gap-1.5">
+                                  <ModelSwitcher
+                                    currentModel={agentSession.model}
+                                    onModelChange={agentUpdateSessionModel}
+                                    disabled={agentStreaming}
+                                  />
+                                  <ThinkingToggle
+                                    currentLevel={agentSession.thinkingLevel}
+                                    onLevelChange={agentUpdateSessionThinking}
+                                    disabled={agentStreaming}
+                                  />
+                                </div>
+                                <button
+                                  onClick={agentNewSession}
+                                  className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+                                  title="New conversation"
+                                  data-testid="agent-support-new-session-btn"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </button>
+                              </>
+                            )}
                             <button
-                              onClick={agentNewSession}
-                              className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-                              title="New conversation"
-                              data-testid="agent-new-session-btn"
+                              onClick={() => setAgentSettingsOpen(true)}
+                              className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+                              title="Agent settings"
+                              data-testid="agent-support-settings-btn"
                             >
-                              <Plus className="h-3.5 w-3.5" />
+                              <Settings className="h-3.5 w-3.5" />
                             </button>
-                          )}
+                          </div>
                         </div>
+
                         <AgentChatView
                           agent={chatAgent}
                           messages={agentMessages}
@@ -581,8 +626,10 @@ export default function ConversationsPage() {
                           onNewSession={agentNewSession}
                           sessionId={agentSession?.sessionId}
                           pendingConfirmation={agentPendingConfirmation}
+                          activity={agentActivity}
                           onConfirmDestructive={agentConfirmDestructive}
                           onCancelDestructive={agentCancelDestructive}
+                          onAbort={agentAbortStream}
                         />
                         <AgentSettingsSheet
                           agent={chatAgent}
@@ -597,199 +644,199 @@ export default function ConversationsPage() {
                       </>
                     )}
                   </div>
-                ) : (
-                  <ChatPanel
-                    selected={selected}
-                    loading={loading}
-                    sending={sending}
-                    onSend={handleSend}
-                    onToggleTakeover={handleToggleTakeover}
-                    onRetry={handleRetry}
-                    showContactPanel={showContactPanel}
-                    onShowContactPanel={() => setShowContactPanel(true)}
-                    onNavigateToLead={(leadId) => {
-                      localStorage.setItem("selected-lead-id", String(leadId));
-                      localStorage.setItem("leads-view-mode", "list");
-                      setLocation(`${basePath}/contacts`);
-                    }}
-                    className="flex-1 min-w-0"
-                    headerActions={
-                      <>
-                        {/* Search — starts expanded */}
-                        <SearchPill
-                          value={searchQuery}
-                          onChange={setSearchQuery}
-                          open={searchOpen}
-                          onOpenChange={setSearchOpen}
-                          placeholder={t("page.searchPlaceholder")}
-                        />
+                </div>
 
-                        {/* Group */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className={cn(
-                                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                                "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]",
-                                isGroupNonDefault
-                                  ? "border-brand-indigo text-brand-indigo"
-                                  : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-                              )}
-                              title={t("page.groupBy")}
-                            >
-                              <Layers className="h-4 w-4 shrink-0" />
-                              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.group")}</span>
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((opt) => (
-                              <DropdownMenuItem
-                                key={opt}
-                                onClick={() => setGroupBy(opt)}
-                                className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}
-                              >
-                                {GROUP_LABELS[opt]}
-                                {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                {/* Lead ChatPanel — visible when no agent selected and not on support tab */}
+                <ChatPanel
+                  selected={selected}
+                  loading={loading}
+                  sending={sending}
+                  onSend={handleSend}
+                  onToggleTakeover={handleToggleTakeover}
+                  onRetry={handleRetry}
+                  showContactPanel={showContactPanel}
+                  onShowContactPanel={() => setShowContactPanel(true)}
+                  onNavigateToLead={(leadId) => {
+                    localStorage.setItem("selected-lead-id", String(leadId));
+                    localStorage.setItem("leads-view-mode", "list");
+                    setLocation(`${basePath}/contacts`);
+                  }}
+                  className={cn("flex-1 min-w-0", !isSupport && !isAgentSelected ? "flex" : "hidden")}
+                  headerActions={
+                    <>
+                      {/* Search — starts expanded */}
+                      <SearchPill
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        open={searchOpen}
+                        onOpenChange={setSearchOpen}
+                        placeholder={t("page.searchPlaceholder")}
+                      />
 
-                        {/* Sort */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className={cn(
-                                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                                "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px]",
-                                isSortNonDefault
-                                  ? "border-brand-indigo text-brand-indigo"
-                                  : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-                              )}
-                              title={t("page.sort")}
+                      {/* Group */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className={cn(
+                              "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
+                              "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]",
+                              isGroupNonDefault
+                                ? "border-brand-indigo text-brand-indigo"
+                                : "border-black/[0.125] text-foreground/60 hover:text-foreground"
+                            )}
+                            title={t("page.groupBy")}
+                          >
+                            <Layers className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.group")}</span>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((opt) => (
+                            <DropdownMenuItem
+                              key={opt}
+                              onClick={() => setGroupBy(opt)}
+                              className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}
                             >
-                              <ArrowUpDown className="h-4 w-4 shrink-0" />
-                              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.sort")}</span>
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((opt) => (
-                              <DropdownMenuItem
-                                key={opt}
-                                onClick={() => setSortBy(opt)}
-                                className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
-                              >
-                                {SORT_LABELS[opt]}
-                                {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              {GROUP_LABELS[opt]}
+                              {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                        {/* Filter — Status + Account → Campaign */}
-                        <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className={cn(
-                                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                                "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]",
-                                filterActive
-                                  ? "border-brand-indigo text-brand-indigo"
-                                  : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-                              )}
-                              title={t("page.filter")}
-                              data-testid="button-toggle-filters"
+                      {/* Sort */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className={cn(
+                              "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
+                              "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px]",
+                              isSortNonDefault
+                                ? "border-brand-indigo text-brand-indigo"
+                                : "border-black/[0.125] text-foreground/60 hover:text-foreground"
+                            )}
+                            title={t("page.sort")}
+                          >
+                            <ArrowUpDown className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.sort")}</span>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((opt) => (
+                            <DropdownMenuItem
+                              key={opt}
+                              onClick={() => setSortBy(opt)}
+                              className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
                             >
-                              <Filter className="h-4 w-4 shrink-0" />
-                              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.filter")}</span>
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            {/* Status */}
+                              {SORT_LABELS[opt]}
+                              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Filter — Status + Account → Campaign */}
+                      <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className={cn(
+                              "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
+                              "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]",
+                              filterActive
+                                ? "border-brand-indigo text-brand-indigo"
+                                : "border-black/[0.125] text-foreground/60 hover:text-foreground"
+                            )}
+                            title={t("page.filter")}
+                            data-testid="button-toggle-filters"
+                          >
+                            <Filter className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.filter")}</span>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          {/* Status */}
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger className="text-[12px]">
+                              {t("page.status")}
+                              {filterStatus.length > 0 && (
+                                <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>
+                              )}
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
+                              {PIPELINE_STATUSES.map((s) => (
+                                <DropdownMenuItem
+                                  key={s}
+                                  onClick={(e) => { e.preventDefault(); handleToggleFilterStatus(s); }}
+                                  className="flex items-center gap-2 text-[12px]"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
+                                  <span className="flex-1">{s}</span>
+                                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+
+                          {/* Account → Campaign drill-down (agency users only) */}
+                          {isAgencyUser && clientAccounts.length > 0 && (
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger className="text-[12px]">
-                                {t("page.status")}
-                                {filterStatus.length > 0 && (
-                                  <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>
+                                {t("page.account")}
+                                {filterAccountId !== "all" && (
+                                  <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[70px]">
+                                    {clientAccounts.find((a) => a.id === filterAccountId)?.name ?? ""}
+                                  </span>
                                 )}
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
-                                {PIPELINE_STATUSES.map((s) => (
-                                  <DropdownMenuItem
-                                    key={s}
-                                    onClick={(e) => { e.preventDefault(); handleToggleFilterStatus(s); }}
-                                    className="flex items-center gap-2 text-[12px]"
-                                  >
-                                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                                    <span className="flex-1">{s}</span>
-                                    {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                                  </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleAccountChange("all")}
+                                  className={cn("text-[12px]", filterAccountId === "all" && "font-semibold text-brand-indigo")}
+                                >
+                                  {t("page.allAccounts")}
+                                  {filterAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
+                                </DropdownMenuItem>
+                                {clientAccounts.map((account) => (
+                                  <DropdownMenuSub key={account.id}>
+                                    <DropdownMenuSubTrigger
+                                      className={cn("text-[12px]", filterAccountId === account.id && "font-semibold text-brand-indigo")}
+                                      onClick={() => handleAccountChange(account.id)}
+                                    >
+                                      {account.name}
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="w-44 max-h-48 overflow-y-auto">
+                                      <DropdownMenuItem
+                                        onClick={() => { handleAccountChange(account.id); setCampaignId("all"); }}
+                                        className={cn("text-[12px]", filterAccountId === account.id && campaignId === "all" && "font-semibold text-brand-indigo")}
+                                      >
+                                        {t("page.allCampaigns")}
+                                        {filterAccountId === account.id && campaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
+                                      </DropdownMenuItem>
+                                      {allCampaigns
+                                        .filter((c) => c.account_id === account.id || (c as any).accounts_id === account.id)
+                                        .map((c) => (
+                                          <DropdownMenuItem
+                                            key={c.id}
+                                            onClick={() => { handleAccountChange(account.id); setCampaignId(c.id); }}
+                                            className={cn("text-[12px]", filterAccountId === account.id && campaignId === c.id && "font-semibold text-brand-indigo")}
+                                          >
+                                            {c.name}
+                                            {filterAccountId === account.id && campaignId === c.id && <Check className="h-3 w-3 ml-auto" />}
+                                          </DropdownMenuItem>
+                                        ))
+                                      }
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
                                 ))}
                               </DropdownMenuSubContent>
                             </DropdownMenuSub>
-
-                            {/* Account → Campaign drill-down (agency users only) */}
-                            {isAgencyUser && clientAccounts.length > 0 && (
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger className="text-[12px]">
-                                  {t("page.account")}
-                                  {filterAccountId !== "all" && (
-                                    <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[70px]">
-                                      {clientAccounts.find((a) => a.id === filterAccountId)?.name ?? ""}
-                                    </span>
-                                  )}
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
-                                  <DropdownMenuItem
-                                    onClick={() => handleAccountChange("all")}
-                                    className={cn("text-[12px]", filterAccountId === "all" && "font-semibold text-brand-indigo")}
-                                  >
-                                    {t("page.allAccounts")}
-                                    {filterAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
-                                  </DropdownMenuItem>
-                                  {clientAccounts.map((account) => (
-                                    <DropdownMenuSub key={account.id}>
-                                      <DropdownMenuSubTrigger
-                                        className={cn("text-[12px]", filterAccountId === account.id && "font-semibold text-brand-indigo")}
-                                        onClick={() => handleAccountChange(account.id)}
-                                      >
-                                        {account.name}
-                                      </DropdownMenuSubTrigger>
-                                      <DropdownMenuSubContent className="w-44 max-h-48 overflow-y-auto">
-                                        <DropdownMenuItem
-                                          onClick={() => { handleAccountChange(account.id); setCampaignId("all"); }}
-                                          className={cn("text-[12px]", filterAccountId === account.id && campaignId === "all" && "font-semibold text-brand-indigo")}
-                                        >
-                                          {t("page.allCampaigns")}
-                                          {filterAccountId === account.id && campaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
-                                        </DropdownMenuItem>
-                                        {allCampaigns
-                                          .filter((c) => c.account_id === account.id || (c as any).accounts_id === account.id)
-                                          .map((c) => (
-                                            <DropdownMenuItem
-                                              key={c.id}
-                                              onClick={() => { handleAccountChange(account.id); setCampaignId(c.id); }}
-                                              className={cn("text-[12px]", filterAccountId === account.id && campaignId === c.id && "font-semibold text-brand-indigo")}
-                                            >
-                                              {c.name}
-                                              {filterAccountId === account.id && campaignId === c.id && <Check className="h-3 w-3 ml-auto" />}
-                                            </DropdownMenuItem>
-                                          ))
-                                        }
-                                      </DropdownMenuSubContent>
-                                    </DropdownMenuSub>
-                                  ))}
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </>
-                    }
-                  />
-                )}
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  }
+                />
               </div>
-            )}
 
             {/* Contact sidebar — hidden in support mode and agent mode */}
             {!isSupport && !isAgentSelected && showContactPanel && (

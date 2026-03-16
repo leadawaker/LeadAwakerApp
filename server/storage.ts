@@ -1,6 +1,6 @@
 import { eq, desc, asc, count, sum, SQL, inArray, and, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
-import { db } from "./db";
+import { db, pool } from "./db";
 import {
   accounts,
   prospects,
@@ -82,6 +82,9 @@ import {
   taskCategories,
   type TaskCategory,
   type InsertTaskCategory,
+  outreachTemplates,
+  type OutreachTemplate,
+  type InsertOutreachTemplate,
 } from "@shared/schema";
 
 
@@ -109,6 +112,13 @@ export interface IStorage {
   updateProspect(id: number, data: Partial<InsertProspects>): Promise<Prospects | undefined>;
   deleteProspect(id: number): Promise<boolean>;
 
+  // Outreach Templates
+  getOutreachTemplates(): Promise<OutreachTemplate[]>;
+  getOutreachTemplateById(id: number): Promise<OutreachTemplate | undefined>;
+  createOutreachTemplate(data: InsertOutreachTemplate): Promise<OutreachTemplate>;
+  updateOutreachTemplate(id: number, data: Partial<InsertOutreachTemplate>): Promise<OutreachTemplate | undefined>;
+  deleteOutreachTemplate(id: number): Promise<boolean>;
+
   // Campaigns
   getCampaigns(): Promise<Campaigns[]>;
   getCampaignById(id: number): Promise<Campaigns | undefined>;
@@ -130,7 +140,10 @@ export interface IStorage {
   getInteractions(): Promise<Interactions[]>;
   getInteractionsByLeadId(leadId: number): Promise<Interactions[]>;
   getInteractionsByAccountId(accountId: number): Promise<Interactions[]>;
+  getInteractionsByProspectId(prospectId: number, limit?: number, offset?: number): Promise<{ interactions: Interactions[]; total: number }>;
   createInteraction(data: InsertInteractions): Promise<Interactions>;
+  deleteInteraction(id: number): Promise<boolean>;
+  bulkDeleteInteractions(ids: number[]): Promise<number>;
   deleteInteractionsByLeadId(leadId: number): Promise<void>;
 
   // Tags
@@ -335,6 +348,32 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  // ─── Outreach Templates ────────────────────────────────────────────
+
+  async getOutreachTemplates(): Promise<OutreachTemplate[]> {
+    return db.select().from(outreachTemplates).orderBy(desc(outreachTemplates.createdAt));
+  }
+
+  async getOutreachTemplateById(id: number): Promise<OutreachTemplate | undefined> {
+    const [row] = await db.select().from(outreachTemplates).where(eq(outreachTemplates.id, id));
+    return row;
+  }
+
+  async createOutreachTemplate(data: InsertOutreachTemplate): Promise<OutreachTemplate> {
+    const [row] = await db.insert(outreachTemplates).values(data as any).returning();
+    return row;
+  }
+
+  async updateOutreachTemplate(id: number, data: Partial<InsertOutreachTemplate>): Promise<OutreachTemplate | undefined> {
+    const [row] = await db.update(outreachTemplates).set(data).where(eq(outreachTemplates.id, id)).returning();
+    return row;
+  }
+
+  async deleteOutreachTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(outreachTemplates).where(eq(outreachTemplates.id, id)).returning();
+    return result.length > 0;
+  }
+
   // ─── Campaigns ──────────────────────────────────────────────────────
 
   async getCampaigns(): Promise<Campaigns[]> {
@@ -426,6 +465,43 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(interactions.createdAt));
   }
 
+  async getInteractionsByProspectId(prospectId: number, limit: number = 20, offset: number = 0): Promise<{ interactions: Interactions[]; total: number }> {
+    // Fetch prospect to get all email addresses
+    const prospect = await this.getProspectById(prospectId);
+    if (!prospect) return { interactions: [], total: 0 };
+
+    const emails: string[] = [];
+    if (prospect.email) emails.push(prospect.email);
+    if (prospect.contactEmail) emails.push(prospect.contactEmail);
+    if (prospect.contact2Email) emails.push(prospect.contact2Email);
+
+    // Build query: match by prospect_id FK OR by email in metadata JSON
+    let emailClause = "";
+    const params: any[] = [prospectId];
+    if (emails.length > 0) {
+      params.push(emails);
+      emailClause = ` OR metadata->>'from_email' = ANY($2) OR metadata->>'to_email' = ANY($2)`;
+    }
+
+    const whereClause = `WHERE prospect_id = $1${emailClause}`;
+    const countParam = emails.length > 0 ? 2 : 1;
+
+    // Use raw SQL via pool for complex OR with JSON operators
+    const countRows = await pool.query(
+      `SELECT COUNT(*)::int as total FROM p2mxx34fvbf3ll6."Interactions" ${whereClause}`,
+      emails.length > 0 ? [prospectId, emails] : [prospectId]
+    );
+    const total = countRows.rows[0]?.total ?? 0;
+
+    // Fetch data
+    const dataRows = await pool.query(
+      `SELECT * FROM p2mxx34fvbf3ll6."Interactions" ${whereClause} ORDER BY COALESCE(sent_at, created_at) DESC LIMIT $${countParam + 1} OFFSET $${countParam + 2}`,
+      emails.length > 0 ? [prospectId, emails, limit, offset] : [prospectId, limit, offset]
+    );
+
+    return { interactions: dataRows.rows as Interactions[], total };
+  }
+
   async createInteraction(data: InsertInteractions): Promise<Interactions> {
     const now = new Date();
     const [row] = await db.insert(interactions).values({
@@ -434,6 +510,17 @@ export class DatabaseStorage implements IStorage {
       ...data,
     } as any).returning();
     return row;
+  }
+
+  async deleteInteraction(id: number): Promise<boolean> {
+    const rows = await db.delete(interactions).where(eq(interactions.id, id)).returning();
+    return rows.length > 0;
+  }
+
+  async bulkDeleteInteractions(ids: number[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    const rows = await db.delete(interactions).where(inArray(interactions.id, ids)).returning();
+    return rows.length;
   }
 
   async deleteInteractionsByLeadId(leadId: number): Promise<void> {

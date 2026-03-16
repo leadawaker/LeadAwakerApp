@@ -3,15 +3,20 @@ import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
+  Columns3,
   FolderOpen,
+  GanttChart,
   Layers,
   Plus,
+  Table2,
   Trash2,
   Pencil,
   Check,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
+import type { ViewMode } from "../types";
 import {
   Tooltip,
   TooltipTrigger,
@@ -58,7 +63,15 @@ interface CategorySidebarProps {
   onSelectCategory: (id: number | null) => void;
   /** All tasks (unfiltered) — used for count badges */
   tasks?: Array<{ id: number; categoryId?: number | null }>;
+  viewMode: ViewMode;
+  onViewModeChange: (v: ViewMode) => void;
 }
+
+const VIEW_TABS: { key: ViewMode; icon: typeof Columns3; tKey: string }[] = [
+  { key: "kanban", icon: Columns3, tKey: "views.kanban" },
+  { key: "table", icon: Table2, tKey: "views.table" },
+  { key: "gantt", icon: GanttChart, tKey: "views.gantt" },
+];
 
 export default function CategorySidebar({
   collapsed,
@@ -66,6 +79,8 @@ export default function CategorySidebar({
   selectedCategoryId,
   onSelectCategory,
   tasks = [],
+  viewMode,
+  onViewModeChange,
 }: CategorySidebarProps) {
   const { t } = useTranslation("tasks");
   const { data: categories = [] } = useTaskCategories();
@@ -397,29 +412,48 @@ export default function CategorySidebar({
       )}
       data-testid="category-sidebar"
     >
-      {/* Header — label + collapse */}
+      {/* Header — page title + view tabs + collapse */}
       <div
         className={cn(
-          "flex items-center shrink-0 mt-3 mb-3 h-9",
-          collapsed ? "px-1.5 justify-center" : "px-2.5 justify-between"
+          "shrink-0 mt-3 mb-2",
+          collapsed ? "px-1.5" : "px-2.5"
         )}
       >
-        {!collapsed && (
-          <span className="text-base font-semibold font-heading text-foreground pl-1">
-            {t("categories.title")}
-          </span>
-        )}
-        <button
-          onClick={() => onCollapse(!collapsed)}
-          className="h-8 w-8 rounded-full flex items-center justify-center border border-black/[0.08] dark:border-white/[0.08] text-foreground/60 hover:text-foreground hover:bg-card transition-colors"
-          title={collapsed ? t("categories.expand") : t("categories.collapse")}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronLeft className="h-3.5 w-3.5" />
+        {/* Title row + collapse button */}
+        <div className={cn("flex items-center h-9", collapsed ? "justify-center" : "justify-between")}>
+          {!collapsed && (
+            <span className="text-2xl font-semibold font-heading text-foreground pl-1">
+              {t("page.title")}
+            </span>
           )}
-        </button>
+          <button
+            onClick={() => onCollapse(!collapsed)}
+            className="h-8 w-8 rounded-full flex items-center justify-center border border-black/[0.08] dark:border-white/[0.08] text-foreground/60 hover:text-foreground hover:bg-card transition-colors"
+            title={collapsed ? t("categories.expand") : t("categories.collapse")}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+
+        {/* View mode tabs — hidden when collapsed */}
+        {!collapsed && (
+          <div className="mt-2 pl-1">
+            <ViewTabBar
+              tabs={VIEW_TABS.map(({ key, icon, tKey }) => ({
+                id: key,
+                label: t(tKey),
+                icon,
+              } as TabDef))}
+              activeId={viewMode}
+              onTabChange={(id) => onViewModeChange(id as ViewMode)}
+              variant="segment"
+            />
+          </div>
+        )}
       </div>
 
       {/* "All" category */}

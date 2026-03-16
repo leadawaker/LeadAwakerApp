@@ -33,9 +33,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
 } from "@/components/ui/popover";
 
 type SortBy = "score-desc" | "recency" | "alpha" | null;
@@ -205,20 +202,11 @@ export function OpportunitiesPage() {
 
   /* ── Fold / unfold trigger ─────────────────────────────────────────────── */
   const [foldAction, setFoldAction] = useState<{
-    type: "expand-all" | "fold-threshold";
+    type: "expand-all" | "fold-empty" | "fold-threshold";
     threshold?: number;
     seq: number;
   }>({ type: "expand-all", seq: 0 });
   const [hasAnyCollapsed, setHasAnyCollapsed] = useState(false);
-  const [foldThresholdInput, setFoldThresholdInput] = useState("0");
-  const [foldPopoverOpen, setFoldPopoverOpen] = useState(false);
-
-  const applyFold = useCallback(() => {
-    const threshold = parseInt(foldThresholdInput, 10);
-    if (isNaN(threshold) || threshold < 0) return;
-    setFoldAction((prev) => ({ type: "fold-threshold", threshold, seq: prev.seq + 1 }));
-    setFoldPopoverOpen(false);
-  }, [foldThresholdInput]);
 
   /* ── Tag data ──────────────────────────────────────────────────────────── */
   const [leadTagsInfo, setLeadTagsInfo] = useState<Map<number, { name: string; color: string }[]>>(
@@ -639,60 +627,25 @@ export function OpportunitiesPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Fold / Unfold button */}
-            {hasAnyCollapsed ? (
-              <button
-                onClick={() =>
-                  setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))
+            {/* Fold / Unfold button — toggles hiding columns with 0 leads */}
+            <button
+              onClick={() => {
+                if (hasAnyCollapsed) {
+                  setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }));
+                } else {
+                  setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 }));
                 }
-                className="h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium bg-black text-[#FFE35B] border border-black hover:opacity-85 transition-opacity"
-              >
-                <Columns3 className="h-4 w-4 shrink-0" />
-                <span>{t("toolbar.unfold")}</span>
-              </button>
-            ) : (
-              <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    className={cn(
-                      "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors",
-                      foldPopoverOpen
-                        ? "bg-black text-[#FFE35B] border border-black"
-                        : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
-                    )}
-                  >
-                    <Columns3 className="h-4 w-4 shrink-0" />
-                    <span>{t("toolbar.fold")}</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-72 rounded-2xl p-4">
-                  <p className="text-sm font-semibold mb-1">{t("fold.foldColumns")}</p>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {t("fold.foldDescription")}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={foldThresholdInput}
-                      onChange={(e) => setFoldThresholdInput(e.target.value)}
-                      min="0"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") applyFold();
-                      }}
-                      className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
-                    />
-                    <span className="text-sm text-muted-foreground flex-1">{t("fold.leads")}</span>
-                    <button
-                      onClick={applyFold}
-                      className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors"
-                    >
-                      {t("fold.apply")}
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
+              }}
+              className={cn(
+                "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors",
+                hasAnyCollapsed
+                  ? "bg-black text-[#FFE35B] border border-black hover:opacity-85"
+                  : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
+              )}
+            >
+              <Columns3 className="h-4 w-4 shrink-0" />
+              <span>{hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}</span>
+            </button>
 
             {/* Tags always-show toggle — next to Fold/Unfold */}
             <button

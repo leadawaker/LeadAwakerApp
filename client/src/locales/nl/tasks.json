@@ -12,7 +12,8 @@
     "filter": "Filteren",
     "clearFilters": "Filters wissen",
     "showTags": "Tags tonen",
-    "hideTags": "Tags verbergen"
+    "hideTags": "Tags verbergen",
+    "groupBy": "Groep"
   },
   "create": {
     "title": "Nieuwe Taak",
@@ -98,10 +99,12 @@
     "type": "Type",
     "assignee": "Toegewezene",
     "account": "Account",
+    "category": "Categorie",
     "all": "Alle",
     "unassigned": "Niet toegewezen"
   },
   "columns": {
+    "id": "ID",
     "title": "Titel",
     "type": "Type",
     "status": "Status",
@@ -112,7 +115,9 @@
     "category": "Categorie",
     "timeEstimate": "Schatting",
     "parentTask": "Bovenliggende",
-    "tags": "Tags"
+    "tags": "Tags",
+    "priority": "Prioriteit",
+    "description": "Beschrijving"
   },
   "card": {
     "newTask": "Nieuwe Taak",
@@ -136,10 +141,26 @@
     "table": "Tabel",
     "simple": "Simpel",
     "tree": "Boom",
+    "gantt": "Gantt",
     "overdue": "Achterstallig",
     "today": "Vandaag",
     "unscheduled": "Ongepland",
     "noDailyTasks": "Geen taken voor vandaag"
+  },
+  "gantt": {
+    "today": "Vandaag",
+    "unscheduled": "Ongepland",
+    "noDate": "Geen datums ingesteld",
+    "zoomDay": "Dag",
+    "zoomWeek": "Week",
+    "zoomMonth": "Maand",
+    "startDate": "Startdatum",
+    "duration": "Duur",
+    "openTask": "Taak openen",
+    "colorBy": "Kleur op",
+    "colorModeCategory": "Categorie",
+    "colorModeStatus": "Status",
+    "colorModePriority": "Prioriteit"
   },
   "categories": {
     "title": "Categorieen",

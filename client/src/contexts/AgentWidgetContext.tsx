@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { usePageContext, type PageContext } from "@/features/ai-agents/hooks/usePageContext";
+
+const LAST_AGENT_KEY = "leadawaker_last_agent_id";
 
 export interface AgentWidgetState {
   /** Whether the widget panel is open */
@@ -27,6 +29,13 @@ export function AgentWidgetProvider({ children }: { children: ReactNode }) {
   const [activeAgentId, setActiveAgentId] = useState<number | null>(null);
   const pageContext = usePageContext();
 
+  // Persist last active agent ID to localStorage
+  useEffect(() => {
+    if (activeAgentId) {
+      localStorage.setItem(LAST_AGENT_KEY, String(activeAgentId));
+    }
+  }, [activeAgentId]);
+
   const openWidget = useCallback((agentId?: number) => {
     setIsOpen(true);
     if (agentId !== undefined) setActiveAgentId(agentId);
@@ -37,7 +46,17 @@ export function AgentWidgetProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleWidget = useCallback(() => {
-    setIsOpen((prev) => !prev);
+    setIsOpen((prev) => {
+      if (!prev) {
+        // Opening: restore last agent so user goes straight to the conversation
+        setActiveAgentId((current) => {
+          if (current) return current;
+          const stored = localStorage.getItem(LAST_AGENT_KEY);
+          return stored ? Number(stored) : null;
+        });
+      }
+      return !prev;
+    });
   }, []);
 
   const selectAgent = useCallback((agentId: number) => {

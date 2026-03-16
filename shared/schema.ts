@@ -78,6 +78,96 @@ export type Accounts = typeof accounts.$inferSelect;
 export type InsertAccounts = z.infer<typeof insertAccountsSchema>;
 
 
+// ─── Prospects ──────────────────────────────────────────────────────────────
+
+export const prospects = nocodb.table("Prospects", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  createdBy: varchar("created_by"),
+  updatedBy: varchar("updated_by"),
+  ncOrder: numeric("nc_order"),
+  name: text("name"),
+  company: text("company"),
+  niche: text("niche"),
+  country: text("country"),
+  city: text("city"),
+  website: text("website"),
+  phone: varchar("phone"),
+  email: varchar("email"),
+  companyLinkedin: text("company_linkedin"),
+  source: text("source"),
+  status: text("status"),
+  priority: text("priority"),
+  notes: text("notes"),
+  nextAction: text("next_action"),
+  action: text("action"),
+  contactName: text("contact_name"),
+  contactRole: text("contact_role"),
+  contactEmail: varchar("contact_email"),
+  contactPhone: varchar("contact_phone"),
+  contactLinkedin: text("contact_linkedin"),
+  // Contact 2
+  contact2Name: text("contact2_name"),
+  contact2Role: text("contact2_role"),
+  contact2Email: varchar("contact2_email"),
+  contact2Phone: varchar("contact2_phone"),
+  contact2Linkedin: text("contact2_linkedin"),
+  accountsId: integer("Accounts_id"),
+  // Enrichment fields (populated by LinkedIn scraper)
+  headline: text("headline"),
+  connectionCount: integer("connection_count"),
+  followerCount: integer("follower_count"),
+  topPost: text("top_post"),
+  aiSummary: text("ai_summary"),
+  conversationStarters: text("conversation_starters"),
+  enrichedAt: timestamp("enriched_at"),
+  enrichmentStatus: text("enrichment_status"),
+  // Outreach tracking
+  outreachStatus: text("outreach_status"),
+  firstContactedAt: timestamp("first_contacted_at"),
+  lastContactedAt: timestamp("last_contacted_at"),
+  followUpCount: integer("follow_up_count"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  contactMethod: text("contact_method"),
+  photoUrl: text("photo_url"),
+});
+
+export const insertProspectsSchema = createInsertSchema(prospects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdBy: true,
+  updatedBy: true,
+  ncOrder: true,
+});
+export type Prospects = typeof prospects.$inferSelect;
+export type InsertProspects = z.infer<typeof insertProspectsSchema>;
+
+
+// ─── Outreach Templates ──────────────────────────────────────────────────────────
+export const outreachTemplates = nocodb.table("OutreachTemplates", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  name: text("name"),
+  niche: text("niche"),
+  templateType: text("template_type"),
+  subject: text("subject"),
+  body: text("body"),
+  channel: text("channel"),
+  language: text("language"),
+  accountsId: integer("Accounts_id"),
+});
+
+export const insertOutreachTemplatesSchema = createInsertSchema(outreachTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type OutreachTemplate = typeof outreachTemplates.$inferSelect;
+export type InsertOutreachTemplate = z.infer<typeof insertOutreachTemplatesSchema>;
+
 // ─── Automation_Logs ───────────────────────────────────────────────────────────────
 
 export const automationLogs = nocodb.table("Automation_Logs", {
@@ -263,10 +353,12 @@ export const interactions = nocodb.table("Interactions", {
   conversationThreadId: varchar("conversation_thread_id"),
   sentimentDetected: varchar("sentiment_detected"),
   isManualFollowUp: boolean("is_manual_follow_up"),
+  prospectId: integer("prospect_id"),
 }, (t) => [
   index("interactions_leads_id_idx").on(t.leadsId),
   index("interactions_accounts_id_idx").on(t.accountsId),
   index("interactions_created_at_idx").on(t.createdAt),
+  index("interactions_prospect_id_idx").on(t.prospectId),
 ]);
 
 export const insertInteractionsSchema = createInsertSchema(interactions).omit({
@@ -818,6 +910,7 @@ export const tasks = nocodb.table("Tasks", {
   priority: text("priority").notNull().default("medium"), // "low" | "medium" | "high" | "urgent"
   taskType: text("task_type").notNull().default("admin"), // "follow_up" | "call" | "review" | "admin" | "custom"
   dueDate: timestamp("due_date", { withTimezone: true }),
+  startDate: timestamp("start_date", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   reminderAt: timestamp("reminder_at", { withTimezone: true }),
   accountName: text("account_name"),
@@ -843,6 +936,7 @@ export const tasks = nocodb.table("Tasks", {
 export const insertTaskSchema = createInsertSchema(tasks, {
   // JSON body-parser sends dates as ISO strings — coerce back to Date
   dueDate: z.coerce.date().nullish(),
+  startDate: z.coerce.date().nullish(),
   completedAt: z.coerce.date().nullish(),
   reminderAt: z.coerce.date().nullish(),
 }).omit({

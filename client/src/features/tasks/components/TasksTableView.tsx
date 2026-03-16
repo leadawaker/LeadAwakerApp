@@ -8,7 +8,6 @@ import { useTagVisibility } from "../context/TagVisibilityContext";
 import {
   sortTasks,
   groupTasks,
-  PRIORITY_COLORS,
   STATUS_COLORS,
   STATUS_OPTIONS,
   TYPE_OPTIONS,
@@ -21,18 +20,16 @@ import {
 import type { Task, SortOption, GroupOption, TaskStatus } from "../types";
 
 // ─── Column definitions ──────────────────────────────────────────────
-// tKey stores the i18n translation key; empty string = no header label (priority dot column)
 const COLUMNS = [
-  { key: "priority", tKey: "", width: 40 },
-  { key: "title", tKey: "columns.title", width: 260, sortable: true },
+  { key: "id", tKey: "columns.id", width: 60 },
+  { key: "status", tKey: "columns.status", width: 120 },
+  { key: "priority", tKey: "columns.priority", width: 50 },
+  { key: "title", tKey: "columns.title", width: 520 },
   { key: "category", tKey: "columns.category", width: 130 },
   { key: "tags", tKey: "columns.tags", width: 150 },
   { key: "taskType", tKey: "columns.type", width: 100 },
-  { key: "status", tKey: "columns.status", width: 120 },
   { key: "timeEstimate", tKey: "columns.timeEstimate", width: 90 },
   { key: "parentTask", tKey: "columns.parentTask", width: 150 },
-  { key: "assigneeName", tKey: "columns.assignee", width: 130 },
-  { key: "accountName", tKey: "columns.account", width: 130 },
   { key: "dueDate", tKey: "columns.due", width: 100 },
   { key: "createdAt", tKey: "columns.created", width: 100 },
 ] as const;
@@ -40,6 +37,34 @@ const COLUMNS = [
 const TABLE_MIN_WIDTH = COLUMNS.reduce((sum, c) => sum + c.width, 0);
 const ROW_HEIGHT = 52;
 const HEADER_ROW_HEIGHT = 32;
+
+// ─── Signal bars for priority ────────────────────────────────────────
+const SIGNAL_FILLED: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 };
+const SIGNAL_COLOR: Record<string, string> = {
+  low: "#3B82F6",
+  medium: "#22C55E",
+  high: "#F97316",
+  urgent: "#EF4444",
+};
+
+function SignalBars({ priority }: { priority: string }) {
+  const filled = SIGNAL_FILLED[priority] ?? 2;
+  const color = SIGNAL_COLOR[priority] ?? "#9CA3AF";
+  return (
+    <div className="flex items-end gap-[2px]">
+      {[5, 8, 11, 14].map((h, i) => (
+        <div
+          key={i}
+          className="w-[3px] rounded-[1px]"
+          style={{
+            height: `${h}px`,
+            backgroundColor: i < filled ? color : "#D1D5DB",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // ─── Props ───────────────────────────────────────────────────────────
 interface TasksTableViewProps {
@@ -241,8 +266,6 @@ export default function TasksTableView({
             // ── Task row ──
             const task = row.task;
             const isSelected = task.id === selectedTaskId;
-            const priorityColor =
-              PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] ?? "#9CA3AF";
             const statusColor =
               STATUS_COLORS[task.status as keyof typeof STATUS_COLORS] ?? "#6B7280";
             const TypeIcon =
@@ -254,182 +277,175 @@ export default function TasksTableView({
             return (
               <div
                 key={task.id}
-                className={cn(
-                  "absolute left-0 w-full flex items-center cursor-pointer border-b border-border/10 transition-colors",
-                  isSelected
-                    ? "bg-highlight-selected"
-                    : "bg-card hover:bg-card-hover",
-                )}
-                style={{
-                  top: vItem.start,
-                  height: ROW_HEIGHT,
-                }}
-                onClick={() => onSelectTask(task.id)}
+                className="absolute left-0 w-full group/row"
+                style={{ top: vItem.start, height: ROW_HEIGHT }}
               >
-                {/* Priority dot */}
+                {/* Main row cells */}
                 <div
-                  className="flex items-center justify-center"
-                  style={{ width: 40, minWidth: 40 }}
-                >
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: priorityColor }}
-                    title={task.priority}
-                  />
-                </div>
-
-                {/* Title (with emoji if present) */}
-                <div
-                  className="px-3 min-w-0"
-                  style={{ width: 260, minWidth: 260 }}
-                >
-                  <span className="text-[13px] font-medium truncate block">
-                    {(task as any).emoji ? <span className="mr-1">{(task as any).emoji}</span> : null}
-                    {task.title}
-                  </span>
-                </div>
-
-                {/* Category */}
-                <div
-                  className="px-3 min-w-0 flex items-center gap-1.5"
-                  style={{ width: 130, minWidth: 130 }}
-                >
-                  {category ? (
-                    <>
-                      {category.color && (
-                        <div
-                          className="h-2.5 w-2.5 rounded-sm shrink-0"
-                          style={{ backgroundColor: category.color }}
-                        />
-                      )}
-                      {category.icon && (
-                        <span className="text-[12px] shrink-0">{category.icon}</span>
-                      )}
-                      <span className="text-[12px] truncate">{category.name}</span>
-                    </>
-                  ) : (
-                    <span className="text-[12px] text-muted-foreground">—</span>
+                  className={cn(
+                    "flex items-center h-full cursor-pointer border-b border-border/10 transition-colors",
+                    isSelected
+                      ? "bg-highlight-selected"
+                      : "bg-card hover:bg-card-hover",
                   )}
-                </div>
-
-                {/* Tags (respects tag visibility toggle) */}
-                <div
-                  className="px-3 min-w-0 flex items-center gap-1 overflow-hidden"
-                  style={{ width: 150, minWidth: 150 }}
+                  onClick={() => onSelectTask(task.id)}
                 >
-                  {showTags ? (() => {
-                    const tags = parseTags((task as any).tags);
-                    const colorMap = isDark ? TAG_COLORS_DARK : TAG_COLORS;
-                    const fallback = { bg: isDark ? "rgba(100,116,139,0.15)" : "#F1F5F9", text: isDark ? "#94A3B8" : "#475569" };
-                    return tags.length > 0 ? tags.map((tag) => {
-                      const c = colorMap[tag] ?? fallback;
-                      return (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0"
-                          style={{ backgroundColor: c.bg, color: c.text }}
-                        >
-                          {tag}
-                        </span>
-                      );
-                    }) : <span className="text-[12px] text-muted-foreground">—</span>;
-                  })() : <span className="text-[12px] text-muted-foreground/40">—</span>}
-                </div>
-
-                {/* Type */}
-                <div
-                  className="px-3 flex items-center gap-1.5 min-w-0"
-                  style={{ width: 100, minWidth: 100 }}
-                >
-                  <TypeIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] text-muted-foreground truncate">
-                    {getTypeLabel(task.taskType)}
-                  </span>
-                </div>
-
-                {/* Status pill (clickable to cycle) */}
-                <div
-                  className="px-3"
-                  style={{ width: 120, minWidth: 120 }}
-                >
-                  <button
-                    type="button"
-                    onClick={(e) => handleStatusClick(e, task)}
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[12px] font-medium bg-muted/60 hover:bg-muted transition-colors"
-                    title={t("clickToChangeStatus")}
+                  {/* 1. Task ID */}
+                  <div
+                    className="px-3 flex items-center"
+                    style={{ width: 60, minWidth: 60 }}
                   >
-                    <div
-                      className="h-1.5 w-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: statusColor }}
-                    />
-                    {getStatusLabel(task.status)}
-                  </button>
-                </div>
+                    <span className="text-[12px] text-muted-foreground font-mono">
+                      #{task.id}
+                    </span>
+                  </div>
 
-                {/* Time Estimate */}
-                <div
-                  className="px-3"
-                  style={{ width: 90, minWidth: 90 }}
-                >
-                  <span className="text-[12px] text-muted-foreground">
-                    {formatTimeEstimate((task as any).timeEstimate)}
-                  </span>
-                </div>
+                  {/* 2. Status pill (clickable to cycle) */}
+                  <div
+                    className="px-3"
+                    style={{ width: 120, minWidth: 120 }}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => handleStatusClick(e, task)}
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[12px] font-medium bg-muted/60 hover:bg-muted transition-colors"
+                      title={t("clickToChangeStatus")}
+                    >
+                      <div
+                        className="h-1.5 w-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: statusColor }}
+                      />
+                      {getStatusLabel(task.status)}
+                    </button>
+                  </div>
 
-                {/* Parent Task */}
-                <div
-                  className="px-3 min-w-0"
-                  style={{ width: 150, minWidth: 150 }}
-                >
-                  <span className="text-[12px] text-muted-foreground truncate block">
-                    {parentTitle ?? "—"}
-                  </span>
-                </div>
+                  {/* 3. Priority signal bars */}
+                  <div
+                    className="flex items-center justify-center"
+                    style={{ width: 50, minWidth: 50 }}
+                  >
+                    <SignalBars priority={task.priority} />
+                  </div>
 
-                {/* Assignee */}
-                <div
-                  className="px-3 min-w-0"
-                  style={{ width: 130, minWidth: 130 }}
-                >
-                  <span className="text-[12px] truncate block">
-                    {task.assigneeName ?? "—"}
-                  </span>
-                </div>
+                  {/* 4. Title (with emoji) */}
+                  <div
+                    className="px-3 min-w-0"
+                    style={{ width: 520, minWidth: 520 }}
+                  >
+                    <span className="text-[13px] font-medium truncate block">
+                      {(task as any).emoji ? <span className="mr-1">{(task as any).emoji}</span> : null}
+                      {task.title}
+                    </span>
+                  </div>
 
-                {/* Account */}
-                <div
-                  className="px-3 min-w-0"
-                  style={{ width: 130, minWidth: 130 }}
-                >
-                  <span className="text-[12px] truncate block">
-                    {task.accountName ?? "—"}
-                  </span>
-                </div>
-
-                {/* Due date */}
-                <div
-                  className="px-3"
-                  style={{ width: 100, minWidth: 100 }}
-                >
-                  <span
-                    className={cn(
-                      "text-[12px]",
-                      overdue ? "text-red-500 font-medium" : "text-foreground",
+                  {/* 5. Category (icon + name, no dot) */}
+                  <div
+                    className="px-3 min-w-0 flex items-center gap-1.5"
+                    style={{ width: 130, minWidth: 130 }}
+                  >
+                    {category ? (
+                      <>
+                        {category.icon && <span className="text-[12px] shrink-0">{category.icon}</span>}
+                        <span className="text-[12px] truncate">{category.name}</span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] text-muted-foreground">—</span>
                     )}
+                  </div>
+
+                  {/* 6. Tags (respects tag visibility toggle) */}
+                  <div
+                    className="px-3 min-w-0 flex items-center gap-1 overflow-hidden"
+                    style={{ width: 150, minWidth: 150 }}
                   >
-                    {formatDueDate(task.dueDate)}
-                  </span>
+                    {showTags ? (() => {
+                      const tags = parseTags((task as any).tags);
+                      const colorMap = isDark ? TAG_COLORS_DARK : TAG_COLORS;
+                      const fallback = { bg: isDark ? "rgba(100,116,139,0.15)" : "#F1F5F9", text: isDark ? "#94A3B8" : "#475569" };
+                      return tags.length > 0 ? tags.map((tag) => {
+                        const c = colorMap[tag] ?? fallback;
+                        return (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0"
+                            style={{ backgroundColor: c.bg, color: c.text }}
+                          >
+                            {tag}
+                          </span>
+                        );
+                      }) : <span className="text-[12px] text-muted-foreground">—</span>;
+                    })() : <span className="text-[12px] text-muted-foreground/40">—</span>}
+                  </div>
+
+                  {/* 7. Type */}
+                  <div
+                    className="px-3 flex items-center gap-1.5 min-w-0"
+                    style={{ width: 100, minWidth: 100 }}
+                  >
+                    <TypeIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="text-[12px] text-muted-foreground truncate">
+                      {getTypeLabel(task.taskType)}
+                    </span>
+                  </div>
+
+                  {/* 8. Time Estimate */}
+                  <div
+                    className="px-3"
+                    style={{ width: 90, minWidth: 90 }}
+                  >
+                    <span className="text-[12px] text-muted-foreground">
+                      {formatTimeEstimate((task as any).timeEstimate)}
+                    </span>
+                  </div>
+
+                  {/* 9. Parent Task */}
+                  <div
+                    className="px-3 min-w-0"
+                    style={{ width: 150, minWidth: 150 }}
+                  >
+                    <span className="text-[12px] text-muted-foreground truncate block">
+                      {(task as any).parentTaskId
+                        ? `#${(task as any).parentTaskId} — ${parentTitle ?? "?"}`
+                        : "—"}
+                    </span>
+                  </div>
+
+                  {/* 10. Due date */}
+                  <div
+                    className="px-3"
+                    style={{ width: 100, minWidth: 100 }}
+                  >
+                    <span
+                      className={cn(
+                        "text-[12px]",
+                        overdue ? "text-red-500 font-medium" : "text-foreground",
+                      )}
+                    >
+                      {formatDueDate(task.dueDate)}
+                    </span>
+                  </div>
+
+                  {/* 11. Created */}
+                  <div
+                    className="px-3"
+                    style={{ width: 100, minWidth: 100 }}
+                  >
+                    <span className="text-[12px] text-muted-foreground">
+                      {relativeTime(task.createdAt instanceof Date ? task.createdAt.toISOString() : task.createdAt)}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Created */}
-                <div
-                  className="px-3"
-                  style={{ width: 100, minWidth: 100 }}
-                >
-                  <span className="text-[12px] text-muted-foreground">
-                    {relativeTime(task.createdAt instanceof Date ? task.createdAt.toISOString() : task.createdAt)}
-                  </span>
-                </div>
+                {/* Description overlay on hover */}
+                {task.description && (
+                  <div className="hidden group-hover/row:block absolute left-0 right-0 top-full z-10 pointer-events-none">
+                    <div className="mx-3 px-4 py-2 rounded-b-lg bg-card border border-t-0 border-border/20 shadow-sm">
+                      <p className="text-[12px] text-muted-foreground/70 leading-relaxed line-clamp-3">
+                        {task.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

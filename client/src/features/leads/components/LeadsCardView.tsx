@@ -39,6 +39,7 @@ import {
   X,
   Calendar,
   TrendingUp,
+  TrendingDown,
   ClipboardList,
   ExternalLink,
   Building2,
@@ -49,6 +50,7 @@ import {
   AlertTriangle,
   Ban,
   Pencil,
+  RotateCcw,
   Star,
   Activity,
   Clock,
@@ -112,8 +114,11 @@ import {
   type ScoreHistoryPoint,
 } from "@/hooks/useScoreBreakdown";
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
 } from "recharts";
+import {
+  Tooltip, TooltipTrigger, TooltipContent,
+} from "@/components/ui/tooltip";
 
 // ── Re-exports for backward compat — other files importing from LeadsCardView still work ──
 export { getLeadStatusAvatarColor as getStatusAvatarColor, PIPELINE_HEX } from "@/lib/avatarUtils";
@@ -718,6 +723,7 @@ function ContactWidget({
   accountLogo: accountLogoProp,
   campaignStickerUrl: campaignStickerUrlProp,
   tags,
+  campaignsById,
 }: {
   lead: Record<string, any>;
   onRefresh?: () => void;
@@ -726,6 +732,8 @@ function ContactWidget({
   campaignStickerUrl?: string | null;
   /** Lead tags to display as pill badges in the Info tab */
   tags?: { name: string; color: string }[];
+  /** Campaigns map (agency view only) for campaign assignment dropdown */
+  campaignsById?: Map<number, { name: string; accountId: number | null }>;
 }) {
   const { t } = useTranslation("leads");
   const leadId      = getLeadId(lead);
@@ -771,6 +779,16 @@ function ContactWidget({
     return () => { cancelled = true; };
   }, [campaignStickerUrlProp, lead.Campaigns_id, lead.campaigns_id, lead.campaignsId]);
   const campaignStickerUrl = campaignStickerUrlProp !== undefined ? campaignStickerUrlProp : stickerFetched;
+
+  // ── Campaign list filtered by lead's account (agency view only) ─────────
+  const { isAgencyView } = useWorkspace();
+  const leadAccountId = Number(lead.Accounts_id || lead.account_id || lead.accounts_id || 0);
+  const accountCampaigns = useMemo(() => {
+    if (!campaignsById || !leadAccountId) return [];
+    return Array.from(campaignsById.entries())
+      .filter(([, info]) => info.accountId === leadAccountId)
+      .map(([id, info]) => ({ id, name: info.name }));
+  }, [campaignsById, leadAccountId]);
 
   // ── Notes state ───────────────────────────────────────────────────────────
   const { toast: toastContact } = useToast();
@@ -965,7 +983,28 @@ function ContactWidget({
             <span className="text-[12px] font-semibold text-foreground leading-snug">{lead.source || lead.Source}</span>
           </div>
         )}
-        {/* Campaign + Owner removed — now header metachips */}
+        {/* Campaign assignment dropdown (agency view only) */}
+        {isAgencyView && (
+          <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
+              {t("detail.fields.campaign")}
+            </span>
+            <select
+              value={String(lead.Campaigns_id ?? lead.campaigns_id ?? lead.campaignsId ?? "")}
+              onChange={async (e) => {
+                const val = e.target.value;
+                try {
+                  await updateLead(leadId, { campaignsId: val ? val : (null as any) });
+                  onRefresh?.();
+                } catch { /* noop */ }
+              }}
+              className="text-[12px] bg-transparent border border-dashed border-border/60 rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50 text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
+            >
+              <option value="">—</option>
+              {accountCampaigns.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* ── Team section (inline) ─────────────────────────────────────────── */}
@@ -1156,35 +1195,14 @@ function buildScoreInsights(lead: Record<string, any>, t?: (key: string) => stri
 // ── Score insight tag component ───────────────────────────────────────────────
 function ScoreInsightTag({ insight, compact }: { insight: ScoreInsight; compact?: boolean }) {
   const isUp = insight.direction === "up";
-  const color = isUp ? "#6da611" : "#d66c42";
-  const size = compact ? 20 : 34;
-  const svgSize = compact ? 12 : 20;
+  const iconSize = compact ? "h-3.5 w-3.5" : "h-5 w-5";
   return (
-    <div className={cn("flex items-center", compact ? "gap-1.5" : "gap-2.5 min-h-[34px]")}>
-      <span
-        className="shrink-0 rounded-full border border-black/[0.125] flex items-center justify-center"
-        style={{ width: size, height: size }}
-      >
-        <svg
-          width={svgSize}
-          height={svgSize}
-          viewBox="0 0 14 13"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ transform: isUp ? "none" : "scaleY(-1)" }}
-        >
-          <path d="M7 1 L13.5 12 H0.5 Z" fill={color} />
-          {isUp ? (
-            <polyline points="4.5,7.5 6.2,9.5 9.5,5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          ) : (
-            <>
-              <line x1="5" y1="6" x2="9" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="9" y1="6" x2="5" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            </>
-          )}
-        </svg>
-      </span>
-      <span className={cn("leading-snug text-foreground/80", compact ? "text-[10px]" : "text-[12px]")}>
+    <div className={cn("flex items-center", compact ? "gap-2" : "gap-2.5 min-h-[38px]")}>
+      {isUp
+        ? <TrendingUp className={cn(iconSize, "text-blue-500 shrink-0")} />
+        : <TrendingDown className={cn(iconSize, "text-gray-400 shrink-0")} />
+      }
+      <span className={cn("leading-snug text-foreground/80", compact ? "text-[12px]" : "text-[14px]")}>
         {insight.label}
       </span>
     </div>
@@ -1215,12 +1233,12 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
     );
   }
 
-  // Deduplicate: keep last score per calendar day to avoid "10,10,10,10,10,10" X-axis
+  // Deduplicate: keep last score per calendar day
   const byDay = new Map<string, number>();
   [...data]
     .sort((a, b) => a.date.localeCompare(b.date))
     .forEach((d) => {
-      const day = d.date.slice(0, 10); // YYYY-MM-DD
+      const day = d.date.slice(0, 10);
       byDay.set(day, d.score);
     });
 
@@ -1229,19 +1247,26 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
     const d = new Date(day);
     const diffDays = Math.round((now.getTime() - d.getTime()) / 86_400_000);
     const label = diffDays <= 7
-      ? d.toLocaleDateString(undefined, { weekday: "short" })       // "Mon"
-      : d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); // "Mar 3"
+      ? d.toLocaleDateString(undefined, { weekday: "short" })
+      : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
     return { label, score: sc };
   });
 
+  // Compute sensible Y domain — don't always start at 0
+  const scores = chartData.map((d) => d.score);
+  const minScore = Math.min(...scores);
+  const maxScore = Math.max(...scores);
+  const yMin = Math.max(0, Math.floor((minScore - 10) / 10) * 10);
+  const yMax = Math.min(100, Math.ceil((maxScore + 10) / 10) * 10);
+
   return (
-    <div className="w-full h-[96px] shrink-0">
+    <div className="w-full h-[130px] shrink-0">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 8, right: 10, bottom: 0, left: -40 }}>
+        <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -4 }}>
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={tierColor} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={tierColor} stopOpacity={0} />
+              <stop offset="0%" stopColor={tierColor} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={tierColor} stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <XAxis
@@ -1251,8 +1276,15 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
             axisLine={false}
             interval="preserveStartEnd"
           />
-          <YAxis hide domain={[0, 100]} />
-          <Tooltip
+          <YAxis
+            domain={[yMin, yMax]}
+            tick={{ fontSize: 9, fill: "rgba(0,0,0,0.3)" }}
+            tickLine={false}
+            axisLine={false}
+            width={32}
+            tickCount={4}
+          />
+          <RechartsTooltip
             contentStyle={{
               borderRadius: "8px",
               border: "1px solid rgba(0,0,0,0.08)",
@@ -1261,7 +1293,7 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
               padding: "4px 8px",
               color: "#111",
             }}
-            formatter={(v: number) => [`${v}`, "Score"]}
+            formatter={(v: number) => [`${v}/100`, "Score"]}
           />
           <Area
             type="monotone"
@@ -1285,9 +1317,21 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
   );
 }
 
-// ── Score column widget (vertical bar + text beside, stacked as rows) ─────────
-function ScoreColumnWidget({ label, value, maxPts, color, insights, isBooked }: {
-  label: string; value: number; maxPts: number; color: string;
+// ── Dimension colors ──────────────────────────────────────────────────────────
+const DIMENSION_COLORS: Record<string, string> = {
+  Engagement: "#3B82F6", // blue
+  Activity:   "#F59E0B", // amber
+  Funnel:     "#10B981", // green
+};
+const DIMENSION_TOOLTIPS: Record<string, string> = {
+  Engagement: "Measures how responsive and engaged the lead is: reply recency, sentiment, and interaction quality.",
+  Activity:   "Tracks message volume and reply rates. Shows how actively the lead participates in the conversation.",
+  Funnel:     "Reflects conversion progress: qualified status, booked calls, and pipeline stage advancement.",
+};
+
+// ── Score column widget (horizontal bar + tooltip on hover) ───────────────────
+function ScoreColumnWidget({ label, value, maxPts, insights, isBooked }: {
+  label: string; value: number; maxPts: number;
   insights: ScoreInsight[]; isBooked?: boolean;
 }) {
   const pct = Math.min(100, Math.max(0, Math.round((value / maxPts) * 100)));
@@ -1296,30 +1340,45 @@ function ScoreColumnWidget({ label, value, maxPts, color, insights, isBooked }: 
     const id = setTimeout(() => setDisplayPct(pct), 20);
     return () => clearTimeout(id);
   }, [pct]);
+  const barColor = DIMENSION_COLORS[label] ?? "#6366f1";
+  const tooltipText = DIMENSION_TOOLTIPS[label];
   return (
-    <div className="flex items-start gap-3 w-full justify-end">
-      {/* Label + pts + insights — right-aligned text next to bar */}
-      <div className="flex flex-col items-end gap-1 pt-2">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
-          <span className="text-[13px] font-semibold tabular-nums text-foreground/70">
-            {Math.round(value)}<span className="text-foreground/35 text-[11px]">/{maxPts}</span>
-          </span>
-        </div>
-        <div className="flex flex-col items-end gap-1 mt-1">
-          {insights.map((ins, i) => <ScoreInsightTag key={i} insight={ins} compact />)}
-        </div>
+    <div className="flex flex-col gap-1 w-full group/bar">
+      {/* Label + percentage */}
+      <div className="flex items-baseline justify-between">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground cursor-help border-b border-dotted border-muted-foreground/30">
+              {label}
+            </span>
+          </TooltipTrigger>
+          {tooltipText && (
+            <TooltipContent side="top" className="max-w-[220px] text-[11px] leading-snug">
+              {tooltipText}
+            </TooltipContent>
+          )}
+        </Tooltip>
+        <span className="text-[13px] font-semibold tabular-nums text-foreground/70">
+          {pct}%
+          <span className="text-foreground/30 text-[10px] ml-1">{Math.round(value)}/{maxPts}</span>
+        </span>
       </div>
-      {/* Vertical bar — fills from bottom */}
-      <div className="relative w-5 h-[96px] rounded-full bg-muted overflow-hidden shrink-0">
+      {/* Horizontal bar */}
+      <div className="relative w-full h-2.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="absolute bottom-0 left-0 right-0 rounded-full transition-[height] duration-[450ms] ease-out"
-          style={{ height: `${displayPct}%`, backgroundColor: color, boxShadow: `0 -2px 8px ${color}50` }}
+          className="absolute top-0 left-0 bottom-0 rounded-full transition-[width] duration-[450ms] ease-out"
+          style={{ width: `${displayPct}%`, backgroundColor: barColor, boxShadow: `2px 0 8px ${barColor}50` }}
         />
         {isBooked && (
-          <div className="absolute inset-0 flex items-center justify-center text-[15px] select-none">👑</div>
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] select-none">👑</div>
         )}
       </div>
+      {/* Insights below */}
+      {insights.length > 0 && (
+        <div className="flex flex-wrap items-start gap-1 mt-0.5">
+          {insights.map((ins, i) => <ScoreInsightTag key={i} insight={ins} compact />)}
+        </div>
+      )}
     </div>
   );
 }
@@ -1330,8 +1389,6 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
   const leadId = lead?.Id || lead?.id;
   const { breakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
   const { history } = useScoreHistory(leadId ? Number(leadId) : null);
-  const [detailsVisible, setDetailsVisible] = useState(true);
-
   const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
   const memoryStr = lead?.ai_memory || lead?.aiMemory || "";
   let parsedSummary = "";
@@ -1352,77 +1409,57 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
 
   return (
     <div className="bg-white/50 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
-      {/* Header */}
+      {/* Header — title + time */}
       <div className="flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-1.5">
-          <p className="text-[18px] font-semibold font-heading text-foreground">{t("score.title")}</p>
-          {breakdown && <TrendIcon trend={breakdown.trend} />}
-        </div>
-        <button
-          type="button"
-          onClick={() => setDetailsVisible((v) => !v)}
-          className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-black/[0.125] dark:border-white/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
-          title={detailsVisible ? "Hide score details" : "Show score details"}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-        </button>
+        <p className="text-[18px] font-semibold font-heading text-foreground">{t("score.title")}</p>
+        {breakdown?.last_updated && (
+          <span className="text-[10px] text-muted-foreground/50">
+            {relativeTime(breakdown.last_updated)}
+          </span>
+        )}
       </div>
 
-      {/* Score hero: tier badge + date on left, big score number on right */}
-      <div className="flex items-start justify-between shrink-0">
-        <div className="flex flex-col gap-1">
-          {breakdown && (
-            <span className={cn("text-[11px] font-bold px-2.5 py-0.5 rounded-full self-start", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
-              {breakdown.tier}
-            </span>
-          )}
-          {breakdown?.last_updated && (
-            <span className="text-[10px] text-muted-foreground/50">
-              {relativeTime(breakdown.last_updated)}
-            </span>
-          )}
-        </div>
+      {/* Score hero: big number centered, tier badge top-right */}
+      <div className="flex flex-col items-center gap-1.5 shrink-0 relative pt-3">
+        {breakdown && (
+          <span className={cn("absolute -top-1 -right-1 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
+            {breakdown.tier}
+          </span>
+        )}
         <span className={cn("text-5xl font-black tabular-nums leading-none", score === 0 && "text-muted-foreground/25")}>
           {score > 0 ? score : "—"}
         </span>
       </div>
 
-      {/* Score history chart + vertical columns — toggled together */}
-      {detailsVisible && (
-        <>
-          <ScoreHistoryChart
-            data={history}
-            tierColor={tierColor}
-            score={score}
-            leadId={leadId ? Number(leadId) : null}
+      {/* Score history chart + horizontal bars */}
+      <ScoreHistoryChart
+        data={history}
+        tierColor={tierColor}
+        score={score}
+        leadId={leadId ? Number(leadId) : null}
+      />
+      {breakdown && score > 0 && (
+        <div className="flex flex-col gap-6 shrink-0 pt-2">
+          <ScoreColumnWidget
+            label="Engagement"
+            value={engPts}
+            maxPts={30}
+            insights={insights.filter((i) => i.column === "engagement")}
           />
-          {breakdown && score > 0 && (
-            <div className="flex flex-col gap-5 shrink-0 pt-2">
-              <ScoreColumnWidget
-                label="Engagement"
-                value={engPts}
-                maxPts={30}
-                color="#6366f1"
-                insights={insights.filter((i) => i.column === "engagement")}
-              />
-              <ScoreColumnWidget
-                label="Activity"
-                value={actPts}
-                maxPts={30}
-                color="#10B981"
-                insights={insights.filter((i) => i.column === "activity")}
-              />
-              <ScoreColumnWidget
-                label="Funnel"
-                value={funnelPts}
-                maxPts={36}
-                color={tierColor}
-                insights={insights.filter((i) => i.column === "funnel")}
-                isBooked={isBooked}
-              />
-            </div>
-          )}
-        </>
+          <ScoreColumnWidget
+            label="Activity"
+            value={actPts}
+            maxPts={30}
+            insights={insights.filter((i) => i.column === "activity")}
+          />
+          <ScoreColumnWidget
+            label="Funnel"
+            value={funnelPts}
+            maxPts={36}
+            insights={insights.filter((i) => i.column === "funnel")}
+            isBooked={isBooked}
+          />
+        </div>
       )}
 
       {/* AI Summary — only shown for Booked status */}
@@ -3001,14 +3038,17 @@ export function LeadDetailView({
   onClose,
   onRefresh,
   toolbarPrefix,
+  campaignsById,
 }: {
   lead: Record<string, any>;
   onClose: () => void;
   leadTags?: { name: string; color: string }[];
   onRefresh?: () => void;
   toolbarPrefix?: (opts: { isNarrow: boolean }) => React.ReactNode;
+  campaignsById?: Map<number, { name: string; accountId: number | null }>;
 }) {
   const { t } = useTranslation("leads");
+  const { toast } = useToast();
   const name        = getFullName(lead);
   const status      = getStatus(lead);
   const score       = getScore(lead);
@@ -3172,6 +3212,8 @@ export function LeadDetailView({
           <div className="flex items-center gap-1 flex-wrap">
             {toolbarPrefix?.({ isNarrow })}
 
+            {/* Action buttons removed — available on Chats page only */}
+
             {/* Right-edge: To PDF + Delete */}
             <div className="ml-auto flex items-center gap-1">
               {/* To PDF */}
@@ -3325,7 +3367,7 @@ export function LeadDetailView({
           <div className="grid gap-[3px] flex-1 min-h-0" style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Contact */}
             <div className="overflow-y-auto rounded-xl min-h-0">
-              <ContactWidget lead={lead} onRefresh={onRefresh} accountLogo={accountLogo} campaignStickerUrl={campaignStickerUrl} />
+              <ContactWidget lead={lead} onRefresh={onRefresh} accountLogo={accountLogo} campaignStickerUrl={campaignStickerUrl} campaignsById={campaignsById} />
             </div>
             {/* Chat */}
             <div className="overflow-hidden rounded-xl bg-white/60 dark:bg-white/[0.10] flex flex-col min-h-0">
@@ -5633,7 +5675,7 @@ export function LeadsCardView({
                     ) : (() => {
                       const lid = getLeadId(item.lead);
                       return (
-                      <div key={lid} data-lead-id={lid} className={i < 12 ? "animate-card-enter" : undefined} style={i < 12 ? { animationDelay: `${Math.min(i, 8) * 45}ms` } : undefined}>
+                      <div key={lid} data-lead-id={lid} className={i < 15 ? "animate-card-enter" : undefined} style={i < 15 ? { animationDelay: `${Math.min(i, 15) * 30}ms` } : undefined}>
                         <LeadListCard
                           lead={item.lead}
                           isActive={selectedId === getLeadId(item.lead)}
@@ -5718,6 +5760,7 @@ export function LeadsCardView({
             onClose={onClose}
             leadTags={leadTagsInfo.get(getLeadId(selectedLead)) || []}
             onRefresh={onRefresh}
+            campaignsById={campaignsById}
             toolbarPrefix={() => {
               const xBtn = (active: boolean, maxW: string) => cn(
                 "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",

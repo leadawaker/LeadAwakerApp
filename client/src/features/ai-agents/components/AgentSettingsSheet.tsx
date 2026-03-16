@@ -243,8 +243,8 @@ export function AgentSettingsSheet({
   }, [agent.id, onOpenChange, onAgentDeleted]);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[340px] sm:max-w-[340px]" data-testid="agent-settings-sheet">
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+      <SheetContent side="right" hideOverlay className="w-[340px] sm:max-w-[340px] overflow-y-auto" data-testid="agent-settings-sheet">
         <SheetHeader className="pb-4">
           <SheetTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-muted-foreground" />

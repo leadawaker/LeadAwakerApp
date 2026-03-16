@@ -28,7 +28,7 @@ import {
   Table2, List, Kanban,
   Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Pencil,
   FileSpreadsheet, Eye, Check, Upload, Download,
-  Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag,
+  Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag, Settings, Rows3, Shrink, Expand,
 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
@@ -44,11 +44,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import type { VirtualListItem } from "./LeadsCardView";
 
 type ViewMode = "list" | "table" | "pipeline";
@@ -60,6 +55,8 @@ const VISIBLE_COLS_KEY = "leads-table-visible-cols";
 const LIST_PREFS_KEY   = "leads-list-prefs";
 const TABLE_PREFS_KEY  = "leads-table-prefs";
 const PIPE_PREFS_KEY   = "leads-pipe-prefs";
+const COL_ORDER_KEY    = "leads-column-order";
+const COL_WIDTHS_KEY   = "leads-column-widths";
 
 /* ── Column metadata for the visibility dropdown ── */
 const TABLE_COL_META = [
@@ -252,6 +249,9 @@ export function LeadsTable() {
   const [showTagsAlways, setShowTagsAlways] = useState<boolean>(() => {
     try { return localStorage.getItem("kanban_tags_always_show") === "true"; } catch { /* noop */ } return false;
   });
+  const [compactMode, setCompactMode] = useState<boolean>(() => {
+    try { return localStorage.getItem("kanban_compact_mode") === "true"; } catch { /* noop */ } return false;
+  });
   const [kanbanSearchQuery, setKanbanSearchQuery] = useState("");
   const [kanbanSearchOpen, setKanbanSearchOpen] = useState(true);
   const [pipePrefs, setPipePrefs] = usePersistedState(PIPE_PREFS_KEY, {
@@ -268,10 +268,8 @@ export function LeadsTable() {
   const setFilterHasPhone = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, filterHasPhone: v })), [setPipePrefs]);
   const setFilterHasEmail = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, filterHasEmail: v })), [setPipePrefs]);
   const setPipelineSortBy = useCallback((v: "score-desc" | "recency" | "alpha" | null) => setPipePrefs(p => ({ ...p, sortBy: v })), [setPipePrefs]);
-  const [foldAction, setFoldAction] = useState<{ type: "expand-all" | "fold-threshold"; threshold?: number; seq: number }>({ type: "expand-all", seq: 0 });
+  const [foldAction, setFoldAction] = useState<{ type: "expand-all" | "fold-empty" | "fold-threshold"; threshold?: number; seq: number }>({ type: "expand-all", seq: 0 });
   const [hasAnyCollapsed, setHasAnyCollapsed] = useState(false);
-  const [foldThresholdInput, setFoldThresholdInput] = useState("0");
-  const [foldPopoverOpen, setFoldPopoverOpen] = useState(false);
   const [selectedKanbanLead, setSelectedKanbanLead] = useState<Record<string, any> | null>(null);
   const [fullProfileLead, setFullProfileLead] = useState<Record<string, any> | null>(null);
 
@@ -324,6 +322,56 @@ export function LeadsTable() {
     } catch {}
     return new Set(DEFAULT_VISIBLE_COLS);
   });
+
+  /* ── Column order persistence ────────────────────────────────────────────── */
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(COL_ORDER_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(COL_ORDER_KEY, JSON.stringify(columnOrder)); } catch {}
+  }, [columnOrder]);
+
+  /* ── Column widths persistence ─────────────────────────────────────────── */
+  const [columnWidths, setColumnWidths] = usePersistedState<Record<string, number>>(COL_WIDTHS_KEY, {});
+
+  /* ── Settings toggles (persisted) ──────────────────────────────────────── */
+  const [showVerticalLines, setShowVerticalLines] = useState(() => {
+    try { return localStorage.getItem("leads-vertical-lines") === "true"; } catch { return false; }
+  });
+  const [fullWidthTable, setFullWidthTable] = useState(() => {
+    try { return localStorage.getItem("leads-full-width") === "true"; } catch { return false; }
+  });
+  useEffect(() => { try { localStorage.setItem("leads-vertical-lines", String(showVerticalLines)); } catch {} }, [showVerticalLines]);
+  useEffect(() => {
+    try { localStorage.setItem("leads-full-width", String(fullWidthTable)); } catch {}
+    window.dispatchEvent(new Event("leads-fullwidth-change"));
+    // Direct DOM fallback: toggle classes on CrmShell content wrapper
+    const el = document.getElementById("crm-content-wrapper");
+    if (el) {
+      if (fullWidthTable) {
+        el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
+        el.classList.add("px-1", "md:px-1");
+      } else {
+        el.classList.remove("px-1", "md:px-1");
+        el.classList.add("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
+      }
+    }
+  }, [fullWidthTable]);
+  // Clean up full-width on unmount (navigating away from leads)
+  useEffect(() => {
+    return () => {
+      const el = document.getElementById("crm-content-wrapper");
+      if (el) {
+        el.classList.remove("px-1", "md:px-1");
+        el.classList.add("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
+      }
+    };
+  }, []);
 
   /* ── Accounts (agency view) ──────────────────────────────────────────────── */
   const [accountsById, setAccountsById] = useState<Map<number, string>>(new Map());
@@ -471,16 +519,9 @@ export function LeadsTable() {
     return filtered;
   }, [filteredLeads, showHighScore, filterHasPhone, filterHasEmail, kanbanSearchQuery, pipelineSortBy]);
 
-  /* ── Pipeline helpers ──────────────────────────────────────────────────── */
-  const applyFold = useCallback(() => {
-    const threshold = parseInt(foldThresholdInput, 10);
-    if (isNaN(threshold) || threshold < 0) return;
-    setFoldAction((prev) => ({ type: "fold-threshold", threshold, seq: prev.seq + 1 }));
-    setFoldPopoverOpen(false);
-  }, [foldThresholdInput]);
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { try { localStorage.setItem("kanban_tags_always_show", String(showTagsAlways)); } catch { /* noop */ } }, [showTagsAlways]);
+  useEffect(() => { try { localStorage.setItem("kanban_compact_mode", String(compactMode)); } catch { /* noop */ } }, [compactMode]);
 
   const pipelineActiveFilterCount = (showHighScore ? 1 : 0) + (filterHasPhone ? 1 : 0) + (filterHasEmail ? 1 : 0);
   const isPipelineFilterActive = pipelineActiveFilterCount > 0;
@@ -769,7 +810,7 @@ export function LeadsTable() {
   }, [tableFlatItems, leadTagsInfo]);
 
   /* ── Error fallback ─────────────────────────────────────────────────────── */
-  if (error && leads.length === 0 && !loading) {
+  if (error && !loading) {
     return <ApiErrorFallback error={error} onRetry={handleRefresh} isRetrying={loading} />;
   }
 
@@ -956,6 +997,38 @@ export function LeadsTable() {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Settings */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, xDefault, "hover:max-w-[100px]")}>
+            <Settings className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.settings")}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.display")}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowVerticalLines(!showVerticalLines); }} className="flex items-center gap-2 text-[12px]">
+            <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", showVerticalLines ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+              {showVerticalLines && <Check className="h-2 w-2 text-white" />}
+            </div>
+            <span className="flex-1">{t("toolbar.verticalLines")}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFullWidthTable(!fullWidthTable); }} className="flex items-center gap-2 text-[12px]">
+            <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", fullWidthTable ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+              {fullWidthTable && <Check className="h-2 w-2 text-white" />}
+            </div>
+            <span className="flex-1">{t("toolbar.fullWidth")}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setColumnOrder([])} className="text-[12px] text-muted-foreground">
+            {t("toolbar.resetColumnOrder")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setColumnWidths({})} className="text-[12px] text-muted-foreground">
+            {t("toolbar.resetColumnWidths")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {/* ── Selection actions — far right, visible when rows selected ── */}
       {tableSelectedIds.size > 0 && (
         <>
@@ -1088,6 +1161,13 @@ export function LeadsTable() {
                   tableSearch={tableSearch}
                   selectedIds={tableSelectedIds}
                   onSelectionChange={setTableSelectedIds}
+                  showVerticalLines={showVerticalLines}
+                  fullWidthTable={fullWidthTable}
+                  groupBy={tableGroupBy}
+                  columnOrder={columnOrder}
+                  onColumnOrderChange={setColumnOrder}
+                  columnWidths={columnWidths}
+                  onColumnWidthsChange={setColumnWidths}
                 />
               </div>
             )}
@@ -1188,33 +1268,27 @@ export function LeadsTable() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Fold / Unfold button — hidden on mobile (snap-scroll makes fold irrelevant) */}
-            <span className="hidden md:contents">
-              {hasAnyCollapsed ? (
-                <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className={cn(xBase, "hover:max-w-[115px]", xDefault)}>
-                  <Columns3 className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("toolbar.unfold")}</span>
-                </button>
-              ) : (
-                <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <button className={cn(xBase, "hover:max-w-[105px]", foldPopoverOpen ? xActive : xDefault)}>
-                      <Columns3 className="h-4 w-4 shrink-0" />
-                      <span className={xSpan}>{t("toolbar.fold")}</span>
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="w-72 rounded-2xl p-4">
-                    <p className="text-sm font-semibold mb-1">{t("fold.foldColumns")}</p>
-                    <p className="text-xs text-muted-foreground mb-3">{t("fold.foldDescription")}</p>
-                    <div className="flex items-center gap-2">
-                      <input type="number" value={foldThresholdInput} onChange={(e) => setFoldThresholdInput(e.target.value)} min="0" autoFocus onKeyDown={(e) => { if (e.key === "Enter") applyFold(); }} className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
-                      <span className="text-sm text-muted-foreground flex-1">{t("fold.leads")}</span>
-                      <button onClick={applyFold} className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors">Apply</button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </span>
+            {/* Compact mode toggle — hidden on mobile */}
+            <button onClick={() => setCompactMode((v) => !v)} title={compactMode ? t("toolbar.normalView") : t("toolbar.compactView")} className={cn(xBase, "hidden md:inline-flex hover:max-w-[110px]", compactMode ? xActive : xDefault)}>
+              {compactMode ? <Expand className="h-4 w-4 shrink-0" /> : <Shrink className="h-4 w-4 shrink-0" />}
+              <span className={xSpan}>{compactMode ? t("toolbar.normalView") : t("toolbar.compactView")}</span>
+            </button>
+
+            {/* Fold / Unfold empty columns — right next to compact, hidden on mobile */}
+            <button
+              onClick={() => {
+                if (hasAnyCollapsed) {
+                  setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }));
+                } else {
+                  setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 }));
+                }
+              }}
+              className={cn(xBase, "hidden md:inline-flex hover:max-w-[115px]", hasAnyCollapsed ? xActive : xDefault)}
+              title={hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
+            >
+              <Rows3 className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>{hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}</span>
+            </button>
 
             {/* Tags always-show toggle — hidden on mobile */}
             <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? t("tagsToggle.alwaysVisible") : t("tagsToggle.hoverOnly")} className={cn(xBase, "hidden md:inline-flex hover:max-w-[100px]", showTagsAlways ? xActive : xDefault)}>
@@ -1238,6 +1312,7 @@ export function LeadsTable() {
                 foldAction={foldAction}
                 onCollapsedChange={setHasAnyCollapsed}
                 showTagsAlways={showTagsAlways}
+                compactMode={compactMode}
               />
             </div>
             {selectedKanbanLead && (

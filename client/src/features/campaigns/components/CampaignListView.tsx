@@ -814,10 +814,8 @@ export function CampaignListView({
                 const isSelected = selectedCampaign
                   ? getCampaignId(selectedCampaign) === cid
                   : false;
-                const isNew = !seenCardIds.current.has(cid);
-                if (isNew && cid) seenCardIds.current.add(cid);
                 return (
-                  <div key={cid || idx} data-campaign-id={cid} className={isNew ? "animate-card-enter" : undefined} style={isNew ? { animationDelay: `${Math.min(idx, 8) * 50}ms` } : undefined}>
+                  <div key={cid || idx} data-campaign-id={cid} className={idx < 15 ? "animate-card-enter" : undefined} style={idx < 15 ? { animationDelay: `${Math.min(idx, 15) * 30}ms` } : undefined}>
                     <CampaignListCard
                       campaign={item.campaign}
                       isActive={isSelected}

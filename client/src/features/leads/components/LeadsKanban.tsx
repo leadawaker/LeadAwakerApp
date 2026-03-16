@@ -55,6 +55,7 @@ import {
   Calendar as CalendarIcon,
   Target,
   ShieldCheck,
+  XCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -126,13 +127,15 @@ const STAGE_ICON_BG: Record<string, string> = {
   "Multiple Responses": "#22C55E",
   Qualified:            "#84CC16",
   Booked:               "#FCB803",
-  Closed:               "#10b981",
-  Lost:                 "#ef4444",
-  DND:                  "#71717A",
+  Closed:               "#F59E0B",
+  Lost:                 "#DC2626",
+  DND:                  "#1a1a1a",
 };
 /** Text color on the stage icon circle */
 const STAGE_ICON_TEXT: Record<string, string> = {
   Booked: "#131B49",
+  Closed: "#1a1a1a",
+  DND: "#ffffff",
 };
 const DEFAULT_ICON_TEXT = "#ffffff";
 
@@ -290,6 +293,10 @@ interface KanbanCardContentProps {
   isSelected?: boolean;
   cardTags?: { name: string; color: string }[];
   showTagsAlways?: boolean;
+  compactMode?: boolean;
+  onMoveLead?: (leadId: number | string, newStage: string) => void | Promise<void>;
+  /** Effective column width in px — drives card density */
+  colWidth?: number;
 }
 
 function KanbanCardContent({
@@ -298,6 +305,9 @@ function KanbanCardContent({
   isSelected = false,
   cardTags,
   showTagsAlways = false,
+  compactMode = false,
+  onMoveLead,
+  colWidth = 280,
 }: KanbanCardContentProps) {
   const { t } = useTranslation("leads");
   const name        = getFullName(lead);
@@ -312,114 +322,265 @@ function KanbanCardContent({
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const visibleTags  = (cardTags || []).slice(0, 3);
 
+  const isBookedStatus = status === "Booked";
+  const isClosedStatus = status === "Closed";
+  const bookedDate = lead.booked_call_date || lead.bookedCallDate;
+  const bookedDatePassed = bookedDate ? new Date(bookedDate) < new Date() : false;
+  const bookedDateStr = bookedDate
+    ? new Date(bookedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    : null;
+  const isBookedToday = bookedDate
+    ? new Date(bookedDate).toDateString() === new Date().toDateString()
+    : false;
+
+  // Closed/Booked action buttons (shared between compact and normal)
+  const actionButtons = isBookedStatus && bookedDatePassed && (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={(e) => { e.stopPropagation(); onMoveLead?.(lead.Id || lead.id, "Closed"); }}
+        onPointerDown={(e) => e.stopPropagation()}
+        className="h-5 w-5 rounded-full text-emerald-500 flex items-center justify-center hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+        title="Closed"
+      >
+        <CheckCircle2 className="h-4 w-4" />
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onMoveLead?.(lead.Id || lead.id, "Lost"); }}
+        onPointerDown={(e) => e.stopPropagation()}
+        className="h-5 w-5 rounded-full text-red-400 flex items-center justify-center hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        title="Lost"
+      >
+        <XCircle className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  // Score bar hidden for Booked (score=100) and Closed
+  const showScoreBar = !isBookedStatus && !isClosedStatus && score > 0;
+
+  // Compact density tiers — progressive avatar sizing
+  const isUltraNarrow = compactMode && colWidth < 80;
+  // Graduated avatar: none < 160, xs at 160, 24 at 200, 32 at 240
+  const compactAvatarSize: number | "xs" | null = !compactMode ? null
+    : colWidth < 160 ? null
+    : colWidth < 200 ? "xs"
+    : colWidth < 240 ? 24
+    : 32;
+
+  // Shared phone/email inline row (clickable)
+  const contactRow = (phone || email) ? (
+    <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
+      {phone && (
+        <a
+          href={`tel:${phone}`}
+          onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(phone); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 truncate hover:text-foreground cursor-pointer"
+          title="Click to copy"
+        >
+          <Phone className="h-2.5 w-2.5 shrink-0" />
+          <span className="truncate">{phone}</span>
+        </a>
+      )}
+      {email && (
+        <a
+          href={`mailto:${email}`}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 truncate hover:text-foreground cursor-pointer"
+        >
+          <Mail className="h-2.5 w-2.5 shrink-0" />
+          <span className="truncate">{email}</span>
+        </a>
+      )}
+    </div>
+  ) : null;
+
+  /* ── Ultra-narrow: avatar circle only with tooltip ── */
+  if (isUltraNarrow) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center py-0.5",
+          isDragging && "opacity-95"
+        )}
+        title={`${name}${score > 0 ? ` • ${score}pts` : ""}${phone ? ` • ${phone}` : ""}${email ? ` • ${email}` : ""}`}
+      >
+        <EntityAvatar
+          name={name}
+          bgColor={status === "DND" ? "#1a1a1a" : avatarColor.bg}
+          textColor={(isClosedStatus || status === "DND") ? "#ffffff" : avatarColor.text}
+          size={24}
+          className={cn("shrink-0", isSelected && "ring-2 ring-brand-indigo")}
+        />
+      </div>
+    );
+  }
+
+  /* ── Compact card ── */
+  if (compactMode) {
+    return (
+      <div
+        className={cn(
+          "group/card relative rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06)]",
+          isSelected
+            ? "bg-highlight-selected"
+            : "bg-white dark:bg-card hover:bg-white dark:hover:bg-card",
+          isDragging && "scale-[1.02] rotate-1 opacity-95"
+        )}
+      >
+        <div className="px-2 py-1 flex flex-col gap-0">
+          {/* Main row: [avatar center-aligned] | name+score stacked | last interaction */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {compactAvatarSize !== null && (
+              <EntityAvatar
+                name={name}
+                bgColor={status === "DND" ? "#1a1a1a" : avatarColor.bg}
+                textColor={(isClosedStatus || status === "DND") ? "#ffffff" : avatarColor.text}
+                size={compactAvatarSize}
+                className="shrink-0"
+              />
+            )}
+            {/* Name + score + booked date stacked, center-aligned with avatar */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <div className="flex items-center gap-1 min-w-0">
+                <span
+                  className="text-[12px] font-semibold leading-tight truncate text-foreground flex-1 min-w-0"
+                  data-testid="kanban-card-name"
+                >
+                  {name}
+                </span>
+                {lastActivity && (
+                  <span className={`text-[9px] tabular-nums leading-none shrink-0 ${getAgingTextClass(lastActivity)}`}>
+                    {formatRelativeDate(lastActivity, t)}
+                  </span>
+                )}
+              </div>
+              {/* Score bar — under name */}
+              {showScoreBar && (
+                <div className="h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden mt-0.5">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, score)}%`, backgroundColor: statusHex }} />
+                </div>
+              )}
+              {/* Booked date under name, action buttons right-aligned */}
+              {isBookedStatus && bookedDateStr && (
+                <div className="flex items-center mt-0.5">
+                  <span className={cn("text-[9px] tabular-nums leading-none", isBookedToday ? "text-amber-600 font-bold" : bookedDatePassed ? "text-red-500 font-medium" : "text-muted-foreground/60")}>
+                    {isBookedToday ? `Today ${new Date(bookedDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : bookedDateStr}
+                  </span>
+                  {bookedDatePassed && <div className="ml-auto">{actionButtons}</div>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Hover-expanded: tags, phone, email */}
+          <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-0 opacity-0 group-hover/card:max-h-28 group-hover/card:opacity-100">
+            <div className="pt-0.5 pb-0.5 flex flex-col gap-0.5">
+              {visibleTags.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  {visibleTags.map((tg) => (
+                    <span key={tg.name} className="inline-flex items-center px-1.5 py-0 rounded-full text-[8px] font-medium" style={{ backgroundColor: "rgba(0,0,0,0.07)", color: "rgba(0,0,0,0.45)" }}>
+                      {tg.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {contactRow}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Normal card ── */
   return (
     <div
       className={cn(
-        "group/card relative mx-0.5 my-0.5 rounded-xl transition-shadow duration-150",
+        "group/card relative mx-0.5 my-0.5 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]",
         isSelected
           ? "bg-highlight-selected"
-          : "bg-white dark:bg-card hover:bg-white dark:hover:bg-card hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
+          : "bg-white dark:bg-card hover:bg-white dark:hover:bg-card",
         isDragging && "scale-[1.02] rotate-1 opacity-95"
       )}
     >
+      {/* Last activity — absolute top-right (not in the name row) */}
+      {lastActivity && (
+        <span
+          className={`absolute top-2 right-2.5 text-[10px] tabular-nums leading-none ${getAgingTextClass(lastActivity)}`}
+          data-testid="kanban-card-last-activity"
+        >
+          {formatRelativeDate(lastActivity, t)}
+        </span>
+      )}
+
       <div className="px-2.5 pt-2 pb-1.5 flex flex-col gap-0.5">
 
-        {/* Row 1: Avatar | Name + status | Right: ScoreRing + lastActivity */}
-        <div className="flex items-start gap-2">
-          {/* Avatar */}
+        {/* Row 1: Avatar | Name+Score — center-aligned */}
+        <div className="flex items-center gap-2">
           <EntityAvatar
             name={name}
-            bgColor={avatarColor.bg}
-            textColor={avatarColor.text}
-            className="mt-0.5"
+            bgColor={status === "DND" ? "#1a1a1a" : avatarColor.bg}
+            textColor={(isClosedStatus || status === "DND") ? "#ffffff" : avatarColor.text}
+            className="shrink-0"
           />
 
-          {/* Name + conversion status dot */}
-          <div className="flex-1 min-w-0 pt-0.5">
+          {/* Name + score stacked, center-aligned with avatar */}
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
             <p
-              className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground"
+              className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground pr-12"
               data-testid="kanban-card-name"
             >
               {name}
             </p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span
-                className="h-1.5 w-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: statusHex }}
-              />
-              <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
-            </div>
-          </div>
-
-          {/* Right column: ScoreRing (top) + lastActivity (below) */}
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
-            {score > 0 && <ScoreRing score={score} status={status} />}
-            {lastActivity && (
-              <span
-                className={`text-[10px] tabular-nums leading-none ${getAgingTextClass(lastActivity)}`}
-                data-testid="kanban-card-last-activity"
-              >
-                {formatRelativeDate(lastActivity, t)}
-              </span>
+            {/* Score bar — starts at first letter of name */}
+            {showScoreBar && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: statusHex }}>
+                  {score}
+                </span>
+                <div className="flex-1 h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, score)}%`, backgroundColor: statusHex }} />
+                </div>
+              </div>
+            )}
+            {/* Booked date under name, action buttons right-aligned */}
+            {isBookedStatus && bookedDateStr && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={cn("text-[10px] tabular-nums leading-none", isBookedToday ? "text-amber-600 font-bold" : bookedDatePassed ? "text-red-500 font-medium" : "text-muted-foreground/60")}>
+                  {isBookedToday ? `Today ${new Date(bookedDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : bookedDateStr}
+                </span>
+                {bookedDatePassed && <div className="ml-auto">{actionButtons}</div>}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Hover-expanded (or always-on when showTagsAlways): last message → tags → phone/email */}
-        <div className={cn(
-          "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
-          showTagsAlways
-            ? "max-h-36 opacity-100"
-            : "max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100"
-        )}>
-          <div className="pt-1.5 pb-0.5 flex flex-col gap-1.5">
+        {/* Tags — always visible when showTagsAlways is on */}
+        {showTagsAlways && visibleTags.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap mt-0.5">
+            {visibleTags.map((tg) => (
+              <span key={tg.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }} data-testid="kanban-card-tags">
+                {tg.name}
+              </span>
+            ))}
+          </div>
+        )}
 
-            {/* Last message — one truncated line */}
-            {lastMessage && (
-              <p
-                className="text-[11px] text-muted-foreground/65 truncate leading-snug"
-                data-testid="kanban-card-last-message"
-              >
-                {lastMessage}
-              </p>
-            )}
-
-            {/* Tags */}
-            {visibleTags.length > 0 && (
+        {/* Hover-expanded: tags (if not always-on) + phone + email */}
+        <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100">
+          <div className="pt-1 pb-0.5 flex flex-col gap-1">
+            {!showTagsAlways && visibleTags.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap">
-                {visibleTags.map((t) => (
-                  <span
-                    key={t.name}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium"
-                    style={{
-                      backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
-                      color: "rgba(0,0,0,0.45)",
-                    }}
-                    data-testid="kanban-card-tags"
-                  >
-                    {t.name}
+                {visibleTags.map((tg) => (
+                  <span key={tg.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }} data-testid="kanban-card-tags">
+                    {tg.name}
                   </span>
                 ))}
               </div>
             )}
-
-            {/* Phone + email */}
-            {(phone || email) && (
-              <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
-                {phone && (
-                  <span className="inline-flex items-center gap-1 truncate">
-                    <Phone className="h-3 w-3 shrink-0" />
-                    {phone}
-                  </span>
-                )}
-                {email && (
-                  <span className="inline-flex items-center gap-1 truncate">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    {email}
-                  </span>
-                )}
-              </div>
-            )}
+            {contactRow}
           </div>
         </div>
 
@@ -436,12 +597,18 @@ function KanbanLeadCard({
   onCardClick,
   isSelected,
   showTagsAlways,
+  compactMode,
+  onMoveLead,
+  colWidth,
 }: {
   lead: any;
   cardTags?: { name: string; color: string }[];
   onCardClick?: (lead: any) => void;
   isSelected?: boolean;
   showTagsAlways?: boolean;
+  compactMode?: boolean;
+  onMoveLead?: (leadId: number | string, newStage: string) => void | Promise<void>;
+  colWidth?: number;
 }) {
   const leadId = String(lead.Id || lead.id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -466,6 +633,9 @@ function KanbanLeadCard({
         cardTags={cardTags}
         isSelected={isSelected}
         showTagsAlways={showTagsAlways}
+        compactMode={compactMode}
+        onMoveLead={onMoveLead}
+        colWidth={colWidth}
       />
     </div>
   );
@@ -482,6 +652,10 @@ function KanbanColumn({
   onCardClick,
   selectedLeadId,
   showTagsAlways,
+  compactMode,
+  useCompactCards,
+  onMoveLead,
+  colWidth,
 }: {
   stage: string;
   leads: any[];
@@ -491,15 +665,24 @@ function KanbanColumn({
   onCardClick?: (lead: any) => void;
   selectedLeadId?: number | string;
   showTagsAlways?: boolean;
+  /** Controls column layout (flex vs fixed) */
+  compactMode?: boolean;
+  /** Controls card density — derived from actual width */
+  useCompactCards?: boolean;
+  onMoveLead?: (leadId: number | string, newStage: string) => void | Promise<void>;
+  colWidth?: number;
 }) {
   const { t } = useTranslation("leads");
   const hex = PIPELINE_HEX[stage] || "#6B7280";
+  const headerTextColor = hex;
   const iconBg = STAGE_ICON_BG[stage] || hex;
   const iconText = STAGE_ICON_TEXT[stage] || DEFAULT_ICON_TEXT;
   const StageIcon = STAGE_ICONS[stage] || AlertCircle;
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
   const isBookedStage = stage === "Booked";
-  const isDarkColumn = stage === "Lost" || stage === "DND";
+  const isClosedStage = stage === "Closed";
+  const isLostStage = stage === "Lost";
+  const isDNDStage = stage === "DND";
   const [isBodyScrolled, setIsBodyScrolled] = useState(false);
 
   /* ── Infinite scroll state ── */
@@ -521,7 +704,9 @@ function KanbanColumn({
       <div
         className={cn(
           "flex flex-col items-center rounded-lg w-10 min-w-[40px] flex-shrink-0 cursor-pointer select-none h-full overflow-hidden",
-          isDarkColumn ? "bg-[#C5C5C5] dark:bg-[#1A1520]" : "bg-muted"
+          isLostStage ? "bg-red-50/80 dark:bg-red-950/15"
+            : isClosedStage ? "bg-orange-50/80 dark:bg-orange-950/10"
+            : "bg-muted"
         )}
         data-testid={`kanban-column-${stage}`}
         data-collapsed="true"
@@ -569,11 +754,19 @@ function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-lg flex-shrink-0 overflow-hidden h-full",
-        isDarkColumn ? "bg-[#C5C5C5] dark:bg-[#1A1520]" : isBookedStage ? "bg-[#FFFBEB] dark:bg-[#1E1A0E]" : "bg-card",
-        isBookedStage
-          ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] border-l-2 border-[#FCB803]/50 snap-start snap-always"
-          : "w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] md:max-w-[300px] snap-start snap-always",
+        "flex flex-col rounded-lg overflow-hidden h-full",
+        isLostStage ? "bg-red-50 dark:bg-red-950/20"
+          : isClosedStage ? "bg-orange-50 dark:bg-orange-950/15"
+          : isBookedStage ? "bg-[#FFFBEB] dark:bg-[#1E1A0E]"
+          : "bg-card",
+        compactMode
+          ? "flex-1 min-w-[60px]"
+          : cn(
+              "flex-shrink-0",
+              isBookedStage
+                ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] border-l-2 border-[#FCB803]/50 snap-start snap-always"
+                : "w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] md:max-w-[300px] snap-start snap-always",
+            ),
         isOver && "ring-2 ring-inset ring-brand-indigo/50"
       )}
       data-testid={`kanban-column-${stage}`}
@@ -585,7 +778,8 @@ function KanbanColumn({
       {/* Column Header — icon + label */}
       <div
         className={cn(
-          "flex items-center gap-2 px-3 py-2.5 shrink-0 transition-shadow duration-150",
+          "flex items-center shrink-0 transition-shadow duration-150",
+          useCompactCards ? "gap-1.5 px-2 py-1.5" : "gap-2 px-3 py-2.5",
           isBookedStage && "bg-[#FCB803]/10 dark:bg-[#FCB803]/[0.06]",
           isBodyScrolled && "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.08)]"
         )}
@@ -593,26 +787,30 @@ function KanbanColumn({
       >
         {/* Stage icon circle */}
         <div
-          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+          className={cn("rounded-full flex items-center justify-center flex-shrink-0", useCompactCards ? "w-5 h-5" : "w-6 h-6")}
           style={{ backgroundColor: iconBg, color: iconText }}
         >
-          <StageIcon className="h-3.5 w-3.5" />
+          <StageIcon className={useCompactCards ? "h-3 w-3" : "h-3.5 w-3.5"} />
         </div>
 
         {/* Stage label — colored text only */}
         <span
-          className={cn("font-semibold text-sm truncate flex-1 flex items-center gap-1", isBookedStage && "font-bold text-base")}
-          style={{ color: hex }}
+          className={cn(
+            "font-semibold truncate flex-1 flex items-center gap-1",
+            useCompactCards ? "text-[12px]" : "text-sm",
+            isBookedStage && !useCompactCards && "font-bold text-base",
+          )}
+          style={{ color: headerTextColor }}
         >
           {t(`kanban.stageLabels.${stageKey(stage)}`)}
-          {isBookedStage && (
+          {isBookedStage && !useCompactCards && (
             <Star className="h-3.5 w-3.5 fill-[#FCB803] text-[#FCB803] shrink-0" />
           )}
         </span>
 
-        {/* Count — sits at the right edge now that collapse button is removed */}
+        {/* Count */}
         <span
-          className="text-[11px] font-semibold text-muted-foreground/70 tabular-nums flex-shrink-0"
+          className={cn("font-semibold text-muted-foreground/70 tabular-nums flex-shrink-0", useCompactCards ? "text-[10px]" : "text-[11px]")}
           data-testid={`kanban-column-count-${stage}`}
         >
           {leads.length}
@@ -675,6 +873,7 @@ function KanbanColumn({
               initial="hidden"
               animate="visible"
               custom={visibleLeads.length}
+              className={useCompactCards ? "flex flex-col gap-[3px]" : undefined}
             >
               {visibleLeads.map((lead) => {
                 const leadId   = Number(lead.Id || lead.id);
@@ -689,6 +888,9 @@ function KanbanColumn({
                       onCardClick={onCardClick}
                       isSelected={isSelected}
                       showTagsAlways={showTagsAlways}
+                      compactMode={useCompactCards}
+                      onMoveLead={onMoveLead}
+                      colWidth={colWidth}
                     />
                   </motion.div>
                 );
@@ -734,7 +936,12 @@ interface LeadsKanbanProps {
   onCollapsedChange?: (hasAny: boolean) => void;
   /** When true, tags/message/contact info are always visible on cards (not just on hover) */
   showTagsAlways?: boolean;
+  /** Compact mode: narrow cards showing only name + last activity, hover reveals score/phone/email */
+  compactMode?: boolean;
 }
+
+/** Threshold: columns wider than this render full cards instead of compact */
+const COMPACT_CARD_THRESHOLD = 260;
 
 export function LeadsKanban({
   leads,
@@ -746,12 +953,36 @@ export function LeadsKanban({
   foldAction,
   onCollapsedChange,
   showTagsAlways,
+  compactMode,
 }: LeadsKanbanProps) {
   const { t } = useTranslation("leads");
   const [localLeads, setLocalLeads]   = useState<any[]>(leads);
   const [activeLead, setActiveLead]   = useState<any | null>(null);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
   const snapshotRef = useRef<any[]>([]);
+
+  // ── Measure container width to auto-switch card density ──────────────
+  // Use callback ref + ResizeObserver for instant updates on resize
+  const boardRef = useRef<HTMLDivElement>(null);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  const boardCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    // Disconnect previous observer
+    if (roRef.current) { roRef.current.disconnect(); roRef.current = null; }
+    boardRef.current = node;
+    if (!node) return;
+    // Set initial width synchronously
+    setContainerWidth(node.getBoundingClientRect().width);
+    // Observe for future resizes
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    ro.observe(node);
+    roRef.current = ro;
+  }, []);
 
   const [collapsedStages, setCollapsedStages] = useState<Set<string>>(() => {
     try {
@@ -838,6 +1069,18 @@ export function LeadsKanban({
     }
     return groups;
   }, [localLeads]);
+
+  // ── Derive card density from actual column width ────────────────────
+  // compactMode controls layout (flex-fill vs fixed scroll)
+  // useCompactCards controls card rendering — auto-switches when columns are wide enough
+  const visibleColumnCount = PIPELINE_STAGES.length - collapsedStages.size;
+  const collapsedWidth = collapsedStages.size * 43; // 40px + 3px gap
+  const rawColWidth = visibleColumnCount > 0
+    ? (containerWidth - collapsedWidth - (PIPELINE_STAGES.length - 1) * 3) / visibleColumnCount
+    : 0;
+  // Use 200 as fallback before ResizeObserver fires to avoid ultra-narrow flash
+  const effectiveColWidth = containerWidth > 0 ? rawColWidth : 200;
+  const useCompactCards = compactMode && effectiveColWidth < COMPACT_CARD_THRESHOLD;
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -985,10 +1228,16 @@ export function LeadsKanban({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Horizontal scroll container */}
+      {/* Horizontal scroll container — compact mode fills screen instead of scrolling */}
       <div
-        className="flex h-full gap-[3px] overflow-x-auto pb-0 scroll-smooth snap-x snap-mandatory md:snap-none"
-        style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
+        ref={boardCallbackRef}
+        className={cn(
+          "flex h-full gap-[3px] pb-0",
+          compactMode
+            ? "overflow-hidden"
+            : "overflow-x-auto scroll-smooth snap-x snap-mandatory md:snap-none",
+        )}
+        style={compactMode ? undefined : { overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-board"
       >
         {PIPELINE_STAGES.map((stage) => (
@@ -1002,6 +1251,10 @@ export function LeadsKanban({
             onCardClick={onCardClick}
             selectedLeadId={selectedLeadId}
             showTagsAlways={showTagsAlways}
+            compactMode={compactMode}
+            useCompactCards={useCompactCards}
+            onMoveLead={onLeadMove}
+            colWidth={compactMode ? effectiveColWidth : 280}
           />
         ))}
       </div>
@@ -1009,11 +1262,13 @@ export function LeadsKanban({
       {/* Ghost card that follows the cursor during drag */}
       <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
         {activeLead ? (
-          <div className="w-[260px]">
+          <div className={useCompactCards ? "w-[180px]" : "w-[260px]"}>
             <KanbanCardContent
               lead={activeLead}
               isDragging
               cardTags={leadTagsMap?.get(Number(activeLead.Id || activeLead.id)) || []}
+              compactMode={useCompactCards}
+              onMoveLead={onLeadMove}
             />
           </div>
         ) : null}

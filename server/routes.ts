@@ -52,6 +52,8 @@ import {
   insertAiSessionSchema,
   insertAiMessageSchema,
   insertAiFileSchema,
+  outreachTemplates,
+  insertOutreachTemplatesSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import fs from "fs";
@@ -60,7 +62,7 @@ import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { eq, count, and, gte, lte, isNotNull, type SQL, desc, sql } from "drizzle-orm";
-import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands } from "./aiAgents";
+import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands, formatConversationHistory } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
   parseCrmToolCalls,
@@ -346,12 +348,92 @@ export async function registerRoutes(
     if (!parsed.success) return handleZodError(res, parsed.error);
     const prospect = await storage.updateProspect(Number(req.params.id), parsed.data);
     if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    // Auto-set contacted timestamps when moving to "contacted" for the first time
+    const incomingStatus = req.body.outreach_status ?? req.body.outreachStatus;
+    if (incomingStatus === "contacted" && !prospect.firstContactedAt) {
+      const now = new Date();
+      const followUp = new Date();
+      followUp.setDate(followUp.getDate() + 3);
+      await storage.updateProspect(Number(req.params.id), {
+        firstContactedAt: now,
+        lastContactedAt: now,
+        followUpCount: 1,
+        nextFollowUpDate: followUp,
+      });
+    }
+
+    // Auto-create task when outreach_status changes
+    if (incomingStatus) {
+      const statusTaskMap: Record<string, { title: string; dueDays: number }> = {
+        contacted:     { title: `Follow up with ${prospect.company || prospect.name || 'prospect'}`, dueDays: 3 },
+        call_booked:   { title: `Call with ${prospect.company || prospect.name || 'prospect'}`, dueDays: 3 },
+        demo_given:    { title: `Send proposal to ${prospect.company || prospect.name || 'prospect'}`, dueDays: 2 },
+        proposal_sent: { title: `Follow up on proposal: ${prospect.company || prospect.name || 'prospect'}`, dueDays: 5 },
+        deal_closed:   { title: `Onboard ${prospect.company || prospect.name || 'prospect'} — set up campaign`, dueDays: 3 },
+      };
+      const taskDef = statusTaskMap[incomingStatus];
+      if (taskDef) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + taskDef.dueDays);
+        const niche = prospect.niche || "General";
+        try {
+          await storage.createTask({
+            title: taskDef.title,
+            status: "todo",
+            priority: prospect.priority || "medium",
+            tags: JSON.stringify(["Outreach", niche]),
+            accountsId: 1,
+            parentTaskId: 176,
+            dueDate,
+            taskType: "follow_up",
+          });
+        } catch (err) {
+          console.error("[Auto-Task] Failed to create task for prospect status change:", err);
+        }
+      }
+    }
+
     res.json(toDbKeys(prospect as any, prospects));
   }));
 
   app.delete("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
     const ok = await storage.deleteProspect(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Prospect not found" });
+    res.status(204).end();
+  }));
+
+  // ─── Outreach Templates ──────────────────────────────────────────
+
+  app.get("/api/outreach-templates", requireAgency, wrapAsync(async (req, res) => {
+    const data = await storage.getOutreachTemplates();
+    res.json(toDbKeysArray(data as any, outreachTemplates));
+  }));
+
+  app.get("/api/outreach-templates/:id", requireAgency, wrapAsync(async (req, res) => {
+    const tpl = await storage.getOutreachTemplateById(Number(req.params.id));
+    if (!tpl) return res.status(404).json({ message: "Template not found" });
+    res.json(toDbKeys(tpl as any, outreachTemplates));
+  }));
+
+  app.post("/api/outreach-templates", requireAgency, wrapAsync(async (req, res) => {
+    const parsed = insertOutreachTemplatesSchema.safeParse(fromDbKeys(req.body, outreachTemplates));
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const tpl = await storage.createOutreachTemplate(parsed.data);
+    res.status(201).json(toDbKeys(tpl as any, outreachTemplates));
+  }));
+
+  app.patch("/api/outreach-templates/:id", requireAgency, wrapAsync(async (req, res) => {
+    const parsed = insertOutreachTemplatesSchema.partial().safeParse(fromDbKeys(req.body, outreachTemplates));
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const tpl = await storage.updateOutreachTemplate(Number(req.params.id), parsed.data);
+    if (!tpl) return res.status(404).json({ message: "Template not found" });
+    res.json(toDbKeys(tpl as any, outreachTemplates));
+  }));
+
+  app.delete("/api/outreach-templates/:id", requireAgency, wrapAsync(async (req, res) => {
+    const ok = await storage.deleteOutreachTemplate(Number(req.params.id));
+    if (!ok) return res.status(404).json({ message: "Template not found" });
     res.status(204).end();
   }));
 
@@ -1015,7 +1097,16 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
   app.get("/api/interactions", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const leadId = req.query.leadId ? Number(req.query.leadId) : undefined;
+    const prospectId = req.query.prospect_id ? Number(req.query.prospect_id) : undefined;
     const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
+
+    // Prospect-based query uses email matching, handled separately
+    if (prospectId) {
+      const limit = Math.min(Number(req.query.limit) || 20, 200);
+      const offset = Number(req.query.offset) || 0;
+      const result = await storage.getInteractionsByProspectId(prospectId, limit, offset);
+      return res.json(result);
+    }
 
     const pagination = getPagination(req);
     if (pagination) {
@@ -1057,6 +1148,21 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       broadcast(interaction.accountsId, "new_interaction", responseBody);
     }
     res.status(201).json(responseBody);
+  }));
+
+  app.delete("/api/interactions/:id", requireAuth, wrapAsync(async (req, res) => {
+    const ok = await storage.deleteInteraction(Number(req.params.id));
+    if (!ok) return res.status(404).json({ message: "Interaction not found" });
+    res.status(204).end();
+  }));
+
+  app.post("/api/interactions/bulk-delete", requireAuth, wrapAsync(async (req, res) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "ids must be a non-empty array" });
+    }
+    const deleted = await storage.bulkDeleteInteractions(ids.map(Number));
+    res.json({ deleted });
   }));
 
   // ─── Tags ─────────────────────────────────────────────────────────
@@ -1319,7 +1425,9 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       storage.deleteInteractionsByLeadId(leadId),
       storage.deleteAllLeadTags(leadId),
     ]);
-    broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
+    if (lead.accountsId !== null) {
+      broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
+    }
     await storage.updateLead(leadId, {
       currentBumpStage: 0,
       messageCountSent: 0,
@@ -1351,7 +1459,9 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       storage.deleteInteractionsByLeadId(leadId),
       storage.deleteAllLeadTags(leadId),
     ]);
-    broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
+    if (lead.accountsId !== null) {
+      broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
+    }
     await storage.updateLead(leadId, {
       currentBumpStage: 0,
       messageCountSent: 0,
@@ -1389,25 +1499,25 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       // If the lead has never received a first message, trigger the campaign first message.
       // Otherwise fall back to triggering the next bump.
       const hasFirstMessage = lead.firstMessageSentAt != null;
-      let resp: Response;
+      let fetchResp: globalThis.Response;
       if (!hasFirstMessage) {
-        resp = await fetch(`${getEngineUrl()}/api/leads/${leadId}/trigger-first-message`, {
+        fetchResp = await fetch(`${getEngineUrl()}/api/leads/${leadId}/trigger-first-message`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ account_id: accountId }),
         });
       } else {
-        resp = await fetch(`${getEngineUrl()}/api/trigger-bump`, {
+        fetchResp = await fetch(`${getEngineUrl()}/api/trigger-bump`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lead_id: leadId, account_id: accountId }),
         });
       }
-      if (!resp.ok) {
-        const err = await resp.text();
-        return res.status(resp.status).json({ message: err });
+      if (!fetchResp.ok) {
+        const err = await fetchResp.text();
+        return res.status(fetchResp.status).json({ message: err });
       }
-      res.json(await resp.json());
+      res.json(await fetchResp.json());
     } catch (err: any) {
       res.status(502).json({ message: "Automation service unavailable: " + (err.message || "") });
     }
@@ -3384,10 +3494,14 @@ GUARDRAILS
         systemPrompt += crmToolsPrompt;
       }
 
+      // Always include system prompt + full history (no --continue)
       let fullPrompt = "";
-      if (isFirstMessage && systemPrompt) {
+      if (systemPrompt) {
         fullPrompt += `[System Instructions]\n${systemPrompt}\n\n`;
       }
+
+      // Include conversation history for context continuity
+      fullPrompt += formatConversationHistory(history);
 
       // Inject skill instructions as a dedicated context block
       fullPrompt += `[Skill Instructions: ${skillName}]\nYou are now executing the "${skillName}" skill. Follow these instructions:\n\n${skillInstructions}\n\n[End of Skill Instructions]\n\n`;
@@ -3416,7 +3530,6 @@ GUARDRAILS
         prompt: fullPrompt,
         cwd,
         bypassPermissions: true, // all agents need this — no interactive terminal for approval
-        isFirstMessage,
         model: sessionModel,
         thinkingLevel: sessionThinking,
         res,
@@ -3467,28 +3580,26 @@ GUARDRAILS
             });
           }
         },
-        onDone: async (fullText, subAgentBlocks) => {
+        onDone: async (fullText, _subAgentBlocks, _cliSessionId, usage) => {
           try {
-            const inputTokens = Math.ceil(fullPrompt.length / 4);
-            const outputTokens = Math.ceil(fullText.length / 4);
             if (fullText.trim()) {
               await storage.createAiMessage({
                 sessionId,
                 role: "assistant",
                 content: fullText.trim(),
-                subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
                 metadata: {
                   model: sessionModel,
-                  inputTokens,
-                  outputTokens,
+                  inputTokens: usage.inputTokens,
+                  outputTokens: usage.outputTokens,
+                  costUsd: usage.costUsd,
                   skillId,
                   skillName,
                 },
               });
             }
             await storage.updateAiSession(session.id, {
-              totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
-              totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
+              totalInputTokens: (session.totalInputTokens || 0) + usage.inputTokens,
+              totalOutputTokens: (session.totalOutputTokens || 0) + usage.outputTokens,
             });
           } catch (err) {
             console.error("[Skill Execute] Failed to store response:", err);
@@ -3603,10 +3714,6 @@ GUARDRAILS
     const agent = await storage.getAiAgentById(session.agentId);
     if (!agent) return res.status(404).json({ message: "Agent not found" });
 
-    // Count existing messages to determine if this is the first message
-    const existingMessages = await storage.getAiMessagesBySessionId(sessionId);
-    const isFirstMessage = existingMessages.length === 0;
-
     // Save user message immediately
     await storage.createAiMessage({
       sessionId,
@@ -3615,8 +3722,19 @@ GUARDRAILS
       subAgentBlocks: null,
     });
 
-    // Build prompt with context injection
-    let fullPrompt = message.trim();
+    // Fetch all messages for full context (no --continue)
+    const allMessages = await storage.getAiMessagesBySessionId(sessionId);
+
+    // Build prompt with system prompt + history + context
+    let fullPrompt = "";
+
+    // Always include system prompt
+    if (agent.systemPrompt) {
+      fullPrompt += `[System Instructions]\n${agent.systemPrompt}\n\n`;
+    }
+
+    // Include conversation history
+    fullPrompt += formatConversationHistory(allMessages);
 
     if (agent.type === "campaign_crafter") {
       try {
@@ -3627,7 +3745,7 @@ GUARDRAILS
           description: c.description?.slice(0, 100),
           aiName: c.aiName,
         }));
-        fullPrompt = `[Current campaigns: ${JSON.stringify(campaignSummary)}]\n\n${fullPrompt}`;
+        fullPrompt += `[Current campaigns: ${JSON.stringify(campaignSummary)}]\n\n`;
       } catch {
         // campaigns context injection failed — proceed without it
       }
@@ -3640,7 +3758,7 @@ GUARDRAILS
           if (urlRes.ok) {
             const text = await urlRes.text();
             const stripped = text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 3000);
-            fullPrompt = `[Website content from ${urlMatch[0]}:\n${stripped}]\n\n${fullPrompt}`;
+            fullPrompt += `[Website content from ${urlMatch[0]}:\n${stripped}]\n\n`;
           }
         } catch {
           // URL fetch failed — proceed without it
@@ -3650,8 +3768,10 @@ GUARDRAILS
 
     // If attachment, prepend to prompt
     if (attachmentBase64) {
-      fullPrompt = `[User attached a file (base64): ${attachmentBase64.slice(0, 100)}...]\n\n${fullPrompt}`;
+      fullPrompt += `[User attached a file (base64): ${attachmentBase64.slice(0, 100)}...]\n\n`;
     }
+
+    fullPrompt += message.trim();
 
     // SSE headers
     res.setHeader("Content-Type", "text/event-stream");
@@ -3661,14 +3781,13 @@ GUARDRAILS
     res.flushHeaders();
 
     // Get session cwd
-    const { getSessionCwd, streamClaudeResponse } = await import("./aiAgents");
+    const { getSessionCwd, streamClaudeResponse: streamClaude } = await import("./aiAgents");
     const cwd = getSessionCwd(sessionId, agent.type);
 
-    streamClaudeResponse({
+    streamClaude({
       prompt: fullPrompt,
       cwd,
       bypassPermissions: true, // all agents need this — no interactive terminal for approval
-      isFirstMessage,
       res,
       onDone: async (fullText, subAgentBlocks) => {
         // Save assistant message to DB
@@ -4183,8 +4302,8 @@ GUARDRAILS
     }
 
     try {
-      // Extract base64 from data URL
-      const base64Match = audio_data.match(/^data:[^;]+;base64,(.+)$/);
+      // Extract base64 from data URL (handles codec params like "data:audio/webm;codecs=opus;base64,...")
+      const base64Match = audio_data.match(/;base64,(.+)$/);
       const base64Data = base64Match ? base64Match[1] : audio_data;
       const buffer = Buffer.from(base64Data, "base64");
 
@@ -4192,8 +4311,9 @@ GUARDRAILS
         return res.status(400).json({ message: "Empty audio data" });
       }
 
-      // Determine file extension from mime type
-      const mimeStr = mime_type || "audio/webm";
+      // Determine file extension from mime type (strip codec info for matching)
+      const mimeRaw = mime_type || "audio/webm";
+      const mimeStr = mimeRaw.split(";")[0].trim(); // "audio/webm;codecs=opus" → "audio/webm"
       const extMap: Record<string, string> = {
         "audio/webm": ".webm",
         "audio/mp4": ".mp4",
@@ -4201,9 +4321,9 @@ GUARDRAILS
         "audio/mp3": ".mp3",
         "audio/wav": ".wav",
         "audio/ogg": ".ogg",
-        "audio/ogg; codecs=opus": ".ogg",
       };
       const ext = extMap[mimeStr] || ".webm";
+      console.log("[Voice Transcribe] MIME:", mimeRaw, "→", mimeStr, "| ext:", ext);
       const filename = `voice-memo-${Date.now()}${ext}`;
 
       // Store audio file on disk
@@ -4217,7 +4337,7 @@ GUARDRAILS
         fileRecord = await storage.createAiFile({
           conversationId: session_id,
           filename,
-          mimeType: mimeStr,
+          mimeType: mimeRaw,
           filePath,
           fileSize: buffer.length,
         });
@@ -4233,7 +4353,7 @@ GUARDRAILS
       const boundary = `----FormBoundary${crypto.randomBytes(16).toString("hex")}`;
       const formParts: Buffer[] = [];
 
-      // File part
+      // File part — use clean mime type (no codec params) for Whisper compatibility
       formParts.push(Buffer.from(
         `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimeStr}\r\n\r\n`
       ));
@@ -4272,15 +4392,13 @@ GUARDRAILS
 
       const transcription = (await whisperRes.text()).trim();
 
-      // Update file record with transcription if stored
-      if (fileRecord) {
-        await db.update(aiFiles).set({ transcription }).where(eq(aiFiles.id, fileRecord.id));
+      // Delete audio file from disk (keep only transcription text) and remove DB record
+      if (fileRecord?.filePath) {
+        try { fs.unlinkSync(fileRecord.filePath); } catch {}
+        await db.delete(aiFiles).where(eq(aiFiles.id, fileRecord.id));
       }
 
-      res.json({
-        transcription,
-        ...(fileRecord ? { fileId: fileRecord.id, filename } : {}),
-      });
+      res.json({ transcription });
     } catch (err: any) {
       console.error("[Voice Transcribe] error:", err);
       res.status(500).json({ message: "Transcription failed" });
@@ -4596,10 +4714,62 @@ GUARDRAILS
     }
   });
 
+  // ─── Helpers for building prompt context blocks ─────────────────────
+  function buildPageContextBlock(pageContext: any): string {
+    let ctxLines = `[Current Page Context]\n`;
+    ctxLines += `The user is currently on the "${pageContext.pageName || "Unknown"}" page.\n`;
+    ctxLines += `Route: ${pageContext.path || "/"}\n`;
+    if (pageContext.pageType) ctxLines += `Page type: ${pageContext.pageType}\n`;
+    if (pageContext.params && Object.keys(pageContext.params).length > 0) {
+      ctxLines += `Route params: ${JSON.stringify(pageContext.params)}\n`;
+    }
+    if (pageContext.entityData) {
+      const ed = pageContext.entityData;
+      ctxLines += `\nOn-screen entity: ${ed.entityType}`;
+      if (ed.entityId) ctxLines += ` (ID: ${ed.entityId})`;
+      if (ed.entityName) ctxLines += ` — "${ed.entityName}"`;
+      ctxLines += `\n`;
+      if (ed.summary && Object.keys(ed.summary).length > 0) {
+        ctxLines += `Entity details:\n`;
+        for (const [key, val] of Object.entries(ed.summary)) {
+          ctxLines += `  ${key}: ${typeof val === "object" ? JSON.stringify(val) : val}\n`;
+        }
+      }
+      if (ed.filters && Object.keys(ed.filters).length > 0) {
+        ctxLines += `Active filters: ${JSON.stringify(ed.filters)}\n`;
+      }
+    }
+    ctxLines += `\nIMPORTANT — Pronoun Resolution:\n`;
+    ctxLines += `When the user says "this lead", "this campaign", etc., they refer to the on-screen entity above.\n`;
+    ctxLines += `Use entity details and page context for specific, data-aware answers.\n`;
+    return ctxLines + `\n`;
+  }
+
+  function buildFileContextBlock(fr: any, isCurrent: boolean): string {
+    const fileExt = path.extname(fr.filename).toLowerCase();
+    const isImg = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
+    const isSsheet = [".csv", ".xlsx", ".xls"].includes(fileExt);
+    const prefix = isCurrent ? "[Attached" : "[Previously Uploaded";
+    const suffix = isCurrent ? "Please analyze as requested." : "This file was shared earlier — reference it if relevant.";
+
+    if (isImg) {
+      if (fr.filePath && fs.existsSync(fr.filePath)) {
+        const imgBuffer = fs.readFileSync(fr.filePath);
+        const base64Data = imgBuffer.toString("base64");
+        return `\n\n${prefix} Image: ${fr.filename}]\ndata:${fr.mimeType || "image/jpeg"};base64,${base64Data}\n\n${suffix}\n`;
+      }
+      return `\n\n${prefix} Image: ${fr.filename}]\n[Image file not found on disk]\n`;
+    } else if (isSsheet) {
+      return `\n\n${prefix} Spreadsheet: ${fr.filename}]\n${fr.transcription || "[Could not extract]"}\n\n${suffix}\n`;
+    } else {
+      return `\n\n${prefix} PDF Document: ${fr.filename}]\n${fr.transcription || "[Could not extract]"}\n\n${suffix}\n`;
+    }
+  }
+
   // ─── Send message to agent (store + initiate Claude API call) ─────────
   // POST /api/agent-conversations/:id/messages
   // Accepts { content, pageContext?, fileId? }
-  // Stores user message, builds prompt with history + system prompt, streams Claude response via SSE
+  // Stores user message, streams Claude response via SSE using --resume for session persistence
   app.post("/api/agent-conversations/:id/messages", requireAgency, async (req, res) => {
     const sessionId = req.params.id;
     const { content, pageContext, fileId } = req.body;
@@ -4630,10 +4800,11 @@ GUARDRAILS
         attachments: fileId ? [{ fileId: Number(fileId) }] : null,
       });
 
-      // 3. Fetch conversation history (all previous messages for context)
+      // 3. Check if this is the first message (determines whether we build full prompt or use --resume)
       const history = await storage.getAiMessagesBySessionId(sessionId);
+      const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
 
-      // 4. Build prompt: resolve system prompt (from Prompt Library if linked, else agent default)
+      // 4. Build system prompt (only used for first message — --resume remembers it after that)
       let systemPrompt = agent.systemPrompt || "";
       if (agent.systemPromptId) {
         const linkedPrompt = await storage.getPromptById(agent.systemPromptId);
@@ -4641,7 +4812,6 @@ GUARDRAILS
           systemPrompt = linkedPrompt.promptText;
         }
       }
-      const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
 
       // Append CRM tool descriptions to system prompt based on agent permissions
       const agentPermissions = (agent.permissions || {}) as AgentPermissions;
@@ -4653,135 +4823,79 @@ GUARDRAILS
       // Append GOG (Google Workspace) instructions to all agents
       systemPrompt += GOG_INSTRUCTIONS;
 
-      // Build the full prompt with conversation context for the CLI
-      // The CLI doesn't have multi-turn context, so we include history in the prompt
+      // ─── Build prompt: use --resume for subsequent messages ───────────
+      // If we have a CLI session ID, Claude remembers the full conversation.
+      // We only need to send the new user message + any ephemeral context.
+      // First message: full system prompt + all context + user message.
+      const hasCliSession = !!session.cliSessionId;
+
       let fullPrompt = "";
-      if (isFirstMessage && systemPrompt) {
-        fullPrompt += `[System Instructions]\n${systemPrompt}\n\n`;
-      }
+      let appendSystemPrompt = "";
 
-      // Add page context if provided — format clearly so the agent can reference it naturally
-      if (pageContext) {
-        let ctxLines = `[Current Page Context]\n`;
-        ctxLines += `The user is currently on the "${pageContext.pageName || "Unknown"}" page.\n`;
-        ctxLines += `Route: ${pageContext.path || "/"}\n`;
-        if (pageContext.pageType) {
-          ctxLines += `Page type: ${pageContext.pageType}\n`;
+      if (!hasCliSession) {
+        // FIRST MESSAGE: Build full prompt with all context
+        if (systemPrompt) {
+          fullPrompt += `[System Instructions]\n${systemPrompt}\n\n`;
         }
-        if (pageContext.params && Object.keys(pageContext.params).length > 0) {
-          ctxLines += `Route params: ${JSON.stringify(pageContext.params)}\n`;
+
+        // Add page context for first message
+        if (pageContext) {
+          fullPrompt += buildPageContextBlock(pageContext);
         }
-        // Include entity data if the page component published it
-        if (pageContext.entityData) {
-          const ed = pageContext.entityData;
-          ctxLines += `\nOn-screen entity: ${ed.entityType}`;
-          if (ed.entityId) ctxLines += ` (ID: ${ed.entityId})`;
-          if (ed.entityName) ctxLines += ` — "${ed.entityName}"`;
-          ctxLines += `\n`;
-          if (ed.summary && Object.keys(ed.summary).length > 0) {
-            ctxLines += `Entity details:\n`;
-            for (const [key, val] of Object.entries(ed.summary)) {
-              ctxLines += `  ${key}: ${typeof val === "object" ? JSON.stringify(val) : val}\n`;
+
+        // For Campaign Crafter agents, inject existing campaign data
+        if (agent.type === "campaign_crafter") {
+          try {
+            const allCampaigns = await storage.getCampaigns();
+            if (allCampaigns.length > 0) {
+              const campaignSummaries = allCampaigns.map((c: any) => ({
+                id: c.id, name: c.name, status: c.status,
+                channel: c.channel || "sms",
+                targetAudience: c.targetAudience || null,
+                campaignService: c.campaignService || null,
+                firstMessage: c.firstMessage || null,
+                responseRatePercent: c.responseRatePercent || null,
+                bookingsGenerated: c.bookingsGenerated || 0,
+              }));
+              fullPrompt += `[Existing CRM Campaigns]\n${JSON.stringify(campaignSummaries, null, 2)}\n\n`;
             }
-          }
-          if (ed.filters && Object.keys(ed.filters).length > 0) {
-            ctxLines += `Active filters: ${JSON.stringify(ed.filters)}\n`;
+          } catch (err) {
+            console.error("[Campaign Crafter] Failed to fetch campaign context:", err);
           }
         }
-        ctxLines += `\nIMPORTANT — Pronoun Resolution:\n`;
-        ctxLines += `When the user says "this lead", "this campaign", "this conversation", "this account", or similar phrases with "this", they are referring to the on-screen entity described above.\n`;
-        ctxLines += `When they say "here" (e.g., "what campaigns are here", "what's here"), they mean the data visible on the current page.\n`;
-        ctxLines += `Use the entity details and page context above to give specific, data-aware answers. Always reference the actual data (names, IDs, statuses, etc.) rather than asking the user to clarify.\n`;
-        fullPrompt += ctxLines + `\n`;
-      }
 
-      // For Campaign Crafter agents, inject existing campaign data as context
-      if (agent.type === "campaign_crafter") {
-        try {
-          const allCampaigns = await storage.getCampaigns();
-          if (allCampaigns.length > 0) {
-            const campaignSummaries = allCampaigns.map((c: any) => ({
-              id: c.id,
-              name: c.name,
-              status: c.status,
-              channel: c.channel || "sms",
-              targetAudience: c.targetAudience || null,
-              campaignService: c.campaignService || null,
-              campaignUsp: c.campaignUsp || null,
-              firstMessage: c.firstMessage || null,
-              agentName: c.agentName || null,
-              useAiBumps: c.useAiBumps || false,
-              maxBumps: c.maxBumps || null,
-              totalLeadsTargeted: c.totalLeadsTargeted || 0,
-              totalMessagesSent: c.totalMessagesSent || 0,
-              responseRatePercent: c.responseRatePercent || null,
-              bookingsGenerated: c.bookingsGenerated || 0,
-              bookingRatePercent: c.bookingRatePercent || null,
-            }));
-            fullPrompt += `[Existing CRM Campaigns]\nHere are the current campaigns in the CRM. Use this data to inform your suggestions and avoid duplicating existing campaigns:\n${JSON.stringify(campaignSummaries, null, 2)}\n\n`;
-          } else {
-            fullPrompt += `[Existing CRM Campaigns]\nNo campaigns exist yet in the CRM. You can suggest creating new campaigns from scratch.\n\n`;
-          }
-        } catch (err) {
-          console.error("[Campaign Crafter] Failed to fetch campaign context:", err);
+        // Include ALL file context on first message
+        const allConversationFiles = await storage.getAiFilesByConversationId(sessionId);
+        const currentFileId = fileId ? Number(fileId) : null;
+        if (currentFileId) {
+          await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, currentFileId));
         }
-      }
-
-      // Include file context: current attachment + previous files in this conversation
-      // This ensures file context persists across conversation turns
-      const allConversationFiles = await storage.getAiFilesByConversationId(sessionId);
-      const currentFileId = fileId ? Number(fileId) : null;
-
-      // Helper to build file context block for any file record
-      const buildFileContext = (fr: typeof allConversationFiles[0], isCurrent: boolean): string => {
-        const fileExt = path.extname(fr.filename).toLowerCase();
-        const isImg = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
-        const isSsheet = [".csv", ".xlsx", ".xls"].includes(fileExt);
-        const prefix = isCurrent ? "[Attached" : "[Previously Uploaded";
-        const suffix = isCurrent ? "Please analyze as requested." : "This file was shared earlier in the conversation — reference it if relevant.";
-
-        if (isImg) {
-          // For images, encode as base64 data URL for Claude vision analysis
-          if (fr.filePath && fs.existsSync(fr.filePath)) {
-            const imgBuffer = fs.readFileSync(fr.filePath);
-            const base64Data = imgBuffer.toString("base64");
-            const imgMimeType = fr.mimeType || "image/jpeg";
-            return `\n\n${prefix} Image: ${fr.filename}]\ndata:${imgMimeType};base64,${base64Data}\n\n${suffix}\n`;
-          }
-          return `\n\n${prefix} Image: ${fr.filename}]\n[Image file not found on disk]\n`;
-        } else if (isSsheet) {
-          const spreadsheetContent = fr.transcription || "[Spreadsheet content could not be extracted]";
-          return `\n\n${prefix} Spreadsheet: ${fr.filename}]\n${spreadsheetContent}\n\n${suffix}\n`;
-        } else {
-          // PDF — use extracted text from transcription field
-          const pdfContent = fr.transcription || "[PDF content could not be extracted]";
-          return `\n\n${prefix} PDF Document: ${fr.filename}]\n${pdfContent}\n\n${suffix}\n`;
-        }
-      };
-
-      // On first message or when --continue is NOT used, include ALL previous files for context
-      // On subsequent messages (--continue), the CLI remembers previous turns, so only include the current file
-      // Link current file to user message if provided
-      if (currentFileId) {
-        await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, currentFileId));
-      }
-
-      if (isFirstMessage && allConversationFiles.length > 0) {
-        // First message: include ALL files uploaded in this conversation for full context
         for (const fr of allConversationFiles) {
           const isCurrent = currentFileId !== null && fr.id === currentFileId;
-          fullPrompt += buildFileContext(fr, isCurrent);
+          fullPrompt += buildFileContextBlock(fr, isCurrent);
         }
-      } else if (currentFileId) {
-        // Subsequent message with a new file: only include the new file
-        // (previous file context is preserved by CLI's --continue flag)
-        const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, currentFileId));
-        if (fileRecord) {
-          fullPrompt += buildFileContext(fileRecord, true);
-        }
-      }
 
-      fullPrompt += content.trim();
+        fullPrompt += content.trim();
+      } else {
+        // SUBSEQUENT MESSAGES: Just the new user message (Claude remembers context via --resume)
+        // If there's a new file attachment, include it
+        const currentFileId = fileId ? Number(fileId) : null;
+        if (currentFileId) {
+          await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, currentFileId));
+          const allConversationFiles = await storage.getAiFilesByConversationId(sessionId);
+          const currentFile = allConversationFiles.find(f => f.id === currentFileId);
+          if (currentFile) {
+            fullPrompt += buildFileContextBlock(currentFile, true);
+          }
+        }
+
+        // Inject page context as append-system-prompt (ephemeral, doesn't pollute history)
+        if (pageContext) {
+          appendSystemPrompt = buildPageContextBlock(pageContext);
+        }
+
+        fullPrompt += content.trim();
+      }
 
       // 5. Set up SSE headers for streaming
       res.setHeader("Content-Type", "text/event-stream");
@@ -4796,129 +4910,92 @@ GUARDRAILS
       // 6. Determine working directory based on agent type
       const cwd = getSessionCwd(sessionId, agent.type);
 
-      // 7. Initiate Claude CLI call with streaming
-      // Use session-level model/thinking (which inherit from agent defaults on creation)
+      // 7. Initiate Claude CLI call with structured streaming + session resume
       const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
-      const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
       streamClaudeResponse({
         prompt: fullPrompt,
         cwd,
-        bypassPermissions: true, // all agents need this — no interactive terminal for approval
-        isFirstMessage,
+        bypassPermissions: true,
         model: sessionModel,
-        thinkingLevel: sessionThinking,
+        cliSessionId: session.cliSessionId || undefined,
+        agentType: agent.type,
+        appendSystemPrompt: appendSystemPrompt || undefined,
         res,
-        // CRM tool execution: detect tool calls in Claude's response, execute them,
-        // and send results as SSE events before the stream closes.
-        // Destructive actions (delete) require user confirmation — sent as pending_confirmation events.
+        // CRM tool + GOG execution (same as before — parse XML tags from response)
         beforeDone: async (fullText, sseRes) => {
           // Execute CRM tool calls
           const toolCalls = parseCrmToolCalls(fullText);
           if (toolCalls.length > 0) {
-            // Separate safe vs destructive tool calls
             const safeCalls = toolCalls.filter((tc) => !isDestructiveToolCall(tc));
             const destructiveCalls = toolCalls.filter((tc) => isDestructiveToolCall(tc));
 
-            console.log(`[CRM Tools] Detected ${toolCalls.length} tool call(s): ${safeCalls.length} safe, ${destructiveCalls.length} destructive`);
-
-            // Execute safe calls immediately
             if (safeCalls.length > 0) {
               const results = await executeCrmToolCalls(safeCalls, agentPermissions);
-
               for (const result of results) {
                 sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
               }
-
-              const toolResultsText = results.map((r) => {
-                if (r.success) {
-                  return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
-                }
-                return `[Tool: ${r.tool}] Error: ${r.error}`;
-              }).join("\n\n");
-
               await storage.createAiMessage({
-                sessionId,
-                role: "tool",
-                content: toolResultsText,
+                sessionId, role: "tool",
+                content: results.map((r) => r.success ? `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}` : `[Tool: ${r.tool}] Error: ${r.error}`).join("\n\n"),
               });
             }
 
-            // Send destructive calls as pending confirmation events — NOT executed yet
             if (destructiveCalls.length > 0) {
-              const pendingActions = destructiveCalls.map((tc) => ({
-                toolName: tc.name,
-                args: tc.args,
-                description: describeToolCall(tc),
-              }));
-
               sseRes.write(`data: ${JSON.stringify({
-                type: "pending_confirmation",
-                sessionId,
-                agentId: agent.id,
-                actions: pendingActions,
+                type: "pending_confirmation", sessionId, agentId: agent.id,
+                actions: destructiveCalls.map((tc) => ({ toolName: tc.name, args: tc.args, description: describeToolCall(tc) })),
               })}\n\n`);
-
-              console.log(`[CRM Tools] Sent ${destructiveCalls.length} destructive action(s) for user confirmation`);
             }
           }
 
-          // Execute GOG (Google Workspace) commands
+          // Execute GOG commands
           const gogCommands = parseGogCommands(fullText);
           if (gogCommands.length > 0) {
-            console.log(`[GOG] Detected ${gogCommands.length} GOG command(s) in agent response`);
             const gogResults = await executeGogCommands(gogCommands);
-
             for (const result of gogResults) {
               sseRes.write(`data: ${JSON.stringify({ type: "tool_result", tool: result.command, success: result.success, data: result.output, error: result.error })}\n\n`);
             }
-
-            const gogResultsText = gogResults.map((r) => {
-              if (r.success) {
-                return `[GOG: ${r.command}] Result:\n${r.output}`;
-              }
-              return `[GOG: ${r.command}] Error: ${r.error}`;
-            }).join("\n\n");
-
             await storage.createAiMessage({
-              sessionId,
-              role: "tool",
-              content: gogResultsText,
+              sessionId, role: "tool",
+              content: gogResults.map((r) => r.success ? `[GOG: ${r.command}] Result:\n${r.output}` : `[GOG: ${r.command}] Error: ${r.error}`).join("\n\n"),
             });
           }
         },
-        onDone: async (fullText, subAgentBlocks) => {
+        onDone: async (fullText, _subAgentBlocks, cliSessionId, usage) => {
           try {
-            // Store assistant response in database with metadata
-            const inputTokens = Math.ceil(fullPrompt.length / 4);
-            const outputTokens = Math.ceil(fullText.length / 4);
+            // Store assistant response with real token counts from CLI
             if (fullText.trim()) {
               await storage.createAiMessage({
                 sessionId,
                 role: "assistant",
                 content: fullText.trim(),
-                subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
                 metadata: {
-                  model: agent.model || "claude-sonnet-4-20250514",
-                  inputTokens,
-                  outputTokens,
+                  model: sessionModel,
+                  inputTokens: usage.inputTokens,
+                  outputTokens: usage.outputTokens,
+                  costUsd: usage.costUsd,
                 },
               });
             }
-            await storage.updateAiSession(session.id, {
-              totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
-              totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
-            });
 
-            // Auto-generate title using AI after first assistant response (non-blocking)
+            // Persist CLI session ID for --resume on next message
+            const sessionUpdate: Record<string, unknown> = {
+              totalInputTokens: (session.totalInputTokens || 0) + usage.inputTokens,
+              totalOutputTokens: (session.totalOutputTokens || 0) + usage.outputTokens,
+            };
+            if (cliSessionId && cliSessionId !== session.cliSessionId) {
+              sessionUpdate.cliSessionId = cliSessionId;
+            }
+            await storage.updateAiSession(session.id, sessionUpdate as any);
+
+            // Auto-generate title after first message
             if (!session.title && isFirstMessage && content.trim().length > 0 && fullText.trim().length > 0) {
               generateConversationTitle(content.trim(), fullText.trim())
                 .then((aiTitle) => {
                   storage.updateAiSession(session.id, { title: aiTitle });
-                  console.log(`[Agent Conversations] Auto-generated title: "${aiTitle}" for session ${session.id}`);
+                  console.log(`[Agent Conversations] Title: "${aiTitle}" for session ${session.id}`);
                 })
-                .catch((err) => {
-                  console.error("[Agent Conversations] Title generation failed:", err);
-                  // Fallback: use truncated user message
+                .catch(() => {
                   const fallback = content.trim().slice(0, 60) + (content.trim().length > 60 ? "\u2026" : "");
                   storage.updateAiSession(session.id, { title: fallback });
                 });
@@ -4936,7 +5013,7 @@ GUARDRAILS
       }
       // If already streaming, send error event
       res.write(`data: ${JSON.stringify({ type: "error", message: err.message || "Internal error" })}\n\n`);
-      res.write(`data: ${JSON.stringify({ type: "done", subAgentBlocks: [] })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "done", cliSessionId: null, subAgentBlocks: [], usage: { inputTokens: 0, outputTokens: 0, costUsd: 0 } })}\n\n`);
       res.end();
     }
   });
@@ -5040,10 +5117,14 @@ GUARDRAILS
         if (linkedPrompt?.promptText) systemPrompt = linkedPrompt.promptText;
       }
 
+      // Always include system prompt + history (no --continue)
       let fullPrompt = "";
-      if (isFirstMessage && systemPrompt) {
+      if (systemPrompt) {
         fullPrompt += systemPrompt + "\n\n";
       }
+
+      // Include conversation history
+      fullPrompt += formatConversationHistory(history);
 
       // Inject skill instructions
       fullPrompt += `[Skill Instructions: ${skillName}]\n${skillInstructions}\n\n`;
@@ -5069,32 +5150,29 @@ GUARDRAILS
         prompt: fullPrompt,
         cwd,
         bypassPermissions: true, // all agents need this — no interactive terminal for approval
-        isFirstMessage,
         model: sessionModel,
         thinkingLevel: sessionThinking,
         res,
-        onDone: async (fullText, subAgentBlocks) => {
+        onDone: async (fullText, _subAgentBlocks, _cliSessionId, usage) => {
           try {
-            const inputTokens = Math.ceil(fullPrompt.length / 4);
-            const outputTokens = Math.ceil(fullText.length / 4);
             if (fullText.trim()) {
               await storage.createAiMessage({
                 sessionId,
                 role: "assistant",
                 content: fullText.trim(),
-                subAgentBlocks: subAgentBlocks.length > 0 ? JSON.stringify(subAgentBlocks) : null,
                 metadata: {
                   skillId,
                   skillName,
                   model: sessionModel,
-                  inputTokens,
-                  outputTokens,
+                  inputTokens: usage.inputTokens,
+                  outputTokens: usage.outputTokens,
+                  costUsd: usage.costUsd,
                 },
               });
             }
             await storage.updateAiSession(session.id, {
-              totalInputTokens: (session.totalInputTokens || 0) + inputTokens,
-              totalOutputTokens: (session.totalOutputTokens || 0) + outputTokens,
+              totalInputTokens: (session.totalInputTokens || 0) + usage.inputTokens,
+              totalOutputTokens: (session.totalOutputTokens || 0) + usage.outputTokens,
             });
 
             // Auto-generate title if needed

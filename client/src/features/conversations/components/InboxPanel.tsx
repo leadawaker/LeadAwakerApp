@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, Headphones, Search, X, BotMessageSquare, MessageSquare, Zap, Bot, Settings } from "lucide-react";
+import { Inbox, BellDot, Headphones, Search, X, BotMessageSquare, MessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2 } from "lucide-react";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
@@ -15,6 +15,7 @@ import {
   getStatusAvatarColor,
   formatRelativeTime,
 } from "../utils/conversationHelpers";
+import { apiFetch } from "@/lib/apiUtils";
 
 function getLeadTagNames(lead: Lead): string[] {
   const raw = lead.tags;
@@ -86,15 +87,27 @@ export type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
 export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
 export type InboxTab = "all" | "unread" | "support";
 
-// ── Agent inbox row ────────────────────────────────────────────────────────────
+// ── Agent inbox row (expandable with recent chats) ──────────────────────────────
+interface AgentRecentChat {
+  id: number;
+  sessionId: string;
+  title: string | null;
+  messageCount: number;
+  updatedAt: string;
+  lastMessage: { content: string; role: string } | null;
+}
+
 type AgentRowProps = {
   agent: { id: number; name: string; type: string; photoUrl: string | null; enabled?: boolean };
   isSelected: boolean;
-  onClick: () => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onSelectChat: (agentId: number, sessionId?: string) => void;
+  activeSessionId?: string | null;
   onSettingsClick?: (agentId: number) => void;
 };
 
-function AgentInboxRow({ agent, isSelected, onClick, onSettingsClick }: AgentRowProps) {
+function AgentInboxRow({ agent, isSelected, isExpanded, onToggleExpand, onSelectChat, activeSessionId, onSettingsClick }: AgentRowProps) {
   const typeChip: Record<string, string> = {
     campaign_crafter: "Campaign Crafter",
     code_runner: "Code Runner",
@@ -102,6 +115,29 @@ function AgentInboxRow({ agent, isSelected, onClick, onSettingsClick }: AgentRow
   };
   const chipLabel = typeChip[agent.type] ?? agent.type;
   const isEnabled = agent.enabled !== false;
+
+  const [recentChats, setRecentChats] = useState<AgentRecentChat[]>([]);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const fetchedRef = useRef(false);
+
+  // Fetch recent chats when expanded
+  useEffect(() => {
+    if (!isExpanded) return;
+    // Re-fetch each time expanded (in case new chats were created)
+    setLoadingChats(true);
+    let cancelled = false;
+    apiFetch(`/api/agents/${agent.id}/conversations`)
+      .then(async (res) => {
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        // Take only the 5 most recent
+        setRecentChats(data.slice(0, 5));
+        fetchedRef.current = true;
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingChats(false); });
+    return () => { cancelled = true; };
+  }, [isExpanded, agent.id, activeSessionId]);
 
   const AgentIcon = () => {
     if (agent.photoUrl) {
@@ -170,38 +206,110 @@ function AgentInboxRow({ agent, isSelected, onClick, onSettingsClick }: AgentRow
     );
   };
 
+  const formatTime = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "now";
+    if (mins < 60) return `${mins}m`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+    return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
-      className={cn(
-        "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors group",
-        isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-      )}
-      data-testid={`button-agent-${agent.id}`}
-    >
-      <div className="shrink-0">
-        <AgentIcon />
+    <div data-testid={`agent-expandable-${agent.id}`}>
+      {/* Agent header row */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggleExpand}
+        onKeyDown={(e) => e.key === "Enter" && onToggleExpand()}
+        className={cn(
+          "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors group",
+          isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+        )}
+        data-testid={`button-agent-${agent.id}`}
+      >
+        <div className="shrink-0">
+          <AgentIcon />
+        </div>
+        <div className="flex-1 min-w-0 pt-0.5">
+          <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+            {agent.name}
+          </p>
+          <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+            {chipLabel}
+          </p>
+        </div>
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 text-muted-foreground/60 transition-transform shrink-0",
+            isExpanded && "rotate-180"
+          )}
+        />
+        {onSettingsClick && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSettingsClick(agent.id); }}
+            className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-all shrink-0"
+            title="Agent settings"
+            data-testid={`agent-settings-${agent.id}`}
+          >
+            <Settings className="h-3 w-3" />
+          </button>
+        )}
       </div>
-      <div className="flex-1 min-w-0 pt-0.5">
-        <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
-          {agent.name}
-        </p>
-        <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
-          {chipLabel}
-        </p>
-      </div>
-      {onSettingsClick && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onSettingsClick(agent.id); }}
-          className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-all shrink-0"
-          title="Agent settings"
-          data-testid={`agent-settings-${agent.id}`}
-        >
-          <Settings className="h-3 w-3" />
-        </button>
+
+      {/* Expanded: recent chats + new chat button */}
+      {isExpanded && (
+        <div className="ml-5 mt-0.5 mb-1 border-l-2 border-border/40 pl-2.5 space-y-0.5">
+          {/* New chat button */}
+          <button
+            onClick={() => onSelectChat(agent.id)}
+            className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-brand-indigo hover:bg-brand-indigo/5 transition-colors"
+            data-testid={`agent-new-chat-${agent.id}`}
+          >
+            <Plus className="h-3 w-3" />
+            New conversation
+          </button>
+
+          {loadingChats ? (
+            <div className="flex items-center justify-center py-3">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+            </div>
+          ) : recentChats.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground/60 px-2.5 py-2">No conversations yet</p>
+          ) : (
+            recentChats.map((chat) => (
+              <button
+                key={chat.sessionId}
+                onClick={() => onSelectChat(agent.id, chat.sessionId)}
+                className={cn(
+                  "flex flex-col w-full px-2.5 py-1.5 rounded-lg text-left transition-colors",
+                  activeSessionId === chat.sessionId
+                    ? "bg-highlight-selected"
+                    : "hover:bg-card-hover"
+                )}
+                data-testid={`agent-chat-${chat.sessionId}`}
+              >
+                <div className="flex items-center gap-1.5 w-full min-w-0">
+                  <span className="text-[12px] font-medium text-foreground truncate flex-1 min-w-0">
+                    {chat.title || "Untitled"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/60 shrink-0">
+                    {formatTime(chat.updatedAt)}
+                  </span>
+                </div>
+                {chat.lastMessage && (
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5 w-full">
+                    {chat.lastMessage.content.slice(0, 60)}
+                  </p>
+                )}
+              </button>
+            ))
+          )}
+        </div>
       )}
     </div>
   );
@@ -240,10 +348,16 @@ interface InboxPanelProps {
   aiAgents?: { id: number; name: string; type: string; photoUrl: string | null; enabled?: boolean }[];
   /** Currently selected agent id */
   selectedAgentId?: number | null;
-  /** Called when user clicks an agent row */
+  /** Called when user clicks an agent row (old: navigates away) */
   onSelectAgent?: (id: number) => void;
+  /** Called when user selects a specific agent chat or clicks "New conversation" */
+  onSelectAgentChat?: (agentId: number, sessionId?: string) => void;
+  /** Currently active agent session ID (to highlight in expanded list) */
+  activeAgentSessionId?: string | null;
   /** Called when user clicks the settings icon on an agent row */
   onAgentSettings?: (agentId: number) => void;
+  /** Called to deselect the active agent (e.g. when clicking Bob) */
+  onDeselectAgent?: () => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -272,8 +386,14 @@ export function InboxPanel({
   aiAgents = [],
   selectedAgentId,
   onSelectAgent,
+  onSelectAgentChat,
+  activeAgentSessionId,
   onAgentSettings,
+  onDeselectAgent,
 }: InboxPanelProps) {
+  // Track which agent is expanded in the support tab
+  const [expandedAgentId, setExpandedAgentId] = useState<number | null>(null);
+
   const hasNonDefaultControls =
     groupBy !== "date" ||
     sortBy !== "newest" ||
@@ -607,61 +727,80 @@ export function InboxPanel({
         </div>
       )}
 
-      {/* ── Support tab: bot card + AI Assistants below ── */}
+      {/* ── Support tab: Assistants list (Bob + AI agents) ── */}
       {tab === "support" && (
         <div className="flex-1 overflow-y-auto p-[3px]">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => onSelectSupport?.()}
-            onKeyDown={(e) => e.key === "Enter" && onSelectSupport?.()}
-            className={cn(
-              "rounded-xl bg-highlight-selected px-2.5 pt-2.5 pb-2 flex items-start gap-2",
-              onSelectSupport ? "cursor-pointer hover:bg-highlight-selected/80 active:scale-[0.99] transition-transform md:cursor-default" : "cursor-default"
-            )}
-            data-testid="button-support-tab-open"
-          >
-            <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0 overflow-hidden">
-              {supportBotConfig?.photoUrl ? (
-                <img
-                  src={supportBotConfig.photoUrl}
-                  alt={supportBotConfig.name}
-                  className="h-9 w-9 rounded-full object-cover"
-                />
-              ) : (
-                <Headphones className="h-4 w-4 text-brand-indigo" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0 pt-0.5">
-              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
-                {supportBotConfig?.name || "Support"}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                Support Assistant
-              </p>
-            </div>
+          <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <BotMessageSquare className="h-3 w-3" />
+            Assistants
           </div>
-
-          {/* AI Assistants — below the Sophie card */}
-          {aiAgents.length > 0 && onSelectAgent && (
-            <div className="mt-4">
-              <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <BotMessageSquare className="h-3 w-3" />
-                AI Assistants
-              </div>
-              <div className="flex flex-col gap-[3px]">
-                {aiAgents.map((agent) => (
-                  <AgentInboxRow
-                    key={agent.id}
-                    agent={agent}
-                    isSelected={selectedAgentId === agent.id}
-                    onClick={() => onSelectAgent(agent.id)}
-                    onSettingsClick={onAgentSettings}
+          <div className="flex flex-col gap-[3px]">
+            {/* Bob — support assistant (non-expandable) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                onDeselectAgent?.();
+                onSelectSupport?.();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onDeselectAgent?.();
+                  onSelectSupport?.();
+                }
+              }}
+              className={cn(
+                "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
+                !selectedAgentId ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+              )}
+              data-testid="button-support-tab-open"
+            >
+              <div className="shrink-0">
+                <div className="relative">
+                  <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0 overflow-hidden">
+                    {supportBotConfig?.photoUrl ? (
+                      <img
+                        src={supportBotConfig.photoUrl}
+                        alt={supportBotConfig?.name || "Support"}
+                        className="h-9 w-9 rounded-full object-cover"
+                      />
+                    ) : (
+                      <Headphones className="h-4 w-4 text-brand-indigo" />
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 bg-green-500",
+                      !selectedAgentId ? "border-highlight-selected" : "border-card"
+                    )}
                   />
-                ))}
+                </div>
+              </div>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+                  {supportBotConfig?.name || "Support"}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                  Support Assistant
+                </p>
               </div>
             </div>
-          )}
+
+            {aiAgents.map((agent) => (
+              <AgentInboxRow
+                key={agent.id}
+                agent={agent}
+                isSelected={selectedAgentId === agent.id}
+                isExpanded={expandedAgentId === agent.id}
+                onToggleExpand={() =>
+                  setExpandedAgentId(expandedAgentId === agent.id ? null : agent.id)
+                }
+                onSelectChat={onSelectAgentChat ?? ((id) => onSelectAgent?.(id))}
+                activeSessionId={selectedAgentId === agent.id ? activeAgentSessionId : null}
+                onSettingsClick={onAgentSettings}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -780,6 +919,7 @@ export function InboxPanel({
                     right: 0,
                     paddingBottom: 3,
                     transform: `translateY(${virtualRow.start}px)`,
+                    animationDelay: `${Math.min(virtualRow.index, 12) * 25}ms`,
                   }}
                 >
                   <div

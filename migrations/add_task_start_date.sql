@@ -1,0 +1,1 @@
+ALTER TABLE "p2mxx34fvbf3ll6"."Tasks" ADD COLUMN IF NOT EXISTS "start_date" TIMESTAMPTZ;

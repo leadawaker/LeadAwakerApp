@@ -30,8 +30,10 @@ export function AgentChatPage() {
     updateSessionModel,
     updateSessionThinking,
     pendingConfirmation,
+    activity,
     confirmDestructiveActions,
     cancelDestructiveActions,
+    abortStream,
   } = useAgentChat();
 
   useEffect(() => {
@@ -124,8 +126,10 @@ export function AgentChatPage() {
             onNewSession={newSession}
             sessionId={session?.sessionId}
             pendingConfirmation={pendingConfirmation}
+            activity={activity}
             onConfirmDestructive={confirmDestructiveActions}
             onCancelDestructive={cancelDestructiveActions}
+            onAbort={abortStream}
             fullPage
           />
           <AgentSettingsSheet

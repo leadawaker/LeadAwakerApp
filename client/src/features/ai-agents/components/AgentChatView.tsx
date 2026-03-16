@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Camera } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Camera, Brain, Terminal, Search, FileCode, Globe, MousePointerClick } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -13,33 +13,86 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import type { AiAgent, AgentMessage, AgentFile, PendingConfirmation } from "../hooks/useAgentChat";
+import type { SelectedElementInfo } from "../hooks/useElementPicker";
 import { SubAgentPill } from "./SubAgentPill";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+
+// ─── Slash commands ──────────────────────────────────────────────────────────
+
+interface SlashCommand {
+  name: string;
+  args?: string;
+  description: string;
+}
+
+const SLASH_COMMANDS: SlashCommand[] = [
+  { name: "/new", description: "Start a new conversation" },
+  { name: "/clear", description: "Clear conversation history" },
+  { name: "/model", args: "sonnet | opus | haiku", description: "Switch AI model" },
+  { name: "/thinking", args: "none | low | medium | high", description: "Set thinking level" },
+  { name: "/page", description: "Toggle page awareness on/off" },
+  { name: "/help", description: "Show available commands" },
+];
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 function TypingDots() {
   return (
-    <div className="flex items-start gap-1.5">
-      <div className="w-8 h-8 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
-        <Cpu className="h-4 w-4 text-brand-indigo" />
-      </div>
-      <div className="bg-white dark:bg-card rounded-lg rounded-tl-none px-3 py-2 shadow-sm">
-        <div className="flex gap-1 items-center h-4">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-brand-indigo/60"
-              style={{ animation: `agentDotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
-            />
-          ))}
-          <style>{`
-            @keyframes agentDotBounce {
-              0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-              30% { transform: translateY(-4px); opacity: 1; }
-            }
-          `}</style>
+    <div className="flex justify-start">
+      <div className="relative">
+        <div className="bg-white dark:bg-card rounded-2xl rounded-bl-none px-3 py-2 shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
+          <div className="flex gap-1 items-center h-4">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-1.5 h-1.5 rounded-full bg-brand-indigo/60"
+                style={{ animation: `agentDotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+              />
+            ))}
+            <style>{`
+              @keyframes agentDotBounce {
+                0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+                30% { transform: translateY(-4px); opacity: 1; }
+              }
+            `}</style>
+          </div>
         </div>
+        <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
       </div>
+    </div>
+  );
+}
+
+// ─── Activity indicator (shows what the AI is doing) ─────────────────────────
+function ActivityIndicator({ activity }: { activity: { type: "thinking" | "tool"; tool?: string; label?: string } }) {
+  const icon = activity.type === "thinking" ? (
+    <Brain className="h-3 w-3 animate-pulse" />
+  ) : activity.tool === "Bash" ? (
+    <Terminal className="h-3 w-3" />
+  ) : activity.tool === "Grep" || activity.tool === "Glob" ? (
+    <Search className="h-3 w-3" />
+  ) : activity.tool === "WebSearch" || activity.tool === "WebFetch" ? (
+    <Globe className="h-3 w-3" />
+  ) : (
+    <FileCode className="h-3 w-3" />
+  );
+
+  const label = activity.type === "thinking"
+    ? "Thinking..."
+    : activity.label || `Using ${activity.tool || "tool"}`;
+
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-indigo/10 text-brand-indigo text-[11px] font-medium w-fit animate-in fade-in slide-in-from-bottom-1 duration-200">
+      {icon}
+      <span>{label}</span>
+      <span className="flex gap-0.5 ml-0.5">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="w-1 h-1 rounded-full bg-brand-indigo/60"
+            style={{ animation: `agentDotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+          />
+        ))}
+      </span>
     </div>
   );
 }
@@ -191,12 +244,12 @@ function MessageBubble({
   msg,
   agent,
   onApplyCampaign,
-  fullPage = false,
+  isLastInStreak,
 }: {
   msg: AgentMessage;
   agent: AiAgent;
   onApplyCampaign?: (campaignId: string, fields: Record<string, string>) => void;
-  fullPage?: boolean;
+  isLastInStreak?: boolean;
 }) {
   const isUser = msg.role === "user";
   const isSkill = !!(msg.metadata?.skillId);
@@ -206,28 +259,24 @@ function MessageBubble({
   // Strip campaign_update XML from displayed content
   const displayContent = msg.content.replace(/<campaign_update[\s\S]*?<\/campaign_update>/g, "").trim();
 
+  const time = msg.createdAt
+    ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
+
   return (
-    <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
-      <div className={cn("flex gap-1.5", isUser ? "justify-end" : "justify-start")}>
-        {!isUser && (
-          <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-            {agent.photoUrl ? (
-              <AvatarImage src={agent.photoUrl} alt={agent.name} />
-            ) : null}
-            <AvatarFallback className="bg-brand-indigo/10 text-brand-indigo text-[10px] font-bold">
-              {agent.type === "code_runner" ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
-            </AvatarFallback>
-          </Avatar>
-        )}
+    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+      <div className="relative" style={{ maxWidth: "80%" }}>
         <div
           className={cn(
-            "px-3 pt-2 pb-1.5 leading-relaxed shadow-sm rounded-lg overflow-hidden",
-            fullPage ? "max-w-[90%] sm:max-w-[85%] text-sm" : "max-w-[85%] sm:max-w-[80%] text-[13px]",
+            "px-3 pt-2 pb-1.5 text-[15px] relative",
+            "rounded-2xl",
+            isLastInStreak && isUser && "rounded-br-none",
+            isLastInStreak && !isUser && "rounded-bl-none",
             isUser
-              ? "bg-brand-indigo text-white rounded-tr-none whitespace-pre-wrap break-words"
+              ? "bg-brand-indigo text-white shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]"
               : isSkillError
-                ? "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 text-foreground rounded-tl-none"
-                : "bg-white dark:bg-card text-foreground rounded-tl-none",
+                ? "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 text-foreground"
+                : "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]",
           )}
         >
           {/* Skill badge indicator */}
@@ -248,65 +297,73 @@ function MessageBubble({
               <span>{isSkillError ? `Skill Failed: ${skillName}` : `Skill: ${skillName}`}</span>
             </div>
           )}
-          {isUser ? (
-            <span>{displayContent}</span>
-          ) : (
-            <div className="agent-markdown-content min-w-0 overflow-hidden">
-              <MarkdownRenderer content={displayContent} />
-            </div>
+          <div className="flex flex-col gap-1">
+            {isUser ? (
+              <div className="flex items-end gap-1.5">
+                <span className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0">{displayContent}</span>
+                {time && (
+                  <span className="shrink-0 text-[11px] leading-none select-none opacity-50 mb-0.5">{time}</span>
+                )}
+              </div>
+            ) : (
+              <div className="agent-markdown-content min-w-0 overflow-hidden">
+                <MarkdownRenderer content={displayContent} />
+                {time && (
+                  <div className="flex justify-end mt-0.5">
+                    <span className="text-[11px] leading-none select-none opacity-50">{time}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {msg.files && msg.files.length > 0 && (
+              <div className="flex flex-col gap-1">
+                {msg.files.map((file) => (
+                  <FilePreview key={file.id} file={file} isUser={isUser} />
+                ))}
+              </div>
+            )}
+            {msg.subAgentBlocks && msg.subAgentBlocks.length > 0 && (
+              <div className="mt-1.5 flex flex-col gap-0.5">
+                {msg.subAgentBlocks.map((block, i) => (
+                  <SubAgentPill key={i} block={block} />
+                ))}
+              </div>
+            )}
+            {campaignUpdate && onApplyCampaign && (
+              <button
+                onClick={() => onApplyCampaign(campaignUpdate.campaignId, campaignUpdate.fields)}
+                className="mt-2 w-full text-[11px] font-semibold bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo rounded-md px-3 py-1.5 transition-colors"
+              >
+                Apply to Campaign #{campaignUpdate.campaignId}
+              </button>
+            )}
+          </div>
+          {/* Tails — side-pointing, bottom-aligned, only on last in streak */}
+          {isLastInStreak && isUser && (
+            <span aria-hidden="true" className="absolute bottom-0 -right-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px] border-l-brand-indigo" />
           )}
-          {msg.files && msg.files.length > 0 && (
-            <div className="flex flex-col gap-1">
-              {msg.files.map((file) => (
-                <FilePreview key={file.id} file={file} isUser={isUser} />
-              ))}
-            </div>
-          )}
-          {msg.subAgentBlocks && msg.subAgentBlocks.length > 0 && (
-            <div className="mt-1.5 flex flex-col gap-0.5">
-              {msg.subAgentBlocks.map((block, i) => (
-                <SubAgentPill key={i} block={block} />
-              ))}
-            </div>
-          )}
-          {campaignUpdate && onApplyCampaign && (
-            <button
-              onClick={() => onApplyCampaign(campaignUpdate.campaignId, campaignUpdate.fields)}
-              className="mt-2 w-full text-[11px] font-semibold bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo rounded-md px-3 py-1.5 transition-colors"
-            >
-              Apply to Campaign #{campaignUpdate.campaignId}
-            </button>
+          {isLastInStreak && !isUser && !isSkillError && (
+            <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
           )}
         </div>
       </div>
-      {msg.createdAt && (
-        <span className={cn("text-[10px] text-muted-foreground mt-0.5", isUser ? "mr-1" : "ml-8")}>
-          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </span>
-      )}
     </div>
   );
 }
 
 // ─── Streaming bubble ─────────────────────────────────────────────────────────
-function StreamingBubble({ text, agent, fullPage = false }: { text: string; agent: AiAgent; fullPage?: boolean }) {
+function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
   if (!text) return <TypingDots />;
   return (
-    <div className="flex items-start gap-1.5">
-      <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-        {agent.photoUrl ? <AvatarImage src={agent.photoUrl} alt={agent.name} /> : null}
-        <AvatarFallback className="bg-brand-indigo/10 text-brand-indigo text-[10px] font-bold">
-          {agent.type === "code_runner" ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
-        </AvatarFallback>
-      </Avatar>
-      <div className={cn(
-        "px-3 pt-2 pb-1.5 leading-relaxed shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground overflow-hidden",
-        fullPage ? "max-w-[90%] sm:max-w-[85%] text-sm" : "max-w-[85%] sm:max-w-[80%] text-[13px]",
-      )}>
-        <div className="agent-markdown-content min-w-0 overflow-hidden">
-          <MarkdownRenderer content={text} />
+    <div className="flex justify-start">
+      <div className="relative" style={{ maxWidth: "80%" }}>
+        <div className="px-3 pt-2 pb-1.5 text-[15px] relative rounded-2xl rounded-bl-none bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
+          <div className="agent-markdown-content min-w-0 overflow-hidden">
+            <MarkdownRenderer content={text} />
+          </div>
+          <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />
+          <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
         </div>
-        <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />
       </div>
     </div>
   );
@@ -323,9 +380,13 @@ export function AgentChatView({
   onNewSession,
   sessionId,
   pendingConfirmation,
+  activity,
   onConfirmDestructive,
   onCancelDestructive,
-  fullPage = false,
+  onAbort,
+  fullPage,
+  selectedElement,
+  onClearElement,
 }: {
   agent: AiAgent;
   messages: AgentMessage[];
@@ -336,9 +397,13 @@ export function AgentChatView({
   onNewSession: () => void;
   sessionId?: string;
   pendingConfirmation?: PendingConfirmation | null;
+  activity?: { type: "thinking" | "tool"; tool?: string; label?: string; timestamp: number } | null;
   onConfirmDestructive?: () => void;
   onCancelDestructive?: () => void;
+  onAbort?: () => void;
   fullPage?: boolean;
+  selectedElement?: SelectedElementInfo | null;
+  onClearElement?: () => void;
 }) {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
@@ -348,6 +413,9 @@ export function AgentChatView({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0); // 0-100
   const [pendingVoiceFile, setPendingVoiceFile] = useState<{ id: number; name: string } | null>(null);
+  const [slashMenuOpen, setSlashMenuOpen] = useState(false);
+  const [slashMenuIndex, setSlashMenuIndex] = useState(0);
+  const [commandFeedback, setCommandFeedback] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -360,21 +428,118 @@ export function AgentChatView({
   // Detect mobile for camera capture button
   const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // Suppress unused variable warning — onNewSession is available for parent use
-  void onNewSession;
-
   // Scroll to bottom on new messages/streaming
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingText]);
 
+  // Auto-dismiss command feedback
+  useEffect(() => {
+    if (!commandFeedback) return;
+    const t = setTimeout(() => setCommandFeedback(null), 3000);
+    return () => clearTimeout(t);
+  }, [commandFeedback]);
+
+  // Filter slash commands based on current input
+  const filteredCommands = slashMenuOpen
+    ? SLASH_COMMANDS.filter((cmd) => cmd.name.startsWith(input.split(" ")[0].toLowerCase()))
+    : [];
+
+  // Execute a slash command — returns true if handled
+  const executeSlashCommand = useCallback((text: string): boolean => {
+    const trimmed = text.trim().toLowerCase();
+    const [cmd, ...args] = trimmed.split(/\s+/);
+
+    if (cmd === "/new") {
+      onNewSession();
+      setCommandFeedback("Starting new conversation...");
+      return true;
+    }
+    if (cmd === "/clear") {
+      window.dispatchEvent(
+        new CustomEvent("agent-delete-conversation", { detail: { agentId: agent.id } }),
+      );
+      setCommandFeedback("Conversation cleared.");
+      return true;
+    }
+    if (cmd === "/model") {
+      const MODEL_MAP: Record<string, string> = {
+        sonnet: "claude-sonnet-4-20250514",
+        opus: "claude-opus-4-20250514",
+        haiku: "claude-haiku-4-5-20251001",
+      };
+      const modelKey = args[0];
+      const modelId = modelKey ? MODEL_MAP[modelKey] : null;
+      if (!modelId) {
+        setCommandFeedback("Usage: /model sonnet | opus | haiku");
+        return true;
+      }
+      window.dispatchEvent(
+        new CustomEvent("agent-model-change", { detail: { agentId: agent.id, model: modelId } }),
+      );
+      setCommandFeedback(`Switched to ${modelKey}.`);
+      return true;
+    }
+    if (cmd === "/thinking") {
+      const validLevels = ["none", "low", "medium", "high"];
+      const level = args[0];
+      if (!level || !validLevels.includes(level)) {
+        setCommandFeedback("Usage: /thinking none | low | medium | high");
+        return true;
+      }
+      window.dispatchEvent(
+        new CustomEvent("agent-thinking-change", { detail: { agentId: agent.id, thinkingLevel: level } }),
+      );
+      setCommandFeedback(`Thinking set to ${level}.`);
+      return true;
+    }
+    if (cmd === "/page") {
+      // Toggle — we don't know current state here, so just dispatch
+      window.dispatchEvent(
+        new CustomEvent("agent-page-awareness-toggle-request", { detail: { agentId: agent.id } }),
+      );
+      setCommandFeedback("Page awareness toggled.");
+      return true;
+    }
+    if (cmd === "/help") {
+      setCommandFeedback(
+        SLASH_COMMANDS.map((c) => `${c.name}${c.args ? ` <${c.args}>` : ""} — ${c.description}`).join("\n"),
+      );
+      return true;
+    }
+    return false;
+  }, [agent.id, onNewSession]);
+
   const handleSend = () => {
-    if (!input.trim() || streaming) return;
+    if (!input.trim()) return;
+
+    // Steering: if AI is responding, abort first then send new message
+    if (streaming && onAbort) {
+      onAbort();
+    }
+
+    // Check for slash commands
+    if (input.trim().startsWith("/")) {
+      const handled = executeSlashCommand(input.trim());
+      if (handled) {
+        setInput("");
+        setSlashMenuOpen(false);
+        if (textareaRef.current) textareaRef.current.style.height = "auto";
+        return;
+      }
+    }
+
+    let messageText = input.trim();
+    if (selectedElement) {
+      const el = selectedElement;
+      messageText += `\n\n[Selected Element: <${el.tagName}> component="${el.componentName || "unknown"}" testId="${el.testId || ""}" text="${el.textContent.slice(0, 120)}" classes="${el.classes.join(" ")}"]`;
+    }
     const fileId = pendingFile?.id ?? pendingVoiceFile?.id;
-    onSend(input.trim(), undefined, fileId);
+    onSend(messageText, undefined, fileId);
     setInput("");
     setPendingFile(null);
     setPendingVoiceFile(null);
+    setSlashMenuOpen(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -531,6 +696,33 @@ export function AgentChatView({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Slash menu navigation
+    if (slashMenuOpen && filteredCommands.length > 0) {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSlashMenuIndex((i) => (i <= 0 ? filteredCommands.length - 1 : i - 1));
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSlashMenuIndex((i) => (i >= filteredCommands.length - 1 ? 0 : i + 1));
+        return;
+      }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const selected = filteredCommands[slashMenuIndex];
+        if (selected) {
+          setInput(selected.name + (selected.args ? " " : ""));
+          setSlashMenuOpen(false);
+        }
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setSlashMenuOpen(false);
+        return;
+      }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -595,6 +787,19 @@ export function AgentChatView({
     // Check if MediaRecorder is available
     if (typeof MediaRecorder === "undefined") {
       console.warn("[AgentChat] MediaRecorder not supported in this browser");
+      setCommandFeedback("Voice recording is not supported in this browser.");
+      return;
+    }
+
+    // Check if we're in a secure context (HTTPS or localhost)
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setCommandFeedback("Microphone requires HTTPS. Try opening the app directly in your browser.");
+      return;
+    }
+
+    // Check if getUserMedia is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCommandFeedback("Microphone not supported in this browser environment.");
       return;
     }
 
@@ -603,7 +808,7 @@ export function AgentChatView({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 16000, // Optimal for speech recognition
+          sampleRate: 16000,
         },
       });
       streamRef.current = stream;
@@ -617,8 +822,14 @@ export function AgentChatView({
 
       const recorder = new MediaRecorder(stream, recorderOptions);
       audioChunksRef.current = [];
+
+      console.log("[Voice Recording] Starting recording with mime type:", mimeType, "Recorder mime:", recorder.mimeType);
+
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        console.log("[Voice Recording] Data available:", e.data.size, "bytes");
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
       };
 
       // Handle unexpected errors (mobile browsers can interrupt recording)
@@ -649,7 +860,14 @@ export function AgentChatView({
         // Build blob from chunks using the actual recorder mimeType
         const actualMime = recorder.mimeType || mimeType || "audio/webm";
         const blob = new Blob(audioChunksRef.current, { type: actualMime });
-        if (blob.size === 0) return; // cancelled — no data
+
+        console.log("[Voice Recording] Audio chunks:", audioChunksRef.current.length, "Total size:", blob.size, "bytes");
+
+        if (blob.size === 0) {
+          console.warn("[Voice Recording] No audio data captured");
+          setCommandFeedback("No audio recorded. Try speaking closer to the microphone.");
+          return;
+        }
 
         // Transcribe via backend
         setTranscribing(true);
@@ -670,6 +888,8 @@ export function AgentChatView({
               });
               if (res.ok) {
                 const data = await res.json() as { transcription: string; fileId?: number; filename?: string };
+                console.log("[Voice Recording] Transcription response:", data);
+
                 if (data.transcription) {
                   setInput(data.transcription);
                   if (textareaRef.current) {
@@ -683,9 +903,14 @@ export function AgentChatView({
                 if (data.fileId) {
                   setPendingVoiceFile({ id: data.fileId, name: data.filename || defaultExt });
                 }
+              } else {
+                const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
+                console.error("[Voice Recording] Server error:", res.status, errorData);
+                setCommandFeedback(`Recording failed: ${errorData.message || "Server error"}`);
               }
             } catch (err) {
               console.error("[AgentChat] Transcription error:", err);
+              setCommandFeedback("Transcription failed. Try again.");
             }
             setTranscribing(false);
           };
@@ -695,8 +920,10 @@ export function AgentChatView({
         }
       };
 
-      // Use timeslice for more reliable data capture on mobile (push data every 1s)
-      recorder.start(1000);
+      // Use shorter timeslice for better compatibility with embedded browsers
+      const timeslice = 500; // 500ms intervals for better capture in Simple Browser
+      recorder.start(timeslice);
+      console.log("[Voice Recording] Started recording with", timeslice, "ms timeslice");
       mediaRecorderRef.current = recorder;
       setRecording(true);
       setRecordingDuration(0);
@@ -704,9 +931,14 @@ export function AgentChatView({
       recordingTimerRef.current = setInterval(() => {
         setRecordingDuration((d) => d + 1);
       }, 1000);
-    } catch (err) {
-      // Log permission denial for debugging on mobile
+    } catch (err: any) {
       console.warn("[AgentChat] Microphone access denied or unavailable:", err);
+      const msg = err?.name === "NotAllowedError"
+        ? "Microphone permission denied. Check your browser settings."
+        : err?.name === "NotFoundError"
+          ? "No microphone found. Connect a microphone and try again."
+          : `Microphone unavailable: ${err?.message || "unknown error"}`;
+      setCommandFeedback(msg);
     }
   }, [sessionId, getSupportedMimeType]);
 
@@ -741,13 +973,10 @@ export function AgentChatView({
   const isCodeRunner = agent.type === "code_runner";
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden bg-[#f5f5f5] dark:bg-[#1a1a2e]">
       {/* Messages area */}
-      <div className={cn(
-        "flex-1 overflow-y-auto space-y-3 min-h-0 overscroll-contain",
-        fullPage ? "p-4 sm:p-6 lg:p-8" : "p-3 sm:p-4",
-      )}>
-        <div className={cn(fullPage && "max-w-4xl mx-auto w-full")}>
+      <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain px-4 pt-4 pb-4">
+        <div className="flex flex-col">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -755,33 +984,49 @@ export function AgentChatView({
         ) : (
           <>
             {messages.length === 0 && !streaming && (
-              <div className="flex items-start gap-1.5">
-                <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-                  {agent.photoUrl ? <AvatarImage src={agent.photoUrl} alt={agent.name} /> : null}
-                  <AvatarFallback className="bg-brand-indigo/10 text-brand-indigo text-[10px] font-bold">
-                    {isCodeRunner ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className={cn(
-                  "px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-tl-none leading-relaxed shadow-sm",
-                  fullPage ? "max-w-[70%] text-sm" : "max-w-[80%] text-[13px]",
-                )}>
-                  {isCodeRunner
-                    ? "I'm connected to the Pi. I can read and modify the LeadAwakerApp codebase and changes apply immediately via pm2. What would you like to change?"
-                    : `Hi! I'm the ${agent.name}. I can help craft and improve your campaign messages. Share a campaign name or paste a URL for me to reference.`}
+              <div className="flex justify-start">
+                <div className="relative" style={{ maxWidth: "80%" }}>
+                  <div className="px-3 pt-2 pb-2 text-[15px] relative bg-white dark:bg-card text-gray-900 dark:text-foreground rounded-2xl rounded-bl-none leading-relaxed shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
+                    {isCodeRunner
+                      ? "I'm connected to the Pi. I can read and modify the LeadAwakerApp codebase and changes apply immediately via pm2. What would you like to change?"
+                      : `Hi! I'm the ${agent.name}. I can help craft and improve your campaign messages. Share a campaign name or paste a URL for me to reference.`}
+                    <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
+                  </div>
                 </div>
               </div>
             )}
-            {messages.map((msg, i) => (
-              <MessageBubble
-                key={msg.id ?? `msg-${i}`}
-                msg={msg}
-                agent={agent}
-                onApplyCampaign={agent.type === "campaign_crafter" ? handleApplyCampaign : undefined}
-                fullPage={fullPage}
-              />
-            ))}
-            {streaming && <StreamingBubble text={streamingText} agent={agent} fullPage={fullPage} />}
+            {messages.map((msg, i) => {
+              const prevMsg = i > 0 ? messages[i - 1] : null;
+              const nextMsg = i < messages.length - 1 ? messages[i + 1] : null;
+              const sameAsPrev = prevMsg?.role === msg.role;
+              const isLastInStreak = !nextMsg || nextMsg.role !== msg.role;
+              // For the very last message, if streaming follows (always AI), adjust
+              const isLastBeforeStreaming = streaming && i === messages.length - 1 && msg.role === "assistant";
+
+              return (
+                <div
+                  key={msg.id ?? `msg-${i}`}
+                  style={{ marginTop: i === 0 ? 0 : sameAsPrev ? 3 : 8 }}
+                >
+                  <MessageBubble
+                    msg={msg}
+                    agent={agent}
+                    isLastInStreak={isLastBeforeStreaming ? false : isLastInStreak}
+                    onApplyCampaign={agent.type === "campaign_crafter" ? handleApplyCampaign : undefined}
+                  />
+                </div>
+              );
+            })}
+            {streaming && (
+              <div style={{ marginTop: messages.length > 0 && messages[messages.length - 1]?.role === "assistant" ? 3 : 8 }}>
+                <StreamingBubble text={streamingText} agent={agent} />
+                {activity && (
+                  <div className="mt-1.5 ml-1">
+                    <ActivityIndicator activity={activity} />
+                  </div>
+                )}
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </>
         )}
@@ -789,11 +1034,8 @@ export function AgentChatView({
       </div>
 
       {/* Input area */}
-      <div className={cn(
-        "border-t border-border/50 bg-background shrink-0",
-        fullPage ? "p-4 sm:p-6 lg:px-8 pb-[max(1rem,env(safe-area-inset-bottom))]" : "p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-      )}>
-        <div className={cn(fullPage && "max-w-4xl mx-auto w-full")}>
+      <div className="px-3 pb-3 shrink-0">
+        <div>
         {/* Pending file indicator */}
         {pendingFile && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg text-[12px]">
@@ -830,6 +1072,27 @@ export function AgentChatView({
               onClick={() => setPendingVoiceFile(null)}
               className="ml-auto text-muted-foreground hover:text-foreground shrink-0 h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center"
               title="Remove voice memo"
+            >
+              <X className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+            </button>
+          </div>
+        )}
+        {/* Selected element indicator */}
+        {selectedElement && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800/30 rounded-lg text-[12px]">
+            <MousePointerClick className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+            <span className="font-mono text-[11px] text-violet-700 dark:text-violet-300 shrink-0">
+              {selectedElement.componentName || `<${selectedElement.tagName}>`}
+            </span>
+            {(selectedElement.textContent || selectedElement.testId) && (
+              <span className="truncate text-foreground/60 text-[10px]">
+                {selectedElement.textContent || selectedElement.testId}
+              </span>
+            )}
+            <button
+              onClick={onClearElement}
+              className="ml-auto text-muted-foreground hover:text-foreground shrink-0 h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center"
+              title="Remove element selection"
             >
               <X className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
             </button>
@@ -896,7 +1159,38 @@ export function AgentChatView({
           </div>
         )}
 
-        <div className="flex items-end gap-2 bg-muted/40 rounded-2xl px-3 py-2 border border-border/40">
+        {/* Slash command autocomplete menu */}
+        {slashMenuOpen && filteredCommands.length > 0 && (
+          <div className="mb-1 bg-white dark:bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden">
+            {filteredCommands.map((cmd, i) => (
+              <button
+                key={cmd.name}
+                onClick={() => {
+                  setInput(cmd.name + (cmd.args ? " " : ""));
+                  setSlashMenuOpen(false);
+                  textareaRef.current?.focus();
+                }}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 text-left text-[12px] transition-colors",
+                  i === slashMenuIndex ? "bg-brand-indigo/10 text-brand-indigo" : "hover:bg-muted/50 text-foreground",
+                )}
+              >
+                <span className="font-mono font-semibold shrink-0">{cmd.name}</span>
+                {cmd.args && <span className="text-muted-foreground/60 text-[10px]">{cmd.args}</span>}
+                <span className="ml-auto text-muted-foreground text-[10px] truncate">{cmd.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Command feedback toast */}
+        {commandFeedback && (
+          <div className="mb-1 px-3 py-2 bg-brand-indigo/5 border border-brand-indigo/20 rounded-xl text-[11px] text-brand-indigo whitespace-pre-line">
+            {commandFeedback}
+          </div>
+        )}
+
+        <div className="flex items-end gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] shadow-sm px-3 py-2">
           {/* Hidden file input — file picker (documents, images from gallery) */}
           <input
             ref={fileInputRef}
@@ -919,18 +1213,24 @@ export function AgentChatView({
             ref={textareaRef}
             value={input}
             onChange={(e) => {
-              setInput(e.target.value);
+              const val = e.target.value;
+              setInput(val);
               e.target.style.height = "auto";
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+              // Open slash menu when typing "/" at start of input
+              if (val.startsWith("/") && !val.includes("\n")) {
+                setSlashMenuOpen(true);
+                setSlashMenuIndex(0);
+              } else {
+                setSlashMenuOpen(false);
+              }
             }}
             onKeyDown={handleKeyDown}
-            placeholder={recording ? "Recording..." : isCodeRunner ? "Tell me what to change..." : "Ask about campaigns..."}
+            placeholder={recording ? "Recording..." : isCodeRunner ? "Type / for commands..." : "Ask about campaigns..."}
             rows={1}
-            disabled={streaming || loading || recording}
-            className={cn(
-              "flex-1 resize-none bg-transparent placeholder:text-muted-foreground/50 focus:outline-none py-0.5",
-              fullPage ? "text-sm min-h-[32px] max-h-[160px]" : "text-[13px] min-h-[28px] max-h-[120px]",
-            )}
+            disabled={loading || recording}
+            className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5 pl-1"
+            style={{ minHeight: "44px", maxHeight: "120px" }}
           />
 
           {/* Camera capture button — visible on mobile only */}
@@ -959,19 +1259,32 @@ export function AgentChatView({
             <Paperclip className="h-4 w-4 max-md:h-5 max-md:w-5" />
           </button>
 
+          {/* Stop button — visible during streaming when no text input */}
+          {streaming && !input.trim() && onAbort && (
+            <button
+              onClick={onAbort}
+              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
+              title="Stop response"
+              data-testid="stop-button"
+            >
+              <Square className="h-3 w-3 max-md:h-4 max-md:w-4 fill-white" />
+            </button>
+          )}
+
           {/* Send / Mic button */}
           {input.trim() ? (
             <button
               onClick={handleSend}
-              disabled={streaming || loading}
-              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
-              data-testid="send-button"
-            >
-              {streaming ? (
-                <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+              disabled={loading}
+              className={cn(
+                "h-8 w-8 max-md:h-11 max-md:w-11 rounded-full text-white flex items-center justify-center shrink-0 transition-colors",
+                streaming ? "bg-orange-500 hover:bg-orange-600" : "bg-brand-indigo hover:bg-brand-indigo/90",
+                loading && "opacity-40",
               )}
+              data-testid="send-button"
+              title={streaming ? "Interrupt & send" : "Send message"}
+            >
+              <Send className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
             </button>
           ) : transcribing ? (
             <button
@@ -993,7 +1306,7 @@ export function AgentChatView({
           ) : (
             <button
               onClick={startRecording}
-              disabled={streaming || loading}
+              disabled={loading}
               className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
               data-testid="mic-button"
             >

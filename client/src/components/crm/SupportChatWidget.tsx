@@ -522,7 +522,7 @@ export function SupportChatWidget({
         )}
 
         {/* Floating mode: plain bg */}
-        {!isInline && <div className="absolute inset-0 bg-card" />}
+        {!isInline && <div className="absolute inset-0 bg-white" />}
 
         {/* ── Content above gradient ── */}
         <div className="relative flex flex-col h-full overflow-hidden">

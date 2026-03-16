@@ -12,6 +12,7 @@ import ConversationsPage from "@/pages/Conversations";
 import LeadDetailPage from "@/pages/LeadDetail";
 import AppCampaigns from "@/pages/AppCampaigns";
 import AppAccounts from "@/pages/AppAccounts";
+import AppProspects from "@/pages/AppProspects";
 import CalendarPage from "@/pages/Calendar";
 import AutomationLogsPage from "@/pages/AutomationLogs";
 // UsersPage removed — user management now lives in Settings > Team tab
@@ -95,6 +96,9 @@ export default function AppArea() {
           <Route path="/agency/accounts">
             <AgencyOnly prefix="/agency"><AppAccounts /></AgencyOnly>
           </Route>
+          <Route path="/agency/prospects">
+            <AgencyOnly prefix="/agency"><AppProspects /></AgencyOnly>
+          </Route>
           <Route path="/agency/users">
             <Redirect to="/agency/settings" />
           </Route>
@@ -144,6 +148,9 @@ export default function AppArea() {
           {/* Subaccount agency-only routes (admin pages) */}
           <Route path="/subaccount/accounts">
             <AgencyOnly prefix="/subaccount"><AppAccounts /></AgencyOnly>
+          </Route>
+          <Route path="/subaccount/prospects">
+            <AgencyOnly prefix="/subaccount"><AppProspects /></AgencyOnly>
           </Route>
           <Route path="/subaccount/users">
             <Redirect to="/subaccount/settings" />
