@@ -54,3 +54,4 @@ Generated_Image_*.jpg
 .autoforge/
 core.*
 uploads/
+n8n automations/
