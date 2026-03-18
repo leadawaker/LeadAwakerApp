@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 
@@ -7,9 +7,13 @@ export interface ScoreBreakdown {
   engagement_score: number;
   activity_score: number;
   funnel_weight: number;
+  engagement_max: number;
+  activity_max: number;
+  funnel_max: number;
   tier: string;
   signals: string[];
   trend: "up" | "down" | "stable";
+  sentiment: "positive" | "negative" | "neutral" | null;
   last_updated: string | null;
 }
 
@@ -17,7 +21,7 @@ export function useScoreBreakdown(leadId: number | null) {
   const [breakdown, setBreakdown] = useState<ScoreBreakdown | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchScore = useCallback(() => {
     if (!leadId) return;
     setLoading(true);
     apiFetch(`/api/leads/${leadId}/score-breakdown`)
@@ -27,7 +31,22 @@ export function useScoreBreakdown(leadId: number | null) {
       .finally(() => setLoading(false));
   }, [leadId]);
 
-  return { breakdown, loading };
+  useEffect(() => {
+    fetchScore();
+    // Poll every 20s so score updates live during demos / active conversations
+    const iv = setInterval(fetchScore, 20_000);
+    return () => clearInterval(iv);
+  }, [fetchScore]);
+
+  const resetToZero = useCallback(() => {
+    setBreakdown((prev) =>
+      prev
+        ? { ...prev, lead_score: 0, engagement_score: 0, activity_score: 0, funnel_weight: 0, tier: "Sleeping", signals: [], trend: "stable" }
+        : null,
+    );
+  }, []);
+
+  return { breakdown, loading, refetch: fetchScore, resetToZero };
 }
 
 export const TIER_COLORS: Record<string, string> = {
@@ -74,12 +93,18 @@ export function useScoreHistory(leadId: number | null) {
 
   useEffect(() => {
     if (!leadId) return;
-    setLoading(true);
-    apiFetch(`/api/leads/${leadId}/score-history?days=14`)
-      .then((r) => r.json())
-      .then((data) => setHistory(Array.isArray(data) ? data : []))
-      .catch(() => setHistory([]))
-      .finally(() => setLoading(false));
+    const fetch = () => {
+      setLoading(true);
+      apiFetch(`/api/leads/${leadId}/score-history?days=14`)
+        .then((r) => r.json())
+        .then((data) => setHistory(Array.isArray(data) ? data : []))
+        .catch(() => setHistory([]))
+        .finally(() => setLoading(false));
+    };
+    fetch();
+    // Poll every 20s so chart updates live during demos
+    const iv = setInterval(fetch, 20_000);
+    return () => clearInterval(iv);
   }, [leadId]);
 
   return { history, loading };

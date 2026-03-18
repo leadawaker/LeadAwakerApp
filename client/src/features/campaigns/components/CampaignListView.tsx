@@ -60,10 +60,12 @@ function CampaignListCard({
   campaign,
   isActive,
   onClick,
+  campaignNumber,
 }: {
   campaign: Campaign;
   isActive: boolean;
   onClick: () => void;
+  campaignNumber?: number;
 }) {
   const { t } = useTranslation("campaigns");
   const name = String(campaign.name || t("detail.unnamed"));
@@ -169,6 +171,9 @@ function CampaignListCard({
                 <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: statusHex }} />
                 {t(`statusLabels.${status}`, status) || t("statusLabels.Unknown")}
               </span>
+              {campaignNumber != null && (
+                <span className="text-[10px] font-semibold text-foreground/35">#{campaignNumber}</span>
+              )}
             </div>
             {accountName && (
               <div className="flex items-center gap-1 mt-1">
@@ -819,6 +824,12 @@ export function CampaignListView({
                     <CampaignListCard
                       campaign={item.campaign}
                       isActive={isSelected}
+                      campaignNumber={(() => {
+                        const aid = item.campaign.account_id || (item.campaign as any).Accounts_id;
+                        const same = campaigns.filter(c => (c.account_id || (c as any).Accounts_id) === aid).sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+                        const idx2 = same.findIndex(c => getCampaignId(c) === cid);
+                        return idx2 >= 0 ? idx2 + 1 : 1;
+                      })()}
                       onClick={() => {
                         onSelectCampaign(item.campaign);
                         if (isMobile768) {

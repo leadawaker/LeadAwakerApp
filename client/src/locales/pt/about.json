@@ -9,41 +9,41 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Fundador",
-    "quote": "\"Na clínica dos meus pais, vi o mesmo padrão repetidas vezes: interesse genuíno, consultas agendadas e depois... silêncio. Foi quando aprendi que a perda de leads não é falha de marketing; é um sinal para reconectar.\"",
-    "description": "10+ anos lançando software. 5 anos de automação data-driven. 4 anos gerindo um negócio real com minha esposa Danique. Isso é o que define o Lead Awaker."
+    "quote": "\"Na clínica dos meus pais, vi o mesmo padrão repetidas vezes: interesse genuíno, consultas agendadas e depois... silêncio. Gastavam milhares enchendo um balde que vazava por baixo. Foi quando aprendi: você não precisa de mais leads. Precisa parar de perder os que já tem.\"",
+    "description": "Passei uma década entregando sob deadlines impossíveis na Warner Bros. e na Sega. Depois construí um negócio real com minha esposa Danique, onde cada lead importava porque era o nosso dinheiro em jogo. O Lead Awaker existe porque eu vivi o problema."
   },
 
   "credentials": {
-    "title": "Construído por alguém que já entregou coisas que importam",
-    "subtitle": "10+ anos em produção digital. Empresas reais. Receita real.",
+    "title": "O problema não são seus leads. É o que acontece depois.",
+    "subtitle": "De estúdios de Hollywood a construir um negócio do zero. A mesma disciplina, aplicada aos seus leads.",
     "resultsNode": "Resultados reais.",
     "items": [
       {
-        "metric": "$150M+",
-        "label": "Bilheteria contribuída",
-        "description": "Arte digital em produções da Warner Bros., incluindo o filme Tom & Jerry (2021)"
+        "metric": "Warner Bros.",
+        "label": "Entregue sob deadlines de estúdio",
+        "description": "Assets de produção entregues para um grande filme. Quando o deadline é uma estreia mundial, você aprende a entregar."
       },
       {
-        "metric": "$3,1 bi",
-        "label": "Receita anual da Sega",
-        "description": "Assets digitais para três títulos blockbuster da Sega em um único ano com a Creative Assembly"
+        "metric": "Sega",
+        "label": "3 títulos em um ano",
+        "description": "Assets digitais construídos e entregues para três jogos blockbuster junto com a Creative Assembly. Escala sob pressão."
       },
       {
-        "metric": "$52M",
-        "label": "Receita do Insurgency Sandstorm",
-        "description": "Arte entregue para o aclamado FPS da New World Interactive"
+        "metric": "TA Monks",
+        "label": "Construí um negócio real",
+        "description": "Co-fundei uma operação de trading financiada com minha esposa Danique. 4 anos de tomada de decisão sistemática, gestão de risco e construção de sistemas automatizados que performam sem supervisão."
       },
       {
-        "metric": "4 anos",
-        "label": "TA Monks",
-        "description": "Co-construí uma marca de trading e investimentos do zero com minha esposa Danique"
+        "metric": "10.000+",
+        "label": "Horas de automação",
+        "description": "De pipelines de dados a outreach com IA. Cada sistema que construo é feito para rodar sem mim."
       }
     ],
-    "recognition": "Em destaque no ZBrush Central e ArtStation. Apresentador de workshop no Design Week, Universidade do Rio de Janeiro."
+    "recognition": "Apresentador de workshop no Design Week, Universidade do Rio de Janeiro. Em destaque no ZBrush Central e ArtStation."
   },
   "cta": {
     "title": "Veja funcionando nos seus leads",
-    "quote": "5 jogos lançados. Um grande filme. 4 anos de automação sistemática num negócio real. Essa experiência está em cada campanha que rodamos.",
+    "quote": "Entreguei sob os deadlines mais apertados da indústria de entretenimento, depois construí um negócio onde cada lead perdido me custava pessoalmente. Essa experiência está em cada campanha que rodamos.",
     "button": "Agendar uma demo grátis"
   },
 

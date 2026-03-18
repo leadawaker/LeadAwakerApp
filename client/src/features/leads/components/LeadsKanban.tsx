@@ -97,7 +97,7 @@ const STAGE_LABELS: Record<string, string> = {
   Responded: "Responded",
   "Multiple Responses": "Multiple Responses",
   Qualified: "Qualified",
-  Booked: "Call Booked",
+  Booked: "Booked",
   Closed: "Closed",
   Lost: "Lost",
   DND: "DND",

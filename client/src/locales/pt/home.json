@@ -1,13 +1,14 @@
 {
   "hero": {
+    "badge": "Para equipes de vendas de alto valor",
     "title": {
-      "line1": "Acorde leads inativos em",
-      "highlight": "agendamentos confirmados",
-      "line2": "automaticamente."
+      "line1": "Pare de comprar leads novos.",
+      "highlight": "Acorde",
+      "line2": "os que você já tem."
     },
     "subtitle": {
-      "line1": "IA gerencia do primeiro contato até o CRM.",
-      "line2": "Foque em crescimento e fechamento, não em correr atrás de leads."
+      "line1": "Seu banco de dados empoeirado é uma mina de ouro.",
+      "line2": "A gente traz a pá."
     },
     "cta": {
       "primary": "Agendar uma Ligação",
@@ -16,7 +17,7 @@
   },
   "results": {
     "title": "E o que você ganha",
-    "subtitle": "Do caos à certeza em 30 dias",
+    "subtitle": "Resultados que se pagam sozinhos",
     "metrics": {
       "replyRates": {
         "label": "Taxa de Resposta",
@@ -32,9 +33,9 @@
       }
     },
     "upfrontCost": {
-      "title": "Custo Inicial",
-      "partnership": "Parceria de Performance",
-      "mission": "Nossa vitória é o seu sucesso",
+      "title": "Sem Custo Inicial",
+      "partnership": "A gente ganha quando você ganha",
+      "mission": "Só vencemos quando você fecha",
       "guarantee": "Garantia de 30 dias"
     },
     "absoluteZero": {
@@ -43,17 +44,42 @@
     }
   },
   "compliance": {
-    "title": "Conformidade e Reputação",
+    "title": "Agimos rápido. Sua reputação fica intacta.",
+    "subtitle": "Cada conversa segue as diretrizes da sua marca, respeita opt-outs e cumpre a LGPD. Sem atalhos.",
     "gdpr": {
-      "title": "Conforme LGPD e GDPR",
-      "description": "Todos os fluxos respeitam preferências de opt-out, links de cancelamento de inscrição e requisitos de residência de dados. Estamos totalmente em conformidade com os padrões globais de privacidade."
+      "title": "Privacidade por Design",
+      "description": "Contatos que pedem opt-out são removidos na hora. Dados ficam em infraestrutura compatível com LGPD. Cada mensagem tem uma saída fácil. Seu jurídico não vai ter nada para sinalizar."
     },
     "brand": {
-      "title": "Proteção da Marca",
-      "description": "Monitoramento em tempo real garante que cada interação permaneça no tópico, profissional e perfeitamente alinhada com a voz e diretrizes da sua marca."
+      "title": "Sua Voz, Não a Nossa",
+      "description": "A IA aprende seu tom, sua linguagem de produto e seus limites. Se uma conversa sai do assunto, é sinalizada antes de chegar ao seu contato. Você mantém o controle."
     }
   },
 
+  "calculator": {
+    "title": "Você comprou esses leads. Hora de fazê-los render.",
+    "subtitle": "Veja quanta receita está deixando para trás e decida se vale uma conversa.",
+    "leadsLabel": "Leads Que Você Já Pagou",
+    "dealLabel": "Quanto Vale Cada Negócio",
+    "costLabel": "Quanto Pagou Por Lead",
+    "scenarios": {
+      "conservative": "Se Formos Cautelosos",
+      "expected": "O Que Normalmente Vemos",
+      "optimistic": "Se Seus Leads Estão Quentes",
+      "recommended": "Mais Provável"
+    },
+    "results": {
+      "responded": "Iniciam Conversa",
+      "qualified": "Prontos Para Comprar",
+      "closed": "Negócios Que Você Fecha",
+      "revenue": "Nova Receita"
+    },
+    "investment": {
+      "spent": "Investimento em Ads Parado",
+      "return": "Receita Que Desbloqueamos",
+      "roi": "Seu ROI"
+    }
+  },
   "bottomCta": {
     "title": "IA na Prática",
     "quote": "Veja ao vivo a nossa IA atendendo como um agente do seu negócio, para que seu time foque no que importa.",

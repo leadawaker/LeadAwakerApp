@@ -62,7 +62,7 @@ function isInRange(dateStr: string | null | undefined, start: Date, end: Date): 
 
 function isBooked(lead: LeadRow): boolean {
   const status = lead.conversion_status || lead.Conversion_Status || "";
-  return status.toLowerCase() === "booked" || status === "Call Booked";
+  return status.toLowerCase() === "booked";
 }
 
 function getBookedDate(lead: LeadRow): string | null {

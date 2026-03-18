@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  X, Phone, Mail, Tag, TrendingUp, Calendar, User, ClipboardList, FileText,
-  Plus, Loader2, Check, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Maximize2,
-  CircleDot, Send, Users, Star, Ban, AlertTriangle, RotateCcw, Trash2, Bot, Zap,
+  X, Phone, Mail, TrendingUp, Calendar, User, ClipboardList, FileText,
+  Loader2, Check, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Maximize2,
+  CircleDot, Send, Users, Star, Ban, AlertTriangle, RotateCcw, Bot, Zap,
 } from "lucide-react";
 import { useScoreBreakdown, TIER_COLORS, TIER_BAR_COLOR, TrendIcon, type ScoreBreakdown } from "@/hooks/useScoreBreakdown";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonContactPanel } from "@/components/ui/skeleton";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
-import { addLeadTag, removeLeadTag } from "../api/conversationsApi";
 import {
   initialsFor,
   getStatusAvatarColor,
@@ -20,20 +18,6 @@ import {
   formatRelativeTime,
   PIPELINE_HEX,
 } from "../utils/conversationHelpers";
-
-interface TagData {
-  id: number;
-  name: string;
-  color: string;
-  category?: string;
-}
-
-interface LeadTagRow {
-  id: number;
-  leadsId?: number;
-  tagsId?: number;
-  [key: string]: any;
-}
 
 // ── Conversion status helpers ─────────────────────────────────────────────────
 export const STAGE_ICON: Record<string, React.ElementType> = {
@@ -43,60 +27,110 @@ export const STAGE_ICON: Record<string, React.ElementType> = {
   "Multiple Responses": Users,
   Qualified:            Star,
   Booked:               Calendar,
-  "Call Booked":        Calendar,
-  "Appointment Booked":   Calendar,
-  "Appointment Rebooked": RotateCcw,
-  "Booking Confirmed":    Check,
-  "Calendar Link Sent": Calendar,
   Closed:               Check,
   Lost:                 AlertTriangle,
   DND:                  Ban,
 };
 
 
-function tagColorClass(color: string): string {
-  const map: Record<string, string> = {
-    yellow: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700/30",
-    blue: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700/30",
-    green: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700/30",
-    red: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700/30",
-    orange: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700/30",
-    purple: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700/30",
-    gray: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/60 dark:text-gray-400 dark:border-gray-700/40",
-  };
-  return map[color?.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
+/** Single thick segmented bar — Engagement | Activity | Funnel as proportional segments with curvy edges */
+function SegmentedScoreBar({ breakdown, tierColor }: { breakdown: ScoreBreakdown; tierColor: string }) {
+  // Sub-scores are already weighted and sum directly to lead_score (max 100):
+  // engagement_score (max 30) + activity_score (max 20) + funnel_weight (max 50) = lead_score
+  const segments = [
+    { label: "Engagement", value: breakdown.engagement_score },
+    { label: "Activity",   value: breakdown.activity_score },
+    { label: "Funnel",     value: breakdown.funnel_weight },
+  ];
+  // Each segment's width as % of 100 (the max possible lead_score)
+  const widths = segments.map((seg) => seg.value);
+  // Distinct colors per segment: blue (Engagement), green (Activity), orange (Funnel)
+  const shades = ["#3B82F6", "#10B981", "#F59E0B"];
+
+  // Cumulative widths: each layer spans from 0 to the sum of all segments up to and including itself.
+  // The bottom layer (Funnel) is the full width, Activity sits on top covering less, Engagement on top covering least.
+  // We render bottom-to-top so the topmost (Engagement) has the highest z-index.
+  const cumulativeWidths: number[] = [];
+  let cumSum = 0;
+  for (let i = 0; i < widths.length; i++) {
+    cumSum += widths[i];
+    cumulativeWidths.push(cumSum);
+  }
+
+  // Render order: last segment first (bottom layer), first segment last (top layer)
+  const renderOrder = segments.map((_, i) => i).reverse();
+
+  return (
+    <div className="w-full group/tube relative">
+      {/* Stacked pill layers: each starts at left=0, wider layers sit underneath */}
+      <div className="relative h-6 w-full rounded-full bg-muted">
+        {/* Colored pill layers */}
+        {renderOrder.map((i) => {
+          if (cumulativeWidths[i] === 0) return null;
+          return (
+            <div
+              key={segments[i].label}
+              className="absolute top-0 left-0 h-full transition-all duration-500"
+              style={{
+                width: `${cumulativeWidths[i]}%`,
+                backgroundColor: shades[i],
+                borderRadius: "9999px",
+                zIndex: segments.length - i,
+              }}
+            />
+          );
+        })}
+        {/* Score labels rendered on top of all layers */}
+        {segments.map((seg, i) => {
+          if (widths[i] <= 6) return null;
+          const prevCum = i > 0 ? cumulativeWidths[i - 1] : 0;
+          // Center of this segment's visible slice, as % of full bar width
+          const sliceCenterPct = prevCum + widths[i] / 2;
+          return (
+            <span
+              key={seg.label + "-label"}
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-[10px] font-bold text-white tabular-nums drop-shadow-sm"
+              style={{ left: `${sliceCenterPct}%`, zIndex: 10 }}
+            >
+              {seg.value}
+            </span>
+          );
+        })}
+      </div>
+      {/* Tooltip legend on hover */}
+      <div className="absolute left-1/2 -translate-x-1/2 -bottom-9 opacity-0 group-hover/tube:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+        <div className="flex items-center gap-2.5 bg-popover border border-border/60 shadow-lg rounded-lg px-2.5 py-1 whitespace-nowrap">
+          {segments.map((seg, i) => (
+            <div key={seg.label} className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: shades[i] }} />
+              <span className="text-[9px] text-muted-foreground">{seg.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-
-function computeLeadScore(lead: Lead): number {
-  const stored = lead.lead_score ?? (lead as any).leadScore;
-  if (typeof stored === "number") return Math.min(100, Math.max(0, stored));
-  let score = 0;
-  const status = (lead.Conversion_Status ?? lead.conversion_status ?? lead.conversionStatus ?? "New").toLowerCase();
-  if (status === "booked") score += 40;
-  else if (status === "qualified") score += 30;
-  else if (status === "interested") score += 25;
-  else if (status === "responded") score += 20;
-  else if (status === "contacted") score += 10;
-  else if (status === "new") score += 5;
-
-  const received = Number(lead.message_count_received ?? 0);
-  score += Math.min(20, received * 5);
-
-  const bumpStage = Number(lead.current_bump_stage ?? 0);
-  score += Math.min(20, bumpStage * 7);
-
-  if (lead.booked_call_date ?? lead.bookedCallDate) score += 10;
-  if (lead.manual_takeover ?? lead.manualTakeover) score += 5;
-  if (!(lead.opted_out ?? lead.optedOut)) score += 5;
-
-  return Math.min(100, score);
-}
-
-function scoreBarColor(score: number): string {
-  if (score >= 70) return "bg-green-500";
-  if (score >= 40) return "bg-yellow-500";
-  return "bg-gray-400 dark:bg-gray-600";
+/** Compact sub-score bar for the sidebar score section */
+function ScoreBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+        <span className="text-[10px] font-bold tabular-nums text-foreground/70">
+          {Math.round(value)}<span className="text-foreground/30">/{max}</span>
+        </span>
+      </div>
+      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+        <div
+          className="h-full rounded-full transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  );
 }
 
 function scoreTextColor(score: number): string {
@@ -105,104 +139,8 @@ function scoreTextColor(score: number): string {
   return "text-muted-foreground";
 }
 
-
-/** Single thick segmented bar — Engagement | Activity | Funnel as proportional segments */
-function SegmentedScoreBar({ breakdown, tierColor }: { breakdown: ScoreBreakdown; tierColor: string }) {
-  const segments = [
-    { label: "Engagement", value: breakdown.engagement_score },
-    { label: "Activity",   value: breakdown.activity_score },
-    { label: "Funnel",     value: breakdown.funnel_weight },
-  ];
-  const total = segments.reduce((s, seg) => s + seg.value, 0);
-  // Each segment gets a proportional width (min 0)
-  const widths = segments.map((seg) => (total > 0 ? (seg.value / (3 * 100)) * 100 : 0));
-  // Slightly different shades so segments are distinguishable
-  const shades = [tierColor, tierColor + "CC", tierColor + "99"];
-
-  return (
-    <div className="w-full">
-      {/* Bar */}
-      <div className="flex h-6 w-full rounded-lg overflow-hidden bg-muted">
-        {segments.map((seg, i) => (
-          <div
-            key={seg.label}
-            className="h-full flex items-center justify-center transition-all duration-500 relative"
-            style={{
-              width: `${widths[i]}%`,
-              backgroundColor: shades[i],
-              borderRight: i < 2 ? "1px solid rgba(255,255,255,0.3)" : undefined,
-            }}
-          >
-            {widths[i] > 8 && (
-              <span className="text-[10px] font-bold text-white tabular-nums drop-shadow-sm">
-                {seg.value}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-      {/* Labels below */}
-      <div className="flex mt-1">
-        {segments.map((seg, i) => (
-          <div
-            key={seg.label}
-            className="flex flex-col items-center"
-            style={{ width: `${widths[i]}%` }}
-          >
-            <span className="text-[9px] text-muted-foreground leading-tight truncate">{seg.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function useLeadTags(leadId: number | null) {
-  const [tags, setTags] = useState<TagData[]>([]);
-  const [allTags, setAllTags] = useState<TagData[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!leadId) { setTags([]); setAllTags([]); setLoading(false); return; }
-    setTags([]);
-    setAllTags([]);
-    setLoading(true);
-    let cancelled = false;
-    const fetchTags = async () => {
-      try {
-        const [junctionRes, allTagsRes] = await Promise.all([
-          apiFetch(`/api/leads/${leadId}/tags`),
-          apiFetch("/api/tags"),
-        ]);
-        if (!junctionRes.ok || !allTagsRes.ok) { if (!cancelled) { setTags([]); setAllTags([]); } return; }
-        const junctionRows: LeadTagRow[] = await junctionRes.json();
-        const fetchedAllTags: TagData[] = await allTagsRes.json();
-        const tagMap = new Map<number, TagData>();
-        for (const t of fetchedAllTags) { if (t.id) tagMap.set(t.id, t); }
-        const resolved: TagData[] = [];
-        for (const row of junctionRows) {
-          const tagId = row.tagsId ?? row.tags_id ?? row.tagId ?? row.tag_id;
-          if (tagId && tagMap.has(tagId)) { const tag = tagMap.get(tagId)!; if (tag.name) resolved.push(tag); }
-        }
-        if (!cancelled) {
-          setTags(resolved);
-          setAllTags(fetchedAllTags.filter((t) => !!t.name));
-        }
-      } catch {
-        if (!cancelled) { setTags([]); setAllTags([]); }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchTags();
-    return () => { cancelled = true; };
-  }, [leadId]);
-
-  return { tags, setTags, allTags, loading };
-}
-
 // ── Collapsible section IDs ──────────────────────────────────────────────────
-type SectionId = "contact" | "score" | "status" | "tags" | "activity" | "notes" | "messages" | "ai";
+type SectionId = "contact" | "score" | "status" | "activity" | "notes" | "messages" | "ai";
 
 function SectionHeader({
   id,
@@ -273,22 +211,17 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       return next;
     });
   };
-  const leadId = selected?.lead?.id ?? null;
-  const { tags: leadTags, setTags: setLeadTags, allTags, loading: tagsLoading } = useLeadTags(leadId);
   const { toast } = useToast();
 
   const lead = selected?.lead ?? null;
-  const { breakdown, loading: scoreLoading } = useScoreBreakdown(lead?.id ?? null);
-  const score = breakdown?.lead_score ?? (lead ? computeLeadScore(lead) : 0);
+  const { breakdown, loading: scoreLoading, resetToZero: resetScoreToZero } = useScoreBreakdown(lead?.id ?? null);
+  const score = breakdown?.lead_score ?? 0;
   const status = lead ? getStatus(lead) || "New" : "New";
   const avatarColor = getStatusAvatarColor(status);
 
   // ── Local status state for pipeline dropdown ──
   const [localStatus, setLocalStatus] = useState(status);
   useEffect(() => { setLocalStatus(status); }, [status]);
-
-  // ── Tag popover state ──
-  const [showTagPopover, setShowTagPopover] = useState(false);
 
   // ── Notes state ──
   const [localNotes, setLocalNotes] = useState("");
@@ -315,34 +248,6 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       setNotesSaving(false);
     }
   };
-
-  // ── Tag handlers ──
-  const handleAddTag = async (tag: TagData) => {
-    if (!lead || leadTags.some((t) => t.id === tag.id)) return;
-    setLeadTags((prev) => [...prev, tag]);
-    setShowTagPopover(false);
-    try {
-      await addLeadTag(lead.id, tag.id);
-    } catch {
-      setLeadTags((prev) => prev.filter((t) => t.id !== tag.id));
-      toast({ variant: "destructive", title: t("contact.tags.failedToAdd") });
-    }
-  };
-
-  const handleRemoveTag = async (tagId: number) => {
-    if (!lead) return;
-    const prevTags = [...leadTags];
-    setLeadTags((p) => p.filter((t) => t.id !== tagId));
-    try {
-      await removeLeadTag(lead.id, tagId);
-    } catch {
-      setLeadTags(prevTags);
-      toast({ variant: "destructive", title: t("contact.tags.failedToRemove") });
-    }
-  };
-
-  // Available tags = allTags minus already-assigned
-  const availableTags = allTags.filter((t) => !leadTags.some((lt) => lt.id === t.id));
 
   return (
     <section
@@ -403,30 +308,9 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               <button
                 onClick={async () => {
                   try {
-                    const res = await apiFetch(`/api/leads/${lead.id}/reset-demo`, { method: "POST" });
-                    if (!res.ok) throw new Error("Failed");
-                    toast({ title: "Lead reset!", description: `${lead.name || lead.Name || "Lead"} reset to zero` });
-                    onRefresh?.();
-                  } catch {
-                    toast({ title: "Reset failed", description: "Could not reset lead", variant: "destructive" });
-                  }
-                }}
-                className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]"
-                title="Reset Lead to Zero"
-              >
-                <Trash2 className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  Reset Lead
-                </span>
-              </button>
-            )}
-
-            {lead && (
-              <button
-                onClick={async () => {
-                  try {
                     const res = await apiFetch(`/api/leads/${lead.id}/demo-reset-and-send`, { method: "POST" });
                     if (!res.ok) throw new Error("Failed");
+                    resetScoreToZero();
                     toast({ title: "Demo started!", description: `Reset + first message sent for ${lead.name || lead.Name || "this lead"}` });
                     onRefresh?.();
                     // Delayed refresh to pick up the first automation message after it's written to DB
@@ -445,26 +329,6 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               </button>
             )}
 
-            {lead && (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await apiFetch(`/api/leads/${lead.id}/ai-send`, { method: "POST" });
-                    if (!res.ok) throw new Error("Failed");
-                    toast({ title: "AI message sent!", description: `Sent for ${lead.name || lead.Name || "this lead"}` });
-                  } catch {
-                    toast({ title: "AI send failed", description: "Automation service may be offline", variant: "destructive" });
-                  }
-                }}
-                className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]"
-                title="AI Send Message"
-              >
-                <Bot className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  AI Send
-                </span>
-              </button>
-            )}
           </div>
 
           {/* Right: details / expand */}
@@ -576,16 +440,14 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             {!collapsedSections.has("score") && (
               <div className="px-4 pb-4">
                 <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-3 relative" data-testid="lead-score">
-                  {/* Tier tag — top-right corner */}
-                  {breakdown && (
-                    <span className={cn("absolute -top-2 -right-1 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
-                      {breakdown.tier}
-                    </span>
-                  )}
-
-                  {/* Score + trend */}
+                  {/* Score + tier + trend */}
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-black tabular-nums text-foreground leading-none">{score}</span>
+                    {breakdown && (
+                      <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
+                        {breakdown.tier}
+                      </span>
+                    )}
                     {breakdown && <TrendIcon trend={breakdown.trend} />}
                   </div>
 
@@ -615,8 +477,8 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               </div>
             )}
 
-            {/* ── AI Summary (only after lead has booked a call) ── */}
-            {(lead?.booked_call_date ?? (lead as any)?.bookedCallDate) && (
+            {/* ── AI Summary (when lead status is Booked or Closed) ── */}
+            {["Booked", "Closed"].includes((lead as any)?.Conversion_Status ?? (lead as any)?.conversionStatus ?? "") && (
               <>
                 <div className="border-t border-border/20" />
                 <SectionHeader id="ai" label="AI Summary" icon={Bot} collapsed={collapsedSections.has("ai")} onToggle={toggleSection} />
@@ -624,7 +486,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   <div className="px-4 pb-4">
                     <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
                       {(() => {
-                        const raw = (lead as any)?.aiMemory ?? (lead as any)?.ai_memory;
+                        const raw = (lead as any)?.aiSummary ?? (lead as any)?.ai_summary ?? (lead as any)?.aiMemory ?? (lead as any)?.ai_memory;
                         if (!raw) {
                           return <p className="text-xs text-muted-foreground">No AI summary yet</p>;
                         }
@@ -637,113 +499,13 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                         } catch { /* not JSON — it's a plain text summary, show it */ }
 
                         return (
-                          <p className="text-xs text-foreground/80 leading-relaxed">{String(raw)}</p>
+                          <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">{String(raw)}</p>
                         );
                       })()}
                     </div>
                   </div>
                 )}
               </>
-            )}
-
-            {/* ── Tags ── */}
-            <div className="border-t border-border/20" />
-            <SectionHeader
-              id="tags"
-              label={t("contact.sections.tags")}
-              icon={Tag}
-              collapsed={collapsedSections.has("tags")}
-              onToggle={toggleSection}
-              trailing={
-                lead ? (
-                  <Popover open={showTagPopover} onOpenChange={setShowTagPopover}>
-                    <PopoverTrigger asChild>
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-muted-foreground hover:text-foreground"
-                        title={t("contact.tags.addTag")}
-                        data-testid="btn-add-tag"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-52 p-2 bg-white/95 dark:bg-popover backdrop-blur-sm"
-                      align="end"
-                      sideOffset={4}
-                    >
-                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1.5 px-1">
-                        {t("contact.tags.availableTags")}
-                      </div>
-                      {availableTags.length === 0 ? (
-                        <div className="text-[11px] text-muted-foreground/60 italic px-1 py-2">
-                          {t("contact.tags.noMoreTags")}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
-                          {availableTags.map((tag) => (
-                            <button
-                              key={tag.id}
-                              onClick={() => handleAddTag(tag)}
-                              className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-medium text-foreground hover:bg-muted/60 text-left"
-                              data-testid={`tag-option-${tag.id}`}
-                            >
-                              <span
-                                className={cn(
-                                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
-                                  tagColorClass(tag.color),
-                                )}
-                              >
-                                {tag.name}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </PopoverContent>
-                  </Popover>
-                ) : undefined
-              }
-            />
-            {!collapsedSections.has("tags") && (
-            <div className="px-4 pb-4" data-testid="contact-tags">
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
-                {tagsLoading ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-6 w-16 rounded-full bg-muted animate-pulse" />
-                    ))}
-                  </div>
-                ) : leadTags.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {leadTags.map((tag) => (
-                      <span
-                        key={tag.id}
-                        className={cn(
-                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold group",
-                          tagColorClass(tag.color),
-                        )}
-                        title={tag.category ? `${tag.category}: ${tag.name}` : tag.name}
-                      >
-                        {tag.name}
-                        {lead && (
-                          <button
-                            onClick={() => handleRemoveTag(tag.id)}
-                            className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
-                            title={t("contact.tags.removeTag", { name: tag.name })}
-                            data-testid={`btn-remove-tag-${tag.id}`}
-                          >
-                            <X className="h-2.5 w-2.5" />
-                          </button>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground/60 italic">{t("contact.tags.noTagsAssigned")}</div>
-                )}
-              </div>
-            </div>
             )}
 
             {/* ── Activity ── */}
@@ -827,7 +589,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                           </div>
                         ) : (
                           recentMessages.map((msg) => {
-                            const outbound = msg.direction === "Outbound";
+                            const outbound = (msg.direction || "").toLowerCase() === "outbound";
                             const content = msg.content ?? msg.Content ?? "";
                             const ts = msg.created_at ?? msg.createdAt;
                             return (

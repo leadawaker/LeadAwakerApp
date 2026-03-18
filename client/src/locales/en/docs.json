@@ -131,7 +131,7 @@
       "statusContacted": "Contacted",
       "statusResponded": "Responded",
       "statusQualified": "Qualified",
-      "statusCallBooked": "Call Booked",
+      "statusCallBooked": "Booked",
       "statusNotInterested": "Not Interested"
     },
     "conversations": {
@@ -151,7 +151,7 @@
     },
     "bookings": {
       "title": "Bookings",
-      "p1": "When the AI detects a booking confirmation in the conversation, the lead is automatically moved to <strong>Call Booked</strong> status. The booking date and time are saved to the lead record.",
+      "p1": "When the AI detects a booking confirmation in the conversation, the lead is automatically moved to <strong>Booked</strong> status. The booking date and time are saved to the lead record.",
       "p2": "You can view all upcoming bookings on the <strong>Calendar</strong> page.",
       "tip": "If a booking appears incorrect or was auto-detected by mistake, manually update the lead status from the detail panel."
     },

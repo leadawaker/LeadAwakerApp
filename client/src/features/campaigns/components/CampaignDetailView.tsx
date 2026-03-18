@@ -31,6 +31,26 @@ import {
   ImageIcon,
   Sparkles,
   Search,
+  Building2,
+  Mic,
+  Send,
+  Settings2,
+  CalendarClock,
+  Globe,
+  Link2,
+  HelpCircle,
+  MousePointerClick,
+  MapPin,
+  Award,
+  MessageSquare,
+  Timer,
+  Gauge,
+  Hash,
+  HandCoins,
+  StopCircle,
+  Repeat,
+  Thermometer,
+  Cpu,
 } from "lucide-react";
 // Gradient tester removed — gradient is baked in
 import {
@@ -287,31 +307,71 @@ interface ContractFinancials {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function InfoRow({ label, value, mono = false, editChild }: {
-  label: string; value: React.ReactNode; mono?: boolean; editChild?: React.ReactNode;
+function InfoRow({ label, value, mono = false, editChild, richText = false, icon: Icon }: {
+  label: string; value: React.ReactNode; mono?: boolean; editChild?: React.ReactNode; richText?: boolean; icon?: React.ElementType;
+}) {
+  const renderValue = () => {
+    if (value == null) return <span className="text-[12px] text-foreground">—</span>;
+    if (richText && typeof value === "string") {
+      return (
+        <div
+          className={cn("text-[12px] text-foreground break-words leading-relaxed", mono && "font-mono text-[11px]")}
+          style={{ whiteSpace: "pre-wrap" }}
+          dangerouslySetInnerHTML={{
+            __html: value
+              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+              .replace(/\*(.*?)\*/g, "<em>$1</em>")
+              .replace(/\n/g, "<br/>"),
+          }}
+        />
+      );
+    }
+    if (typeof value === "string" && value.includes("\n")) {
+      return (
+        <pre className={cn("text-[12px] text-foreground break-words leading-relaxed font-sans", mono && "font-mono text-[11px]")}>
+          {value}
+        </pre>
+      );
+    }
+    return (
+      <span className={cn("text-[12px] text-foreground break-words", mono && "font-mono text-[11px]")}>
+        {value}
+      </span>
+    );
+  };
+  return (
+    <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
+      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 flex items-center gap-1">
+        {Icon && <Icon className="w-3 h-3" />}
+        {label}
+      </span>
+      {editChild ?? renderValue()}
+    </div>
+  );
+}
+
+function BoolRow({ label, value, editChild, icon: Icon }: {
+  label: string; value: boolean | null | undefined; editChild?: React.ReactNode; icon?: React.ElementType;
 }) {
   return (
     <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{label}</span>
-      {editChild ?? (
-        <span className={cn("text-[12px] font-semibold text-foreground break-words", mono && "font-mono text-[11px]")}>
-          {value ?? "—"}
-        </span>
+      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 flex items-center gap-1">
+        {Icon && <Icon className="w-3 h-3" />}
+        {label}
+      </span>
+      {editChild ?? (value
+        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        : <XCircle className="w-4 h-4 text-foreground/25" />
       )}
     </div>
   );
 }
 
-function BoolRow({ label, value, editChild }: {
-  label: string; value: boolean | null | undefined; editChild?: React.ReactNode;
-}) {
+/** Sub-section header — bold label with border divider */
+function SectionHeader({ label }: { label: string }) {
   return (
-    <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{label}</span>
-      {editChild ?? (value
-        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-        : <XCircle className="w-4 h-4 text-foreground/25" />
-      )}
+    <div className="flex items-center gap-1.5 pt-3 mt-1 mb-1 border-t border-white/30">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{label}</span>
     </div>
   );
 }
@@ -321,10 +381,34 @@ function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(value).then(() => {
+    const doCopy = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    });
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value).then(doCopy).catch(() => {
+        // Fallback for non-secure contexts
+        const ta = document.createElement("textarea");
+        ta.value = value;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        doCopy();
+      });
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = value;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      doCopy();
+    }
   }, [value]);
   return (
     <button
@@ -2094,8 +2178,8 @@ export function CampaignDetailView({
                 {campaign.name || t("detail.unnamed")}
               </h2>
 
-              {/* Subtitle: status */}
-              <div className="mt-1 flex flex-col gap-1" data-testid="campaign-detail-view-status">
+              {/* Subtitle: status + campaign number */}
+              <div className="mt-1 flex items-center gap-1.5" data-testid="campaign-detail-view-status">
                 {status && (
                   <span
                     className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold self-start"
@@ -2105,12 +2189,13 @@ export function CampaignDetailView({
                     {t(`statusLabels.${status}`, status)}
                   </span>
                 )}
+                <span className="text-[11px] font-semibold text-foreground/40">#{campaignNumber}</span>
               </div>
             </div>
 
-            {/* Meta chips — absolute overlay when wide (list view), hidden when compact (table view) */}
+            {/* Meta chips — inline on the same row, hidden when compact (table view) */}
             {!compact && (
-              <div className="absolute -translate-x-1/2 bottom-[45px] hidden md:flex items-center gap-10 whitespace-nowrap pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
+              <div className="shrink-0 hidden md:flex items-center gap-7 whitespace-nowrap">
                 {(campaign as any).channel && (
                   <div className="flex items-center gap-1.5">
                     <img
@@ -2127,7 +2212,7 @@ export function CampaignDetailView({
                   </div>
                 )}
                 {campaignCreatedAt && (
-                  <div className="ml-6">
+                  <div>
                     <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.started")}</div>
                     <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
                   </div>
@@ -2636,125 +2721,49 @@ export function CampaignDetailView({
         {activeTab === "configurations" && (
           <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 md:grid-cols-3 gap-[3px] md:h-full", "max-w-[1386px] w-full mr-auto")}>
 
-            {/* Column 1: Configuration / Settings */}
+            {/* Column 1: Business & Campaign Info */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
-              <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.configuration")}</h3>
+              <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Business & Campaign</h3>
 
-              {/* Status + Type + Booking Mode + Business Description + extra fields */}
-              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                <InfoRow label={t("columns.status")} value={String(campaign.status || "—")}
-                  editChild={isEditing ? <EditSelect value={String(draft.status ?? campaign.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Active", "Paused", "Draft", "Completed", "Inactive"]} /> : undefined}
-                />
-                <InfoRow label={t("config.type")} value={campaign.type}
-                  editChild={isEditing ? (
-                    <select
-                      value={draft.type as string || ""}
-                      onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value }))}
-                      className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">— Select type —</option>
-                      <option value="Cold Outreach">Cold Outreach</option>
-                      <option value="Re-engagement">Re-engagement</option>
-                      <option value="Follow-up">Follow-up</option>
-                      <option value="Event">Event</option>
-                    </select>
-                  ) : undefined}
-                />
-                {/* Booking Mode — Call Agent / Direct Booking */}
-                <div className="flex flex-col gap-0.5 py-2 border-b border-border/20">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("config.bookingMode")}</span>
-                  {isEditing ? (
-                    <div className="flex gap-1 flex-wrap">
-                      {(["Call Agent", "Direct Booking"] as const).map((mode) => (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => setDraft(d => ({ ...d, booking_mode_override: mode }))}
-                          className={cn(
-                            "text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors",
-                            draft.booking_mode_override === mode
-                              ? "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo"
-                              : "border-black/[0.125] bg-transparent text-foreground/60 hover:bg-muted/50"
-                          )}
-                        >
-                          {mode}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-[12px] font-semibold text-foreground">
-                      {campaign.booking_mode_override || "—"}
-                    </span>
-                  )}
-                </div>
-                <InfoRow label={t("config.businessDescription")} value={campaign.description}
-                  editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline placeholder="Business description…" /> : undefined}
-                />
-                <InfoRow label={t("config.nicheQuestion")} value={campaign.niche_question}
-                  editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder="e.g. Are you still looking for…?" /> : undefined}
-                />
-                <InfoRow label={t("config.whatLeadDid")} value={campaign.what_lead_did}
-                  editChild={isEditing ? <EditText value={String(draft.what_lead_did ?? "")} onChange={(v) => setDraft(d => ({...d, what_lead_did: v}))} multiline placeholder="e.g. Filled out a form, clicked an ad…" /> : undefined}
-                />
-                <InfoRow label={t("config.inquiriesSource")} value={campaign.inquiries_source}
-                  editChild={isEditing ? <EditText value={String(draft.inquiries_source ?? "")} onChange={(v) => setDraft(d => ({...d, inquiries_source: v}))} placeholder="e.g. Contact form, landing page" /> : undefined}
-                />
-                <InfoRow label={t("config.website")} value={campaign.website || ""}
-                  editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://example.com" /> : undefined}
-                />
-                <InfoRow label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
-                  editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" /> : undefined}
-                />
-                <InfoRow label={t("config.usp")} value={campaign.campaign_usp}
-                  editChild={isEditing ? <EditText value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} multiline placeholder="What makes this offer unique…" /> : undefined}
-                />
-              </div>
+              <SectionHeader label="Business Info" />
+              <InfoRow icon={Building2} label={t("config.businessDescription")} value={campaign.description} richText={true}
+                editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline placeholder="Business description…" /> : undefined}
+              />
+              <InfoRow icon={Globe} label={t("config.website")} value={campaign.website || ""}
+                editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://example.com" /> : undefined}
+              />
+              <InfoRow icon={Link2} label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
+                editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" /> : undefined}
+              />
 
-              {/* Schedule group */}
-              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-2">{t("config.schedule")}</p>
-                <InfoRow label={t("config.startDate")} value={formatDate(campaign.start_date)}
-                  editChild={isEditing ? <EditDate value={String(draft.start_date ?? "")} onChange={(v) => setDraft(d => ({...d, start_date: v}))} /> : undefined}
-                />
-                <InfoRow label={t("config.endDate")} value={formatDate(campaign.end_date)}
-                  editChild={isEditing ? <EditDate value={String(draft.end_date ?? "")} onChange={(v) => setDraft(d => ({...d, end_date: v}))} /> : undefined}
-                />
-                <InfoRow
-                  label={t("config.activeHours")}
-                  value={campaign.active_hours_start || campaign.active_hours_end ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}` : null}
-                  editChild={isEditing ? (
-                    <div className="flex items-center gap-1 flex-1 min-w-0">
-                      <EditText value={String(draft.active_hours_start ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_start: v}))} placeholder="09:00" />
-                      <span className="text-foreground/40 text-[11px]">→</span>
-                      <EditText value={String(draft.active_hours_end ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_end: v}))} placeholder="18:00" />
-                    </div>
-                  ) : undefined}
-                />
-                {(isEditing ? draft.channel : campaign.channel) !== "whatsapp" && (
-                  <InfoRow label={t("config.dailyLimit")} value={campaign.daily_lead_limit?.toLocaleString()}
-                    editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit ?? "")} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} placeholder="e.g. 50" /> : undefined}
-                  />
-                )}
-                <InfoRow label={t("config.interval")} value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null}
-                  editChild={isEditing ? <EditNumber value={String(draft.message_interval_minutes ?? "")} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} placeholder="minutes" /> : undefined}
-                />
-              </div>
+              <SectionHeader label="Campaign Info" />
+              <InfoRow icon={HelpCircle} label={t("config.nicheQuestion")} value={campaign.niche_question}
+                editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder="e.g. Are you still looking for…?" /> : undefined}
+              />
+              <InfoRow icon={MousePointerClick} label={t("config.whatLeadDid")} value={campaign.what_lead_did} richText={true}
+                editChild={isEditing ? <EditText value={String(draft.what_lead_did ?? "")} onChange={(v) => setDraft(d => ({...d, what_lead_did: v}))} multiline placeholder="e.g. Filled out a form, clicked an ad…" /> : undefined}
+              />
+              <InfoRow icon={MapPin} label={t("config.inquiriesSource")} value={campaign.inquiries_source}
+                editChild={isEditing ? <EditText value={String(draft.inquiries_source ?? "")} onChange={(v) => setDraft(d => ({...d, inquiries_source: v}))} placeholder="e.g. Contact form, landing page" /> : undefined}
+              />
+              <InfoRow icon={Award} label={t("config.usp")} value={campaign.campaign_usp} richText={true}
+                editChild={isEditing ? <EditText value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} multiline placeholder="What makes this offer unique…" /> : undefined}
+              />
             </div>
 
             {/* Column 2: AI Settings */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
               <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.aiSettings")}</h3>
-              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                <InfoRow label={t("config.agent")} value={campaign.agent_name}
-                  editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} /> : undefined}
-                />
-                <InfoRow label={t("config.service")} value={campaign.service_name}
-                  editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} /> : undefined}
-                />
-              </div>
-              {/* Templates — linked prompt + message templates in one card */}
-              <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] p-3 md:p-6 space-y-5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Templates</span>
+              <SectionHeader label="Agent" />
+              <InfoRow icon={Bot} label={t("config.agent")} value={campaign.agent_name}
+                editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} /> : undefined}
+              />
+              <InfoRow icon={Megaphone} label={t("config.service")} value={campaign.service_name}
+                editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} /> : undefined}
+              />
+
+              {/* Templates */}
+              <SectionHeader label="Templates" />
 
                 {/* Linked Prompt */}
                 <div className="space-y-1.5">
@@ -2974,93 +2983,192 @@ export function CampaignDetailView({
                       : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
                   )}
                 </div>
-              </div>
 
-              {/* AI Model + Temperature — at bottom of templates section */}
-              <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-2">{t("config.aiSettings")}</p>
-                <InfoRow label={t("config.model")} value={campaign.ai_model || "Default"}
-                  editChild={isEditing ? <EditText value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} placeholder="Model name" /> : undefined}
-                />
-                <InfoRow label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
-                  editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}
-                />
-              </div>
+              <SectionHeader label="Voice Notes" />
+              <BoolRow icon={Mic} label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false}
+                editChild={isEditing ? <EditToggle value={Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)} onChange={(v) => setDraft(d => ({...d, first_message_voice_note: v}))} /> : undefined}
+              />
+              <BoolRow icon={Mic} label={t("config.bump1VoiceNote")} value={campaign.bump_1_voice_note ?? false}
+                editChild={isEditing ? <EditToggle value={Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_1_voice_note: v}))} /> : undefined}
+              />
+              <BoolRow icon={Mic} label={t("config.bump2VoiceNote")} value={campaign.bump_2_voice_note ?? false}
+                editChild={isEditing ? <EditToggle value={Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_2_voice_note: v}))} /> : undefined}
+              />
+              <BoolRow icon={Mic} label={t("config.bump3VoiceNote")} value={campaign.bump_3_voice_note ?? false}
+                editChild={isEditing ? <EditToggle value={Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_3_voice_note: v}))} /> : undefined}
+              />
+              <BoolRow icon={Mic} label={t("config.aiReplyVoiceNote")} value={campaign.ai_reply_voice_note ?? false}
+                editChild={isEditing ? <EditToggle value={Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note)} onChange={(v) => setDraft(d => ({...d, ai_reply_voice_note: v}))} /> : undefined}
+              />
+              <InfoRow icon={Hash} label={t("config.voiceId")} value={campaign.tts_voice_id || null}
+                editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Voice ID" /> : undefined}
+              />
+
+              <SectionHeader label={t("config.aiSettings")} />
+              <InfoRow icon={Cpu} label={t("config.model")} value={campaign.ai_model || "Default"}
+                editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1", "gpt-5.1-mini", "gpt-5.1"]} /> : undefined}
+              />
+              <InfoRow icon={Thermometer} label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
+                editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}
+              />
 
             </div>
 
             {/* Column 3: Behavior */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto">
               <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Behavior</h3>
-                {/* Channel + toggles */}
-                <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                  <InfoRow label={t("config.channel")} value={campaign.channel || "WhatsApp"}
-                    editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} /> : undefined}
-                  />
-                  <BoolRow label={t("config.stopOnResponse")} value={campaign.stop_on_response}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.stop_on_response ?? campaign.stop_on_response)} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
-                  />
-                  <BoolRow label={t("config.useAiBumps")} value={campaign.use_ai_bumps}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.use_ai_bumps ?? campaign.use_ai_bumps)} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
-                  />
-                  {campaign.channel === "whatsapp" && (
-                    <InfoRow
-                      label={t("config.whatsappTier")}
-                      value={(() => {
-                        const lim = campaign.daily_lead_limit;
-                        if (!lim || lim > 100000) return "Tier 4 · ∞";
-                        if (lim > 10000) return "Tier 3 · 100k/day";
-                        if (lim > 1000) return "Tier 2 · 10k/day";
-                        return "Tier 1 · 1,000/day";
-                      })()}
-                    />
+
+                <SectionHeader label="Campaign Settings" />
+                <InfoRow icon={Zap} label={t("columns.status")} value={String(campaign.status || "—")}
+                  editChild={isEditing ? <EditSelect value={String(draft.status ?? campaign.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Active", "Paused", "Draft", "Completed", "Inactive"]} /> : undefined}
+                />
+                <InfoRow icon={Tag} label={t("config.type")} value={campaign.type}
+                  editChild={isEditing ? (
+                    <select
+                      value={draft.type as string || ""}
+                      onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value }))}
+                      className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">— Select type —</option>
+                      <option value="Cold Outreach">Cold Outreach</option>
+                      <option value="Re-engagement">Re-engagement</option>
+                      <option value="Follow-up">Follow-up</option>
+                      <option value="Event">Event</option>
+                    </select>
+                  ) : undefined}
+                />
+                {/* Booking Mode */}
+                <div className="flex flex-col gap-0.5 py-2 border-b border-border/20">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("config.bookingMode")}</span>
+                  {isEditing ? (
+                    <div className="flex gap-1 flex-wrap">
+                      {(["Call Agent", "Direct Booking"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setDraft(d => ({ ...d, booking_mode_override: mode }))}
+                          className={cn(
+                            "text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors",
+                            draft.booking_mode_override === mode
+                              ? "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo"
+                              : "border-black/[0.125] bg-transparent text-foreground/60 hover:bg-muted/50"
+                          )}
+                        >
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[12px] text-foreground">
+                      {campaign.booking_mode_override || "—"}
+                    </span>
                   )}
-                  <InfoRow label={t("config.maxBumps")} value={campaign.max_bumps}
-                    editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" /> : undefined}
-                  />
                 </div>
 
-                {/* Voice Notes */}
-                <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 pb-2">Voice Notes</p>
-                  <BoolRow label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)} onChange={(v) => setDraft(d => ({...d, first_message_voice_note: v}))} /> : undefined}
+                <SectionHeader label="Timing" />
+                <InfoRow icon={Clock}
+                  label={t("config.activeHours")}
+                  value={campaign.active_hours_start || campaign.active_hours_end ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}` : null}
+                  editChild={isEditing ? (
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <EditText value={String(draft.active_hours_start ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_start: v}))} placeholder="09:00" />
+                      <span className="text-foreground/40 text-[11px]">→</span>
+                      <EditText value={String(draft.active_hours_end ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_end: v}))} placeholder="18:00" />
+                    </div>
+                  ) : undefined}
+                />
+                <InfoRow icon={CalendarClock}
+                  label="Campaign Duration"
+                  value={campaign.start_date || campaign.end_date ? `${formatDate(campaign.start_date)} → ${formatDate(campaign.end_date)}` : null}
+                  editChild={isEditing ? (
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <EditDate value={String(draft.start_date ?? "")} onChange={(v) => setDraft(d => ({...d, start_date: v}))} />
+                      <span className="text-foreground/40 text-[11px]">→</span>
+                      <EditDate value={String(draft.end_date ?? "")} onChange={(v) => setDraft(d => ({...d, end_date: v}))} />
+                    </div>
+                  ) : undefined}
+                />
+                {(isEditing ? draft.channel : campaign.channel) !== "whatsapp" && (
+                  <InfoRow icon={Gauge} label={t("config.dailyLimit")} value={campaign.daily_lead_limit?.toLocaleString()}
+                    editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit ?? "")} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} placeholder="e.g. 50" /> : undefined}
                   />
-                  <BoolRow label={t("config.bump1VoiceNote")} value={campaign.bump_1_voice_note ?? false}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_1_voice_note: v}))} /> : undefined}
+                )}
+                <InfoRow icon={Timer} label={t("config.interval")} value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null}
+                  editChild={isEditing ? <EditNumber value={String(draft.message_interval_minutes ?? "")} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} placeholder="minutes" /> : undefined}
+                />
+
+                <SectionHeader label="Channel & Outreach" />
+                <InfoRow icon={Send}
+                  label={t("config.channel")}
+                  value={
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={`/logos/${(
+                          ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[String(campaign.channel || "whatsapp").toLowerCase()] ?? "whatsapp-svgrepo-com"
+                        )}.svg`}
+                        alt={campaign.channel || "WhatsApp"}
+                        className="h-4 w-4 object-contain shrink-0"
+                      />
+                      <span className="capitalize">{campaign.channel || "WhatsApp"}</span>
+                    </div>
+                  }
+                  editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} /> : undefined}
+                />
+                {campaign.channel === "whatsapp" && (
+                  <InfoRow
+                    label={t("config.whatsappTier")}
+                    value={(() => {
+                      const lim = campaign.daily_lead_limit;
+                      if (!lim || lim > 100000) return "Tier 4 · ∞";
+                      if (lim > 10000) return "Tier 3 · 100k/day";
+                      if (lim > 1000) return "Tier 2 · 10k/day";
+                      return "Tier 1 · 1,000/day";
+                    })()}
                   />
-                  <BoolRow label={t("config.bump2VoiceNote")} value={campaign.bump_2_voice_note ?? false}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_2_voice_note: v}))} /> : undefined}
-                  />
-                  <BoolRow label={t("config.bump3VoiceNote")} value={campaign.bump_3_voice_note ?? false}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_3_voice_note: v}))} /> : undefined}
-                  />
-                  <BoolRow label={t("config.aiReplyVoiceNote")} value={campaign.ai_reply_voice_note ?? false}
-                    editChild={isEditing ? <EditToggle value={Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note)} onChange={(v) => setDraft(d => ({...d, ai_reply_voice_note: v}))} /> : undefined}
-                  />
-                  <InfoRow label={t("config.voiceId")} value={campaign.tts_voice_id || null}
-                    editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Voice ID" /> : undefined}
-                  />
+                )}
+                <BoolRow icon={StopCircle} label={t("config.stopOnResponse")} value={campaign.stop_on_response}
+                  editChild={isEditing ? <EditToggle value={Boolean(draft.stop_on_response ?? campaign.stop_on_response)} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
+                />
+                <BoolRow icon={Repeat} label={t("config.useAiBumps")} value={campaign.use_ai_bumps}
+                  editChild={isEditing ? <EditToggle value={Boolean(draft.use_ai_bumps ?? campaign.use_ai_bumps)} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
+                />
+                <InfoRow icon={Hash} label={t("config.maxBumps")} value={campaign.max_bumps}
+                  editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" /> : undefined}
+                />
+                {/* Buying Signal Response */}
+                <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">
+                    {t("config.buyingSignalResponse")}
+                  </span>
+                  {isEditing ? (
+                    <EditText
+                      value={String(draft.buying_signal_response ?? campaign.buying_signal_response ?? "")}
+                      onChange={(v) => setDraft(d => ({...d, buying_signal_response: v}))}
+                      multiline
+                      placeholder={t("config.buyingSignalResponsePlaceholder")}
+                    />
+                  ) : (
+                    campaign.buying_signal_response
+                      ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.buying_signal_response}</p>
+                      : <p className="text-[11px] text-foreground/40 italic">{t("config.buyingSignalResponseDefault")}</p>
+                  )}
                 </div>
 
-                {/* Contract */}
-                <div className="rounded-xl bg-white/50 dark:bg-white/[0.06] p-3 space-y-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 pb-2">{t("config.contract")}</p>
-                  <InfoRow
-                    label={t("config.deal")}
-                    value={linkedContract ? (linkedContract.title || `Contract #${linkedContract.id}`) : t("config.noneLinked")}
-                  />
-                  <InfoRow
-                    label={t("config.valuePerBooking")}
-                    value={
-                      linkedContract?.value_per_booking != null
-                        ? fmtCurrency(Number(linkedContract.value_per_booking))
-                        : campaign.value_per_booking != null
-                          ? fmtCurrency(Number(campaign.value_per_booking))
-                          : null
-                    }
-                  />
-                </div>
+                <SectionHeader label={t("config.contract")} />
+                <InfoRow icon={FileText}
+                  label={t("config.deal")}
+                  value={linkedContract ? (linkedContract.title || `Contract #${linkedContract.id}`) : t("config.noneLinked")}
+                />
+                <InfoRow icon={HandCoins}
+                  label={t("config.valuePerBooking")}
+                  value={
+                    linkedContract?.value_per_booking != null
+                      ? fmtCurrency(Number(linkedContract.value_per_booking))
+                      : campaign.value_per_booking != null
+                        ? fmtCurrency(Number(campaign.value_per_booking))
+                        : null
+                  }
+                />
             </div>
 
 

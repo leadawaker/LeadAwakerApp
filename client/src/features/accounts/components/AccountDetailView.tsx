@@ -15,6 +15,7 @@ import { getInitials, getAccountAvatarColor, getCampaignAvatarColor, getUserRole
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { useLocation } from "wouter";
 import type { AccountRow } from "./AccountDetailsDialog";
+import KnowledgeBasePanel from "./KnowledgeBasePanel";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -1753,6 +1754,13 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
             />
           </div>
 
+        </div>
+
+        {/* Knowledge Base row */}
+        <div className="max-w-[1386px] w-full mr-auto mt-[3px]">
+          <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4">
+            <KnowledgeBasePanel accountId={accountId} />
+          </div>
         </div>
 
       </div>

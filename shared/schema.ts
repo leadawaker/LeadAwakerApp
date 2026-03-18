@@ -428,6 +428,8 @@ export const leads = nocodb.table("Leads", {
   campaignName: text("campaign_name"),
   text2: text("Text_2"),
   leadScore: integer("lead_score"),
+  engagementScore: integer("engagement_score"),
+  activityScore: integer("activity_score"),
   channelIdentifier: text("channel_identifier"),
   aiNotes: text("ai_notes"),
   aiNotesGeneratedAt: timestamp("ai_notes_generated_at"),

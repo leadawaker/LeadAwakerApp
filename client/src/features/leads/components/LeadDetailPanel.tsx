@@ -525,6 +525,8 @@ function ScoreDetailBar({ label, rawScore, weight, maxRaw, context }: {
 function engagementContext(lead: Record<string, any> | null): string {
   if (!lead) return "";
   const parts: string[] = [];
+
+  // Reply recency
   const lastReceived = lead.lastMessageReceivedAt ?? lead.last_message_received_at;
   if (lastReceived) {
     const hours = (Date.now() - new Date(lastReceived).getTime()) / 3600000;
@@ -532,15 +534,40 @@ function engagementContext(lead: Record<string, any> | null): string {
     else if (hours < 24) parts.push(`Replied ${Math.round(hours)}h ago`);
     else {
       const days = Math.floor(hours / 24);
-      parts.push(days === 1 ? "Replied yesterday" : `Replied ${days} days ago`);
+      parts.push(days === 1 ? "Replied yesterday" : `Replied ${days}d ago`);
+      if (days >= 7) parts.push("Score decaying");
     }
   } else {
     parts.push("No replies yet");
   }
+
+  // Sentiment
   const sentiment = (lead.aiSentiment ?? lead.ai_sentiment ?? "").toString().toLowerCase();
   if (sentiment === "positive") parts.push("Positive sentiment");
   else if (sentiment === "neutral") parts.push("Neutral sentiment");
   else if (sentiment === "negative") parts.push("Negative sentiment");
+
+  // Intent signals
+  const intentRaw = (lead.aiIntentSignals ?? lead.ai_intent_signals ?? "").toString();
+  if (intentRaw) {
+    const intents = intentRaw.split(",").map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+    const labels: Record<string, string> = {
+      asked_pricing: "Asked pricing",
+      mentioned_timeline: "Has timeline",
+      requested_callback: "Wants callback",
+      asked_features: "Asked features",
+      expressed_objection: "Objection raised",
+      not_interested: "Not interested",
+    };
+    for (const intent of intents) {
+      if (labels[intent]) { parts.push(labels[intent]); break; }
+    }
+  }
+
+  // Bump stage penalty
+  const bumpStage = Number(lead.currentBumpStage ?? lead.current_bump_stage ?? 0);
+  if (bumpStage >= 2) parts.push(`Bumped ${bumpStage}x, no reply`);
+
   return parts.join(" · ");
 }
 
@@ -553,14 +580,61 @@ function activityContext(lead: Record<string, any> | null): string {
   if (sent > 0 && received > 0) {
     const ratio = Math.round((received / sent) * 100);
     parts.push(`${ratio}% reply rate`);
+  } else if (sent > 0 && received === 0) {
+    parts.push("No replies yet");
   }
+
+  // Message frequency
+  const firstSent = lead.firstMessageSentAt ?? lead.first_message_sent_at;
+  if (firstSent && received >= 2) {
+    const daysSinceFirst = (Date.now() - new Date(firstSent).getTime()) / 86400000;
+    if (daysSinceFirst >= 1) {
+      const perDay = received / daysSinceFirst;
+      if (perDay >= 1) parts.push(`~${Math.round(perDay)}/day`);
+      else parts.push(`~${Math.round(perDay * 7)}/week`);
+    }
+  }
+
   return parts.join(" · ");
 }
+
+const FUNNEL_STAGE_ORDER = [
+  "New", "Queued", "Contacted", "Responded", "Multiple Responses",
+  "Qualified", "Booked", "Closed", "DND", "Lost",
+];
+
+const FUNNEL_NEXT_ACTION: Record<string, string> = {
+  New: "Waiting to be contacted",
+  Queued: "Queued for outreach",
+  Contacted: "Waiting for first reply",
+  Responded: "Engage to qualify",
+  "Multiple Responses": "Ready to qualify",
+  Qualified: "Schedule a call",
+  Booked: "Call scheduled",
+  Closed: "Deal closed",
+  DND: "Do not contact",
+  Lost: "Lead lost",
+};
 
 function funnelContext(lead: Record<string, any> | null): string {
   if (!lead) return "";
   const status = lead.conversionStatus ?? lead.conversion_status ?? lead.Conversion_Status ?? "";
-  return status || "Not set";
+  if (!status) return "Not set";
+
+  const parts: string[] = [];
+
+  // Next action hint
+  const hint = FUNNEL_NEXT_ACTION[status];
+  if (hint) parts.push(hint);
+
+  // Time at current stage
+  const lastActivity = lead.last_interaction_at ?? lead.lastMessageReceivedAt ?? lead.last_message_received_at ?? lead.lastMessageSentAt ?? lead.last_message_sent_at;
+  if (lastActivity) {
+    const days = Math.floor((Date.now() - new Date(lastActivity).getTime()) / 86400000);
+    if (days >= 1) parts.push(`${days}d at this stage`);
+  }
+
+  return parts.join(" · ");
 }
 
 // ── Main Component ────────────────────────────────────────────────────────
@@ -584,7 +658,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [showTagDropdown, setShowTagDropdown] = useState(false);
 
   // ── Score breakdown ──
-  const { breakdown: scoreBreakdown, loading: scoreLoading } = useScoreBreakdown(lead?.id ?? null);
+  const { breakdown: scoreBreakdown, loading: scoreLoading, refetch: refetchScore, resetToZero: resetScoreToZero } = useScoreBreakdown(lead?.id ?? null);
   const panelScore = scoreBreakdown?.lead_score ?? (lead?.lead_score ?? lead?.leadScore ?? 0);
 
   // ── Notes editing state ──
@@ -1140,6 +1214,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               try {
                 const res = await apiFetch(`/api/leads/${leadId}/reset-demo`, { method: "POST" });
                 if (!res.ok) throw new Error("Failed");
+                resetScoreToZero();
                 toast({ title: t("detail.actions.leadReset"), description: fullName });
               } catch {
                 toast({ title: t("detail.actions.resetFailed"), variant: "destructive" });
@@ -1159,6 +1234,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               try {
                 const res = await apiFetch(`/api/leads/${leadId}/demo-reset-and-send`, { method: "POST" });
                 if (!res.ok) throw new Error("Failed");
+                resetScoreToZero();
                 toast({ title: t("detail.actions.demoStarted"), description: fullName });
               } catch {
                 toast({ title: t("detail.actions.demoFailed"), variant: "destructive" });
@@ -1373,16 +1449,22 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               className="rounded-xl border border-border/40 bg-muted/20 px-4 py-4 flex flex-col gap-4 relative"
               data-testid="lead-score-gauges"
             >
-              {/* Tier tag — top-right corner */}
-              {scoreBreakdown && (
-                <span className={cn("absolute -top-2.5 -right-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm z-10", TIER_COLORS[scoreBreakdown.tier] ?? TIER_COLORS.Sleeping)}>
-                  {scoreBreakdown.tier}
-                </span>
-              )}
-
               {/* Arc + trend row */}
               <div className="flex items-center gap-4">
-                <ScoreArcPanel score={panelScore} tier={scoreBreakdown?.tier} />
+                <div className="relative shrink-0">
+                  <ScoreArcPanel score={panelScore} tier={scoreBreakdown?.tier} />
+                  {/* Tier tag — top-right of score arc */}
+                  {scoreBreakdown && (
+                    <span
+                      className={cn("absolute -top-1 -right-2 text-[10px] font-bold px-2 py-0.5 rounded-full z-10", TIER_COLORS[scoreBreakdown.tier] ?? TIER_COLORS.Sleeping)}
+                      style={(scoreBreakdown.tier === "Hot" || scoreBreakdown.tier === "Awake") ? {
+                        boxShadow: `0 0 8px 2px ${scoreBreakdown.tier === "Hot" ? "rgba(239,68,68,0.4)" : "rgba(16,185,129,0.4)"}`,
+                      } : undefined}
+                    >
+                      {scoreBreakdown.tier}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-col gap-1.5">
                   {scoreBreakdown && (
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -1409,22 +1491,22 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   <ScoreDetailBar
                     label="Engagement"
                     rawScore={scoreBreakdown.engagement_score}
-                    weight={0.30}
-                    maxRaw={100}
+                    weight={1}
+                    maxRaw={30}
                     context={engagementContext(lead)}
                   />
                   <ScoreDetailBar
                     label="Activity"
                     rawScore={scoreBreakdown.activity_score}
-                    weight={0.30}
-                    maxRaw={100}
+                    weight={1}
+                    maxRaw={20}
                     context={activityContext(lead)}
                   />
                   <ScoreDetailBar
-                    label="Funnel Stage"
+                    label="Funnel"
                     rawScore={scoreBreakdown.funnel_weight}
-                    weight={0.40}
-                    maxRaw={90}
+                    weight={1}
+                    maxRaw={50}
                     context={funnelContext(lead)}
                   />
                 </div>
@@ -1923,8 +2005,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               >
                 {(() => {
                   // Status names that get a colored status chip instead of a tag chip
-                  const STATUS_TAG_NAMES = new Set(["Contacted","Responded","Multiple Responses","Qualified","Booked","Call Booked","Appointment Booked","Appointment Rebooked","Booking Confirmed","Calendar Link Sent","Lost","DND","Opted Out","DNC"]);
-                  const STATUS_HEX: Record<string, string> = { Contacted:"#7A73FF", Responded:"#3ACBDF", "Multiple Responses":"#31D35C", Qualified:"#AED62E", Booked:"#F7BF0E", "Call Booked":"#F7BF0E", "Appointment Booked":"#F7BF0E", "Appointment Rebooked":"#A78BFA", "Booking Confirmed":"#22C55E", "Calendar Link Sent":"#F7BF0E", Lost:"#DC2626", DND:"#722F37", "Opted Out":"#6B7280", DNC:"#6B7280" };
+                  const STATUS_TAG_NAMES = new Set(["Contacted","Responded","Multiple Responses","Qualified","Booked","Lost","DND","Opted Out","DNC"]);
+                  const STATUS_HEX: Record<string, string> = { Contacted:"#7A73FF", Responded:"#3ACBDF", "Multiple Responses":"#31D35C", Qualified:"#AED62E", Booked:"#22C55E", Lost:"#DC2626", DND:"#722F37", "Opted Out":"#6B7280", DNC:"#6B7280" };
                   // Case-insensitive lookup
                   const _sLower = new Map<string, string>();
                   Array.from(STATUS_TAG_NAMES).forEach(s => _sLower.set(s.toLowerCase(), s));
@@ -1996,9 +2078,9 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     const outbound = String(m.direction || "").toLowerCase() === "outbound";
                     const AI_TB = new Set(["ai_conversation", "campaign_launcher", "bump_scheduler",
                       "manual_bump_trigger", "inbound_handler", "booking_webhook", "booking_confirmation"]);
-                    const isAI = Boolean(m.ai_generated)
-                      || Boolean(m.is_bump)
-                      || AI_TB.has(((m as any).triggered_by ?? "").toLowerCase());
+                    const isAI = Boolean(m.ai_generated || m.aiGenerated)
+                      || Boolean(m.is_bump || m.isBump)
+                      || AI_TB.has(((m as any).triggered_by ?? (m as any).triggeredBy ?? "").toLowerCase());
                     const isHuman = Boolean(m.is_manual_follow_up);
                     const isBump = Boolean(m.is_bump);
                     const msgContent = m.Content || m.content || "";

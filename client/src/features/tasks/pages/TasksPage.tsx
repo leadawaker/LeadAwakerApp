@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, CalendarDays, Check, ClipboardList, Columns3, Filter, FolderOpen, Layers, Plus, Settings, Tag } from "lucide-react";
+import { ArrowUpDown, CalendarDays, Check, ClipboardList, Columns3, Filter, FolderOpen, Gauge, Layers, Plus, Settings, Tag } from "lucide-react";
 import { usePersistedState } from "@/hooks/usePersistedState";
 
 import { SearchPill } from "@/components/ui/search-pill";
@@ -32,6 +32,7 @@ import {
   type SortOption,
   type GroupOption,
   type TaskStatus,
+  type TaskPriority,
   type Task,
   type ViewMode,
 } from "../types";
@@ -105,6 +106,10 @@ const SORT_KEYS: Record<string, string> = {
   due_date_desc: "sort.dueDateDesc",
   priority_desc: "sort.priorityDesc",
   priority_asc: "sort.priorityAsc",
+  category_asc: "sort.categoryAsc",
+  category_desc: "sort.categoryDesc",
+  id_asc: "sort.idAsc",
+  id_desc: "sort.idDesc",
   created_desc: "sort.createdDesc",
   created_asc: "sort.createdAsc",
   title_asc: "sort.titleAsc",
@@ -126,6 +131,13 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "todo",        label: "To Do" },
   { value: "in_progress", label: "In Progress" },
   { value: "done",        label: "Done" },
+];
+
+const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
+  { value: "urgent", label: "Urgent" },
+  { value: "high",   label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low",    label: "Low" },
 ];
 
 export default function TasksPage() {
@@ -202,9 +214,12 @@ export default function TasksPage() {
   // Transient state
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTags, setFilterTags] = useState<string[]>([]);
-  const [filterStatuses, setFilterStatuses] = useState<TaskStatus[]>([]);
-  const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [filterTags, setFilterTags] = useState<string[]>(() => loadLocal<string[]>("tasks-filter-tags", []));
+  const [filterStatuses, setFilterStatuses] = useState<TaskStatus[]>(() => loadLocal<TaskStatus[]>("tasks-filter-statuses", ["todo", "in_progress"]));
+  const [filterPriorities, setFilterPriorities] = useState<TaskPriority[]>(() => loadLocal<TaskPriority[]>("tasks-filter-priorities", []));
+  const [dateRange, setDateRange] = useState<DateRange>(() => loadLocal<DateRange>("tasks-filter-daterange", "all"));
+  const [ganttMaxDepth, setGanttMaxDepth] = useState<number | null>(() => loadLocal<number | null>("tasks-gantt-maxdepth", null));
+  const [ganttGroupBy, setGanttGroupBy] = useState<"hierarchy" | "status" | "priority">(() => loadLocal<"hierarchy" | "status" | "priority">("tasks-gantt-groupby", "hierarchy"));
 
   // Mobile tab state
   const [mobileTab, setMobileTab] = useState<TaskStatus>("todo");
@@ -243,15 +258,57 @@ export default function TasksPage() {
   }, []);
 
   const toggleFilterTag = useCallback((tag: string) => {
-    setFilterTags((prev) =>
-      prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]
-    );
+    setFilterTags((prev) => {
+      const next = prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag];
+      saveLocal("tasks-filter-tags", next);
+      return next;
+    });
   }, []);
 
   const toggleFilterStatus = useCallback((status: TaskStatus) => {
-    setFilterStatuses((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
-    );
+    setFilterStatuses((prev) => {
+      const next = prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status];
+      saveLocal("tasks-filter-statuses", next);
+      return next;
+    });
+  }, []);
+
+  const toggleFilterPriority = useCallback((priority: TaskPriority) => {
+    setFilterPriorities((prev) => {
+      const next = prev.includes(priority) ? prev.filter((p) => p !== priority) : [...prev, priority];
+      saveLocal("tasks-filter-priorities", next);
+      return next;
+    });
+  }, []);
+
+  const handleSetFilterStatuses = useCallback((v: TaskStatus[]) => {
+    setFilterStatuses(v);
+    saveLocal("tasks-filter-statuses", v);
+  }, []);
+
+  const handleSetFilterPriorities = useCallback((v: TaskPriority[]) => {
+    setFilterPriorities(v);
+    saveLocal("tasks-filter-priorities", v);
+  }, []);
+
+  const handleSetFilterTags = useCallback((v: string[]) => {
+    setFilterTags(v);
+    saveLocal("tasks-filter-tags", v);
+  }, []);
+
+  const handleSetDateRange = useCallback((v: DateRange) => {
+    setDateRange(v);
+    saveLocal("tasks-filter-daterange", v);
+  }, []);
+
+  const handleSetGanttMaxDepth = useCallback((v: number | null) => {
+    setGanttMaxDepth(v);
+    saveLocal("tasks-gantt-maxdepth", v);
+  }, []);
+
+  const handleSetGanttGroupBy = useCallback((v: "hierarchy" | "status" | "priority") => {
+    setGanttGroupBy(v);
+    saveLocal("tasks-gantt-groupby", v);
   }, []);
 
   // Filtered tasks (desktop kanban)
@@ -264,11 +321,12 @@ export default function TasksPage() {
       }
       if (selectedCategoryId !== null && (t as any).categoryId !== selectedCategoryId) return false;
       if (filterStatuses.length > 0 && !filterStatuses.includes(t.status as TaskStatus)) return false;
+      if (filterPriorities.length > 0 && !filterPriorities.includes((t.priority ?? "medium") as TaskPriority)) return false;
       return true;
     });
 
     // For gantt view: preserve tree structure by including ancestors of filtered tasks
-    const hasAnyFilter = selectedCategoryId !== null || filterStatuses.length > 0 || filterTags.length > 0;
+    const hasAnyFilter = selectedCategoryId !== null || filterStatuses.length > 0 || filterTags.length > 0 || filterPriorities.length > 0;
     if (viewMode === "gantt" && hasAnyFilter) {
       const filteredIds = new Set(result.map((t) => t.id));
       // Walk up the parent chain for every matched task so the tree stays connected
@@ -286,7 +344,7 @@ export default function TasksPage() {
     }
 
     return result;
-  }, [tasks, dateRange, filterTags, selectedCategoryId, filterStatuses, viewMode]);
+  }, [tasks, dateRange, filterTags, selectedCategoryId, filterStatuses, filterPriorities, viewMode]);
 
   // Mobile tasks: filtered + searched + sorted
   const mobileTasks = useMemo(() => {
@@ -368,7 +426,7 @@ export default function TasksPage() {
       {/* 3. Status filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[140px]", filterStatuses.length > 0 ? [xActive, xExpanded] : xDefault)} title="Filter by status">
+          <button className={cn(xBase, "hover:max-w-[140px]", filterStatuses.length > 0 ? [xActive, xExpanded] : xDefault)} title="Status">
             <Filter className="h-4 w-4 shrink-0" />
             <span className={filterStatuses.length > 0 ? xSpanVisible : xSpan}>
               {filterStatuses.length > 0
@@ -378,33 +436,39 @@ export default function TasksPage() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => setFilterStatuses([])}
-            className={cn(filterStatuses.length === 0 && "font-bold text-brand-indigo")}
-          >
-            All statuses
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleSetFilterStatuses([])} className={cn(filterStatuses.length === 0 && "font-bold text-brand-indigo")}>All statuses</DropdownMenuItem>
           {STATUS_OPTIONS.map((o) => (
-            <DropdownMenuItem
-              key={o.value}
-              onClick={() => toggleFilterStatus(o.value)}
-              className={cn(filterStatuses.includes(o.value) && "font-bold text-brand-indigo")}
-            >
-              {o.label}
-            </DropdownMenuItem>
+            <DropdownMenuItem key={o.value} onClick={() => toggleFilterStatus(o.value)} className={cn(filterStatuses.includes(o.value) && "font-bold text-brand-indigo")}>{o.label}</DropdownMenuItem>
           ))}
-          {filterStatuses.length > 0 && (
-            <DropdownMenuItem onClick={() => setFilterStatuses([])} className="text-red-500 border-t border-border/40 mt-1">
-              Clear
-            </DropdownMenuItem>
-          )}
+          {filterStatuses.length > 0 && <DropdownMenuItem onClick={() => handleSetFilterStatuses([])} className="text-red-500 border-t border-border/40 mt-1">Clear</DropdownMenuItem>}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* 4. Category filter */}
+      {/* 4. Priority filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[160px]", selectedCategoryId !== null ? [xActive, xExpanded] : xDefault)} title="Filter by category">
+          <button className={cn(xBase, "hover:max-w-[140px]", filterPriorities.length > 0 ? [xActive, xExpanded] : xDefault)} title="Priority">
+            <Gauge className="h-4 w-4 shrink-0" />
+            <span className={filterPriorities.length > 0 ? xSpanVisible : xSpan}>
+              {filterPriorities.length > 0
+                ? filterPriorities.map((p) => PRIORITY_OPTIONS.find((o) => o.value === p)?.label ?? p).join(", ")
+                : "Priority"}
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={() => handleSetFilterPriorities([])} className={cn(filterPriorities.length === 0 && "font-bold text-brand-indigo")}>All priorities</DropdownMenuItem>
+          {PRIORITY_OPTIONS.map((o) => (
+            <DropdownMenuItem key={o.value} onClick={() => toggleFilterPriority(o.value)} className={cn(filterPriorities.includes(o.value) && "font-bold text-brand-indigo")}>{o.label}</DropdownMenuItem>
+          ))}
+          {filterPriorities.length > 0 && <DropdownMenuItem onClick={() => handleSetFilterPriorities([])} className="text-red-500 border-t border-border/40 mt-1">Clear</DropdownMenuItem>}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 5. Category filter */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[160px]", selectedCategoryId !== null ? [xActive, xExpanded] : xDefault)} title="Category">
             <FolderOpen className="h-4 w-4 shrink-0" />
             <span className={selectedCategoryId !== null ? xSpanVisible : xSpan}>
               {selectedCategoryId !== null
@@ -414,25 +478,52 @@ export default function TasksPage() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 max-h-72 overflow-y-auto">
-          <DropdownMenuItem
-            onClick={() => setSelectedCategoryId(null)}
-            className={cn(selectedCategoryId === null && "font-bold text-brand-indigo")}
-          >
-            All
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSelectedCategoryId(null)} className={cn(selectedCategoryId === null && "font-bold text-brand-indigo")}>All</DropdownMenuItem>
           {categories.map((cat: any) => (
-            <DropdownMenuItem
-              key={cat.id}
-              onClick={() => setSelectedCategoryId(cat.id)}
-              className={cn(selectedCategoryId === cat.id && "font-bold text-brand-indigo")}
-            >
-              {cat.name}
-            </DropdownMenuItem>
+            <DropdownMenuItem key={cat.id} onClick={() => setSelectedCategoryId(cat.id)} className={cn(selectedCategoryId === cat.id && "font-bold text-brand-indigo")}>{cat.name}</DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* 5. Sort */}
+      {/* 6. Tags filter */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[140px]", filterTags.length > 0 ? [xActive, xExpanded] : xDefault)} title="Tags">
+            <Tag className="h-4 w-4 shrink-0" />
+            <span className={filterTags.length > 0 ? xSpanVisible : xSpan}>
+              {filterTags.length > 0 ? filterTags.join(", ") : "Tags"}
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44 max-h-72 overflow-y-auto">
+          {TASK_TAG_PRESETS.map((tag) => (
+            <DropdownMenuItem key={tag} onClick={() => toggleFilterTag(tag)} className={cn(filterTags.includes(tag) && "font-bold text-brand-indigo")}>{tag}</DropdownMenuItem>
+          ))}
+          {filterTags.length > 0 && <DropdownMenuItem onClick={() => handleSetFilterTags([])} className="text-red-500 border-t border-border/40 mt-1">Clear</DropdownMenuItem>}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 7. Levels filter (gantt only) */}
+      {viewMode === "gantt" && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={cn(xBase, "hover:max-w-[100px]", ganttMaxDepth !== null ? [xActive, xExpanded] : xDefault)} title="Levels">
+              <Layers className="h-4 w-4 shrink-0" />
+              <span className={ganttMaxDepth !== null ? xSpanVisible : xSpan}>
+                {ganttMaxDepth !== null ? `L${ganttMaxDepth}` : "Levels"}
+              </span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuItem onClick={() => handleSetGanttMaxDepth(null)} className={cn(ganttMaxDepth === null && "font-bold text-brand-indigo")}>All levels</DropdownMenuItem>
+            {[1, 2, 3, 4, 5].map((lvl) => (
+              <DropdownMenuItem key={lvl} onClick={() => handleSetGanttMaxDepth(lvl)} className={cn(ganttMaxDepth === lvl && "font-bold text-brand-indigo")}>Up to L{lvl}</DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* 8. Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[160px]", sort !== "due_date_asc" ? [xActive, xExpanded] : xDefault)} title={t("toolbar.sort")}>
@@ -451,42 +542,12 @@ export default function TasksPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* 6. Tags filter */}
+      {/* 5. Date range filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[140px]", filterTags.length > 0 ? [xActive, xExpanded] : xDefault)} title="Filter by tags">
-            <Tag className="h-4 w-4 shrink-0" />
-            <span className={filterTags.length > 0 ? xSpanVisible : xSpan}>
-              {filterTags.length > 0 ? filterTags.join(", ") : "Tags"}
-            </span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44 max-h-72 overflow-y-auto">
-          {TASK_TAG_PRESETS.map((tag) => (
-            <DropdownMenuItem
-              key={tag}
-              onClick={() => toggleFilterTag(tag)}
-              className={cn(filterTags.includes(tag) && "font-bold text-brand-indigo")}
-            >
-              {tag}
-            </DropdownMenuItem>
-          ))}
-          {filterTags.length > 0 && (
-            <DropdownMenuItem onClick={() => setFilterTags([])} className="text-red-500 border-t border-border/40 mt-1">
-              Clear tags
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-
-
-      {/* 8. Date range filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[110px]", dateRange !== "all" ? xActive : xDefault)} title="Filter by date">
+          <button className={cn(xBase, "hover:max-w-[140px]", dateRange !== "all" ? [xActive, xExpanded] : xDefault)} title="Filter by date">
             <CalendarDays className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>
+            <span className={dateRange !== "all" ? xSpanVisible : xSpan}>
               {DATE_RANGE_OPTIONS.find((o) => o.value === dateRange)?.label ?? "Date"}
             </span>
           </button>
@@ -495,7 +556,7 @@ export default function TasksPage() {
           {DATE_RANGE_OPTIONS.map((o) => (
             <DropdownMenuItem
               key={o.value}
-              onClick={() => setDateRange(o.value)}
+              onClick={() => handleSetDateRange(o.value)}
               className={cn(dateRange === o.value && "font-bold text-brand-indigo")}
             >
               {o.label}
@@ -707,6 +768,9 @@ export default function TasksPage() {
                   tasks={filteredTasks}
                   searchQuery={searchQuery}
                   onTaskClick={(id) => setSelectedTaskId(id)}
+                  maxDepth={ganttMaxDepth}
+                  groupBy={ganttGroupBy}
+                  onGroupByChange={handleSetGanttGroupBy}
                 />
               </div>
             ) : null}
@@ -761,6 +825,9 @@ export default function TasksPage() {
                   searchQuery={searchQuery}
                   onTaskClick={setDesktopSelectedTaskId}
                   toolbarPortal={ganttToolbarRef}
+                  maxDepth={ganttMaxDepth}
+                  groupBy={ganttGroupBy}
+                  onGroupByChange={handleSetGanttGroupBy}
                 />
               )}
             </div>

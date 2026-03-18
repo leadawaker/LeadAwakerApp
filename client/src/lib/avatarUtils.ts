@@ -77,13 +77,8 @@ export const PIPELINE_HEX: Record<string, string> = {
   Responded:            "#3ACBDF",
   "Multiple Responses": "#31D35C",
   Qualified:            "#AED62E",
-  Booked:               "#F7BF0E",
-  "Call Booked":        "#F7BF0E",
-  "Appointment Booked":   "#F7BF0E",
-  "Appointment Rebooked": "#A78BFA",
-  "Booking Confirmed":    "#22C55E",
-  "Calendar Link Sent": "#F7BF0E",
-  Closed:               "#D97706",
+  Booked:               "#FCD34D",
+  Closed:               "#10B981",
   Lost:                 "#DC2626",
   DND:                  "#1a1a1a",
 };
@@ -96,7 +91,6 @@ export const LEAD_AVATAR_BG: Record<string, string> = {
   "Multiple Responses": "#AFE3BB",
   Qualified:            "#C7DF7D",
   Booked:               "#FFDB74",
-  "Call Booked":        "#FFDB74",
   Closed:               "#FDBA74",
   Lost:                 "#F5BFBF",
   DND:                  "#D4B5B9",
@@ -108,7 +102,6 @@ export const LEAD_AVATAR_TEXT: Record<string, string> = {
   "Multiple Responses": "#166534",
   Qualified:            "#3F6212",
   Booked:               "#78350F",
-  "Call Booked":        "#78350F",
   Closed:               "#9A3412",
   Lost:                 "#991B1B",
   DND:                  "#4A1A20",
@@ -122,7 +115,6 @@ export const LEAD_AVATAR_BG_DARK: Record<string, string> = {
   "Multiple Responses": "#1A3325",
   Qualified:            "#283314",
   Booked:               "#33290A",
-  "Call Booked":        "#33290A",
   Closed:               "#3D2A0A",
   Lost:                 "#3D1A1A",
   DND:                  "#3D2228",
@@ -134,7 +126,6 @@ export const LEAD_AVATAR_TEXT_DARK: Record<string, string> = {
   "Multiple Responses": "#6AE87C",
   Qualified:            "#B5E050",
   Booked:               "#FFD54F",
-  "Call Booked":        "#FFD54F",
   Closed:               "#FDBA74",
   Lost:                 "#F48A8A",
   DND:                  "#E0A0A8",
@@ -168,7 +159,7 @@ export function getLeadStatusAvatarColor(status: string): { bg: string; text: st
 
 export const PIPELINE_STATUSES = [
   "New", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Call Booked", "Closed", "Lost", "DND",
+  "Qualified", "Booked", "Closed", "Lost", "DND",
 ];
 
 // ── Account status colors — exported mutable for Color Tester ─────────────────

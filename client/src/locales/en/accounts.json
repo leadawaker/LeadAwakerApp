@@ -233,5 +233,29 @@
     "title": "Select an account",
     "description": "Click any account on the left to see its details and configuration.",
     "chooseFromList": "← Choose from the list"
+  },
+  "knowledge": {
+    "title": "Knowledge Base",
+    "entries": "entries",
+    "loading": "Loading...",
+    "add": "Add Entry",
+    "save": "Save",
+    "update": "Update",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "titlePlaceholder": "Entry title...",
+    "contentPlaceholder": "Content the AI will use to answer questions...",
+    "emptyTitle": "No knowledge base entries yet",
+    "emptyDescription": "Add pricing, services, FAQs, and more so the AI can answer lead questions accurately.",
+    "categories": {
+      "pricing": "Pricing",
+      "services": "Services",
+      "faq": "FAQ",
+      "team": "Team",
+      "hours": "Hours",
+      "location": "Location",
+      "policies": "Policies",
+      "testimonials": "Testimonials"
+    }
   }
 }

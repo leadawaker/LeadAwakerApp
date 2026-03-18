@@ -61,7 +61,7 @@ import path from "path";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
-import { eq, count, and, gte, lte, isNotNull, type SQL, desc, sql } from "drizzle-orm";
+import { eq, count, and, gte, lte, isNotNull, ilike, type SQL, desc, sql } from "drizzle-orm";
 import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands, formatConversationHistory } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
@@ -821,6 +821,15 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     }
     const lead = await storage.updateLead(Number(req.params.id), data);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
+
+    // Fire close summary when conversion status changes to a closed status
+    const CLOSE_STATUSES = ["Closed", "Booked"];
+    const newStatus = data.conversionStatus;
+    const oldStatus = existing.conversionStatus;
+    if (newStatus && CLOSE_STATUSES.includes(newStatus) && newStatus !== oldStatus) {
+      fetch(`${getEngineUrl()}/api/leads/${req.params.id}/close-summary`, { method: "POST" }).catch(() => {});
+    }
+
     res.json(toDbKeys(lead as any, leads));
   }));
 
@@ -1066,9 +1075,13 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
   app.get("/api/interactions/stream", requireAuth, (req: Request, res: Response) => {
     const user = (req as any).user;
     // Agency (accountsId 1) can watch any account via ?accountId=; subaccounts are locked
-    const accountId: number = user.accountsId !== 1
+    const isAgency = user.accountsId === 1;
+    const hasAccountFilter = !!req.query.accountId;
+    const accountId: number = !isAgency
       ? user.accountsId
-      : (req.query.accountId ? Number(req.query.accountId) : user.accountsId);
+      : (hasAccountFilter ? Number(req.query.accountId) : user.accountsId);
+    // Agency user with no specific account filter gets ALL broadcasts
+    const isGlobal = isAgency && !hasAccountFilter;
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -1078,19 +1091,19 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     (res as any).socket?.setNoDelay?.(true);
     res.flushHeaders();
 
-    console.log(`[sse] Client connected: accountId=${accountId}, userId=${user.id}`);
+    console.log(`[sse] Client connected: accountId=${accountId}, userId=${user.id}, global=${isGlobal}`);
     // Send an immediate event to force Cloudflare to treat this as a streaming response
     res.write("event: connected\ndata: {}\n\n");
-    addClient(accountId, res);
+    addClient(accountId, res, isGlobal);
 
     const keepAlive = setInterval(() => {
       res.write("event: ping\ndata: {}\n\n");
     }, 15_000);
 
     req.on("close", () => {
-      console.log(`[sse] Client disconnected: accountId=${accountId}, userId=${user.id}`);
+      console.log(`[sse] Client disconnected: accountId=${accountId}, userId=${user.id}, global=${isGlobal}`);
       clearInterval(keepAlive);
-      removeClient(accountId, res);
+      removeClient(accountId, res, isGlobal);
     });
   });
 
@@ -1334,19 +1347,44 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const history = await storage.getLeadScoreHistoryByLeadId(leadId);
     const latestHistory = history[0];
 
-    const leadScore = lead.leadScore ?? 0;
-    const engagementScore = latestHistory?.engagementScore ?? 0;
-    const activityScore = latestHistory?.activityScore ?? 0;
+    // Weights mirror Python lead_scorer.py exactly
+    const WEIGHT_FUNNEL = 0.50;
+    const WEIGHT_ENGAGEMENT = 0.30;
+    const WEIGHT_ACTIVITY = 0.20;
 
     const FUNNEL_WEIGHTS: Record<string, number> = {
-      Queued: 0, Contacted: 0, Responded: 30, "Multiple Responses": 50,
-      Qualified: 70, "Call Booked": 90, DND: 0, Lost: 0,
+      New: 0, Queued: 0, Contacted: 0, Responded: 30, "Multiple Responses": 50,
+      Qualified: 70, Booked: 90, Closed: 90, DND: 0, Lost: 0,
     };
+
     const conversionStatus = lead.conversionStatus ?? "";
-    const funnelWeight = FUNNEL_WEIGHTS[conversionStatus] ?? 0;
+    // Short-circuits matching Python scorer
+    let leadScore: number;
+    if (lead.optedOut || conversionStatus === "DND" || conversionStatus === "Lost") {
+      leadScore = 0;
+    } else {
+      const funnelWeight = FUNNEL_WEIGHTS[conversionStatus] ?? 0;
+      const rawEngagement = latestHistory?.engagementScore ?? lead.engagementScore ?? 0;
+      const rawActivity = latestHistory?.activityScore ?? lead.activityScore ?? 0;
+      leadScore = Math.max(0, Math.min(100, Math.round(
+        WEIGHT_FUNNEL * funnelWeight
+        + WEIGHT_ENGAGEMENT * rawEngagement
+        + WEIGHT_ACTIVITY * rawActivity
+      )));
+    }
+
+    // Display sub-scores (normalized to their visual max for the UI bar charts)
+    const FUNNEL_MAX = 50;
+    const ENGAGEMENT_MAX = 30;
+    const ACTIVITY_MAX = 20;
+    const funnelWeight = Math.min(FUNNEL_MAX, Math.round(WEIGHT_FUNNEL * (FUNNEL_WEIGHTS[conversionStatus] ?? 0)));
+    const rawEngagement = latestHistory?.engagementScore ?? lead.engagementScore ?? 0;
+    const rawActivity = latestHistory?.activityScore ?? lead.activityScore ?? 0;
+    const engagementScore = Math.min(ENGAGEMENT_MAX, Math.round((rawEngagement / 100) * ENGAGEMENT_MAX));
+    const activityScore = Math.min(ACTIVITY_MAX, Math.round((rawActivity / 100) * ACTIVITY_MAX));
 
     let tier: string;
-    if (conversionStatus === "DND" || conversionStatus === "Lost" || lead.optedOut) tier = "Lost";
+    if (lead.optedOut || conversionStatus === "DND" || conversionStatus === "Lost") tier = "Lost";
     else if (leadScore >= 80) tier = "Hot";
     else if (leadScore >= 60) tier = "Awake";
     else if (leadScore >= 40) tier = "Lukewarm";
@@ -1361,21 +1399,31 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       else if (oldest - newest >= 5) trend = "down";
     }
 
+    const sentiment: "positive" | "negative" | "neutral" | null =
+      lead.aiSentiment === "positive" ? "positive"
+      : lead.aiSentiment === "negative" ? "negative"
+      : lead.aiSentiment === "neutral" ? "neutral"
+      : null;
+
     const signals: string[] = [];
-    if (lead.aiSentiment === "positive") signals.push("Positive sentiment");
-    else if (lead.aiSentiment === "negative") signals.push("Negative sentiment");
+    if (sentiment === "positive") signals.push("Positive sentiment");
+    else if (sentiment === "negative") signals.push("Negative sentiment");
     if (lead.manualTakeover) signals.push("Manual takeover active");
     if (lead.optedOut) signals.push("Opted out");
-    if (conversionStatus === "Call Booked") signals.push("Call booked");
+    if (conversionStatus === "Booked") signals.push("Booked");
 
     res.json({
       lead_score: leadScore,
       engagement_score: engagementScore,
       activity_score: activityScore,
       funnel_weight: funnelWeight,
+      engagement_max: ENGAGEMENT_MAX,
+      activity_max: ACTIVITY_MAX,
+      funnel_max: FUNNEL_MAX,
       tier,
       signals: signals.slice(0, 4),
       trend,
+      sentiment,
       last_updated: new Date().toISOString(),
     });
   }));
@@ -1393,18 +1441,18 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
 
     try {
       const result = await pool.query(
-        `SELECT score_date, lead_score
+        `SELECT created_at, lead_score
          FROM p2mxx34fvbf3ll6."Lead_Score_History"
          WHERE leads_id = $1
-           AND score_date >= CURRENT_DATE - ($2 || ' days')::INTERVAL
-         ORDER BY score_date ASC`,
+           AND created_at >= NOW() - ($2 || ' days')::INTERVAL
+         ORDER BY created_at ASC`,
         [leadId, days]
       );
 
-      const history = result.rows.map((row: { score_date: Date | string; lead_score: number }) => ({
-        date: typeof row.score_date === "string"
-          ? row.score_date.slice(0, 10)
-          : row.score_date.toISOString().slice(0, 10),
+      const history = result.rows.map((row: { created_at: Date | string; lead_score: number }) => ({
+        date: typeof row.created_at === "string"
+          ? row.created_at
+          : row.created_at.toISOString(),
         score: Number(row.lead_score),
       }));
 
@@ -1424,6 +1472,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     await Promise.all([
       storage.deleteInteractionsByLeadId(leadId),
       storage.deleteAllLeadTags(leadId),
+      db.delete(leadScoreHistory).where(eq(leadScoreHistory.leadsId, leadId)),
     ]);
     if (lead.accountsId !== null) {
       broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
@@ -1458,6 +1507,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     await Promise.all([
       storage.deleteInteractionsByLeadId(leadId),
       storage.deleteAllLeadTags(leadId),
+      db.delete(leadScoreHistory).where(eq(leadScoreHistory.leadsId, leadId)),
     ]);
     if (lead.accountsId !== null) {
       broadcast(lead.accountsId, "lead_reset", { leads_id: leadId, accounts_id: lead.accountsId });
@@ -2134,6 +2184,15 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
     const categoryIdParam = req.query.categoryId as string | undefined;
     const parentTaskIdParam = req.query.parentTaskId as string | undefined;
+    const searchParam = req.query.search as string | undefined;
+
+    // Search by title (used by prospect detail to find related tasks)
+    if (searchParam) {
+      const rows = await db.select().from(tasks).where(
+        ilike(tasks.title, `%${searchParam}%`)
+      ).orderBy(desc(tasks.createdAt));
+      return res.json(rows);
+    }
 
     // If any filtering params are provided, use the filtered method
     const hasFilters = accountId !== undefined || categoryIdParam !== undefined || parentTaskIdParam !== undefined;
@@ -2912,7 +2971,7 @@ PERSONALITY
 
 PLATFORM KNOWLEDGE
 1. Campaigns — Create WhatsApp outreach campaigns targeting inactive leads with AI-powered messaging sequences
-2. Lead Pipeline — Visual Kanban board tracking leads: New → Contacted → Responded → Multiple Responses → Qualified → Call Booked → Lost → DND
+2. Lead Pipeline — Visual Kanban board tracking leads: New → Contacted → Responded → Multiple Responses → Qualified → Booked → Closed → Lost → DND
 3. AI Conversations — Automated WhatsApp messages that engage leads naturally, with smart follow-up bumps
 4. Lead Scoring — Automatic 0-100 scoring based on engagement signals, response quality, and conversion likelihood
 5. Manual Takeover — Human agents can take over any AI conversation at any time and hand back to AI when done

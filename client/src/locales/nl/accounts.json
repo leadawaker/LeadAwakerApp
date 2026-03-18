@@ -233,5 +233,29 @@
     "title": "Selecteer een account",
     "description": "Klik op een account aan de linkerkant om de details en configuratie te bekijken.",
     "chooseFromList": "\u2190 Kies uit de lijst"
+  },
+  "knowledge": {
+    "title": "Kennisbank",
+    "entries": "items",
+    "loading": "Laden...",
+    "add": "Toevoegen",
+    "save": "Opslaan",
+    "update": "Bijwerken",
+    "saving": "Opslaan...",
+    "cancel": "Annuleren",
+    "titlePlaceholder": "Titel van item...",
+    "contentPlaceholder": "Inhoud die de AI gebruikt om vragen te beantwoorden...",
+    "emptyTitle": "Nog geen kennisbank items",
+    "emptyDescription": "Voeg prijzen, diensten, FAQ's en meer toe zodat de AI vragen van leads nauwkeurig kan beantwoorden.",
+    "categories": {
+      "pricing": "Prijzen",
+      "services": "Diensten",
+      "faq": "FAQ",
+      "team": "Team",
+      "hours": "Openingstijden",
+      "location": "Locatie",
+      "policies": "Beleid",
+      "testimonials": "Testimonials"
+    }
   }
 }

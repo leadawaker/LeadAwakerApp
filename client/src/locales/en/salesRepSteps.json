@@ -3,50 +3,49 @@
     "title": "Manual reactivation",
     "titleIs": "is",
     "titleBroken": "broken",
-    "subtitle": "You have already invested <strong>THOUSANDS</strong> to acquire these leads, but you are leaving <strong>MILLIONS</strong> on the table because reactivation is painful and ineffective. Sound familiar?",
-    "bloatedCrm": "Bloated CRMs with\n1,000s of forgotten contacts",
-    "wastedTime": "Reps waste 20-40 hrs/week on\nsoul-crushing copy-paste work",
-    "lowReplyRates": "5-10% reply rates\n→ zero ROI",
-    "spamCampaigns": "Spray-and-pray campaigns\nBulk emails straight to spam"
+    "subtitle": "You paid to get these leads. They're sitting in a spreadsheet doing nothing. <strong>That changes today.</strong>",
+    "bloatedCrm": "Thousands of leads\ncollecting dust in your CRM",
+    "wastedTime": "Your team spends hours\nchasing people who don't reply",
+    "lowReplyRates": "5-10% reply rates.\nYou do the math.",
+    "spamCampaigns": "Bulk emails that land\nin spam, not inboxes"
   },
   "intro": {
-    "title": "Your Autonomous Sales Rep"
-    ,
-    "subtitle": "in 3 simple steps"
+    "title": "How it works.",
+    "subtitle": "Three steps. That's it."
   },
   "steps": {
     "step1": {
       "number": "1",
-      "cardTitle": "1. Upload your database",
-      "cardDescription": "Send a CSV or connect your CRM. Is that simple.",
+      "cardTitle": "1. Drop your leads in. We handle the rest.",
+      "cardDescription": "CSV, CRM export, or direct API integration. 15 minutes to launch.",
       "bulletPoints": {
-        "reawaken": "We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death",
-        "segment": "Auto segment contacts based on past interactions"
+        "reawaken": "Dormant leads, ghosted contacts, even the ones your team gave up on",
+        "segment": "Auto-segmented by intent, value, and last interaction"
       }
     },
     "step2": {
       "number": "2",
-      "cardTitle": "2. We start real conversations",
-      "cardDescription": "Our AI agents use the latest language models to read intent and craft tailored engagement offers for your niche.",
+      "cardTitle": "2. Real conversations, not spam.",
+      "cardDescription": "AI that reads intent, handles objections, and knows when to hand off to your team.",
       "overlayTitle": "24/7 Response capability",
       "overlayDescription": "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
       "bulletPoints": {
-        "response": "24/7 responses across SMS, WhatsApp, and email",
-        "followUp": "Smart follow-up re-engage unresponsive leads automatically",
-        "languages": "Speaks customers' languages and can sound formal or casual",
-        "humanTakeover": "Human takeover whenever needed",
-        "selling": "Conversations shaped by Challenger & SPIN selling to uncover needs and handle objections"
+        "response": "Responds in seconds, any time of day",
+        "followUp": "Speaks their language, matches your tone",
+        "languages": "Knows when to push and when to hand off to your team",
+        "humanTakeover": "Built on proven sales frameworks that handle objections naturally",
+        "selling": "Smart follow-ups that re-engage unresponsive leads automatically"
       }
     },
     "step3": {
       "number": "3",
-      "cardTitle": "3. Automated Appointment Booking and Reporting",
-      "cardDescription": "Reactivation → Revenue",
+      "cardTitle": "3. Calls booked. Revenue tracked.",
+      "cardDescription": "Qualified leads land on your calendar. You see everything in real time.",
       "bulletPoints": {
-        "calendar": "Syncs with Google Calendar, Calendly, or whatever you use. Dialer-ready for instant calls",
-        "support": "Support for sales calls and direct bookings (appointments, reservations, cart closures)",
-        "optimization": "Weekly optimization reviews for continuous performance improvements",
-        "dashboard": "Live dashboard shows campaign reports and lead interaction details"
+        "calendar": "Qualified leads land directly on your calendar",
+        "support": "Supports bookings, reservations, and direct sales",
+        "optimization": "Weekly optimization so results improve over time",
+        "dashboard": "Live dashboard with every conversation and metric"
       }
     }
   },

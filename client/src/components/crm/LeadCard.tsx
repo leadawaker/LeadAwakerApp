@@ -26,7 +26,7 @@ const CSV_TAGS = [
 function statusTone(status: Lead["conversion_status"]) {
   switch (status) {
     case "Booked":
-      return "bg-brand-yellow/10 text-brand-yellow border-brand-yellow/20";
+      return "text-amber-800 border-[#FCD34D]/20" + " bg-[#FCD34D]/10";
     case "Qualified":
       return "bg-brand-indigo/10 text-brand-indigo border-brand-indigo/20";
     case "Responded":

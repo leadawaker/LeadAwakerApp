@@ -23,6 +23,7 @@ import PipelineChart from "@/components/PipelineChart";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
 import SalesRepSteps from "@/components/SalesRepSteps";
+import RevenueCalculator from "@/components/RevenueCalculator";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
@@ -56,14 +57,34 @@ export default function Home() {
 
 
 
+              <motion.span
+                className="inline-block mb-4 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground border border-border/60 rounded-full"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0 }}
+              >
+                {t("hero.badge")}
+              </motion.span>
+
               <h1 className="
                 font-bold leading-[1.1] mb-6 text-foreground relative
                 text-[42px] sm:text-[48px] md:text-5xl lg:text-6xl
               ">
-                {t("hero.title.line1")}
-                <br />
+                <motion.span
+                  className="block"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  {t("hero.title.line1")}
+                </motion.span>
 
-                <motion.span className="relative block w-full">
+                <motion.span
+                  className="relative block w-full"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
                   <motion.span
                     className="absolute top-0 bottom-0 -z-10"
                     style={{
@@ -74,33 +95,48 @@ export default function Home() {
                     }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ delay: 1.5, duration: 0.3 }}
+                    transition={{ delay: 1.2, duration: 0.3 }}
                   />
                   <motion.span
-                    className="relative inline-block font-bold py-2 md:py-3 z-10"
+                    className="relative inline-block font-bold uppercase py-2 md:py-3 z-10"
                     initial={{ color: "#000" }}
                     animate={{ color: "#ffffff" }}
-                    transition={{ delay: 1.5, duration: 0.01 }}
+                    transition={{ delay: 1.2, duration: 0.01 }}
                   >
                     {t("hero.title.highlight")}
                   </motion.span>
                 </motion.span>
 
-                <span className="block">
+                <motion.span
+                  className="block"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
                   {t("hero.title.line2")}
-                </span>
+                </motion.span>
               </h1>
 
-              <p className="
-                text-muted-foreground mb-8 leading-relaxed
-                text-[16px] sm:text-[18px] md:text-xl
-                max-w-md mx-auto md:mx-0
-              ">
+              <motion.p
+                className="
+                  text-muted-foreground mb-8 leading-relaxed
+                  text-[16px] sm:text-[18px] md:text-xl
+                  max-w-lg mx-auto md:mx-0
+                "
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.1 }}
+              >
                 {t("hero.subtitle.line1")}<br />
-                {t("hero.subtitle.line2")}
-              </p>
+                <span className="font-semibold text-[#FEB800]">{t("hero.subtitle.line2")}</span>
+              </motion.p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <motion.div
+                className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
                 <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full transition-all duration-200 hover:bg-[#FEB800] hover:text-[#1a1a1a] hover:border-[#FEB800] hover:[box-shadow:0_0_40px_12px_rgba(254,184,0,0.6)]">
                     {t("hero.cta.primary")}
@@ -117,7 +153,7 @@ export default function Home() {
                     {t("hero.cta.secondary")}
                   </Button>
                 </Link>
-              </div>
+              </motion.div>
             </motion.div>
 
             {/* CHAT 3D */}
@@ -313,6 +349,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Revenue Calculator */}
+      <RevenueCalculator />
+
       {/* Security & AI Guardrails Section */}
       <section className="py-48 bg-[#F6F5FA]">
         <div className="container mx-auto px-4 md:px-6">
@@ -320,11 +359,14 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-5xl mx-auto mb-16"
+            className="text-center max-w-6xl mx-auto mb-16"
           >
-            <h2 className="font-bold mt-[3px] mb-[3px] text-[58px]">
+            <h2 className="font-bold mt-[3px] mb-[3px] text-[42px] md:text-[50px] lg:text-[57px]">
               {t("compliance.title")}
             </h2>
+            <p className="text-base md:text-lg mt-4 text-muted-foreground">
+              {t("compliance.subtitle")}
+            </p>
           </motion.div>
 
           <WorkflowVisualization />

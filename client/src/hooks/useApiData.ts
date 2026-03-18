@@ -3,7 +3,7 @@
  * Replaces all mock data imports across the application.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
-import { apiFetch } from "@/lib/apiUtils";
+import { apiFetch, API_BASE } from "@/lib/apiUtils";
 import type {
   Account,
   Campaign,
@@ -154,7 +154,6 @@ export function useInteractions(accountId?: number, leadId?: number) {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchInteractions = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -178,17 +177,44 @@ export function useInteractions(accountId?: number, leadId?: number) {
 
   useEffect(() => { fetchInteractions(false); }, [fetchInteractions]);
 
-  // Silent background polling every 15s — resets when leadId changes
+  // SSE: real-time interaction updates (replaces 15s polling)
   useEffect(() => {
-    if (!leadId) return;
-    pollingRef.current = setInterval(() => { fetchInteractions(true); }, 15000);
-    return () => {
-      if (pollingRef.current !== null) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
+    const url = accountId
+      ? `${API_BASE}/api/interactions/stream?accountId=${accountId}`
+      : `${API_BASE}/api/interactions/stream`;
+    const es = new EventSource(url, { withCredentials: true });
+
+    es.addEventListener("new_interaction", (e: MessageEvent) => {
+      try {
+        const raw = JSON.parse(e.data);
+        const newMsg = normalizeInteraction(raw);
+        // Only append if it belongs to the lead we're viewing (when filtering by lead)
+        if (leadId && newMsg.lead_id !== leadId) return;
+        setInteractions((prev) => {
+          if (prev.some((i) => i.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+        // Fetch full record (SSE payload is truncated at 500 chars due to PG NOTIFY limit)
+        apiFetch(`/api/interactions/${newMsg.id}`)
+          .then((r) => r.ok ? r.json() : null)
+          .then((full) => {
+            if (full) {
+              const normalized = normalizeInteraction(full);
+              setInteractions((prev) =>
+                prev.map((i) => i.id === normalized.id ? normalized : i)
+              );
+            }
+          })
+          .catch(() => {});
+      } catch (err) {
+        console.error("[sse] Failed to parse new_interaction in useInteractions:", err);
       }
-    };
-  }, [leadId, fetchInteractions]);
+    });
+
+    es.onerror = () => {};
+
+    return () => es.close();
+  }, [accountId, leadId]);
 
   return { interactions, loading, error, refresh };
 }

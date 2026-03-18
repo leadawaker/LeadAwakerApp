@@ -127,127 +127,116 @@ export default function About() {
               transition={{ duration: 0.8 }}
               className="max-w-5xl mx-auto space-y-10"
             >
-              {/* Big unified panel: founder + metrics + footnote */}
-              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-10">
+              {/* Founder + Credentials unified panel */}
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-14">
 
-                {/* Section heading */}
                 <h2 className="text-4xl font-bold text-center">
                   {t("credentials.title")}
                 </h2>
 
-                {/* Results tree: subtitle → "Real results." → stem → bar → cards */}
-                <div className="pt-0">
-                  {/* Subtitle with inline "Real results." — stem drops from it */}
-                  <p className="text-lg text-muted-foreground text-center mb-8">
-                    {t("credentials.subtitle")}{" "}
-                    <span className="relative inline-block">
-                      <span className="text-primary font-semibold underline underline-offset-4 decoration-2">
-                        {t("credentials.resultsNode")}
-                      </span>
-                      <motion.div
-                        className="absolute w-0.5 h-8 bg-primary/40"
-                        style={{ transformOrigin: "top", top: "100%", left: "50%", marginLeft: "-1px" }}
-                        initial={{ scaleY: 0 }}
-                        whileInView={{ scaleY: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                      />
-                    </span>
-                  </p>
-
-                  {/* Metric cards with drawing connector */}
-                  <div className="relative">
-                    {/* Bar grows from the stem position outward */}
-                    <motion.div
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1.4, delay: 0.6, ease: "easeOut" }}
-                      style={{
-                        transformOrigin: "87.5% 0",
-                        left: "calc((100% - 3 * 1.25rem) / 8)",
-                        right: "calc((100% - 3 * 1.25rem) / 8)",
-                      }}
-                      className="absolute top-0 h-0.5 bg-primary/40"
-                    />
-                    {/* Tick marks row — same grid as cards so each tick is auto-centered in its column */}
-                    <div className="hidden lg:grid grid-cols-4 gap-5 h-8">
-                      {[0, 1, 2, 3].map((i) => (
-                        <div key={i} className="flex justify-center">
-                          <motion.div
-                            className="w-px bg-primary/40"
-                            initial={{ height: 0 }}
-                            whileInView={{ height: 32 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.4, delay: 2.0 + i * 0.16, ease: "easeOut" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                      {credentialItems.map((item, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1.0, delay: 2.4 + i * 0.24, ease: "easeOut" }}
-                          className="px-4 py-5 text-left bg-white/70 dark:bg-card/70 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
-                        >
-                          <div className="text-3xl font-bold text-primary mb-1 text-center">{item.metric}</div>
-                          <div className="text-sm font-semibold text-foreground mb-2">{item.label}</div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
+                {/* Leaking bucket illustration */}
+                <div className="flex justify-center">
+                  <img
+                    src="/images/leaking-bucket.png?v=3"
+                    alt="Leaking bucket illustration"
+                    className="w-full dark:invert"
+                  />
                 </div>
 
-                {/* Recognition footnote */}
-                <motion.p
-                  className="text-sm text-muted-foreground text-center italic"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.0, delay: 3.6 }}
-                >
-                  {t("credentials.recognition")}
-                </motion.p>
-
-                <motion.hr
-                  className="border-border/50"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 3.9 }}
-                />
-
-                {/* Founder identity + quote */}
+                {/* Founder row: photo left-aligned with cards, quote right */}
                 <motion.div
-                  className="max-w-3xl mx-auto flex flex-col md:flex-row items-center gap-8"
+                  className="flex flex-col md:flex-row items-start gap-8"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 4.0 }}
+                  transition={{ duration: 0.8 }}
                 >
-                  <div className="w-60 h-60 shrink-0 relative flex items-center justify-center">
-                    <div className="scale-[0.80]">
+                  <div className="w-full md:w-[calc((100%-3*1.25rem)/4)] h-48 shrink-0 relative flex items-center justify-center">
+                    <div className="scale-[0.70]">
                       <AnimatedLogo3D />
                     </div>
                   </div>
                   <div className="flex-grow space-y-4 text-left">
-                    <h3 className="text-lg md:text-2xl font-bold text-foreground text-center md:text-left">
-                      {t("founder.name")}
-                    </h3>
-                    <p className="text-sm font-semibold uppercase tracking-wider text-primary text-center md:text-left">
-                      {t("founder.title")}
-                    </p>
-                    <p className="italic border-l-4 border-primary/30 pl-6 text-[19px] text-foreground/80 text-justify">
+                    <div className="flex items-baseline gap-3">
+                      <h3 className="text-lg md:text-2xl font-bold text-foreground">
+                        {t("founder.name")}
+                      </h3>
+                      <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+                        {t("founder.title")}
+                      </p>
+                    </div>
+                    <p className="italic border-l-4 border-primary/30 pl-6 text-[19px] text-foreground/80">
                       {t("founder.quote")}
                     </p>
                   </div>
                 </motion.div>
 
+                <h3 className="text-xl font-semibold text-foreground text-center">
+                  {t("credentials.subtitle")}
+                </h3>
+
+                {/* Credential cards */}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {credentialItems.map((item, i) => {
+                    const TracingCard = () => {
+                      const [size, setSize] = useState({ w: 0, h: 0 });
+                      const ref = (el: HTMLDivElement | null) => {
+                        if (el) {
+                          const { width, height } = el.getBoundingClientRect();
+                          if (width !== size.w || height !== size.h) {
+                            setSize({ w: width, h: height });
+                          }
+                        }
+                      };
+
+                      return (
+                        <motion.div
+                          key={i}
+                          ref={ref}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5, delay: i * 0.3, ease: "easeOut" }}
+                          className="relative px-4 py-5 text-left bg-white/70 dark:bg-card/70 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+                        >
+                          {/* SVG border trace */}
+                          {size.w > 0 && (
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ borderRadius: "1rem" }}>
+                              <motion.rect
+                                x="1"
+                                y="1"
+                                width={size.w - 2}
+                                height={size.h - 2}
+                                rx="16"
+                                ry="16"
+                                fill="none"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth="2"
+                                initial={{ pathLength: 0, opacity: 0 }}
+                                whileInView={{
+                                  pathLength: [0, 1],
+                                  opacity: [0, 1, 1, 0],
+                                }}
+                                viewport={{ once: true }}
+                                transition={{
+                                  pathLength: { duration: 1.8, delay: i * 0.4 + 0.3, ease: "easeInOut" },
+                                  opacity: { duration: 2.2, delay: i * 0.4 + 0.3, times: [0, 0.05, 0.75, 1] },
+                                }}
+                              />
+                            </svg>
+                          )}
+                          <div className="relative z-10">
+                            <div className="text-[28px] font-bold text-primary mb-1 text-center">{item.metric}</div>
+                            <div className="text-[12px] font-semibold text-foreground mb-2">{item.label}</div>
+                            <p className="text-[12px] text-muted-foreground leading-relaxed">{item.description}</p>
+                          </div>
+                        </motion.div>
+                      );
+                    };
+
+                    return <TracingCard key={i} />;
+                  })}
+                </div>
               </div>
             </motion.div>
           </div>

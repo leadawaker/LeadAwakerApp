@@ -949,7 +949,7 @@ function ClientGuide({ search }: { search: string }) {
           how business hours, scheduling, and calendar events are displayed.
         </Step>
         <Tip>
-          Enable email notifications for "Call Booked" events so you never miss a new
+          Enable email notifications for "Booked" events so you never miss a new
           appointment, even when you're away from the dashboard.
         </Tip>
       </DocSection>

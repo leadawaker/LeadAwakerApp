@@ -84,7 +84,7 @@ const STATUS_DOT: Record<string, string> = {
   Responded:            "bg-teal-500",
   "Multiple Responses": "bg-green-500",
   Qualified:            "bg-lime-500",
-  Booked:               "bg-amber-400",
+  Booked:               "bg-amber-500",
   Closed:               "bg-emerald-500",
   Lost:                 "bg-red-500",
   DND:                  "bg-zinc-500",
@@ -845,7 +845,7 @@ export function LeadsInlineTable({
                           return (
                             <td key="score" className={cn("px-2.5", tdClass)}>
                               {score > 0 ? (
-                                <ListScoreRing score={score} status={leadStatus} />
+                                <ListScoreRing score={score} status={leadStatus} lead={lead} />
                               ) : (
                                 <span className="text-muted-foreground/30 text-[11px]">&mdash;</span>
                               )}

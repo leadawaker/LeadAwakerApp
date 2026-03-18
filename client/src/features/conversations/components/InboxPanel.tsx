@@ -59,7 +59,7 @@ export const SORT_LABELS: Record<ChatSortBy, string> = {
 };
 
 
-const STATUS_GROUP_ORDER = ["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Call Booked", "Closed", "Lost", "DND"];
+const STATUS_GROUP_ORDER = ["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Closed", "Lost", "DND"];
 
 // ── Date group helpers ─────────────────────────────────────────────────────────
 function getDateGroupLabel(dateStr: string | null | undefined): string {

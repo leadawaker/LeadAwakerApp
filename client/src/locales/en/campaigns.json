@@ -193,6 +193,9 @@
     "stopOnResponse": "Stop on response",
     "useAiBumps": "Use AI bumps",
     "maxBumps": "Max bumps",
+    "buyingSignalResponse": "Buying signal response",
+    "buyingSignalResponsePlaceholder": "Custom AI response when a lead shows buying intent (e.g. 'Let me check my schedule and call you right back')",
+    "buyingSignalResponseDefault": "Default: AI will say it's checking its agenda and call back shortly",
     "deal": "Deal",
     "noneLinked": "\u2014 None linked",
     "valuePerBooking": "Value / Booking",
@@ -390,7 +393,7 @@
     "responded": "Responded",
     "multipleResponses": "Multiple Responses",
     "qualified": "Qualified",
-    "callBooked": "Call Booked",
+    "callBooked": "Booked",
     "closed": "Closed",
     "lost": "Lost",
     "dnd": "DND"

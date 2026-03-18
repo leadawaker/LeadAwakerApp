@@ -16,6 +16,7 @@ import {
   Briefcase,
   Maximize2,
   Minimize2,
+  X,
 } from "lucide-react";
 import type { Task, TaskCategory } from "@shared/schema";
 import { useTaskCategories, useUpdateTask } from "../api/tasksApi";
@@ -41,9 +42,15 @@ interface TasksGanttViewProps {
   onTaskClick?: (taskId: number) => void;
   /** Render gantt-specific controls in the page toolbar */
   toolbarPortal?: React.RefObject<HTMLDivElement | null>;
+  /** Max tree depth to display (null = all) */
+  maxDepth?: number | null;
+  /** Grouping mode */
+  groupBy?: GanttGroupBy;
+  onGroupByChange?: (g: GanttGroupBy) => void;
 }
 
 type ZoomLevel = "day" | "week" | "month";
+type GanttGroupBy = "hierarchy" | "status" | "priority";
 
 // ── Constants ──────────────────────────────────────────────────────────
 const MIN_LEFT_PANEL = 180;
@@ -53,12 +60,12 @@ const BAR_HEIGHT = 22;
 const BAR_Y_OFFSET = (ROW_HEIGHT - BAR_HEIGHT) / 2;
 
 const MIN_PX_PER_DAY = 3;
-const MAX_PX_PER_DAY = 600; // allow zooming into hourly view
+const MAX_PX_PER_DAY = 1200; // allow deep hourly zoom
 
 const ZOOM_PRESETS: Record<ZoomLevel, number> = {
-  day: 400, // hourly granularity: ~16px per hour
-  week: 17,
-  month: 5,
+  day: 960, // hourly granularity: ~40px per hour for clear daily view
+  week: 120, // ~7 days visible: one full Mon-Sun week in viewport
+  month: 15, // show week starts within each month
 };
 
 // ── Category icons (same as tree view) ────────────────────────────────
@@ -123,6 +130,64 @@ function buildTree(tasks: Task[]): TreeNode[] {
     for (const n of nodes) sortNodes(n.children);
   };
   sortNodes(roots);
+  return roots;
+}
+
+// ── Build grouped tree (status or priority) ─────────────────────────────
+const STATUS_GROUP_ORDER: { key: string; label: string }[] = [
+  { key: "in_progress", label: "In Progress" },
+  { key: "todo", label: "To Do" },
+  { key: "done", label: "Done" },
+];
+const PRIORITY_GROUP_ORDER: { key: string; label: string }[] = [
+  { key: "urgent", label: "Urgent" },
+  { key: "high", label: "High" },
+  { key: "medium", label: "Medium" },
+  { key: "low", label: "Low" },
+];
+
+function buildGroupedTree(tasks: Task[], groupBy: "status" | "priority"): TreeNode[] {
+  const activeTasks = tasks.filter((t) => t.status !== "cancelled");
+  const groups = groupBy === "status" ? STATUS_GROUP_ORDER : PRIORITY_GROUP_ORDER;
+  const buckets = new Map<string, Task[]>();
+  for (const g of groups) buckets.set(g.key, []);
+
+  for (const task of activeTasks) {
+    const key = groupBy === "status" ? (task.status ?? "todo") : (task.priority ?? "medium");
+    const bucket = buckets.get(key);
+    if (bucket) bucket.push(task);
+    else buckets.get(groups[groups.length - 1].key)!.push(task);
+  }
+
+  const priorityRank: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+  const sortByPriThenTitle = (a: Task, b: Task) => {
+    const pa = priorityRank[a.priority ?? "low"] ?? 3;
+    const pb = priorityRank[b.priority ?? "low"] ?? 3;
+    if (pa !== pb) return pa - pb;
+    return (a.title ?? "").localeCompare(b.title ?? "");
+  };
+
+  const roots: TreeNode[] = [];
+  for (const g of groups) {
+    const items = buckets.get(g.key) ?? [];
+    if (items.length === 0) continue;
+    items.sort(sortByPriThenTitle);
+
+    // Virtual group node (negative ID to avoid conflicts)
+    const virtualTask = {
+      id: -(groups.indexOf(g) + 1) * 10000,
+      title: g.label,
+      status: groupBy === "status" ? g.key : null,
+      priority: groupBy === "priority" ? g.key : null,
+      parentTaskId: null,
+      categoryId: null,
+    } as unknown as Task;
+
+    roots.push({
+      task: virtualTask,
+      children: items.map((task) => ({ task, children: [] })),
+    });
+  }
   return roots;
 }
 
@@ -338,8 +403,7 @@ function BarTooltip({
 
   return (
     <div
-      className="fixed z-[100] bg-popover border border-border rounded-lg shadow-xl px-3.5 py-3 pointer-events-none text-[12px] max-w-[360px]"
-      style={{ left: x, top: y - 12, transform: "translate(-50%, -100%)" }}
+      className="bg-popover border border-border rounded-lg shadow-xl px-3.5 py-3 pointer-events-none text-[12px] max-w-[360px]"
     >
       {/* Title */}
       <div className="font-semibold text-foreground text-[13px] leading-tight">
@@ -420,6 +484,9 @@ export default function TasksGanttView({
   searchQuery: _searchQuery,
   onTaskClick,
   toolbarPortal,
+  maxDepth: maxDepthProp = null,
+  groupBy: ganttGroupBy = "hierarchy",
+  onGroupByChange,
 }: TasksGanttViewProps) {
   const { t } = useTranslation("tasks");
   const { data: categories = [] } = useTaskCategories();
@@ -454,16 +521,22 @@ export default function TasksGanttView({
   const setZoomPreset = useCallback((z: ZoomLevel) => {
     setPxPerDay(ZOOM_PRESETS[z]);
     setActivePreset(z);
-    // Center on today after preset change
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const panel = rightPanelRef.current;
         if (panel) {
-          const newTodayX = diffDays(
-            computeTimelineRange(flatRowsRef.current).rangeStart,
-            startOfDay(new Date())
-          ) * ZOOM_PRESETS[z];
-          panel.scrollLeft = Math.max(0, newTodayX - panel.clientWidth / 2);
+          const rs = computeTimelineRange(flatRowsRef.current).rangeStart;
+          const tod = startOfDay(new Date());
+          if (z === "week") {
+            // Snap to Monday of current week
+            const dow = tod.getDay(); // 0=Sun
+            const monday = addDays(tod, dow === 0 ? -6 : 1 - dow);
+            const mondayX = diffDays(rs, monday) * ZOOM_PRESETS[z];
+            panel.scrollLeft = Math.max(0, mondayX - panel.clientWidth * 0.15);
+          } else {
+            const todX = diffDays(rs, tod) * ZOOM_PRESETS[z];
+            panel.scrollLeft = Math.max(0, todX - panel.clientWidth * 0.15);
+          }
         }
       });
     });
@@ -619,12 +692,10 @@ export default function TasksGanttView({
 
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
-  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   expandedTaskIdRef.current = expandedTaskId;
 
   const toggleTaskExpand = useCallback((taskId: number) => {
     setExpandedTaskId((prev) => (prev === taskId ? null : taskId));
-    setEditingTaskId(null);
   }, []);
 
   // ── Color-by mode ─────────────────────────────────────────────────────
@@ -641,6 +712,8 @@ export default function TasksGanttView({
     try { localStorage.setItem("tasks-gantt-colorby", colorBy); } catch {}
   }, [colorBy]);
 
+  const maxDepth = maxDepthProp;
+
   // ── Category color map ───────────────────────────────────────────────
   const categoryColorMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -652,7 +725,25 @@ export default function TasksGanttView({
   }, [categories]);
 
   // ── Build tree + flatten ─────────────────────────────────────────────
-  const tree = useMemo(() => buildTree(tasks), [tasks]);
+  const tree = useMemo(() => {
+    if (ganttGroupBy === "status" || ganttGroupBy === "priority") {
+      return buildGroupedTree(tasks, ganttGroupBy);
+    }
+    return buildTree(tasks);
+  }, [tasks, ganttGroupBy]);
+
+  // Auto-expand virtual group nodes when using grouped mode
+  useEffect(() => {
+    if (ganttGroupBy !== "hierarchy") {
+      setExpanded((prev) => {
+        const next = new Set(prev);
+        for (const root of tree) {
+          if (root.task.id < 0) next.add(root.task.id);
+        }
+        return next;
+      });
+    }
+  }, [tree, ganttGroupBy]);
 
   const taskNodeMap = useMemo(() => {
     const map = new Map<number, TreeNode>();
@@ -683,7 +774,23 @@ export default function TasksGanttView({
     });
   }, [getAllDescendantIds, taskNodeMap]);
 
-  const flatRows = useMemo(() => flattenTree(tree, expanded), [tree, expanded]);
+  const flatRows = useMemo(() => {
+    const all = flattenTree(tree, expanded);
+    if (maxDepth === null) return all;
+    // Filter by depth and remap parentIndex to new positions
+    const filtered: FlatRow[] = [];
+    const indexMap = new Map<number, number>();
+    for (let i = 0; i < all.length; i++) {
+      if (all[i].depth <= maxDepth) {
+        indexMap.set(i, filtered.length);
+        filtered.push({
+          ...all[i],
+          parentIndex: all[i].parentIndex !== null ? (indexMap.get(all[i].parentIndex!) ?? null) : null,
+        });
+      }
+    }
+    return filtered;
+  }, [tree, expanded, maxDepth]);
   const flatRowsRef = useRef(flatRows);
   flatRowsRef.current = flatRows;
 
@@ -705,9 +812,18 @@ export default function TasksGanttView({
   );
 
   const today = startOfDay(new Date());
+  const yearEnd = useMemo(() => new Date(today.getFullYear(), 11, 31), []);
   const todayX = diffDays(rangeStart, today) * pxPerDay;
 
   const leftPanelRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+
+  // ── Virtualization: only render visible rows ──────────────────────
+  const [visibleScrollTop, setVisibleScrollTop] = useState(0);
+  const viewportHeightRef = useRef(600);
+  const VIRT_BUFFER = 5;
+  const firstVisibleRow = Math.max(0, Math.floor(visibleScrollTop / ROW_HEIGHT) - VIRT_BUFFER);
+  const lastVisibleRow = Math.min(flatRows.length - 1, Math.ceil((visibleScrollTop + viewportHeightRef.current) / ROW_HEIGHT) + VIRT_BUFFER);
   const headerRef = useRef<HTMLDivElement>(null);
 
   // Sync timeline header horizontal scroll with body
@@ -719,16 +835,21 @@ export default function TasksGanttView({
     }
   }, []);
 
-  // Scroll sync: both panels now have identical scroll ranges (header is outside scroll)
+  // Scroll sync: lock flag prevents ping-pong between panels
+  const scrollLockRef = useRef(false);
   const syncVerticalScroll = useCallback((source: "left" | "right") => {
+    if (scrollLockRef.current) return;
+    scrollLockRef.current = true;
     const left = leftPanelRef.current;
     const right = rightPanelRef.current;
-    if (!left || !right) return;
-    if (source === "left" && Math.abs(right.scrollTop - left.scrollTop) > 0.5) {
-      right.scrollTop = left.scrollTop;
-    } else if (source === "right" && Math.abs(left.scrollTop - right.scrollTop) > 0.5) {
-      left.scrollTop = right.scrollTop;
+    if (left && right) {
+      if (source === "left") {
+        right.scrollTop = left.scrollTop;
+      } else {
+        left.scrollTop = right.scrollTop;
+      }
     }
+    requestAnimationFrame(() => { scrollLockRef.current = false; });
   }, []);
 
   // Full-width toggle
@@ -740,15 +861,14 @@ export default function TasksGanttView({
     window.dispatchEvent(new Event("gantt-fullwidth-change"));
   }, [isFullWidth]);
 
-  // ── Scroll to today (centered in viewport) ─────────────────────────
+  // ── Scroll to today (left-aligned with small padding) ──────────────
   const didAutoScroll = useRef(false);
   const scrollToToday = useCallback(() => {
     const panel = rightPanelRef.current;
     if (panel) {
-      // Offset by leftWidth since the left column is sticky
-      panel.scrollLeft = Math.max(0, todayX - panel.clientWidth / 2);
+      panel.scrollLeft = Math.max(0, todayX - panel.clientWidth * 0.15);
     }
-  }, [todayX, leftWidth]);
+  }, [todayX]);
 
   useEffect(() => {
     if (didAutoScroll.current) return;
@@ -769,16 +889,16 @@ export default function TasksGanttView({
     return () => document.removeEventListener("keydown", handler);
   }, [scrollToToday]);
 
-  // ── Tooltip ──────────────────────────────────────────────────────────
-  const [tooltip, setTooltip] = useState<{
+  // ── Tooltip (ref-based position to avoid 60fps re-renders) ──────────
+  const [tooltipData, setTooltipData] = useState<{
     task: Task;
     start: Date | null;
     end: Date | null;
-    x: number;
-    y: number;
   } | null>(null);
+  const tooltipPosRef = useRef({ x: 0, y: 0 });
+  const tooltipElRef = useRef<HTMLDivElement>(null);
 
-  // ── Drag state ───────────────────────────────────────────────────────
+  // ── Drag state (visual-only during drag, mutate once on mouseup) ────
   const [dragState, setDragState] = useState<{
     taskId: number;
     mode: "move" | "resize-left" | "resize-right";
@@ -786,6 +906,7 @@ export default function TasksGanttView({
     origStart: Date;
     origEnd: Date;
   } | null>(null);
+  const [dragDaysDelta, setDragDaysDelta] = useState(0);
 
   const startDrag = useCallback(
     (
@@ -795,11 +916,11 @@ export default function TasksGanttView({
       barStart: Date,
       barEnd: Date
     ) => {
-      // Don't allow dragging parent/summary bars
       const row = flatRows.find((r) => r.node.task.id === task.id);
       if (row?.hasChildren) return;
       e.preventDefault();
       e.stopPropagation();
+      setDragDaysDelta(0);
       setDragState({
         taskId: task.id,
         mode,
@@ -813,30 +934,31 @@ export default function TasksGanttView({
 
   useEffect(() => {
     if (!dragState) return;
+    const pxRef = pxPerDay; // capture for closure
     const onMove = (e: MouseEvent) => {
       const dx = e.clientX - dragState.startMouseX;
-      const daysDelta = Math.round(dx / pxPerDay);
-      if (dragState.mode === "move") {
-        const newStart = addDays(dragState.origStart, daysDelta);
-        const newEnd = addDays(dragState.origEnd, daysDelta);
-        updateTask.mutate({
-          id: dragState.taskId,
-          data: { startDate: newStart.toISOString(), dueDate: newEnd.toISOString() } as any,
-        });
-      } else if (dragState.mode === "resize-left") {
-        const newStart = addDays(dragState.origStart, daysDelta);
-        if (newStart < dragState.origEnd) {
-          updateTask.mutate({ id: dragState.taskId, data: { startDate: newStart.toISOString() } as any });
-        }
-      } else {
-        const newEnd = addDays(dragState.origEnd, daysDelta);
-        if (newEnd > dragState.origStart) {
-          updateTask.mutate({ id: dragState.taskId, data: { dueDate: newEnd.toISOString() } as any });
+      setDragDaysDelta(Math.round(dx / pxRef));
+    };
+    const onUp = (e: MouseEvent) => {
+      const dx = e.clientX - dragState.startMouseX;
+      const delta = Math.round(dx / pxRef);
+      // Single API call on release
+      if (delta !== 0) {
+        if (dragState.mode === "move") {
+          updateTask.mutate({
+            id: dragState.taskId,
+            data: { startDate: addDays(dragState.origStart, delta).toISOString(), dueDate: addDays(dragState.origEnd, delta).toISOString() } as any,
+          });
+        } else if (dragState.mode === "resize-left") {
+          const ns = addDays(dragState.origStart, delta);
+          if (ns < dragState.origEnd) updateTask.mutate({ id: dragState.taskId, data: { startDate: ns.toISOString() } as any });
+        } else {
+          const ne = addDays(dragState.origEnd, delta);
+          if (ne > dragState.origStart) updateTask.mutate({ id: dragState.taskId, data: { dueDate: ne.toISOString() } as any });
         }
       }
-    };
-    const onUp = () => {
       setDragState(null);
+      setDragDaysDelta(0);
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
     };
@@ -923,7 +1045,6 @@ export default function TasksGanttView({
 
       const catColor = getRowColor(row);
       // The band extends to Dec 31 of current year
-      const yearEnd = new Date(new Date().getFullYear(), 11, 31);
       const bandStart = diffDays(rangeStart, rangeStart) * pxPerDay; // start of timeline
       const bandEnd = diffDays(rangeStart, yearEnd) * pxPerDay;
 
@@ -966,9 +1087,27 @@ export default function TasksGanttView({
           <div
             ref={leftPanelRef}
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none]"
-            onScroll={() => syncVerticalScroll("left")}
+            onScroll={() => { if (!scrollRafRef.current) { scrollRafRef.current = requestAnimationFrame(() => { syncVerticalScroll("left"); scrollRafRef.current = null; }); } }}
+            onMouseOver={(e) => {
+              const el = (e.target as HTMLElement).closest("[data-row-idx]");
+              if (el) setHoveredRow(Number(el.getAttribute("data-row-idx")));
+            }}
+            onMouseOut={(e) => {
+              const el = (e.target as HTMLElement).closest("[data-row-idx]");
+              if (el) setHoveredRow(null);
+            }}
+            onClick={(e) => {
+              const el = (e.target as HTMLElement).closest("[data-row-idx]");
+              if (!el) return;
+              const idx = Number(el.getAttribute("data-row-idx"));
+              const row = flatRows[idx];
+              if (row) toggleTaskExpand(row.node.task.id);
+            }}
           >
-            {flatRows.map((row, i) => {
+            {/* Spacer for virtualized rows above */}
+            {firstVisibleRow > 0 && <div style={{ height: firstVisibleRow * ROW_HEIGHT }} />}
+            {flatRows.slice(firstVisibleRow, lastVisibleRow + 1).map((row, sliceIdx) => {
+              const i = firstVisibleRow + sliceIdx;
               const { task } = row.node;
               const catColorRaw = task.categoryId ? categoryColorMap.get(task.categoryId) : undefined;
               const catColor = catColorRaw ?? "#6366f1";
@@ -985,10 +1124,11 @@ export default function TasksGanttView({
               return (
                 <div
                   key={task.id}
+                  data-row-idx={i}
                   className={cn(
                     "flex items-center gap-1 pr-1 border-b border-border/10 cursor-pointer transition-colors",
                     isSelected
-                      ? "bg-brand-indigo/8 dark:bg-brand-indigo/15"
+                      ? "bg-white dark:bg-white/15"
                       : hoveredRow === i
                         ? "bg-white dark:bg-white/10"
                         : "hover:bg-white/70 dark:hover:bg-white/5"
@@ -1002,9 +1142,6 @@ export default function TasksGanttView({
                       ? { backgroundColor: l1Bg, color: "white" }
                       : {}),
                   }}
-                  onClick={() => toggleTaskExpand(task.id)}
-                  onMouseEnter={() => setHoveredRow(i)}
-                  onMouseLeave={() => setHoveredRow(null)}
                 >
                   {row.hasChildren ? (
                     <button
@@ -1040,7 +1177,7 @@ export default function TasksGanttView({
                     </div>
                   )}
 
-                  <span className={cn("shrink-0 text-[9px] font-mono w-[22px] text-right", l1Bg && !isSelected ? "text-white/60" : "text-muted-foreground/40")}>#{task.id}</span>
+                  {task.id > 0 && <span className={cn("shrink-0 text-[9px] font-mono w-[22px] text-right", l1Bg && !isSelected ? "text-white/60" : "text-muted-foreground/40")}>#{task.id}</span>}
                   <span className={cn("truncate text-[11px] flex-1 min-w-0", isRoot ? "font-bold" : isL1 ? "font-semibold" : "font-normal", isDone && "line-through text-muted-foreground/50", l1Bg && !isSelected && "text-white")} title={task.title ?? ""}>{task.title}</span>
                   <span className="ml-auto flex items-center gap-1 shrink-0">
                     {childCount > 0 && !expanded.has(task.id) && (
@@ -1051,7 +1188,8 @@ export default function TasksGanttView({
                 </div>
               );
             })}
-            <div style={{ height: 40 }} />
+            {/* Spacer for virtualized rows below */}
+            <div style={{ height: Math.max(0, (flatRows.length - lastVisibleRow - 1) * ROW_HEIGHT + 40) }} />
           </div>
 
           {/* Resize handle */}
@@ -1087,7 +1225,7 @@ export default function TasksGanttView({
           <div
             ref={rightPanelRef}
             className="flex-1 min-h-0 overflow-auto"
-            onScroll={() => { syncVerticalScroll("right"); syncHorizontalScroll(); }}
+            onScroll={(e) => { const el = e.currentTarget; if (!scrollRafRef.current) { scrollRafRef.current = requestAnimationFrame(() => { syncVerticalScroll("right"); syncHorizontalScroll(); viewportHeightRef.current = el.clientHeight; setVisibleScrollTop(el.scrollTop); scrollRafRef.current = null; }); } }}
           >
             <div className="relative" style={{ width: timelineWidth, height: totalContentHeight }}>
               {/* Grid lines */}
@@ -1130,22 +1268,26 @@ export default function TasksGanttView({
                 />
               ))}
 
-              {/* Row stripes + hover + L0/L1 colored rows */}
-              {flatRows.map((row, i) => {
+              {/* Row stripes + hover + L0/L1 colored rows (virtualized) */}
+              {flatRows.slice(firstVisibleRow, lastVisibleRow + 1).map((row, sliceIdx) => {
+                const i = firstVisibleRow + sliceIdx;
                 const isRootRow = row.depth === 0;
                 const isL1Row = row.depth === 1 && row.hasChildren;
                 const l1CatColor = isL1Row && colorBy === "category"
                   ? (row.node.task.categoryId ? categoryColorMap.get(row.node.task.categoryId) : undefined)
                   : undefined;
+                const isSelectedRow = expandedTaskId === row.node.task.id;
 
                 return (
                   <div
                     key={`stripe-${i}`}
                     className={cn(
                       "absolute left-0 right-0 border-b border-border/8 transition-colors z-[2]",
-                      hoveredRow === i
-                        ? "bg-white/60 dark:bg-white/8"
-                        : i % 2 === 1 ? "bg-muted/5" : ""
+                      isSelectedRow
+                        ? "bg-white/80 dark:bg-white/15"
+                        : hoveredRow === i
+                          ? "bg-white/60 dark:bg-white/8"
+                          : i % 2 === 1 ? "bg-muted/5" : ""
                     )}
                     style={{
                       top: rowTops[i],
@@ -1223,8 +1365,9 @@ export default function TasksGanttView({
                 })}
               </svg>
 
-              {/* ── Task bars ───────────────────────────────────────── */}
-              {flatRows.map((row, i) => {
+              {/* ── Task bars (virtualized) ────────────────────────── */}
+              {flatRows.slice(firstVisibleRow, lastVisibleRow + 1).map((row, sliceIdx) => {
+                const i = firstVisibleRow + sliceIdx;
                 const { task } = row.node;
                 const isParent = row.hasChildren;
                 const isRoot = row.depth === 0;
@@ -1239,7 +1382,6 @@ export default function TasksGanttView({
 
                 // L0 root: dark bar extending to Dec 31 2026
                 if (isRoot) {
-                  const yearEnd = new Date(2026, 11, 31);
                   const barStart = start ?? today;
                   const barEndDate = yearEnd;
                   const rootPos = getBarPos(barStart, barEndDate);
@@ -1254,15 +1396,16 @@ export default function TasksGanttView({
                         width: rootPos.width,
                         height: 8,
                       }}
-                      onClick={() => onTaskClick?.(task.id)}
+                      onClick={() => { toggleTaskExpand(task.id); onTaskClick?.(task.id); }}
                       onMouseEnter={(e) => {
                         setHoveredRow(i);
-                        setTooltip({ task, start: barStart, end: barEndDate, x: e.clientX, y: e.clientY });
+                        tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start: barStart, end: barEndDate });
                       }}
-                      onMouseMove={(e) =>
-                        setTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null))
-                      }
-                      onMouseLeave={() => { setHoveredRow(null); setTooltip(null); }}
+                      onMouseMove={(e) => {
+                        tooltipPosRef.current = { x: e.clientX, y: e.clientY };
+                        if (tooltipElRef.current) { tooltipElRef.current.style.left = `${e.clientX}px`; tooltipElRef.current.style.top = `${e.clientY - 12}px`; }
+                      }}
+                      onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
                     >
                       <div className="h-full rounded-sm" style={{ backgroundColor: "#1a1a1a", opacity: 0.85 }} />
                       {rootPos.width > 100 && (
@@ -1286,12 +1429,12 @@ export default function TasksGanttView({
                         width: 40,
                         height: BAR_HEIGHT - 4,
                       }}
-                      onClick={() => onTaskClick?.(task.id)}
+                      onClick={() => { toggleTaskExpand(task.id); onTaskClick?.(task.id); }}
                       onMouseEnter={(e) => {
                         setHoveredRow(i);
-                        setTooltip({ task, start: null, end: null, x: e.clientX, y: e.clientY });
+                        tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start: null, end: null });
                       }}
-                      onMouseLeave={() => { setHoveredRow(null); setTooltip(null); }}
+                      onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
                     >
                       <div
                         className="h-full rounded-full opacity-25 group-hover/bar:opacity-40 transition-opacity border"
@@ -1305,14 +1448,20 @@ export default function TasksGanttView({
                 if (!pos) return null;
 
                 const commonHandlers = {
-                  onClick: () => onTaskClick?.(task.id),
+                  onClick: () => { toggleTaskExpand(task.id); onTaskClick?.(task.id); },
                   onMouseEnter: (e: React.MouseEvent) => {
                     setHoveredRow(i);
-                    setTooltip({ task, start, end, x: e.clientX, y: e.clientY });
+                    tooltipPosRef.current = { x: e.clientX, y: e.clientY };
+                    setTooltipData({ task, start, end });
                   },
-                  onMouseMove: (e: React.MouseEvent) =>
-                    setTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null)),
-                  onMouseLeave: () => { setHoveredRow(null); setTooltip(null); },
+                  onMouseMove: (e: React.MouseEvent) => {
+                    tooltipPosRef.current = { x: e.clientX, y: e.clientY };
+                    if (tooltipElRef.current) {
+                      tooltipElRef.current.style.left = `${e.clientX}px`;
+                      tooltipElRef.current.style.top = `${e.clientY - 12}px`;
+                    }
+                  },
+                  onMouseLeave: () => { setHoveredRow(null); setTooltipData(null); },
                 };
 
                 if (isParent) {
@@ -1358,12 +1507,13 @@ export default function TasksGanttView({
                           onClick={() => onTaskClick?.(task.id)}
                           onMouseEnter={(e) => {
                             setHoveredRow(i);
-                            setTooltip({ task, start, end, x: e.clientX, y: e.clientY });
+                            tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start, end });
                           }}
-                          onMouseMove={(e) =>
-                            setTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null))
-                          }
-                          onMouseLeave={() => { setHoveredRow(null); setTooltip(null); }}
+                          onMouseMove={(e) => {
+                            tooltipPosRef.current = { x: e.clientX, y: e.clientY };
+                            if (tooltipElRef.current) { tooltipElRef.current.style.left = `${e.clientX}px`; tooltipElRef.current.style.top = `${e.clientY - 12}px`; }
+                          }}
+                          onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
                         />
                         {/* Diamond marker at top of deadline line */}
                         <div
@@ -1381,9 +1531,9 @@ export default function TasksGanttView({
                           onClick={() => onTaskClick?.(task.id)}
                           onMouseEnter={(e) => {
                             setHoveredRow(i);
-                            setTooltip({ task, start, end, x: e.clientX, y: e.clientY });
+                            tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start, end });
                           }}
-                          onMouseLeave={() => { setHoveredRow(null); setTooltip(null); }}
+                          onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
                         />
                         {/* Label next to the diamond */}
                         <div
@@ -1442,14 +1592,23 @@ export default function TasksGanttView({
                       : 50)
                   : 0;
 
+                const isDragging = dragState?.taskId === task.id;
+                const dragPx = isDragging ? dragDaysDelta * pxPerDay : 0;
+                const dragLeft = isDragging && dragState.mode === "resize-left" ? dragPx : 0;
+                const dragWidth = isDragging
+                  ? dragState.mode === "move" ? 0
+                    : dragState.mode === "resize-left" ? -dragPx
+                    : dragPx
+                  : 0;
+
                 return (
                   <div
                     key={`bar-${task.id}`}
                     className="absolute group/bar z-[6]"
                     style={{
                       top: rowTops[i] + BAR_Y_OFFSET,
-                      left: pos.left,
-                      width: pos.width,
+                      left: pos.left + (isDragging && dragState.mode === "move" ? dragPx : dragLeft),
+                      width: Math.max(6, pos.width + dragWidth),
                       height: BAR_HEIGHT,
                     }}
                     {...commonHandlers}
@@ -1458,7 +1617,9 @@ export default function TasksGanttView({
                     <div
                       className={cn(
                         "absolute inset-0 rounded-[5px] cursor-grab active:cursor-grabbing transition-opacity overflow-hidden",
-                        isDone ? "opacity-40" : "opacity-75 group-hover/bar:opacity-100"
+                        expandedTaskId === task.id
+                          ? "opacity-100 ring-2 ring-brand-indigo/50 ring-offset-1"
+                          : isDone ? "opacity-40" : "opacity-75 group-hover/bar:opacity-100"
                       )}
                       style={{ backgroundColor: catColor }}
                       onMouseDown={(e) => startDrag(e, task, "move", effectiveStart, effectiveEnd)}
@@ -1477,18 +1638,18 @@ export default function TasksGanttView({
 
                     {/* Left resize handle */}
                     <div
-                      className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-10 opacity-0 group-hover/bar:opacity-100"
+                      className="absolute -left-1 top-0 bottom-0 w-3 cursor-col-resize z-10 opacity-0 group-hover/bar:opacity-100"
                       onMouseDown={(e) => startDrag(e, task, "resize-left", effectiveStart, effectiveEnd)}
                     >
-                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-0.5 h-3 rounded bg-white/60" />
+                      <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-3.5 rounded-sm bg-white/80" />
                     </div>
 
                     {/* Right resize handle */}
                     <div
-                      className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-10 opacity-0 group-hover/bar:opacity-100"
+                      className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize z-10 opacity-0 group-hover/bar:opacity-100"
                       onMouseDown={(e) => startDrag(e, task, "resize-right", effectiveStart, effectiveEnd)}
                     >
-                      <div className="absolute right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-3 rounded bg-white/60" />
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1 h-3.5 rounded-sm bg-white/80" />
                     </div>
 
                     {/* Label */}
@@ -1508,31 +1669,32 @@ export default function TasksGanttView({
         </div>
       </div>
 
-      {/* Hover tooltip (timeline bars) */}
-      {tooltip && !expandedTaskId && (
-        <BarTooltip
-          task={tooltip.task}
-          start={tooltip.start}
-          end={tooltip.end}
-          x={tooltip.x}
-          y={tooltip.y}
-        />
+      {/* Hover tooltip (timeline bars) — position via ref, no re-render on move */}
+      {tooltipData && !expandedTaskId && (
+        <div
+          ref={tooltipElRef}
+          className="fixed z-[100] pointer-events-none"
+          style={{ left: tooltipPosRef.current.x, top: tooltipPosRef.current.y - 12, transform: "translate(-50%, -100%)" }}
+        >
+          <BarTooltip
+            task={tooltipData.task}
+            start={tooltipData.start}
+            end={tooltipData.end}
+            x={0}
+            y={0}
+          />
+        </div>
       )}
 
-      {/* Selected task detail panel (floating, with edit mode) */}
+      {/* Selected task detail panel (floating, always editable) */}
       {expandedTaskId && (() => {
         const rowIdx = flatRows.findIndex((r) => r.node.task.id === expandedTaskId);
         if (rowIdx < 0) return null;
         const row = flatRows[rowIdx];
         const task = row.node.task;
         const dates = getEffectiveDates(task);
-        const priority = (task.priority ?? "medium") as TaskPriority;
-        const priorityColors = PRIORITY_BADGE[priority];
         const tags = parseTags((task as any).tags);
-        const isEditing = editingTaskId === task.id;
         const catColor = getRowColor(row);
-        const fmtDate = (d: Date | null) =>
-          d ? d.toLocaleDateString("default", { day: "numeric", month: "short", year: "numeric" }) : "-";
 
         // Position the panel below the row
         const scrollEl = rightPanelRef.current;
@@ -1551,110 +1713,71 @@ export default function TasksGanttView({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with category color accent */}
-            <div className="rounded-t-lg px-3.5 pt-3 pb-2" style={{ borderTop: `3px solid ${catColor}` }}>
-              {isEditing ? (
-                <input
-                  className="w-full bg-transparent text-[13px] font-semibold text-foreground outline-none border-b border-border/40 pb-0.5"
-                  defaultValue={task.title ?? ""}
-                  onBlur={(e) => {
-                    if (e.target.value !== task.title) updateTask.mutate({ id: task.id, data: { title: e.target.value } as any });
-                  }}
-                  onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                  autoFocus
-                />
-              ) : (
-                <div className="font-semibold text-foreground text-[13px] leading-tight">
-                  <span className="text-muted-foreground/40 text-[10px] font-mono mr-1">#{task.id}</span>
-                  {task.title}
-                </div>
-              )}
+            {/* Header with category color accent + X close */}
+            <div className="rounded-t-lg px-3.5 pt-2.5 pb-2 relative" style={{ borderTop: `3px solid ${catColor}` }}>
+              <button
+                className="absolute top-2 right-2 h-5 w-5 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setExpandedTaskId(null)}
+              >
+                <X className="h-3 w-3" />
+              </button>
+              {task.id > 0 && <span className="text-muted-foreground/40 text-[10px] font-mono">#{task.id}</span>}
+              <input
+                className="w-full bg-transparent text-[13px] font-semibold text-foreground outline-none border-b border-transparent focus:border-border/40 pb-0.5 pr-5"
+                defaultValue={task.title ?? ""}
+                onBlur={(e) => {
+                  if (e.target.value !== task.title) updateTask.mutate({ id: task.id, data: { title: e.target.value } as any });
+                }}
+                onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+              />
             </div>
 
             <div className="px-3.5 pb-3 space-y-2">
               {/* Description */}
-              {isEditing ? (
-                <textarea
-                  className="w-full bg-muted/30 rounded text-[11px] text-foreground/80 outline-none p-1.5 resize-none"
-                  rows={3}
-                  defaultValue={task.description ?? ""}
-                  placeholder="Description..."
-                  onBlur={(e) => {
-                    if (e.target.value !== (task.description ?? "")) updateTask.mutate({ id: task.id, data: { description: e.target.value } as any });
-                  }}
-                />
-              ) : task.description ? (
-                <p className="text-muted-foreground text-[11px] leading-relaxed whitespace-pre-wrap">
-                  {task.description}
-                </p>
-              ) : null}
+              <textarea
+                className="w-full bg-muted/30 rounded text-[11px] text-foreground/80 outline-none p-1.5 resize-none focus:ring-1 focus:ring-border/40"
+                rows={2}
+                defaultValue={task.description ?? ""}
+                placeholder="Description..."
+                onBlur={(e) => {
+                  if (e.target.value !== (task.description ?? "")) updateTask.mutate({ id: task.id, data: { description: e.target.value } as any });
+                }}
+              />
 
               {/* Dates */}
-              {isEditing ? (
-                <div className="flex gap-2 items-center flex-wrap text-[10px]">
-                  <label className="text-muted-foreground">Start:</label>
-                  <input type="date" className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
-                    defaultValue={dates.start ? dates.start.toISOString().slice(0, 10) : ""}
-                    onChange={(e) => { if (e.target.value) updateTask.mutate({ id: task.id, data: { startDate: e.target.value } as any }); }}
-                  />
-                  <label className="text-muted-foreground">Due:</label>
-                  <input type="date" className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
-                    defaultValue={dates.end ? dates.end.toISOString().slice(0, 10) : ""}
-                    onChange={(e) => { if (e.target.value) updateTask.mutate({ id: task.id, data: { dueDate: e.target.value } as any }); }}
-                  />
-                </div>
-              ) : (
-                <div className="text-muted-foreground space-y-0.5 text-[11px]">
-                  <div className="flex justify-between gap-4">
-                    <span>{t("gantt.startDate")}:</span>
-                    <span className="font-medium text-foreground">{fmtDate(dates.start)}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span>Due:</span>
-                    <span className="font-medium text-foreground">{fmtDate(dates.end)}</span>
-                  </div>
-                  {dates.start && dates.end && (
-                    <div className="flex justify-between gap-4">
-                      <span>{t("gantt.duration")}:</span>
-                      <span className="font-medium text-foreground">{Math.max(1, Math.round(diffDays(dates.start, dates.end)))}d</span>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="flex gap-2 items-center flex-wrap text-[10px]">
+                <label className="text-muted-foreground">Start:</label>
+                <input type="date" className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
+                  defaultValue={dates.start ? dates.start.toISOString().slice(0, 10) : ""}
+                  onChange={(e) => { if (e.target.value) updateTask.mutate({ id: task.id, data: { startDate: e.target.value } as any }); }}
+                />
+                <label className="text-muted-foreground">Due:</label>
+                <input type="date" className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
+                  defaultValue={dates.end ? dates.end.toISOString().slice(0, 10) : ""}
+                  onChange={(e) => { if (e.target.value) updateTask.mutate({ id: task.id, data: { dueDate: e.target.value } as any }); }}
+                />
+              </div>
 
               {/* Status + Priority */}
-              {isEditing ? (
-                <div className="flex gap-1.5 items-center flex-wrap text-[10px]">
-                  <select className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
-                    defaultValue={task.status ?? "todo"}
-                    onChange={(e) => updateTask.mutate({ id: task.id, data: { status: e.target.value } as any })}
-                  >
-                    <option value="todo">To Do</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="done">Done</option>
-                  </select>
-                  <select className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
-                    defaultValue={task.priority ?? "medium"}
-                    onChange={(e) => updateTask.mutate({ id: task.id, data: { priority: e.target.value } as any })}
-                  >
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: priorityColors.bg, color: priorityColors.text }}
-                  >
-                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground capitalize">
-                    {task.status?.replace("_", " ")}
-                  </span>
-                </div>
-              )}
+              <div className="flex gap-1.5 items-center flex-wrap text-[10px]">
+                <select className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
+                  defaultValue={task.status ?? "todo"}
+                  onChange={(e) => updateTask.mutate({ id: task.id, data: { status: e.target.value } as any })}
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+                <select className="bg-muted/30 rounded px-1 py-0.5 text-foreground outline-none text-[10px]"
+                  defaultValue={task.priority ?? "medium"}
+                  onChange={(e) => updateTask.mutate({ id: task.id, data: { priority: e.target.value } as any })}
+                >
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
 
               {/* Tags */}
               {tags.length > 0 && (
@@ -1669,22 +1792,6 @@ export default function TasksGanttView({
                   })}
                 </div>
               )}
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-2 pt-1 border-t border-border/20">
-                <button
-                  className="text-[10px] text-brand-indigo hover:text-brand-indigo/80 font-medium"
-                  onClick={() => setEditingTaskId(isEditing ? null : task.id)}
-                >
-                  {isEditing ? "Done" : "Edit"}
-                </button>
-                <button
-                  className="text-[10px] text-muted-foreground hover:text-foreground"
-                  onClick={() => { setExpandedTaskId(null); setEditingTaskId(null); }}
-                >
-                  Close
-                </button>
-              </div>
             </div>
           </div>
         );
@@ -1692,24 +1799,46 @@ export default function TasksGanttView({
 
       {/* Portal gantt controls into page toolbar */}
       {toolbarPortal?.current && createPortal(
-        <div className="flex items-center gap-1">
-          {(["day", "week", "month"] as ZoomLevel[]).map((z) => (
-            <button key={z} onClick={() => setZoomPreset(z)}
-              className={cn("px-2 py-1 rounded text-[10px] font-medium transition-colors", activePreset === z ? "bg-brand-indigo text-white" : "text-muted-foreground hover:bg-muted")}
-            >{t(`gantt.zoom${z.charAt(0).toUpperCase() + z.slice(1)}` as any)}</button>
-          ))}
-          <button onClick={() => setPxPerDay((p) => { const v = Math.max(MIN_PX_PER_DAY, p / 1.3); setActivePreset(null); return v; })}
-            className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted"><Minus className="h-3 w-3" /></button>
-          <button onClick={() => setPxPerDay((p) => { const v = Math.min(MAX_PX_PER_DAY, p * 1.3); setActivePreset(null); return v; })}
-            className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted"><Plus className="h-3 w-3" /></button>
-          <button onClick={scrollToToday}
-            className="px-2 py-1 rounded text-[10px] font-medium text-brand-indigo hover:bg-brand-indigo/10 transition-colors">{t("gantt.today")}</button>
-          <span className="w-px h-4 bg-border/30 mx-0.5" />
-          {(["category", "status", "priority"] as ColorByMode[]).map((mode) => (
-            <button key={mode} onClick={() => setColorBy(mode)}
-              className={cn("px-2 py-0.5 rounded text-[10px] font-medium transition-colors", colorBy === mode ? "bg-brand-indigo/15 text-brand-indigo" : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50")}
-            >{t(`gantt.colorMode${mode.charAt(0).toUpperCase() + mode.slice(1)}` as any)}</button>
-          ))}
+        <div className="flex items-center gap-2">
+          {/* ── Zoom tab ── */}
+          <div className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 gap-0.5">
+            {(["day", "week", "month"] as ZoomLevel[]).map((z) => (
+              <button key={z} onClick={() => setZoomPreset(z)}
+                className={cn("px-2.5 py-1 rounded-md text-[10px] font-medium transition-all", activePreset === z ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+              >{t(`gantt.zoom${z.charAt(0).toUpperCase() + z.slice(1)}` as any)}</button>
+            ))}
+            <span className="w-px h-4 bg-border/30" />
+            <button onClick={() => setPxPerDay((p) => { const v = Math.max(MIN_PX_PER_DAY, p / 1.3); setActivePreset(null); return v; })}
+              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/60"><Minus className="h-3 w-3" /></button>
+            <button onClick={() => setPxPerDay((p) => { const v = Math.min(MAX_PX_PER_DAY, p * 1.3); setActivePreset(null); return v; })}
+              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/60"><Plus className="h-3 w-3" /></button>
+            <button onClick={scrollToToday}
+              className="px-2 py-1 rounded-md text-[10px] font-semibold text-brand-indigo hover:bg-brand-indigo/10 transition-colors">{t("gantt.today")}</button>
+          </div>
+
+          {/* ── Color tab ── */}
+          <div className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 gap-0.5">
+            <span className="text-[9px] text-muted-foreground/50 font-medium px-1.5">Color</span>
+            {(["category", "status", "priority"] as ColorByMode[]).map((mode) => (
+              <button key={mode} onClick={() => setColorBy(mode)}
+                className={cn("px-2 py-1 rounded-md text-[10px] font-medium transition-all", colorBy === mode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+              >{t(`gantt.colorMode${mode.charAt(0).toUpperCase() + mode.slice(1)}` as any)}</button>
+            ))}
+          </div>
+
+          {/* ── Group tab ── */}
+          {onGroupByChange && (
+            <div className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 gap-0.5">
+              <span className="text-[9px] text-muted-foreground/50 font-medium px-1.5">Group</span>
+              {(["hierarchy", "status", "priority"] as GanttGroupBy[]).map((g) => (
+                <button key={g} onClick={() => onGroupByChange(g)}
+                  className={cn("px-2 py-1 rounded-md text-[10px] font-medium transition-all", ganttGroupBy === g ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                >
+                  {g === "hierarchy" ? "Tree" : g.charAt(0).toUpperCase() + g.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>,
         toolbarPortal.current
       )}

@@ -154,6 +154,10 @@ export const SORT_OPTIONS = [
   { value: "due_date_desc", label: "Due date (latest)" },
   { value: "priority_desc", label: "Priority (highest)" },
   { value: "priority_asc", label: "Priority (lowest)" },
+  { value: "category_asc", label: "Category A-Z" },
+  { value: "category_desc", label: "Category Z-A" },
+  { value: "id_asc", label: "ID (lowest)" },
+  { value: "id_desc", label: "ID (highest)" },
   { value: "created_desc", label: "Newest first" },
   { value: "created_asc", label: "Oldest first" },
   { value: "title_asc", label: "Title A-Z" },
@@ -189,6 +193,14 @@ export function sortTasks(tasks: Task[], sort: SortOption): Task[] {
       return copy.sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9));
     case "priority_asc":
       return copy.sort((a, b) => (PRIORITY_RANK[b.priority] ?? 0) - (PRIORITY_RANK[a.priority] ?? 0));
+    case "category_asc":
+      return copy.sort((a, b) => ((a as any).categoryId ?? 999) - ((b as any).categoryId ?? 999));
+    case "category_desc":
+      return copy.sort((a, b) => ((b as any).categoryId ?? 0) - ((a as any).categoryId ?? 0));
+    case "id_asc":
+      return copy.sort((a, b) => a.id - b.id);
+    case "id_desc":
+      return copy.sort((a, b) => b.id - a.id);
     case "created_desc":
       return copy.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
     case "created_asc":

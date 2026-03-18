@@ -33,7 +33,6 @@ import {
   Table2,
   Plus,
   Trash2,
-  RefreshCw,
   CalendarClock,
   FileText,
   X,
@@ -114,7 +113,7 @@ import {
   type ScoreHistoryPoint,
 } from "@/hooks/useScoreBreakdown";
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, Tooltip as RechTooltip, ResponsiveContainer,
 } from "recharts";
 import {
   Tooltip, TooltipTrigger, TooltipContent,
@@ -163,7 +162,7 @@ interface LeadsCardViewProps {
   mobileView?: "list" | "detail";
   onMobileViewChange?: (v: "list" | "detail") => void;
   accountsById?: Map<number, string>;
-  campaignsById?: Map<number, { name: string; accountId: number | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
 }
 
 // ── Pipeline stages ────────────────────────────────────────────────────────────
@@ -455,22 +454,33 @@ const TERMINAL_DEFAULT_ANCHOR: Record<string, number> = {
   Lost: 3,
 };
 
+// ── Map variant statuses to their canonical pipeline stage ────────────────────
+const STATUS_TO_STAGE: Record<string, string> = {};
+
 // ── Pipeline progress — monochrome tube, icons+labels at left of each segment ─
-function PipelineProgress({ status }: { status: string }) {
+function PipelineProgress({ status, skipBooked = false }: { status: string; skipBooked?: boolean }) {
   const { t } = useTranslation("leads");
   const { isDark } = useTheme();
-  const currentIndex = PIPELINE_STAGES.findIndex((s) => s.key === status);
+  // Map variant statuses to canonical stage key
+  let canonicalStatus = STATUS_TO_STAGE[status] ?? status;
+  // Direct-booking campaigns: "Closed" is really "Booked" (final stage)
+  if (skipBooked && canonicalStatus === "Closed") canonicalStatus = "Booked";
   const isTerminal = LOST_STAGES.includes(status);
   const tubeHeight = 46;
-  const stageCount = PIPELINE_STAGES.length;
+
+  // For direct-call campaigns, "Booked" is the final stage (no "Closed" after it)
+  const stages = skipBooked ? PIPELINE_STAGES.filter((s) => s.key !== "Closed") : PIPELINE_STAGES;
+  const stageCount = stages.length;
+
+  const currentIndex = stages.findIndex((s) => s.key === canonicalStatus);
 
   // For terminal statuses (DND/Lost), anchor = the last normal stage before the exit.
   // The terminal icon replaces the stage right after the anchor (same slot, same position).
   const anchorIndex = isTerminal
-    ? (TERMINAL_DEFAULT_ANCHOR[status] ?? 3)
+    ? Math.min(TERMINAL_DEFAULT_ANCHOR[status] ?? 3, stageCount - 1)
     : currentIndex;
   // effectiveIndex = the slot whose icon gets the "current" treatment
-  const effectiveIndex = isTerminal ? anchorIndex + 1 : anchorIndex;
+  const effectiveIndex = isTerminal ? anchorIndex + 1 : Math.max(0, anchorIndex);
 
   // Sizes — current stage is slightly bigger
   const iconSizeBase = 30;
@@ -478,17 +488,31 @@ function PipelineProgress({ status }: { status: string }) {
   const innerIconBase = 16;
   const innerIconCurrent = 20;
 
-  // Monochrome: entire filled bar uses the status color
-  const activeHex = PIPELINE_HEX[status] || "#6B7280";
-  const barHex = `${activeHex}B0`;
+  // Monochrome: entire filled bar uses the status color (canonical for direct-booking remap)
+  const activeHex = PIPELINE_HEX[canonicalStatus] || PIPELINE_HEX[status] || "#6B7280";
+  const barHex = activeHex;
 
   // Animated fill — grows from 0 on mount, transitions smoothly between leads
-  const rawFillPct = Math.min(100, ((effectiveIndex + 0.5) / stageCount) * 100);
+  // New: no fill. Closed (last stage): full bar.
+  // Others: bar extends 7% past the next icon so the fade trails smoothly into it.
+  const isClosed = effectiveIndex === stageCount - 1;
+  const isNew = effectiveIndex === 0 && !isTerminal;
+  const nextIconPct = ((effectiveIndex + 1) / stageCount) * 100;
+  const rawFillPct = isNew ? 0 : isClosed ? 100 : Math.min(100, nextIconPct + 7);
   const [displayFillPct, setDisplayFillPct] = useState(0);
   useEffect(() => {
     const id = setTimeout(() => setDisplayFillPct(rawFillPct), 20);
     return () => clearTimeout(id);
   }, [rawFillPct]);
+
+  // Gradient: solid from start through the current icon, then smooth fade to transparent at end.
+  // Current icon position within the fill bar.
+  const iconPct = isNew ? 0 : isClosed ? 100 : Math.round((effectiveIndex / (effectiveIndex + 1)) * 100);
+  const fillBackground = isNew
+    ? "transparent"
+    : isClosed
+      ? barHex
+      : `linear-gradient(to right, ${barHex} ${iconPct}%, transparent 100%)`;
 
   return (
     <div className="w-full">
@@ -508,13 +532,13 @@ function PipelineProgress({ status }: { status: string }) {
             className="h-full transition-[width] duration-[500ms] ease-out"
             style={{
               width: `${displayFillPct}%`,
-              background: `linear-gradient(to right, ${barHex} 0%, ${barHex} 72%, transparent 100%)`,
+              background: fillBackground,
             }}
           />
         </div>
 
         {/* Stage icons + labels — at LEFT edge of each segment */}
-        {PIPELINE_STAGES.map((stage, i) => {
+        {stages.map((stage, i) => {
           const isPast = i < effectiveIndex;
           const isCurrent = i === effectiveIndex;
           const isFuture = i > effectiveIndex;
@@ -598,7 +622,7 @@ function PipelineProgressCompact({ status }: { status: string }) {
   const futureCount = Math.max(0, PIPELINE_STAGES.length - 1 - effectiveIndex);
   const locksToShow = Math.min(futureCount, 2);
   const activeHex = PIPELINE_HEX[status] || "#6B7280";
-  const barHex = `${activeHex}B0`;
+  const barHex = activeHex;
   const currentStageKey = isTerminal ? status : (PIPELINE_STAGES[effectiveIndex]?.key ?? status);
   const currentStage = t(`kanban.stageLabels.${currentStageKey.replace(/ /g, "")}`, currentStageKey);
   const CurrentIcon = isTerminal
@@ -733,7 +757,7 @@ function ContactWidget({
   /** Lead tags to display as pill badges in the Info tab */
   tags?: { name: string; color: string }[];
   /** Campaigns map (agency view only) for campaign assignment dropdown */
-  campaignsById?: Map<number, { name: string; accountId: number | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
 }) {
   const { t } = useTranslation("leads");
   const leadId      = getLeadId(lead);
@@ -994,7 +1018,7 @@ function ContactWidget({
               onChange={async (e) => {
                 const val = e.target.value;
                 try {
-                  await updateLead(leadId, { campaignsId: val ? val : (null as any) });
+                  await updateLead(leadId, { campaignsId: val ? Number(val) : (null as any) });
                   onRefresh?.();
                 } catch { /* noop */ }
               }}
@@ -1214,55 +1238,93 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
   data: ScoreHistoryPoint[]; tierColor: string; score: number; leadId: number | null;
 }) {
   const gradId = `sg-${leadId ?? "x"}`;
-  const [displayScore, setDisplayScore] = useState(0);
-  useEffect(() => {
-    const id = setTimeout(() => setDisplayScore(score), 20);
-    return () => clearTimeout(id);
-  }, [score]);
 
-  if (data.length < 2) {
+  const now = new Date();
+
+  // Sort chronologically, keep all data points (timestamps, not just dates)
+  const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+
+  // If fewer than 2 data points, synthesize a flat line at the current score
+  if (sorted.length < 2) {
+    const todayLabel = now.toLocaleDateString(undefined, { weekday: "short" });
+    const yesterdayLabel = new Date(now.getTime() - 86_400_000).toLocaleDateString(undefined, { weekday: "short" });
+    const chartData = [
+      { label: yesterdayLabel, score: 0 },
+      { label: todayLabel, score },
+    ];
     return (
-      <div className="h-[48px] flex items-center shrink-0">
-        <div className="h-3.5 rounded-full bg-muted overflow-hidden flex-1 shadow-inner">
-          <div
-            className="h-full rounded-full transition-[width] duration-[600ms] ease-out"
-            style={{ width: `${displayScore}%`, backgroundColor: tierColor, boxShadow: `0 1px 4px ${tierColor}60` }}
-          />
-        </div>
+      <div className="w-full h-[130px] shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 14, right: 36, bottom: 0, left: -4 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={tierColor} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={tierColor} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="label" tick={{ fontSize: 9, fill: "rgba(0,0,0,0.35)" }} tickLine={false} axisLine={false} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "rgba(0,0,0,0.3)" }} tickLine={false} axisLine={false} width={32} tickCount={4} />
+            <Area
+              type="monotone" dataKey="score" stroke={tierColor} strokeWidth={2}
+              fill={`url(#${gradId})`} strokeDasharray="4 4"
+              dot={(dotProps: any) => {
+                const isLast = dotProps.index === chartData.length - 1;
+                return (
+                  <g key={dotProps.index}>
+                    <circle cx={dotProps.cx} cy={dotProps.cy} r={isLast ? 4 : 2} fill={tierColor} stroke={isLast ? "white" : "none"} strokeWidth={isLast ? 2 : 0} opacity={isLast ? 1 : 0.4} />
+                  </g>
+                );
+              }}
+              isAnimationActive={true} animationBegin={100} animationDuration={600} animationEasing="ease-out"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     );
   }
 
-  // Deduplicate: keep last score per calendar day
-  const byDay = new Map<string, number>();
-  [...data]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .forEach((d) => {
-      const day = d.date.slice(0, 10);
-      byDay.set(day, d.score);
-    });
+  // ── Deduplicate consecutive same-score points ──
+  // Keep: first occurrence of a new score, last occurrence before score changes, and always the last point.
+  const deduped: typeof sorted = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const prev = i > 0 ? sorted[i - 1].score : -1;
+    const next = i < sorted.length - 1 ? sorted[i + 1].score : -1;
+    const cur = sorted[i].score;
+    const isFirst = cur !== prev;            // score just changed
+    const isLast = cur !== next;             // score about to change
+    const isVeryLast = i === sorted.length - 1;
+    if (isFirst || isLast || isVeryLast) {
+      deduped.push(sorted[i]);
+    }
+  }
 
-  const now = new Date();
-  const chartData = Array.from(byDay.entries()).map(([day, sc]) => {
-    const d = new Date(day);
-    const diffDays = Math.round((now.getTime() - d.getTime()) / 86_400_000);
-    const label = diffDays <= 7
-      ? d.toLocaleDateString(undefined, { weekday: "short" })
-      : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    return { label, score: sc };
+  // ── Prepend a zero-origin point (1 minute before first real data point) ──
+  const firstTs = new Date(deduped[0].date);
+  const zeroDate = new Date(firstTs.getTime() - 60_000).toISOString();
+  const withZero = [{ date: zeroDate, score: 0 }, ...deduped];
+
+  const chartData = withZero.map((d, i) => {
+    const ts = new Date(d.date);
+    const diffMs = now.getTime() - ts.getTime();
+    const diffDays = diffMs / 86_400_000;
+    let label: string;
+    if (diffDays < 1) {
+      label = ts.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    } else if (diffDays <= 7) {
+      label = ts.toLocaleDateString(undefined, { weekday: "short" });
+    } else {
+      label = ts.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    }
+    // Mark whether this is the first point of a plateau (show label) vs a repeat (just dot)
+    const prevScore = i > 0 ? withZero[i - 1].score : -1;
+    const isNewScore = d.score !== prevScore;
+    return { label, score: d.score, isNewScore };
   });
 
-  // Compute sensible Y domain — don't always start at 0
-  const scores = chartData.map((d) => d.score);
-  const minScore = Math.min(...scores);
-  const maxScore = Math.max(...scores);
-  const yMin = Math.max(0, Math.floor((minScore - 10) / 10) * 10);
-  const yMax = Math.min(100, Math.ceil((maxScore + 10) / 10) * 10);
-
   return (
-    <div className="w-full h-[130px] shrink-0">
+    <div className="w-full h-[140px] shrink-0">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -4 }}>
+        <AreaChart data={chartData} margin={{ top: 20, right: 36, bottom: 0, left: -4 }}>
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={tierColor} stopOpacity={0.3} />
@@ -1277,14 +1339,14 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
             interval="preserveStartEnd"
           />
           <YAxis
-            domain={[yMin, yMax]}
+            domain={[0, 100]}
             tick={{ fontSize: 9, fill: "rgba(0,0,0,0.3)" }}
             tickLine={false}
             axisLine={false}
             width={32}
             tickCount={4}
           />
-          <RechartsTooltip
+          <RechTooltip
             contentStyle={{
               borderRadius: "8px",
               border: "1px solid rgba(0,0,0,0.08)",
@@ -1302,8 +1364,54 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
             strokeWidth={2}
             fill={`url(#${gradId})`}
             dot={(dotProps: any) => {
-              if (dotProps.index !== chartData.length - 1) return <g key={dotProps.index} />;
-              return <circle key={dotProps.index} cx={dotProps.cx} cy={dotProps.cy} r={4} fill={tierColor} stroke="white" strokeWidth={2} />;
+              const val = dotProps.payload.score;
+              const { isNewScore } = dotProps.payload;
+              const isLast = dotProps.index === chartData.length - 1;
+              const isZero = dotProps.index === 0;
+              // Zero-origin: small faded dot, no label
+              if (isZero) {
+                return (
+                  <g key={dotProps.index}>
+                    <circle cx={dotProps.cx} cy={dotProps.cy} r={2} fill={tierColor} opacity={0.4} />
+                  </g>
+                );
+              }
+              // Last point: just a prominent dot, no label (the big hero number above shows it)
+              if (isLast) {
+                return (
+                  <g key={dotProps.index}>
+                    <circle cx={dotProps.cx} cy={dotProps.cy} r={4} fill={tierColor} stroke="white" strokeWidth={2} />
+                  </g>
+                );
+              }
+              // Repeat of same score (plateau anchor): just a small dot, no label
+              if (!isNewScore) {
+                return (
+                  <g key={dotProps.index}>
+                    <circle cx={dotProps.cx} cy={dotProps.cy} r={2} fill={tierColor} opacity={0.5} />
+                  </g>
+                );
+              }
+              // First occurrence of a new score: dot + label
+              const prevScore = dotProps.index > 0 ? chartData[dotProps.index - 1].score : 0;
+              const wentUp = val >= prevScore;
+              // For scores near 100, always label below to avoid cropping
+              const labelY = val >= 90 ? dotProps.cy + 14 : (wentUp ? dotProps.cy - 10 : dotProps.cy + 14);
+              return (
+                <g key={dotProps.index}>
+                  <circle cx={dotProps.cx} cy={dotProps.cy} r={2.5} fill={tierColor} />
+                  <text
+                    x={dotProps.cx}
+                    y={labelY}
+                    textAnchor="middle"
+                    dominantBaseline="auto"
+                    fill={tierColor}
+                    style={{ fontSize: 10, fontWeight: 700 }}
+                  >
+                    {val}
+                  </text>
+                </g>
+              );
             }}
             activeDot={{ r: 4, fill: tierColor, stroke: "white", strokeWidth: 2 }}
             isAnimationActive={true}
@@ -1320,14 +1428,106 @@ function ScoreHistoryChart({ data, tierColor, score, leadId }: {
 // ── Dimension colors ──────────────────────────────────────────────────────────
 const DIMENSION_COLORS: Record<string, string> = {
   Engagement: "#3B82F6", // blue
-  Activity:   "#F59E0B", // amber
-  Funnel:     "#10B981", // green
+  Activity:   "#10B981", // green
+  Funnel:     "#F59E0B", // amber
 };
 const DIMENSION_TOOLTIPS: Record<string, string> = {
   Engagement: "Measures how responsive and engaged the lead is: reply recency, sentiment, and interaction quality.",
   Activity:   "Tracks message volume and reply rates. Shows how actively the lead participates in the conversation.",
   Funnel:     "Reflects conversion progress: qualified status, booked calls, and pipeline stage advancement.",
 };
+
+// ── Card-view score context helpers ────────────────────────────────────────────
+function cardEngagementContext(lead?: Record<string, any>): string {
+  if (!lead) return "";
+  const parts: string[] = [];
+  const lastReceived = lead.lastMessageReceivedAt ?? lead.last_message_received_at;
+  if (lastReceived) {
+    const hours = (Date.now() - new Date(lastReceived).getTime()) / 3600000;
+    if (hours < 1) parts.push("Replied just now");
+    else if (hours < 24) parts.push(`Replied ${Math.round(hours)}h ago`);
+    else {
+      const days = Math.floor(hours / 24);
+      parts.push(days === 1 ? "Replied yesterday" : `Replied ${days}d ago`);
+      if (days >= 7) parts.push("Decaying");
+    }
+  } else {
+    parts.push("No replies yet");
+  }
+  const sentiment = (lead.aiSentiment ?? lead.ai_sentiment ?? "").toString().toLowerCase();
+  if (sentiment === "positive") parts.push("Positive");
+  else if (sentiment === "negative") parts.push("Negative");
+
+  const intentRaw = (lead.aiIntentSignals ?? lead.ai_intent_signals ?? "").toString();
+  if (intentRaw) {
+    const intents = intentRaw.split(",").map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+    const labels: Record<string, string> = {
+      asked_pricing: "Asked pricing", mentioned_timeline: "Has timeline",
+      requested_callback: "Wants callback", not_interested: "Not interested",
+    };
+    for (const intent of intents) {
+      if (labels[intent]) { parts.push(labels[intent]); break; }
+    }
+  }
+  const bumpStage = Number(lead.currentBumpStage ?? lead.current_bump_stage ?? 0);
+  if (bumpStage >= 2) parts.push(`Bumped ${bumpStage}x`);
+  return parts.join(" · ");
+}
+
+function cardActivityContext(lead?: Record<string, any>): string {
+  if (!lead) return "";
+  const received = Number(lead.messageCountReceived ?? lead.message_count_received ?? 0);
+  const sent = Number(lead.messageCountSent ?? lead.message_count_sent ?? 0);
+  const parts: string[] = [];
+  parts.push(`${received} ${received === 1 ? "reply" : "replies"}`);
+  if (sent > 0 && received > 0) {
+    parts.push(`${Math.round((received / sent) * 100)}% rate`);
+  }
+  return parts.join(" · ");
+}
+
+const CARD_FUNNEL_HINTS: Record<string, string> = {
+  New: "Waiting to contact",
+  Queued: "Queued for outreach",
+  Contacted: "Awaiting first reply",
+  Responded: "Engage to qualify",
+  "Multiple Responses": "Ready to qualify",
+  Qualified: "Schedule a call",
+  Booked: "Call scheduled",
+  Closed: "Deal closed",
+  DND: "Do not contact",
+  Lost: "Lead lost",
+};
+
+function cardFunnelContext(lead?: Record<string, any>): string {
+  if (!lead) return "";
+  const status = lead.conversionStatus ?? lead.conversion_status ?? lead.Conversion_Status ?? "";
+  return CARD_FUNNEL_HINTS[status] || status || "Not set";
+}
+
+// ── Compact sub-score bar (matches ContactSidebar pattern) ────────────────────
+function ScoreBar({ label, value, max, color, context }: { label: string; value: number; max: number; color: string; context?: string }) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[12px] font-semibold text-foreground/80">{label}</span>
+        <span className="text-[12px] font-bold tabular-nums text-foreground/70">
+          {Math.round(value)}<span className="text-foreground/30">/{max}</span>
+        </span>
+      </div>
+      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+        <div
+          className="h-full rounded-full transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+      {context && (
+        <span className="text-[12px] text-muted-foreground leading-snug">{context}</span>
+      )}
+    </div>
+  );
+}
 
 // ── Score column widget (horizontal bar + tooltip on hover) ───────────────────
 function ScoreColumnWidget({ label, value, maxPts, insights, isBooked }: {
@@ -1359,8 +1559,8 @@ function ScoreColumnWidget({ label, value, maxPts, insights, isBooked }: {
           )}
         </Tooltip>
         <span className="text-[13px] font-semibold tabular-nums text-foreground/70">
-          {pct}%
-          <span className="text-foreground/30 text-[10px] ml-1">{Math.round(value)}/{maxPts}</span>
+          {Math.round(value)}<span className="text-foreground/30 text-[10px]">/{maxPts}</span>
+          <span className="text-foreground/30 text-[10px] ml-1">({pct}%)</span>
         </span>
       </div>
       {/* Horizontal bar */}
@@ -1401,11 +1601,11 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
   const summaryText = aiSummary || parsedSummary;
   const insights = lead ? buildScoreInsights(lead, t) : [];
   const tierColor = TIER_BAR_COLOR[breakdown?.tier ?? "Sleeping"];
-  // Weighted contribution pts: 0.30×eng + 0.30×act + 0.40×funnel = lead_score
-  const engPts    = breakdown ? Math.round(0.30 * breakdown.engagement_score) : 0;
-  const actPts    = breakdown ? Math.round(0.30 * breakdown.activity_score)   : 0;
-  const funnelPts = breakdown ? Math.round(0.40 * breakdown.funnel_weight)    : 0;
-  const isBooked  = score === 100 && (breakdown?.funnel_weight ?? 0) === 90;
+  // Sub-scores are already pre-scaled: eng (max 30) + act (max 20) + funnel (max 50) = lead_score
+  const engPts    = breakdown?.engagement_score ?? 0;
+  const actPts    = breakdown?.activity_score ?? 0;
+  const funnelPts = breakdown?.funnel_weight ?? 0;
+  const isBooked  = status === "Booked";
 
   return (
     <div className="bg-white/50 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
@@ -1419,46 +1619,48 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
         )}
       </div>
 
-      {/* Score hero: big number centered, tier badge top-right */}
-      <div className="flex flex-col items-center gap-1.5 shrink-0 relative pt-3">
-        {breakdown && (
-          <span className={cn("absolute -top-1 -right-1 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}>
-            {breakdown.tier}
+      {/* Score hero: big number right-aligned, tier badge to its left — hidden when score=0 */}
+      {score > 0 && (
+        <div className="flex items-center justify-end gap-2.5 shrink-0 pt-10 -mb-8 pr-1">
+          {breakdown && (
+            <span
+              className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}
+              style={(breakdown.tier === "Hot" || breakdown.tier === "Awake") ? {
+                boxShadow: `0 0 8px 2px ${breakdown.tier === "Hot" ? "rgba(239,68,68,0.4)" : "rgba(16,185,129,0.4)"}`,
+              } : undefined}
+            >
+              {breakdown.tier}
+            </span>
+          )}
+          <span className="text-5xl font-black tabular-nums leading-none">
+            {score}
           </span>
-        )}
-        <span className={cn("text-5xl font-black tabular-nums leading-none", score === 0 && "text-muted-foreground/25")}>
-          {score > 0 ? score : "—"}
-        </span>
-      </div>
+        </div>
+      )}
 
-      {/* Score history chart + horizontal bars */}
-      <ScoreHistoryChart
-        data={history}
-        tierColor={tierColor}
-        score={score}
-        leadId={leadId ? Number(leadId) : null}
-      />
+      {/* Score history chart + horizontal bars — hidden when score=0 */}
+      {score > 0 && (
+        <ScoreHistoryChart
+          data={history}
+          tierColor={tierColor}
+          score={score}
+          leadId={leadId ? Number(leadId) : null}
+        />
+      )}
       {breakdown && score > 0 && (
-        <div className="flex flex-col gap-6 shrink-0 pt-2">
-          <ScoreColumnWidget
-            label="Engagement"
-            value={engPts}
-            maxPts={30}
-            insights={insights.filter((i) => i.column === "engagement")}
-          />
-          <ScoreColumnWidget
-            label="Activity"
-            value={actPts}
-            maxPts={30}
-            insights={insights.filter((i) => i.column === "activity")}
-          />
-          <ScoreColumnWidget
-            label="Funnel"
-            value={funnelPts}
-            maxPts={36}
-            insights={insights.filter((i) => i.column === "funnel")}
-            isBooked={isBooked}
-          />
+        <div className="flex flex-col gap-2.5 shrink-0 pt-2" style={{ marginLeft: 28, marginRight: 36 }}>
+          <ScoreBar label="Engagement" value={engPts} max={30} color="#3B82F6" context={cardEngagementContext(lead)} />
+          <ScoreBar label="Activity" value={actPts} max={20} color="#10B981" context={cardActivityContext(lead)} />
+          <ScoreBar label="Funnel" value={funnelPts} max={50} color="#F59E0B" context={cardFunnelContext(lead)} />
+        </div>
+      )}
+
+      {/* Score=0 empty state */}
+      {score === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 py-8 text-center">
+          <span className="text-3xl">😴</span>
+          <p className="text-[13px] font-medium text-muted-foreground/60">{t("score.noActivity", "No activity yet")}</p>
+          <p className="text-[11px] text-muted-foreground/40">{t("score.noActivityHint", "Score will update as interactions happen")}</p>
         </div>
       )}
 
@@ -1469,7 +1671,7 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
             <Bot className="h-3 w-3 text-brand-indigo/60" />
             <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("detail.aiSummary")}</p>
           </div>
-          <p className="text-[12px] text-foreground/75 leading-relaxed">{summaryText}</p>
+          <p className="text-[12px] text-foreground/75 leading-relaxed whitespace-pre-wrap">{summaryText}</p>
         </div>
       ) : status === "Booked" ? (
         <div className="border-t border-border/20 pt-3 mt-1 flex-1 min-h-0">
@@ -1482,10 +1684,16 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
 }
 
 // ── Message type detection (matches ChatPanel) ───────────────────────────────
+const AI_TRIGGERED_BY = new Set([
+  "automation", "ai_conversation", "campaign_launcher",
+  "bump_scheduler", "manual_bump_trigger",
+  "inbound_handler", "booking_webhook", "booking_confirmation",
+]);
 function isAiMsg(item: Interaction): boolean {
-  if (item.ai_generated === true) return true;
-  if (item.is_bump === true) return true;
-  if ((item.triggered_by ?? item.triggeredBy) === "Automation") return true;
+  if ((item.ai_generated ?? item.aiGenerated) === true) return true;
+  if ((item.is_bump ?? item.isBump) === true) return true;
+  const triggeredBy = (item.triggered_by ?? item.triggeredBy ?? "").toLowerCase();
+  if (AI_TRIGGERED_BY.has(triggeredBy)) return true;
   const who = (item.Who ?? item.who ?? "").toLowerCase();
   if (who === "ai" || who === "bot" || who === "automation") return true;
   if (/^bump\s*\d/.test(who)) return true;
@@ -1852,12 +2060,12 @@ const MINI_TAG_HEX: Record<string, string> = {
   purple: "#A855F7", orange: "#F97316", pink: "#EC4899", gray: "#6B7280",
 };
 const MINI_CONVERSION_STATUS_TAGS = new Set([
-  "Call Booked", "Responded", "Multiple Responses", "Qualified", "Opted Out", "DNC",
+  "Booked", "Responded", "Multiple Responses", "Qualified", "Opted Out", "DNC",
 ]);
 const MINI_STAGE_ICON: Record<string, React.ElementType> = {
   New: CircleDot, Contacted: Send, Responded: MessageSquare,
   "Multiple Responses": Users, Qualified: Star, Booked: Calendar,
-  "Call Booked": Calendar, Closed: Check, Lost: AlertTriangle, DND: Ban,
+  Closed: Check, Lost: AlertTriangle, DND: Ban,
 };
 
 function MiniTagEventChip({ tagName, tagColor, time, eventType }: { tagName: string; tagColor: string; time: string; eventType?: "added" | "removed" }) {
@@ -2050,12 +2258,6 @@ function ConversationWidget({ lead, showHeader = false, readOnly = false }: { le
     }
   }, [draft, sending, leadId, lead, refresh]);
 
-  const [refreshing, setRefreshing] = useState(false);
-  const handleRefreshChat = useCallback(async () => {
-    setRefreshing(true);
-    try { await refresh(); } finally { setTimeout(() => setRefreshing(false), 600); }
-  }, [refresh]);
-
   const handleAiResume = useCallback(async () => {
     setShowAiResumeConfirm(false);
     try {
@@ -2109,9 +2311,15 @@ function ConversationWidget({ lead, showHeader = false, readOnly = false }: { le
     }
 
     // Merge tag events into timeline (only when showTags is enabled)
+    // Skip tags that predate the first message (stale from a demo-reset)
     let mergedTokens: Token[] = tokens;
     if (showTags && tagEvents.length > 0) {
-      const sortedTe = [...tagEvents].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+      const firstMsgTs = sorted.length > 0
+        ? new Date((sorted[0] as any).created_at ?? (sorted[0] as any).createdAt ?? 0).getTime()
+        : 0;
+      const sortedTe = [...tagEvents]
+        .filter((te: any) => !te.created_at || !firstMsgTs || new Date(te.created_at).getTime() >= firstMsgTs)
+        .sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
       const mt: Token[] = [];
       let tei = 0;
       for (const tok of tokens) {
@@ -2309,34 +2517,34 @@ function ConversationWidget({ lead, showHeader = false, readOnly = false }: { le
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </button>
-            <button
-              onClick={handleRefreshChat}
-              className="h-[34px] w-[34px] rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              title="Refresh messages"
-            >
-              <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-            </button>
-            {/* Tag toggle button */}
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowTags((v) => !v)}
-                className="h-[34px] w-[34px] rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                title={showTags ? "Hide tags" : "Show tags"}
-              >
-                <TagIcon className="h-3.5 w-3.5" />
-              </button>
-              {!showTags && (
-                <svg
-                  className="absolute inset-0 pointer-events-none text-muted-foreground"
-                  viewBox="0 0 34 34"
-                  width="34"
-                  height="34"
+            {/* Tag toggle button — only shown when lead has tag events */}
+            {tagEvents.length > 0 && (
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowTags((v) => !v)}
+                  className={cn(
+                    "h-[34px] w-[34px] rounded-full border flex items-center justify-center transition-colors",
+                    showTags
+                      ? "border-brand-indigo/40 bg-brand-indigo/10 text-brand-indigo"
+                      : "border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  )}
+                  title={showTags ? "Hide tags" : "Show tags"}
                 >
-                  <line x1="8" y1="8" x2="26" y2="26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              )}
-            </div>
+                  <TagIcon className="h-3.5 w-3.5" />
+                </button>
+                {!showTags && (
+                  <svg
+                    className="absolute inset-0 pointer-events-none text-muted-foreground"
+                    viewBox="0 0 34 34"
+                    width="34"
+                    height="34"
+                  >
+                    <line x1="8" y1="8" x2="26" y2="26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3039,13 +3247,14 @@ export function LeadDetailView({
   onRefresh,
   toolbarPrefix,
   campaignsById,
+  leadTags,
 }: {
   lead: Record<string, any>;
   onClose: () => void;
   leadTags?: { name: string; color: string }[];
   onRefresh?: () => void;
   toolbarPrefix?: (opts: { isNarrow: boolean }) => React.ReactNode;
-  campaignsById?: Map<number, { name: string; accountId: number | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
 }) {
   const { t } = useTranslation("leads");
   const { toast } = useToast();
@@ -3054,6 +3263,9 @@ export function LeadDetailView({
   const score       = getScore(lead);
   const avatarColor = getStatusAvatarColor(status);
   const leadId      = getLeadId(lead);
+
+  const { breakdown: detailBreakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
+  const tier = detailBreakdown?.tier ?? (score === 0 ? "Sleeping" : null);
 
   const [, navigate] = useLocation();
 
@@ -3129,6 +3341,19 @@ export function LeadDetailView({
       .catch(() => { if (!cancelled) setCampaignStickerUrl(null); });
     return () => { cancelled = true; };
   }, [lead.Campaigns_id, lead.campaigns_id, lead.campaignsId]);
+
+  // ── Campaign number (#N within same account, sorted by ID) ────────────────
+  const campaignNumber = useMemo(() => {
+    const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
+    if (!cId || !campaignsById) return null;
+    const info = campaignsById.get(cId);
+    if (!info) return null;
+    const sameAccount = Array.from(campaignsById.entries())
+      .filter(([, c]) => c.accountId === info.accountId)
+      .sort(([a], [b]) => a - b);
+    const idx = sameAccount.findIndex(([id]) => id === cId);
+    return idx >= 0 ? idx + 1 : null;
+  }, [lead.Campaigns_id, lead.campaigns_id, lead.campaignsId, campaignsById]);
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
@@ -3275,81 +3500,85 @@ export function LeadDetailView({
               )}
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/50 text-[10px] font-medium text-muted-foreground">Lead {leadId}</span>
-                {tagEvents.map((evt, i) => {
-                  const hex = resolveColor(evt.color);
-                  return (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0"
-                      style={{ backgroundColor: `${hex}40`, color: hex }}
-                    >
-                      {evt.name}
-                    </span>
-                  );
-                })}
+                {tier && (
+                  <span
+                    className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold", TIER_COLORS[tier] ?? TIER_COLORS.Sleeping)}
+                    style={(tier === "Hot" || tier === "Awake") ? {
+                      boxShadow: `0 0 8px 2px ${tier === "Hot" ? "rgba(239,68,68,0.4)" : "rgba(16,185,129,0.4)"}`,
+                    } : undefined}
+                  >
+                    {tier}
+                  </span>
+                )}
               </div>
             </div>
-            {/* Metachips — absolute overlay, desktop only, centered on col 2/3 boundary */}
-            {(lead.campaign_name || lead.account_name || lead.last_interaction_at || lead.last_message_received_at || lead.booked_call_date) && (
-              <div className="absolute -translate-x-1/2 top-[38px] hidden md:flex items-center gap-8 whitespace-nowrap pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
-                {lead.campaign_name && (
+            {/* Metachips — absolute, centered on panel 2/3 boundary (66.67%) */}
+            {(() => {
+              const campName = lead.campaign_name || lead.Campaign || "";
+              const acctName = lead.account_name || lead.Account || "";
+              const hasAny = campName || acctName || lead.last_interaction_at || lead.last_message_received_at || lead.booked_call_date;
+              if (!hasAny) return null;
+              return (
+              <div className="absolute -translate-x-1/2 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-8 whitespace-nowrap pointer-events-auto z-10" style={{ left: "66.67%" }}>
+                {campName && (
                   <div className="flex items-center gap-1.5">
                     {campaignStickerUrl ? (
-                      <img src={campaignStickerUrl} alt="" className="h-9 w-9 object-contain shrink-0" />
+                      <img src={campaignStickerUrl} alt="" className="h-[38px] w-[38px] object-contain shrink-0" />
                     ) : (
                       <EntityAvatar
-                        name={lead.campaign_name}
+                        name={campName}
                         bgColor={getCampaignAvatarColor("Active").bg}
                         textColor={getCampaignAvatarColor("Active").text}
-                        size={36}
+                        size={38}
                         className="shrink-0"
                       />
                     )}
                     <div>
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Campaign</div>
-                      <div className="text-[11px] font-bold text-foreground leading-none truncate max-w-[120px]">{lead.campaign_name}</div>
+                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Campaign{campaignNumber ? ` #${campaignNumber}` : ""}</div>
+                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[120px]">{campName}</div>
                     </div>
                   </div>
                 )}
-                {lead.account_name && (
+                {acctName && (
                   <div className="flex items-center gap-1.5">
                     {accountLogo ? (
-                      <img src={accountLogo} alt="" className="h-9 w-9 rounded-full object-cover shrink-0" />
+                      <img src={accountLogo} alt="" className="h-[25px] w-[25px] rounded-full object-cover shrink-0" />
                     ) : (
                       <EntityAvatar
-                        name={lead.account_name}
+                        name={acctName}
                         bgColor="rgba(0,0,0,0.08)"
                         textColor="#374151"
-                        size={36}
+                        size={25}
                         className="shrink-0"
                       />
                     )}
                     <div>
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Account</div>
-                      <div className="text-[11px] font-bold text-foreground leading-none truncate max-w-[120px]">{lead.account_name}</div>
+                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Account</div>
+                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[120px]">{acctName}</div>
                     </div>
                   </div>
                 )}
                 {(lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at) && (
                   <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("contact.lastActivity", "Last Activity")}</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none">{formatRelativeTime(lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at, t)}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("contact.lastActivity", "Last Activity")}</div>
+                    <div className="text-[12px] font-bold text-foreground leading-none">{formatRelativeTime(lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at, t)}</div>
                   </div>
                 )}
                 {(lead.booked_call_date || lead.bookedCallDate) && (
                   <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detail.fields.callDate", "Booked Call")}</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate)}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detail.fields.callDate", "Booked Call")}</div>
+                    <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate)}</div>
                   </div>
                 )}
               </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Pipeline tube */}
           {status && (
             <div className="pt-2 pb-6">
-              <div className="hidden md:block"><PipelineProgress status={status} /></div>
+              <div className="hidden md:block"><PipelineProgress status={status} skipBooked={(() => { const cId = lead.Campaigns_id ?? lead.campaigns_id ?? lead.campaignsId; const mode = cId && campaignsById?.get(Number(cId))?.bookingMode; return mode === "direct"; })()} /></div>
               <div className="md:hidden"><PipelineProgressCompact status={status} /></div>
             </div>
           )}
@@ -3385,33 +3614,63 @@ export function LeadDetailView({
   );
 }
 
-// ── Score ring for list cards (mirrors LeadsKanban ScoreRing) ──────────────────
-export const LIST_RING_SIZE   = 34;
-export const LIST_RING_STROKE = 2.5;
-const LIST_RING_RADIUS = (LIST_RING_SIZE - LIST_RING_STROKE * 2) / 2;
-const LIST_RING_CIRC   = 2 * Math.PI * LIST_RING_RADIUS;
+// ── Funnel weight from conversion status (client-side, mirrors server logic) ──
+const CLIENT_FUNNEL_WEIGHTS: Record<string, number> = {
+  New: 0, Contacted: 5, Responded: 15, "Multiple Responses": 25,
+  Qualified: 35, Booked: 45, Closed: 50, DND: 0, Lost: 0,
+};
 
-export function ListScoreRing({ score, status, isActive }: { score: number; status: string; isActive?: boolean }) {
-  const offset = LIST_RING_CIRC * (1 - Math.max(0, Math.min(1, score / 100)));
+// ── Score breakdown tube for list cards ────────────────────────────────────────
+// Stacked pill bar: Engagement (blue) under Activity (green) under Funnel (orange)
+// Score number displayed to the left
+export const LIST_RING_SIZE = 34; // kept for backward compat (used by InlineTable import)
+
+export function ListScoreRing({ score, status, lead }: { score: number; status: string; isActive?: boolean; lead?: Record<string, any> }) {
+  const engScore = Number(lead?.engagement_score ?? lead?.engagementScore ?? 0);
+  const actScore = Number(lead?.activity_score ?? lead?.activityScore ?? 0);
+  const funnelScore = CLIENT_FUNNEL_WEIGHTS[status] ?? 0;
+
+  // Sub-scores are already weighted (eng max 30, act max 20, funnel max 50 = 100)
+  // But the raw engagement/activity from scorer are 0-100, need to scale
+  const eng = Math.min(30, Math.round((engScore / 100) * 30));
+  const act = Math.min(20, Math.round((actScore / 100) * 20));
+  const funnel = funnelScore;
+
+  const segments = [
+    { label: "Engagement", value: eng },
+    { label: "Activity",   value: act },
+    { label: "Funnel",     value: funnel },
+  ];
+  const shades = ["#3B82F6", "#10B981", "#F59E0B"];
+
+  // Cumulative widths for stacked pill effect
+  const cumulativeWidths: number[] = [];
+  let cumSum = 0;
+  for (const seg of segments) {
+    cumSum += seg.value;
+    cumulativeWidths.push(cumSum);
+  }
+  const renderOrder = [2, 1, 0]; // bottom layer first
+
   return (
-    <div className="relative shrink-0" style={{ width: LIST_RING_SIZE, height: LIST_RING_SIZE }}>
-      <svg
-        width={LIST_RING_SIZE} height={LIST_RING_SIZE}
-        className="absolute inset-0"
-        style={{ transform: "rotate(-90deg)" }}
-      >
-        <circle
-          cx={LIST_RING_SIZE / 2} cy={LIST_RING_SIZE / 2} r={LIST_RING_RADIUS}
-          fill="none" stroke="#D1D1D1" strokeOpacity={0.3} strokeWidth={LIST_RING_STROKE}
-        />
-        <circle
-          cx={LIST_RING_SIZE / 2} cy={LIST_RING_SIZE / 2} r={LIST_RING_RADIUS}
-          fill="none" stroke={isActive ? "#555555" : "#D1D1D1"} strokeWidth={LIST_RING_STROKE}
-          strokeDasharray={LIST_RING_CIRC} strokeDashoffset={offset} strokeLinecap="round"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-bold tabular-nums text-foreground/70">{score}</span>
+    <div className="flex items-center gap-1.5 shrink-0">
+      <span className="text-[10px] font-bold tabular-nums text-foreground/70 w-[18px] text-right">{score}</span>
+      <div className="relative w-[60px] h-[8px] rounded-full bg-muted">
+        {renderOrder.map((i) => {
+          if (cumulativeWidths[i] === 0) return null;
+          return (
+            <div
+              key={segments[i].label}
+              className="absolute top-0 left-0 h-full transition-all duration-500"
+              style={{
+                width: `${cumulativeWidths[i]}%`,
+                backgroundColor: shades[i],
+                borderRadius: "9999px",
+                zIndex: segments.length - i,
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -3441,7 +3700,7 @@ function LeadListCard({
   showContactAlways?: boolean;
   tagsColorful?: boolean;
   hideTags?: boolean;
-  campaignsById?: Map<number, { name: string; accountId: number | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
   /** Swipe right navigates here — navigates to Chats tab with this lead selected */
   onOpenConversation?: () => void;
   /** Swipe left quick actions (Feature #41) */
@@ -3805,7 +4064,7 @@ function LeadListCard({
               )}
               {score > 0 && (
                 <div className="mt-auto pt-1">
-                  <ListScoreRing score={score} status={status} isActive={isActive} />
+                  <ListScoreRing score={score} status={status} isActive={isActive} lead={lead} />
                 </div>
               )}
             </div>
@@ -4584,7 +4843,7 @@ function MobileAddLeadForm({
   open: boolean;
   onClose: () => void;
   onCreated: (lead: Record<string, any>) => void;
-  campaignsById?: Map<number, { name: string; accountId: number | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
 }) {
   const { t } = useTranslation("leads");
   const { toast } = useToast();

@@ -583,6 +583,20 @@ export function ChatPanel({
                           step={1}
                         />
                       </div>
+                      {/* Size slider */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">{t("chat.background.size")}</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.size}px</span>
+                        </div>
+                        <Slider
+                          value={[doodleConfig.size]}
+                          onValueChange={([v]) => setDoodleConfig({ size: v })}
+                          min={200}
+                          max={800}
+                          step={25}
+                        />
+                      </div>
                       {/* Opacity slider */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
@@ -788,11 +802,16 @@ export function ChatPanel({
                     }
                   }
 
-                  // Merge real tag events (DB) into tokens by timestamp — skip "removed" events and
-                  // bump-sequence tags (Bump 1/2/3/…) since ThreadDivider already labels those.
+                  // Merge real tag events (DB) into tokens by timestamp — skip "removed" events,
+                  // bump-sequence tags (Bump 1/2/3/…) since ThreadDivider already labels those,
+                  // and tags that predate the first message (stale from a demo-reset).
+                  const firstMsgTs = allMsgs.length > 0
+                    ? new Date(allMsgs[0].created_at ?? allMsgs[0].createdAt ?? 0).getTime()
+                    : 0;
                   const allTagEvents = [...tagEvents]
                     .filter((te: any) => te.event_type !== "removed")
                     .filter((te: any) => !/^bump\s*\d/i.test(te.tag_name ?? ""))
+                    .filter((te: any) => !te.created_at || !firstMsgTs || new Date(te.created_at).getTime() >= firstMsgTs)
                     .sort((a: any, b: any) => {
                       if (!a.created_at && !b.created_at) return 0;
                       if (!a.created_at) return 1;
@@ -1297,11 +1316,6 @@ const CONVERSION_STATUS_TAGS = new Set([
   "Multiple Responses",
   "Qualified",
   "Booked",
-  "Call Booked",
-  "Appointment Booked",
-  "Appointment Rebooked",
-  "Booking Confirmed",
-  "Calendar Link Sent",
   "Lost",
   "DND",
   "Opted Out",
@@ -2110,22 +2124,22 @@ function ChatBubble({
           "px-3 pt-2 pb-1.5 text-[15px] relative",
           bubbleRadius,
           // Inbound (lead): neutral gray glow; mobile uses --card bg explicitly
-          inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]",
+          inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground drop-shadow-[0_3px_2px_rgba(0,0,0,0.10)] dark:drop-shadow-[0_3px_2px_rgba(255,255,255,0.05)]",
           // AI outbound: blue (desktop) / brand-indigo (mobile)
-          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)] max-md:bg-brand-indigo max-md:text-white max-md:shadow-none",
+          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground drop-shadow-[0_3px_2px_rgba(0,0,0,0.10)] dark:drop-shadow-[0_3px_2px_rgba(255,255,255,0.05)] max-md:bg-brand-indigo max-md:text-white max-md:drop-shadow-none",
           // Human agent outbound (desktop: green) / brand-indigo (mobile)
-          humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)] max-md:bg-brand-indigo max-md:text-white max-md:shadow-none",
+          humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground drop-shadow-[0_3px_2px_rgba(0,0,0,0.10)] dark:drop-shadow-[0_3px_2px_rgba(255,255,255,0.05)] max-md:bg-brand-indigo max-md:text-white max-md:drop-shadow-none",
           isFailed && "opacity-80",
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
       >
         {/* Tail triangle — only on last message in a consecutive run */}
         {isLastInRun && inbound && (
-          <span aria-hidden="true" className="absolute bottom-0 -left-[5px] w-0 h-0 border-r-[5px] border-r-white dark:border-r-[#243249] border-b-[6px] border-b-transparent" />
+          <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[9px] border-t-transparent border-r-[8px] border-r-white dark:border-r-[#243249]" />
         )}
         {isLastInRun && !inbound && (
           <span aria-hidden="true" className={cn(
-            "absolute bottom-0 -right-[5px] w-0 h-0 border-l-[5px] border-b-[6px] border-b-transparent",
+            "absolute bottom-0 -right-[6px] w-0 h-0 border-t-[9px] border-t-transparent border-l-[8px]",
             aiMsg && "border-l-[#f2f5ff] dark:border-l-[#1e2340] max-md:border-l-brand-indigo",
             humanAgentMsg && "border-l-[#f1fff5] dark:border-l-[#1a2e1f] max-md:border-l-brand-indigo",
           )} />

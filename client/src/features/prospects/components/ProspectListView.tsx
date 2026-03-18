@@ -42,6 +42,7 @@ import { ProspectCreatePanel } from "./ProspectCreatePanel";
 import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { SkeletonAccountPanel } from "@/components/ui/skeleton";
+import { ProspectTasks } from "./ProspectTasks";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1308,12 +1309,10 @@ export function ProspectListView({
                   <p className="text-[12px] text-muted-foreground/40 italic">No follow-up scheduled</p>
                 )}
 
-                {/* Tasks placeholder */}
+                {/* Tasks */}
                 <div className="h-px bg-border/30" />
                 <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Tasks</h4>
-                <div className="flex flex-col items-center justify-center text-center py-4">
-                  <p className="text-[12px] text-muted-foreground/40 italic">No tasks yet</p>
-                </div>
+                <ProspectTasks prospectCompanyName={selectedProspect.company || ""} compact />
 
                 {/* Interactions */}
                 <div className="h-px bg-border/30" />

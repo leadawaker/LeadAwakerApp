@@ -1,0 +1,37 @@
+<svg viewBox="0 0 120 110" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Handle -->
+  <path d="M38 18 Q60 2 82 18" />
+
+  <!-- Handle attachment points -->
+  <circle cx="38" cy="18" r="1.5" fill="currentColor" opacity="0.4" />
+  <circle cx="82" cy="18" r="1.5" fill="currentColor" opacity="0.4" />
+
+  <!-- Bucket body: tapered sides with rounded bottom -->
+  <path d="M30 20 L22 70 Q22 82 60 82 Q98 82 98 70 L90 20" />
+
+  <!-- Rim ellipse -->
+  <ellipse cx="60" cy="20" rx="30" ry="5" />
+
+  <!-- Water surface: dashed ellipse -->
+  <ellipse cx="60" cy="45" rx="24" ry="4" stroke-dasharray="3 2" opacity="0.5" />
+
+  <!-- Holes near bottom -->
+  <circle cx="32" cy="68" r="1.8" fill="currentColor" opacity="0.35" />
+  <circle cx="44" cy="74" r="1.8" fill="currentColor" opacity="0.35" />
+  <circle cx="56" cy="76" r="1.8" fill="currentColor" opacity="0.35" />
+
+  <!-- Drip 1: from left hole -->
+  <line x1="30" y1="70" x2="26" y2="84" stroke-dasharray="2 2" opacity="0.45" />
+  <path d="M26 84 Q25 88 26 90 Q27 88 26 84" fill="currentColor" stroke="none" opacity="0.4" />
+
+  <!-- Drip 2: from middle hole -->
+  <line x1="43" y1="76" x2="40" y2="92" stroke-dasharray="2 2" opacity="0.45" />
+  <path d="M40 92 Q39 96 40 98 Q41 96 40 92" fill="currentColor" stroke="none" opacity="0.4" />
+
+  <!-- Drip 3: from right hole -->
+  <line x1="55" y1="78" x2="54" y2="96" stroke-dasharray="2 2" opacity="0.45" />
+  <path d="M54 96 Q53 100 54 102 Q55 100 54 96" fill="currentColor" stroke="none" opacity="0.4" />
+
+  <!-- Fallen drop (splash detail) -->
+  <path d="M38 106 Q37 108 38 108 Q39 108 38 106" fill="currentColor" stroke="none" opacity="0.25" />
+</svg>

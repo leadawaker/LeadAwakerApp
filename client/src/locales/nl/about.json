@@ -9,40 +9,40 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Oprichter",
-    "quote": "\"Bij de kliniek van mijn ouders zag ik hetzelfde patroon steeds weer: oprechte interesse, geboekte consultaties en dan... stilte. Het leerde me dat het verlies van leads geen marketingfout is; het is een signaal om opnieuw te verbinden\"",
-    "description": "10+ jaar software productie. 5 jaar data-gedreven automatisering. 4 jaar samen met mijn vrouw Danique een bedrijf opgebouwd. Dat is wat Lead Awaker defineert."
+    "quote": "\"Bij de kliniek van mijn ouders zag ik steeds hetzelfde patroon: oprechte interesse, geboekte consultaties en dan... stilte. Ze gaven duizenden uit om een emmer te vullen die van onderen lekte. Toen leerde ik: je hebt niet meer leads nodig. Je moet stoppen met de leads verliezen die je al hebt.\"",
+    "description": "Ik heb tien jaar onder onmogelijke deadlines geleverd bij Warner Bros. en Sega. Daarna bouwde ik samen met mijn vrouw Danique een echt bedrijf, waar elke lead ertoe deed omdat het ons eigen geld was. Lead Awaker bestaat omdat ik het probleem zelf heb meegemaakt."
   },
   "credentials": {
-    "title": "Gebouwd door iemand die echte dingen heeft verscheept",
-    "subtitle": "10+ jaar in digitale productie. Echte bedrijven. Echte omzet.",
+    "title": "Het probleem zijn niet je leads. Het is wat er daarna gebeurt.",
+    "subtitle": "Van Hollywood-studio's tot een bedrijf opbouwen vanuit nul. Dezelfde discipline, toegepast op jouw leads.",
     "resultsNode": "Echte resultaten.",
     "items": [
       {
-        "metric": "$150M+",
-        "label": "Box office bijdrage",
-        "description": "Digitale kunst bijgedragen aan Warner Bros.-producties, waaronder Tom & Jerry (2021)"
+        "metric": "Warner Bros.",
+        "label": "Geleverd onder studiodeadlines",
+        "description": "Productie-assets geleverd voor een grote bioscoopfilm. Als de deadline een wereldwijde releasedatum is, leer je leveren."
       },
       {
-        "metric": "$3,1 mrd",
-        "label": "Sega jaaromzet",
-        "description": "Digitale assets gebouwd voor drie Sega-blockbuster titels in één jaar, samen met Creative Assembly"
+        "metric": "Sega",
+        "label": "3 titels in één jaar",
+        "description": "Digitale assets gebouwd en geleverd voor drie blockbuster-games samen met Creative Assembly. Schaal onder druk."
       },
       {
-        "metric": "$52M",
-        "label": "Insurgency Sandstorm bruto",
-        "description": "Artwork verzonden voor de geprezen FPS van New World Interactive"
+        "metric": "TA Monks",
+        "label": "Een echt bedrijf gebouwd",
+        "description": "Samen met mijn vrouw Danique een funded trading operatie opgericht. 4 jaar systematische besluitvorming, risicobeheer en het bouwen van geautomatiseerde systemen die zonder toezicht presteren."
       },
       {
-        "metric": "4 jaar",
-        "label": "TA Monks",
-        "description": "Samen met mijn vrouw Danique een trading- en investeermerk opgebouwd van nul"
+        "metric": "10.000+",
+        "label": "Uren automatisering",
+        "description": "Van datapipelines tot AI-gestuurde outreach. Elk systeem dat ik bouw, is ontworpen om zonder mij te draaien."
       }
     ],
-    "recognition": "Uitgelicht op ZBrush Central en ArtStation. Workshop presentator op Design Week, Universiteit van Rio de Janeiro."
+    "recognition": "Workshop presentator op Design Week, Universiteit van Rio de Janeiro. Uitgelicht op ZBrush Central en ArtStation."
   },
   "cta": {
     "title": "Zie het werken op jouw leads",
-    "quote": "5 uitgebrachte videogames. Een grote film. 4 jaar systematische automatisering in een echt bedrijf. Die ervaring zit in elke campagne die we draaien.",
+    "quote": "Ik heb geleverd onder de strakste deadlines in de entertainmentindustrie en daarna een bedrijf gebouwd waar elke gemiste lead mij persoonlijk raakte. Die ervaring zit in elke campagne die we draaien.",
     "button": "Boek een gratis demo"
   },
   "faq": {

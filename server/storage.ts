@@ -768,7 +768,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(leadScoreHistory)
       .where(eq(leadScoreHistory.leadsId, leadId))
-      .orderBy(desc(leadScoreHistory.scoreDate));
+      .orderBy(desc(leadScoreHistory.createdAt));
   }
 
   // ─── Campaign Metrics History ─────────────────────────────────────────

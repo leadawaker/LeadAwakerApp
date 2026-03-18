@@ -16,6 +16,7 @@ interface TaskItem {
 
 interface ProspectTasksProps {
   prospectCompanyName: string;
+  compact?: boolean;
 }
 
 // ── Priority signal bars ─────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ function PriorityBars({ priority }: { priority: string }) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function ProspectTasks({ prospectCompanyName }: ProspectTasksProps) {
+export function ProspectTasks({ prospectCompanyName, compact }: ProspectTasksProps) {
   const { t } = useTranslation("prospects");
 
   const [tasks, setTasks] = useState<TaskItem[]>([]);
@@ -96,7 +97,7 @@ export function ProspectTasks({ prospectCompanyName }: ProspectTasksProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className={cn("flex items-center justify-center", compact ? "py-4" : "py-16")}>
         <div className="h-6 w-6 border-2 border-brand-indigo/30 border-t-brand-indigo rounded-full animate-spin" />
       </div>
     );
@@ -104,9 +105,9 @@ export function ProspectTasks({ prospectCompanyName }: ProspectTasksProps) {
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center px-5">
-        <ListChecks className="h-10 w-10 text-muted-foreground/20 mb-3" />
-        <p className="text-[13px] font-medium text-foreground/50">
+      <div className={cn("flex flex-col items-center justify-center text-center", compact ? "py-4 px-2" : "py-16 px-5")}>
+        <ListChecks className={cn("text-muted-foreground/20", compact ? "h-6 w-6 mb-1.5" : "h-10 w-10 mb-3")} />
+        <p className={cn("font-medium text-foreground/50", compact ? "text-[11px]" : "text-[13px]")}>
           {t("slidePanel.emptyTasks")}
         </p>
       </div>
@@ -114,14 +115,15 @@ export function ProspectTasks({ prospectCompanyName }: ProspectTasksProps) {
   }
 
   return (
-    <div className="px-5 py-3 space-y-1.5">
+    <div className={cn("space-y-1.5", compact ? "py-1" : "px-5 py-3")}>
       {tasks.map((task) => {
         const isDone = task.status === "done";
         return (
           <div
             key={task.id}
             className={cn(
-              "flex items-center gap-3 rounded-xl border bg-card p-3 transition-opacity duration-150",
+              "flex items-center gap-3 rounded-xl border bg-card transition-opacity duration-150",
+              compact ? "p-2 gap-2" : "p-3",
               isDone && "opacity-50",
             )}
           >

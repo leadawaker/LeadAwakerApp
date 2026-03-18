@@ -411,7 +411,7 @@
       "valuePerBooking": "Value per Booking",
       "paymentTrigger": "Payment Trigger",
       "paymentTriggers": {
-        "callBooked": "Call Booked",
+        "callBooked": "Booked",
         "closedSale": "Closed Sale (by client's team)"
       },
       "costPassthroughPercent": "Cost Passthrough %",

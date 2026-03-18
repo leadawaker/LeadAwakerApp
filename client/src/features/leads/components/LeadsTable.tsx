@@ -102,7 +102,7 @@ const STATUS_DOT: Record<string, string> = {
   Responded:            "bg-teal-500",
   "Multiple Responses": "bg-green-500",
   Qualified:            "bg-lime-500",
-  Booked:               "bg-amber-400",
+  Booked:               "bg-amber-500",
   Closed:               "bg-emerald-500",
   Lost:                 "bg-red-500",
   DND:                  "bg-zinc-500",
@@ -376,7 +376,7 @@ export function LeadsTable() {
   /* ── Accounts (agency view) ──────────────────────────────────────────────── */
   const [accountsById, setAccountsById] = useState<Map<number, string>>(new Map());
   /* ── Campaigns (id → { name, accountId }) ──────────────────────────────── */
-  const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null }>>(new Map());
+  const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null; bookingMode: string | null }>>(new Map());
 
   /* ── Persist view mode ───────────────────────────────────────────────────── */
   useEffect(() => {
@@ -440,12 +440,13 @@ export function LeadsTable() {
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : data?.list || [];
-          const byId = new Map<number, { name: string; accountId: number | null }>();
+          const byId = new Map<number, { name: string; accountId: number | null; bookingMode: string | null }>();
           list.forEach((c: any) => {
             const id = c.id ?? c.Id;
             byId.set(Number(id), {
               name: c.name || c.Name || c.campaign_name || `Campaign ${id}`,
               accountId: c.Accounts_id ?? c.accounts_id ?? c.accountsId ?? null,
+              bookingMode: c.booking_mode_override ?? c.bookingModeOverride ?? null,
             });
           });
           setCampaignsById(byId);

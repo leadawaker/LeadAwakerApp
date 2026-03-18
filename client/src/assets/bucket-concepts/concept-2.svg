@@ -1,0 +1,47 @@
+<svg viewBox="0 0 120 110" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Bucket: geometric trapezoid shape -->
+  <path d="M 35 30 L 30 75 L 90 75 L 85 30 Z" />
+
+  <!-- Bucket rim -->
+  <line x1="32" y1="30" x2="88" y2="30" />
+
+  <!-- Handle arc -->
+  <path d="M 45 30 Q 60 12 75 30" fill="none" />
+
+  <!-- Water level inside bucket (dashed, abstract) -->
+  <line x1="38" y1="50" x2="82" y2="50" stroke-dasharray="3 2" stroke-width="1" />
+
+  <!-- Leak holes on bucket wall -->
+  <circle cx="42" cy="62" r="1.5" fill="currentColor" />
+  <circle cx="78" cy="58" r="1.5" fill="currentColor" />
+  <circle cx="60" cy="75" r="1.5" fill="currentColor" />
+
+  <!-- Dotted leak paths flowing down from holes -->
+  <path d="M 42 64 L 40 72 L 38 80" stroke-dasharray="2 2" stroke-width="1" />
+  <path d="M 78 60 L 80 68 L 82 76" stroke-dasharray="2 2" stroke-width="1" />
+  <path d="M 60 77 L 60 85" stroke-dasharray="2 2" stroke-width="1" />
+
+  <!-- Coins falling: small circles (money leak) -->
+  <circle cx="37" cy="84" r="2.5" stroke-width="1" />
+  <line x1="36" y1="84" x2="38" y2="84" stroke-width="0.8" />
+
+  <circle cx="83" cy="80" r="2.5" stroke-width="1" />
+  <line x1="82" y1="80" x2="84" y2="80" stroke-width="0.8" />
+
+  <circle cx="59" cy="90" r="2.5" stroke-width="1" />
+  <line x1="58" y1="90" x2="60" y2="90" stroke-width="0.8" />
+
+  <!-- Lower falling coins (further down, smaller - perspective) -->
+  <circle cx="35" cy="94" r="2" stroke-width="0.8" />
+  <line x1="34.2" y1="94" x2="35.8" y2="94" stroke-width="0.6" />
+
+  <circle cx="85" cy="90" r="2" stroke-width="0.8" />
+  <line x1="84.2" y1="90" x2="85.8" y2="90" stroke-width="0.6" />
+
+  <circle cx="57" cy="100" r="2" stroke-width="0.8" />
+  <line x1="56.2" y1="100" x2="57.8" y2="100" stroke-width="0.6" />
+
+  <!-- Smallest coins at bottom (fading away) -->
+  <circle cx="34" cy="103" r="1.5" stroke-width="0.5" opacity="0.5" />
+  <circle cx="86" cy="99" r="1.5" stroke-width="0.5" opacity="0.5" />
+</svg>

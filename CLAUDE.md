@@ -2,7 +2,7 @@
 
 ## What This App Is
 
-Lead Reactivation CRM for WhatsApp outreach. Core features: WhatsApp inbox (conversations), campaign manager, leads pipeline (kanban/table/list), task manager (kanban/table/tree/list/gantt), prospects pipeline, and AI agents.
+Lead Reactivation CRM for WhatsApp outreach. Core features: WhatsApp inbox (conversations), campaign manager, leads pipeline (kanban/table/list), task manager (kanban/table/tree/list/gantt), prospects pipeline, AI agents, and AI smart automation (contextual bumps, buying signal detection, business knowledge base, smart handoff, nightly summaries).
 
 ## Stack
 
@@ -36,6 +36,9 @@ Drizzle-Zod generates `z.date()` for timestamp columns. ISO strings from client 
 
 ### No `process.exit()` in Error Handlers
 Never use `process.exit()` in Vite or server error handlers — it kills the entire Express+API process. File changes are never lost on crash, only serving stops.
+
+### Terminology
+- "Leads page" = `LeadsCardView.tsx` (the card/list view with chat panel), NOT `LeadDetailPanel.tsx`
 
 ### Styling
 - Follow `UI_STANDARDS.md` strictly. Check it before introducing new color values, spacing, or component patterns.

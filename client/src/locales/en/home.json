@@ -1,13 +1,14 @@
 {
   "hero": {
+    "badge": "For high-ticket sales teams",
     "title": {
-      "line1": "Wake dormant leads into",
-      "highlight": "booked calls",
-      "line2": "automatically."
+      "line1": "Stop buying new leads.",
+      "highlight": "Wake up",
+      "line2": "the ones you have."
     },
     "subtitle": {
-      "line1": "AI handles first contact to CRM handoff.",
-      "line2": "Focus on growth and closing, not chasing."
+      "line1": "Your dead database is a goldmine.",
+      "line2": "We bring the shovel."
     },
     "cta": {
       "primary": "Book a Call",
@@ -16,7 +17,7 @@
   },
   "results": {
     "title": "And what you get",
-    "subtitle": "From chaos to certainty in 30 days",
+    "subtitle": "Results that pay for themselves",
     "metrics": {
       "replyRates": {
         "label": "Reply Rates",
@@ -32,9 +33,9 @@
       }
     },
     "upfrontCost": {
-      "title": "Initial Cost",
-      "partnership": "Performance Partnership",
-      "mission": "Our victory is your success",
+      "title": "No Upfront Cost",
+      "partnership": "We earn when you earn",
+      "mission": "We only win when you close",
       "guarantee": "30-Day guarantee"
     },
     "absoluteZero": {
@@ -43,14 +44,39 @@
     }
   },
   "compliance": {
-    "title": "Compliance and Reputation Built In",
+    "title": "We Move Fast. Your Reputation Stays Intact.",
+    "subtitle": "Every conversation follows your brand guidelines, respects opt-outs, and meets GDPR standards. No shortcuts.",
     "gdpr": {
-      "title": "GDPR & CCPA Compliant",
-      "description": "All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards."
+      "title": "Privacy by Design",
+      "description": "Contacts who opt out are removed instantly. Data stays in EU-compliant infrastructure. Every message includes an easy exit. Your legal team will have nothing to flag."
     },
     "brand": {
-      "title": "Brand Protection",
-      "description": "Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines."
+      "title": "Your Voice, Not Ours",
+      "description": "The AI learns your tone, your product language, and your boundaries. If a conversation goes off-topic, it gets flagged before it reaches your contact. You stay in control."
+    }
+  },
+  "calculator": {
+    "title": "You bought these leads. Let's make them pay.",
+    "subtitle": "See how much revenue you're leaving behind and decide if it's worth a conversation.",
+    "leadsLabel": "Leads You Already Paid For",
+    "dealLabel": "What Each Deal Is Worth",
+    "costLabel": "What You Paid Per Lead",
+    "scenarios": {
+      "conservative": "If We're Cautious",
+      "expected": "What We Typically See",
+      "optimistic": "If Your Leads Are Warm",
+      "recommended": "Most Likely"
+    },
+    "results": {
+      "responded": "Start a Conversation",
+      "qualified": "Ready to Buy",
+      "closed": "Deals You Close",
+      "revenue": "New Revenue"
+    },
+    "investment": {
+      "spent": "Total Ad Spend Sitting Idle",
+      "return": "Revenue We Unlock",
+      "roi": "Your ROI"
     }
   },
   "bottomCta": {

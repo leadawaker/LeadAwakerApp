@@ -9,40 +9,40 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Founder",
-    "quote": "\"At my parents’ clinic, I saw the same pattern again and again: genuine interest, booked consultations then... silence. That’s when I learned lead loss isn’t a marketing failure, it’s a signal to reconnect.\"",
-    "description": "10+ years shipping software. 5 years data-driven automation. 4 years running a real business with my wife Danique. That's what defines Lead Awaker."
+    "quote": "\"At my parents’ clinic, I saw the same pattern again and again: genuine interest, booked consultations then... silence. They were spending thousands filling a bucket that was leaking from the bottom. That’s when I learned: you don’t need more leads. You need to stop losing the ones you have.\"",
+    "description": "I spent a decade shipping under impossible deadlines at Warner Bros. and Sega. Then I built a real business with my wife Danique, where every lead mattered because it was our money on the line. Lead Awaker exists because I lived the problem."
   },
   "credentials": {
-    "title": "Built by someone who has shipped things that matter",
-    "subtitle": "10+ years in digital production. Real companies. Real revenue.",
+    "title": "The problem isn't your leads. It's what happens after.",
+    "subtitle": "From Hollywood studios to building a business from zero. The same discipline, applied to your leads.",
     "resultsNode": "Real results.",
     "items": [
       {
-        "metric": "$150M+",
-        "label": "Box office contribution",
-        "description": "Contributed digital art to Warner Bros. productions, including the Tom & Jerry (2021) film"
+        "metric": "Warner Bros",
+        "label": "Shipped under studio deadlines",
+        "description": "Delivered production assets for a major motion picture. When the deadline is a global release date, you learn to ship."
       },
       {
-        "metric": "$3.1B",
-        "label": "Sega annual revenue",
-        "description": "Built digital assets for three Sega blockbuster titles in a single year alongside Creative Assembly"
+        "metric": "Sega",
+        "label": "3 titles in one year",
+        "description": "Built and delivered digital assets for three blockbuster games alongside Creative Assembly. Scale under pressure."
       },
       {
-        "metric": "$52M",
-        "label": "Insurgency Sandstorm gross",
-        "description": "Shipped artwork for New World Interactive's acclaimed FPS title"
+        "metric": "TA Monks",
+        "label": "Built a real business",
+        "description": "Co-founded a funded trading operation with my wife Danique. 4 years of systematic decision-making, risk management, and building automated systems that perform without supervision."
       },
       {
-        "metric": "4 years",
-        "label": "TA Monks",
-        "description": "Co-built a trading and investing brand from the ground up with my wife Danique"
+        "metric": "10,000+",
+        "label": "Hours of automation",
+        "description": "From data pipelines to AI-driven outreach. Every system I build is designed to run without me."
       }
     ],
-    "recognition": "Featured on ZBrush Central and ArtStation. Workshop presenter at Design Week, University of Rio de Janeiro."
+    "recognition": "Workshop presenter at Design Week, University of Rio de Janeiro. Featured on ZBrush Central and ArtStation."
   },
   "cta": {
     "title": "See it running on your leads",
-    "quote": "5 shipped video games. A major motion picture. 4 years of systematic automation in a real business. That experience is baked into every campaign we run.",
+    "quote": "I've shipped under the tightest deadlines in entertainment, then built a business where every lost lead cost me personally. That experience is baked into every campaign we run.",
     "button": "Book a free demo"
   },
   "faq": {

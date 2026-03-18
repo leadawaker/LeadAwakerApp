@@ -139,7 +139,7 @@
       "Responded": "Responded",
       "MultipleResponses": "Multiple Responses",
       "Qualified": "Qualified",
-      "Booked": "Call Booked",
+      "Booked": "Booked",
       "Closed": "Closed",
       "Lost": "Lost",
       "DND": "DND",
@@ -522,7 +522,7 @@
   },
   "activity": {
     "title": "Activity",
-    "callBooked": "Call Booked",
+    "callBooked": "Booked",
     "scheduledFor": "Scheduled for {{date}}",
     "doNotDisturb": "Do Not Disturb",
     "leadRequestedNoContact": "Lead requested no contact",

@@ -1,13 +1,14 @@
 {
   "hero": {
+    "badge": "Voor high-ticket salesteams",
     "title": {
-      "line1": "Wek slapende leads naar",
-      "highlight": "geboekte gesprekken,",
-      "line2": "automatisch."
+      "line1": "Stop met nieuwe leads kopen.",
+      "highlight": "Maak wakker",
+      "line2": "van wat je al hebt."
     },
     "subtitle": {
-      "line1": "Van eerste bericht tot CRM-overdracht: de AI regelt het.",
-      "line2": "Jij kan focussen op groei en deals sluiten, niet op achter leads aanzitten."
+      "line1": "Je dode database is een goudmijn.",
+      "line2": "Wij brengen de schep."
     },
     "cta": {
       "primary": "Gesprek Boeken",
@@ -16,7 +17,7 @@
   },
   "results": {
     "title": "En wat je krijgt",
-    "subtitle": "Van chaos naar zekerheid in 30 dagen",
+    "subtitle": "Resultaten die zichzelf terugverdienen",
     "metrics": {
       "replyRates": {
         "label": "Reactiepercentages",
@@ -32,9 +33,9 @@
       }
     },
     "upfrontCost": {
-      "title": "Initiële Kosten",
-      "partnership": "Performance Samenwerking",
-      "mission": "We lossen problemen op, we creëren ze niet",
+      "title": "Geen Voorafkosten",
+      "partnership": "Wij verdienen als jij verdient",
+      "mission": "Wij winnen alleen als jij sluit",
       "guarantee": "30-dagen garantie"
     },
     "absoluteZero": {
@@ -43,14 +44,39 @@
     }
   },
   "compliance": {
-    "title": "Ingebouwde Compliance en Reputatie",
+    "title": "Wij bewegen snel. Jouw reputatie blijft intact.",
+    "subtitle": "Elk gesprek volgt jouw merkrichtlijnen, respecteert opt-outs en voldoet aan de AVG. Geen shortcuts.",
     "gdpr": {
-      "title": "AVG (GDPR) & CCPA Conform",
-      "description": "Alle workflows respecteren opt-out voorkeuren, uitschrijflinks en dataresidentie-eisen. We zijn volledig conform met wereldwijde privacystandaarden."
+      "title": "Privacy by Design",
+      "description": "Contacten die opt-outen worden direct verwijderd. Data blijft in EU-conforme infrastructuur. Elk bericht bevat een makkelijke exit. Je juridische afdeling hoeft niks te markeren."
     },
     "brand": {
-      "title": "Merkveiligheid",
-      "description": "Real-time monitoring zorgt ervoor dat elk gesprek on-topic, professioneel en perfect afgestemd blijft op de merkidentiteit en richtlijnen."
+      "title": "Jouw Stem, Niet de Onze",
+      "description": "De AI leert jouw toon, productkennis en grenzen. Als een gesprek off-topic gaat, wordt het geflagd voordat het je contact bereikt. Jij houdt de controle."
+    }
+  },
+  "calculator": {
+    "title": "Je hebt deze leads gekocht. Laat ze nu opleveren.",
+    "subtitle": "Ontdek hoeveel omzet je laat liggen en beslis of het een gesprek waard is.",
+    "leadsLabel": "Leads Waar Je Al Voor Betaald Hebt",
+    "dealLabel": "Wat Elke Deal Waard Is",
+    "costLabel": "Wat Je Betaalde Per Lead",
+    "scenarios": {
+      "conservative": "Als We Voorzichtig Zijn",
+      "expected": "Wat We Normaal Zien",
+      "optimistic": "Als Je Leads Warm Zijn",
+      "recommended": "Meest Waarschijnlijk"
+    },
+    "results": {
+      "responded": "Starten een Gesprek",
+      "qualified": "Klaar om te Kopen",
+      "closed": "Deals Die Jij Sluit",
+      "revenue": "Nieuwe Omzet"
+    },
+    "investment": {
+      "spent": "Advertentiekosten Die Stilliggen",
+      "return": "Omzet Die Wij Ontgrendelen",
+      "roi": "Jouw ROI"
     }
   },
   "bottomCta": {

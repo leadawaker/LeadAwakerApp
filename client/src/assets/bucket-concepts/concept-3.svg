@@ -1,0 +1,41 @@
+<svg viewBox="0 0 120 110" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Bucket body, slightly tilted -->
+  <path d="M32 32 L26 78 Q26 84 32 84 L78 88 Q84 88 85 82 L90 36" />
+
+  <!-- Bucket rim / top ellipse -->
+  <ellipse cx="61" cy="33" rx="30" ry="6" />
+
+  <!-- Handle -->
+  <path d="M38 28 Q60 10 84 28" />
+
+  <!-- Holes at bottom -->
+  <circle cx="38" cy="78" r="1.5" fill="currentColor" />
+  <circle cx="52" cy="82" r="1.5" fill="currentColor" />
+  <circle cx="68" cy="84" r="1.5" fill="currentColor" />
+
+  <!-- Water leaking from bottom holes -->
+  <path d="M38 80 Q36 90 34 98" />
+  <path d="M52 84 Q51 92 49 100" />
+  <path d="M68 86 Q69 94 67 102" />
+
+  <!-- Drip drops at bottom -->
+  <circle cx="33" cy="101" r="1" fill="currentColor" />
+  <circle cx="48" cy="103" r="1" fill="currentColor" />
+  <circle cx="66" cy="105" r="1" fill="currentColor" />
+
+  <!-- Water level inside bucket (wavy line) -->
+  <path d="M36 45 Q45 42 54 45 Q63 48 72 45 Q80 42 86 45" />
+
+  <!-- Overflow water spilling from top right -->
+  <path d="M88 30 Q94 34 96 42" />
+  <path d="M91 28 Q98 30 102 38 Q104 44 103 50" />
+
+  <!-- Overflow drops -->
+  <circle cx="97" cy="45" r="1" fill="currentColor" />
+  <circle cx="103" cy="53" r="1" fill="currentColor" />
+
+  <!-- Splash/pour lines at top (water being poured in) -->
+  <path d="M55 16 L55 22" />
+  <path d="M60 12 L60 20" />
+  <path d="M65 14 L65 22" />
+</svg>
