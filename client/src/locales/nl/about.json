@@ -1,10 +1,10 @@
 {
   "intro": {
-    "title": "Wat ons motiveert",
-    "paragraph1": "Wij geloven dat je tijd en energie horen te gaan naar waar je passie ligt: je klanten helpen.",
-    "paragraph2": "Wij helpen je hun aandacht te winnen door elke lead als persoon te behandelen, niet als regel in een spreadsheet.",
-    "paragraph3": "Wanneer je benadering rekening houdt met timing, voorkeuren en context voelen mensen zich begrepen. Zo maak je het gesprek weer wakker en reageren ze sneller op ",
-    "cyclingWords": ["jouw bedrijf.", "jouw merk.", "jouw diensten.", "jouw producten.", "jouw verhaal.", "jouw waarden."]
+    "title": "Wij wekken wakker wat",
+    "titleHighlight": "stil werd.",
+    "paragraph1": "Elke lead in je database heeft ooit zijn hand opgestoken.",
+    "paragraph2": "Wij helpen je ze opnieuw te bereiken. Niet met spam, maar met timing, context en respect.",
+    "paragraph3": "Dan reageren mensen. Niet omdat je aandrong, maar omdat ze zich begrepen voelden."
   },
   "founder": {
     "name": "Gabriel B. Fronza",
@@ -13,29 +13,24 @@
     "description": "Ik heb tien jaar onder onmogelijke deadlines geleverd bij Warner Bros. en Sega. Daarna bouwde ik samen met mijn vrouw Danique een echt bedrijf, waar elke lead ertoe deed omdat het ons eigen geld was. Lead Awaker bestaat omdat ik het probleem zelf heb meegemaakt."
   },
   "credentials": {
-    "title": "Het probleem zijn niet je leads. Het is wat er daarna gebeurt.",
+    "title": "Het is geen leadprobleem. Het is een lekprobleem.",
     "subtitle": "Van Hollywood-studio's tot een bedrijf opbouwen vanuit nul. Dezelfde discipline, toegepast op jouw leads.",
     "resultsNode": "Echte resultaten.",
     "items": [
       {
         "metric": "Warner Bros.",
-        "label": "Geleverd onder studiodeadlines",
-        "description": "Productie-assets geleverd voor een grote bioscoopfilm. Als de deadline een wereldwijde releasedatum is, leer je leveren."
+        "label": "Deadlinebestendige levering",
+        "description": "Productie-assets geleverd voor een Warner Bros. bioscoopfilm op een wereldwijd releaseschema. Als ik zeg dat het klaar is, dan is het klaar."
       },
       {
         "metric": "Sega",
-        "label": "3 titels in één jaar",
-        "description": "Digitale assets gebouwd en geleverd voor drie blockbuster-games samen met Creative Assembly. Schaal onder druk."
+        "label": "3 games in 12 maanden",
+        "description": "Digitale assets geleverd voor drie Sega-titels samen met Creative Assembly. Ik bouw systemen die schalen, niet systemen die vastlopen als het druk wordt."
       },
       {
         "metric": "TA Monks",
-        "label": "Een echt bedrijf gebouwd",
-        "description": "Samen met mijn vrouw Danique een funded trading operatie opgericht. 4 jaar systematische besluitvorming, risicobeheer en het bouwen van geautomatiseerde systemen die zonder toezicht presteren."
-      },
-      {
-        "metric": "10.000+",
-        "label": "Uren automatisering",
-        "description": "Van datapipelines tot AI-gestuurde outreach. Elk systeem dat ik bouw, is ontworpen om zonder mij te draaien."
+        "label": "Een bedrijf vanaf nul gebouwd",
+        "description": "Samen met mijn vrouw Danique een geautomatiseerde trading operatie opgericht. 4 jaar systemen bouwen die zonder toezicht presteren. Lead Awaker draait op hetzelfde principe."
       }
     ],
     "recognition": "Workshop presentator op Design Week, Universiteit van Rio de Janeiro. Uitgelicht op ZBrush Central en ArtStation."
@@ -49,15 +44,27 @@
     "title": "Veelgestelde vragen",
     "categories": [
       {
-        "title": "Resultaten en waarde",
+        "title": "Resultaten en starten",
         "items": [
           {
-            "q": "Welke resultaten kunnen we realistisch verwachten?",
-            "a": "Op basis van marktbenchmarks en publiek waargenomen resultaten van vergelijkbare systemen voor lead reactivatie en conversatiegerichte outreach, liggen heractivatiepercentages vaak tussen de 5 en 15 procent binnen de eerste 30 dagen. Deze cijfers zijn indicatief en geen garanties. De uiteindelijke resultaten hangen af van factoren zoals leadkwaliteit, relevantie van het aanbod, timing, kanaalkeuze en campagneconfiguratie."
+            "q": "Welke resultaten kunnen we verwachten?",
+            "a": "Heractivatiepercentages liggen doorgaans tussen de 5 en 15% in de eerste 30 dagen. Het exacte cijfer hangt af van hoe vers je leads zijn, hoe relevant je aanbod nog is en hoe goed de campagne is afgestemd. We beloven geen wonderen, maar we zetten stille databases consequent om in gesprekken."
           },
           {
-            "q": "Is dit een vervanging voor ons salesteam?",
-            "a": "Nee. Lead Awaker is bedoeld om je salesinspanningen te ondersteunen en op te schalen, niet om ze te vervangen. Het systeem verzorgt de eerste benadering, opvolging en kwalificatie, zodat je salesteam zich kan richten op gesprekken met hoge intentie en het sluiten van deals."
+            "q": "Hoe snel kunnen we starten?",
+            "a": "De meeste klanten zijn binnen een week live. We richten je account in, stemmen de tone of voice af, importeren je leads en draaien een testbatch voordat we opschalen. Geen lang onboardingtraject."
+          },
+          {
+            "q": "Wat als onze leads echt oud of helemaal koud zijn?",
+            "a": "Sommige van onze beste resultaten komen van leads van 6 maanden tot 2 jaar oud. Leeftijd is niet het probleem. Als de oorspronkelijke behoefte nog bestaat en de benadering persoonlijk is in plaats van generiek, reageren mensen. We zien het keer op keer."
+          },
+          {
+            "q": "Werkt dit voor onze branche?",
+            "a": "Als je een dienst of product verkoopt waarbij mensen interesse tonen en dan stil worden, ja. We hebben Lead Awaker aangepast voor B2B, klinieken, bureaus en dienstverlenende bedrijven. Tijdens de setup configureren we alles zodat het past bij jouw taal, bezwaren en verkoopproces."
+          },
+          {
+            "q": "Wat kost het?",
+            "a": "Ons voorkeursmodel is prestatiegericht: je betaalt per geboekt gesprek, zodat onze belangen gelijk lopen met die van jou. We bieden ook vaste tarieven aan, afhankelijk van je volume en setup. We lopen de opties met je door in een democall en geven je een helder bedrag. Geen verborgen kosten, geen langlopend contract."
           }
         ]
       },
@@ -65,54 +72,45 @@
         "title": "Hoe het werkt",
         "items": [
           {
-            "q": "Wat gebeurt er wanneer een lead reageert?",
-            "a": "Wanneer een lead reageert, beoordeelt het systeem de intentie en koopbereidheid. Afhankelijk van de ingestelde configuratie kan er direct een gesprek in je agenda worden ingepland, wordt de conversatie overgedragen aan je salesteam met volledige context, of blijft het systeem opvolgen totdat menselijk contact zinvol is."
+            "q": "Wat gebeurt er als een lead reageert?",
+            "a": "Dat hangt af van wat jij wilt. Het systeem kan direct een gesprek inplannen in je agenda, de conversatie overdragen aan je salesteam met volledige context, of blijven opvolgen tot de lead klaar is. Jij bepaalt de handoff-regels, en die kun je altijd aanpassen."
           },
           {
-            "q": "Wat als onze leads erg oud of volledig afgekoeld zijn?",
-            "a": "Leeftijd op zichzelf is niet doorslaggevend, relevantie wel. Leads van 6 maanden of zelfs 2 jaar oud kunnen nog steeds converteren als de oorspronkelijke behoefte of het probleem nog bestaat en de benadering persoonlijk en contextueel aanvoelt. Het systeem kijkt vooral naar betrokkenheid en reactiegedrag, niet alleen naar de leeftijd van de database."
+            "q": "Is dit een vervanging voor ons salesteam?",
+            "a": "Nee. Jouw team sluit deals. Wij doen het werk daarvoor: de eerste benadering, de follow-ups, de kwalificatie. Tegen de tijd dat een lead bij je team komt, is die al warm en ge\u00efnteresseerd. Je mensen besteden minder tijd aan achtervolgen en meer aan sluiten."
           },
           {
-            "q": "Werkt dit voor onze branche of niche?",
-            "a": "Lead Awaker past zich aan verschillende verkoopprocessen en sectoren aan, waaronder B2B en dienstverlenende bedrijven. Tijdens de setup wordt het systeem afgestemd op jouw terminologie, aanbod, veelvoorkomende bezwaren en kwalificatielogica, zodat het goed aansluit bij jouw specifieke markt."
-          }
-        ]
-      },
-      {
-        "title": "Berichten en controle",
-        "items": [
-          {
-            "q": "Hoe voorkomen jullie dat berichten als spam of opdringerig overkomen?",
-            "a": "Berichten worden contextueel verstuurd op basis van waar een lead is afgehaakt in de funnel en maken gebruik van natuurlijke taal in plaats van generieke templates. De benadering respecteert timing, relevantie en afmeldsignalen, zodat het voelt als een doordachte follow-up en niet als een massale campagne."
+            "q": "Hoe voorkomen jullie dat het als spam overkomt?",
+            "a": "Elk bericht is gebaseerd op waar die specifieke lead is gestopt. Geen bulktemplates, geen generiek \"even checken hoe het gaat.\" Het systeem weet waarin ze ge\u00efnteresseerd waren, wanneer ze voor het laatst reageerden en wat nu logisch is om te zeggen. Mensen reageren omdat het voelt als een echte follow-up, niet als een massale verzending."
           },
           {
-            "q": "Moeten wij scripts aanleveren of schrijft de AI alles zelf?",
-            "a": "Het aanleveren van scripts is optioneel. Je kunt voorbeelden delen van goed presterende gesprekken, merk richtlijnen of belangrijke gesprekspunten. Het systeem vertaalt deze input naar gepersonaliseerde berichten, met toon en positionering die tijdens de setup worden afgestemd."
-          },
-          {
-            "q": "Kunnen we berichten vooraf bekijken of goedkeuren?",
-            "a": "Ja. Voordat een campagne live gaat, kun je voorbeelden van berichten, toon, positionering en kwalificatielogica beoordelen. Er wordt niets uitgerold zonder afstemming over hoe het systeem namens jou communiceert."
+            "q": "Moeten we scripts aanleveren?",
+            "a": "Optioneel. Als je gesprekken hebt die goed werken, deel ze en wij gebruiken dat als basis. Zo niet, dan maken wij de berichten op basis van je aanbod, je doelgroep en je tone of voice. Hoe dan ook, je beoordeelt alles voordat het live gaat."
           },
           {
             "q": "Kunnen we campagnes tussentijds pauzeren of aanpassen?",
-            "a": "Ja. Campagnes kunnen op elk moment worden gepauzeerd, aangepast of verfijnd. Berichten, targetingregels en kwalificatiecriteria kunnen worden gewijzigd zonder dat actieve gesprekken hun context verliezen."
+            "a": "Ja. Pauzeer, pas de berichten aan, wijzig de targeting, update de kwalificatieregels. Allemaal zonder de context van lopende gesprekken te verliezen."
           }
         ]
       },
       {
-        "title": "Compliance en risico",
+        "title": "Vertrouwen en compliance",
         "items": [
           {
-            "q": "Via welke kanalen worden leads opnieuw benaderd?",
-            "a": "Kanalen kunnen bestaan uit WhatsApp, SMS, Instagram of andere messaging platforms, afhankelijk van je doelgroep, technische haalbaarheid, platformbeleid en compliance vereisten. De keuze en prioriteit van kanalen worden tijdens de setup bepaald."
+            "q": "Welke kanalen gebruiken jullie?",
+            "a": "WhatsApp, SMS, Instagram of andere messaging platforms, afhankelijk van wat logisch is voor jouw doelgroep. We helpen je het juiste kanaal te kiezen tijdens de setup en regelen de technische kant."
           },
           {
-            "q": "Hoe gaan jullie om met compliance zoals AVG, CAN-SPAM en CCPA?",
-            "a": "Lead Awaker werkt met compliancegerichte processen zoals directe verwerking van afmeldingen, consent bewuste berichtlogica en respectvolle benaderingspatronen. Klanten blijven verantwoordelijk voor de herkomst van hun leads en de juridische grondslag voor contact. Het systeem voert campagnes uit volgens klantinstructies en toepasselijke wetgeving."
+            "q": "Kunnen we berichten bekijken voordat ze verstuurd worden?",
+            "a": "Absoluut. Voor elke campagnelancering zie je de berichten, de toon en de kwalificatielogica. Niets gaat live zonder jouw akkoord."
           },
           {
-            "q": "Wat gebeurt er als leads klagen of zich afmelden?",
-            "a": "Afmeldverzoeken worden direct gerespecteerd en deze leads worden uitgesloten van verdere communicatie. Bij klachten kunnen campagnes worden aangepast of gepauzeerd, terwijl berichten, targeting of verzendfrequentie worden geëvalueerd om een respectvolle benadering te waarborgen."
+            "q": "Hoe gaan jullie om met AVG en compliance?",
+            "a": "Afmeldingen worden direct verwerkt. Het systeem is gebouwd met consent-bewuste logica en respectvolle pacing. Jij behoudt controle over je leaddata en de juridische grondslag voor contact. Wij voeren campagnes uit volgens jouw instructies en de geldende wetgeving."
+          },
+          {
+            "q": "Waar worden onze gegevens opgeslagen?",
+            "a": "Je data staat op beveiligde, dedicated infrastructuur. We delen het niet, verkopen het niet en gebruiken het niet om modellen te trainen. Jij bent eigenaar van je leads, je gesprekken en je resultaten."
           }
         ]
       }

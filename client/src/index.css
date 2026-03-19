@@ -264,6 +264,10 @@
  *   1. When CRM is in dark mode (.dark on html), reset public pages to light vars.
  *   2. Then, when system prefers dark, re-apply dark vars regardless of CRM toggle.
  * This means the CRM toggle has no effect on public pages — only the OS preference does.
+ *
+ * For Tailwind dark: utilities (class-based), #public-shell uses color-scheme
+ * isolation: it strips the .dark ancestor influence and re-applies via
+ * the .system-dark class which JS sets based on prefers-color-scheme.
  */
 
 html.dark #public-shell {
@@ -364,6 +368,10 @@ html.dark #public-shell {
     --sidebar-active: 243 85% 68%;
     --sidebar-active-foreground: 0 0% 100%;
   }
+
+  /* Utility: swap images for system dark mode (public pages) */
+  .system-dark-hidden { display: none !important; }
+  .system-dark-block { display: block !important; }
 }
 
 /* Agency mode: swap blue accent to yellow globally */

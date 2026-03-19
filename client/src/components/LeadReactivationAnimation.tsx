@@ -74,39 +74,39 @@
 
               // UPDATED: Arrows spawn from well outside the container edges
               const cursorSequence: CursorData[] = [
-                { delay: 500, startX: -15, startY: -15 },     // Top-left far
-                { delay: 2000, startX: 115, startY: -10 },    // Top-right far
-                { delay: 3500, startX: -10, startY: 110 },    // Bottom-left far
-                { delay: 5000, startX: 50, startY: -20 },     // Top far
-                { delay: 5300, startX: 120, startY: 30 },     // Right far
-                { delay: 5600, startX: -20, startY: 50 },     // Left far
-                { delay: 5900, startX: 115, startY: 70 },     // Right far
-                { delay: 6200, startX: 30, startY: 120 },     // Bottom far
-                { delay: 6400, startX: 120, startY: 10 },     // Right far
-                { delay: 6600, startX: -15, startY: 40 },     // Left far
-                { delay: 6800, startX: 115, startY: 50 },     // Right far
-                { delay: 7000, startX: -10, startY: 80 },     // Left far
-                { delay: 7100, startX: 120, startY: 90 },     // Right far
-                { delay: 7200, startX: -20, startY: 20 },     // Left far
-                { delay: 7300, startX: 110, startY: 115 },    // Right far
-                { delay: 7400, startX: -15, startY: 60 },     // Left far
-                { delay: 7500, startX: 115, startY: -5 },     // Right far
-                { delay: 7600, startX: 50, startY: 120 },     // Bottom far
-                { delay: 7700, startX: -10, startY: 10 },     // Left far
-                { delay: 7800, startX: 110, startY: 35 },     // Right far
-                { delay: 7900, startX: -20, startY: -10 },    // Left far
-                { delay: 8000, startX: 120, startY: 80 },     // Right far
-                { delay: 8100, startX: -15, startY: 110 },    // Left far
-                { delay: 8200, startX: 115, startY: 15 },     // Right far
-                { delay: 8300, startX: 40, startY: -20 },     // Top far
-                { delay: 8400, startX: 110, startY: 45 },     // Right far
-                { delay: 8500, startX: -20, startY: 30 },     // Left far
-                { delay: 8600, startX: 120, startY: 85 },     // Right far
-                { delay: 8700, startX: -10, startY: 70 },     // Left far
-                { delay: 8800, startX: 115, startY: 60 },     // Right far
-                { delay: 8900, startX: 50, startY: 115 },    // Bottom far
-                { delay: 9000, startX: 110, startY: 25 },     // Right far
-                { delay: 9100, startX: -15, startY: 95 }      // Left far
+                { delay: 500, startX: -25, startY: -60 },
+                { delay: 2000, startX: 125, startY: -50 },
+                { delay: 3500, startX: -20, startY: 160 },
+                { delay: 5000, startX: 50, startY: -70 },
+                { delay: 5300, startX: 130, startY: 30 },
+                { delay: 5600, startX: -30, startY: 50 },
+                { delay: 5900, startX: 125, startY: 80 },
+                { delay: 6200, startX: 30, startY: 165 },
+                { delay: 6400, startX: 130, startY: -55 },
+                { delay: 6600, startX: -25, startY: -45 },
+                { delay: 6800, startX: 125, startY: 45 },
+                { delay: 7000, startX: -20, startY: 140 },
+                { delay: 7100, startX: 130, startY: 155 },
+                { delay: 7200, startX: -30, startY: -65 },
+                { delay: 7300, startX: 120, startY: 160 },
+                { delay: 7400, startX: -25, startY: 70 },
+                { delay: 7500, startX: 125, startY: -60 },
+                { delay: 7600, startX: 60, startY: 170 },
+                { delay: 7700, startX: -20, startY: -50 },
+                { delay: 7800, startX: 130, startY: -30 },
+                { delay: 7900, startX: -30, startY: -70 },
+                { delay: 8000, startX: 125, startY: 120 },
+                { delay: 8100, startX: -25, startY: 155 },
+                { delay: 8200, startX: 130, startY: -45 },
+                { delay: 8300, startX: 40, startY: -75 },
+                { delay: 8400, startX: 120, startY: 25 },
+                { delay: 8500, startX: -20, startY: -35 },
+                { delay: 8600, startX: 125, startY: 145 },
+                { delay: 8700, startX: -30, startY: 100 },
+                { delay: 8800, startX: 130, startY: 60 },
+                { delay: 8900, startX: 70, startY: 170 },
+                { delay: 9000, startX: 120, startY: -40 },
+                { delay: 9100, startX: -25, startY: 130 }
               ];
 
               cursorSequence.forEach((cursor, index) => {
@@ -165,7 +165,7 @@
             return (
               <div
                 ref={containerRef}
-                className="relative w-full h-[32vh] flex items-center justify-center overflow-hidden font-sans mb-12 text-center"
+                className="relative w-full h-[22vh] flex items-center justify-center overflow-visible font-sans mb-12 text-center"
               >
                 <style>{`
                   @keyframes sparkle {

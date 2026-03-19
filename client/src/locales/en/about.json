@@ -1,10 +1,10 @@
 {
   "intro": {
-    "title": "What we care about",
-    "paragraph1": "We believe your energy belongs where your heart is: serving your customers. ",
-    "paragraph2": "We help you earn their attention by treating every lead like a person, not a mere line in a spreadsheet.",
-    "paragraph3": "When outreach respects timing, preferences, and context, people feel understood. It's only then that they wake up and respond to ",
-    "cyclingWords": ["you.", "your company.", "your brand.", "your services.", "your products.", "your story.", "your values."]
+    "title": "We wake up what went",
+    "titleHighlight": "quiet.",
+    "paragraph1": "Every lead in your database once raised their hand.",
+    "paragraph2": "We help you reach them again, not with spam, but with timing, context, and respect.",
+    "paragraph3": "That's when people respond. Not because you pushed, but because they felt understood."
   },
   "founder": {
     "name": "Gabriel B. Fronza",
@@ -13,29 +13,24 @@
     "description": "I spent a decade shipping under impossible deadlines at Warner Bros. and Sega. Then I built a real business with my wife Danique, where every lead mattered because it was our money on the line. Lead Awaker exists because I lived the problem."
   },
   "credentials": {
-    "title": "The problem isn't your leads. It's what happens after.",
+    "title": "It's not a lead problem. It's a leak problem.",
     "subtitle": "From Hollywood studios to building a business from zero. The same discipline, applied to your leads.",
     "resultsNode": "Real results.",
     "items": [
       {
-        "metric": "Warner Bros",
-        "label": "Shipped under studio deadlines",
-        "description": "Delivered production assets for a major motion picture. When the deadline is a global release date, you learn to ship."
+        "metric": "Warner Bros.",
+        "label": "Deadline-proof delivery",
+        "description": "Shipped production assets for a Warner Bros. motion picture on a global release schedule. When I say it'll be ready, it'll be ready."
       },
       {
         "metric": "Sega",
-        "label": "3 titles in one year",
-        "description": "Built and delivered digital assets for three blockbuster games alongside Creative Assembly. Scale under pressure."
+        "label": "3 games in 12 months",
+        "description": "Delivered digital assets for three Sega titles alongside Creative Assembly. I build systems that scale, not ones that break when things get busy."
       },
       {
         "metric": "TA Monks",
-        "label": "Built a real business",
-        "description": "Co-founded a funded trading operation with my wife Danique. 4 years of systematic decision-making, risk management, and building automated systems that perform without supervision."
-      },
-      {
-        "metric": "10,000+",
-        "label": "Hours of automation",
-        "description": "From data pipelines to AI-driven outreach. Every system I build is designed to run without me."
+        "label": "Built a business from zero",
+        "description": "Co-founded an automated trading operation with my wife Danique. 4 years building systems that perform without supervision. Lead Awaker runs on the same principle."
       }
     ],
     "recognition": "Workshop presenter at Design Week, University of Rio de Janeiro. Featured on ZBrush Central and ArtStation."
@@ -49,15 +44,27 @@
     "title": "Frequently Asked Questions",
     "categories": [
       {
-        "title": "Results & Value",
+        "title": "Results & Getting Started",
         "items": [
           {
-            "q": "What results can we realistically expect?",
-            "a": "Based on industry benchmarks and publicly observed results from similar lead reactivation and conversational outreach systems, re-engagement rates commonly range between 5–15% within the first 30 days. These figures are indicative, not guarantees. Actual performance depends on factors such as lead quality, offer relevance, timing, channel selection, and campaign configuration."
+            "q": "What results can we expect?",
+            "a": "Re-engagement rates typically land between 5 and 15% in the first 30 days. The exact number depends on how fresh your leads are, how relevant your offer still is, and how well the campaign is dialed in. We don't promise miracles, but we consistently turn silent databases back into conversations."
           },
           {
-            "q": "Is this a replacement for our sales team?",
-            "a": "No. Lead Awaker is designed to support and scale your sales efforts, not replace them. The system handles initial outreach, follow-ups, and qualification, allowing your sales team to focus on high-intent conversations and closing."
+            "q": "How quickly can we get started?",
+            "a": "Most clients are live within a week. We set up your account, configure your messaging tone, import your leads, and run a test batch before scaling. No long onboarding process."
+          },
+          {
+            "q": "What if our leads are really old or completely cold?",
+            "a": "Some of our best results come from leads that are 6 months to 2 years old. Age isn't the problem. If the original need still exists and the outreach feels personal instead of generic, people respond. We've seen it over and over."
+          },
+          {
+            "q": "Will this work for our industry?",
+            "a": "If you sell a service or product where people express interest and then go quiet, yes. We've adapted Lead Awaker for B2B, clinics, agencies, and service businesses. During setup, we configure everything to match your terminology, your objections, and your sales process."
+          },
+          {
+            "q": "How much does it cost?",
+            "a": "Our preferred model is performance-based: you pay per booked call, so our incentives are aligned with yours. We also offer fixed-rate plans depending on your volume and setup. We'll walk you through the options on a demo call and give you a clear number. No hidden fees, no long-term lock-in."
           }
         ]
       },
@@ -66,53 +73,44 @@
         "items": [
           {
             "q": "What happens when a lead responds?",
-            "a": "When a lead replies, the system evaluates intent and readiness. Depending on your configuration, it may book a call directly into your calendar, hand the conversation off to your sales team with full context, or continue nurturing until the lead is ready for human follow-up."
+            "a": "It depends on what you want. The system can book a call straight into your calendar, hand the conversation to your sales team with full context, or keep nurturing until the lead is ready. You decide the handoff rules, and they can change anytime."
           },
           {
-            "q": "What if our leads are really old or completely cold?",
-            "a": "Age alone is not the main factor; relevance is. Leads that are 6 months or even 2 years old can still convert if the original problem or need still exists and the outreach feels contextual and personal. The system focuses on engagement signals and response behavior rather than database age."
+            "q": "Is this a replacement for our sales team?",
+            "a": "No. Your team closes deals. We handle the part before that: the initial outreach, the follow-ups, the qualification. By the time a lead reaches your team, they're already warm and interested. Your people spend less time chasing and more time closing."
           },
           {
-            "q": "Will this work with our industry or niche?",
-            "a": "Lead Awaker adapts to different sales processes and industries, including B2B and service-based businesses. During setup, the system is configured to reflect your terminology, offerings, common objections, and qualification logic so it fits your specific market."
-          }
-        ]
-      },
-      {
-        "title": "Messaging & Control",
-        "items": [
-          {
-            "q": "How do you avoid coming across as spam or pushy?",
-            "a": "Messages are sent contextually based on where each lead left off in the funnel, using natural language instead of generic templates. Outreach respects pacing, relevance, and opt-out signals, aiming to feel like a thoughtful follow-up rather than a mass campaign."
+            "q": "How do you avoid sounding like spam?",
+            "a": "Every message is based on where that specific lead left off. No bulk templates, no generic \"just checking in.\" The system knows what they were interested in, when they last engaged, and what makes sense to say next. People respond because it feels like a real follow-up, not a mass blast."
           },
           {
-            "q": "Do we need to provide scripts or does the AI write everything?",
-            "a": "Providing scripts is optional. You may share examples of your best-performing conversations, brand guidelines, or key talking points. The system adapts this input into personalized messages, with tone and positioning aligned during setup."
-          },
-          {
-            "q": "Can we review or approve messages before launch?",
-            "a": "Yes. Before any campaign goes live, you can review messaging examples, tone, positioning, and qualification logic. Nothing is deployed without alignment on how the system communicates on your behalf."
+            "q": "Do we need to provide scripts?",
+            "a": "Optional. If you have conversations that work well, share them and we'll use that as a foundation. If not, we'll craft the messaging based on your offer, your audience, and your tone. Either way, you review everything before it goes live."
           },
           {
             "q": "Can we pause or adjust campaigns mid-run?",
-            "a": "Yes. Campaigns can be paused, adjusted, or refined at any time. Messaging, targeting rules, and qualification criteria can be updated without losing active conversation context."
+            "a": "Yes. Pause, tweak the messaging, change targeting, update qualification rules. All without losing the context of conversations already in progress."
           }
         ]
       },
       {
-        "title": "Compliance & Risk",
+        "title": "Trust & Compliance",
         "items": [
           {
-            "q": "What channels do you use to re-engage leads?",
-            "a": "Channels may include WhatsApp, SMS, Instagram, or other messaging platforms depending on your audience, technical feasibility, platform policies, and compliance requirements. Channel selection and prioritization are defined during setup."
+            "q": "What channels do you use?",
+            "a": "WhatsApp, SMS, Instagram, or other messaging platforms depending on what makes sense for your audience. We help you pick the right channel during setup and handle the technical side."
           },
           {
-            "q": "How do you handle compliance (GDPR, CAN-SPAM, CCPA)?",
-            "a": "Lead Awaker operates with compliance-oriented workflows such as opt-out handling, consent-aware messaging logic, and respectful outreach patterns. Clients remain responsible for the origin of their leads and the legal basis for contact. The system executes campaigns according to client instructions and applicable regulations."
+            "q": "Can we review messages before they go out?",
+            "a": "Absolutely. Before any campaign launches, you see the messaging, the tone, the qualification logic. Nothing goes live without your sign-off."
           },
           {
-            "q": "What happens if leads complain or opt out?",
-            "a": "Opt-out requests are respected immediately and those leads are excluded from further outreach. If complaints occur, campaigns can be adjusted or paused while messaging, targeting, or cadence is reviewed to ensure respectful communication."
+            "q": "How do you handle GDPR and compliance?",
+            "a": "Opt-outs are respected instantly. The system is built with consent-aware logic and respectful pacing. You remain in control of your lead data and the legal basis for contact. We execute campaigns according to your instructions and applicable regulations."
+          },
+          {
+            "q": "Where is our data stored?",
+            "a": "Your data stays on secure, dedicated infrastructure. We don't share it, sell it, or use it to train models. You own your leads, your conversations, and your results."
           }
         ]
       }

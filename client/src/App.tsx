@@ -1,5 +1,5 @@
 import { Switch, Route, useRoute, useLocation, Redirect } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import i18n from "./i18n";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -194,14 +194,60 @@ function Router() {
           !lang && <AppRoutes />
         ) : (
           /* Public pages — theme follows system preference */
-          <div id="public-shell">
+          <PublicShell>
             {!lang && <AppRoutes />}
             {lang && <LanguageRouter lang={lang} />}
-          </div>
+          </PublicShell>
         )}
       </main>
 
       {!isAppArea && <Footer />}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* PublicShell — isolates dark mode from CRM toggle, follows system   */
+/* ------------------------------------------------------------------ */
+
+function PublicShell({ children }: { children: React.ReactNode }) {
+  const [systemDark, setSystemDark] = useState(
+    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
+
+  /* Strip CRM's .dark from <html> while public pages are mounted;
+     restore it on unmount so the CRM toggle still works. */
+  useEffect(() => {
+    const root = document.documentElement;
+    const hadDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+    return () => {
+      if (hadDark) root.classList.add("dark");
+    };
+  }, []);
+
+  /* Follow system preference for public pages */
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setSystemDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  /* Apply/remove .dark on <html> based on system preference */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (systemDark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [systemDark]);
+
+  return (
+    <div id="public-shell">
+      {children}
     </div>
   );
 }

@@ -4,54 +4,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import Seo from "@/Seo";
-
-const CyclingWord = ({
-  words,
-  duration = 3000,
-}: {
-  words: string[];
-  duration?: number;
-}) => {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(
-      () => setIndex((prev) => (prev + 1) % words.length),
-      duration
-    );
-    return () => clearInterval(timer);
-  }, [words, duration]);
-
-  return (
-    <span className="inline-flex min-w-max">
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={words[index]}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-primary font-bold"
-        >
-          {words[index]}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  );
-};
+import profileImg from "@/assets/profile.webp";
 
 export default function About() {
   const { t, i18n } = useTranslation("about");
   const lang = i18n.language;
   const isDefaultLang = lang === "en";
   const [openFAQ, setOpenFAQ] = useState<{ catIndex: number; itemIndex: number } | null>(null);
-
-  const cyclingWords =
-    (t("intro.cyclingWords", { returnObjects: true }) as string[]) || [];
 
   const faqCategories =
     (t("faq.categories", { returnObjects: true }) as Array<{
@@ -73,77 +35,34 @@ export default function About() {
 
       <div className="min-h-screen pt-[126px] text-center overflow-x-hidden bg-slate-50 dark:bg-muted">
 
-        {/* Intro Section */}
+        {/* The Problem — now first, plain white background */}
         <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 pb-24">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-5xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-6xl mx-auto space-y-14"
           >
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-foreground">
-              {t("intro.title")}
-            </h1>
-
-            {/* Animation — -mb-8 neutralises the component's own mb-12 */}
-            <div className="w-full max-w-5xl mx-auto -mb-8">
-              <LeadReactivationAnimation />
-            </div>
-
-            <div className="space-y-2 mt-2 w-full text-left">
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                {t("intro.paragraph1")}
-              </p>
-
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                {t("intro.paragraph2")}
-              </p>
-
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                {t("intro.paragraph3")}{" "}
-                <span className="inline-block">
-                  {cyclingWords.length > 0 && (
-                    <CyclingWord words={cyclingWords} />
-                  )}
-                </span>
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Founder + Credentials — merged section */}
-        <section className="py-24 bg-gray-200 dark:bg-card/80 border-y border-border relative overflow-hidden">
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
-              backgroundSize: "20px 20px",
-            }}
-          />
-          <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="max-w-5xl mx-auto space-y-10"
-            >
-              {/* Founder + Credentials unified panel */}
-              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-14">
-
-                <h2 className="text-4xl font-bold text-center">
+                <h2 className="text-4xl md:text-[57px] font-bold text-center">
                   {t("credentials.title")}
                 </h2>
 
                 {/* Leaking bucket illustration */}
                 <div className="flex justify-center">
                   <img
-                    src="/images/leaking-bucket.png?v=3"
+                    src="/images/leaking-bucket.png?v=6"
                     alt="Leaking bucket illustration"
-                    className="w-full dark:invert"
+                    className="w-full system-dark-hidden"
+                  />
+                  <img
+                    src="/images/leaking-bucket-dark.png?v=1"
+                    alt="Leaking bucket illustration"
+                    className="w-full hidden system-dark-block"
                   />
                 </div>
 
-                {/* Founder row: photo left-aligned with cards, quote right */}
+                {/* Founder */}
                 <motion.div
                   className="flex flex-col md:flex-row items-start gap-8"
                   initial={{ opacity: 0, y: 20 }}
@@ -151,11 +70,11 @@ export default function About() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.8 }}
                 >
-                  <div className="w-full md:w-[calc((100%-3*1.25rem)/4)] h-48 shrink-0 relative flex items-center justify-center">
-                    <div className="scale-[0.70]">
-                      <AnimatedLogo3D />
-                    </div>
-                  </div>
+                  <img
+                    src={profileImg}
+                    alt={t("founder.name")}
+                    className="w-50 h-43 shrink-0 rounded-2xl object-cover shadow-md"
+                  />
                   <div className="flex-grow space-y-4 text-left">
                     <div className="flex items-baseline gap-3">
                       <h3 className="text-lg md:text-2xl font-bold text-foreground">
@@ -165,18 +84,14 @@ export default function About() {
                         {t("founder.title")}
                       </p>
                     </div>
-                    <p className="italic border-l-4 border-primary/30 pl-6 text-[19px] text-foreground/80">
+                    <p className="italic border-l-4 border-primary/30 pl-6 text-[17px] md:text-[19px] text-foreground/80">
                       {t("founder.quote")}
                     </p>
                   </div>
                 </motion.div>
 
-                <h3 className="text-xl font-semibold text-foreground text-center">
-                  {t("credentials.subtitle")}
-                </h3>
-
                 {/* Credential cards */}
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {credentialItems.map((item, i) => {
                     const TracingCard = () => {
                       const [size, setSize] = useState({ w: 0, h: 0 });
@@ -227,7 +142,7 @@ export default function About() {
                           )}
                           <div className="relative z-10">
                             <div className="text-[28px] font-bold text-primary mb-1 text-center">{item.metric}</div>
-                            <div className="text-[12px] font-semibold text-foreground mb-2">{item.label}</div>
+                            <div className="text-[12px] font-semibold text-foreground mb-2 text-center">{item.label}</div>
                             <p className="text-[12px] text-muted-foreground leading-relaxed">{item.description}</p>
                           </div>
                         </motion.div>
@@ -237,6 +152,42 @@ export default function About() {
                     return <TracingCard key={i} />;
                   })}
                 </div>
+          </motion.div>
+        </div>
+
+        {/* What We Care About — gray background with white card */}
+        <section className="py-24 bg-gray-200 dark:bg-card/80 border-y border-border relative overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+          <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 relative">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-6xl mx-auto"
+            >
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-10 overflow-hidden">
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-foreground text-center">
+                  {t("intro.title")}{" "}
+                  <span className="text-primary">{t("intro.titleHighlight")}</span>
+                </h1>
+
+                <p className="text-xl text-muted-foreground leading-relaxed text-center max-w-4xl mx-auto">
+                  {t("intro.paragraph1")} {t("intro.paragraph2")}
+                </p>
+
+                {/* Animation as visual payoff */}
+                <div className="w-full max-w-5xl mx-auto -mb-4">
+                  <LeadReactivationAnimation />
+                </div>
+
+                <p className="text-xl text-foreground font-semibold leading-relaxed text-center">
+                  {t("intro.paragraph3")}
+                </p>
               </div>
             </motion.div>
           </div>
@@ -248,9 +199,9 @@ export default function About() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-5xl mx-auto"
+            className="max-w-6xl mx-auto"
           >
-            <div className="bg-white dark:bg-card rounded-3xl p-8 md:p-12">
+            <div className="bg-white dark:bg-card rounded-3xl p-8 md:p-12 shadow-xl">
               <h2 className="text-4xl font-bold mb-12 text-left">
                 {t("faq.title")}
               </h2>
