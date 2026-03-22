@@ -403,6 +403,7 @@ export function GradientTester({
   dragMode,
   onToggleDragMode,
   onSaveToSlot,
+  onApply,
 }: {
   open: boolean;
   onClose: () => void;
@@ -412,6 +413,8 @@ export function GradientTester({
   dragMode: boolean;
   onToggleDragMode: () => void;
   onSaveToSlot?: (slot: string) => void;
+  /** Called when user clicks "Apply" — persist the current layers as the page background */
+  onApply?: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"layers" | "export">("layers");
   const [nextId, setNextId] = useState(100);
@@ -564,6 +567,18 @@ export function GradientTester({
           </div>
         )}
       </div>
+
+      {/* Apply button */}
+      {onApply && (
+        <div className="shrink-0 border-t border-gray-200 bg-gray-50 px-2 py-2">
+          <button
+            onClick={onApply}
+            className="w-full py-1.5 rounded text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
+          >
+            Apply as Background
+          </button>
+        </div>
+      )}
 
       {/* Save to Slot footer */}
       {onSaveToSlot && (

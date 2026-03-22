@@ -21,7 +21,8 @@
     "promptCount_other": "{{count}} prompts",
     "allStatuses": "Todos os Status",
     "allModels": "Todos os Modelos",
-    "allCampaigns": "Todas as Campanhas"
+    "allCampaigns": "Todas as Campanhas",
+    "allAccounts": "Todas as Contas"
   },
   "views": {
     "list": "Lista",
@@ -34,7 +35,9 @@
     "untitled": "Sem título",
     "untitledPrompt": "Prompt sem título",
     "noModel": "Sem Modelo",
-    "noCampaign": "Sem Campanha"
+    "noCampaign": "Sem Campanha",
+    "account": "Conta",
+    "noAccount": "Agency Bots"
   },
   "form": {
     "createTitle": "Criar Prompt",
@@ -69,6 +72,7 @@
     "selectModel": "Selecionar modelo",
     "selectStatus": "Selecionar status",
     "noneOption": "\u2014 Nenhum \u2014",
+    "noCampaignModel": "Nenhuma campanha selecionada",
     "identity": "Identidade",
     "configuration": "Configuração",
     "required": "Obrigatório"

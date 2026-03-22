@@ -59,6 +59,7 @@ export default function PromptsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [modelFilter, setModelFilter] = useState<string>("all");
   const [campaignFilter, setCampaignFilter] = useState<string>("");
+  const [accountFilter, setAccountFilter] = useState<string>("");
 
   /* ── Sort & Group (persisted) ───────────────────────────────────────────── */
   const [sortBy, setSortBy] = usePersistedState<PromptSortOption>("prompts-sort", "recent");
@@ -82,7 +83,8 @@ export default function PromptsPage() {
 
   /* ── Data ────────────────────────────────────────────────────────────────── */
   const [promptLibraryData, setPromptLibraryData] = useState<any[]>([]);
-  const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([]);
+  const [campaigns, setCampaigns] = useState<{ id: number; name: string; aiModel: string }[]>([]);
+  const [accounts, setAccounts] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -100,9 +102,10 @@ export default function PromptsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [promptsRes, campaignsRes] = await Promise.all([
+      const [promptsRes, campaignsRes, accountsRes] = await Promise.all([
         apiFetch("/api/prompts"),
         apiFetch("/api/campaigns"),
+        apiFetch("/api/accounts"),
       ]);
       if (!promptsRes.ok) throw new Error(`${promptsRes.status}: Could not load prompts`);
       const promptsData = await promptsRes.json();
@@ -114,6 +117,17 @@ export default function PromptsPage() {
           (Array.isArray(campaignsData) ? campaignsData : []).map((c: any) => ({
             id: c.id || c.Id,
             name: c.name || c.Name || `Campaign #${c.id || c.Id}`,
+            aiModel: c.aiModel || c.ai_model || "",
+          })),
+        );
+      }
+
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(
+          (Array.isArray(accountsData) ? accountsData : []).map((a: any) => ({
+            id: a.id || a.Id,
+            name: a.name || a.Name || `Account #${a.id || a.Id}`,
           })),
         );
       }
@@ -136,6 +150,13 @@ export default function PromptsPage() {
     return m;
   }, [campaigns]);
 
+  /* ── Account lookup map ─────────────────────────────────────────────────── */
+  const accountMap = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const a of accounts) m.set(a.id, a.name);
+    return m;
+  }, [accounts]);
+
   /* ── Derived: unique models ─────────────────────────────────────────────── */
   const availableModels = useMemo(() => {
     const modelSet = new Set<string>();
@@ -156,6 +177,16 @@ export default function PromptsPage() {
     return campaigns.filter((c) => ids.has(c.id));
   }, [promptLibraryData, campaigns]);
 
+  /* ── Derived: available account options ──────────────────────────────── */
+  const availableAccounts = useMemo(() => {
+    const ids = new Set<number>();
+    promptLibraryData.forEach((p: any) => {
+      const aId = p.accountsId || p.Accounts_id;
+      if (aId) ids.add(aId);
+    });
+    return accounts.filter((a) => ids.has(a.id));
+  }, [promptLibraryData, accounts]);
+
   /* ── Derived: filtered + sorted rows ────────────────────────────────────── */
   const rows = useMemo(() => {
     let filtered = promptLibraryData.filter((p: any) => {
@@ -171,6 +202,10 @@ export default function PromptsPage() {
       if (campaignFilter) {
         const pCampaign = p.campaignsId || p.Campaigns_id;
         if (String(pCampaign) !== campaignFilter) return false;
+      }
+      if (accountFilter) {
+        const pAccount = p.accountsId || p.Accounts_id;
+        if (String(pAccount) !== accountFilter) return false;
       }
       return true;
     });
@@ -201,7 +236,7 @@ export default function PromptsPage() {
     });
 
     return filtered;
-  }, [promptLibraryData, q, statusFilter, modelFilter, campaignFilter, sortBy]);
+  }, [promptLibraryData, q, statusFilter, modelFilter, campaignFilter, accountFilter, sortBy]);
 
   /* ── Derived: grouped rows ───────────────────────────────────────────────── */
   const groupedRows = useMemo(() => {
@@ -223,6 +258,11 @@ export default function PromptsPage() {
           key = cId ? (campaignMap.get(cId) || `Campaign #${cId}`) : "No Campaign";
           break;
         }
+        case "account": {
+          const aId = p.accountsId || p.Accounts_id;
+          key = aId ? (accountMap.get(aId) || `Account #${aId}`) : "Agency Bots";
+          break;
+        }
         default:
           key = "All";
       }
@@ -230,19 +270,21 @@ export default function PromptsPage() {
       groups.get(key)!.push(p);
     }
     return groups;
-  }, [rows, groupBy, campaignMap]);
+  }, [rows, groupBy, campaignMap, accountMap]);
 
   /* ── Filter state helpers ───────────────────────────────────────────────── */
-  const isFilterActive = statusFilter !== "all" || modelFilter !== "all" || !!campaignFilter;
+  const isFilterActive = statusFilter !== "all" || modelFilter !== "all" || !!campaignFilter || !!accountFilter;
   const activeFilterCount =
     (statusFilter !== "all" ? 1 : 0) +
     (modelFilter !== "all" ? 1 : 0) +
-    (campaignFilter ? 1 : 0);
+    (campaignFilter ? 1 : 0) +
+    (accountFilter ? 1 : 0);
 
   const clearAllFilters = useCallback(() => {
     setStatusFilter("all");
     setModelFilter("all");
     setCampaignFilter("");
+    setAccountFilter("");
   }, []);
 
   /* ════════════════════════════════════════════════════════════════════════
@@ -400,8 +442,11 @@ export default function PromptsPage() {
               onModelFilterChange={setModelFilter}
               campaignFilter={campaignFilter}
               onCampaignFilterChange={setCampaignFilter}
+              accountFilter={accountFilter}
+              onAccountFilterChange={setAccountFilter}
               availableModels={availableModels}
               availableCampaigns={availableCampaigns}
+              availableAccounts={availableAccounts}
               isFilterActive={isFilterActive}
               onClearAllFilters={clearAllFilters}
               onSaved={handleSaved}
@@ -437,8 +482,11 @@ export default function PromptsPage() {
                   onModelFilterChange={setModelFilter}
                   campaignFilter={campaignFilter}
                   onCampaignFilterChange={setCampaignFilter}
+                  accountFilter={accountFilter}
+                  onAccountFilterChange={setAccountFilter}
                   availableModels={availableModels}
                   availableCampaigns={availableCampaigns}
+                  availableAccounts={availableAccounts}
                   totalCount={rows.length}
                   onOpenCreate={openCreate}
                   isFilterActive={isFilterActive}

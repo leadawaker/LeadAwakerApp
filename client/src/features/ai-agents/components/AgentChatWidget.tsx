@@ -784,46 +784,17 @@ export function AgentChatWidget() {
         data-agent-widget
         className={cn(
           "fixed z-[9999] flex flex-col bg-[#f5f5f5] dark:bg-[#1a1a2e] border border-border/60 shadow-2xl overflow-hidden transition-all duration-300 ease-out",
-          "rounded-2xl",
-          "max-md:bottom-0 max-md:right-0 max-md:left-0 max-md:top-0 max-md:w-full max-md:h-full max-md:rounded-none max-md:border-0",
+          "inset-0 w-full h-full rounded-none border-0",
           isOpen
             ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
-            : "md:translate-y-4 md:opacity-0 md:scale-95 max-md:translate-y-full max-md:opacity-100 pointer-events-none",
+            : "translate-y-full opacity-0 invisible pointer-events-none",
         )}
-        style={{
-          right: widgetPos.right,
-          bottom: widgetPos.bottom,
-          width: `${widgetSize.width}px`,
-          height: `${widgetSize.height}px`,
-        }}
         data-testid="agent-widget-panel"
       >
-        {/* ── Resize handles (all 4 corners, invisible) ── */}
-        {(["tl", "tr", "bl", "br"] as const).map((corner) => (
-          <div
-            key={corner}
-            data-corner={corner}
-            onPointerDown={onResizePointerDown}
-            onPointerMove={onResizePointerMove}
-            onPointerUp={onResizePointerUp}
-            className={cn(
-              "absolute z-10 w-5 h-5 hidden md:block touch-none",
-              corner === "tl" && "top-0 left-0 cursor-nw-resize",
-              corner === "tr" && "top-0 right-0 cursor-ne-resize",
-              corner === "bl" && "bottom-0 left-0 cursor-sw-resize",
-              corner === "br" && "bottom-0 right-0 cursor-se-resize",
-            )}
-          />
-        ))}
+        {/* Resize handles removed — widget is now full-page */}
         {/* ── Widget Header ── */}
         <div
-          className={cn(
-            "flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-white dark:bg-card shrink-0 touch-none select-none",
-            draggingRef.current ? "md:cursor-grabbing" : "md:cursor-grab",
-          )}
-          onPointerDown={onDragPointerDown}
-          onPointerMove={onDragPointerMove}
-          onPointerUp={onDragPointerUp}
+          className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-white dark:bg-card shrink-0"
         >
           {activeAgentId && activeAgent ? (
             <>
@@ -1028,12 +999,12 @@ export function AgentChatWidget() {
           )}
           <button
             onClick={closeWidget}
-            className="h-7 w-7 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-            title="Minimize"
+            className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+            title="Close"
             data-testid="agent-widget-minimize"
-            aria-label="Minimize AI Agent chat"
+            aria-label="Close AI Agent chat"
           >
-            <Minimize2 className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 

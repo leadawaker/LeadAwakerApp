@@ -661,12 +661,12 @@ export function AccountListView({
   );
 
   return (
-    <div className="flex h-full gap-[3px]" data-testid="account-list-view">
+    <div className="flex flex-col md:flex-row h-full gap-[3px] overflow-y-auto md:overflow-y-hidden" data-testid="account-list-view">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
         "flex-col bg-muted rounded-lg overflow-hidden",
-        "w-full md:w-[340px] md:shrink-0",
+        "w-full md:w-[340px] md:shrink-0 min-h-[300px] md:min-h-0",
         isMobile && selectedAccount ? "hidden" : "flex"
       )}>
 
@@ -747,7 +747,7 @@ export function AccountListView({
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
-        "flex-1 flex-col overflow-hidden rounded-lg",
+        "flex-1 flex-col overflow-hidden rounded-lg min-h-[400px] md:min-h-0",
         isMobile && !selectedAccount ? "hidden" : "flex mobile-panel-enter"
       )}>
         {panelMode === "create" ? (

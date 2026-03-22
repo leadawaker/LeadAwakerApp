@@ -399,6 +399,26 @@
     "dnd": "DND"
   },
 
+  "abTesting": {
+    "title": "A/B Test",
+    "variantA": "Variant A",
+    "variantB": "Variant B",
+    "leads": "Leads",
+    "response": "Response",
+    "booking": "Booking",
+    "qualification": "Qualified",
+    "optOut": "Opt-out",
+    "avgMessages": "Avg msgs",
+    "avgResponseTime": "Avg reply time",
+    "winner": "Winner",
+    "confidence": "Confidence",
+    "needMore": "Need ~{{count}} more for 95%",
+    "noTest": "No A/B test active",
+    "enabled": "A/B Testing",
+    "splitRatio": "B Variant %",
+    "split": "Split"
+  },
+
   "copy": "Copy",
 
   "tagsPage": {

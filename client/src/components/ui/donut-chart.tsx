@@ -38,6 +38,8 @@ interface DonutChartProps extends React.HTMLAttributes<HTMLDivElement> {
   onSegmentClick?: (segment: DonutChartSegment) => void;
   /** Called when clicking the background (gap/center) — use to deselect */
   onBackgroundClick?: () => void;
+  /** When true, skip entrance animation and only smoothly transition between states */
+  skipAnimation?: boolean;
 }
 
 const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
@@ -54,6 +56,7 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
       onSegmentHover,
       onSegmentClick,
       onBackgroundClick,
+      skipAnimation,
       className,
       ...props
     },
@@ -139,7 +142,7 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
                   strokeDasharray={strokeDasharray}
                   strokeDashoffset={-strokeDashoffset}
                   strokeLinecap="round"
-                  initial={{ opacity: 0, strokeDashoffset: circumference, stroke: segment.color }}
+                  initial={skipAnimation ? false : { opacity: 0, strokeDashoffset: circumference, stroke: segment.color }}
                   animate={{
                     opacity: 1,
                     strokeDashoffset: -strokeDashoffset,
@@ -149,8 +152,8 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
                     opacity: { duration: 0.15 },
                     stroke: { duration: 0.15 },
                     strokeDashoffset: {
-                      duration: animationDuration,
-                      delay: index * animationDelayPerSegment,
+                      duration: skipAnimation ? 0.4 : animationDuration,
+                      delay: skipAnimation ? 0 : index * animationDelayPerSegment,
                       ease: "easeOut",
                     },
                   }}

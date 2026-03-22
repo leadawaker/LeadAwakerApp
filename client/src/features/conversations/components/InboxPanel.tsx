@@ -358,6 +358,8 @@ interface InboxPanelProps {
   onAgentSettings?: (agentId: number) => void;
   /** Called to deselect the active agent (e.g. when clicking Bob) */
   onDeselectAgent?: () => void;
+  /** Map of campaign ID → campaign name, used when grouping by campaign */
+  campaignsMap?: Map<number, string>;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -390,6 +392,7 @@ export function InboxPanel({
   activeAgentSessionId,
   onAgentSettings,
   onDeselectAgent,
+  campaignsMap,
 }: InboxPanelProps) {
   // Track which agent is expanded in the support tab
   const [expandedAgentId, setExpandedAgentId] = useState<number | null>(null);
@@ -459,9 +462,13 @@ export function InboxPanel({
         case "status":
           key = getStatus(t.lead) || "Unknown";
           break;
-        case "campaign":
-          key = t.lead.Campaign ?? t.lead.campaign_name ?? t.lead.campaign ?? "No Campaign";
+        case "campaign": {
+          const cId = Number(t.lead.campaigns_id ?? t.lead.campaign_id ?? t.lead.Campaigns_id ?? 0);
+          key = t.lead.Campaign ?? t.lead.campaign_name ?? t.lead.campaign
+            ?? (cId && campaignsMap?.get(cId))
+            ?? "No Campaign";
           break;
+        }
         case "ai_human":
           key = t.lead.manual_takeover ? "Human" : "AI";
           break;

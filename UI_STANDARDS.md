@@ -247,6 +247,8 @@ These components live in `client/src/components/ui/` and MUST be used instead of
 ### 5.3 Cards & Panels
 
 - Cards float on `--card` (`#F8F8F8`) above the `--background` (`#DEDEDE`) canvas.
+- **Widget cards in detail/list views:** `bg-white/60 dark:bg-white/[0.10]` (semi-transparent white, lets gradient backgrounds show through).
+- **Highlighted widget cards** (Key Metrics, Financials): `bg-white dark:bg-white/[0.12]` (pure white, fully opaque for prominence).
 - No visible borders on cards — depth comes from color contrast.
 - Detail panel right sidebar (LeadInfoPanel): 288px wide (`w-72`).
 - Full slide-over panel (LeadDetailPanel): Sheet component.

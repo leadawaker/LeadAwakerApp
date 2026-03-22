@@ -399,6 +399,26 @@
     "dnd": "Niet storen"
   },
 
+  "abTesting": {
+    "title": "A/B Test",
+    "variantA": "Variant A",
+    "variantB": "Variant B",
+    "leads": "Leads",
+    "response": "Respons",
+    "booking": "Boeking",
+    "qualification": "Gekwalificeerd",
+    "optOut": "Opt-out",
+    "avgMessages": "Gem. berichten",
+    "avgResponseTime": "Gem. reactietijd",
+    "winner": "Winnaar",
+    "confidence": "Betrouwbaarheid",
+    "needMore": "Nog ~{{count}} nodig voor 95%",
+    "noTest": "Geen A/B test actief",
+    "enabled": "A/B Testen",
+    "splitRatio": "% Variant B",
+    "split": "Verdeling"
+  },
+
   "copy": "Kopi\u00ebren",
 
   "tagsPage": {

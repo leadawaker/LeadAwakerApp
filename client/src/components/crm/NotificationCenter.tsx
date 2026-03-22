@@ -2,10 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useLocation } from "wouter";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { apiFetch } from "@/lib/apiUtils";
-import { apiRequest } from "@/lib/queryClient";
 import {
   Bell,
   MessageSquare,
@@ -26,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useNotificationStream } from "@/hooks/useNotificationStream";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -34,27 +32,16 @@ interface Notification {
   type: string;
   title: string;
   body: string | null;
-  lead_id?: number | null;
-  user_id?: number;
-  account_id?: number | null;
-  /** Legacy boolean field from existing API */
+  leadId?: number | null;
+  userId?: number;
+  accountId?: number | null;
   read?: boolean;
-  /** New field from SSE-backed hook (null = unread) */
-  read_at?: string | null;
   link: string | null;
-  created_at: string;
+  createdAt: string;
 }
 
-/** Normalize both old (read: boolean) and new (read_at: string | null) shapes */
 function isUnread(n: Notification): boolean {
-  if (typeof n.read === "boolean") return !n.read;
-  return n.read_at === null || n.read_at === undefined;
-}
-
-interface NotificationsResponse {
-  items: Notification[];
-  unreadCount: number;
-  totalCount: number;
+  return !n.read;
 }
 
 // ─── Icon map ──────────────────────────────────────────────────────────────
@@ -118,31 +105,10 @@ function groupNotifications(items: Notification[]): { group: TimeGroup; items: N
   const map = new Map<TimeGroup, Notification[]>();
   for (const g of order) map.set(g, []);
   for (const n of items) {
-    const g = getTimeGroup(n.created_at);
+    const g = getTimeGroup(n.createdAt);
     map.get(g)!.push(n);
   }
   return order.filter(g => map.get(g)!.length > 0).map(g => ({ group: g, items: map.get(g)! }));
-}
-
-// ─── Try to use the SSE-backed hook if available ──────────────────────────
-// Another agent creates useNotificationStream at @/hooks/useNotificationStream.
-// We try a dynamic require; if it doesn't exist yet, stream stays null and
-// we fall back to the existing useQuery-based fetching below.
-
-let useNotificationStream: (() => {
-  notifications: Notification[];
-  unreadCount: number;
-  markAsRead: (id: number) => void;
-  markAllAsRead: () => void;
-  deleteNotification: (id: number) => void;
-}) | null = null;
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mod = require("@/hooks/useNotificationStream");
-  useNotificationStream = mod.useNotificationStream || mod.default;
-} catch {
-  // Hook not yet available — fallback to query-based approach
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -159,40 +125,48 @@ export function NotificationCenter({
   const { t } = useTranslation("crm");
   const [, setLocation] = useLocation();
   const { isAgencyView } = useWorkspace();
-  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "messages" | "tasks" | "bookings" | "system">("all");
 
-  // ── SSE hook (preferred path, if the module exists) ───────────────────
-  const stream = useNotificationStream?.();
+  // ── SSE hook (real-time notifications via SSE + polling) ───────────────
+  const stream = useNotificationStream();
 
-  // ── Fallback: query-based fetch (when SSE hook isn't available) ───────
-  const { data: queryData, isLoading: queryLoading } = useQuery<NotificationsResponse>({
-    queryKey: ["/api/notifications", filter],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      params.set("limit", "50");
-      if (filter === "unread") params.set("unread", "true");
-      const res = await apiFetch(`/api/notifications?${params}`);
-      if (!res.ok) return { items: [], unreadCount: 0, totalCount: 0 };
-      return res.json() as Promise<NotificationsResponse>;
-    },
-    refetchInterval: open ? 30_000 : false,
-    staleTime: 15_000,
-    enabled: open && !stream,
-  });
+  // ── Data from SSE hook ─────────────────────────────────────────────────
+  const allItems = stream.notifications;
+  const isLoading = false; // Hook handles its own fetching; empty state shown naturally
 
-  // ── Unified data source ───────────────────────────────────────────────
-  const allItems = stream?.notifications ?? queryData?.items ?? [];
-  const isLoading = !stream && queryLoading;
+  // Type filter mapping: which notification types belong to each category
+  const TYPE_FILTER_MAP: Record<string, "messages" | "tasks" | "bookings" | "system"> = {
+    message: "messages",
+    lead_responded: "messages",
+    takeover: "messages",
+    lead_manual_takeover: "messages",
+    task: "tasks",
+    task_assigned: "tasks",
+    task_due_soon: "tasks",
+    task_overdue: "tasks",
+    booking: "bookings",
+    booking_confirmed: "bookings",
+    campaign: "system",
+    campaign_finished: "system",
+    system: "system",
+    escalation: "system",
+    automation: "system",
+    critical_automation_failure: "system",
+  };
 
   // Client-side filter + cap at 50 items
   const items = useMemo(() => {
     const limited = allItems.slice(0, 50);
-    if (filter === "unread") return limited.filter(n => isUnread(n));
-    return limited;
-  }, [allItems, filter]);
+    let filtered = limited;
+    if (filter === "unread") filtered = filtered.filter(n => isUnread(n));
+    if (typeFilter !== "all") {
+      filtered = filtered.filter(n => (TYPE_FILTER_MAP[n.type] || "system") === typeFilter);
+    }
+    return filtered;
+  }, [allItems, filter, typeFilter]);
 
-  const unreadCount = stream?.unreadCount ?? queryData?.unreadCount ?? 0;
+  const unreadCount = stream.unreadCount;
 
   // Push unread count to parent
   useEffect(() => {
@@ -200,62 +174,25 @@ export function NotificationCenter({
   }, [unreadCount, onUnreadCountChange]);
 
   // ── Mark single as read ─────────────────────────────────────────────────
-  const markReadMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("PATCH", `/api/notifications/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/count"] });
-    },
-  });
-
   const handleMarkAsRead = useCallback((id: number) => {
-    if (stream) {
-      stream.markAsRead(id);
-    } else {
-      markReadMutation.mutate(id);
-    }
-  }, [stream, markReadMutation]);
+    stream.markAsRead(id);
+  }, [stream]);
 
   // ── Mark all as read ────────────────────────────────────────────────────
-  const markAllReadMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/notifications/mark-all-read");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/count"] });
-    },
-  });
-
   const handleMarkAllAsRead = useCallback(() => {
-    if (stream) {
-      stream.markAllAsRead();
-    } else {
-      markAllReadMutation.mutate();
-    }
-  }, [stream, markAllReadMutation]);
+    stream.markAllAsRead();
+  }, [stream]);
 
   // ── Delete notification ───────────────────────────────────────────────
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/notifications/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/count"] });
-    },
-  });
-
   const handleDelete = useCallback((e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    if (stream) {
-      stream.deleteNotification(id);
-    } else {
-      deleteMutation.mutate(id);
-    }
-  }, [stream, deleteMutation]);
+    stream.deleteNotification(id);
+  }, [stream]);
+
+  // ── Delete all notifications ───────────────────────────────────────────
+  const handleDeleteAll = useCallback(() => {
+    stream.deleteAllNotifications();
+  }, [stream]);
 
   // ── Click handler ───────────────────────────────────────────────────────
   const handleNotificationClick = useCallback((n: Notification) => {
@@ -267,9 +204,9 @@ export function NotificationCenter({
     if (n.link) {
       onClose();
       setLocation(n.link);
-    } else if (n.lead_id) {
+    } else if (n.leadId) {
       // Default: navigate to leads with the lead preselected
-      sessionStorage.setItem("pendingLeadId", String(n.lead_id));
+      sessionStorage.setItem("pendingLeadId", String(n.leadId));
       onClose();
       const base = isAgencyView ? "/agency" : "/subaccount";
       setLocation(`${base}/leads`);
@@ -286,25 +223,39 @@ export function NotificationCenter({
           <span className="text-sm font-semibold tracking-tight" data-testid="text-notifications-title">
             {t("notifications.title")}
           </span>
-          <AnimatePresence>
-            {unreadCount > 0 && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.15 }}
-                onClick={handleMarkAllAsRead}
-                disabled={markAllReadMutation.isPending}
-                className="text-xs text-brand-indigo hover:text-brand-indigo/80 font-medium transition-colors duration-150 disabled:opacity-50"
-                data-testid="button-mark-all-read"
+          <div className="flex items-center gap-2">
+            <AnimatePresence>
+              {unreadCount > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={handleMarkAllAsRead}
+                  disabled={false}
+                  className="text-xs text-brand-indigo hover:text-brand-indigo/80 font-medium transition-colors duration-150 disabled:opacity-50"
+                  data-testid="button-mark-all-read"
+                >
+                  <div className="flex items-center gap-1">
+                    <Check className="h-3 w-3" />
+                    {t("notifications.markAllRead")}
+                  </div>
+                </motion.button>
+              )}
+            </AnimatePresence>
+            {allItems.length > 0 && (
+              <button
+                onClick={handleDeleteAll}
+                className="text-xs text-muted-foreground hover:text-red-500 font-medium transition-colors duration-150"
+                data-testid="button-clear-all"
               >
                 <div className="flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  {t("notifications.markAllRead")}
+                  <Trash2 className="h-3 w-3" />
+                  {t("notifications.clearAll")}
                 </div>
-              </motion.button>
+              </button>
             )}
-          </AnimatePresence>
+          </div>
         </div>
 
         {/* Filter tabs */}
@@ -329,6 +280,35 @@ export function NotificationCenter({
             </button>
           ))}
         </div>
+
+        {/* Type filter chips */}
+        <div className="flex items-center gap-1 pt-2 flex-wrap">
+          {(["all", "messages", "tasks", "bookings", "system"] as const).map((tf) => (
+            <button
+              key={tf}
+              onClick={() => setTypeFilter(tf)}
+              className={cn(
+                "h-6 px-2.5 rounded-full text-[11px] font-medium transition-all duration-200",
+                typeFilter === tf
+                  ? "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
+                  : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/40"
+              )}
+            >
+              {tf === "all" ? t("notifications.filterAll")
+                : tf === "messages" ? t("notifications.filterMessages")
+                : tf === "tasks" ? t("notifications.filterTasks")
+                : tf === "bookings" ? t("notifications.filterBookings")
+                : t("notifications.filterSystem")}
+            </button>
+          ))}
+        </div>
+
+        {/* Showing latest count */}
+        {allItems.length >= 50 && (
+          <p className="text-[11px] text-muted-foreground/50 pt-1.5">
+            {t("notifications.showingLatest", { count: 50 })}
+          </p>
+        )}
       </div>
 
       {/* ── List ── */}
@@ -375,7 +355,7 @@ export function NotificationCenter({
                 {groupItems.map((n, itemIdx) => {
                   const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.system;
                   const Icon = config.icon;
-                  const isClickable = !!(n.link || n.lead_id);
+                  const isClickable = !!(n.link || n.leadId);
 
                   return (
                     <motion.div
@@ -445,15 +425,15 @@ export function NotificationCenter({
                           className="text-[11px] text-muted-foreground/50 mt-1 block tabular-nums"
                           data-testid={`text-notification-at-${n.id}`}
                         >
-                          {timeAgo(n.created_at, t)}
+                          {timeAgo(n.createdAt, t)}
                         </span>
                       </div>
 
-                      {/* Delete button — visible on hover (desktop) */}
+                      {/* Delete button — always visible on mobile, hover on desktop */}
                       <button
                         onClick={(e) => handleDelete(e, n.id)}
-                        className="shrink-0 mt-0.5 p-1.5 rounded-md text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                        aria-label="Delete notification"
+                        className="shrink-0 mt-0.5 p-1.5 rounded-md text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                        aria-label={t("notifications.delete")}
                         data-testid={`button-delete-notification-${n.id}`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

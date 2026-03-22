@@ -80,7 +80,9 @@ export function OpportunitiesPage() {
     return false;
   });
 
-  const accountFilterId = selectedAccountId === "all" ? undefined : selectedAccountId;
+  const accountFilterId = selectedAccountId === "all"
+    ? (currentAccountId > 0 ? currentAccountId : undefined)
+    : selectedAccountId;
   const { campaigns } = useCampaigns(accountFilterId);
 
   /* Persist account/campaign selections */
@@ -108,10 +110,8 @@ export function OpportunitiesPage() {
   }, [selectedAccountId]);
 
   const filterAccountId =
-    isAgencyView && selectedAccountId === "all"
-      ? undefined
-      : selectedAccountId === "all"
-      ? undefined
+    selectedAccountId === "all"
+      ? (currentAccountId > 0 ? currentAccountId : undefined)
       : selectedAccountId;
   const { leads: rawLeads, loading, error, handleRefresh, setLeads } = useLeadsData(filterAccountId);
 

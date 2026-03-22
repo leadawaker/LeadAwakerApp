@@ -5,7 +5,9 @@ import {
   Pencil, X, RefreshCw, Camera,
   ChevronLeft, Linkedin, Mail, MapPin,
   ChevronDown, ChevronUp, Users, Sparkles,
+  UserPlus, Send,
 } from "lucide-react";
+import { EmailComposeModal } from "./EmailComposeModal";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
@@ -43,9 +45,14 @@ const PROSPECT_STATUS_HEX: Record<string, string> = {
 };
 
 const PRIORITY_HEX: Record<string, string> = {
-  High:   "#EF4444",
-  Medium: "#F59E0B",
-  Low:    "#94A3B8",
+  Urgent: "#DC2626", urgent: "#DC2626",
+  High:   "#EF4444", high:   "#EF4444",
+  Medium: "#F59E0B", medium: "#F59E0B",
+  Low:    "#3B82F6", low:    "#3B82F6",
+};
+
+const PRIORITY_LEVEL: Record<string, number> = {
+  Low: 1, low: 1, Medium: 2, medium: 2, High: 3, high: 3, Urgent: 4, urgent: 4,
 };
 
 // ── Edit input helpers ─────────────────────────────────────────────────────────
@@ -352,6 +359,9 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
     setCropSrc(null);
   }, [cropSrc]);
 
+  // ── Email compose state ──────────────────────────────────────────────────
+  const [emailComposeOpen, setEmailComposeOpen] = useState(false);
+
   const handleRemovePhoto = useCallback(async () => {
     await onSave("photo_url", "");
   }, [onSave]);
@@ -428,6 +438,22 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
 
   const handlePDF = useCallback(() => { window.print(); }, []);
 
+  // ── Convert to Account ────────────────────────────────────────────────────
+  const [converting, setConverting] = useState(false);
+  const handleConvertToAccount = useCallback(async () => {
+    if (converting) return;
+    setConverting(true);
+    try {
+      const { convertProspectToAccount } = await import("../api/prospectsApi");
+      await convertProspectToAccount(prospectId);
+      await onSave("status", "Converted");
+    } catch (err) {
+      console.error("Convert to account failed", err);
+    } finally {
+      setConverting(false);
+    }
+  }, [converting, prospectId, onSave]);
+
   const initials = getInitials(prospect.name || "?");
 
   const displayStatus     = isEditing ? (draft.status || status) : status;
@@ -461,8 +487,19 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
 
             <div className="flex-1 min-w-0" />
 
-            {/* Edit / Save / Cancel + PDF + Delete */}
+            {/* Send Email + Edit / Save / Cancel + PDF + Delete */}
             <div className="flex items-center gap-1 shrink-0">
+              {!isEditing && (prospect.email || prospect.contact_email || prospect.contact2_email) && (
+                <button
+                  onClick={() => setEmailComposeOpen(true)}
+                  className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px] border-brand-indigo text-brand-indigo"
+                >
+                  <Send className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    {t("emailCompose.sendEmail")}
+                  </span>
+                </button>
+              )}
               {isEditing ? (
                 <>
                   <button
@@ -586,16 +623,47 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
                   <span className={cn("w-1.5 h-1.5 rounded-full", getStatusDotCls(displayStatus))} />
                   {displayStatus}
                 </span>
-                {/* Priority badge */}
-                <span
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
-                  style={{
-                    backgroundColor: `${PRIORITY_HEX[displayPriority] || "#94A3B8"}18`,
-                    color: PRIORITY_HEX[displayPriority] || "#94A3B8",
-                  }}
-                >
-                  {displayPriority}
-                </span>
+                {/* Priority badge with dashes */}
+                {(() => {
+                  const level = PRIORITY_LEVEL[displayPriority] || 0;
+                  const color = PRIORITY_HEX[displayPriority] || "#94A3B8";
+                  return (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                      style={{ backgroundColor: `${color}30`, color }}
+                    >
+                      {displayPriority}
+                      <span className="inline-flex items-center gap-[3px]">
+                        {[1, 2, 3, 4].map((i) => (
+                          <span
+                            key={i}
+                            className="w-[8px] h-[2.5px] rounded-full"
+                            style={{ backgroundColor: i <= level ? color : "rgba(0,0,0,0.08)" }}
+                          />
+                        ))}
+                      </span>
+                    </span>
+                  );
+                })()}
+                {/* Convert to Account / Linked Account badge */}
+                {!isEditing && (
+                  prospect.status !== "Converted" && !prospect.Accounts_id ? (
+                    <button
+                      onClick={handleConvertToAccount}
+                      disabled={converting}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/80 text-foreground/70 border border-border/40 hover:bg-white hover:text-foreground transition-colors disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15"
+                    >
+                      {converting ? <RefreshCw className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3 w-3" />}
+                      {converting ? t("detail.converting") : t("detail.convertToAccount")}
+                    </button>
+                  ) : prospect.Accounts_id ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                      <Building2 className="h-3 w-3" />
+                      {t("detail.linkedAccount")} #{prospect.Accounts_id}
+                    </span>
+                  ) : null
+                )}
+
                 {/* Company */}
                 {(isEditing ? draft.company : prospect.company) && (
                   <span className="text-[11px] text-foreground/50 truncate">
@@ -837,6 +905,13 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
           onCancel={handleCropCancel}
         />
       )}
+
+      {/* Email compose modal */}
+      <EmailComposeModal
+        open={emailComposeOpen}
+        onOpenChange={setEmailComposeOpen}
+        prospect={prospect}
+      />
     </div>
   );
 }

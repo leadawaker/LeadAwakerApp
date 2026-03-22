@@ -8,7 +8,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
 import { useSession } from "@/hooks/useSession";
-import { apiFetch } from "@/lib/apiUtils";
+import { apiFetch, API_BASE } from "@/lib/apiUtils";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
@@ -100,7 +100,7 @@ const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.Elemen
   { id: "profile", labelKey: "sections.profile", icon: User },
   { id: "notifications", labelKey: "sections.notifications", icon: Bell },
   { id: "dashboard", labelKey: "sections.dashboard", icon: Clock },
-  { id: "team", labelKey: "sections.team", icon: Users, agencyOnly: true },
+  { id: "team", labelKey: "sections.team", icon: Users },
 ];
 
 // ── Reusable field component ─────────────────────────────────────────
@@ -347,6 +347,10 @@ function SettingsContent() {
   const [isResetting, setIsResetting] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
 
+  // ── Gmail integration state ──────────────────────────────────────
+  const [gmailStatus, setGmailStatus] = useState<{ connected: boolean; email?: string } | null>(null);
+  const [gmailLoading, setGmailLoading] = useState(false);
+
   // ── Notification state ─────────────────────────────────────────────
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(getDefaultNotifPrefs);
   const [isSavingNotifs, setIsSavingNotifs] = useState(false);
@@ -354,6 +358,32 @@ function SettingsContent() {
   const [pushDevices, setPushDevices] = useState<PushDevice[]>([]);
   const [isSubscribingPush, setIsSubscribingPush] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
+
+  // ── Gmail integration effects & handlers ─────────────────────────
+  useEffect(() => {
+    apiFetch("/api/gmail/oauth/status")
+      .then((r) => r.json())
+      .then((data) => setGmailStatus(data))
+      .catch(() => setGmailStatus({ connected: false }));
+  }, []);
+
+  const handleGmailConnect = () => {
+    setGmailLoading(true);
+    window.location.href = `${API_BASE}/api/gmail/oauth/authorize`;
+  };
+
+  const handleGmailDisconnect = async () => {
+    setGmailLoading(true);
+    try {
+      await apiFetch("/api/gmail/oauth/disconnect", { method: "POST" });
+      setGmailStatus({ connected: false });
+      toast({ title: t("gmail.disconnected") });
+    } catch {
+      toast({ title: t("gmail.disconnectError"), variant: "destructive" });
+    } finally {
+      setGmailLoading(false);
+    }
+  };
 
   // ── Theme state ────────────────────────────────────────────────────
 
@@ -557,10 +587,21 @@ function SettingsContent() {
     if (session.status !== "authenticated") return;
     setIsSubscribingPush(true);
     try {
+      // 0. Check browser permission status
+      if (typeof Notification !== "undefined" && Notification.permission === "denied") {
+        toast({ variant: "destructive", title: t("notifications.push.permissionDenied", "Notifications are blocked. Please allow them in your browser settings.") });
+        return;
+      }
+
       // 1. Get VAPID key
       const vapidRes = await apiFetch("/api/notifications/vapid-public-key");
       if (!vapidRes.ok) throw new Error("Failed to get VAPID key");
       const { publicKey } = await vapidRes.json();
+
+      if (!publicKey) {
+        toast({ variant: "destructive", title: t("notifications.push.notConfigured", "Push notifications are not configured on this server.") });
+        return;
+      }
 
       // 2. Register service worker and subscribe
       const registration = await navigator.serviceWorker.ready;
@@ -582,9 +623,14 @@ function SettingsContent() {
           device_label: navigator.userAgent,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save subscription");
 
-      // 4. Update local state
+      // If server POST failed, unsubscribe from pushManager and show error
+      if (!res.ok) {
+        await subscription.unsubscribe();
+        throw new Error(t("notifications.push.serverRegistrationFailed", "Could not register, please try again."));
+      }
+
+      // 4. Update local state only after server confirmed
       const saved = await res.json();
       setPushDevices((prev) => [...prev, {
         id: saved.id,
@@ -694,7 +740,7 @@ function SettingsContent() {
 
             {/* ── Crop/Zoom Dialog ──────────────────────────────── */}
             <Dialog open={!!cropImage} onOpenChange={(open) => { if (!open) setCropImage(null); }}>
-              <DialogContent className="sm:max-w-[360px]">
+              <DialogContent className="max-w-[90vw] sm:max-w-[360px]">
                 <DialogHeader>
                   <DialogTitle>{t("cropDialog.title")}</DialogTitle>
                 </DialogHeader>
@@ -1004,6 +1050,41 @@ function SettingsContent() {
               </div>
             </div>
           )}
+
+          {/* ── Gmail Integration (Agency only) ────────────────────── */}
+          {isAgencyUser && <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+              <Mail className="h-4 w-4 text-brand-indigo" />
+              {t("gmail.title")}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("gmail.description")}
+            </p>
+            {gmailStatus?.connected ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm text-foreground">{gmailStatus.email}</span>
+                </div>
+                <button
+                  onClick={handleGmailDisconnect}
+                  disabled={gmailLoading}
+                  className="text-xs text-red-500 hover:text-red-600 transition-colors font-medium"
+                >
+                  {gmailLoading ? "..." : t("gmail.disconnect")}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleGmailConnect}
+                disabled={gmailLoading}
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90 transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                {gmailLoading ? "..." : t("gmail.connect")}
+              </button>
+            )}
+          </div>}
         </>
       )}
     </div>
@@ -1185,7 +1266,7 @@ function SettingsContent() {
         {overridesOpen && (
           <div className="px-4 pb-4 pt-2 border-t border-border/15">
             {/* Column headers */}
-            <div className="grid grid-cols-[1fr_4rem_4rem] gap-1 mb-2.5 px-1">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 mb-2.5 px-1">
               <div />
               <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center">
                 {t("notifications.overrides.telegram")}
@@ -1202,7 +1283,7 @@ function SettingsContent() {
                 return (
                   <div
                     key={nt.key}
-                    className="grid grid-cols-[1fr_4rem_4rem] gap-1 items-center rounded-lg px-1 py-2 hover:bg-background/40 transition-colors duration-150 group"
+                    className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 items-center rounded-lg px-1 py-2 hover:bg-background/40 transition-colors duration-150 group"
                     data-testid={`row-override-${nt.key}`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -1248,6 +1329,7 @@ function SettingsContent() {
           </div>
         )}
       </div>
+
     </div>
   );
 
@@ -1264,7 +1346,7 @@ function SettingsContent() {
             {t("dashboard.current")} <span className="font-semibold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2" data-testid="refresh-interval-options">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" data-testid="refresh-interval-options">
           {REFRESH_INTERVAL_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -1628,7 +1710,7 @@ function SettingsContent() {
           <div className={cn(
             (activeSection === "team" || activeSection === "account")
               ? "flex-1 flex flex-col min-h-0 overflow-y-auto"
-              : "px-6 max-w-2xl",
+              : "px-4 md:px-6 max-w-2xl",
           )}>
             {renderActiveSection()}
           </div>

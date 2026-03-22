@@ -40,13 +40,13 @@ import { TagVisibilityContext } from "../context/TagVisibilityContext";
 
 // ── Expand-on-hover button classes (§28) ─────────────────────────────
 const xBase =
-  "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+  "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 md:hover:max-w-[200px]";
 const xDefault = "border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground";
 const xActive = "border-brand-indigo text-brand-indigo";
 // When filter is active, button stays expanded (override max-w and show label)
 const xExpanded = "!max-w-[200px]";
 const xSpan =
-  "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+  "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 md:group-hover:opacity-100 transition-opacity duration-150";
 const xSpanVisible = "whitespace-nowrap pl-1.5 pr-2.5 opacity-100";
 
 // ── localStorage helpers ─────────────────────────────────────────────
@@ -212,7 +212,7 @@ export default function TasksPage() {
   const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
 
   // Transient state
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>(() => loadLocal<string[]>("tasks-filter-tags", []));
   const [filterStatuses, setFilterStatuses] = useState<TaskStatus[]>(() => loadLocal<TaskStatus[]>("tasks-filter-statuses", ["todo", "in_progress"]));
@@ -409,7 +409,7 @@ export default function TasksPage() {
   const toolbarButtons = (
     <>
       {/* 1. Add */}
-      <button onClick={handleCreate} className={cn(xBase, "hover:max-w-[90px]", xDefault)} title={t("create.title")}>
+      <button onClick={handleCreate} className={cn(xBase, "md:hover:max-w-[90px]", xDefault)} title={t("create.title")}>
         <Plus className="h-4 w-4 shrink-0" />
         <span className={xSpan}>{t("toolbar.add")}</span>
       </button>
@@ -426,7 +426,7 @@ export default function TasksPage() {
       {/* 3. Status filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[140px]", filterStatuses.length > 0 ? [xActive, xExpanded] : xDefault)} title="Status">
+          <button className={cn(xBase, "md:hover:max-w-[140px]", filterStatuses.length > 0 ? [xActive, xExpanded] : xDefault)} title="Status">
             <Filter className="h-4 w-4 shrink-0" />
             <span className={filterStatuses.length > 0 ? xSpanVisible : xSpan}>
               {filterStatuses.length > 0
@@ -447,7 +447,7 @@ export default function TasksPage() {
       {/* 4. Priority filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[140px]", filterPriorities.length > 0 ? [xActive, xExpanded] : xDefault)} title="Priority">
+          <button className={cn(xBase, "md:hover:max-w-[140px]", filterPriorities.length > 0 ? [xActive, xExpanded] : xDefault)} title="Priority">
             <Gauge className="h-4 w-4 shrink-0" />
             <span className={filterPriorities.length > 0 ? xSpanVisible : xSpan}>
               {filterPriorities.length > 0
@@ -468,7 +468,7 @@ export default function TasksPage() {
       {/* 5. Category filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[160px]", selectedCategoryId !== null ? [xActive, xExpanded] : xDefault)} title="Category">
+          <button className={cn(xBase, "md:hover:max-w-[160px]", selectedCategoryId !== null ? [xActive, xExpanded] : xDefault)} title="Category">
             <FolderOpen className="h-4 w-4 shrink-0" />
             <span className={selectedCategoryId !== null ? xSpanVisible : xSpan}>
               {selectedCategoryId !== null
@@ -488,7 +488,7 @@ export default function TasksPage() {
       {/* 6. Tags filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[140px]", filterTags.length > 0 ? [xActive, xExpanded] : xDefault)} title="Tags">
+          <button className={cn(xBase, "md:hover:max-w-[140px]", filterTags.length > 0 ? [xActive, xExpanded] : xDefault)} title="Tags">
             <Tag className="h-4 w-4 shrink-0" />
             <span className={filterTags.length > 0 ? xSpanVisible : xSpan}>
               {filterTags.length > 0 ? filterTags.join(", ") : "Tags"}
@@ -507,7 +507,7 @@ export default function TasksPage() {
       {viewMode === "gantt" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[100px]", ganttMaxDepth !== null ? [xActive, xExpanded] : xDefault)} title="Levels">
+            <button className={cn(xBase, "md:hover:max-w-[100px]", ganttMaxDepth !== null ? [xActive, xExpanded] : xDefault)} title="Levels">
               <Layers className="h-4 w-4 shrink-0" />
               <span className={ganttMaxDepth !== null ? xSpanVisible : xSpan}>
                 {ganttMaxDepth !== null ? `L${ganttMaxDepth}` : "Levels"}
@@ -526,7 +526,7 @@ export default function TasksPage() {
       {/* 8. Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[160px]", sort !== "due_date_asc" ? [xActive, xExpanded] : xDefault)} title={t("toolbar.sort")}>
+          <button className={cn(xBase, "md:hover:max-w-[160px]", sort !== "due_date_asc" ? [xActive, xExpanded] : xDefault)} title={t("toolbar.sort")}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
             <span className={sort !== "due_date_asc" ? xSpanVisible : xSpan}>
               {sort !== "due_date_asc" ? t(SORT_KEYS[sort] ?? "Sort") : t("toolbar.sort")}
@@ -545,7 +545,7 @@ export default function TasksPage() {
       {/* 5. Date range filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[140px]", dateRange !== "all" ? [xActive, xExpanded] : xDefault)} title="Filter by date">
+          <button className={cn(xBase, "md:hover:max-w-[140px]", dateRange !== "all" ? [xActive, xExpanded] : xDefault)} title="Filter by date">
             <CalendarDays className="h-4 w-4 shrink-0" />
             <span className={dateRange !== "all" ? xSpanVisible : xSpan}>
               {DATE_RANGE_OPTIONS.find((o) => o.value === dateRange)?.label ?? "Date"}
@@ -569,7 +569,7 @@ export default function TasksPage() {
       {!isMobile && viewMode === "table" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[90px]", tableGroupBy !== "none" ? xActive : xDefault)} title={t("toolbar.groupBy")}>
+            <button className={cn(xBase, "md:hover:max-w-[90px]", tableGroupBy !== "none" ? xActive : xDefault)} title={t("toolbar.groupBy")}>
               <Layers className="h-4 w-4 shrink-0" />
               <span className={xSpan}>{t("toolbar.groupBy")}</span>
             </button>
@@ -592,7 +592,7 @@ export default function TasksPage() {
       {!isMobile && viewMode === "table" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[90px]", xDefault)} title="Fields">
+            <button className={cn(xBase, "md:hover:max-w-[90px]", xDefault)} title="Fields">
               <Columns3 className="h-4 w-4 shrink-0" />
               <span className={xSpan}>Fields</span>
             </button>
@@ -628,7 +628,7 @@ export default function TasksPage() {
       {!isMobile && viewMode === "table" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[100px]", xDefault)} title="Settings">
+            <button className={cn(xBase, "md:hover:max-w-[100px]", xDefault)} title="Settings">
               <Settings className="h-4 w-4 shrink-0" />
               <span className={xSpan}>Settings</span>
             </button>
@@ -665,19 +665,19 @@ export default function TasksPage() {
       <div className="h-full min-h-0 flex flex-col overflow-hidden bg-muted rounded-lg" data-testid="page-tasks">
 
         {/* Header: title + view switcher + toolbar */}
-        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none] max-w-[1386px] w-full mr-auto">
-          <h2 className="text-2xl font-semibold font-heading text-foreground shrink-0">{t("page.title")}</h2>
-          {!isMobile && <ViewSwitcher value={viewMode} onChange={handleViewMode} />}
-          <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-          <div className="flex items-center gap-1.5">
-            {toolbarButtons}
+        <div className="pl-[17px] pr-3.5 pt-4 md:pt-10 pb-3 shrink-0 flex items-center gap-3 max-w-[1386px] w-full mr-auto">
+          {/* Left section: title + toolbar (scrolls horizontally if needed) */}
+          <div className="flex-1 min-w-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+            <h2 className="text-2xl font-semibold font-heading text-foreground shrink-0">{t("page.title")}</h2>
+            {!isMobile && <ViewSwitcher value={viewMode} onChange={handleViewMode} />}
+            <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+            <div className="flex items-center gap-1.5">
+              {toolbarButtons}
+            </div>
           </div>
-          {/* Gantt controls portal target (right side of header) */}
+          {/* Right section: gantt controls (always visible at right edge) */}
           {viewMode === "gantt" && (
-            <>
-              <span className="flex-1" />
-              <div ref={ganttToolbarRef} className="flex items-center gap-1 shrink-0" />
-            </>
+            <div ref={ganttToolbarRef} className="flex items-center gap-1 shrink-0" />
           )}
         </div>
 

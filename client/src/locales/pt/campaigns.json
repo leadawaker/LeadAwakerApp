@@ -387,6 +387,26 @@
     "dnd": "N\u00e3o Perturbe"
   },
 
+  "abTesting": {
+    "title": "Teste A/B",
+    "variantA": "Variante A",
+    "variantB": "Variante B",
+    "leads": "Leads",
+    "response": "Resposta",
+    "booking": "Agendamento",
+    "qualification": "Qualificado",
+    "optOut": "Opt-out",
+    "avgMessages": "Msgs médias",
+    "avgResponseTime": "Tempo médio resposta",
+    "winner": "Vencedor",
+    "confidence": "Confiança",
+    "needMore": "Precisa de ~{{count}} mais para 95%",
+    "noTest": "Nenhum teste A/B ativo",
+    "enabled": "Teste A/B",
+    "splitRatio": "% Variante B",
+    "split": "Divisão"
+  },
+
   "copy": "Copiar",
 
   "tagsPage": {

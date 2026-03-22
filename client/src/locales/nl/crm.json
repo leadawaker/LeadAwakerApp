@@ -208,6 +208,15 @@
     "allCaughtUp": "Alles bijgewerkt!",
     "noUnread": "Geen ongelezen meldingen.",
     "noNotifications": "Nog geen meldingen.",
-    "older": "Ouder"
+    "older": "Ouder",
+    "loading": "Laden...",
+    "clearAll": "Alles wissen",
+    "delete": "Melding verwijderen",
+    "showingLatest": "Laatste {{count}} weergegeven",
+    "filterAll": "Alle",
+    "filterMessages": "Berichten",
+    "filterTasks": "Taken",
+    "filterBookings": "Boekingen",
+    "filterSystem": "Systeem"
   }
 }

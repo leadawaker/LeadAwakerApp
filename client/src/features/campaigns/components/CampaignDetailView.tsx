@@ -51,8 +51,11 @@ import {
   Repeat,
   Thermometer,
   Cpu,
+  FlaskConical,
+  Percent,
+  Palette,
 } from "lucide-react";
-// Gradient tester removed — gradient is baked in
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -571,6 +574,174 @@ function EditToggle({
   );
 }
 
+// ── A/B Test Card ────────────────────────────────────────────────────────────
+
+function ABTestCard({ campaign }: { campaign: Campaign }) {
+  const { t } = useTranslation("campaigns");
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/campaigns/${campaign.id}/ab-stats`, {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then(setStats)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [campaign.id]);
+
+  if (loading) {
+    return (
+      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0" data-testid="campaign-detail-view-ab">
+        <div className="flex items-center min-h-[36px] shrink-0">
+          <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">
+            {t("abTesting.title")}
+          </span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse text-muted-foreground text-xs">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasData = stats?.variants && (stats.variants.A || stats.variants.B);
+
+  return (
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0" data-testid="campaign-detail-view-ab">
+      {/* Header */}
+      <div className="flex items-center justify-between min-h-[36px] shrink-0">
+        <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">
+          {t("abTesting.title")}
+        </span>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {stats?.split_ratio != null ? `${100 - stats.split_ratio}/${stats.split_ratio}` : "50/50"}
+        </span>
+      </div>
+
+      {!hasData ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+          <FlaskConical className="w-8 h-8 opacity-20" />
+          <span className="text-xs">{t("abTesting.noTest")}</span>
+        </div>
+      ) : (
+        <>
+          {/* Legend */}
+          <div className="flex items-center gap-4">
+            {(["A", "B"] as const).map((v) => {
+              const isWinner = stats.winner === v;
+              return (
+                <div key={v} className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-sm ${v === "A" ? "bg-indigo-500" : "bg-transparent ring-1 ring-indigo-500"}`} />
+                  <span className={`text-xs font-medium ${isWinner ? "text-amber-400" : "text-foreground"}`}>
+                    {v}{isWinner ? " ✦" : ""}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {stats.variants[v]?.leads ?? 0} leads
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Comparison rows */}
+          <div className="flex flex-col gap-3">
+            {[
+              { key: "response", label: t("abTesting.response"), field: "response_rate", pct: true },
+              { key: "qualification", label: t("abTesting.qualification"), field: "qualification_rate", pct: true },
+              { key: "booking", label: t("abTesting.booking"), field: "booking_rate", pct: true },
+              { key: "optout", label: t("abTesting.optOut"), field: "optout_rate", pct: true, invert: true },
+              { key: "avgMsgs", label: t("abTesting.avgMessages"), field: "avg_messages", pct: false, invert: true },
+              { key: "avgTime", label: t("abTesting.avgResponseTime"), field: "avg_response_time_min", pct: false, suffix: "m", invert: true },
+            ].map(({ key, label, field, pct, invert, suffix }) => {
+              const a = stats.variants.A?.[field] ?? 0;
+              const b = stats.variants.B?.[field] ?? 0;
+              const max = Math.max(a, b) || 1;
+              const fmt = (v: number) => pct ? `${(v * 100).toFixed(0)}%` : `${v.toFixed(1)}${suffix ?? ""}`;
+              const better = invert ? (a < b && a > 0 ? "A" : b < a && b > 0 ? "B" : null) : (a > b ? "A" : b > a ? "B" : null);
+              return (
+                <div key={key} className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
+                    {better && (
+                      <span className="text-[10px] text-amber-400 font-semibold">{better} ✦</span>
+                    )}
+                  </div>
+                  {(["A", "B"] as const).map((v) => {
+                    const val = v === "A" ? a : b;
+                    const wPct = pct ? val * 100 : (max > 0 ? (val / max) * 100 : 0);
+                    const w = Math.max(wPct, val > 0 ? 6 : 0);
+                    const isSolid = v === "A";
+                    const text = fmt(val);
+                    return (
+                      <div key={v} className="relative h-6">
+                        {/* Bar fill */}
+                        <div
+                          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ${
+                            isSolid ? "bg-indigo-500" : "border border-indigo-500/60 bg-indigo-500/8"
+                          }`}
+                          style={{ width: `${w}%`, minWidth: w > 0 ? "24px" : "0" }}
+                        />
+                        {isSolid ? (
+                          <>
+                            {/* White text clipped to bar width */}
+                            <div className="absolute inset-0 flex items-center px-3 overflow-hidden" style={{ width: `${w}%`, minWidth: w > 0 ? "24px" : "0" }}>
+                              <span className="font-mono text-[11px] font-medium text-white whitespace-nowrap">{text}</span>
+                            </div>
+                            {/* Dark text for the part outside the bar */}
+                            <div className="absolute inset-0 flex items-center px-3 overflow-hidden" style={{ clipPath: `inset(0 0 0 ${w}%)` }}>
+                              <span className="font-mono text-[11px] font-medium text-foreground whitespace-nowrap">{text}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center px-3">
+                            <span className="font-mono text-[11px] font-medium text-foreground">{text}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Confidence */}
+          {stats.confidence > 0 && (
+            <div className="flex flex-col gap-2 pt-3 border-t border-border/30">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">{t("abTesting.confidence")}</span>
+                <span className={`font-mono font-semibold ${stats.confidence >= 0.95 ? "text-emerald-500" : stats.confidence >= 0.7 ? "text-amber-500" : "text-indigo-400"}`}>
+                  {(stats.confidence * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-border/40 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${stats.confidence * 100}%`,
+                    background: stats.confidence >= 0.95
+                      ? "linear-gradient(90deg, #10b981, #34d399)"
+                      : stats.confidence >= 0.7
+                        ? "linear-gradient(90deg, #f59e0b, #fbbf24)"
+                        : "linear-gradient(90deg, #6366f1, #818cf8)",
+                  }}
+                />
+              </div>
+              {stats.leads_needed_for_95pct > 0 && (
+                <span className="text-[10px] text-muted-foreground">
+                  {t("abTesting.needMore", { count: stats.leads_needed_for_95pct })}
+                </span>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Contract select for edit mode ─────────────────────────────────────────────
 
 function ContractSelect({
@@ -640,15 +811,21 @@ const FUNNEL_STAGES = [
 function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
   const { t } = useTranslation("campaigns");
   const { leads, loading } = useLeads(undefined, campaignId);
+  const hadDataOnce = useRef(false);
   // hoveredKey: transient (mouse-over only), cleared on mouse-leave
   // lockedKey:  persists on click, cleared on click-away or re-click
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [lockedKey,  setLockedKey]  = useState<string | null>(null);
 
-  // Reset selection whenever the campaign changes
+  // Track whether the entrance animation has already played
+  const hasAnimated = useRef(false);
+
+  // Reset selection and animation flag whenever the campaign changes
   useEffect(() => {
     setHoveredKey(null);
     setLockedKey(null);
+    hasAnimated.current = false;
+    hadDataOnce.current = false;
   }, [campaignId]);
 
   // Effective active key: hover takes priority, then locked, then none
@@ -681,7 +858,19 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
   const displayCount = activeStage ? activeStage.count : total;
   const displayLabel = activeStage ? activeStage.label : t("summary.totalLeads");
 
-  if (loading) {
+  // After the first render with data, mark animation as done
+  const skipAnim = hasAnimated.current;
+  useEffect(() => {
+    if (hasData && !hasAnimated.current) {
+      hasAnimated.current = true;
+    }
+    if (hasData || leads.length > 0) {
+      hadDataOnce.current = true;
+    }
+  });
+
+  // Only show skeleton on the very first load, not on refetches
+  if (loading && !hadDataOnce.current) {
     return (
       <>
         <div className="flex justify-center">
@@ -718,6 +907,7 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
           strokeWidth={22}
           animationDuration={1.0}
           animationDelayPerSegment={0.04}
+          skipAnimation={skipAnim}
           activeKey={activeKey}
           onSegmentHover={(seg) => setHoveredKey(seg?.key ?? null)}
           onSegmentClick={(seg) => setLockedKey(prev => prev !== null ? null : (seg.key ?? null))}
@@ -758,6 +948,7 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
           const widthPct   = hasCount ? Math.max((stage.count / maxCount) * 100, 4) : 0;
           const pct        = total > 0 && hasCount ? ((stage.count / total) * 100).toFixed(0) : null;
           const barColor   = isDimmed ? tintColor(stage.color, 0.72) : stage.color;
+          const barH       = isActive ? "22px" : "20px";
 
           return (
             <div
@@ -788,36 +979,38 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
                   >
                     {stage.count.toLocaleString()}
                   </span>
-                  {pct && (
-                    <span
-                      className="text-[10px] tabular-nums"
-                      style={{
-                        color: isDimmed ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.3)",
-                        transition: "color 150ms ease",
-                      }}
-                    >
-                      {pct}%
-                    </span>
-                  )}
                 </div>
               </div>
               {/* Progress bar */}
               <div
-                className="w-full rounded-full overflow-hidden bg-foreground/[0.03]"
+                className="w-full rounded-full overflow-hidden bg-foreground/[0.03] relative"
                 style={{
-                  height: isActive ? "6px" : "4px",
-                  transition: "height 150ms ease",
+                  height: barH,
+                  transition: "height 250ms ease",
                 }}
               >
                 {hasCount && (
                   <div
-                    className="h-full rounded-full"
+                    className="h-full rounded-full relative"
                     style={{
                       width: `${widthPct}%`,
                       backgroundColor: barColor,
                       transition: "background-color 150ms ease, width 300ms ease",
                     }}
-                  />
+                  >
+                    {pct && (
+                      <span
+                        className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white tabular-nums select-none"
+                        style={{
+                          textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                          opacity: isDimmed ? 0.5 : 1,
+                          transition: "opacity 150ms ease",
+                        }}
+                      >
+                        {pct}%
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -825,6 +1018,19 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
         })}
       </div>
     </>
+  );
+}
+
+function PipelineCardWrapper({ campaignId }: { campaignId: number }) {
+  const { t } = useTranslation("campaigns");
+
+  return (
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-funnel">
+      <div className="flex items-center min-h-[36px]">
+        <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.pipeline")}</span>
+      </div>
+      <PipelineAndDonutWidget campaignId={campaignId} />
+    </div>
   );
 }
 
@@ -844,7 +1050,7 @@ function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger, bo
   const showSparkline = trendData && trendData.length > 1;
   return (
     <div
-      className={cn("rounded-xl bg-white/50 dark:bg-white/[0.08] p-4 md:p-8 flex flex-col items-center justify-center text-center", borderColor && "border-t-2")}
+      className={cn("rounded-xl bg-white dark:bg-white/[0.12] p-4 md:p-8 flex flex-col items-center justify-center text-center", borderColor && "border-t-2")}
       style={borderColor ? { borderTopColor: borderColor } : undefined}
     >
       <div className="text-[22px] md:text-[28px] font-black text-foreground tabular-nums leading-none">{display}</div>
@@ -1076,11 +1282,11 @@ function FinancialsWidget({
       {/* 2-up: Total Spend + Cost / Booking — agency only */}
       {isAgencyUser && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
+          <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.totalSpend")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrency(totalCost)}</div>
           </div>
-          <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
+          <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.costPerBooking")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrencyDecimals(costPerBooking)}</div>
           </div>
@@ -1089,13 +1295,13 @@ function FinancialsWidget({
 
       {/* 2-up: Value / Booking + Payment Trigger */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
+        <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.valuePerBooking")}</div>
           <div className="text-[18px] font-bold tabular-nums text-foreground">
             {valuePB > 0 ? fmtCurrency(valuePB) : "—"}
           </div>
         </div>
-        <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
+        <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.paymentTrigger")}</div>
           <div className="text-[13px] font-semibold text-foreground leading-snug">
             {paymentTrigger ? (paymentTriggerLabel[paymentTrigger] ?? paymentTrigger) : "—"}
@@ -1105,7 +1311,7 @@ function FinancialsWidget({
 
       {/* Projected Revenue — agency only */}
       {isAgencyUser && hasContractOrValue && (
-        <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
+        <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider">{t("financials.projectedRevenue")}</div>
             {paymentTrigger === "sale_closed" && (
@@ -1128,7 +1334,7 @@ function FinancialsWidget({
       )}
 
       {/* ROI — large display */}
-      <div className="rounded-xl bg-white/50 dark:bg-white/[0.08] px-3 py-3">
+      <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
         <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.returnOnInvestment")}</div>
         <div className={cn("text-[28px] font-black tabular-nums leading-none", getRoiColor(roiValue))}>
           {roiValue != null ? `${roiValue >= 0 ? "+" : ""}${roiValue.toFixed(0)}%` : "—"}
@@ -1265,14 +1471,12 @@ export function CampaignDetailViewEmpty({ compact = false }: { compact?: boolean
     <div className="relative h-full flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
       {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
-      {!compact && (
-        <>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
-        </>
-      )}
+      <>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
+      </>
 
       <div className="relative z-10">
         <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 flex items-center justify-center ring-1 ring-amber-200/50 dark:ring-amber-700/30">
@@ -1528,7 +1732,30 @@ export function CampaignDetailView({
     ? t("meta.duration", { count: durationDays })
     : null;
 
-  // (Gradient tester removed — gradient is now baked in)
+  // ── Gradient tester (agency-only) ─────────────────────────────────────────
+  const GRADIENT_KEY = "la:gradient:campaigns";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+  const toggleGradientTester = useCallback(() => {
+    setGradientTesterOpen(prev => {
+      if (!prev && savedGradient) setGradientLayers(savedGradient);
+      return !prev;
+    });
+  }, [savedGradient]);
 
   // ── Inline editing state ────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
@@ -1767,7 +1994,24 @@ export function CampaignDetailView({
 
       {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
-      {!compact && (
+      {gradientTesterOpen ? (
+        <>
+          {gradientLayers.map(layer => {
+            const style = layerToStyle(layer);
+            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+          })}
+          {gradientDragMode && (
+            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+          )}
+        </>
+      ) : savedGradient ? (
+        <>
+          {savedGradient.map((layer: GradientLayer) => {
+            const style = layerToStyle(layer);
+            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+          })}
+        </>
+      ) : (
         <>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
@@ -1960,6 +2204,16 @@ export function CampaignDetailView({
                   <RefreshCw className="h-4 w-4 shrink-0" />
                   <span className={xSpan}>{t("toolbar.refresh")}</span>
                 </button>
+                {isAgencyUser && (
+                  <button
+                    onClick={toggleGradientTester}
+                    className={cn(xBase, "hover:max-w-[120px]", gradientTesterOpen ? xActive : xDefault)}
+                    title="Gradient Tester"
+                  >
+                    <Palette className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Gradient</span>
+                  </button>
+                )}
                 {onDuplicate && (
                   <DuplicateButton campaign={campaign} onDuplicate={onDuplicate} t={t} />
                 )}
@@ -2527,18 +2781,14 @@ export function CampaignDetailView({
 
         {/* ── Summary tab — 3-col grid, rows auto-match heights ── */}
         {activeTab === "summary" && (
-          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 md:grid-cols-3 md:grid-rows-[680px_680px] gap-[3px]", "max-w-[1386px] w-full mr-auto")}>
+          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px]", "max-w-[1386px] w-full mr-auto")}>
 
             {/* ── Row 1, Col 1: Pipeline + Donut ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-funnel">
-              <div className="flex items-center min-h-[36px]">
-                <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.pipeline")}</span>
-              </div>
-              <PipelineAndDonutWidget campaignId={campaign.id || (campaign as any).Id} />
-            </div>
+            <PipelineCardWrapper campaignId={campaign.id || (campaign as any).Id} />
+
 
             {/* ── Row 1, Col 2: Key Metrics + Performance Trends ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-metrics">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-metrics">
               <div className="flex items-center justify-between gap-2 min-h-[36px]">
                 <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.keyMetrics")}</span>
                 <DateRangeFilter
@@ -2619,47 +2869,51 @@ export function CampaignDetailView({
             </div>
 
             {/* ── Row 1, Col 3: Up Next ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-agenda">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-agenda">
               <div className="flex items-center min-h-[32px] shrink-0">
                 <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.upNext")}</span>
               </div>
               <AgendaWidget accountId={undefined} className="flex-1 min-h-0 bg-transparent" hideHeader />
             </div>
 
-            {/* ── Row 2, Col 1: Activity Feed ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-activity">
-              <div className="flex items-center min-h-[36px] shrink-0">
-                <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.activity")}</span>
-              </div>
-
-              {/* Daily capacity */}
-              {dailyStats && (
-                <div className="bg-white/90 dark:bg-white/[0.06] rounded-lg px-4 py-3 flex flex-col gap-2 shrink-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Daily Capacity</span>
-                    <span className="text-[11px] text-muted-foreground tabular-nums">
-                      {dailyStats.sentToday.toLocaleString()} / {dailyStats.dailyLimit.toLocaleString()} · resets midnight
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full bg-black/[0.07] dark:bg-white/[0.08] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(100, (dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit)) * 100)}%`,
-                        backgroundColor:
-                          dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.9 ? "#ef4444" :
-                          dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.7 ? "#f59e0b" : "#3ACBDF",
-                      }}
-                    />
-                  </div>
+            {/* ── Row 2, Col 1: Activity Feed or A/B Test ── */}
+            {campaign.ab_enabled ? (
+              <ABTestCard campaign={campaign} />
+            ) : (
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-activity">
+                <div className="flex items-center min-h-[36px] shrink-0">
+                  <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.activity")}</span>
                 </div>
-              )}
 
-              <ActivityFeed accountId={undefined} className="flex-1 min-h-0" />
-            </div>
+                {/* Daily capacity */}
+                {dailyStats && (
+                  <div className="bg-white/90 dark:bg-white/[0.06] rounded-lg px-4 py-3 flex flex-col gap-2 shrink-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Daily Capacity</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {dailyStats.sentToday.toLocaleString()} / {dailyStats.dailyLimit.toLocaleString()} · resets midnight
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-black/[0.07] dark:bg-white/[0.08] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(100, (dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit)) * 100)}%`,
+                          backgroundColor:
+                            dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.9 ? "#ef4444" :
+                            dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.7 ? "#f59e0b" : "#3ACBDF",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <ActivityFeed accountId={undefined} className="flex-1 min-h-0" />
+              </div>
+            )}
 
             {/* ── Row 2, Col 2: Financials + ROI Trend ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-conversions">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-conversions">
               <div className="flex items-center min-h-[36px]">
                 <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.financials")}</span>
               </div>
@@ -2702,7 +2956,7 @@ export function CampaignDetailView({
             </div>
 
             {/* ── Row 2, Col 3: AI Summary ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-ai-summary">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-ai-summary">
               <div className="flex items-center min-h-[36px] shrink-0">
                 <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.aiAnalysis")}</span>
               </div>
@@ -2719,10 +2973,10 @@ export function CampaignDetailView({
 
         {/* ── Configurations tab ── */}
         {activeTab === "configurations" && (
-          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 md:grid-cols-3 gap-[3px] md:h-full", "max-w-[1386px] w-full mr-auto")}>
+          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px]", "max-w-[1386px] w-full mr-auto")}>
 
             {/* Column 1: Business & Campaign Info */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
               <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Business & Campaign</h3>
 
               <SectionHeader label="Business Info" />
@@ -2752,7 +3006,7 @@ export function CampaignDetailView({
             </div>
 
             {/* Column 2: AI Settings */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
               <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.aiSettings")}</h3>
               <SectionHeader label="Agent" />
               <InfoRow icon={Bot} label={t("config.agent")} value={campaign.agent_name}
@@ -3006,7 +3260,7 @@ export function CampaignDetailView({
 
               <SectionHeader label={t("config.aiSettings")} />
               <InfoRow icon={Cpu} label={t("config.model")} value={campaign.ai_model || "Default"}
-                editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1", "gpt-5.1-mini", "gpt-5.1"]} /> : undefined}
+                editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4-mini", "gpt-5.2", "gpt-5.1", "gpt-5.1-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} /> : undefined}
               />
               <InfoRow icon={Thermometer} label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
                 editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}
@@ -3015,7 +3269,7 @@ export function CampaignDetailView({
             </div>
 
             {/* Column 3: Behavior */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto">
               <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Behavior</h3>
 
                 <SectionHeader label="Campaign Settings" />
@@ -3042,7 +3296,7 @@ export function CampaignDetailView({
                   <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("config.bookingMode")}</span>
                   {isEditing ? (
                     <div className="flex gap-1 flex-wrap">
-                      {(["Call Agent", "Direct Booking"] as const).map((mode) => (
+                      {(["Call Agent", "Direct Booking", "Qualifying"] as const).map((mode) => (
                         <button
                           key={mode}
                           type="button"
@@ -3061,6 +3315,34 @@ export function CampaignDetailView({
                   ) : (
                     <span className="text-[12px] text-foreground">
                       {campaign.booking_mode_override || "—"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Typo Count */}
+                <div className="flex flex-col gap-0.5 py-2 border-b border-border/20">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">Typos per chat</span>
+                  {isEditing ? (
+                    <div className="flex gap-1">
+                      {([0, 1, 2, 3] as const).map((count) => (
+                        <button
+                          key={count}
+                          type="button"
+                          onClick={() => setDraft(d => ({ ...d, typo_count: count }))}
+                          className={cn(
+                            "text-[11px] font-medium w-8 h-7 rounded-full border transition-colors",
+                            (draft.typo_count ?? 1) === count
+                              ? "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo"
+                              : "border-black/[0.125] bg-transparent text-foreground/60 hover:bg-muted/50"
+                          )}
+                        >
+                          {count}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[12px] text-foreground">
+                      {campaign.typo_count ?? 1}
                     </span>
                   )}
                 </div>
@@ -3169,6 +3451,21 @@ export function CampaignDetailView({
                         : null
                   }
                 />
+
+                <SectionHeader label={t("abTesting.title")} />
+                <BoolRow icon={FlaskConical} label={t("abTesting.enabled")} value={campaign.ab_enabled}
+                  editChild={isEditing ? (
+                    <EditToggle value={Boolean(draft.ab_enabled ?? campaign.ab_enabled)} onChange={(v) => setDraft(d => ({...d, ab_enabled: v}))} />
+                  ) : undefined}
+                />
+                {(isEditing ? draft.ab_enabled : campaign.ab_enabled) && (
+                  <InfoRow icon={Percent} label={t("abTesting.splitRatio")}
+                    value={campaign.ab_split_ratio != null ? `${campaign.ab_split_ratio}%` : "50%"}
+                    editChild={isEditing ? (
+                      <EditNumber value={String(draft.ab_split_ratio ?? 50)} onChange={(v) => setDraft(d => ({...d, ab_split_ratio: v}))} placeholder="50" />
+                    ) : undefined}
+                  />
+                )}
             </div>
 
 
@@ -3223,6 +3520,20 @@ export function CampaignDetailView({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Gradient Tester floating panel (agency-only) */}
+      {isAgencyUser && (
+        <GradientTester
+          open={gradientTesterOpen}
+          onClose={() => setGradientTesterOpen(false)}
+          layers={gradientLayers}
+          onUpdateLayer={updateGradientLayer}
+          onResetLayers={() => setGradientLayers(DEFAULT_LAYERS)}
+          dragMode={gradientDragMode}
+          onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+          onApply={handleApplyGradient}
+        />
+      )}
 
     </div>
   );

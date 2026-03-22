@@ -72,7 +72,7 @@ async function seed() {
     hash,
     role: "Admin",
     status: "Active",
-    accountId: null, // Agency-level: sees all accounts
+    accountId: 1, // Agency account
   });
 
   console.log("\n── Agency Operator (no account scope) ──");
@@ -82,7 +82,7 @@ async function seed() {
     hash,
     role: "Operator",
     status: "Active",
-    accountId: null, // Agency-level operator
+    accountId: 1, // Agency account
   });
 
   console.log("\n── Manager — Account 1 ──");

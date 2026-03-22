@@ -11,14 +11,14 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MODEL_OPTIONS, EMPTY_FORM, type PromptFormData, getPromptId } from "../types";
+import { EMPTY_FORM, type PromptFormData, getPromptId } from "../types";
 
 interface PromptFormDialogProps {
   open: boolean;
   onClose: () => void;
   prompt: any | null;
   onSaved: (prompt: any) => void;
-  campaigns?: { id: number; name: string }[];
+  campaigns?: { id: number; name: string; aiModel: string }[];
 }
 
 export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [] }: PromptFormDialogProps) {
@@ -37,7 +37,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
           name: prompt.name || "",
           promptText: prompt.promptText || prompt.prompt_text || "",
           systemMessage: prompt.systemMessage || prompt.system_message || "",
-          model: prompt.model || "gpt-4o",
+          model: prompt.model || "gpt-5.1",
           temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
           maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
           status: prompt.status || "active",
@@ -252,17 +252,16 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-model">
                 {t("labels.model")}
               </label>
-              <select
+              <div
                 id="prompt-model"
-                className={`${selectBase} border-border/30`}
-                value={form.model}
-                onChange={(e) => setField("model", e.target.value)}
+                className={`${selectBase} border-border/30 opacity-60 cursor-default`}
                 data-testid="select-prompt-model"
               >
-                {MODEL_OPTIONS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+                {(() => {
+                  const c = campaigns?.find((c) => String(c.id) === form.campaignsId);
+                  return c?.aiModel || t("form.noCampaignModel");
+                })()}
+              </div>
             </div>
 
             <div className="space-y-1">

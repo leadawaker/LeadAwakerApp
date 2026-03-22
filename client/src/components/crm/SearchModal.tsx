@@ -45,11 +45,12 @@ export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onO
     if (!query) return [] as { leadId: number; title: string; subtitle: string }[];
 
     const leadHits = allLeads
-      .filter((l: any) =>
-        [l.full_name || "", l.phone || "", l.email || l.Email || ""].some((v: string) => v.toLowerCase().includes(query)),
-      )
+      .filter((l: any) => {
+        const name = l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || l.name || "";
+        return [name, l.phone || "", l.email || l.Email || ""].some((v: string) => v.toLowerCase().includes(query));
+      })
       .slice(0, 8)
-      .map((l: any) => ({ leadId: l.id || l.Id, title: l.full_name || l.name || "", subtitle: `${l.phone || ""} • ${l.email || l.Email || ""}` }));
+      .map((l: any) => ({ leadId: l.id || l.Id, title: l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || l.name || "", subtitle: `${l.phone || ""} • ${l.email || l.Email || ""}` }));
 
     const interactionHits = allInteractions
       .filter((i: any) => (i.content || "").toLowerCase().includes(query))
@@ -59,7 +60,7 @@ export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onO
         const lead = allLeads.find((l: any) => (l.id || l.Id) === leadId);
         return {
           leadId,
-          title: lead?.full_name || lead?.name || `Lead #${leadId}`,
+          title: lead?.full_name || [lead?.first_name, lead?.last_name].filter(Boolean).join(" ") || lead?.name || `Lead #${leadId}`,
           subtitle: `Message: ${(i.content || "").slice(0, 72)}${(i.content || "").length > 72 ? "…" : ""}`,
         };
       });

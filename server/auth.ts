@@ -121,10 +121,11 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Unauthorized" });
 }
 
-/** Only the agency account (accountsId === 1) can access this route. */
+/** Only the agency account (accountsId === 1) or Admin role can access this route. */
 export function requireAgency(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
-  if (req.user!.accountsId !== 1) {
+  const user = req.user!;
+  if (user.accountsId !== 1 && user.role !== "Admin") {
     return res.status(403).json({ message: "Agency access required" });
   }
   next();

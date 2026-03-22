@@ -85,6 +85,9 @@ import {
   outreachTemplates,
   type OutreachTemplate,
   type InsertOutreachTemplate,
+  gmailSyncState,
+  type GmailSyncState,
+  type InsertGmailSyncState,
 } from "@shared/schema";
 
 
@@ -228,6 +231,8 @@ export interface IStorage {
   createNotification(data: InsertNotifications): Promise<Notifications>;
   updateNotification(id: number, data: Partial<InsertNotifications>): Promise<Notifications | undefined>;
   markAllNotificationsRead(userId: number): Promise<number>;
+  deleteNotification(id: number): Promise<void>;
+  deleteAllNotifications(userId: number): Promise<number>;
 
   // Notification Preferences
   getNotificationPreferences(userId: number, accountId: number): Promise<NotificationPreferences | undefined>;
@@ -235,6 +240,7 @@ export interface IStorage {
 
   // Push Subscriptions
   getPushSubscriptionsByUser(userId: number, accountId: number): Promise<PushSubscriptionRow[]>;
+  getPushSubscriptionByEndpoint(endpoint: string): Promise<PushSubscriptionRow | undefined>;
   createPushSubscription(data: InsertPushSubscription): Promise<PushSubscriptionRow>;
   deletePushSubscriptionByEndpoint(endpoint: string): Promise<boolean>;
 
@@ -292,6 +298,11 @@ export interface IStorage {
   createAiFile(data: InsertAiFile): Promise<AiFile>;
   getAiFilesByConversationId(conversationId: string): Promise<AiFile[]>;
   getAiFilesByMessageId(messageId: number): Promise<AiFile[]>;
+
+  // Gmail Sync State
+  getGmailSyncState(accountEmail: string): Promise<GmailSyncState | undefined>;
+  upsertGmailSyncState(data: InsertGmailSyncState): Promise<GmailSyncState>;
+  deleteGmailSyncState(accountEmail: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -949,6 +960,18 @@ export class DatabaseStorage implements IStorage {
     return rows.length;
   }
 
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  async deleteAllNotifications(userId: number): Promise<number> {
+    const rows = await db
+      .delete(notifications)
+      .where(eq(notifications.userId, userId))
+      .returning({ id: notifications.id });
+    return rows.length;
+  }
+
   // ─── Notification Preferences ──────────────────────────────────────────
 
   async getNotificationPreferences(userId: number, accountId: number): Promise<NotificationPreferences | undefined> {
@@ -991,6 +1014,15 @@ export class DatabaseStorage implements IStorage {
     // Delete existing subscription for same endpoint (re-subscribe)
     await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, data.endpoint));
     const [row] = await db.insert(pushSubscriptions).values(data as any).returning();
+    return row;
+  }
+
+  async getPushSubscriptionByEndpoint(endpoint: string): Promise<PushSubscriptionRow | undefined> {
+    const [row] = await db
+      .select()
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.endpoint, endpoint))
+      .limit(1);
     return row;
   }
 
@@ -1255,6 +1287,31 @@ export class DatabaseStorage implements IStorage {
 
   async getAiFilesByMessageId(messageId: number): Promise<AiFile[]> {
     return db.select().from(aiFiles).where(eq(aiFiles.messageId, messageId)).orderBy(asc(aiFiles.createdAt));
+  }
+
+  // ─── Gmail Sync State ──────────────────────────────────────────────────────
+
+  async getGmailSyncState(accountEmail: string): Promise<GmailSyncState | undefined> {
+    const [row] = await db.select().from(gmailSyncState).where(eq(gmailSyncState.accountEmail, accountEmail));
+    return row;
+  }
+
+  async upsertGmailSyncState(data: InsertGmailSyncState): Promise<GmailSyncState> {
+    const existing = await this.getGmailSyncState(data.accountEmail);
+    if (existing) {
+      const [row] = await db.update(gmailSyncState)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(gmailSyncState.accountEmail, data.accountEmail))
+        .returning();
+      return row;
+    }
+    const [row] = await db.insert(gmailSyncState).values(data as any).returning();
+    return row;
+  }
+
+  async deleteGmailSyncState(accountEmail: string): Promise<boolean> {
+    const result = await db.delete(gmailSyncState).where(eq(gmailSyncState.accountEmail, accountEmail)).returning();
+    return result.length > 0;
   }
 }
 

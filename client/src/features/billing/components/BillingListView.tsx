@@ -378,6 +378,10 @@ export function BillingListView({
   const [isNarrow, setIsNarrow] = useState(false);
 
   // ── Gradient tester state ──────────────────────────────────────────────────
+  const GRADIENT_KEY = "la:gradient:billing";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
   const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
@@ -398,6 +402,18 @@ export function BillingListView({
     setGradientLayers(getTabLayers(activeTab));
     setGradientDragMode(false);
   }, [activeTab, getTabLayers]);
+
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+  const toggleGradientTester = useCallback(() => {
+    setGradientTesterOpen(prev => {
+      if (!prev && savedGradient) setGradientLayers(savedGradient);
+      return !prev;
+    });
+  }, [savedGradient]);
 
   // Accounts for filter dropdown (agency only)
   const { accounts } = useAccounts({ enabled: isAgencyUser });
@@ -1033,7 +1049,7 @@ export function BillingListView({
       <button
         type="button"
         onClick={() => {
-          if (!gradientTesterOpen) setGradientLayers(getTabLayers(activeTab));
+          if (!gradientTesterOpen) setGradientLayers(savedGradient ?? getTabLayers(activeTab));
           setGradientTesterOpen(prev => !prev);
         }}
         className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
@@ -1603,13 +1619,13 @@ export function BillingListView({
     // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full gap-[3px]" data-testid="billing-list-view">
+    <div className="flex flex-col md:flex-row h-full gap-[3px] overflow-y-auto md:overflow-y-hidden" data-testid="billing-list-view">
 
       {viewMode === "list" ? (
         /* ── LIST MODE: original split-panel layout ── */
         <>
           {/* Left panel */}
-          <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden", mobileView === "detail" ? "hidden md:flex" : "flex")}>
+          <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden min-h-[300px] md:min-h-0", mobileView === "detail" ? "hidden md:flex" : "flex")}>
             {leftPanelHeader}
 
             {/* Card list (invoices / contracts) */}
@@ -1634,7 +1650,7 @@ export function BillingListView({
           </div>
 
           {/* Right panel */}
-          <div className={cn("relative flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg bg-card", mobileView === "list" ? "hidden md:flex" : "flex")}>
+          <div className={cn("relative flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg bg-card min-h-[400px] md:min-h-0", mobileView === "list" ? "hidden md:flex" : "flex")}>
             {/* Gradient background — renders across all right-panel states */}
             {gradientTesterOpen ? (
               <>
@@ -1646,6 +1662,13 @@ export function BillingListView({
                 {gradientDragMode && (
                   <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
                 )}
+              </>
+            ) : savedGradient ? (
+              <>
+                {savedGradient.map((layer: GradientLayer) => {
+                  const style = layerToStyle(layer);
+                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+                })}
               </>
             ) : (
               <>
@@ -1676,7 +1699,7 @@ export function BillingListView({
                     onDeleted={() => setSelectedExpenseId(null)}
                     onNew={isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined}
                     toolbarSlot={toolbarControls}
-                    noBackground={gradientTesterOpen}
+                    noBackground={gradientTesterOpen || !!savedGradient}
                   />
                 ) : (
                   <ExpenseDetailViewEmpty
@@ -1718,7 +1741,7 @@ export function BillingListView({
                   onDelete={onDeleteInvoice}
                   onRefresh={onRefreshInvoices}
                   toolbarSlot={toolbarControls}
-                  noBackground={gradientTesterOpen}
+                  noBackground={gradientTesterOpen || !!savedGradient}
                 />
               ) : (
                 <InvoiceDetailViewEmpty toolbarSlot={toolbarControls} />
@@ -1741,7 +1764,7 @@ export function BillingListView({
                   onUpdate={onUpdateContract}
                   onNew={isAgencyUser ? () => { onSelectContract(null); setRightPanelMode("create"); } : undefined}
                   toolbarSlot={toolbarControls}
-                  noBackground={gradientTesterOpen}
+                  noBackground={gradientTesterOpen || !!savedGradient}
                 />
               ) : (
                 <div className="flex flex-col h-full overflow-hidden">
@@ -1823,7 +1846,7 @@ export function BillingListView({
 
           {/* Right: Inline create / edit / duplicate panel (no overlay — same as list view) */}
           {createSheetOpen && (
-            <div className="w-[500px] shrink-0 flex flex-col overflow-hidden rounded-lg bg-card">
+            <div className="w-full md:w-[500px] shrink-0 flex flex-col overflow-hidden rounded-lg bg-card">
               {isInvoicesTab ? (
                 <InvoiceCreatePanel
                   editingInvoice={editingInvoice}
@@ -1864,7 +1887,7 @@ export function BillingListView({
             </div>
           )}
           {isExpensesTab && expensePanelOpen && (
-            <div className="w-[500px] shrink-0 flex flex-col overflow-hidden rounded-lg bg-card">
+            <div className="w-full md:w-[500px] shrink-0 flex flex-col overflow-hidden rounded-lg bg-card">
               <ExpenseCreatePanel
                 editingExpense={editingExpense}
                 onClose={() => {
@@ -1894,6 +1917,7 @@ export function BillingListView({
         onResetLayers={resetGradientLayers}
         dragMode={gradientDragMode}
         onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+        onApply={handleApplyGradient}
       />
 
     </div>

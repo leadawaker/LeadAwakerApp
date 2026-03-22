@@ -8,14 +8,31 @@ import {
   Plus,
   Trash2,
   ChevronDown,
+  ChevronRight,
   Mail,
   MessageSquare,
   Pencil,
+  Paperclip,
 } from "lucide-react";
+import DOMPurify from "dompurify";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+interface EmailMetadata {
+  gmailMessageId?: string;
+  gmailThreadId?: string;
+  subject?: string;
+  from?: string;
+  to?: string;
+  cc?: string;
+  snippet?: string;
+  labels?: string[];
+  attachmentCount?: number;
+  fromEmail?: string;
+  toEmail?: string;
+}
 
 interface Interaction {
   id: number;
@@ -23,12 +40,16 @@ interface Interaction {
   type: "email" | "sms" | "call" | "note" | "whatsapp";
   direction: "inbound" | "outbound";
   content: string;
-  metadata?: Record<string, unknown>;
+  metadata?: EmailMetadata & Record<string, unknown>;
   created_at: string;
+  sent_at?: string;
+  conversation_thread_id?: string;
+  status?: string;
 }
 
 interface InteractionTimelineProps {
   prospectId: number;
+  onReply?: (context: { messageId: string; threadId: string; subject: string }) => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -37,6 +58,7 @@ function getDirectionIcon(type: string, direction: string) {
   if (type === "call") return Phone;
   if (type === "note") return FileText;
   if (type === "whatsapp") return MessageSquare;
+  if (type === "email") return Mail;
   if (direction === "outbound") return ArrowUpRight;
   return ArrowDownLeft;
 }
@@ -71,13 +93,168 @@ function formatTimestamp(dateStr: string): string {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function getTimestamp(item: Interaction): string {
+  return item.sent_at || item.created_at;
+}
+
+/** Strip HTML to plain text for snippet preview */
+function stripHtml(html: string): string {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || div.innerText || "";
+}
+
 const INTERACTION_TYPES = ["email", "sms", "call", "note", "whatsapp"] as const;
 const DIRECTIONS = ["outbound", "inbound"] as const;
 const PAGE_SIZE = 20;
 
+// ── Email Card ───────────────────────────────────────────────────────────────
+
+function EmailCard({
+  item,
+  isExpanded,
+  isSelected,
+  onToggleExpand,
+  onToggleSelect,
+  onReply,
+  t,
+}: {
+  item: Interaction;
+  isExpanded: boolean;
+  isSelected: boolean;
+  onToggleExpand: () => void;
+  onToggleSelect: () => void;
+  onReply?: () => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const meta = item.metadata as EmailMetadata | undefined;
+  const subject = meta?.subject || t("slidePanel.email.noSubject");
+  const isOut = item.direction === "outbound";
+  const snippet = meta?.snippet || stripHtml(item.content).slice(0, 140);
+  const attachments = meta?.attachmentCount || 0;
+
+  return (
+    <div
+      className={cn(
+        "group rounded-xl border bg-card transition-shadow duration-150 overflow-hidden",
+        isSelected && "ring-1 ring-brand-indigo/30 bg-highlight-selected",
+      )}
+    >
+      {/* Header row */}
+      <div
+        className="flex items-start gap-3 p-3 cursor-pointer"
+        onClick={onToggleExpand}
+      >
+        {/* Checkbox */}
+        <label
+          className="flex items-center justify-center h-5 w-5 mt-0.5 shrink-0 cursor-pointer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelect}
+            className="h-4 w-4 rounded border-border accent-brand-indigo"
+          />
+        </label>
+
+        {/* Icon */}
+        <div className={cn(
+          "shrink-0 h-8 w-8 rounded-full flex items-center justify-center mt-0.5",
+          isOut ? "bg-blue-100/80 dark:bg-blue-900/30" : "bg-muted",
+        )}>
+          <Mail className={cn("h-4 w-4", isOut ? "text-blue-600 dark:text-blue-400" : "text-foreground/50")} />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            {/* Direction badge */}
+            <span className={cn(
+              "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+              isOut
+                ? "bg-brand-indigo/10 text-brand-indigo"
+                : "bg-muted text-muted-foreground",
+            )}>
+              {isOut ? t("slidePanel.email.sent") : t("slidePanel.email.received")}
+            </span>
+            {attachments > 0 && (
+              <span className="flex items-center gap-0.5 text-[10px] text-foreground/40">
+                <Paperclip className="h-3 w-3" />
+                {attachments}
+              </span>
+            )}
+            <span className="text-[10px] text-foreground/30 ml-auto shrink-0">
+              {formatTimestamp(getTimestamp(item))}
+            </span>
+            <ChevronDown className={cn(
+              "h-3.5 w-3.5 text-foreground/30 transition-transform duration-150 shrink-0",
+              isExpanded && "rotate-180",
+            )} />
+          </div>
+
+          {/* Subject */}
+          <p className="text-[12px] font-medium text-foreground truncate">
+            {subject}
+          </p>
+
+          {/* Snippet (collapsed only) */}
+          {!isExpanded && (
+            <p className="text-[11px] text-foreground/50 line-clamp-1 mt-0.5">
+              {snippet}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded: full email body */}
+      {isExpanded && (
+        <div className="border-t border-border/30">
+          {/* From/To info */}
+          <div className="px-4 pt-3 pb-2 text-[11px] text-foreground/50 space-y-0.5">
+            <div><span className="font-medium text-foreground/70">{t("slidePanel.email.from")}:</span> {meta?.from || "..."}</div>
+            <div><span className="font-medium text-foreground/70">{t("slidePanel.email.to")}:</span> {meta?.to || "..."}</div>
+            {meta?.cc && (
+              <div><span className="font-medium text-foreground/70">{t("slidePanel.email.cc")}:</span> {meta.cc}</div>
+            )}
+          </div>
+
+          {/* Email body */}
+          <div
+            className="px-4 pb-3 text-[12px] text-foreground/80 leading-relaxed overflow-x-auto"
+            dangerouslySetInnerHTML={{
+              __html: item.content.includes("<")
+                ? DOMPurify.sanitize(item.content, {
+                    ALLOWED_TAGS: ["p", "br", "b", "strong", "i", "em", "a", "ul", "ol", "li", "div", "span", "table", "tr", "td", "th", "thead", "tbody", "img", "h1", "h2", "h3", "h4", "blockquote", "hr"],
+                    ALLOWED_ATTR: ["href", "target", "style", "src", "alt", "width", "height", "cellpadding", "cellspacing", "class"],
+                    ADD_ATTR: ["target"],
+                    FORCE_BODY: true,
+                  }).replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ')
+                : `<p>${item.content.replace(/\n/g, "<br>")}</p>`,
+            }}
+          />
+
+          {/* Reply button */}
+          {item.direction === "inbound" && onReply && (
+            <div className="px-4 pb-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); onReply(); }}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-brand-indigo text-brand-indigo text-[11px] font-medium hover:bg-brand-indigo/5 transition-colors"
+              >
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                {t("slidePanel.email.reply")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function InteractionTimeline({ prospectId }: InteractionTimelineProps) {
+export function InteractionTimeline({ prospectId, onReply }: InteractionTimelineProps) {
   const { t } = useTranslation("prospects");
 
   // ── Data state ──
@@ -113,7 +290,9 @@ export function InteractionTimeline({ prospectId }: InteractionTimelineProps) {
           `/api/interactions?prospect_id=${prospectId}&limit=${PAGE_SIZE}&offset=${offsetVal}`,
         );
         if (res.ok) {
-          const data: Interaction[] = await res.json();
+          const json = await res.json();
+          // API returns { interactions, total } for prospect queries
+          const data: Interaction[] = json.interactions ?? json;
           setInteractions((prev) => (append ? [...prev, ...data] : data));
           setHasMore(data.length >= PAGE_SIZE);
           setOffset(offsetVal + data.length);
@@ -233,6 +412,43 @@ export function InteractionTimeline({ prospectId }: InteractionTimelineProps) {
     }
   }, [editingId, editContent]);
 
+  // ── Group emails by thread ──
+  const groupedItems = (() => {
+    const threadMap = new Map<string, Interaction[]>();
+    const nonEmail: Interaction[] = [];
+
+    for (const item of interactions) {
+      if (item.type === "email" && item.conversation_thread_id) {
+        const thread = threadMap.get(item.conversation_thread_id) || [];
+        thread.push(item);
+        threadMap.set(item.conversation_thread_id, thread);
+      } else {
+        nonEmail.push(item);
+      }
+    }
+
+    // Merge: keep chronological order based on first item in each group
+    const allItems: { sortKey: string; item: Interaction | { threadId: string; emails: Interaction[] } }[] = [];
+
+    for (const item of nonEmail) {
+      allItems.push({ sortKey: getTimestamp(item), item });
+    }
+
+    for (const [threadId, emails] of threadMap) {
+      if (emails.length === 1) {
+        allItems.push({ sortKey: getTimestamp(emails[0]), item: emails[0] });
+      } else {
+        // Sort within thread by date ascending
+        emails.sort((a, b) => new Date(getTimestamp(a)).getTime() - new Date(getTimestamp(b)).getTime());
+        allItems.push({ sortKey: getTimestamp(emails[emails.length - 1]), item: { threadId, emails } });
+      }
+    }
+
+    // Sort all by most recent first
+    allItems.sort((a, b) => new Date(b.sortKey).getTime() - new Date(a.sortKey).getTime());
+    return allItems.map((a) => a.item);
+  })();
+
   // ── Render ──
   return (
     <div className="flex flex-col h-full">
@@ -323,115 +539,66 @@ export function InteractionTimeline({ prospectId }: InteractionTimelineProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {interactions.map((item) => {
-              const Icon = getDirectionIcon(item.type, item.direction);
-              const badge = getTypeBadgeStyle(item.type);
-              const isExpanded = expandedIds.has(item.id);
-              const isSelected = selectedIds.has(item.id);
-              const isEditing = editingId === item.id;
-              const typeLabel = t(`slidePanel.interactionType.${item.type}`, item.type);
+            {groupedItems.map((entry) => {
+              // Email thread group
+              if ("threadId" in entry && "emails" in entry) {
+                return (
+                  <EmailThread
+                    key={`thread-${entry.threadId}`}
+                    emails={entry.emails}
+                    expandedIds={expandedIds}
+                    selectedIds={selectedIds}
+                    onToggleExpand={toggleExpand}
+                    onToggleSelect={toggleSelect}
+                    onReply={onReply}
+                    t={t}
+                  />
+                );
+              }
 
+              // Single email
+              const item = entry as Interaction;
+              if (item.type === "email") {
+                return (
+                  <EmailCard
+                    key={item.id}
+                    item={item}
+                    isExpanded={expandedIds.has(item.id)}
+                    isSelected={selectedIds.has(item.id)}
+                    onToggleExpand={() => toggleExpand(item.id)}
+                    onToggleSelect={() => toggleSelect(item.id)}
+                    onReply={
+                      onReply && item.direction === "inbound"
+                        ? () => onReply({
+                            messageId: (item.metadata as EmailMetadata)?.gmailMessageId || "",
+                            threadId: (item.metadata as EmailMetadata)?.gmailThreadId || "",
+                            subject: (item.metadata as EmailMetadata)?.subject || "",
+                          })
+                        : undefined
+                    }
+                    t={t}
+                  />
+                );
+              }
+
+              // Non-email interaction (original card)
               return (
-                <div
+                <GenericInteractionCard
                   key={item.id}
-                  className={cn(
-                    "group flex items-start gap-3 rounded-xl border bg-card p-3 transition-shadow duration-150",
-                    isSelected && "ring-1 ring-brand-indigo/30 bg-highlight-selected",
-                  )}
-                >
-                  {/* Checkbox */}
-                  <label className="flex items-center justify-center h-5 w-5 mt-0.5 shrink-0 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelect(item.id)}
-                      className="h-4 w-4 rounded border-border accent-brand-indigo"
-                    />
-                  </label>
-
-                  {/* Direction icon */}
-                  <div className="shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center mt-0.5">
-                    <Icon className="h-4 w-4 text-foreground/50" />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {/* Type badge */}
-                      <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", badge.bg, badge.text)}>
-                        {typeLabel}
-                      </span>
-                      {/* Direction */}
-                      <span className="text-[10px] text-foreground/40 font-medium">
-                        {t(`slidePanel.direction.${item.direction}`)}
-                      </span>
-                      {/* Timestamp */}
-                      <span className="text-[10px] text-foreground/30 ml-auto shrink-0">
-                        {formatTimestamp(item.created_at)}
-                      </span>
-                      {/* Edit icon */}
-                      {!isEditing && (
-                        <button
-                          onClick={() => startEditing(item)}
-                          className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center text-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:text-foreground/70 hover:bg-muted"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Content text or edit textarea */}
-                    {isEditing ? (
-                      <div>
-                        <textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          rows={3}
-                          className="w-full text-[12px] bg-card border border-border rounded-lg px-3 py-2 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/25 leading-relaxed"
-                        />
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={handleSaveEdit}
-                            disabled={editSaving || !editContent.trim()}
-                            className="h-9 px-4 rounded-full bg-brand-indigo text-white text-[12px] font-medium disabled:opacity-50 transition-opacity duration-150"
-                          >
-                            {editSaving ? t("detail.saving") : t("detail.save")}
-                          </button>
-                          <button
-                            onClick={cancelEditing}
-                            className="h-9 px-4 rounded-full border border-border text-foreground/60 text-[12px] font-medium transition-colors duration-150 hover:text-foreground"
-                          >
-                            {t("detail.cancel")}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <p
-                        className={cn(
-                          "text-[12px] text-foreground/70 leading-relaxed cursor-pointer",
-                          !isExpanded && "line-clamp-2",
-                        )}
-                        onClick={() => toggleExpand(item.id)}
-                      >
-                        {item.content}
-                      </p>
-                    )}
-
-                    {/* Attachment badges */}
-                    {item.metadata && Array.isArray((item.metadata as any).attachments) && (
-                      <div className="flex items-center gap-1 mt-1.5">
-                        {((item.metadata as any).attachments as string[]).map((att, i) => (
-                          <span
-                            key={i}
-                            className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                          >
-                            {att}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  item={item}
+                  isExpanded={expandedIds.has(item.id)}
+                  isSelected={selectedIds.has(item.id)}
+                  isEditing={editingId === item.id}
+                  editContent={editContent}
+                  editSaving={editSaving}
+                  onToggleExpand={() => toggleExpand(item.id)}
+                  onToggleSelect={() => toggleSelect(item.id)}
+                  onStartEditing={() => startEditing(item)}
+                  onCancelEditing={cancelEditing}
+                  onSaveEdit={handleSaveEdit}
+                  onEditContentChange={setEditContent}
+                  t={t}
+                />
               );
             })}
           </div>
@@ -454,6 +621,236 @@ export function InteractionTimeline({ prospectId }: InteractionTimelineProps) {
         {loading && interactions.length === 0 && (
           <div className="flex items-center justify-center py-16">
             <div className="h-6 w-6 border-2 border-brand-indigo/30 border-t-brand-indigo rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Email Thread Group ───────────────────────────────────────────────────────
+
+function EmailThread({
+  emails,
+  expandedIds,
+  selectedIds,
+  onToggleExpand,
+  onToggleSelect,
+  onReply,
+  t,
+}: {
+  emails: Interaction[];
+  expandedIds: Set<number>;
+  selectedIds: Set<number>;
+  onToggleExpand: (id: number) => void;
+  onToggleSelect: (id: number) => void;
+  onReply?: (context: { messageId: string; threadId: string; subject: string }) => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const [collapsed, setCollapsed] = useState(true);
+  const latest = emails[emails.length - 1];
+  const meta = latest.metadata as EmailMetadata | undefined;
+  const subject = meta?.subject || t("slidePanel.email.noSubject");
+  const count = emails.length;
+
+  if (collapsed) {
+    return (
+      <div
+        className="group rounded-xl border bg-card p-3 cursor-pointer transition-shadow duration-150 hover:shadow-sm"
+        onClick={() => setCollapsed(false)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 h-8 w-8 rounded-full bg-blue-100/80 dark:bg-blue-900/30 flex items-center justify-center">
+            <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                {count} {count === 1 ? "email" : "emails"}
+              </span>
+              <span className="text-[10px] text-foreground/30 ml-auto shrink-0">
+                {formatTimestamp(getTimestamp(latest))}
+              </span>
+              <ChevronRight className="h-3.5 w-3.5 text-foreground/30 shrink-0" />
+            </div>
+            <p className="text-[12px] font-medium text-foreground truncate mt-0.5">
+              {subject}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-200/50 dark:border-blue-800/30 overflow-hidden">
+      {/* Thread header */}
+      <div
+        className="flex items-center gap-2 px-3 py-2 bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer border-b border-blue-200/30 dark:border-blue-800/20"
+        onClick={() => setCollapsed(true)}
+      >
+        <ChevronDown className="h-3.5 w-3.5 text-blue-600/50 shrink-0" />
+        <Mail className="h-3.5 w-3.5 text-blue-600/50 shrink-0" />
+        <span className="text-[11px] font-medium text-blue-700 dark:text-blue-400 truncate">
+          {subject}
+        </span>
+        <span className="text-[10px] text-blue-600/40 ml-auto shrink-0">
+          {count} {count === 1 ? "email" : "emails"}
+        </span>
+      </div>
+
+      {/* Thread emails */}
+      <div className="space-y-0 divide-y divide-border/20">
+        {emails.map((item) => (
+          <EmailCard
+            key={item.id}
+            item={item}
+            isExpanded={expandedIds.has(item.id)}
+            isSelected={selectedIds.has(item.id)}
+            onToggleExpand={() => onToggleExpand(item.id)}
+            onToggleSelect={() => onToggleSelect(item.id)}
+            onReply={
+              onReply && item.direction === "inbound"
+                ? () => onReply({
+                    messageId: (item.metadata as EmailMetadata)?.gmailMessageId || "",
+                    threadId: (item.metadata as EmailMetadata)?.gmailThreadId || "",
+                    subject: (item.metadata as EmailMetadata)?.subject || "",
+                  })
+                : undefined
+            }
+            t={t}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Generic Interaction Card (non-email) ─────────────────────────────────────
+
+function GenericInteractionCard({
+  item,
+  isExpanded,
+  isSelected,
+  isEditing,
+  editContent,
+  editSaving,
+  onToggleExpand,
+  onToggleSelect,
+  onStartEditing,
+  onCancelEditing,
+  onSaveEdit,
+  onEditContentChange,
+  t,
+}: {
+  item: Interaction;
+  isExpanded: boolean;
+  isSelected: boolean;
+  isEditing: boolean;
+  editContent: string;
+  editSaving: boolean;
+  onToggleExpand: () => void;
+  onToggleSelect: () => void;
+  onStartEditing: () => void;
+  onCancelEditing: () => void;
+  onSaveEdit: () => void;
+  onEditContentChange: (val: string) => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const Icon = getDirectionIcon(item.type, item.direction);
+  const badge = getTypeBadgeStyle(item.type);
+  const typeLabel = t(`slidePanel.interactionType.${item.type}`, item.type);
+
+  return (
+    <div
+      className={cn(
+        "group flex items-start gap-3 rounded-xl border bg-card p-3 transition-shadow duration-150",
+        isSelected && "ring-1 ring-brand-indigo/30 bg-highlight-selected",
+      )}
+    >
+      {/* Checkbox */}
+      <label className="flex items-center justify-center h-5 w-5 mt-0.5 shrink-0 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelect}
+          className="h-4 w-4 rounded border-border accent-brand-indigo"
+        />
+      </label>
+
+      {/* Direction icon */}
+      <div className="shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center mt-0.5">
+        <Icon className="h-4 w-4 text-foreground/50" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", badge.bg, badge.text)}>
+            {typeLabel}
+          </span>
+          <span className="text-[10px] text-foreground/40 font-medium">
+            {t(`slidePanel.direction.${item.direction}`)}
+          </span>
+          <span className="text-[10px] text-foreground/30 ml-auto shrink-0">
+            {formatTimestamp(getTimestamp(item))}
+          </span>
+          {!isEditing && (
+            <button
+              onClick={onStartEditing}
+              className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center text-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:text-foreground/70 hover:bg-muted"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {isEditing ? (
+          <div>
+            <textarea
+              value={editContent}
+              onChange={(e) => onEditContentChange(e.target.value)}
+              rows={3}
+              className="w-full text-[12px] bg-card border border-border rounded-lg px-3 py-2 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/25 leading-relaxed"
+            />
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={onSaveEdit}
+                disabled={editSaving || !editContent.trim()}
+                className="h-9 px-4 rounded-full bg-brand-indigo text-white text-[12px] font-medium disabled:opacity-50 transition-opacity duration-150"
+              >
+                {editSaving ? t("detail.saving") : t("detail.save")}
+              </button>
+              <button
+                onClick={onCancelEditing}
+                className="h-9 px-4 rounded-full border border-border text-foreground/60 text-[12px] font-medium transition-colors duration-150 hover:text-foreground"
+              >
+                {t("detail.cancel")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p
+            className={cn(
+              "text-[12px] text-foreground/70 leading-relaxed cursor-pointer",
+              !isExpanded && "line-clamp-2",
+            )}
+            onClick={onToggleExpand}
+          >
+            {item.content}
+          </p>
+        )}
+
+        {item.metadata && Array.isArray((item.metadata as any).attachments) && (
+          <div className="flex items-center gap-1 mt-1.5">
+            {((item.metadata as any).attachments as string[]).map((att, i) => (
+              <span
+                key={i}
+                className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+              >
+                {att}
+              </span>
+            ))}
           </div>
         )}
       </div>

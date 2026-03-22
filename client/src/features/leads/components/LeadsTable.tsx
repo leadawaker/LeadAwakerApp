@@ -173,7 +173,7 @@ export function LeadsTable() {
   const { t } = useTranslation("leads");
   const VIEW_TABS: TabDef[] = useMemo(() => VIEW_TAB_KEYS.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t]);
   const { currentAccountId, isAgencyView } = useWorkspace();
-  const filterAccountId = (isAgencyView && currentAccountId === 0) ? undefined : currentAccountId || undefined;
+  const filterAccountId = currentAccountId > 0 ? currentAccountId : undefined;
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
 
   // Publish leads list entity data for AI agent context ("what leads are here")

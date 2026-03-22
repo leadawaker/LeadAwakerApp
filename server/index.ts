@@ -99,6 +99,14 @@ app.use((req, res, next) => {
   startSseListener(); // Real-time push via PostgreSQL LISTEN/NOTIFY
   verifySmtp(); // Log SMTP status at startup (non-blocking)
 
+  // Log notification channel status at startup
+  console.log("[notifications] VAPID configured:", !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY));
+  console.log("[notifications] Telegram configured:", !!(process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_WEBHOOK_URL));
+
+  // Start Gmail sync polling (every 5 min)
+  const { startGmailSync } = await import("./gmail-sync");
+  startGmailSync();
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

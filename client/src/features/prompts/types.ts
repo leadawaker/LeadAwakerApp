@@ -20,7 +20,7 @@ export const EMPTY_FORM: PromptFormData = {
   name: "",
   promptText: "",
   systemMessage: "",
-  model: "gpt-4o",
+  model: "gpt-5.4-mini",
   temperature: "0.7",
   maxTokens: "1000",
   status: "active",
@@ -30,14 +30,18 @@ export const EMPTY_FORM: PromptFormData = {
 };
 
 export const MODEL_OPTIONS = [
+  "gpt-5.4",
+  "gpt-5.4-mini",
+  "gpt-5.4-nano",
+  "gpt-5.1",
+  "gpt-4.1",
+  "gpt-4.1-mini",
+  "gpt-4.1-nano",
   "gpt-4o",
   "gpt-4o-mini",
-  "gpt-4-turbo",
-  "gpt-3.5-turbo",
-  "chatgpt-5o",
-  "chatgpt-5-mini",
-  "chatgpt-5.2-instant",
-  "llama-3.1-8b-instant",
+  "claude-sonnet-4-6",
+  "claude-haiku-4-5",
+  "llama-3.3-70b-versatile",
 ];
 
 // Column definitions for table view
@@ -79,12 +83,13 @@ export const PROMPT_SORT_LABELS: Record<PromptSortOption, string> = {
 };
 
 // Group options
-export type PromptGroupOption = "status" | "model" | "campaign" | "none";
+export type PromptGroupOption = "status" | "model" | "campaign" | "account" | "none";
 
 export const PROMPT_GROUP_LABELS: Record<PromptGroupOption, string> = {
   status:   "Status",
   model:    "Model",
   campaign: "Campaign",
+  account:  "Account",
   none:     "None",
 };
 

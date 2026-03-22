@@ -225,7 +225,10 @@
     "removePhoto": "Foto verwijderen",
     "cropPhoto": "Foto Bijsnijden",
     "cropDescription": "Sleep om te herpositioneren \u00b7 gebruik de schuif om te zoomen",
-    "savePhoto": "Foto Opslaan"
+    "savePhoto": "Foto Opslaan",
+    "convertToAccount": "Omzetten naar Account",
+    "converting": "Omzetten...",
+    "linkedAccount": "Account"
   },
   "related": {
     "unnamed": "Naamloos",
@@ -242,6 +245,22 @@
     "title": "Selecteer een prospect",
     "description": "Klik op een prospect aan de linkerkant om de details en contactgegevens te bekijken.",
     "chooseFromList": "\u2190 Kies uit de lijst"
+  },
+  "mobileSheet": {
+    "nextAction": "Volgende Actie",
+    "noNextAction": "Geen volgende actie ingesteld",
+    "followUp": "Opvolging",
+    "noFollowUp": "Geen opvolging gepland",
+    "overdue": "Achterstallig",
+    "followUpsSent": "{{count}} opvolging verzonden",
+    "followUpsSent_plural": "{{count}} opvolgingen verzonden",
+    "contact": "Contact",
+    "primaryContact": "Primair Contact",
+    "secondContact": "Tweede Contact",
+    "noContactInfo": "Nog geen contactgegevens",
+    "pipelineStage": "Pipeline Fase",
+    "firstContact": "Eerste contact",
+    "source": "Bron"
   },
   "slidePanel": {
     "tabs": {
@@ -269,6 +288,37 @@
     "interactionContentPlaceholder": "Schrijf de inhoud van de interactie...",
     "emptyInteractions": "Nog geen interacties. Stuur uw eerste bericht of voeg een notitie toe.",
     "emptyTasks": "Geen taken gekoppeld aan deze prospect.",
-    "emptyNotes": "Nog geen notities."
+    "emptyNotes": "Nog geen notities.",
+    "email": {
+      "sent": "Verzonden",
+      "received": "Ontvangen",
+      "from": "Van",
+      "to": "Aan",
+      "cc": "CC",
+      "noSubject": "(Geen onderwerp)",
+      "reply": "Beantwoorden"
+    }
+  },
+  "emailCompose": {
+    "title": "E-mail opstellen",
+    "replyTitle": "E-mail beantwoorden",
+    "subtitle": "Verzenden naar {{name}}",
+    "sendEmail": "E-mail verzenden",
+    "to": "Aan",
+    "toPlaceholder": "ontvanger@voorbeeld.com",
+    "subject": "Onderwerp",
+    "subjectPlaceholder": "E-mail onderwerp...",
+    "body": "Bericht",
+    "bodyPlaceholder": "Schrijf uw bericht hier...",
+    "template": "Sjabloon",
+    "noTemplate": "Geen sjabloon (leeg)",
+    "signatureNote": "Uw bedrijfshandtekening wordt automatisch toegevoegd.",
+    "send": "Verzenden",
+    "sending": "Verzenden...",
+    "sent": "E-mail verzonden",
+    "sentDescription": "E-mail afgeleverd bij {{to}}",
+    "sendFailed": "Verzenden mislukt",
+    "sendFailedDescription": "Kon de e-mail niet verzenden. Probeer het opnieuw.",
+    "reply": "Beantwoorden"
   }
 }

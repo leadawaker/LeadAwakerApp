@@ -247,7 +247,7 @@ export function ConfigTagsPanel({ campaignId, campaignName, isAgencyUser }: Conf
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
     <>
-      <div className="bg-card/75 rounded-xl flex flex-col overflow-hidden h-full">
+      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl flex flex-col overflow-hidden h-full">
 
         {/* Fixed header */}
         <div className="shrink-0 px-4 md:px-6 pt-4 md:pt-6 pb-3 flex items-center justify-between gap-2">

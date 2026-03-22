@@ -49,6 +49,7 @@ const GROUP_TKEYS: Record<PromptGroupOption, string> = {
   status:   "labels.status",
   model:    "labels.model",
   campaign: "labels.campaign",
+  account:  "labels.account",
   none:     "group.none",
 };
 
@@ -69,8 +70,11 @@ interface PromptsToolbarProps {
   onModelFilterChange: (m: string) => void;
   campaignFilter: string;
   onCampaignFilterChange: (c: string) => void;
+  accountFilter: string;
+  onAccountFilterChange: (a: string) => void;
   availableModels: string[];
   availableCampaigns: { id: number; name: string }[];
+  availableAccounts: { id: number; name: string }[];
   totalCount: number;
   onOpenCreate: () => void;
   isFilterActive: boolean;
@@ -87,7 +91,7 @@ interface PromptsToolbarProps {
 
 const STATUS_OPTIONS = ["all", "active", "archived"] as const;
 const SORT_OPTIONS: PromptSortOption[] = ["recent", "name_asc", "name_desc", "score_desc", "score_asc"];
-const GROUP_OPTIONS: PromptGroupOption[] = ["status", "model", "campaign", "none"];
+const GROUP_OPTIONS: PromptGroupOption[] = ["status", "model", "campaign", "account", "none"];
 
 export function PromptsToolbar({
   searchQuery,
@@ -100,8 +104,11 @@ export function PromptsToolbar({
   onModelFilterChange,
   campaignFilter,
   onCampaignFilterChange,
+  accountFilter,
+  onAccountFilterChange,
   availableModels,
   availableCampaigns,
+  availableAccounts,
   totalCount,
   onOpenCreate,
   isFilterActive,
@@ -241,6 +248,33 @@ export function PromptsToolbar({
                 >
                   <span className="truncate flex-1">{c.name}</span>
                   {campaignFilter === String(c.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+
+          {/* Account section */}
+          {availableAccounts.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {t("labels.account")}
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                className={cn("text-[12px]", !accountFilter && "font-semibold text-brand-indigo")}
+                onClick={(e) => { e.preventDefault(); onAccountFilterChange(""); }}
+              >
+                {t("toolbar.allAccounts")}
+                {!accountFilter && <Check className="h-3 w-3 ml-auto" />}
+              </DropdownMenuItem>
+              {availableAccounts.map((a) => (
+                <DropdownMenuItem
+                  key={a.id}
+                  className={cn("text-[12px]", accountFilter === String(a.id) && "font-semibold text-brand-indigo")}
+                  onClick={(e) => { e.preventDefault(); onAccountFilterChange(accountFilter === String(a.id) ? "" : String(a.id)); }}
+                >
+                  <span className="truncate flex-1">{a.name}</span>
+                  {accountFilter === String(a.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
               ))}
             </>

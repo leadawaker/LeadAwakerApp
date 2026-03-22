@@ -254,6 +254,11 @@ export default function ConversationsPage() {
 
   // All campaigns (no account filter) for the Filter > Account > Campaign drill-down
   const { campaigns: allCampaigns } = useCampaigns(undefined);
+  const campaignsMap = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const c of allCampaigns) m.set(c.id, c.name);
+    return m;
+  }, [allCampaigns]);
 
   // AI agents — fetched only for agency users; used for pinned agent rows in InboxPanel
   const { data: aiAgents = [] } = useQuery<AiAgent[]>({
@@ -392,7 +397,7 @@ export default function ConversationsPage() {
         data-testid="page-conversations"
       >
         {/* Mobile header */}
-        <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0 flex md:hidden items-center gap-3">
+        <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0 flex md:hidden items-center gap-3 min-w-0">
           {mobileView === "chat" && (
             <button
               onClick={() => {
@@ -413,7 +418,7 @@ export default function ConversationsPage() {
               <ChevronLeft className="h-4 w-4" />
             </button>
           )}
-          <h1 className="text-2xl font-extrabold tracking-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight truncate min-w-0">
             {mobileView === "chat" && isAgentSelected
               ? (chatAgent?.name ?? aiAgents.find(a => a.id === selectedAgentId)?.name ?? "AI Agent")
               : mobileView === "chat" && selected && !isSupport
@@ -435,7 +440,7 @@ export default function ConversationsPage() {
           <div
             className={cn(
               "flex-1 min-h-0 flex gap-[3px]",
-              mobileView === "chat" ? "flex-col md:flex-row" : "flex-col md:flex-row"
+              mobileView === "chat" ? "flex-col lg:flex-row" : "flex-col lg:flex-row"
             )}
             data-testid="layout-conversations"
             data-onboarding="conversations-inbox"
@@ -444,8 +449,8 @@ export default function ConversationsPage() {
             {isAgentSelected && selectedAgentId !== null && !isSupport ? (
               <div
                 className={cn(
-                  "w-full md:w-[340px] flex-shrink-0 bg-muted rounded-lg overflow-hidden h-full",
-                  mobileView === "chat" ? "hidden md:flex" : "flex"
+                  "w-full lg:w-[340px] lg:flex-shrink-0 bg-muted rounded-lg overflow-hidden h-full",
+                  mobileView === "chat" ? "hidden lg:flex" : "flex"
                 )}
                 data-testid="agent-conversations-panel"
               >
@@ -501,9 +506,10 @@ export default function ConversationsPage() {
                 activeAgentSessionId={agentSession?.sessionId ?? null}
                 onAgentSettings={handleAgentSettings}
                 onDeselectAgent={() => setSelectedAgentId(null)}
+                campaignsMap={campaignsMap}
                 className={cn(
-                  "w-full md:w-[340px] flex-shrink-0",
-                  mobileView === "chat" ? "hidden md:flex" : "flex"
+                  "w-full lg:w-[340px] lg:flex-shrink-0",
+                  mobileView === "chat" ? "hidden lg:flex" : "flex"
                 )}
                 data-testid="mobile-inbox-panel"
               />
@@ -513,7 +519,7 @@ export default function ConversationsPage() {
               <div
                 className={cn(
                   "flex-1 min-w-0 flex flex-col overflow-hidden",
-                  mobileView === "inbox" ? "hidden md:flex" : "flex"
+                  mobileView === "inbox" ? "hidden lg:flex" : "flex"
                 )}
                 data-testid="mobile-chat-panel"
                 data-onboarding="conversations-chat"
@@ -851,7 +857,7 @@ export default function ConversationsPage() {
                   setLocation(`${basePath}/contacts`);
                 }}
                 onRefresh={refresh}
-                className="hidden xl:flex w-[340px] flex-shrink-0"
+                className="hidden lg:flex w-[340px] flex-shrink-0"
               />
             )}
           </div>

@@ -1,11 +1,11 @@
 import { Switch, Route, useRoute, useLocation, Redirect } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import i18n from "./i18n";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/hooks/useTheme";
+import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
@@ -144,6 +144,7 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 
 function Router() {
   const [location, setLocation] = useLocation();
+  const { setPublicMode } = useTheme();
 
   // Get first path segment
   const firstSegment = location.split("/").filter(Boolean)[0] as
@@ -183,71 +184,31 @@ function Router() {
 
   const isAppArea = location.startsWith("/agency") || location.startsWith("/subaccount");
 
+  /* Public pages follow system preference; CRM follows the manual toggle */
+  useEffect(() => {
+    setPublicMode(!isAppArea);
+  }, [isAppArea, setPublicMode]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
-      {!isAppArea && <Navbar />}
 
-      <main className="flex-grow">
-        {isAppArea ? (
-          /* CRM app — theme controlled by the manual toggle */
-          !lang && <AppRoutes />
-        ) : (
-          /* Public pages — theme follows system preference */
-          <PublicShell>
+      {isAppArea ? (
+        /* CRM app — theme controlled by the manual toggle */
+        <main className="flex-grow">
+          {!lang && <AppRoutes />}
+        </main>
+      ) : (
+        /* Public pages — theme follows system preference */
+        <>
+          <Navbar />
+          <main className="flex-grow">
             {!lang && <AppRoutes />}
             {lang && <LanguageRouter lang={lang} />}
-          </PublicShell>
-        )}
-      </main>
-
-      {!isAppArea && <Footer />}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* PublicShell — isolates dark mode from CRM toggle, follows system   */
-/* ------------------------------------------------------------------ */
-
-function PublicShell({ children }: { children: React.ReactNode }) {
-  const [systemDark, setSystemDark] = useState(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
-  );
-
-  /* Strip CRM's .dark from <html> while public pages are mounted;
-     restore it on unmount so the CRM toggle still works. */
-  useEffect(() => {
-    const root = document.documentElement;
-    const hadDark = root.classList.contains("dark");
-    root.classList.remove("dark");
-    return () => {
-      if (hadDark) root.classList.add("dark");
-    };
-  }, []);
-
-  /* Follow system preference for public pages */
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    setSystemDark(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  /* Apply/remove .dark on <html> based on system preference */
-  useEffect(() => {
-    const root = document.documentElement;
-    if (systemDark) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [systemDark]);
-
-  return (
-    <div id="public-shell">
-      {children}
+          </main>
+          <Footer />
+        </>
+      )}
     </div>
   );
 }

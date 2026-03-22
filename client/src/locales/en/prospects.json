@@ -218,7 +218,10 @@
     "removePhoto": "Remove photo",
     "cropPhoto": "Crop Photo",
     "cropDescription": "Drag to reposition \u00b7 use slider to zoom",
-    "savePhoto": "Save Photo"
+    "savePhoto": "Save Photo",
+    "convertToAccount": "Convert to Account",
+    "converting": "Converting...",
+    "linkedAccount": "Account"
   },
   "related": {
     "unnamed": "Unnamed",
@@ -235,6 +238,22 @@
     "title": "Select a prospect",
     "description": "Click any prospect on the left to see their details and contact info.",
     "chooseFromList": "\u2190 Choose from the list"
+  },
+  "mobileSheet": {
+    "nextAction": "Next Action",
+    "noNextAction": "No next action set",
+    "followUp": "Follow-up",
+    "noFollowUp": "No follow-up scheduled",
+    "overdue": "Overdue",
+    "followUpsSent": "{{count}} follow-up sent",
+    "followUpsSent_plural": "{{count}} follow-ups sent",
+    "contact": "Contact",
+    "primaryContact": "Primary Contact",
+    "secondContact": "Second Contact",
+    "noContactInfo": "No contact info yet",
+    "pipelineStage": "Pipeline Stage",
+    "firstContact": "First contact",
+    "source": "Source"
   },
   "slidePanel": {
     "tabs": {
@@ -262,6 +281,37 @@
     "interactionContentPlaceholder": "Write the interaction content...",
     "emptyInteractions": "No interactions yet. Send your first message or add a note.",
     "emptyTasks": "No tasks linked to this prospect.",
-    "emptyNotes": "No notes yet."
+    "emptyNotes": "No notes yet.",
+    "email": {
+      "sent": "Sent",
+      "received": "Received",
+      "from": "From",
+      "to": "To",
+      "cc": "CC",
+      "noSubject": "(No subject)",
+      "reply": "Reply"
+    }
+  },
+  "emailCompose": {
+    "title": "Compose Email",
+    "replyTitle": "Reply to Email",
+    "subtitle": "Send to {{name}}",
+    "sendEmail": "Send Email",
+    "to": "To",
+    "toPlaceholder": "recipient@example.com",
+    "subject": "Subject",
+    "subjectPlaceholder": "Email subject...",
+    "body": "Message",
+    "bodyPlaceholder": "Write your message here...",
+    "template": "Template",
+    "noTemplate": "No template (blank)",
+    "signatureNote": "Your branded signature will be added automatically.",
+    "send": "Send",
+    "sending": "Sending...",
+    "sent": "Email sent",
+    "sentDescription": "Email delivered to {{to}}",
+    "sendFailed": "Send failed",
+    "sendFailedDescription": "Could not send the email. Please try again.",
+    "reply": "Reply"
   }
 }

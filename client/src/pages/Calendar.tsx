@@ -484,6 +484,7 @@ export default function CalendarPage() {
   const [viewportWidth, setViewportWidth] = useState(() => typeof window !== "undefined" ? window.innerWidth : 1024);
   const isMobile = useIsMobile();
   const isTablet = viewportWidth >= 640 && viewportWidth < 1024;
+  const isNarrowDesktop = viewportWidth >= 1024 && viewportWidth < 1280;
 
   useEffect(() => {
     const handleResize = () => {
@@ -997,9 +998,9 @@ export default function CalendarPage() {
   if (leadsLoading) {
     return (
       <CrmShell>
-        <div className="flex-1 min-h-0 grid grid-cols-[340px_1fr] gap-[3px] p-0" data-testid="page-calendar">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-[3px] p-0" data-testid="page-calendar">
           {/* Left panel */}
-          <div className="bg-muted rounded-lg flex flex-col overflow-hidden">
+          <div className="hidden lg:flex bg-muted rounded-lg flex-col overflow-hidden">
             {/* Header */}
             <div className="px-3.5 pt-5 pb-1 flex items-center justify-between shrink-0">
               <Skeleton className="h-5 w-24 rounded bg-primary/10" />
@@ -1075,7 +1076,7 @@ export default function CalendarPage() {
       >
         <div className={cn(
           "flex flex-col px-0 py-0 bg-transparent",
-          isMobile || isTablet ? "h-auto overflow-y-auto" : "h-full overflow-hidden"
+          isMobile || isTablet ? "h-auto overflow-y-auto" : isNarrowDesktop && (selectedBooking || selectedLead) ? "h-full overflow-y-auto" : "h-full overflow-hidden"
         )} data-testid="page-calendar">
           {/* Hidden legacy header */}
           <div className="flex items-center gap-4 mb-6 shrink-0 hidden">
@@ -1089,6 +1090,10 @@ export default function CalendarPage() {
               ? "flex flex-col h-full overflow-hidden"
               : isTablet
               ? "flex flex-col overflow-y-auto"
+              : isNarrowDesktop
+              ? (selectedBooking || selectedLead)
+                ? "grid grid-cols-[340px_minmax(0,1fr)] overflow-y-auto"
+                : "grid grid-cols-[340px_minmax(0,1fr)]"
               : (selectedBooking || selectedLead)
                 ? "grid grid-cols-[340px_minmax(0,1386px)_340px]"
                 : "grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1386px)]"
@@ -1098,7 +1103,7 @@ export default function CalendarPage() {
                 RIGHT PANEL — Calendar views
                ══════════════════════════════════════════════════════════════════ */}
             <div ref={calendarSwipeRef} className={cn(
-              "bg-card overflow-hidden flex flex-col rounded-lg lg:order-2",
+              "bg-card overflow-hidden flex flex-col rounded-lg order-1 lg:order-2",
               isMobile && viewMode === "month" ? "h-[55vh] shrink-0" : "",
               isMobile && viewMode === "week" ? "h-[360px] shrink-0" : "",
               isMobile && viewMode === "day" ? "flex-1" : "",
@@ -1174,7 +1179,7 @@ export default function CalendarPage() {
                   <PopoverTrigger asChild>
                     <IconBtn className="!h-9 !w-9" title={t("book.newAppointment")}><Plus className="h-4 w-4" /></IconBtn>
                   </PopoverTrigger>
-                  <PopoverContent className="w-72 p-0 overflow-hidden" align="end">
+                  <PopoverContent className="w-72 max-w-[calc(100vw-2rem)] p-0 overflow-hidden" align="end">
                     <div className="px-3 pt-3 pb-2 border-b border-border/30">
                       <h3 className="text-[13px] font-semibold font-heading">{t("book.title")}</h3>
                     </div>
@@ -1705,7 +1710,11 @@ export default function CalendarPage() {
                 unreadCount: 0,
               } : null;
               return (
-                <div className="overflow-hidden flex flex-col lg:order-3 h-full">
+                <div className={cn(
+                  "overflow-hidden flex flex-col lg:order-3 h-full",
+                  isNarrowDesktop && "col-span-2 max-h-[400px]",
+                  (isMobile || isTablet) && "order-3"
+                )}>
                   <ContactSidebar
                     selected={fakeThread}
                     onClose={() => { setSelectedBooking(null); setSelectedLead(null); }}
@@ -1724,7 +1733,7 @@ export default function CalendarPage() {
                 LEFT PANEL — My Calendar (appointment list)
                ══════════════════════════════════════════════════════════════════ */}
             <div className={cn(
-              "bg-muted flex flex-col overflow-hidden rounded-lg lg:order-1",
+              "bg-muted flex flex-col overflow-hidden rounded-lg order-2 lg:order-1",
               isMobile && viewMode === "month" ? "flex-1 min-h-0" : "",
               isMobile && (viewMode === "week" || viewMode === "day") ? "hidden" : "",
               !isMobile && isTablet ? "min-h-[200px] max-h-[300px]" : "",

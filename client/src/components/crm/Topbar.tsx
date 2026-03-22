@@ -287,7 +287,7 @@ export function Topbar({
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <div
-              className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-background"
+              className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-indigo rounded-full flex items-center justify-center border-2 border-background shadow-[0_0_8px_rgba(99,102,241,0.35)]"
               data-testid="badge-notifications-count-mobile"
               aria-hidden="true"
             >
@@ -317,15 +317,17 @@ export function Topbar({
           )}
         </div>
 
-        {/* AI Agent */}
-        <IconBtn
-          onClick={toggleAiWidget}
-          data-testid="button-ai-agent-mobile"
-          aria-label="AI Agent"
-          className="shrink-0 min-h-[44px] min-w-[44px]"
-        >
-          <Bot className="h-4 w-4" />
-        </IconBtn>
+        {/* AI Agent (agency users only) */}
+        {isAgencyUser && (
+          <IconBtn
+            onClick={toggleAiWidget}
+            data-testid="button-ai-agent-mobile"
+            aria-label="AI Agent"
+            className="shrink-0 min-h-[44px] min-w-[44px]"
+          >
+            <Bot className="h-4 w-4" />
+          </IconBtn>
+        )}
 
         {/* User Avatar */}
         <DropdownMenu>
@@ -431,10 +433,10 @@ export function Topbar({
               </DropdownMenuItem>
             )}
 
-            {/* My Profile */}
+            {/* My Profile / Settings */}
             <DropdownMenuItem
               onClick={() => {
-                sessionStorage.setItem("pendingSettingsSection", "profile");
+                sessionStorage.setItem("pendingSettingsSection", isAgencyUser ? "profile" : "account");
                 setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`);
               }}
               className="flex items-center gap-2 cursor-pointer min-h-[44px] rounded-xl mx-1"
@@ -682,23 +684,25 @@ export function Topbar({
             </Tooltip>
           </span>
 
-          {/* AI Agent — hidden on mobile */}
-          <span className="hidden md:contents">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <IconBtn
-                  onClick={toggleAiWidget}
-                  data-testid="button-ai-agent"
-                  aria-label="AI Agent"
-                >
-                  <Bot className="h-4 w-4" />
-                </IconBtn>
-              </TooltipTrigger>
-              <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                AI Agent
-              </TooltipContent>
-            </Tooltip>
-          </span>
+          {/* AI Agent — agency users only, hidden on mobile */}
+          {isAgencyUser && (
+            <span className="hidden md:contents">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <IconBtn
+                    onClick={toggleAiWidget}
+                    data-testid="button-ai-agent"
+                    aria-label="AI Agent"
+                  >
+                    <Bot className="h-4 w-4" />
+                  </IconBtn>
+                </TooltipTrigger>
+                <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                  AI Agent
+                </TooltipContent>
+              </Tooltip>
+            </span>
+          )}
 
           {/* Help — hidden on mobile */}
           <span className="hidden md:contents">
@@ -892,7 +896,7 @@ export function Topbar({
 
               <DropdownMenuItem
                 onClick={() => {
-                  sessionStorage.setItem("pendingSettingsSection", "profile");
+                  sessionStorage.setItem("pendingSettingsSection", isAgencyUser ? "profile" : "account");
                   setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`);
                 }}
                 className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 mt-1"

@@ -77,7 +77,10 @@
       "activeDevices": "Actieve Apparaten",
       "added": "toegevoegd",
       "remove": "Verwijderen",
-      "deviceRemoved": "Apparaat verwijderd"
+      "deviceRemoved": "Apparaat verwijderd",
+      "permissionDenied": "Meldingen zijn geblokkeerd. Sta ze toe in je browserinstellingen.",
+      "notConfigured": "Push-meldingen zijn niet geconfigureerd op deze server.",
+      "serverRegistrationFailed": "Kon niet registreren, probeer het opnieuw."
     },
     "overrides": {
       "title": "Meldingsoverschrijvingen per Type",
@@ -126,6 +129,16 @@
     "automationsDesc": "Automatiseringslogboeken bekijken",
     "prompts": "Prompts",
     "promptsDesc": "AI-promptbibliotheek"
+  },
+  "gmail": {
+    "title": "E-mailintegratie",
+    "description": "Verbind je Gmail-account om e-mails rechtstreeks vanuit het CRM te verzenden en ontvangen.",
+    "connect": "Gmail verbinden",
+    "disconnect": "Ontkoppelen",
+    "connected": "Gmail succesvol verbonden",
+    "disconnected": "Gmail ontkoppeld",
+    "connectError": "Gmail verbinden mislukt",
+    "disconnectError": "Gmail ontkoppelen mislukt"
   },
   "security": {
     "title": "Beveiliging",

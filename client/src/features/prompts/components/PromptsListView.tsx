@@ -35,7 +35,6 @@ import {
   getStatusBadgeClasses,
   getScoreColorClasses,
   getPromptId,
-  MODEL_OPTIONS,
   type PromptViewMode,
   type PromptSortOption,
   type PromptGroupOption,
@@ -62,6 +61,7 @@ const PROMPT_GROUP_TKEYS: Record<PromptGroupOption, string> = {
   status:   "labels.status",
   model:    "labels.model",
   campaign: "labels.campaign",
+  account:  "labels.account",
 };
 
 const VIEW_TAB_DEFS = [
@@ -109,7 +109,7 @@ const EditPanel = forwardRef<EditPanelHandle, {
   onSaved: (saved: any) => void;
   onDelete: (prompt: any) => void;
   onSavingChange?: (saving: boolean) => void;
-  campaigns?: { id: number; name: string }[];
+  campaigns?: { id: number; name: string; aiModel: string }[];
 }>(function EditPanel({ prompt, onSaved, onDelete, onSavingChange, campaigns = [] }, ref) {
   const { toast } = useToast();
   const { t } = useTranslation("prompts");
@@ -118,7 +118,7 @@ const EditPanel = forwardRef<EditPanelHandle, {
     name: "",
     promptText: "",
     systemMessage: "",
-    model: "gpt-4o",
+    model: "gpt-5.1",
     temperature: "0.7",
     maxTokens: "1000",
     status: "active",
@@ -144,7 +144,7 @@ const EditPanel = forwardRef<EditPanelHandle, {
       name: prompt.name || "",
       promptText: prompt.promptText || prompt.prompt_text || "",
       systemMessage: prompt.systemMessage || prompt.system_message || "",
-      model: prompt.model || "gpt-4o",
+      model: prompt.model || "gpt-5.1",
       temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
       maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
       status: (prompt.status || "active").toLowerCase(),
@@ -347,17 +347,12 @@ const EditPanel = forwardRef<EditPanelHandle, {
                 </div>
                 <div>
                   <label className={labelCls}>{t("detail.model")}</label>
-                  <select
-                    className={selectCls}
-                    value={form.model}
-                    onChange={(e) => setField("model", e.target.value)}
-                  >
-                    {MODEL_OPTIONS.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
+                  <div className={`${selectCls} opacity-60 cursor-default`}>
+                    {(() => {
+                      const c = campaigns.find((c) => String(c.id) === form.campaignsId);
+                      return c?.aiModel || t("form.noCampaignModel");
+                    })()}
+                  </div>
                 </div>
                 <div>
                   <label className={labelCls}>{t("labels.status")}</label>
@@ -438,7 +433,8 @@ function PromptListCard({
 }) {
   const { t } = useTranslation("prompts");
   const name = prompt.name || t("labels.untitled");
-  const iconColor = getPromptIconColor(name);
+  const aId = prompt.accountsId || prompt.Accounts_id;
+  const iconColor = getPromptIconColor(aId ? `account-${aId}` : "agency-bots");
   const cId = prompt.campaignsId || prompt.Campaigns_id;
   const campaignName = cId ? campaignMap.get(cId) : null;
   const updatedAt = prompt.updatedAt || prompt.updated_at;
@@ -458,74 +454,29 @@ function PromptListCard({
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
-      <div className="px-3 pt-3 pb-2.5 flex flex-col gap-1.5">
-        {/* Top row: avatar + name + status badge */}
-        <div className="flex items-start gap-2.5">
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: iconColor.bg }}
-          >
-            <Bot className="h-5 w-5" style={{ color: iconColor.icon }} />
-          </div>
-          <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-start justify-between gap-1.5">
-              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
-                {name}
-              </p>
-              <span
-                className={cn(
-                  "shrink-0 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full mt-0.5 whitespace-nowrap",
-                  getStatusBadgeClasses(prompt.status),
-                )}
-              >
-                {t(STATUS_I18N_KEY[prompt.status?.toLowerCase() ?? ""] ?? "status.unknown")}
-              </span>
-            </div>
-            {/* Model + campaign */}
-            <div className="flex items-center gap-1 mt-[3px] min-w-0">
-              <span className="text-[11px] text-muted-foreground truncate">
-                {prompt.model || "—"}
-              </span>
-              {campaignName && (
-                <>
-                  <span className="text-muted-foreground/30 shrink-0">·</span>
-                  <span className="text-[11px] text-muted-foreground/60 truncate">
-                    {campaignName}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
+      <div className="px-3 py-2.5 flex items-center gap-2.5">
+        {/* Avatar */}
+        <div
+          className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+          style={{ backgroundColor: iconColor.bg }}
+        >
+          <Bot className="h-4.5 w-4.5" style={{ color: iconColor.icon }} />
         </div>
-
-        {/* Text preview */}
-        {(prompt.promptText || prompt.prompt_text) && (
-          <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2 -mt-0.5">
-            {(prompt.promptText || prompt.prompt_text as string).slice(0, 120)}
-          </p>
-        )}
-
-        {/* Score + updated time */}
-        {(prompt.performanceScore != null || updatedAt) && (
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground/50">
-            {prompt.performanceScore != null ? (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-0.5 font-medium",
-                  getScoreColorClasses(prompt.performanceScore),
-                )}
-              >
-                <Star className="h-3 w-3 fill-current" />
-                {prompt.performanceScore}
-              </span>
-            ) : (
-              <span />
-            )}
-            {updatedAt && (
-              <span className="tabular-nums">{formatRelativeTime(updatedAt, t)}</span>
-            )}
-          </div>
-        )}
+        {/* Name */}
+        <p className="flex-1 min-w-0 text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
+          {name}
+        </p>
+        {/* Date + model, right-aligned */}
+        <div className="shrink-0 flex flex-col items-end gap-0.5">
+          <span className="text-[10px] text-muted-foreground/50 tabular-nums whitespace-nowrap">
+            {formatRelativeTime(updatedAt, t)}
+          </span>
+          {prompt.model && (
+            <span className="text-[10px] text-muted-foreground/40 whitespace-nowrap">
+              {prompt.model}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -556,7 +507,7 @@ const SORT_OPTIONS: PromptSortOption[] = [
   "score_desc",
   "score_asc",
 ];
-const GROUP_OPTIONS: PromptGroupOption[] = ["none", "status", "model", "campaign"];
+const GROUP_OPTIONS: PromptGroupOption[] = ["none", "status", "model", "campaign", "account"];
 const STATUS_OPTIONS = ["all", "active", "archived"] as const;
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
@@ -578,15 +529,18 @@ interface PromptsListViewProps {
   onModelFilterChange: (m: string) => void;
   campaignFilter: string;
   onCampaignFilterChange: (c: string) => void;
+  accountFilter: string;
+  onAccountFilterChange: (a: string) => void;
   availableModels: string[];
   availableCampaigns: { id: number; name: string }[];
+  availableAccounts: { id: number; name: string }[];
   isFilterActive: boolean;
   onClearAllFilters: () => void;
   onSaved: (saved: any) => void;
   onDelete: (prompt: any) => void;
   onOpenCreate: () => void;
   campaignMap: Map<number, string>;
-  campaigns: { id: number; name: string }[];
+  campaigns: { id: number; name: string; aiModel: string }[];
 }
 
 /* ── Main component ──────────────────────────────────────────────────────── */
@@ -608,8 +562,11 @@ export function PromptsListView({
   onModelFilterChange,
   campaignFilter,
   onCampaignFilterChange,
+  accountFilter,
+  onAccountFilterChange,
   availableModels,
   availableCampaigns,
+  availableAccounts,
   isFilterActive,
   onClearAllFilters,
   onSaved,
@@ -872,6 +829,32 @@ export function PromptsListView({
                     </>
                   )}
 
+                  {availableAccounts.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {t("labels.account")}
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem
+                        className={cn("text-[12px]", !accountFilter && "font-semibold text-brand-indigo")}
+                        onClick={(e) => { e.preventDefault(); onAccountFilterChange(""); }}
+                      >
+                        {t("toolbar.allAccounts")}
+                        {!accountFilter && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                      {availableAccounts.map((a) => (
+                        <DropdownMenuItem
+                          key={a.id}
+                          className={cn("text-[12px]", accountFilter === String(a.id) && "font-semibold text-brand-indigo")}
+                          onClick={(e) => { e.preventDefault(); onAccountFilterChange(accountFilter === String(a.id) ? "" : String(a.id)); }}
+                        >
+                          <span className="truncate flex-1">{a.name}</span>
+                          {accountFilter === String(a.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+
                   {isFilterActive && (
                     <>
                       <DropdownMenuSeparator />
@@ -945,7 +928,8 @@ export function PromptsListView({
             <div className="px-4 pt-3 pb-2 shrink-0">
               <div className="flex items-center gap-3">
                 {(() => {
-                  const ic = getPromptIconColor(selectedPrompt.name || t("labels.untitledPrompt"));
+                  const spAId = selectedPrompt.accountsId || selectedPrompt.Accounts_id;
+                  const ic = getPromptIconColor(spAId ? `account-${spAId}` : "agency-bots");
                   return (
                     <div
                       className="h-12 w-12 rounded-full flex items-center justify-center shrink-0"

@@ -31,6 +31,18 @@ export const createProspect = async (payload: Record<string, unknown>) => {
   return await res.json();
 };
 
+export const convertProspectToAccount = async (rowId: number | string) => {
+  const res = await apiFetch(`/api/prospects/${rowId}/convert-to-account`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Failed to convert prospect" }));
+    throw new Error(err.message || "Failed to convert prospect");
+  }
+  return await res.json();
+};
+
 export const deleteProspect = async (rowId: number | string) => {
   const res = await apiFetch(`/api/prospects/${rowId}`, {
     method: "DELETE",

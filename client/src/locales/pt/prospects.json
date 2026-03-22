@@ -225,7 +225,10 @@
     "removePhoto": "Remover foto",
     "cropPhoto": "Recortar Foto",
     "cropDescription": "Arraste para reposicionar \u00b7 use o controle para zoom",
-    "savePhoto": "Guardar Foto"
+    "savePhoto": "Guardar Foto",
+    "convertToAccount": "Converter em Conta",
+    "converting": "Convertendo...",
+    "linkedAccount": "Conta"
   },
   "related": {
     "unnamed": "Sem Nome",
@@ -242,6 +245,22 @@
     "title": "Selecione um prospecto",
     "description": "Clique em qualquer prospecto \u00e0 esquerda para ver os seus detalhes e informa\u00e7\u00f5es de contacto.",
     "chooseFromList": "\u2190 Escolha da lista"
+  },
+  "mobileSheet": {
+    "nextAction": "Pr\u00f3xima A\u00e7\u00e3o",
+    "noNextAction": "Nenhuma a\u00e7\u00e3o definida",
+    "followUp": "Acompanhamento",
+    "noFollowUp": "Nenhum acompanhamento agendado",
+    "overdue": "Atrasado",
+    "followUpsSent": "{{count}} acompanhamento enviado",
+    "followUpsSent_plural": "{{count}} acompanhamentos enviados",
+    "contact": "Contacto",
+    "primaryContact": "Contacto Principal",
+    "secondContact": "Segundo Contacto",
+    "noContactInfo": "Sem informa\u00e7\u00f5es de contacto",
+    "pipelineStage": "Fase do Pipeline",
+    "firstContact": "Primeiro contacto",
+    "source": "Fonte"
   },
   "slidePanel": {
     "tabs": {
@@ -269,6 +288,37 @@
     "interactionContentPlaceholder": "Escreva o conte\u00fado da intera\u00e7\u00e3o...",
     "emptyInteractions": "Sem intera\u00e7\u00f5es ainda. Envie a sua primeira mensagem ou adicione uma nota.",
     "emptyTasks": "Nenhuma tarefa associada a este prospecto.",
-    "emptyNotes": "Sem notas ainda."
+    "emptyNotes": "Sem notas ainda.",
+    "email": {
+      "sent": "Enviado",
+      "received": "Recebido",
+      "from": "De",
+      "to": "Para",
+      "cc": "CC",
+      "noSubject": "(Sem assunto)",
+      "reply": "Responder"
+    }
+  },
+  "emailCompose": {
+    "title": "Escrever E-mail",
+    "replyTitle": "Responder E-mail",
+    "subtitle": "Enviar para {{name}}",
+    "sendEmail": "Enviar E-mail",
+    "to": "Para",
+    "toPlaceholder": "destinatario@exemplo.com",
+    "subject": "Assunto",
+    "subjectPlaceholder": "Assunto do e-mail...",
+    "body": "Mensagem",
+    "bodyPlaceholder": "Escreva sua mensagem aqui...",
+    "template": "Modelo",
+    "noTemplate": "Sem modelo (em branco)",
+    "signatureNote": "Sua assinatura profissional sera adicionada automaticamente.",
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "sent": "E-mail enviado",
+    "sentDescription": "E-mail entregue para {{to}}",
+    "sendFailed": "Falha no envio",
+    "sendFailedDescription": "Nao foi possivel enviar o e-mail. Tente novamente.",
+    "reply": "Responder"
   }
 }

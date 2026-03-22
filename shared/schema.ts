@@ -269,6 +269,7 @@ export const campaigns = nocodb.table("Campaigns", {
   secondMessage: text("second_message"),
   agentName: text("agent_name"),
   serviceName: text("service_name"),
+  typoCount: integer("typo_count").default(1),
   // Performance metrics (calculated fields on Campaigns table)
   totalLeadsTargeted: integer("total_leads_targeted"),
   totalMessagesSent: integer("total_messages_sent"),
@@ -286,6 +287,8 @@ export const campaigns = nocodb.table("Campaigns", {
   campaignHue: integer("campaign_hue"),
   aiSummary: text("ai_summary"),
   aiSummaryGeneratedAt: timestamp("ai_summary_generated_at"),
+  abEnabled: boolean("ab_enabled").default(false),
+  abSplitRatio: integer("ab_split_ratio").default(50),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
@@ -433,6 +436,7 @@ export const leads = nocodb.table("Leads", {
   channelIdentifier: text("channel_identifier"),
   aiNotes: text("ai_notes"),
   aiNotesGeneratedAt: timestamp("ai_notes_generated_at"),
+  abVariant: text("ab_variant"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),
@@ -510,6 +514,8 @@ export const promptLibrary = nocodb.table("Prompt_Library", {
   status: text("status"),
   performanceScore: text("performance_score"),
   notes: text("notes"),
+  abVariant: text("ab_variant"),
+  firstMessage: text("first_message"),
 }, (t) => [
   index("prompt_library_accounts_id_idx").on(t.accountsId),
 ]);
@@ -1083,3 +1089,25 @@ export const aiFiles = nocodb.table("AI_Files", {
 export const insertAiFileSchema = createInsertSchema(aiFiles).omit({ id: true, createdAt: true });
 export type AiFile = typeof aiFiles.$inferSelect;
 export type InsertAiFile = z.infer<typeof insertAiFileSchema>;
+
+// ─── Gmail Sync State ────────────────────────────────────────────────────────
+
+export const gmailSyncState = nocodb.table("Gmail_Sync_State", {
+  id: serial("id").primaryKey(),
+  accountEmail: varchar("account_email", { length: 255 }).notNull(),
+  lastHistoryId: varchar("last_history_id", { length: 100 }),
+  lastFullSyncAt: timestamp("last_full_sync_at"),
+  oauthTokensEncrypted: text("oauth_tokens_encrypted"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (t) => [
+  index("gmail_sync_state_account_email_idx").on(t.accountEmail),
+]);
+
+export const insertGmailSyncStateSchema = createInsertSchema(gmailSyncState).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type GmailSyncState = typeof gmailSyncState.$inferSelect;
+export type InsertGmailSyncState = z.infer<typeof insertGmailSyncStateSchema>;

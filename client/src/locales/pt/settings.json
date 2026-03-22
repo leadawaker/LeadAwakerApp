@@ -77,7 +77,10 @@
       "activeDevices": "Dispositivos Ativos",
       "added": "adicionado",
       "remove": "Remover",
-      "deviceRemoved": "Dispositivo removido"
+      "deviceRemoved": "Dispositivo removido",
+      "permissionDenied": "Notifica\u00e7\u00f5es est\u00e3o bloqueadas. Por favor, permita nas configura\u00e7\u00f5es do seu navegador.",
+      "notConfigured": "Notifica\u00e7\u00f5es push n\u00e3o est\u00e3o configuradas neste servidor.",
+      "serverRegistrationFailed": "N\u00e3o foi poss\u00edvel registrar, tente novamente."
     },
     "overrides": {
       "title": "Substituicoes por Tipo de Notificacao",
@@ -126,6 +129,16 @@
     "automationsDesc": "Ver logs de automacao",
     "prompts": "Prompts",
     "promptsDesc": "Biblioteca de prompts de IA"
+  },
+  "gmail": {
+    "title": "Integração de Email",
+    "description": "Conecte sua conta do Gmail para enviar e receber emails diretamente do CRM.",
+    "connect": "Conectar Gmail",
+    "disconnect": "Desconectar",
+    "connected": "Gmail conectado com sucesso",
+    "disconnected": "Gmail desconectado",
+    "connectError": "Falha ao conectar Gmail",
+    "disconnectError": "Falha ao desconectar Gmail"
   },
   "security": {
     "title": "Seguranca",

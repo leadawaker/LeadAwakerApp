@@ -94,6 +94,8 @@ export function useNotificationStream(options?: {
   const qc = useQueryClient();
   const sseRef = useRef<EventSource | null>(null);
   const lastNotifIdRef = useRef<number>(0);
+  // Track notification IDs that already triggered a toast via SSE to avoid duplicates
+  const sseToastedIdsRef = useRef<Set<number>>(new Set());
 
   /* ── Unread count (lightweight poll every 30s) ──────────────── */
   const { data: countData } = useQuery<CountResponse>({
@@ -154,9 +156,11 @@ export function useNotificationStream(options?: {
     // This is handled via the onSuccess in the query above — we compare IDs
 
     es.addEventListener("notification", (event: MessageEvent) => {
-      // If the server ever adds a dedicated "notification" SSE event, handle it directly
+      // Handle dedicated "notification" SSE events from the server
       try {
         const notif: Notification = JSON.parse(event.data);
+        // Track this ID so the refetch-based toast effect skips it
+        sseToastedIdsRef.current.add(notif.id);
         fireNotificationToast(notif);
         // Optimistically prepend to cache
         qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
@@ -191,12 +195,21 @@ export function useNotificationStream(options?: {
   useEffect(() => {
     if (!notifications.length) return;
     const prevIds = new Set(prevItemsRef.current.map((n) => n.id));
-    const newOnes = notifications.filter((n) => !prevIds.has(n.id) && !n.read);
+    const newOnes = notifications.filter(
+      (n) => !prevIds.has(n.id) && !n.read && !sseToastedIdsRef.current.has(n.id)
+    );
 
     // Only toast if this isn't the initial load
     if (prevItemsRef.current.length > 0) {
       // Limit to 3 toasts to avoid flooding
       newOnes.slice(0, 3).forEach((n) => fireNotificationToast(n));
+    }
+
+    // Clean up SSE-toasted IDs that are now in the list (no longer needed)
+    for (const id of sseToastedIdsRef.current) {
+      if (notifications.some((n) => n.id === id)) {
+        sseToastedIdsRef.current.delete(id);
+      }
     }
 
     prevItemsRef.current = notifications;
@@ -209,6 +222,14 @@ export function useNotificationStream(options?: {
       if (!res.ok) throw new Error("Failed to mark notification as read");
     },
     onMutate: async (id) => {
+      // Cancel outgoing refetches so they don't overwrite optimistic update
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
+
+      // Snapshot previous values for rollback
+      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
+      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+
       // Optimistic update
       qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
         if (!old) return old;
@@ -221,6 +242,17 @@ export function useNotificationStream(options?: {
       qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], (old) => ({
         unreadCount: Math.max(0, (old?.unreadCount ?? 1) - 1),
       }));
+
+      return { previousNotifs, previousCount };
+    },
+    onError: (_err, _id, context) => {
+      // Rollback on failure
+      if (context?.previousNotifs) {
+        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+      }
+      if (context?.previousCount) {
+        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+      }
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
@@ -238,6 +270,12 @@ export function useNotificationStream(options?: {
       if (!res.ok) throw new Error("Failed to mark all as read");
     },
     onMutate: async () => {
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
+
+      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
+      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+
       qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
         if (!old) return old;
         return {
@@ -249,6 +287,16 @@ export function useNotificationStream(options?: {
       qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], () => ({
         unreadCount: 0,
       }));
+
+      return { previousNotifs, previousCount };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotifs) {
+        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+      }
+      if (context?.previousCount) {
+        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+      }
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY] });
@@ -260,11 +308,108 @@ export function useNotificationStream(options?: {
     markAllAsReadMutation.mutate();
   }, [markAllAsReadMutation]);
 
+  /* ── Delete single notification ────────────────────────────── */
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiFetch(`/api/notifications/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete notification");
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
+
+      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
+      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+
+      // Optimistic: remove from list and adjust counts
+      qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
+        if (!old) return old;
+        const target = old.items.find((n) => n.id === id);
+        const wasUnread = target ? !target.read : false;
+        return {
+          ...old,
+          items: old.items.filter((n) => n.id !== id),
+          unreadCount: wasUnread ? Math.max(0, old.unreadCount - 1) : old.unreadCount,
+          totalCount: Math.max(0, old.totalCount - 1),
+        };
+      });
+      qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], (old) => {
+        const target = previousNotifs?.items.find((n) => n.id === id);
+        const wasUnread = target ? !target.read : false;
+        return {
+          unreadCount: wasUnread ? Math.max(0, (old?.unreadCount ?? 1) - 1) : (old?.unreadCount ?? 0),
+        };
+      });
+
+      return { previousNotifs, previousCount };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousNotifs) {
+        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+      }
+      if (context?.previousCount) {
+        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY] });
+      qc.invalidateQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
+    },
+  });
+
+  const deleteNotification = useCallback((id: number) => {
+    deleteNotificationMutation.mutate(id);
+  }, [deleteNotificationMutation]);
+
+  /* ── Delete all notifications ────────────────────────────── */
+  const deleteAllNotificationsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch("/api/notifications/all", { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete all notifications");
+    },
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
+      await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
+
+      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
+      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+
+      qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], () => ({
+        items: [],
+        unreadCount: 0,
+        totalCount: 0,
+      }));
+      qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], () => ({
+        unreadCount: 0,
+      }));
+
+      return { previousNotifs, previousCount };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotifs) {
+        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+      }
+      if (context?.previousCount) {
+        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY] });
+      qc.invalidateQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
+    },
+  });
+
+  const deleteAllNotifications = useCallback(() => {
+    deleteAllNotificationsMutation.mutate();
+  }, [deleteAllNotificationsMutation]);
+
   return {
     unreadCount,
     notifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
     refetchNotifications,
   };
 }

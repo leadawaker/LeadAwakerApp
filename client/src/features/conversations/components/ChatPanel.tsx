@@ -265,6 +265,10 @@ export function ChatPanel({
   const activeSlotLayers = useBgSlotLayers(doodleConfig.bgStyle !== "crm" ? doodleConfig.bgStyle : "social1", isDark);
 
   // ── Gradient tester state (dev tool) ────────────────────────────────────────
+  const GRADIENT_KEY = "la:gradient:chat";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
   const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
@@ -285,6 +289,18 @@ export function ChatPanel({
     setGradientLayers(DEFAULT_LAYERS);
     setGradientDragMode(false);
   }, []);
+
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+  const toggleGradientTester = useCallback(() => {
+    setGradientTesterOpen(prev => {
+      if (!prev && savedGradient) setGradientLayers(savedGradient);
+      return !prev;
+    });
+  }, [savedGradient]);
 
   // Compute lead avatar colors
   const leadAvatarColors = useMemo(() => {
@@ -426,6 +442,19 @@ export function ChatPanel({
             {gradientDragMode && (
               <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
             )}
+            {doodleConfig.enabled && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={getDoodleStyle(doodleConfig.patternId, doodleConfig.color, doodleConfig.size, isDark ? 100 : 0, isDark ? "screen" : "multiply")}
+              />
+            )}
+          </>
+        ) : savedGradient ? (
+          <>
+            {savedGradient.map((layer: GradientLayer) => {
+              const style = layerToStyle(layer);
+              return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+            })}
             {doodleConfig.enabled && (
               <div
                 className="absolute inset-0 pointer-events-none"
@@ -619,7 +648,7 @@ export function ChatPanel({
               {/* Gradient tester — always gray */}
               <button
                 type="button"
-                onClick={() => setGradientTesterOpen(prev => !prev)}
+                onClick={toggleGradientTester}
                 className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
                 title={t("chat.background.gradientTester")}
               >
@@ -1172,6 +1201,7 @@ export function ChatPanel({
             saveSlotLayers(slot, gradientLayers);
             setDoodleConfig({ bgStyle: slot as ChatBgStyle });
           }}
+          onApply={handleApplyGradient}
         />
       </section>
 

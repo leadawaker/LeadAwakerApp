@@ -17,7 +17,6 @@ import {
   getStatusBadgeClasses,
   getScoreColorClasses,
   getPromptId,
-  MODEL_OPTIONS,
   type PromptFormData,
 } from "../types";
 
@@ -41,7 +40,7 @@ function EditPanel({
   prompt: any;
   onSaved: (saved: any) => void;
   onDelete: (prompt: any) => void;
-  campaigns?: { id: number; name: string }[];
+  campaigns?: { id: number; name: string; aiModel: string }[];
 }) {
   const { t } = useTranslation("prompts");
   const { toast } = useToast();
@@ -50,7 +49,7 @@ function EditPanel({
     name: "",
     promptText: "",
     systemMessage: "",
-    model: "gpt-4o",
+    model: "gpt-5.4-mini",
     temperature: "0.7",
     maxTokens: "1000",
     status: "active",
@@ -67,7 +66,7 @@ function EditPanel({
       name: prompt.name || "",
       promptText: prompt.promptText || prompt.prompt_text || "",
       systemMessage: prompt.systemMessage || prompt.system_message || "",
-      model: prompt.model || "gpt-4o",
+      model: prompt.model || "gpt-5.1",
       temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
       maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
       status: prompt.status || "active",
@@ -215,15 +214,12 @@ function EditPanel({
         </div>
         <div>
           <label className={labelCls}>{t("labels.model")}</label>
-          <select
-            className={cn(selectCls, "border-border/30")}
-            value={form.model}
-            onChange={(e) => setField("model", e.target.value)}
-          >
-            {MODEL_OPTIONS.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+          <div className={cn(selectCls, "border-border/30 opacity-60 cursor-default")}>
+            {(() => {
+              const c = campaigns.find((c) => String(c.id) === form.campaignsId);
+              return c?.aiModel || t("form.noCampaignModel");
+            })()}
+          </div>
         </div>
         <div>
           <label className={labelCls}>{t("labels.status")}</label>
@@ -297,7 +293,7 @@ interface PromptsCardViewProps {
   onDelete: (prompt: any) => void;
   onToggleStatus: (prompt: any) => void;
   campaignMap: Map<number, string>;
-  campaigns: { id: number; name: string }[];
+  campaigns: { id: number; name: string; aiModel: string }[];
 }
 
 export function PromptsCardView({

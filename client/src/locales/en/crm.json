@@ -208,6 +208,15 @@
     "allCaughtUp": "All caught up!",
     "noUnread": "No unread notifications.",
     "noNotifications": "No notifications yet.",
-    "older": "Older"
+    "older": "Older",
+    "loading": "Loading...",
+    "clearAll": "Clear all",
+    "delete": "Delete notification",
+    "showingLatest": "Showing latest {{count}}",
+    "filterAll": "All",
+    "filterMessages": "Messages",
+    "filterTasks": "Tasks",
+    "filterBookings": "Bookings",
+    "filterSystem": "System"
   }
 }

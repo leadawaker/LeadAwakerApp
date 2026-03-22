@@ -175,11 +175,6 @@ export function useProspectsData(currentAccountId?: number) {
       );
 
       await Promise.all(updatePromises);
-
-      toast({
-        title: "Updated",
-        description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
-      });
     } catch (err) {
       console.error("Detailed sync error:", err);
       toast({

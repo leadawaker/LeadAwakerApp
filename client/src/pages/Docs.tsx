@@ -4,7 +4,7 @@
  * Split-pane layout: left sidebar navigation + right scrollable content.
  */
 
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,9 @@ import {
   FileText,
   Receipt,
   User,
+  Paintbrush,
 } from "lucide-react";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
   Sheet,
   SheetContent,
@@ -57,46 +59,11 @@ function matchesSearch(keywords: string, q: string): boolean {
 
 // ── Changelog data ────────────────────────────────────────────────────────────
 
-const CHANGELOG: { version: string; date: string; items: string[] }[] = [
-  {
-    version: "v1.5",
-    date: "March 2026",
-    items: [
-      "Documentation redesign — sidebar navigation, expanded content, agency/user split",
-      "New docs sections: User Management, Prompt Library, Billing, Getting Started, Reports",
-    ],
-  },
-  {
-    version: "v1.4",
-    date: "March 2026",
-    items: [
-      "Documentation page with Operator Manual and Client Guide",
-      "Campaign Tags tab — group and organize tags by category",
-      "Users management page — roles, avatars, and permissions",
-      "Support chat integration in the navigation bar",
-      "Instagram contact sync — pull existing DM contacts from Meta's API",
-    ],
-  },
-  {
-    version: "v1.3",
-    date: "February 2026",
-    items: [
-      "Full design system overhaul — new color palette and avatar system",
-      "Leads page redesign — split-pane with List, Table, and Kanban views",
-      "Calendar page — monthly, weekly, and daily booking views",
-      "Conversations inbox — real-time WhatsApp chat interface",
-    ],
-  },
-  {
-    version: "v1.2",
-    date: "January 2026",
-    items: [
-      "Campaigns page — create, manage, and monitor campaigns",
-      "Prompt Library — AI persona and script management",
-      "Automation Logs — full audit trail for every lead action",
-      "Billing & Expenses — BTW/VAT invoice management with PDF upload",
-    ],
-  },
+const CHANGELOG_KEYS = [
+  { version: "v1.5", key: "v15" },
+  { version: "v1.4", key: "v14" },
+  { version: "v1.3", key: "v13" },
+  { version: "v1.2", key: "v12" },
 ];
 
 // ── TOC anchor data ───────────────────────────────────────────────────────────
@@ -146,7 +113,7 @@ function DocSection({
   const [open, setOpen] = useState(true);
   if (hidden) return null;
   return (
-    <div id={id} className="rounded-xl bg-card overflow-hidden scroll-mt-6">
+    <div id={id} className="rounded-xl bg-white/60 dark:bg-white/[0.06] overflow-hidden scroll-mt-6">
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-3 px-5 py-4 hover:bg-card transition-colors text-left"
@@ -246,12 +213,7 @@ function CopyableBlock({ label, text }: { label: string; text: string }) {
 
 function RolesTable() {
   const { t } = useTranslation("docs");
-  const roles = [
-    { role: "Admin",    view: "Agency",     access: "Full CRUD on all entities, user management, billing" },
-    { role: "Operator", view: "Agency",     access: "Filtered by assigned accounts, no user management" },
-    { role: "Manager",  view: "Subaccount", access: "Read + limited write, scoped to their account" },
-    { role: "Viewer",   view: "Subaccount", access: "Read-only, scoped to their account" },
-  ];
+  const roleKeys = ["admin", "operator", "manager", "viewer"] as const;
   return (
     <div className="rounded-lg overflow-hidden border border-black/[0.06] dark:border-white/[0.06]">
       <table className="w-full text-xs">
@@ -263,11 +225,11 @@ function RolesTable() {
           </tr>
         </thead>
         <tbody>
-          {roles.map(({ role, view, access }) => (
-            <tr key={role} className="border-t border-black/[0.04] dark:border-white/[0.04]">
-              <td className="px-3 py-2 font-medium">{role}</td>
-              <td className="px-3 py-2 text-muted-foreground">{view}</td>
-              <td className="px-3 py-2 text-muted-foreground">{access}</td>
+          {roleKeys.map((key) => (
+            <tr key={key} className="border-t border-black/[0.04] dark:border-white/[0.04]">
+              <td className="px-3 py-2 font-medium">{t(`roles.${key}.role`)}</td>
+              <td className="px-3 py-2 text-muted-foreground">{t(`roles.${key}.view`)}</td>
+              <td className="px-3 py-2 text-muted-foreground">{t(`roles.${key}.access`)}</td>
             </tr>
           ))}
         </tbody>
@@ -297,7 +259,7 @@ function OperatorManual({ search }: { search: string }) {
   const noResults = q.trim() !== "" && sectionMatches.every((m) => !m);
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-6 pb-8">
       {noResults && (
         <p className="text-sm text-muted-foreground text-center py-8">
           {t("noResults", { query: q })}
@@ -311,38 +273,13 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.setup.title")}
         hidden={!sectionMatches[0]}
       >
-        <Step n={1}>
-          Go to <SettingsLink>Settings → Integrations</SettingsLink>. Enter your{" "}
-          <strong>Twilio Account SID</strong>, <strong>Auth Token</strong>, and the{" "}
-          <strong>From Number</strong> (or Messaging Service SID) for this account.
-        </Step>
-        <Step n={2}>
-          Choose your <strong>number type</strong>: Local numbers are cheapest but have the lowest
-          throughput. Toll-free numbers are recommended for most accounts. Short codes offer the
-          highest volume but require a separate application.
-        </Step>
-        <Step n={3}>
-          If using a US 10-digit local number for A2P (application-to-person) messaging, you must
-          complete <strong>A2P 10DLC registration</strong> with your carrier through Twilio's console.
-          Without registration, messages may be filtered or blocked.
-        </Step>
-        <Step n={4}>
-          Set your <strong>business hours</strong> (start/end time) and{" "}
-          <strong>timezone</strong>. The engine will never send messages outside these hours.
-        </Step>
-        <Step n={5}>
-          Set a <strong>Daily Send Limit</strong> (default 500). This is the max messages
-          the account can send per day across all campaigns.
-        </Step>
-        <Step n={6}>
-          Copy the <strong>API Key</strong> (webhook_secret) from{" "}
-          <SettingsLink>Settings</SettingsLink>. Paste this into your CRM integrations to
-          authorize inbound leads.
-        </Step>
-        <Tip>
-          The API key is shown once on generation. If lost, regenerate it — the old key
-          will stop working immediately.
-        </Tip>
+        <Step n={1}>{t("operator.setup.step1")}</Step>
+        <Step n={2}>{t("operator.setup.step2")}</Step>
+        <Step n={3}>{t("operator.setup.step3")}</Step>
+        <Step n={4}>{t("operator.setup.step4")}</Step>
+        <Step n={5}>{t("operator.setup.step5")}</Step>
+        <Step n={6}>{t("operator.setup.step6")}</Step>
+        <Tip>{t("operator.setup.tip")}</Tip>
       </DocSection>
 
       {/* 2 - Creating a Campaign */}
@@ -352,42 +289,18 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.campaign.title")}
         hidden={!sectionMatches[1]}
       >
-        <Step n={1}>
-          Go to <strong>Campaigns → New Campaign</strong>. Give it a name and select the{" "}
-          <strong>channel</strong> (SMS or WhatsApp).
-        </Step>
+        <Step n={1}>{t("operator.campaign.step1")}</Step>
         <div className="rounded-lg bg-popover px-4 py-3 text-xs space-y-1.5">
-          <p className="font-semibold">SMS vs WhatsApp — when to use which</p>
-          <p className="text-muted-foreground"><strong>SMS:</strong> Higher open rates in the US/Canada, works with any phone, no template approval needed. Best for short, direct re-engagement.</p>
-          <p className="text-muted-foreground"><strong>WhatsApp:</strong> Preferred internationally, supports rich media, requires pre-approved message templates for the first outbound message. Best for longer conversational flows.</p>
+          <p className="font-semibold">{t("operator.campaign.smsVsWhatsapp.title")}</p>
+          <p className="text-muted-foreground">{t("operator.campaign.smsVsWhatsapp.sms")}</p>
+          <p className="text-muted-foreground">{t("operator.campaign.smsVsWhatsapp.whatsapp")}</p>
         </div>
-        <Step n={2}>
-          Write your <strong>First Message</strong> template. Use merge tags:{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{"{{first_name}}"}</code>,{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{"{{agent_name}}"}</code>,{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{"{{service}}"}</code>.
-        </Step>
-        <Step n={3}>
-          For WhatsApp campaigns, your first message template must be{" "}
-          <strong>approved by Meta</strong> before it can be sent. Submit it via the Twilio
-          console under Messaging → Content Templates. Approval takes 1–3 business days.
-        </Step>
-        <Step n={4}>
-          Add up to 3 <strong>Follow-up bumps</strong>. Set the delay in hours for each
-          (e.g., 24h, 48h, 72h). Bumps are sent only if the lead hasn't replied.
-        </Step>
-        <Step n={5}>
-          Set <strong>Active Hours</strong>, <strong>Daily Lead Limit</strong>, and
-          optionally link a <strong>Prompt Library entry</strong> to customize the AI's
-          persona.
-        </Step>
-        <Step n={6}>
-          Set campaign status to <strong>Active</strong> when you're ready to start sending.
-        </Step>
-        <Tip>
-          Keep the first message short and personal. Avoid links in the first message —
-          many carrier filters block them.
-        </Tip>
+        <Step n={2}>{t("operator.campaign.step2")}</Step>
+        <Step n={3}>{t("operator.campaign.step3")}</Step>
+        <Step n={4}>{t("operator.campaign.step4")}</Step>
+        <Step n={5}>{t("operator.campaign.step5")}</Step>
+        <Step n={6}>{t("operator.campaign.step6")}</Step>
+        <Tip>{t("operator.campaign.tip")}</Tip>
       </DocSection>
 
       {/* 3 - Lead Lifecycle */}
@@ -397,59 +310,56 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.lifecycle.title")}
         hidden={!sectionMatches[2]}
       >
-        <p className="font-semibold">Pipeline Stages (Conversion Status)</p>
-        <p>Every lead sits in one of these pipeline stages visible on the Kanban board:</p>
+        <p className="font-semibold">{t("operator.lifecycle.pipelineTitle")}</p>
+        <p>{t("operator.lifecycle.pipelineDescription")}</p>
         <div className="space-y-1.5 mt-2">
-          {[
-            ["New",                "#6B7280", "Lead just arrived, not yet contacted."],
-            ["Contacted",          "#7A73FF", "First message sent. Waiting for a reply."],
-            ["Responded",          "#3ACBDF", "Lead replied at least once."],
-            ["Multiple Responses", "#31D35C", "Active back-and-forth dialogue."],
-            ["Qualified",          "#AED62E", "Lead shows intent — being guided to book."],
-            ["Booked",             "#F7BF0E", "Appointment confirmed. North-star KPI."],
-            ["Closed",             "#6B7280", "Deal completed — no further action."],
-            ["Lost",               "#DC2626", "Lead went cold or was not a fit."],
-            ["DND",                "#722F37", "Opted out. Never contacted again."],
-          ].map(([label, hex, desc]) => (
-            <div key={label} className="flex gap-3 items-center">
+          {([
+            ["new",                "#6B7280"],
+            ["contacted",          "#7A73FF"],
+            ["responded",          "#3ACBDF"],
+            ["multipleResponses",  "#31D35C"],
+            ["qualified",          "#AED62E"],
+            ["booked",             "#F7BF0E"],
+            ["closed",             "#6B7280"],
+            ["lost",               "#DC2626"],
+            ["dnd",                "#722F37"],
+          ] as const).map(([key, hex]) => (
+            <div key={key} className="flex gap-3 items-center">
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
                 style={{ backgroundColor: `${hex}20`, color: hex }}
               >
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                {label}
+                {t(`operator.lifecycle.stageLabels.${key}`)}
               </span>
-              <span className="text-xs text-muted-foreground">{desc}</span>
+              <span className="text-xs text-muted-foreground">{t(`operator.lifecycle.stages.${key}`)}</span>
             </div>
           ))}
         </div>
 
-        <p className="font-semibold mt-4">Automation Statuses</p>
-        <p>Behind the scenes, leads also have an automation status that controls messaging:</p>
+        <p className="font-semibold mt-4">{t("operator.lifecycle.automationTitle")}</p>
+        <p>{t("operator.lifecycle.automationDescription")}</p>
         <div className="space-y-1.5 mt-2">
-          {[
-            ["paused",    "#6B7280", "Created but not yet assigned to a campaign. No messages sent."],
-            ["queued",    "#7A73FF", "Assigned to an active campaign. Picked up within 60 seconds."],
-            ["active",    "#31D35C", "First message sent. Eligible for bumps and AI replies."],
-            ["completed", "#8B5CF6", "All bumps sent, booking confirmed, or lead exhausted."],
-            ["dnd",       "#DC2626", "Lead opted out (replied STOP). Never contacted again."],
-          ].map(([label, hex, desc]) => (
-            <div key={label} className="flex gap-3 items-center">
+          {([
+            ["paused",    "#6B7280"],
+            ["queued",    "#7A73FF"],
+            ["active",    "#31D35C"],
+            ["completed", "#8B5CF6"],
+            ["dnd",       "#DC2626"],
+          ] as const).map(([key, hex]) => (
+            <div key={key} className="flex gap-3 items-center">
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
                 style={{ backgroundColor: `${hex}20`, color: hex }}
               >
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                {label}
+                {key}
               </span>
-              <span className="text-xs text-muted-foreground">{desc}</span>
+              <span className="text-xs text-muted-foreground">{t(`operator.lifecycle.${key}`)}</span>
             </div>
           ))}
         </div>
-        <Tip>
-          To pause a specific lead manually, set their automation_status to "paused" in the
-          lead detail panel. To pause a whole campaign, set campaign status to "Inactive".
-        </Tip>
+        <Tip>{t("operator.lifecycle.tip")}</Tip>
       </DocSection>
 
       {/* 4 - CRM Webhooks */}
@@ -459,10 +369,7 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.webhooks.title")}
         hidden={!sectionMatches[3]}
       >
-        <p>
-          Each CRM has a dedicated intake URL. Paste the URL into your CRM's webhook
-          settings. Leads are automatically created and queued.
-        </p>
+        <p>{t("operator.webhooks.description")}</p>
         <div className="space-y-2 mt-1">
           {[
             ["GoHighLevel",       "POST",     "/api/leads/intake/ghl?key=YOUR_KEY&campaign_id=ID"],
@@ -477,13 +384,7 @@ function OperatorManual({ search }: { search: string }) {
             />
           ))}
         </div>
-        <Tip>
-          Replace{" "}
-          <code className="bg-amber-100 dark:bg-amber-900/30 px-1 rounded text-[11px] font-mono">YOUR_KEY</code>{" "}
-          with the API key from <SettingsLink>Settings</SettingsLink>. Replace{" "}
-          <code className="bg-amber-100 dark:bg-amber-900/30 px-1 rounded text-[11px] font-mono">ID</code>{" "}
-          with the campaign ID from the campaign detail page.
-        </Tip>
+        <Tip>{t("operator.webhooks.tip")}</Tip>
       </DocSection>
 
       {/* 5 - Instagram */}
@@ -493,29 +394,11 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.instagram.title")}
         hidden={!sectionMatches[4]}
       >
-        <p>
-          Connect an Instagram Business account to sync existing DM contacts
-          and receive inbound messages.
-        </p>
-        <Step n={1}>
-          Go to <SettingsLink>Settings → Account</SettingsLink>. Enter your{" "}
-          <strong>Instagram User ID</strong> (your IG Business Account numeric ID) and{" "}
-          <strong>Access Token</strong> (a long-lived Page access token from Meta).
-        </Step>
-        <Step n={2}>
-          Click <strong>Sync Instagram Contacts</strong> to pull all existing DM
-          conversation contacts from Meta's API. Each unique contact is created as a
-          lead with status <Badge label="paused" color="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300" />.
-        </Step>
-        <Step n={3}>
-          Assign synced leads to a campaign to start automated outreach, or use
-          them for manual follow-up in the Conversations inbox.
-        </Step>
-        <Tip>
-          Meta allows ~200 API calls per hour per token. For accounts with 200+
-          contacts, the sync may stop early due to rate limiting — just run it
-          again after an hour. Duplicates are automatically skipped.
-        </Tip>
+        <p>{t("operator.instagram.description")}</p>
+        <Step n={1}>{t("operator.instagram.step1")}</Step>
+        <Step n={2}>{t("operator.instagram.step2")}</Step>
+        <Step n={3}>{t("operator.instagram.step3")}</Step>
+        <Tip>{t("operator.instagram.tip")}</Tip>
       </DocSection>
 
       {/* 6 - Analytics */}
@@ -525,19 +408,10 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.analytics.title")}
         hidden={!sectionMatches[5]}
       >
-        <Step n={1}>
-          <strong>Lead Scores</strong> (0–100) are recalculated every 30 minutes. They
-          combine funnel stage (40%), engagement (30%), and activity recency (30%).
-        </Step>
-        <Step n={2}>
-          <strong>Campaign Metrics</strong> (response rate, booking rate, cost per lead)
-          are snapshotted daily at midnight. Check them under Reports.
-        </Step>
-        <Step n={3}>
-          <strong>Automation Logs</strong> show every step the engine took for every lead —
-          useful for debugging missed sends or unexpected behavior.
-        </Step>
-        <Tip>A lead score above 70 = high intent. Prioritize manual follow-up on these.</Tip>
+        <Step n={1}>{t("operator.analytics.step1")}</Step>
+        <Step n={2}>{t("operator.analytics.step2")}</Step>
+        <Step n={3}>{t("operator.analytics.step3")}</Step>
+        <Tip>{t("operator.analytics.tip")}</Tip>
       </DocSection>
 
       {/* 7 - User Management & Roles */}
@@ -547,27 +421,12 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.users.title")}
         hidden={!sectionMatches[6]}
       >
-        <p>
-          LeadAwaker uses a role-based access model. Each user is assigned one role that
-          determines what they can see and do.
-        </p>
+        <p>{t("operator.users.description")}</p>
         <RolesTable />
-        <Step n={1}>
-          To invite a new user, go to <SettingsLink>Settings → Team</SettingsLink> and
-          click <strong>Add User</strong>. Enter their name, email, and role.
-        </Step>
-        <Step n={2}>
-          <strong>Operators</strong> can be assigned to specific accounts. They will only
-          see leads, campaigns, and data for their assigned accounts.
-        </Step>
-        <Step n={3}>
-          <strong>Managers and Viewers</strong> always see the subaccount view, scoped
-          to their own account. They cannot access other accounts' data.
-        </Step>
-        <Tip>
-          Only Admins can create or delete users. Operators can view the team list but
-          cannot change roles or remove members.
-        </Tip>
+        <Step n={1}>{t("operator.users.step1")}</Step>
+        <Step n={2}>{t("operator.users.step2")}</Step>
+        <Step n={3}>{t("operator.users.step3")}</Step>
+        <Tip>{t("operator.users.tip")}</Tip>
       </DocSection>
 
       {/* 8 - Prompt Library */}
@@ -577,34 +436,12 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.prompts.title")}
         hidden={!sectionMatches[7]}
       >
-        <p>
-          The Prompt Library stores reusable AI persona definitions that control how the
-          AI agent speaks, what tone it uses, and how it handles objections.
-        </p>
-        <Step n={1}>
-          Go to <strong>Prompt Library</strong> and click <strong>New Prompt</strong>.
-          Give it a clear name (e.g., "Friendly Sales Agent" or "Dutch Appointment Setter").
-        </Step>
-        <Step n={2}>
-          Write the <strong>system message</strong>. This is the instruction the AI receives
-          before every conversation. Include: tone, language, the service being offered,
-          how to handle objections, and when to stop pushing.
-        </Step>
-        <Step n={3}>
-          Use <strong>template variables</strong> in your prompt:{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{"{{agent_name}}"}</code>,{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{"{{service}}"}</code>,{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{"{{company}}"}</code>.
-          These are filled automatically per-account.
-        </Step>
-        <Step n={4}>
-          Link your prompt to a campaign under <strong>Campaign → Configurations</strong>.
-          Each campaign can use a different AI persona.
-        </Step>
-        <Tip>
-          Best practice: keep system messages under 500 words. Be explicit about what the
-          AI should NOT do (e.g., "Never promise discounts", "Don't mention competitors").
-        </Tip>
+        <p>{t("operator.prompts.description")}</p>
+        <Step n={1}>{t("operator.prompts.step1")}</Step>
+        <Step n={2}>{t("operator.prompts.step2")}</Step>
+        <Step n={3}>{t("operator.prompts.step3")}</Step>
+        <Step n={4}>{t("operator.prompts.step4")}</Step>
+        <Tip>{t("operator.prompts.tip")}</Tip>
       </DocSection>
 
       {/* 9 - Billing */}
@@ -614,25 +451,11 @@ function OperatorManual({ search }: { search: string }) {
         title={t("operator.billing.title")}
         hidden={!sectionMatches[8]}
       >
-        <p>
-          The Billing section tracks contracts, invoices, and expenses for each account.
-        </p>
-        <Step n={1}>
-          <strong>Contracts</strong> define the agreement between you and the client —
-          monthly fee, start date, and terms. Create them under Billing → Contracts.
-        </Step>
-        <Step n={2}>
-          <strong>Invoices</strong> are sent to clients for payment. You can generate
-          invoices manually or set up recurring billing. Each invoice links to a contract.
-        </Step>
-        <Step n={3}>
-          <strong>Expenses</strong> (agency-only) track costs like Twilio usage, API fees,
-          and other operational costs. Upload PDF receipts for record-keeping.
-        </Step>
-        <Tip>
-          All amounts support BTW/VAT calculations automatically. Set your VAT rate in
-          the account settings to have it applied to new invoices.
-        </Tip>
+        <p>{t("operator.billing.description")}</p>
+        <Step n={1}>{t("operator.billing.step1")}</Step>
+        <Step n={2}>{t("operator.billing.step2")}</Step>
+        <Step n={3}>{t("operator.billing.step3")}</Step>
+        <Tip>{t("operator.billing.tip")}</Tip>
       </DocSection>
 
       {/* 10 - Troubleshoot */}
@@ -643,19 +466,10 @@ function OperatorManual({ search }: { search: string }) {
         hidden={!sectionMatches[9]}
       >
         <div className="space-y-2.5">
-          {[
-            ["Lead not receiving messages",    "Check: campaign status = Active, lead automation_status = queued, business hours not blocking, daily limit not reached. Check Automation Logs for the lead."],
-            ["Wrong language in replies",      "Ensure the lead's language field is set. The AI uses this to reply in the correct language."],
-            ["Lead stuck in 'sending' status", "This means Twilio failed to send the first message. Manually reset to 'queued' in the DB and check Twilio credentials."],
-            ["Duplicate leads",                "Phone-based dedup is per-account. The same phone cannot be in the same account twice. Different accounts can have the same phone."],
-            ["AI replies stopped",             "Check Automation Logs for ai_conversation errors. Usually means OpenAI API key issue or rate limit."],
-            ["Messages flagged as spam",       "This usually means the sending number has a low trust score. Register for A2P 10DLC (US), avoid link-heavy messages, and warm up new numbers gradually (start with 50–100 messages/day)."],
-            ["WhatsApp template not approved",  "Review Meta's template guidelines: no promotional language in utility templates, no URL shorteners, and correct category selection. Re-submit with edits and allow 1–3 business days."],
-            ["Lead score not updating",         "Scores refresh every 30 minutes via a cron job. If scores are stale beyond that, check that the scoring engine is running in Automation Logs (look for 'lead_score_batch' entries)."],
-          ].map(([problem, solution]) => (
-            <div key={problem} className="rounded-lg bg-popover px-4 py-3">
-              <p className="font-semibold text-xs mb-1">{problem}</p>
-              <p className="text-xs text-muted-foreground">{solution}</p>
+          {(["1", "2", "3", "4", "5", "6", "7", "8"] as const).map((num) => (
+            <div key={num} className="rounded-lg bg-popover px-4 py-3">
+              <p className="font-semibold text-xs mb-1">{t(`operator.troubleshoot.items.${num}.problem`)}</p>
+              <p className="text-xs text-muted-foreground">{t(`operator.troubleshoot.items.${num}.solution`)}</p>
             </div>
           ))}
         </div>
@@ -684,7 +498,7 @@ function ClientGuide({ search }: { search: string }) {
   const noResults = q.trim() !== "" && sectionMatches.every((m) => !m);
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-6 pb-8">
       {noResults && (
         <p className="text-sm text-muted-foreground text-center py-8">
           {t("noResults", { query: q })}
@@ -698,25 +512,11 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.gettingStarted.title")}
         hidden={!sectionMatches[0]}
       >
-        <p>
-          Welcome to LeadAwaker! Here's a quick overview of what you'll see after logging in.
-        </p>
-        <Step n={1}>
-          After logging in, you'll land on the <strong>Campaigns</strong> page. This shows
-          all active campaigns running for your account with key metrics at a glance.
-        </Step>
-        <Step n={2}>
-          Use the <strong>left sidebar</strong> to navigate between pages: Campaigns, Leads,
-          Conversations, Calendar, and Documentation (this page).
-        </Step>
-        <Step n={3}>
-          Click on any <strong>lead</strong> to view their full profile, conversation history,
-          and current status in the pipeline.
-        </Step>
-        <Tip>
-          Start by reviewing your active campaigns and their lead counts. The Leads page
-          lets you filter by status to quickly find your hottest prospects.
-        </Tip>
+        <p>{t("client.gettingStarted.description")}</p>
+        <Step n={1}>{t("client.gettingStarted.step1")}</Step>
+        <Step n={2}>{t("client.gettingStarted.step2")}</Step>
+        <Step n={3}>{t("client.gettingStarted.step3")}</Step>
+        <Tip>{t("client.gettingStarted.tip")}</Tip>
       </DocSection>
 
       {/* What is LeadAwaker? */}
@@ -726,15 +526,8 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.what.title")}
         hidden={!sectionMatches[1]}
       >
-        <p>
-          LeadAwaker is an AI-powered lead follow-up system. When someone expresses interest
-          in your service (fills a form, clicks an ad, etc.), LeadAwaker automatically reaches
-          out via WhatsApp, nurtures the conversation, and books calls — all on autopilot.
-        </p>
-        <p>
-          The AI agent replies to leads in real time, handles objections, and knows when to
-          stop and let a human take over.
-        </p>
+        <p>{t("client.what.p1")}</p>
+        <p>{t("client.what.p2")}</p>
       </DocSection>
 
       {/* Your Leads */}
@@ -744,31 +537,28 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.leads.title")}
         hidden={!sectionMatches[2]}
       >
-        <p>
-          Each lead goes through a journey from first contact to booking. Here's what the
-          status indicators mean:
-        </p>
+        <p>{t("client.leads.description")}</p>
         <div className="space-y-1.5 mt-2">
-          {[
-            ["New",                "#6B7280", "Lead just arrived, not yet contacted."],
-            ["Contacted",          "#7A73FF", "First message sent. Waiting for a reply."],
-            ["Responded",          "#3ACBDF", "Lead replied at least once. AI is in conversation."],
-            ["Multiple Responses", "#31D35C", "Active back-and-forth dialogue with the AI."],
-            ["Qualified",          "#AED62E", "Lead has shown interest and is being guided to book."],
-            ["Booked",             "#F7BF0E", "Appointment confirmed! This is the north-star outcome."],
-            ["Closed",             "#6B7280", "Deal completed — no further action needed."],
-            ["Lost",               "#DC2626", "Lead went cold or was not a fit."],
-            ["DND",                "#722F37", "Lead opted out. Never contacted again."],
-          ].map(([label, hex, desc]) => (
-            <div key={label} className="flex gap-3 items-center">
+          {([
+            ["new",                "#6B7280"],
+            ["contacted",          "#7A73FF"],
+            ["responded",          "#3ACBDF"],
+            ["multipleResponses",  "#31D35C"],
+            ["qualified",          "#AED62E"],
+            ["booked",             "#F7BF0E"],
+            ["closed",             "#6B7280"],
+            ["lost",               "#DC2626"],
+            ["dnd",                "#722F37"],
+          ] as const).map(([key, hex]) => (
+            <div key={key} className="flex gap-3 items-center">
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
                 style={{ backgroundColor: `${hex}20`, color: hex }}
               >
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                {label}
+                {t(`client.leads.stageLabels.${key}`)}
               </span>
-              <span className="text-xs text-muted-foreground">{desc}</span>
+              <span className="text-xs text-muted-foreground">{t(`client.leads.stages.${key}`)}</span>
             </div>
           ))}
         </div>
@@ -781,42 +571,23 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.conversations.title")}
         hidden={!sectionMatches[3]}
       >
-        <Step n={1}>
-          Open the <strong>Leads</strong> page and click any lead to view their full
-          conversation history.
-        </Step>
-        <Step n={2}>
-          Messages shown on the <strong>right side</strong> are outbound (sent by the AI
-          or your team). Messages on the <strong>left</strong> are inbound (from the lead).
-        </Step>
-        <Step n={3}>
-          Look for the <strong>AI label</strong> on messages — these were generated
-          automatically. Messages without this label were sent manually.
-        </Step>
-        <Step n={4}>
-          Message status icons tell you the delivery state:
-        </Step>
+        <Step n={1}>{t("client.conversations.step1")}</Step>
+        <Step n={2}>{t("client.conversations.step2")}</Step>
+        <Step n={3}>{t("client.conversations.step3")}</Step>
+        <Step n={4}>{t("client.conversations.step4")}</Step>
         <div className="space-y-1.5 ml-9">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-gray-400 shrink-0" /> <strong>Sent</strong> — message left the system
+            <span className="w-2 h-2 rounded-full bg-gray-400 shrink-0" /> <strong>{t("client.conversations.statusSent")}</strong> — {t("client.conversations.statusSentDesc")}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" /> <strong>Delivered</strong> — confirmed arrival on the lead's device
+            <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" /> <strong>{t("client.conversations.statusDelivered")}</strong> — {t("client.conversations.statusDeliveredDesc")}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" /> <strong>Read</strong> — lead opened the message (WhatsApp only)
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" /> <strong>{t("client.conversations.statusRead")}</strong> — {t("client.conversations.statusReadDesc")}
           </div>
         </div>
-        <Step n={5}>
-          If you want to take over the conversation manually, toggle{" "}
-          <strong>Manual Takeover</strong> on the lead detail. The AI will stop replying
-          and you can message freely. To hand back to the AI, toggle it off again.
-        </Step>
-        <Tip>
-          Use Manual Takeover for high-value leads you want to handle personally. The AI
-          won't interfere while takeover is active — but remember to turn it off when done,
-          or the lead will stop receiving automated follow-ups.
-        </Tip>
+        <Step n={5}>{t("client.conversations.step5")}</Step>
+        <Tip>{t("client.conversations.tip")}</Tip>
       </DocSection>
 
       {/* Lead Score */}
@@ -826,31 +597,28 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.score.title")}
         hidden={!sectionMatches[4]}
       >
-        <p>
-          Every lead has a <strong>Lead Score</strong> from 0 to 100 that estimates how
-          likely they are to book. It's calculated from:
-        </p>
+        <p>{t("client.score.description")}</p>
         <ul className="list-disc pl-4 space-y-1 mt-1">
-          <li>Their current funnel stage (40%)</li>
-          <li>How many times they've replied and how recently (30%)</li>
-          <li>Recency of their last activity (30%)</li>
+          <li>{t("client.score.factor1")}</li>
+          <li>{t("client.score.factor2")}</li>
+          <li>{t("client.score.factor3")}</li>
         </ul>
 
         {/* Score ring examples (card view) */}
-        <p className="font-semibold mt-2">Score Rings (Card & Kanban View)</p>
-        <p>Small score rings appear on lead cards, showing at a glance how warm each lead is:</p>
+        <p className="font-semibold mt-2">{t("client.score.scoreRingsTitle")}</p>
+        <p>{t("client.score.scoreRingsDescription")}</p>
         <div className="flex items-center gap-4 mt-2 flex-wrap">
           {[
-            { score: 15, label: "Cold", color: "#6B7280" },
-            { score: 45, label: "Warming", color: "#3ACBDF" },
-            { score: 72, label: "Hot", color: "#AED62E" },
-            { score: 93, label: "On Fire", color: "#F7BF0E" },
-          ].map(({ score, label, color }) => {
+            { score: 15, labelKey: "cold" as const, color: "#6B7280" },
+            { score: 45, labelKey: "warming" as const, color: "#3ACBDF" },
+            { score: 72, labelKey: "hot" as const, color: "#AED62E" },
+            { score: 93, labelKey: "onFire" as const, color: "#F7BF0E" },
+          ].map(({ score, labelKey, color }) => {
             const r = 18;
             const circ = 2 * Math.PI * r;
             const offset = circ - (score / 100) * circ;
             return (
-              <div key={label} className="flex flex-col items-center gap-1">
+              <div key={labelKey} className="flex flex-col items-center gap-1">
                 <svg width="48" height="48" viewBox="0 0 48 48">
                   <circle cx="24" cy="24" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-border/30" />
                   <circle
@@ -863,24 +631,24 @@ function ClientGuide({ search }: { search: string }) {
                     {score}
                   </text>
                 </svg>
-                <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+                <span className="text-[10px] font-medium text-muted-foreground">{t(`client.score.${labelKey}`)}</span>
               </div>
             );
           })}
         </div>
 
         {/* Score gauges (detail panel view) */}
-        <p className="font-semibold mt-4">Score Breakdown (Lead Detail Panel)</p>
-        <p>When you open a lead, the detail panel shows three score gauges:</p>
+        <p className="font-semibold mt-4">{t("client.score.scoreBreakdownTitle")}</p>
+        <p>{t("client.score.scoreBreakdownDescription")}</p>
         <div className="rounded-xl border border-border/40 bg-muted/20 px-4 py-4 flex flex-col gap-3 mt-2">
           {[
-            { label: "Lead Score", value: 72, bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
-            { label: "Engagement", value: 58, bar: "bg-amber-400", text: "text-amber-600 dark:text-amber-400" },
-            { label: "Activity Score", value: 85, bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
-          ].map(({ label, value, bar, text }) => (
-            <div key={label} className="flex flex-col gap-1">
+            { labelKey: "gaugeLeadScore" as const, value: 72, bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+            { labelKey: "gaugeEngagement" as const, value: 58, bar: "bg-amber-400", text: "text-amber-600 dark:text-amber-400" },
+            { labelKey: "gaugeActivityScore" as const, value: 85, bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+          ].map(({ labelKey, value, bar, text }) => (
+            <div key={labelKey} className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground">{label}</span>
+                <span className="text-[11px] text-muted-foreground">{t(`client.score.${labelKey}`)}</span>
                 <span className={cn("text-[12px] font-bold tabular-nums", text)}>
                   {value}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">/100</span>
                 </span>
@@ -895,13 +663,10 @@ function ClientGuide({ search }: { search: string }) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          <strong>Lead Score</strong> is the overall composite. <strong>Engagement</strong> tracks reply frequency and recency. <strong>Activity Score</strong> measures recent pipeline movement.
+          {t("client.score.gaugeExplanation")}
         </p>
 
-        <Tip>
-          Leads with a score above 70 are your warmest prospects. Prioritize these for
-          manual outreach.
-        </Tip>
+        <Tip>{t("client.score.tip")}</Tip>
       </DocSection>
 
       {/* Bookings */}
@@ -911,18 +676,53 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.bookings.title")}
         hidden={!sectionMatches[5]}
       >
-        <p>
-          When the AI detects a booking confirmation in the conversation, the lead is
-          automatically moved to <strong>Call Booked</strong> status. The booking date
-          and time are saved to the lead record.
-        </p>
-        <p>
-          You can view all upcoming bookings on the <strong>Calendar</strong> page.
-        </p>
-        <Tip>
-          If a booking appears incorrect or was auto-detected by mistake, manually update
-          the lead status from the detail panel.
-        </Tip>
+        <p>{t("client.bookings.p1")}</p>
+        <p>{t("client.bookings.p2")}</p>
+
+        {/* Mini calendar illustration */}
+        <div className="rounded-xl border border-border/40 bg-muted/20 p-4 mt-1">
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+              <span key={i} className="text-[10px] font-bold text-muted-foreground/50 pb-1">{d}</span>
+            ))}
+            {/* Row 1 */}
+            {[null, null, null, 1, 2, 3, 4].map((d, i) => (
+              <span key={`r1-${i}`} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d ? "text-muted-foreground" : "")}>{d || ""}</span>
+            ))}
+            {/* Row 2 */}
+            {[5, 6, 7, 8, 9, 10, 11].map((d) => (
+              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 9 ? "bg-[#F7BF0E]/20 text-[#F7BF0E] font-bold ring-1 ring-[#F7BF0E]/30" : "text-muted-foreground")}>{d}</span>
+            ))}
+            {/* Row 3 */}
+            {[12, 13, 14, 15, 16, 17, 18].map((d) => (
+              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 14 ? "bg-[#31D35C]/20 text-[#31D35C] font-bold ring-1 ring-[#31D35C]/30" : d === 17 ? "bg-[#F7BF0E]/20 text-[#F7BF0E] font-bold ring-1 ring-[#F7BF0E]/30" : "text-muted-foreground")}>{d}</span>
+            ))}
+            {/* Row 4 */}
+            {[19, 20, 21, 22, 23, 24, 25].map((d) => (
+              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 22 ? "bg-[#31D35C]/20 text-[#31D35C] font-bold ring-1 ring-[#31D35C]/30" : "text-muted-foreground")}>{d}</span>
+            ))}
+            {/* Row 5 */}
+            {[26, 27, 28, 29, 30, null, null].map((d, i) => (
+              <span key={`r5-${i}`} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 28 ? "bg-[#7A73FF]/20 text-[#7A73FF] font-bold ring-1 ring-[#7A73FF]/30" : d ? "text-muted-foreground" : "")}>{d || ""}</span>
+            ))}
+          </div>
+          <div className="flex items-center gap-4 mt-3 pt-2 border-t border-border/20">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#F7BF0E]/30 ring-1 ring-[#F7BF0E]/40" />
+              <span className="text-[10px] text-muted-foreground">{t("client.bookings.legendBooked")}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#31D35C]/30 ring-1 ring-[#31D35C]/40" />
+              <span className="text-[10px] text-muted-foreground">{t("client.bookings.legendConfirmed")}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#7A73FF]/30 ring-1 ring-[#7A73FF]/40" />
+              <span className="text-[10px] text-muted-foreground">{t("client.bookings.legendUpcoming")}</span>
+            </div>
+          </div>
+        </div>
+
+        <Tip>{t("client.bookings.tip")}</Tip>
       </DocSection>
 
       {/* Managing Your Account */}
@@ -932,26 +732,11 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.accountMgmt.title")}
         hidden={!sectionMatches[6]}
       >
-        <p>
-          Customize your profile and preferences from the Settings page.
-        </p>
-        <Step n={1}>
-          <strong>Profile:</strong> Update your name, email, phone number, and avatar under{" "}
-          <SettingsLink>Settings → My Profile</SettingsLink>.
-        </Step>
-        <Step n={2}>
-          <strong>Notifications:</strong> Choose which events trigger alerts (call booked,
-          lead responded, AI needs takeover) and how you receive them (in-app or email).
-          Set quiet hours to pause notifications outside business hours.
-        </Step>
-        <Step n={3}>
-          <strong>Timezone:</strong> Make sure your timezone is set correctly — it affects
-          how business hours, scheduling, and calendar events are displayed.
-        </Step>
-        <Tip>
-          Enable email notifications for "Booked" events so you never miss a new
-          appointment, even when you're away from the dashboard.
-        </Tip>
+        <p>{t("client.accountMgmt.description")}</p>
+        <Step n={1}>{t("client.accountMgmt.step1")}</Step>
+        <Step n={2}>{t("client.accountMgmt.step2")}</Step>
+        <Step n={3}>{t("client.accountMgmt.step3")}</Step>
+        <Tip>{t("client.accountMgmt.tip")}</Tip>
       </DocSection>
 
       {/* Reports & Insights */}
@@ -961,46 +746,43 @@ function ClientGuide({ search }: { search: string }) {
         title={t("client.reports.title")}
         hidden={!sectionMatches[7]}
       >
-        <p>
-          Track how your campaigns are performing with key metrics available across the
-          dashboard.
-        </p>
+        <p>{t("client.reports.description")}</p>
 
         {/* Key metrics */}
         <div className="space-y-2 mt-2">
-          {[
-            ["Response Rate",  "Percentage of leads who replied to at least one message. Higher is better — aim for 30%+."],
-            ["Booking Rate",   "Percentage of leads who booked a call. This is your bottom-line conversion metric."],
-            ["Cost per Lead",  "Total messaging cost divided by number of leads contacted. Helps you measure ROI."],
-            ["Avg. Reply Time","Average time between outbound message and lead reply. Faster replies usually mean warmer leads."],
-          ].map(([metric, desc]) => (
-            <div key={metric} className="rounded-lg bg-popover px-4 py-3">
-              <p className="font-semibold text-xs mb-1">{metric}</p>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+          {([
+            ["responseRate", "responseRateDesc"],
+            ["bookingRate", "bookingRateDesc"],
+            ["costPerLead", "costPerLeadDesc"],
+            ["avgReplyTime", "avgReplyTimeDesc"],
+          ] as const).map(([metricKey, descKey]) => (
+            <div key={metricKey} className="rounded-lg bg-popover px-4 py-3">
+              <p className="font-semibold text-xs mb-1">{t(`client.reports.${metricKey}`)}</p>
+              <p className="text-xs text-muted-foreground">{t(`client.reports.${descKey}`)}</p>
             </div>
           ))}
         </div>
 
         {/* Pipeline funnel example */}
-        <p className="font-semibold mt-4">Pipeline Funnel</p>
-        <p>The campaign detail page shows a visual funnel of how leads move through stages:</p>
+        <p className="font-semibold mt-4">{t("client.reports.pipelineFunnelTitle")}</p>
+        <p>{t("client.reports.pipelineFunnelDescription")}</p>
         <div className="mt-2 space-y-1">
-          {[
-            ["New",                "#6B7280", 120],
-            ["Contacted",          "#7A73FF", 98],
-            ["Responded",          "#3ACBDF", 54],
-            ["Multiple Responses", "#31D35C", 32],
-            ["Qualified",          "#AED62E", 18],
-            ["Booked",             "#F7BF0E", 11],
-          ].map(([label, hex, count]) => {
-            const pct = ((count as number) / 120) * 100;
+          {([
+            ["new",                "#6B7280", 120],
+            ["contacted",          "#7A73FF", 98],
+            ["responded",          "#3ACBDF", 54],
+            ["multipleResponses",  "#31D35C", 32],
+            ["qualified",          "#AED62E", 18],
+            ["booked",             "#F7BF0E", 11],
+          ] as const).map(([key, hex, count]) => {
+            const pct = (count / 120) * 100;
             return (
-              <div key={label as string} className="flex items-center gap-2">
-                <span className="text-[11px] font-medium text-muted-foreground w-[120px] shrink-0 text-right">{label}</span>
+              <div key={key} className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-muted-foreground w-[120px] shrink-0 text-right">{t(`client.leads.stageLabels.${key}`)}</span>
                 <div className="flex-1 h-5 rounded-full bg-popover overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{ width: `${pct}%`, backgroundColor: hex as string }}
+                    style={{ width: `${pct}%`, backgroundColor: hex }}
                   />
                 </div>
                 <span className="text-[11px] font-semibold tabular-nums w-8 text-right">{count}</span>
@@ -1010,20 +792,20 @@ function ClientGuide({ search }: { search: string }) {
         </div>
 
         {/* Lead score distribution example */}
-        <p className="font-semibold mt-4">Lead Score Distribution</p>
-        <p>Score rings appear on lead cards, showing at a glance how warm each lead is:</p>
+        <p className="font-semibold mt-4">{t("client.reports.scoreDistributionTitle")}</p>
+        <p>{t("client.reports.scoreDistributionDescription")}</p>
         <div className="flex items-center gap-4 mt-2 flex-wrap">
-          {[
-            { score: 15, status: "New", color: "#6B7280" },
-            { score: 42, status: "Responded", color: "#3ACBDF" },
-            { score: 78, status: "Qualified", color: "#AED62E" },
-            { score: 95, status: "Booked", color: "#F7BF0E" },
-          ].map(({ score, status, color }) => {
+          {([
+            { score: 15, statusKey: "new" as const, color: "#6B7280" },
+            { score: 42, statusKey: "responded" as const, color: "#3ACBDF" },
+            { score: 78, statusKey: "qualified" as const, color: "#AED62E" },
+            { score: 95, statusKey: "booked" as const, color: "#F7BF0E" },
+          ]).map(({ score, statusKey, color }) => {
             const r = 18;
             const circ = 2 * Math.PI * r;
             const offset = circ - (score / 100) * circ;
             return (
-              <div key={status} className="flex flex-col items-center gap-1">
+              <div key={statusKey} className="flex flex-col items-center gap-1">
                 <svg width="48" height="48" viewBox="0 0 48 48">
                   <circle cx="24" cy="24" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-border/30" />
                   <circle
@@ -1036,16 +818,13 @@ function ClientGuide({ search }: { search: string }) {
                     {score}
                   </text>
                 </svg>
-                <span className="text-[10px] font-medium" style={{ color }}>{status}</span>
+                <span className="text-[10px] font-medium" style={{ color }}>{t(`client.leads.stageLabels.${statusKey}`)}</span>
               </div>
             );
           })}
         </div>
 
-        <Tip>
-          Check campaign metrics weekly to spot trends. A sudden drop in response rate
-          may indicate message fatigue — consider refreshing your first message copy.
-        </Tip>
+        <Tip>{t("client.reports.tip")}</Tip>
       </DocSection>
 
       {/* FAQ */}
@@ -1056,29 +835,10 @@ function ClientGuide({ search }: { search: string }) {
         hidden={!sectionMatches[8]}
       >
         <div className="space-y-2.5">
-          {[
-            ["Can leads tell they're talking to an AI?",
-              "The AI is trained to sound natural and human. It doesn't announce itself as a bot unless directly asked or unless your campaign script tells it to."],
-            ["What happens if a lead says STOP?",
-              "They're immediately added to the Do Not Contact list and will never be messaged again by any campaign in your account."],
-            ["How fast does the AI reply?",
-              "Within seconds to a few minutes, depending on message volume. A small delay is added to simulate natural human typing."],
-            ["Can I message a lead manually?",
-              "Yes — enable Manual Takeover on the lead. The AI pauses and you send messages directly from the Conversations page."],
-            ["What if a lead doesn't respond?",
-              "The system sends up to 3 follow-up messages (bumps) at scheduled intervals. After all bumps are exhausted, the lead is marked Completed and automation stops."],
-            ["How do I export my leads?",
-              "Open the Leads page and use the export button in the toolbar. You can export filtered results as CSV for use in spreadsheets or other tools."],
-            ["Can I customize the AI's tone?",
-              "Yes — each campaign can be linked to a Prompt Library entry that defines the AI's personality, language, and conversation style. Ask your account operator to set this up."],
-            ["What happens when I change my business hours?",
-              "The change takes effect immediately. Any leads currently queued for messages outside the new hours will wait until the next valid window. No messages are lost."],
-            ["How are leads assigned to campaigns?",
-              "Leads are assigned when they arrive through a webhook (the campaign_id is specified in the URL) or manually through the lead detail panel."],
-          ].map(([question, answer]) => (
-            <div key={question} className="rounded-lg bg-popover px-4 py-3">
-              <p className="font-semibold text-xs mb-1">{question}</p>
-              <p className="text-xs text-muted-foreground">{answer}</p>
+          {(["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const).map((num) => (
+            <div key={num} className="rounded-lg bg-popover px-4 py-3">
+              <p className="font-semibold text-xs mb-1">{t(`client.faq.q${num}`)}</p>
+              <p className="text-xs text-muted-foreground">{t(`client.faq.a${num}`)}</p>
             </div>
           ))}
         </div>
@@ -1101,22 +861,26 @@ function WhatsNewSheet({ open, onClose }: { open: boolean; onClose: () => void }
           </SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-auto px-5 py-5 space-y-6">
-          {CHANGELOG.map(({ version, date, items }) => (
-            <div key={version}>
-              <div className="flex items-baseline gap-2 mb-2.5">
-                <span className="text-[13px] font-bold text-foreground">{version}</span>
-                <span className="text-[11px] text-muted-foreground">{date}</span>
+          {CHANGELOG_KEYS.map(({ version, key }) => {
+            const items = t(`changelog.${key}.items`, { returnObjects: true }) as string[];
+            const date = t(`changelog.${key}.date`);
+            return (
+              <div key={version}>
+                <div className="flex items-baseline gap-2 mb-2.5">
+                  <span className="text-[13px] font-bold text-foreground">{version}</span>
+                  <span className="text-[11px] text-muted-foreground">{date}</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {Array.isArray(items) && items.map((item, i) => (
+                    <li key={i} className="flex gap-2 text-[12px] text-foreground/80 leading-snug">
+                      <span className="text-brand-indigo mt-0.5 shrink-0 font-bold">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="space-y-1.5">
-                {items.map((item) => (
-                  <li key={item} className="flex gap-2 text-[12px] text-foreground/80 leading-snug">
-                    <span className="text-brand-indigo mt-0.5 shrink-0 font-bold">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </SheetContent>
     </Sheet>
@@ -1136,7 +900,64 @@ export default function DocsPage() {
   const [whatsNew, setWhatsNew] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
 
+  // ── Gradient tester state (agency only) ────────────────────────────
+  const GRADIENT_KEY = "la:gradient:docs";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+
   const currentToc = tab === "operator" ? OPERATOR_TOC : CLIENT_TOC;
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver: highlight sidebar item matching the visible section
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Find the topmost visible section
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          setActiveSectionId(visible[0].target.id);
+        }
+      },
+      {
+        root: container,
+        rootMargin: "-10% 0px -70% 0px",
+        threshold: 0,
+      }
+    );
+
+    // Observe all section elements
+    currentToc.forEach(({ id }) => {
+      const el = container.querySelector(`#${id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [currentToc, tab]);
 
   function handleSectionClick(id: string) {
     setActiveSectionId(id);
@@ -1238,8 +1059,8 @@ export default function DocsPage() {
                         className={cn(
                           "w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                           isActive
-                            ? "bg-highlight-selected text-foreground font-semibold"
-                            : "bg-card hover:bg-card-hover text-muted-foreground hover:text-foreground"
+                            ? "bg-white dark:bg-white/10 shadow-sm border border-black/[0.06] dark:border-white/[0.06] text-foreground font-semibold"
+                            : "bg-card hover:bg-card-hover text-muted-foreground hover:text-foreground border border-transparent"
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
@@ -1285,7 +1106,7 @@ export default function DocsPage() {
                       onClick={() => handleSectionClick(id)}
                       className={cn(
                         "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-medium whitespace-nowrap shrink-0 transition-colors duration-150",
-                        isActive ? "bg-[#FFF9D9] text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                        isActive ? "bg-white dark:bg-white/10 shadow-sm border border-black/[0.06] dark:border-white/[0.06] text-foreground font-semibold" : "text-muted-foreground hover:text-foreground border border-transparent"
                       )}
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -1299,26 +1120,81 @@ export default function DocsPage() {
 
           {/* ── Right content area ── */}
           <div
+            ref={contentRef}
             className={cn(
-              "flex-1 bg-card rounded-lg w-full overflow-y-auto",
+              "flex-1 relative bg-card rounded-lg w-full overflow-y-auto",
               !isMobile && "ml-1.5"
             )}
             data-testid="docs-content"
           >
-            <div className="pl-[17px] pr-3.5 pt-10 pb-3">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-                {tab === "operator" ? t("agencyDocumentation") : t("userDocumentation")}
-              </h2>
-            </div>
-            <div className="px-6 pb-8 max-w-2xl">
-              {tab === "operator"
-                ? <OperatorManual search={search} />
-                : <ClientGuide search={search} />
-              }
+            {/* Gradient background — sticky so it stays fixed while scrolling */}
+            {gradientTesterOpen ? (
+              <div className="sticky top-0 left-0 right-0 h-0 z-0">
+                {gradientLayers.map(layer => {
+                  const style = layerToStyle(layer);
+                  return style ? <div key={layer.id} className="absolute inset-0 h-[200vh]" style={style} /> : null;
+                })}
+                {gradientDragMode && (
+                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+                )}
+              </div>
+            ) : savedGradient ? (
+              <div className="sticky top-0 left-0 right-0 h-0 z-0">
+                {savedGradient.map((layer: GradientLayer) => {
+                  const style = layerToStyle(layer);
+                  return style ? <div key={layer.id} className="absolute inset-0 h-[200vh]" style={style} /> : null;
+                })}
+              </div>
+            ) : null}
+
+            <div className="relative">
+              <div className="pl-[17px] pr-3.5 pt-10 pb-3 flex items-center justify-between">
+                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+                  {tab === "operator" ? t("agencyDocumentation") : t("userDocumentation")}
+                </h2>
+                {/* Gradient tester toggle (agency only) */}
+                {isOperator && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!gradientTesterOpen) setGradientLayers(savedGradient ?? DEFAULT_LAYERS);
+                      setGradientTesterOpen(prev => !prev);
+                    }}
+                    className={cn(
+                      "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px]",
+                      gradientTesterOpen
+                        ? "border-indigo-200 text-indigo-600 bg-indigo-100"
+                        : "border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
+                    )}
+                    title={t("gradientTester")}
+                  >
+                    <Paintbrush className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("gradientTesterStyle")}</span>
+                  </button>
+                )}
+              </div>
+              <div className="px-6 pb-8">
+                {tab === "operator"
+                  ? <OperatorManual search={search} />
+                  : <ClientGuide search={search} />
+                }
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Gradient tester panel */}
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+        onApply={handleApplyGradient}
+      />
 
       <WhatsNewSheet open={whatsNew} onClose={() => setWhatsNew(false)} />
     </CrmShell>

@@ -208,6 +208,15 @@
     "allCaughtUp": "Tudo em dia!",
     "noUnread": "Sem notifica\u00e7\u00f5es n\u00e3o lidas.",
     "noNotifications": "Nenhuma notifica\u00e7\u00e3o ainda.",
-    "older": "Mais antigas"
+    "older": "Mais antigas",
+    "loading": "Carregando...",
+    "clearAll": "Limpar tudo",
+    "delete": "Excluir notifica\u00e7\u00e3o",
+    "showingLatest": "Mostrando os {{count}} mais recentes",
+    "filterAll": "Todos",
+    "filterMessages": "Mensagens",
+    "filterTasks": "Tarefas",
+    "filterBookings": "Agendamentos",
+    "filterSystem": "Sistema"
   }
 }

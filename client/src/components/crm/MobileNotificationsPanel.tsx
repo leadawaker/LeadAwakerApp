@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { NotificationCenter } from "@/components/crm/NotificationCenter";
@@ -21,6 +22,7 @@ export function MobileNotificationsPanel({
   onClose,
   onUnreadCountChange,
 }: MobileNotificationsPanelProps) {
+  const { t } = useTranslation("crm");
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -60,7 +62,7 @@ export function MobileNotificationsPanel({
               <ChevronLeft className="h-5 w-5" />
             </button>
             <h2 className="flex-1 min-w-0 text-[17px] font-semibold truncate text-foreground">
-              Notifications
+              {t("notifications.title")}
             </h2>
           </div>
 

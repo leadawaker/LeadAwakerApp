@@ -77,7 +77,10 @@
       "activeDevices": "Active Devices",
       "added": "added",
       "remove": "Remove",
-      "deviceRemoved": "Device removed"
+      "deviceRemoved": "Device removed",
+      "permissionDenied": "Notifications are blocked. Please allow them in your browser settings.",
+      "notConfigured": "Push notifications are not configured on this server.",
+      "serverRegistrationFailed": "Could not register, please try again."
     },
     "overrides": {
       "title": "Per-Type Notification Overrides",
@@ -126,6 +129,16 @@
     "automationsDesc": "View automation logs",
     "prompts": "Prompts",
     "promptsDesc": "AI prompt library"
+  },
+  "gmail": {
+    "title": "Email Integration",
+    "description": "Connect your Gmail account to send and receive emails directly from the CRM.",
+    "connect": "Connect Gmail",
+    "disconnect": "Disconnect",
+    "connected": "Gmail connected successfully",
+    "disconnected": "Gmail disconnected",
+    "connectError": "Failed to connect Gmail",
+    "disconnectError": "Failed to disconnect Gmail"
   },
   "security": {
     "title": "Security",

@@ -16,6 +16,7 @@ import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
+import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 
 export type CampaignDetailTab = "summary" | "configurations";
 export type CampaignGroupBy = "status" | "account" | "type" | "none";
@@ -141,7 +142,7 @@ function CampaignsContent() {
     return filterAccountId as number;
   }, [isAgencyUser, filterAccountId, currentAccountId]);
 
-  const { campaigns, loading: campaignsLoading, handleRefresh, updateCampaignRow, setCampaigns } = useCampaignsData(effectiveAccountId);
+  const { campaigns, loading: campaignsLoading, error: campaignsError, handleRefresh, updateCampaignRow, setCampaigns } = useCampaignsData(effectiveAccountId);
   const { metrics, loading: metricsLoading } = useCampaignMetrics();
 
   const loading = campaignsLoading;
@@ -346,6 +347,18 @@ function CampaignsContent() {
       }
     } catch (err) { console.error("Create campaign failed", err); }
   }, [handleRefresh, setSelectedCampaign]);
+
+  // Show error fallback if campaigns failed to load
+  if (campaignsError && !loading && campaigns.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <ApiErrorFallback
+          error={campaignsError}
+          onRetry={handleRefresh}
+        />
+      </div>
+    );
+  }
 
   return (
     <>

@@ -22,6 +22,9 @@ import {
   ChevronRight,
   MapPin,
   X,
+  UserPlus,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
@@ -43,6 +46,8 @@ import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { SkeletonAccountPanel } from "@/components/ui/skeleton";
 import { ProspectTasks } from "./ProspectTasks";
+import { EmailComposeModal } from "./EmailComposeModal";
+import { InteractionTimeline } from "./InteractionTimeline";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -145,18 +150,51 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
 // ── Status colors ─────────────────────────────────────────────────────────────
 
 const PROSPECT_STATUS_HEX: Record<string, string> = {
-  New:          "#3B82F6", // blue
-  Contacted:    "#F59E0B", // amber
-  "In Progress": "#6366F1", // indigo
-  Converted:    "#10B981", // emerald
-  Archived:     "#64748B", // slate
+  New:              "#3B82F6",
+  Contacted:        "#7A73FF",
+  Responded:        "#3ACBDF",
+  "Call Booked":    "#31D35C",
+  "Demo Given":     "#AED62E",
+  "Proposal Sent":  "#F7BF0E",
+  Lost:             "#DC2626",
+  Archived:         "#64748B",
 };
 
 const PRIORITY_HEX: Record<string, string> = {
-  High:   "#EF4444",
-  Medium: "#F59E0B",
-  Low:    "#94A3B8",
+  Urgent: "#EF4444", urgent: "#EF4444",
+  High:   "#F97316", high:   "#F97316",
+  Medium: "#F59E0B", medium: "#F59E0B",
+  Low:    "#9CA3AF", low:    "#9CA3AF",
 };
+
+const SIGNAL_FILLED: Record<string, number> = {
+  low: 0, Low: 0, medium: 1, Medium: 1, high: 2, High: 2, urgent: 3, Urgent: 3,
+};
+const SIGNAL_COLOR: Record<string, string> = {
+  low: "#9CA3AF", Low: "#9CA3AF",
+  medium: "#F59E0B", Medium: "#F59E0B",
+  high: "#F97316", High: "#F97316",
+  urgent: "#EF4444", Urgent: "#EF4444",
+};
+
+function SignalBars({ priority }: { priority: string }) {
+  const filled = SIGNAL_FILLED[priority] ?? 0;
+  const color = SIGNAL_COLOR[priority] || "#9CA3AF";
+  return (
+    <div className="flex items-end gap-[2px]" title={priority || "No priority"}>
+      {[5, 8, 11].map((h, i) => (
+        <div
+          key={i}
+          className="w-[3px] rounded-[1px]"
+          style={{ height: `${h}px`, backgroundColor: i < filled ? color : "#D1D5DB" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+const INLINE_STATUS_OPTIONS = ["New", "Contacted", "Responded", "Call Booked", "Demo Given", "Proposal Sent", "Lost", "Archived"];
+const INLINE_PRIORITY_OPTIONS = ["low", "medium", "high", "urgent"];
 
 // ── Niche color palette (same as table view) ─────────────────────────────────
 
@@ -250,6 +288,12 @@ function ProspectListCard({
 
   const hasHoverContent = !!(website || phone || email || linkedin || source);
 
+  const outreachStatus = String(prospect.outreach_status || "new") as OutreachStatus;
+  const followUpDate = prospect.next_follow_up_date ? new Date(prospect.next_follow_up_date as string) : null;
+  const isOverdue = followUpDate ? followUpDate.getTime() < Date.now() : false;
+  const contactSnippet = email || phone || "";
+  const priorityColor = PRIORITY_HEX[priority] || "transparent";
+
   return (
     <div
       className={cn(
@@ -264,9 +308,9 @@ function ProspectListCard({
       onKeyDown={(e) => e.key === "Enter" && onClick()}
       data-testid="prospect-mobile-card"
     >
-      <div className="px-3 pt-3 pb-2.5 flex flex-col gap-2">
+      <div className="px-3 pt-3 pb-2.5 flex flex-col gap-1.5">
 
-        {/* Top row: Avatar + Name + Niche badge */}
+        {/* Top row: Avatar + Name + Date */}
         <div className="flex items-start gap-2.5">
           <EntityAvatar
             name={name}
@@ -275,17 +319,23 @@ function ProspectListCard({
             textColor="#fff"
           />
           <div className="flex-1 min-w-0 pt-0.5">
+            {/* Name + date */}
             <div className="flex items-start justify-between gap-1.5">
               <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
                 {name}
               </p>
-              {niche && (
-                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-black/[0.07] text-foreground/40 mt-0.5 whitespace-nowrap">
-                  {niche}
-                </span>
-              )}
+              <div className="shrink-0 flex items-center gap-1.5 mt-1">
+                {isOverdue && (
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-red-500">Overdue</span>
+                )}
+                {lastUpdated && (
+                  <span className="text-[10px] text-muted-foreground/45 tabular-nums whitespace-nowrap">
+                    {formatRelativeTime(lastUpdated)}
+                  </span>
+                )}
+              </div>
             </div>
-            {/* Status dot + label + Priority + last updated */}
+            {/* Status + Outreach + Niche tag + Priority dashes */}
             <div className="flex items-center justify-between gap-1 mt-[3px]">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
@@ -293,29 +343,52 @@ function ProspectListCard({
                   style={{ backgroundColor: statusHex }}
                 />
                 <span className="text-[11px] text-muted-foreground truncate">{status || "New"}</span>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {priority && (
-                  <span
-                    className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1"
-                    style={{
-                      backgroundColor: `${PRIORITY_HEX[priority] || "#94A3B8"}18`,
-                      color: PRIORITY_HEX[priority] || "#94A3B8",
-                    }}
-                  >
-                    <span className="w-[8px] h-[2.5px] rounded-full" style={{ backgroundColor: PRIORITY_HEX[priority] || "#94A3B8" }} />
-                    {priority}
-                  </span>
+                {outreachStatus !== "new" && (
+                  <>
+                    <span className="text-muted-foreground/30 shrink-0">·</span>
+                    <span
+                      className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1 text-white"
+                      style={{ backgroundColor: OUTREACH_HEX[outreachStatus] || "#6B7280" }}
+                    >
+                      <span className="w-1 h-1 rounded-full bg-white/70" />
+                      {OUTREACH_LABELS[outreachStatus] || outreachStatus.replace(/_/g, " ")}
+                    </span>
+                  </>
                 )}
-                {lastUpdated && (
-                  <span className="text-[10px] text-muted-foreground/45 tabular-nums">
-                    {formatRelativeTime(lastUpdated)}
-                  </span>
+                {niche && outreachStatus === "new" && (
+                  <>
+                    <span className="text-muted-foreground/30 shrink-0">·</span>
+                    <span
+                      className="shrink-0 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full text-white whitespace-nowrap"
+                      style={{ backgroundColor: nicheColor.hex }}
+                    >
+                      {niche}
+                    </span>
+                  </>
                 )}
               </div>
+              {/* Priority signal bars */}
+              <SignalBars priority={priority} />
             </div>
           </div>
         </div>
+
+        {/* Last email activity */}
+        {prospect.last_contacted_at && (
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50">
+            <Mail className="h-3 w-3 shrink-0 text-muted-foreground/35" />
+            <span>
+              {prospect.contact_method === "email" ? "Emailed" : "Contacted"}{" "}
+              {formatRelativeTime(prospect.last_contacted_at)}
+            </span>
+            {(prospect.follow_up_count ?? 0) > 1 && (
+              <>
+                <span className="text-muted-foreground/25">·</span>
+                <span>{prospect.follow_up_count} follow-ups</span>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Hover-reveal: website, phone, email, linkedin, source */}
         {hasHoverContent && (
@@ -369,6 +442,7 @@ function ProspectListCard({
     </div>
   );
 }
+
 
 // ── Group header ──────────────────────────────────────────────────────────────
 
@@ -514,7 +588,7 @@ export function ProspectListView({
   onResetControls,
 }: ProspectListViewProps) {
   const { t } = useTranslation("prospects");
-  const isMobile = useIsMobile();
+  const isNarrow = useIsMobile(1024); // below lg: show list OR detail, not both
   const [currentPage, setCurrentPage] = useState(0);
 
   const viewTabs = useMemo(
@@ -524,7 +598,15 @@ export function ProspectListView({
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
   const PAGE_SIZE = 25;
 
+  // ── Email compose state ──────────────────────────────────────────────────
+  const [emailComposeOpen, setEmailComposeOpen] = useState(false);
+  const [replyContext, setReplyContext] = useState<{ messageId: string; threadId: string; subject: string } | null>(null);
+
   // ── Gradient tester state ──────────────────────────────────────────────────
+  const GRADIENT_KEY = "la:gradient:prospects";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
   const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
@@ -534,6 +616,122 @@ export function ProspectListView({
     if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
     setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
   }, []);
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+  const toggleGradientTester = useCallback(() => {
+    setGradientTesterOpen(prev => {
+      if (!prev && savedGradient) setGradientLayers(savedGradient);
+      return !prev;
+    });
+  }, [savedGradient]);
+
+  // ── Inline editing (contentEditable) ──────────────────────────────────────
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const editRef = useRef<HTMLElement>(null);
+  // Keep a ref to track original value for cancel
+  const editOriginal = useRef("");
+
+  const startEdit = useCallback((field: string, currentValue: string) => {
+    setEditingField(field);
+    editOriginal.current = currentValue;
+  }, []);
+
+  const commitEdit = useCallback(async (field: string, el: HTMLElement) => {
+    const value = el.innerText.trim();
+    setEditingField(null);
+    if (value !== editOriginal.current) {
+      await onSave(field, value);
+    }
+  }, [onSave]);
+
+  const cancelEdit = useCallback(() => {
+    if (editRef.current) editRef.current.innerText = editOriginal.current;
+    setEditingField(null);
+  }, []);
+
+  /** Reusable editable span for text fields */
+  const editableField = useCallback((
+    field: string,
+    value: string,
+    placeholder: string,
+    className: string,
+  ) => (
+    <span
+      ref={editingField === field ? editRef as React.RefObject<HTMLSpanElement> : undefined}
+      contentEditable
+      suppressContentEditableWarning
+      className={cn(
+        className,
+        "outline-none rounded px-1 -mx-1 transition-colors cursor-text",
+        "focus:bg-white/80 focus:ring-1 focus:ring-brand-blue/40",
+        "hover:bg-black/[0.03]",
+        !value && "text-muted-foreground/40 italic",
+      )}
+      onFocus={(e) => {
+        startEdit(field, e.currentTarget.innerText.trim());
+        // If it's showing placeholder, clear it on focus
+        if (!value) e.currentTarget.innerText = "";
+      }}
+      onBlur={(e) => commitEdit(field, e.currentTarget)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.blur(); }
+        if (e.key === "Escape") { cancelEdit(); e.currentTarget.blur(); }
+      }}
+    >
+      {value || placeholder}
+    </span>
+  ), [editingField, startEdit, commitEdit, cancelEdit]);
+
+  /** Editable multiline (notes, next action) */
+  const editableMultiline = useCallback((
+    field: string,
+    value: string,
+    placeholder: string,
+    className: string,
+  ) => (
+    <div
+      ref={editingField === field ? editRef as React.RefObject<HTMLDivElement> : undefined}
+      contentEditable
+      suppressContentEditableWarning
+      className={cn(
+        className,
+        "outline-none rounded-lg px-2.5 py-1 -mx-2.5 transition-colors cursor-text whitespace-pre-wrap",
+        "focus:bg-white/80 focus:ring-1 focus:ring-brand-blue/40",
+        "hover:bg-black/[0.03]",
+        !value && "text-muted-foreground/40 italic",
+      )}
+      onFocus={(e) => {
+        startEdit(field, e.currentTarget.innerText.trim());
+        if (!value) e.currentTarget.innerText = "";
+      }}
+      onBlur={(e) => commitEdit(field, e.currentTarget)}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") { cancelEdit(); e.currentTarget.blur(); }
+      }}
+    >
+      {value || placeholder}
+    </div>
+  ), [editingField, startEdit, commitEdit, cancelEdit]);
+
+  // For date/select fields we still need controlled state
+  const [dateEditField, setDateEditField] = useState<string | null>(null);
+  const [dateEditValue, setDateEditValue] = useState("");
+
+  const startDateEdit = useCallback((field: string, currentValue: string) => {
+    setDateEditField(field);
+    setDateEditValue(currentValue);
+  }, []);
+
+  const commitDateEdit = useCallback(async () => {
+    if (!dateEditField) return;
+    const field = dateEditField;
+    const value = dateEditValue;
+    setDateEditField(null);
+    await onSave(field, value);
+  }, [dateEditField, dateEditValue, onSave]);
 
   // ── Photo upload ─────────────────────────────────────────────────────────
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -554,6 +752,25 @@ export function ProspectListView({
   const handleRemovePhoto = useCallback(async () => {
     await onSave("photo_url", "");
   }, [onSave]);
+
+  // ── Convert to Account ────────────────────────────────────────────────────
+  const [converting, setConverting] = useState(false);
+  const handleConvertToAccount = useCallback(async () => {
+    if (!selectedProspect || converting) return;
+    const pid = selectedProspect.Id ?? selectedProspect.id ?? 0;
+    setConverting(true);
+    try {
+      const { convertProspectToAccount } = await import("../api/prospectsApi");
+      const result = await convertProspectToAccount(pid);
+      // Refresh the prospect data in the list by triggering onSave with the new values
+      await onSave("status", "Converted");
+      await onSave("Accounts_id", String(result.account.id));
+    } catch (err) {
+      console.error("Convert to account failed", err);
+    } finally {
+      setConverting(false);
+    }
+  }, [selectedProspect, converting, onSave]);
 
   // Build flat grouped list
   const flatItems = useMemo((): VirtualListItem[] => {
@@ -683,6 +900,8 @@ export function ProspectListView({
       if (first) onSelectProspect(first.prospect);
     }
   }, [flatItems, selectedProspect, prospects.length, onSelectProspect]);
+
+  // (mobile sheet removed — narrow screens now show detail inline like Leads page)
 
   const isFilterActive = filterNiche.length > 0 || filterStatus.length > 0 || filterCountry.length > 0;
 
@@ -872,7 +1091,7 @@ export function ProspectListView({
 
       {/* Gradient Tester toggle */}
       <button
-        onClick={() => setGradientTesterOpen(prev => !prev)}
+        onClick={toggleGradientTester}
         className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
         title="Gradient Tester"
       >
@@ -888,8 +1107,8 @@ export function ProspectListView({
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
         "flex-col bg-muted rounded-lg overflow-hidden",
-        "w-full md:w-[340px] md:shrink-0",
-        isMobile && selectedProspect ? "hidden" : "flex"
+        "w-full lg:w-[340px] lg:shrink-0",
+        isNarrow && selectedProspect ? "hidden" : "flex"
       )}>
 
         {/* Header: title + ViewTabBar */}
@@ -992,7 +1211,7 @@ export function ProspectListView({
       {/* ── RIGHT PANEL — 3-column layout ──────────────────────────── */}
       <div className={cn(
         "flex-1 flex-col overflow-hidden rounded-lg",
-        isMobile && !selectedProspect ? "hidden" : "flex mobile-panel-enter"
+        isNarrow && !selectedProspect ? "hidden" : "flex"
       )}>
         {panelMode === "create" ? (
           <ProspectCreatePanel
@@ -1015,6 +1234,13 @@ export function ProspectListView({
                   <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
                 )}
               </>
+            ) : savedGradient ? (
+              <>
+                {savedGradient.map((layer: GradientLayer) => {
+                  const style = layerToStyle(layer);
+                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+                })}
+              </>
             ) : (
               <>
                 <div className="absolute inset-0 bg-[#ffffff]" />
@@ -1029,7 +1255,7 @@ export function ProspectListView({
               <div className="relative px-4 pt-6 pb-4 md:pb-6 space-y-3">
                 {/* Toolbar row */}
                 <div className="flex items-center gap-1">
-                  {isMobile && (
+                  {isNarrow && (
                     <button
                       onClick={() => (onSelectProspect as unknown as (v: null) => void)(null)}
                       className="h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0 mr-2"
@@ -1077,272 +1303,317 @@ export function ProspectListView({
                     onChange={handlePhotoFile}
                   />
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight truncate">
-                      {selectedProspect.name || selectedProspect.company || ""}
-                    </h2>
-                    {/* Outreach status / Niche / Priority — all on one row */}
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight truncate">
+                        {selectedProspect.name || selectedProspect.company || ""}
+                      </h2>
+                      {(selectedProspect.email || selectedProspect.contact_email || selectedProspect.contact2_email) && (
+                        <button
+                          onClick={() => setEmailComposeOpen(true)}
+                          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-brand-indigo text-white text-[11px] font-medium hover:bg-brand-indigo/90 transition-colors"
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          {t("emailCompose.sendEmail")}
+                        </button>
+                      )}
+                    </div>
+                    {/* Status / Outreach / Niche / Priority — all on one row, clickable */}
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {selectedProspect.outreach_status && (() => {
+                      {/* Status dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 backdrop-blur-sm border border-black/[0.06] hover:border-black/[0.15] transition-colors cursor-pointer"
+                            style={{ color: PROSPECT_STATUS_HEX[String(selectedProspect.status)] || "#3B82F6" }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PROSPECT_STATUS_HEX[String(selectedProspect.status)] || "#3B82F6" }} />
+                            {selectedProspect.status || "New"}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-40">
+                          {INLINE_STATUS_OPTIONS.map((s) => (
+                            <DropdownMenuItem key={s} onClick={() => onSave("status", s)} className={cn("text-[12px]", String(selectedProspect.status) === s && "font-semibold")}>
+                              <span className="w-2 h-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: PROSPECT_STATUS_HEX[s] || "#3B82F6" }} />
+                              {s}
+                              {String(selectedProspect.status) === s && <Check className="h-3 w-3 ml-auto" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* Outreach status */}
+                      {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (() => {
                         const key = (selectedProspect.outreach_status || "new") as OutreachStatus;
                         const hex = OUTREACH_HEX[key] || "#6B7280";
                         const label = OUTREACH_LABELS[key] || key.replace(/_/g, " ");
                         return (
                           <span
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold"
-                            style={{ backgroundColor: `${hex}20`, color: hex }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 backdrop-blur-sm border border-black/[0.06]"
+                            style={{ color: hex }}
                           >
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: hex }} />
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hex }} />
                             {label}
                           </span>
                         );
                       })()}
                       {selectedProspect.niche && (
                         <span
-                          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: getNicheColor(String(selectedProspect.niche)).hex + "18", color: getNicheColor(String(selectedProspect.niche)).hex }}
+                          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm border border-black/[0.06]"
+                          style={{ color: getNicheColor(String(selectedProspect.niche)).hex }}
                         >
                           {selectedProspect.niche}
                         </span>
                       )}
-                      {selectedProspect.priority && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.07] text-foreground/50">
-                          {selectedProspect.priority}
-                        </span>
-                      )}
+                      {/* Priority dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="inline-flex items-center px-2 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-black/[0.06] hover:border-black/[0.15] transition-colors cursor-pointer">
+                            <SignalBars priority={String(selectedProspect.priority || "")} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-36">
+                          {INLINE_PRIORITY_OPTIONS.map((p) => (
+                            <DropdownMenuItem key={p} onClick={() => onSave("priority", p)} className={cn("text-[12px] capitalize flex items-center gap-2", String(selectedProspect.priority) === p && "font-semibold")}>
+                              <SignalBars priority={p} />
+                              {p}
+                              {String(selectedProspect.priority) === p && <Check className="h-3 w-3 ml-auto" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ── 3-column body ── */}
-            <div className="flex-1 min-h-0 flex gap-[3px] px-[3px] pb-[3px] pt-3 overflow-hidden relative z-10">
+            {/* ── 3-column body (Actions | Enrichment/Notes | Contact) ── */}
+            {(() => {
+              const hasEnrichment = !!(selectedProspect.ai_summary || selectedProspect.headline || selectedProspect.top_post || selectedProspect.conversation_starters);
+              const colWidth = hasEnrichment ? "md:w-1/3" : "md:w-1/2";
+              return (
+                <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-[3px] px-[3px] pb-[3px] pt-3 overflow-y-auto md:overflow-hidden relative z-10">
 
-              {/* Column 1: Contact Info */}
-              <div className="w-full md:w-1/3 md:shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex flex-col gap-4">
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
+                  {/* Column 1: Actions & Follow-up (was Column 3) */}
+                  <div className={cn("w-full shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex flex-col gap-3", colWidth)}>
 
-                {/* Location */}
-                {selectedProspect.city && (
-                  <span className="text-[12px] text-muted-foreground">{selectedProspect.city}{selectedProspect.country ? `, ${selectedProspect.country}` : ""}</span>
-                )}
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Next Action</h4>
+                    {editableMultiline("next_action", String(selectedProspect.next_action || ""), "No next action set", "text-[13px] leading-relaxed text-foreground")}
 
-                {/* Website */}
-                {selectedProspect.website && (
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                    <a href={selectedProspect.website.startsWith("http") ? selectedProspect.website : `https://${selectedProspect.website}`} target="_blank" rel="noopener noreferrer" className="text-[12px] text-brand-indigo hover:underline truncate">{selectedProspect.website}</a>
-                  </div>
-                )}
-
-                {/* Outreach stage */}
-                {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (
-                  <span className="text-[10px] font-medium text-muted-foreground/60 capitalize">{selectedProspect.outreach_status.replace(/_/g, " ")}</span>
-                )}
-
-                {/* Divider */}
-                <div className="h-px bg-border/30" />
-
-                {/* Primary contact */}
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Primary Contact</h4>
-                <div className="flex flex-col gap-1.5">
-                  {selectedProspect.contact_name && (
-                    <span className="text-[13px] font-medium text-foreground">{selectedProspect.contact_name}</span>
-                  )}
-                  {selectedProspect.contact_role && (
-                    <span className="text-[11px] text-muted-foreground">{selectedProspect.contact_role}</span>
-                  )}
-                  {selectedProspect.contact_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      <a href={`mailto:${selectedProspect.contact_email}`} className="text-[12px] text-brand-indigo hover:underline truncate">{selectedProspect.contact_email}</a>
-                    </div>
-                  )}
-                  {selectedProspect.contact_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      <a href={`tel:${selectedProspect.contact_phone}`} className="text-[12px] text-foreground hover:underline">{selectedProspect.contact_phone}</a>
-                    </div>
-                  )}
-                  {selectedProspect.contact_linkedin && (
-                    <div className="flex items-center gap-2">
-                      <Linkedin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      <a href={selectedProspect.contact_linkedin} target="_blank" rel="noopener noreferrer" className="text-[12px] text-brand-indigo hover:underline truncate">{selectedProspect.contact_linkedin.replace(/.*linkedin\.com\/in\//, "").replace(/\/$/, "")}</a>
-                    </div>
-                  )}
-                  {!selectedProspect.contact_name && !selectedProspect.contact_email && !selectedProspect.contact_phone && (
-                    <span className="text-[12px] text-muted-foreground/40 italic">No contact info yet</span>
-                  )}
-                </div>
-
-                {/* Secondary contact */}
-                {(selectedProspect.contact2_name || selectedProspect.contact2_email) && (
-                  <>
+                    {/* Follow-up info */}
                     <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Second Contact</h4>
-                    <div className="flex flex-col gap-1.5">
-                      {selectedProspect.contact2_name && <span className="text-[13px] font-medium text-foreground">{selectedProspect.contact2_name}</span>}
-                      {selectedProspect.contact2_role && <span className="text-[11px] text-muted-foreground">{selectedProspect.contact2_role}</span>}
-                      {selectedProspect.contact2_email && (
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Follow-up</h4>
+                    {dateEditField === "next_follow_up_date" ? (
+                      <input
+                        autoFocus
+                        type="date"
+                        value={dateEditValue}
+                        onChange={(e) => setDateEditValue(e.target.value)}
+                        onBlur={commitDateEdit}
+                        onKeyDown={(e) => { if (e.key === "Escape") setDateEditField(null); }}
+                        className="text-[12px] bg-white/80 border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 w-full"
+                      />
+                    ) : selectedProspect.next_follow_up_date ? (
+                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+                        const d = new Date(selectedProspect.next_follow_up_date!);
+                        startDateEdit("next_follow_up_date", d.toISOString().split("T")[0]);
+                      }}>
                         <div className="flex items-center gap-2">
-                          <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                          <a href={`mailto:${selectedProspect.contact2_email}`} className="text-[12px] text-brand-indigo hover:underline truncate">{selectedProspect.contact2_email}</a>
-                        </div>
-                      )}
-                      {selectedProspect.contact2_phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                          <span className="text-[12px] text-foreground">{selectedProspect.contact2_phone}</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {/* Source */}
-                {selectedProspect.source && (
-                  <>
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Source</h4>
-                    <span className="text-[12px] text-muted-foreground">{selectedProspect.source}</span>
-                  </>
-                )}
-              </div>
-
-              {/* Column 2: Enrichment & Notes */}
-              <div className="hidden md:flex w-1/3 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3">
-
-                {/* LinkedIn Enrichment */}
-                {(selectedProspect.ai_summary || selectedProspect.headline) ? (
-                  <>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
-
-                    {selectedProspect.headline && (
-                      <p className="text-[13px] font-medium text-foreground">{selectedProspect.headline}</p>
-                    )}
-
-                    {(selectedProspect.connection_count || selectedProspect.follower_count) && (
-                      <div className="flex gap-4">
-                        {selectedProspect.connection_count && (
-                          <span className="text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground">{Number(selectedProspect.connection_count).toLocaleString()}</span> {t("fields.connectionCount").toLowerCase()}
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                          <span className={cn("text-[13px] font-medium", new Date(selectedProspect.next_follow_up_date) < new Date() ? "text-red-500" : "text-foreground")}>
+                            {new Date(selectedProspect.next_follow_up_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                           </span>
-                        )}
-                        {selectedProspect.follower_count && (
-                          <span className="text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground">{Number(selectedProspect.follower_count).toLocaleString()}</span> {t("fields.followerCount").toLowerCase()}
-                          </span>
+                          {new Date(selectedProspect.next_follow_up_date) < new Date() && (
+                            <span className="text-[9px] font-bold text-red-500 uppercase">Overdue</span>
+                          )}
+                        </div>
+                        {selectedProspect.follow_up_count != null && Number(selectedProspect.follow_up_count) > 0 && (
+                          <span className="text-[11px] text-muted-foreground">{selectedProspect.follow_up_count} follow-up{Number(selectedProspect.follow_up_count) > 1 ? "s" : ""} sent</span>
                         )}
                       </div>
+                    ) : (
+                      <p className="text-[12px] text-muted-foreground/40 italic cursor-pointer hover:bg-black/[0.03] rounded px-1 -mx-1 transition-colors" onClick={() => startDateEdit("next_follow_up_date", new Date().toISOString().split("T")[0])}>
+                        No follow-up scheduled (click to set)
+                      </p>
                     )}
 
-                    {selectedProspect.ai_summary && (
+                    {/* Tasks */}
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Tasks</h4>
+                    <ProspectTasks prospectCompanyName={selectedProspect.company || ""} compact />
+
+                    {/* Email Interactions */}
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Emails</h4>
+                    <InteractionTimeline
+                      prospectId={selectedProspect.Id ?? selectedProspect.id ?? 0}
+                      onReply={(ctx) => {
+                        setReplyContext(ctx);
+                        setEmailComposeOpen(true);
+                      }}
+                    />
+
+                    {/* Pipeline info */}
+                    {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (
                       <>
                         <div className="h-px bg-border/30" />
-                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.aiSummary")}</h4>
-                        <p className="text-[12px] text-foreground leading-relaxed">{selectedProspect.ai_summary}</p>
+                        <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-muted/50">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/50">Pipeline Stage</span>
+                          <span className="text-[13px] font-medium text-foreground capitalize">{selectedProspect.outreach_status.replace(/_/g, " ")}</span>
+                          {selectedProspect.first_contacted_at && (
+                            <span className="text-[10px] text-muted-foreground">First contact: {new Date(selectedProspect.first_contacted_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          )}
+                        </div>
                       </>
                     )}
+                  </div>
 
-                    {selectedProspect.top_post && (
-                      <>
-                        <div className="h-px bg-border/30" />
-                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.topPost")}</h4>
-                        <p className="text-[12px] text-foreground/70 leading-relaxed italic">{selectedProspect.top_post}</p>
-                      </>
-                    )}
+                  {/* Column 2: Enrichment & Notes (collapses when empty) */}
+                  {hasEnrichment ? (
+                    <div className={cn("flex shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3", "w-full md:w-1/3")}>
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
 
-                    {selectedProspect.conversation_starters && (
-                      <>
-                        <div className="h-px bg-border/30" />
-                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.conversationStarters")}</h4>
-                        <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap">{selectedProspect.conversation_starters}</p>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
-                    <p className="text-[12px] text-muted-foreground/40 italic">{t("fields.notEnriched")}</p>
-                  </>
-                )}
+                      {selectedProspect.headline && (
+                        <p className="text-[13px] font-medium text-foreground">{selectedProspect.headline}</p>
+                      )}
 
-                {/* Notes */}
-                <div className="h-px bg-border/30" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.notes")}</h4>
-                {selectedProspect.notes ? (
-                  <p className="text-[12px] text-foreground whitespace-pre-wrap leading-relaxed">{selectedProspect.notes}</p>
-                ) : (
-                  <p className="text-[12px] text-muted-foreground/40 italic">No notes yet</p>
-                )}
-              </div>
+                      {(selectedProspect.connection_count || selectedProspect.follower_count) && (
+                        <div className="flex gap-4">
+                          {selectedProspect.connection_count && (
+                            <span className="text-[11px] text-muted-foreground">
+                              <span className="font-semibold text-foreground">{Number(selectedProspect.connection_count).toLocaleString()}</span> {t("fields.connectionCount").toLowerCase()}
+                            </span>
+                          )}
+                          {selectedProspect.follower_count && (
+                            <span className="text-[11px] text-muted-foreground">
+                              <span className="font-semibold text-foreground">{Number(selectedProspect.follower_count).toLocaleString()}</span> {t("fields.followerCount").toLowerCase()}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
-              {/* Column 3: Actions & Follow-up */}
-              <div className="hidden md:flex w-1/3 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3">
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Next Action</h4>
+                      {selectedProspect.ai_summary && (
+                        <>
+                          <div className="h-px bg-border/30" />
+                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.aiSummary")}</h4>
+                          <p className="text-[12px] text-foreground leading-relaxed">{selectedProspect.ai_summary}</p>
+                        </>
+                      )}
 
-                {selectedProspect.next_action ? (
-                  <p className="text-[13px] text-foreground leading-relaxed">{selectedProspect.next_action}</p>
-                ) : (
-                  <p className="text-[12px] text-muted-foreground/40 italic">No next action set</p>
-                )}
+                      {selectedProspect.top_post && (
+                        <>
+                          <div className="h-px bg-border/30" />
+                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.topPost")}</h4>
+                          <p className="text-[12px] text-foreground/70 leading-relaxed italic">{selectedProspect.top_post}</p>
+                        </>
+                      )}
 
-                {/* Follow-up info */}
-                <div className="h-px bg-border/30" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Follow-up</h4>
-                {selectedProspect.next_follow_up_date ? (
-                  <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-muted/50">
+                      {selectedProspect.conversation_starters && (
+                        <>
+                          <div className="h-px bg-border/30" />
+                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.conversationStarters")}</h4>
+                          <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap">{selectedProspect.conversation_starters}</p>
+                        </>
+                      )}
+
+                    </div>
+                  ) : (
+                    /* Collapsed enrichment: just notes */
+                    <div className={cn("flex shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3", "w-full md:w-1/3")}>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-muted-foreground/30" />
+                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
+                      </div>
+                      <p className="text-[12px] text-muted-foreground/40 italic">{t("fields.notEnriched")}</p>
+                    </div>
+                  )}
+
+                  {/* Column 3: Contact Info — all fields contentEditable */}
+                  <div className={cn("flex shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3", "w-full", colWidth)}>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
+
+                    {/* Location */}
                     <div className="flex items-center gap-2">
-                      <Clock className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      <span className={cn("text-[13px] font-medium", new Date(selectedProspect.next_follow_up_date) < new Date() ? "text-red-500" : "text-foreground")}>
-                        {new Date(selectedProspect.next_follow_up_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                      </span>
-                      {new Date(selectedProspect.next_follow_up_date) < new Date() && (
-                        <span className="text-[9px] font-bold text-red-500 uppercase">Overdue</span>
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                      {editableField("city", String(selectedProspect.city || ""), "Add location", "text-[12px] text-muted-foreground flex-1 min-w-0")}
+                    </div>
+
+                    {/* Website */}
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                      {editableField("website", String(selectedProspect.website || ""), "Add website", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                    </div>
+
+                    <div className="h-px bg-border/30" />
+
+                    {/* Primary contact header + Create Account */}
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Primary Contact</h4>
+                      {selectedProspect.Accounts_id ? (
+                        <a href={`/accounts`} onClick={(e) => { e.preventDefault(); localStorage.setItem("selectedAccountId", String(selectedProspect.Accounts_id)); window.location.href = "/accounts"; }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors cursor-pointer">
+                          <Building2 className="h-3 w-3" />
+                          Account #{selectedProspect.Accounts_id}
+                        </a>
+                      ) : (
+                        <button
+                          onClick={handleConvertToAccount}
+                          disabled={converting}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Create Account
+                        </button>
                       )}
                     </div>
-                    {selectedProspect.follow_up_count != null && Number(selectedProspect.follow_up_count) > 0 && (
-                      <span className="text-[11px] text-muted-foreground">{selectedProspect.follow_up_count} follow-up{Number(selectedProspect.follow_up_count) > 1 ? "s" : ""} sent</span>
-                    )}
+                    <div className="flex flex-col gap-2">
+                      {editableField("contact_name", String(selectedProspect.contact_name || ""), "Add name", "text-[13px] font-medium text-foreground")}
+                      {editableField("contact_role", String(selectedProspect.contact_role || ""), "Add role", "text-[11px] text-muted-foreground")}
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        {editableField("contact_email", String(selectedProspect.contact_email || ""), "Add email", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        {editableField("contact_phone", String(selectedProspect.contact_phone || ""), "Add phone", "text-[12px] text-foreground flex-1 min-w-0")}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Linkedin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        {editableField("contact_linkedin", String(selectedProspect.contact_linkedin || ""), "Add LinkedIn", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                      </div>
+                    </div>
+
+                    {/* Source */}
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Source</h4>
+                    {editableField("source", String(selectedProspect.source || ""), "Add source", "text-[12px] text-muted-foreground")}
+
+                    {/* Notes */}
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.notes")}</h4>
+                    {editableMultiline("notes", String(selectedProspect.notes || ""), "No notes yet", "text-[12px] leading-relaxed text-foreground")}
                   </div>
-                ) : (
-                  <p className="text-[12px] text-muted-foreground/40 italic">No follow-up scheduled</p>
-                )}
-
-                {/* Tasks */}
-                <div className="h-px bg-border/30" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Tasks</h4>
-                <ProspectTasks prospectCompanyName={selectedProspect.company || ""} compact />
-
-                {/* Interactions */}
-                <div className="h-px bg-border/30" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Interactions</h4>
-
-                {/* Pipeline info */}
-                {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (
-                  <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/50">Pipeline Stage</span>
-                    <span className="text-[13px] font-medium text-foreground capitalize">{selectedProspect.outreach_status.replace(/_/g, " ")}</span>
-                    {selectedProspect.first_contacted_at && (
-                      <span className="text-[10px] text-muted-foreground">First contact: {new Date(selectedProspect.first_contacted_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-                    )}
-                    {selectedProspect.follow_up_count != null && Number(selectedProspect.follow_up_count) > 0 && (
-                      <span className="text-[10px] text-muted-foreground">Follow-ups: {selectedProspect.follow_up_count}</span>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
-                  <Mail className="h-6 w-6 text-muted-foreground/20 mb-1.5" />
-                  <p className="text-[11px] text-muted-foreground/40">Interactions will appear here</p>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
+
           </div>
         ) : (
           <ProspectDetailViewEmpty toolbarPrefix={toolbarPrefix} />
         )}
       </div>
+
+      {/* Email compose modal */}
+      {selectedProspect && (
+        <EmailComposeModal
+          open={emailComposeOpen}
+          onOpenChange={(open) => {
+            setEmailComposeOpen(open);
+            if (!open) setReplyContext(null);
+          }}
+          prospect={selectedProspect}
+          replyTo={replyContext || undefined}
+        />
+      )}
+
+      {/* Mobile detail sheet removed — narrow screens now show detail inline */}
 
       {/* Gradient Tester floating panel */}
       <GradientTester
@@ -1353,6 +1624,7 @@ export function ProspectListView({
         onResetLayers={() => setGradientLayers(DEFAULT_LAYERS)}
         dragMode={gradientDragMode}
         onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+        onApply={handleApplyGradient}
       />
     </div>
   );

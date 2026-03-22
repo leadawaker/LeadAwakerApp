@@ -7,7 +7,6 @@ import {
   Calendar,
   GripVertical,
   LocateFixed,
-  Minus,
   Plus,
   Target,
   User,
@@ -501,12 +500,12 @@ export default function TasksGanttView({
         if (n >= MIN_PX_PER_DAY && n <= MAX_PX_PER_DAY) return n;
       }
     } catch {}
-    return ZOOM_PRESETS.week;
+    return ZOOM_PRESETS.day;
   });
 
   const [activePreset, setActivePreset] = useState<ZoomLevel | null>(() => {
     const stored = localStorage.getItem("tasks-gantt-pxperday");
-    if (!stored) return "week";
+    if (!stored) return "day";
     const n = Number(stored);
     for (const [key, val] of Object.entries(ZOOM_PRESETS)) {
       if (Math.abs(n - val) < 1) return key as ZoomLevel;
@@ -866,14 +865,23 @@ export default function TasksGanttView({
   const scrollToToday = useCallback(() => {
     const panel = rightPanelRef.current;
     if (panel) {
-      panel.scrollLeft = Math.max(0, todayX - panel.clientWidth * 0.15);
+      // In day view, scroll to current hour; otherwise scroll to today
+      const now = new Date();
+      const hourFrac = (now.getHours() + now.getMinutes() / 60) / 24;
+      const nowX = todayX + hourFrac * pxPerDay;
+      panel.scrollLeft = Math.max(0, nowX - panel.clientWidth * 0.3);
     }
-  }, [todayX]);
+  }, [todayX, pxPerDay]);
 
   useEffect(() => {
     if (didAutoScroll.current) return;
     didAutoScroll.current = true;
     scrollToToday();
+    // Set sticky-label CSS variable after initial scroll
+    requestAnimationFrame(() => {
+      const panel = rightPanelRef.current;
+      if (panel) panel.style.setProperty('--gantt-sl', `${panel.scrollLeft}px`);
+    });
   }, [scrollToToday]);
 
   // F key to focus on today
@@ -1021,6 +1029,32 @@ export default function TasksGanttView({
       }
     }
     return spans;
+  }, [flatRows]);
+
+  // ── Precompute L3 parent row spans (for extending deadline lines through children) ──
+  const l3Spans = useMemo(() => {
+    const spans = new Map<number, { startRow: number; endRow: number }>();
+    for (let i = 0; i < flatRows.length; i++) {
+      const row = flatRows[i];
+      if (row.depth === 3 && row.hasChildren) {
+        let endRow = i + 1;
+        while (endRow < flatRows.length && flatRows[endRow].depth > 3) {
+          endRow++;
+        }
+        spans.set(i, { startRow: i, endRow });
+      }
+    }
+    return spans;
+  }, [flatRows]);
+
+  // ── Pre-compute all node spans (avoids repeated recursive getNodeSpan during render) ──
+  const nodeSpanCache = useMemo(() => {
+    const cache = new Map<number, { start: Date | null; end: Date | null }>();
+    for (let i = 0; i < flatRows.length; i++) {
+      const row = flatRows[i];
+      cache.set(i, row.hasChildren ? getNodeSpan(row.node) : getEffectiveDates(row.node.task));
+    }
+    return cache;
   }, [flatRows]);
 
   // ── Precompute L1 background bands (category color spans across all children) ──
@@ -1225,7 +1259,7 @@ export default function TasksGanttView({
           <div
             ref={rightPanelRef}
             className="flex-1 min-h-0 overflow-auto"
-            onScroll={(e) => { const el = e.currentTarget; if (!scrollRafRef.current) { scrollRafRef.current = requestAnimationFrame(() => { syncVerticalScroll("right"); syncHorizontalScroll(); viewportHeightRef.current = el.clientHeight; setVisibleScrollTop(el.scrollTop); scrollRafRef.current = null; }); } }}
+            onScroll={(e) => { const el = e.currentTarget; if (!scrollRafRef.current) { scrollRafRef.current = requestAnimationFrame(() => { syncVerticalScroll("right"); syncHorizontalScroll(); viewportHeightRef.current = el.clientHeight; setVisibleScrollTop(el.scrollTop); el.style.setProperty('--gantt-sl', `${el.scrollLeft}px`); scrollRafRef.current = null; }); } }}
           >
             <div className="relative" style={{ width: timelineWidth, height: totalContentHeight }}>
               {/* Grid lines */}
@@ -1318,13 +1352,16 @@ export default function TasksGanttView({
                   const parentRow = flatRows[row.parentIndex];
                   // Only show dependency lines from L3+ parents to their children
                   if (parentRow.depth <= 2) return null;
+                  // Performance: skip lines entirely outside visible range
+                  if (i > lastVisibleRow + 10 && row.parentIndex > lastVisibleRow + 10) return null;
+                  if (i < firstVisibleRow - 10 && row.parentIndex < firstVisibleRow - 10) return null;
 
-                  const parentSpan = parentRow.hasChildren
+                  const parentSpan = nodeSpanCache.get(row.parentIndex) ?? (parentRow.hasChildren
                     ? getNodeSpan(parentRow.node)
-                    : getEffectiveDates(parentRow.node.task);
-                  const childSpan = row.hasChildren
+                    : getEffectiveDates(parentRow.node.task));
+                  const childSpan = nodeSpanCache.get(i) ?? (row.hasChildren
                     ? getNodeSpan(row.node)
-                    : getEffectiveDates(row.node.task);
+                    : getEffectiveDates(row.node.task));
 
                   const parentPos = getBarPos(parentSpan.start, parentSpan.end);
                   const childPos = getBarPos(childSpan.start, childSpan.end);
@@ -1372,7 +1409,7 @@ export default function TasksGanttView({
                 const isParent = row.hasChildren;
                 const isRoot = row.depth === 0;
                 const isL1 = row.depth === 1 && isParent;
-                const span = isParent ? getNodeSpan(row.node) : getEffectiveDates(task);
+                const span = nodeSpanCache.get(i) ?? (isParent ? getNodeSpan(row.node) : getEffectiveDates(task));
                 const { start, end } = span;
                 const catColor = getRowColor(row);
                 const isDone = task.status === "done";
@@ -1408,8 +1445,17 @@ export default function TasksGanttView({
                       onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
                     >
                       <div className="h-full rounded-sm" style={{ backgroundColor: "#1a1a1a", opacity: 0.85 }} />
-                      {rootPos.width > 100 && (
-                        <span className="absolute inset-0 flex items-center px-2 text-[9px] font-bold truncate pointer-events-none text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                      {rootPos.width > 60 && (
+                        <span
+                          className="absolute top-0 bottom-0 flex items-center text-[9px] font-bold truncate pointer-events-none text-white"
+                          style={{
+                            left: `clamp(0px, calc(var(--gantt-sl, 0px) - ${rootPos.left}px), ${Math.max(0, rootPos.width - 60)}px)`,
+                            right: 0,
+                            paddingLeft: 8,
+                            paddingRight: 8,
+                            textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                          }}
+                        >
                           {task.title}
                         </span>
                       )}
@@ -1552,7 +1598,93 @@ export default function TasksGanttView({
                     );
                   }
 
-                  // Depth 3+: thin summary bar with end caps (standard parent)
+                  // Depth 3: thin line with vertical deadline line + diamond + label (like L2 but thinner)
+                  if (row.depth === 3) {
+                    const deadlineX = end
+                      ? diffDays(rangeStart, addDays(end, 1)) * pxPerDay
+                      : pos.left + pos.width;
+
+                    const rowSpan = l3Spans.get(i);
+                    const lineHeight = rowSpan && rowSpan.endRow < rowTops.length
+                      ? rowTops[rowSpan.endRow] - rowTops[rowSpan.startRow]
+                      : rowSpan
+                        ? (rowSpan.endRow - rowSpan.startRow) * ROW_HEIGHT
+                        : ROW_HEIGHT;
+
+                    return (
+                      <div key={`bar-${task.id}`} className="absolute z-[7] pointer-events-none" style={{ top: rowTops[i], height: lineHeight }}>
+                        {/* Thin horizontal line */}
+                        <div
+                          className="absolute"
+                          style={{
+                            top: ROW_HEIGHT / 2 - 1,
+                            left: pos.left,
+                            width: pos.width,
+                            height: 2,
+                            backgroundColor: catColor,
+                            opacity: 0.35,
+                          }}
+                        />
+                        {/* Vertical deadline line extending through children (1px) */}
+                        <div
+                          className="absolute pointer-events-auto cursor-pointer"
+                          style={{
+                            left: deadlineX,
+                            top: 2,
+                            width: 1,
+                            height: lineHeight - 4,
+                            backgroundColor: catColor,
+                            opacity: 0.3,
+                          }}
+                          onClick={() => onTaskClick?.(task.id)}
+                          onMouseEnter={(e) => {
+                            setHoveredRow(i);
+                            tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start, end });
+                          }}
+                          onMouseMove={(e) => {
+                            tooltipPosRef.current = { x: e.clientX, y: e.clientY };
+                            if (tooltipElRef.current) { tooltipElRef.current.style.left = `${e.clientX}px`; tooltipElRef.current.style.top = `${e.clientY - 12}px`; }
+                          }}
+                          onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
+                        />
+                        {/* Diamond marker at deadline */}
+                        <div
+                          className="absolute pointer-events-auto cursor-pointer"
+                          style={{
+                            left: deadlineX - 4,
+                            top: ROW_HEIGHT / 2 - 4,
+                            width: 8,
+                            height: 8,
+                            backgroundColor: catColor,
+                            opacity: 0.7,
+                            transform: "rotate(45deg)",
+                            borderRadius: 1,
+                          }}
+                          onClick={() => onTaskClick?.(task.id)}
+                          onMouseEnter={(e) => {
+                            setHoveredRow(i);
+                            tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start, end });
+                          }}
+                          onMouseLeave={() => { setHoveredRow(null); setTooltipData(null); }}
+                        />
+                        {/* Label next to the diamond */}
+                        <div
+                          className="absolute text-[9px] font-semibold truncate pointer-events-none"
+                          style={{
+                            left: deadlineX + 7,
+                            top: ROW_HEIGHT / 2 - 6,
+                            maxWidth: 120,
+                            color: catColor,
+                            opacity: 0.75,
+                          }}
+                        >
+                          {task.title}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Depth 4+: thin summary bar with end caps (standard parent)
                   return (
                     <div
                       key={`bar-${task.id}`}
@@ -1566,10 +1698,16 @@ export default function TasksGanttView({
                       {...commonHandlers}
                     >
                       <div className="h-full rounded-sm" style={{ backgroundColor: catColor, opacity: 0.55 }} />
-                      {pos.width > 60 && (
+                      {pos.width > 50 && (
                         <span
-                          className="absolute inset-0 flex items-center px-2 text-[9px] font-bold truncate pointer-events-none text-white"
-                          style={{ textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}
+                          className="absolute top-0 bottom-0 flex items-center text-[9px] font-bold truncate pointer-events-none text-white"
+                          style={{
+                            left: `clamp(0px, calc(var(--gantt-sl, 0px) - ${pos.left}px), ${Math.max(0, pos.width - 50)}px)`,
+                            right: 0,
+                            paddingLeft: 8,
+                            paddingRight: 8,
+                            textShadow: "0 1px 2px rgba(0,0,0,0.4)",
+                          }}
                         >
                           {task.title}
                         </span>
@@ -1652,11 +1790,17 @@ export default function TasksGanttView({
                       <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1 h-3.5 rounded-sm bg-white/80" />
                     </div>
 
-                    {/* Label */}
-                    {pos.width > 50 && (
+                    {/* Label (sticky: slides with horizontal scroll, stays visible until bar exits) */}
+                    {pos.width > 40 && (
                       <span
-                        className="absolute inset-0 flex items-center px-2 text-[10px] font-medium text-white truncate pointer-events-none"
-                        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                        className="absolute top-0 bottom-0 flex items-center text-[10px] font-medium text-white truncate pointer-events-none"
+                        style={{
+                          left: `clamp(0px, calc(var(--gantt-sl, 0px) - ${pos.left}px), ${Math.max(0, pos.width - 40)}px)`,
+                          right: 0,
+                          paddingLeft: 8,
+                          paddingRight: 8,
+                          textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                        }}
                       >
                         {task.title}
                       </span>
@@ -1799,40 +1943,35 @@ export default function TasksGanttView({
 
       {/* Portal gantt controls into page toolbar */}
       {toolbarPortal?.current && createPortal(
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* ── Zoom tab ── */}
           <div className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 gap-0.5">
             {(["day", "week", "month"] as ZoomLevel[]).map((z) => (
               <button key={z} onClick={() => setZoomPreset(z)}
-                className={cn("px-2.5 py-1 rounded-md text-[10px] font-medium transition-all", activePreset === z ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                className={cn("px-2 py-0.5 rounded-md text-[10px] font-medium transition-all", activePreset === z ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
               >{t(`gantt.zoom${z.charAt(0).toUpperCase() + z.slice(1)}` as any)}</button>
             ))}
-            <span className="w-px h-4 bg-border/30" />
-            <button onClick={() => setPxPerDay((p) => { const v = Math.max(MIN_PX_PER_DAY, p / 1.3); setActivePreset(null); return v; })}
-              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/60"><Minus className="h-3 w-3" /></button>
-            <button onClick={() => setPxPerDay((p) => { const v = Math.min(MAX_PX_PER_DAY, p * 1.3); setActivePreset(null); return v; })}
-              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/60"><Plus className="h-3 w-3" /></button>
             <button onClick={scrollToToday}
-              className="px-2 py-1 rounded-md text-[10px] font-semibold text-brand-indigo hover:bg-brand-indigo/10 transition-colors">{t("gantt.today")}</button>
+              className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold text-brand-indigo hover:bg-brand-indigo/10 transition-colors">{t("gantt.today")}</button>
           </div>
 
-          {/* ── Color tab ── */}
+          {/* ── Color tab (compact: no label prefix) ── */}
           <div className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 gap-0.5">
-            <span className="text-[9px] text-muted-foreground/50 font-medium px-1.5">Color</span>
             {(["category", "status", "priority"] as ColorByMode[]).map((mode) => (
               <button key={mode} onClick={() => setColorBy(mode)}
-                className={cn("px-2 py-1 rounded-md text-[10px] font-medium transition-all", colorBy === mode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                className={cn("px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-all", colorBy === mode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title={`Color by ${mode}`}
               >{t(`gantt.colorMode${mode.charAt(0).toUpperCase() + mode.slice(1)}` as any)}</button>
             ))}
           </div>
 
-          {/* ── Group tab ── */}
+          {/* ── Group tab (compact: no label prefix) ── */}
           {onGroupByChange && (
             <div className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 gap-0.5">
-              <span className="text-[9px] text-muted-foreground/50 font-medium px-1.5">Group</span>
               {(["hierarchy", "status", "priority"] as GanttGroupBy[]).map((g) => (
                 <button key={g} onClick={() => onGroupByChange(g)}
-                  className={cn("px-2 py-1 rounded-md text-[10px] font-medium transition-all", ganttGroupBy === g ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                  className={cn("px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-all", ganttGroupBy === g ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                  title={`Group by ${g}`}
                 >
                   {g === "hierarchy" ? "Tree" : g.charAt(0).toUpperCase() + g.slice(1)}
                 </button>

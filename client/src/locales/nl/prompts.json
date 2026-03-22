@@ -21,7 +21,8 @@
     "promptCount_other": "{{count}} prompts",
     "allStatuses": "Alle Statussen",
     "allModels": "Alle Modellen",
-    "allCampaigns": "Alle Campagnes"
+    "allCampaigns": "Alle Campagnes",
+    "allAccounts": "Alle Accounts"
   },
   "views": {
     "list": "Lijst",
@@ -34,7 +35,9 @@
     "untitled": "Naamloos",
     "untitledPrompt": "Naamloze Prompt",
     "noModel": "Geen Model",
-    "noCampaign": "Geen Campagne"
+    "noCampaign": "Geen Campagne",
+    "account": "Account",
+    "noAccount": "Agency Bots"
   },
   "form": {
     "createTitle": "Prompt Aanmaken",
@@ -69,6 +72,7 @@
     "selectModel": "Model selecteren",
     "selectStatus": "Status selecteren",
     "noneOption": "\u2014 Geen \u2014",
+    "noCampaignModel": "Geen campagne geselecteerd",
     "identity": "Identiteit",
     "configuration": "Configuratie",
     "required": "Verplicht",

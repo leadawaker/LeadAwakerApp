@@ -102,6 +102,7 @@ import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { SkeletonLeadPanel } from "@/components/ui/skeleton";
 import { renderRichText } from "@/lib/richTextUtils";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSession, type SessionUser } from "@/hooks/useSession";
 import {
@@ -564,7 +565,7 @@ function PipelineProgress({ status, skipBooked = false }: { status: string; skip
           return (
             <div
               key={`icon-${stage.key}`}
-              className="absolute z-10 flex items-center"
+              className={cn("absolute z-10 items-center", isCurrent ? "flex" : "hidden lg:flex")}
               style={{
                 left: `${pct}%`,
                 top: "50%",
@@ -3122,7 +3123,7 @@ function ActivityTimeline({ lead, tagEvents }: {
   }, [interactions, tagEvents, status, lead, page]);
 
   return (
-    <div data-testid="activity-timeline" className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col h-full overflow-y-auto gap-6">
+    <div data-testid="activity-timeline" className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col h-full overflow-y-auto gap-6">
       <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">{t("activity.title")}</span>
 
       {loading ? (
@@ -3415,6 +3416,32 @@ export function LeadDetailView({
     setTimeout(() => document.getElementById("__pdf_print_style__")?.remove(), 1200);
   }, [leadId]);
 
+  // ── Gradient tester (agency-only) ─────────────────────────────────────────
+  const { isAgencyUser } = useWorkspace();
+  const GRADIENT_KEY = "la:gradient:leads";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+  const toggleGradientTester = useCallback(() => {
+    setGradientTesterOpen(prev => {
+      if (!prev && savedGradient) setGradientLayers(savedGradient);
+      return !prev;
+    });
+  }, [savedGradient]);
+
   // ── Expand-on-hover button helpers ───────────────────────────────────────
   const xBtn = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
   const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
@@ -3423,12 +3450,31 @@ export function LeadDetailView({
     <div ref={panelRef} className="relative flex flex-col h-full overflow-hidden">
 
       {/* ── Full-height gradient ── */}
-      <>
-        <div className="absolute inset-0 bg-popover dark:bg-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,102,17,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f0ffb5_5%,transparent_30%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
-      </>
+      {gradientTesterOpen ? (
+        <>
+          {gradientLayers.map(layer => {
+            const style = layerToStyle(layer);
+            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+          })}
+          {gradientDragMode && (
+            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+          )}
+        </>
+      ) : savedGradient ? (
+        <>
+          {savedGradient.map((layer: GradientLayer) => {
+            const style = layerToStyle(layer);
+            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+          })}
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-popover dark:bg-background" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,102,17,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f0ffb5_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
 
       {/* ── Fixed header (stays in place) ── */}
       <div className="relative shrink-0 z-10 px-4 pt-5 pb-3 space-y-6 max-w-[1386px] w-full mr-auto">
@@ -3439,8 +3485,19 @@ export function LeadDetailView({
 
             {/* Action buttons removed — available on Chats page only */}
 
-            {/* Right-edge: To PDF + Delete */}
+            {/* Right-edge: Gradient + To PDF + Delete */}
             <div className="ml-auto flex items-center gap-1">
+              {/* Gradient Tester (agency-only) */}
+              {isAgencyUser && (
+                <button
+                  onClick={toggleGradientTester}
+                  className={cn(xBtn, "hover:max-w-[120px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : "border-black/[0.125] text-foreground/60 hover:text-foreground")}
+                  title="Gradient Tester"
+                >
+                  <Palette className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Gradient</span>
+                </button>
+              )}
               {/* To PDF */}
               <button onClick={handlePdf} className={cn(xBtn, "hover:max-w-[110px] border-black/[0.125] text-foreground/60 hover:text-foreground")}>
                 <span className="relative inline-flex h-4 w-4 shrink-0">
@@ -3609,6 +3666,20 @@ export function LeadDetailView({
           </div>
         </div>
       </div>
+
+      {/* Gradient Tester floating panel (agency-only) */}
+      {isAgencyUser && (
+        <GradientTester
+          open={gradientTesterOpen}
+          onClose={() => setGradientTesterOpen(false)}
+          layers={gradientLayers}
+          onUpdateLayer={updateGradientLayer}
+          onResetLayers={() => setGradientLayers(DEFAULT_LAYERS)}
+          dragMode={gradientDragMode}
+          onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+          onApply={handleApplyGradient}
+        />
+      )}
 
     </div>
   );
@@ -3995,7 +4066,7 @@ function LeadListCard({
             <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
               {name}
             </p>
-            <div className="flex items-center gap-1 mt-0.5">
+            <div className="flex flex-wrap items-center gap-1 mt-0.5">
               <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", (status === "New" || status === "Responded" || status === "Multiple Responses") && "animate-status-pulse")} style={{ backgroundColor: statusHex, color: statusHex }} />
               <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
             </div>
@@ -4074,9 +4145,9 @@ function LeadListCard({
       </div>
 
       {/* ── Mobile-only footer: status badge + phone + campaign + last activity ── */}
-      <div className="md:hidden px-3 pb-3 pt-0 flex flex-col gap-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 shrink-0 min-w-0">
+      <div className="lg:hidden px-3 pb-3 pt-0 flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
             <span className={cn(
               "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border shrink-0",
               statusColors.badge
@@ -4578,7 +4649,7 @@ function MobileLeadDetailPanel({
       initial="initial"
       animate="animate"
       exit="exit"
-      className="md:hidden fixed inset-0 z-[200] flex flex-col bg-background"
+      className="lg:hidden fixed inset-0 z-[200] flex flex-col bg-background"
       style={{ height: "100dvh" }}
     >
       {/* ── Sticky header: back + name + status badge ── */}
@@ -4957,7 +5028,7 @@ function MobileAddLeadForm({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden fixed inset-0 z-[300] bg-black/50"
+            className="lg:hidden fixed inset-0 z-[300] bg-black/50"
             onClick={onClose}
           />
           {/* Full-screen form panel */}
@@ -4968,7 +5039,7 @@ function MobileAddLeadForm({
             exit={{ y: "100%" }}
             transition={{ type: "tween", duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
             data-testid="mobile-add-lead-form"
-            className="md:hidden fixed inset-x-0 bottom-0 z-[301] bg-background rounded-t-3xl border-t border-border/30 flex flex-col max-h-[92dvh]"
+            className="lg:hidden fixed inset-x-0 bottom-0 z-[301] bg-background rounded-t-3xl border-t border-border/30 flex flex-col max-h-[92dvh]"
             style={{ paddingBottom: "calc(1.5rem + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))" }}
           >
             {/* Drag handle */}
@@ -5202,7 +5273,7 @@ function LeadFilterBottomSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden fixed inset-0 z-[300] bg-black/50"
+            className="lg:hidden fixed inset-0 z-[300] bg-black/50"
             onClick={onClose}
           />
           {/* Sheet */}
@@ -5213,7 +5284,7 @@ function LeadFilterBottomSheet({
             exit={{ y: "100%" }}
             transition={{ type: "tween", duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
             data-testid="lead-filter-sheet"
-            className="md:hidden fixed inset-x-0 bottom-0 z-[301] bg-background rounded-t-3xl border-t border-border/30 flex flex-col max-h-[88dvh]"
+            className="lg:hidden fixed inset-x-0 bottom-0 z-[301] bg-background rounded-t-3xl border-t border-border/30 flex flex-col max-h-[88dvh]"
             style={{ paddingBottom: "calc(1.5rem + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))" }}
           >
             {/* Drag handle */}
@@ -5786,17 +5857,17 @@ export function LeadsCardView({
 
       {/* ── LEFT: Lead List ── muted panel (#E3E3E3) */}
       {/* On mobile: always visible (MobileLeadDetailPanel is a fixed overlay on top) */}
-      <div className="flex flex-col bg-muted rounded-lg overflow-hidden w-full md:w-[340px] md:shrink-0">
+      <div className="flex flex-col bg-muted rounded-lg overflow-hidden w-full lg:w-[340px] lg:shrink-0">
 
         {/* ── Panel header: title + ViewTabBar ── */}
-        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
-          <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
+        <div className="pl-[17px] pr-3.5 pt-3 lg:pt-10 pb-1 lg:pb-3 shrink-0 flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-0">
+          <div className="flex items-center justify-between w-full lg:w-[309px] lg:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-            <span className="hidden md:block">
+            <span className="hidden lg:block">
               <ViewTabBar tabs={viewTabs} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
             </span>
             {/* Mobile action buttons: filter + kanban toggle (Feature #42 + #39) */}
-            <div className="md:hidden flex items-center gap-1.5">
+            <div className="lg:hidden flex items-center gap-1.5">
               {/* Filter button (Feature #42) */}
               <button
                 className={cn(
@@ -5842,12 +5913,12 @@ export function LeadsCardView({
             </div>
           </div>
           {/* ViewTabBar below title on mobile */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <ViewTabBar tabs={viewTabs} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
           </div>
 
           {/* Mobile search bar — Feature #43 */}
-          <div className="md:hidden px-1 pt-1 pb-0.5">
+          <div className="lg:hidden px-1 pt-1 pb-0.5">
             <div
               className={cn(
                 "flex items-center h-9 px-3 gap-2 rounded-lg border transition-colors",
@@ -5880,7 +5951,7 @@ export function LeadsCardView({
         </div>
 
         {/* Upcoming calls filter chip — mobile only */}
-        <div className="md:hidden px-2 pb-1 flex gap-2">
+        <div className="lg:hidden px-2 pb-1 flex gap-2">
           <button
             onClick={() => setUpcomingCallsOnly(!upcomingCallsOnly)}
             className={cn(
@@ -5899,7 +5970,7 @@ export function LeadsCardView({
 
         {/* Mobile simplified kanban view (Feature #39) — shown when kanban mode active on mobile */}
         {mobileListMode === "kanban" && (
-          <div className="flex-1 min-h-0 overflow-hidden md:hidden">
+          <div className="flex-1 min-h-0 overflow-hidden lg:hidden">
             <MobileSimpleKanban
               leads={leads}
               leadTagsInfo={leadTagsInfo}
@@ -5910,7 +5981,7 @@ export function LeadsCardView({
         )}
 
         {/* Lead list — card list (pagination inside scroll area, below last card) */}
-        <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-[3px] pt-0 pb-[3px]", mobileListMode === "kanban" && "hidden md:flex md:flex-col")}>
+        <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-[3px] pt-0 pb-[3px]", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")}>
           {/* Pull-to-refresh indicator — mobile only */}
           <PullToRefreshIndicator pullDistance={leadsPullDistance} isRefreshing={leadsIsRefreshing} />
           {loading ? (
@@ -6009,7 +6080,7 @@ export function LeadsCardView({
 
       {/* Desktop detail panel — always hidden on mobile (mobile uses MobileLeadDetailPanel overlay) */}
       <div className={cn(
-        "flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg hidden md:flex max-w-[1386px]"
+        "flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg hidden lg:flex max-w-[1386px]"
       )}>
         {loading && !selectedLead ? (
           <SkeletonLeadPanel />

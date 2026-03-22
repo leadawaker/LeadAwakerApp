@@ -125,7 +125,12 @@ export function useLeads(accountId?: number, campaignId?: number) {
     }
   }, [accountId, campaignId]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+    // Poll every 20s so lead data (status, score, counters) stays fresh during demos
+    const iv = setInterval(refresh, 20_000);
+    return () => clearInterval(iv);
+  }, [refresh]);
 
   return { leads, loading, refresh };
 }

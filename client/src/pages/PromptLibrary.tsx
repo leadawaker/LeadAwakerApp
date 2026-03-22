@@ -89,7 +89,7 @@ const EMPTY_FORM: PromptFormData = {
   name: "",
   promptText: "",
   systemMessage: "",
-  model: "gpt-4o",
+  model: "gpt-5.1",
   temperature: "0.7",
   maxTokens: "1000",
   status: "active",
@@ -135,7 +135,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           name: prompt.name || "",
           promptText: prompt.promptText || prompt.prompt_text || "",
           systemMessage: prompt.systemMessage || prompt.system_message || "",
-          model: prompt.model || "gpt-4o",
+          model: prompt.model || "gpt-5.1",
           temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
           maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
           status: prompt.status || "active",
@@ -977,6 +977,10 @@ export default function PromptLibraryPage() {
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
   // Gradient tester state
+  const GRADIENT_KEY = "la:gradient:prompts";
+  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
+    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
+  });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
   const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
@@ -991,6 +995,18 @@ export default function PromptLibraryPage() {
     setGradientLayers(DEFAULT_LAYERS);
     setGradientDragMode(false);
   }, []);
+
+  const handleApplyGradient = useCallback(() => {
+    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
+    setSavedGradient(gradientLayers);
+    setGradientTesterOpen(false);
+  }, [gradientLayers]);
+  const toggleGradientTester = useCallback(() => {
+    setGradientTesterOpen(prev => {
+      if (!prev && savedGradient) setGradientLayers(savedGradient);
+      return !prev;
+    });
+  }, [savedGradient]);
 
   // Clear topbar actions (tabs are inline)
   useEffect(() => {
@@ -1199,7 +1215,7 @@ export default function PromptLibraryPage() {
   return (
     <CrmShell>
       <div className="flex flex-col h-full" data-testid="page-prompt-library">
-        <div className="flex-1 min-h-0 flex gap-0 overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-0 overflow-y-auto md:overflow-hidden">
 
           {/* ── LEFT PANEL ── list of prompts ────────────────────────── */}
           <div className="w-full md:w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
@@ -1284,8 +1300,8 @@ export default function PromptLibraryPage() {
             </div>
           </div>
 
-          {/* ── RIGHT PANEL ── prompt details (desktop only) ─────────── */}
-          <div className="hidden md:flex flex-1 min-w-0 flex-col rounded-lg ml-1.5 overflow-hidden relative">
+          {/* ── RIGHT PANEL ── prompt details ─────────────────────────── */}
+          <div className="flex flex-1 min-w-0 flex-col rounded-lg md:ml-1.5 overflow-hidden relative">
             {/* ── Warm gradient bloom background (matching Invoices/Expenses) ── */}
             {gradientTesterOpen ? (
               <>
@@ -1297,6 +1313,13 @@ export default function PromptLibraryPage() {
                 {gradientDragMode && (
                   <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
                 )}
+              </>
+            ) : savedGradient ? (
+              <>
+                {savedGradient.map((layer: GradientLayer) => {
+                  const style = layerToStyle(layer);
+                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+                })}
               </>
             ) : (
               <>
@@ -1318,7 +1341,7 @@ export default function PromptLibraryPage() {
                   onToggleStatus={() => handleToggleStatus(selectedPrompt)}
                   isToggling={togglingIds.has(selectedPromptId!)}
                   gradientTesterOpen={gradientTesterOpen}
-                  onToggleGradientTester={() => setGradientTesterOpen(prev => !prev)}
+                  onToggleGradientTester={toggleGradientTester}
                   isAgencyView={isAgencyView}
                   availableCampaigns={availableCampaignsForFilter}
                   onCampaignChange={handleCampaignChange}
@@ -1357,6 +1380,7 @@ export default function PromptLibraryPage() {
         onResetLayers={resetGradientLayers}
         dragMode={gradientDragMode}
         onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+        onApply={handleApplyGradient}
       />
 
       {/* ── Mobile full-screen prompt detail panel (portal) ── */}

@@ -59,8 +59,10 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
+import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, BRANDED_SIGNATURE } from "./gmail";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
+import { createAndDispatchNotification } from "./notification-dispatcher";
 import { eq, count, and, gte, lte, isNotNull, ilike, type SQL, desc, sql } from "drizzle-orm";
 import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands, formatConversationHistory } from "./aiAgents";
 import {
@@ -278,8 +280,14 @@ export async function registerRoutes(
     res.json(toDbKeysArray(data as any, accounts));
   }));
 
-  app.get("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
-    const account = await storage.getAccountById(Number(req.params.id));
+  app.get("/api/accounts/:id", requireAuth, wrapAsync(async (req, res) => {
+    const requestedId = Number(req.params.id);
+    const user = req.user!;
+    // Sub-account users can only fetch their own account
+    if (user.role !== "Agency" && user.accountsId !== requestedId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const account = await storage.getAccountById(requestedId);
     if (!account) return res.status(404).json({ message: "Account not found" });
     res.json(toDbKeys(account as any, accounts));
   }));
@@ -395,6 +403,50 @@ export async function registerRoutes(
     }
 
     res.json(toDbKeys(prospect as any, prospects));
+  }));
+
+  app.post("/api/prospects/:id/convert-to-account", requireAgency, wrapAsync(async (req, res) => {
+    const prospect = await storage.getProspectById(Number(req.params.id));
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+    if (prospect.accountsId) return res.status(400).json({ message: "Prospect already linked to an account" });
+
+    // Check if an account with the same name already exists
+    const accountName = prospect.company || prospect.name || "Unnamed Account";
+    const existingAccounts = await storage.getAccounts();
+    const duplicate = existingAccounts.find((a: any) => (a.name || "").toLowerCase().trim() === accountName.toLowerCase().trim());
+    if (duplicate) {
+      // Link to existing account instead of creating a new one
+      const updatedProspect = await storage.updateProspect(Number(req.params.id), {
+        accountsId: duplicate.id,
+        status: "Converted",
+      });
+      return res.json({
+        account: toDbKeys(duplicate as any, accounts),
+        prospect: toDbKeys(updatedProspect as any, prospects),
+        linked_existing: true,
+      });
+    }
+
+    // Create account from prospect data
+    const account = await storage.createAccount({
+      name: prospect.company || prospect.name || "Unnamed Account",
+      phone: prospect.phone || prospect.contactPhone || null,
+      website: prospect.website || null,
+      ownerEmail: prospect.contactEmail || prospect.email || null,
+      status: "trial",
+      businessNiche: prospect.niche || null,
+    });
+
+    // Link prospect to the new account and set status to Converted
+    const updatedProspect = await storage.updateProspect(Number(req.params.id), {
+      accountsId: account.id,
+      status: "Converted",
+    });
+
+    res.json({
+      account: toDbKeys(account as any, accounts),
+      prospect: toDbKeys(updatedProspect as any, prospects),
+    });
   }));
 
   app.delete("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
@@ -555,6 +607,144 @@ export async function registerRoutes(
       channel: campaign.channel ?? "sms",
     });
   }));
+
+  // GET /api/campaigns/:id/ab-stats — A/B test variant performance
+  app.get("/api/campaigns/:id/ab-stats", requireAuth, async (req, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+
+      // Get campaign AB settings
+      const campResult = await pool.query(
+        'SELECT ab_enabled, ab_split_ratio FROM p2mxx34fvbf3ll6."Campaigns" WHERE id = $1',
+        [campaignId]
+      );
+
+      if (!campResult.rows[0]) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+
+      const { ab_enabled, ab_split_ratio } = campResult.rows[0];
+
+      // Get variant stats
+      const stats = await pool.query(`
+        SELECT
+          l.ab_variant,
+          COUNT(DISTINCT l.id) as leads,
+          COUNT(DISTINCT CASE WHEN l."Conversion_Status" IN ('Contacted','Responded','Multiple Responses','Qualified','Booked') THEN l.id END) as contacted,
+          COUNT(DISTINCT CASE WHEN l."Conversion_Status" IN ('Responded','Multiple Responses','Qualified','Booked') THEN l.id END) as responded,
+          COUNT(DISTINCT CASE WHEN l."Conversion_Status" IN ('Qualified','Booked') THEN l.id END) as qualified,
+          COUNT(DISTINCT CASE WHEN l."Conversion_Status" IN ('Booked') THEN l.id END) as booked,
+          COUNT(DISTINCT CASE WHEN l.opted_out = true OR l.dnc_reason IS NOT NULL THEN l.id END) as opted_out
+        FROM p2mxx34fvbf3ll6."Leads" l
+        WHERE l."Campaigns_id" = $1
+          AND l.ab_variant IS NOT NULL
+        GROUP BY l.ab_variant
+      `, [campaignId]);
+
+      // Get avg messages to booking per variant
+      const avgMsgs = await pool.query(`
+        SELECT
+          l.ab_variant,
+          AVG(l.message_count_sent + l.message_count_received) as avg_messages,
+          AVG(EXTRACT(EPOCH FROM (l.last_message_received_at - l.first_message_sent_at)) / 60) as avg_response_time_min
+        FROM p2mxx34fvbf3ll6."Leads" l
+        WHERE l."Campaigns_id" = $1
+          AND l.ab_variant IS NOT NULL
+          AND l.message_count_received > 0
+        GROUP BY l.ab_variant
+      `, [campaignId]);
+
+      const avgMsgsMap: Record<string, { avg_messages: number; avg_response_time_min: number }> = {};
+      for (const row of avgMsgs.rows) {
+        avgMsgsMap[row.ab_variant] = {
+          avg_messages: parseFloat(row.avg_messages) || 0,
+          avg_response_time_min: parseFloat(row.avg_response_time_min) || 0,
+        };
+      }
+
+      // Get prompt names for each variant
+      const prompts = await pool.query(`
+        SELECT ab_variant, name
+        FROM p2mxx34fvbf3ll6."Prompt_Library"
+        WHERE "Campaigns_id" = $1 AND LOWER(status) = 'active' AND ab_variant IS NOT NULL
+      `, [campaignId]);
+
+      const promptNames: Record<string, string> = {};
+      for (const p of prompts.rows) {
+        promptNames[p.ab_variant] = p.name;
+      }
+
+      // Build variants object
+      const variants: Record<string, any> = {};
+      for (const row of stats.rows) {
+        const total = parseInt(row.leads);
+        const responded = parseInt(row.responded);
+        const qualified = parseInt(row.qualified);
+        const booked = parseInt(row.booked);
+        const optedOut = parseInt(row.opted_out);
+        const avg = avgMsgsMap[row.ab_variant];
+        variants[row.ab_variant] = {
+          label: promptNames[row.ab_variant] || `Variant ${row.ab_variant}`,
+          leads: total,
+          contacted: parseInt(row.contacted),
+          responded,
+          response_rate: total > 0 ? responded / total : 0,
+          qualified,
+          qualification_rate: total > 0 ? qualified / total : 0,
+          booked,
+          booking_rate: total > 0 ? booked / total : 0,
+          opted_out: optedOut,
+          optout_rate: total > 0 ? optedOut / total : 0,
+          avg_messages: avg?.avg_messages ? Math.round(avg.avg_messages * 10) / 10 : null,
+          avg_response_time_min: avg?.avg_response_time_min ? Math.round(avg.avg_response_time_min) : null,
+        };
+      }
+
+      // Calculate confidence (two-proportion z-test)
+      let winner = null;
+      let confidence = 0;
+      let leads_needed = 0;
+
+      if (variants.A && variants.B) {
+        const aTotal = variants.A.leads;
+        const bTotal = variants.B.leads;
+        const aSuccess = variants.A.booked;
+        const bSuccess = variants.B.booked;
+
+        if (aTotal > 0 && bTotal > 0) {
+          const pA = aSuccess / aTotal;
+          const pB = bSuccess / bTotal;
+          const pPool = (aSuccess + bSuccess) / (aTotal + bTotal);
+          const se = Math.sqrt(pPool * (1 - pPool) * (1/aTotal + 1/bTotal));
+
+          if (se > 0) {
+            const z = Math.abs(pA - pB) / se;
+            confidence = Math.min(0.99, 1 - Math.exp(-0.5 * z * z));
+            winner = pA > pB ? "A" : pB > pA ? "B" : null;
+          }
+
+          // Estimate leads needed for 95% confidence
+          if (confidence < 0.95 && se > 0) {
+            const diff = Math.abs(pA - pB) || 0.05;
+            const needed = Math.ceil(2 * (1.96 * 1.96 * pPool * (1 - pPool)) / (diff * diff));
+            leads_needed = Math.max(0, needed - (aTotal + bTotal));
+          }
+        }
+      }
+
+      res.json({
+        ab_enabled: ab_enabled ?? false,
+        split_ratio: ab_split_ratio ?? 50,
+        variants,
+        winner,
+        confidence: Math.round(confidence * 100) / 100,
+        leads_needed_for_95pct: leads_needed,
+      });
+    } catch (err: any) {
+      console.error("ab-stats error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   // ─── Prompt Library helpers ─────────────────────────────────────────
   // Interpolate {{variable}} placeholders in a template string
@@ -828,6 +1018,30 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const oldStatus = existing.conversionStatus;
     if (newStatus && CLOSE_STATUSES.includes(newStatus) && newStatus !== oldStatus) {
       fetch(`${getEngineUrl()}/api/leads/${req.params.id}/close-summary`, { method: "POST" }).catch(() => {});
+    }
+
+    // Notification: booking_confirmed — when lead status changes to Booked
+    if (newStatus === "Booked" && oldStatus !== "Booked") {
+      try {
+        const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(" ") || "Lead";
+        const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+        for (const admin of agencyUsers) {
+          await createAndDispatchNotification({
+            type: "booking_confirmed",
+            title: `Call booked: ${leadName}`,
+            body: lead.bookedCallDate
+              ? `Scheduled for ${new Date(lead.bookedCallDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`
+              : null,
+            userId: admin.id!,
+            accountId: lead.accountsId ?? null,
+            read: false,
+            link: "/leads",
+            leadId: lead.id,
+          });
+        }
+      } catch (notifErr) {
+        console.error("[notifications] Failed to dispatch booking_confirmed:", notifErr);
+      }
     }
 
     res.json(toDbKeys(lead as any, leads));
@@ -1160,6 +1374,29 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     if (interaction.accountsId) {
       broadcast(interaction.accountsId, "new_interaction", responseBody);
     }
+
+    // Notification: lead_responded — when an inbound message arrives
+    if ((parsed.data as any).direction === "inbound") {
+      try {
+        const leadName = (parsed.data as any).leadName || "Lead";
+        const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+        for (const admin of agencyUsers) {
+          await createAndDispatchNotification({
+            type: "lead_responded",
+            title: `${leadName} sent a message`,
+            body: ((parsed.data as any).content || "").substring(0, 120) || null,
+            userId: admin.id!,
+            accountId: interaction.accountsId ?? null,
+            read: false,
+            link: "/leads",
+            leadId: (interaction as any).leadsId ?? (interaction as any).leadId ?? null,
+          });
+        }
+      } catch (notifErr) {
+        console.error("[notifications] Failed to dispatch lead_responded:", notifErr);
+      }
+    }
+
     res.status(201).json(responseBody);
   }));
 
@@ -1612,6 +1849,26 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     res.json({ unreadCount });
   }));
 
+  // PATCH /api/notifications/preferences — save notification preferences
+  // (must be registered BEFORE /:id to avoid Express matching "preferences" as an ID)
+  app.patch("/api/notifications/preferences", requireAuth, wrapAsync(async (req, res) => {
+    const userId = parseInt(req.query.user_id as string);
+    const accountId = parseInt(req.query.account_id as string);
+    if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
+    // Non-agency users can only modify their own preferences
+    if (req.user!.accountsId !== 1 && userId !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const { telegram_enabled, telegram_chat_id, push_enabled, type_overrides } = req.body;
+    const row = await storage.upsertNotificationPreferences(userId, accountId, {
+      telegramEnabled: telegram_enabled,
+      telegramChatId: telegram_chat_id,
+      webPushEnabled: push_enabled,
+      typeOverrides: type_overrides,
+    });
+    res.json(row);
+  }));
+
   // PATCH /api/notifications/:id — mark single notification as read
   app.patch("/api/notifications/:id", requireAuth, wrapAsync(async (req, res) => {
     const id = parseInt(req.params.id);
@@ -1626,6 +1883,26 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     res.json({ success: true });
   }));
 
+  // DELETE /api/notifications/all — delete all notifications for current user
+  app.delete("/api/notifications/all", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const count = await storage.deleteAllNotifications(user.id!);
+    res.json({ success: true, deleted: count });
+  }));
+
+  // DELETE /api/notifications/:id — delete a single notification
+  app.delete("/api/notifications/:id", requireAuth, wrapAsync(async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid notification ID" });
+    const notif = await storage.getNotificationById(id);
+    if (!notif) return res.status(404).json({ message: "Notification not found" });
+    if (notif.userId !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    await storage.deleteNotification(id);
+    res.json({ success: true });
+  }));
+
   // POST /api/notifications/mark-all-read — mark all as read for current user
   app.post("/api/notifications/mark-all-read", requireAuth, wrapAsync(async (req, res) => {
     const user = req.user!;
@@ -1637,12 +1914,31 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
   app.post("/api/notifications", requireAuth, wrapAsync(async (req, res) => {
     const user = req.user!;
     // Only agency (admin) users can create notifications via API
-    if (user.accountsId !== 1) {
+    if (user.accountsId !== 1 && user.role !== "Admin") {
       return res.status(403).json({ message: "Agency access required" });
     }
-    const parsed = insertNotificationsSchema.parse(req.body);
-    const created = await storage.createNotification(parsed);
+    const result = insertNotificationsSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid notification data", errors: result.error.flatten() });
+    }
+    const created = await createAndDispatchNotification(result.data);
     res.status(201).json(created);
+  }));
+
+  // POST /api/notifications/test — send a test notification through all configured channels
+  app.post("/api/notifications/test", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const notif = await createAndDispatchNotification({
+      type: "system",
+      title: "Test Notification",
+      body: "If you see this, notifications are working!",
+      userId: user.id!,
+      accountId: user.accountsId ?? null,
+      read: false,
+      link: null,
+      leadId: null,
+    });
+    res.json({ success: true, notification: notif });
   }));
 
   // GET /api/notifications/vapid-public-key — return VAPID public key for push subscription
@@ -1657,6 +1953,10 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const userId = parseInt(req.query.user_id as string);
     const accountId = parseInt(req.query.account_id as string);
     if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
+    // Non-agency users can only access their own preferences
+    if (req.user!.accountsId !== 1 && userId !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const prefs = await storage.getNotificationPreferences(userId, accountId);
     if (!prefs) return res.json({ telegram_enabled: true, telegram_chat_id: null, push_enabled: true, type_overrides: {} });
     res.json({
@@ -1667,26 +1967,15 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     });
   }));
 
-  // PATCH /api/notifications/preferences — save notification preferences
-  app.patch("/api/notifications/preferences", requireAuth, wrapAsync(async (req, res) => {
-    const userId = parseInt(req.query.user_id as string);
-    const accountId = parseInt(req.query.account_id as string);
-    if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
-    const { telegram_enabled, telegram_chat_id, push_enabled, type_overrides } = req.body;
-    const row = await storage.upsertNotificationPreferences(userId, accountId, {
-      telegramEnabled: telegram_enabled,
-      telegramChatId: telegram_chat_id,
-      webPushEnabled: push_enabled,
-      typeOverrides: type_overrides,
-    });
-    res.json(row);
-  }));
-
   // GET /api/notifications/push-subscriptions — list push devices for user
   app.get("/api/notifications/push-subscriptions", requireAuth, wrapAsync(async (req, res) => {
     const userId = parseInt(req.query.user_id as string);
     const accountId = parseInt(req.query.account_id as string);
     if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
+    // Non-agency users can only view their own push subscriptions
+    if (req.user!.accountsId !== 1 && userId !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const subs = await storage.getPushSubscriptionsByUser(userId, accountId);
     res.json(subs.map((s) => ({
       id: s.id,
@@ -1702,6 +1991,13 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     if (!subscription?.endpoint) {
       return res.status(400).json({ message: "Invalid subscription object" });
     }
+    if (!user_id || user_id === 0) {
+      return res.status(400).json({ message: "Missing or invalid user_id" });
+    }
+    // Non-agency users can only create subscriptions for themselves
+    if (req.user!.accountsId !== 1 && user_id !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const saved = await storage.createPushSubscription({
       userId: user_id,
       accountId: account_id,
@@ -1716,6 +2012,11 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
   app.delete("/api/notifications/push-subscription", requireAuth, wrapAsync(async (req, res) => {
     const { endpoint } = req.body;
     if (!endpoint) return res.status(400).json({ message: "Missing endpoint" });
+    // Verify the endpoint belongs to the requesting user before deleting
+    const sub = await storage.getPushSubscriptionByEndpoint(endpoint);
+    if (sub && sub.userId !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     await storage.deletePushSubscriptionByEndpoint(endpoint);
     res.json({ success: true });
   }));
@@ -1884,8 +2185,15 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
 
   // ─── Users ────────────────────────────────────────────────────────
 
-  app.get("/api/users", requireAgency, wrapAsync(async (_req, res) => {
-    const data = await storage.getAppUsers();
+  app.get("/api/users", requireAuth, wrapAsync(async (req, res) => {
+    const sessionUser = req.user!;
+    const allUsers = await storage.getAppUsers();
+    // Agency users (Admin/Operator on account 1) see all users;
+    // sub-account users only see users from their own account.
+    const isAgency = sessionUser.accountsId === 1 || sessionUser.role === "Admin";
+    const data = isAgency
+      ? allUsers
+      : allUsers.filter(u => u.accountsId === sessionUser.accountsId);
     res.json(data);
   }));
 
@@ -2152,6 +2460,25 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const data = accountId
       ? await storage.getPromptsByAccountId(accountId)
       : await storage.getPrompts();
+
+    // Enrich with campaign's ai_model (source of truth for model)
+    const campaignIds = [...new Set(data.filter(p => p.campaignsId).map(p => p.campaignsId!))];
+    if (campaignIds.length > 0) {
+      const campaignModels = await pool.query(
+        `SELECT id, ai_model FROM p2mxx34fvbf3ll6."Campaigns" WHERE id = ANY($1)`,
+        [campaignIds]
+      );
+      const modelMap: Record<number, string> = {};
+      for (const row of campaignModels.rows) {
+        modelMap[row.id] = row.ai_model;
+      }
+      for (const prompt of data) {
+        if (prompt.campaignsId && modelMap[prompt.campaignsId]) {
+          (prompt as any).model = modelMap[prompt.campaignsId];
+        }
+      }
+    }
+
     res.json(data);
   }));
 
@@ -2255,15 +2582,61 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const parsed = insertTaskSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const task = await storage.createTask(parsed.data);
+
+    // Notification: task_assigned — when a task is created with an assignee
+    if (task.assignedToUserId) {
+      try {
+        await createAndDispatchNotification({
+          type: "task_assigned",
+          title: `Task assigned: ${task.title}`,
+          body: task.dueDate
+            ? `Due ${new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+            : null,
+          userId: task.assignedToUserId,
+          accountId: task.accountsId ?? null,
+          read: false,
+          link: "/tasks",
+          leadId: null,
+        });
+      } catch (notifErr) {
+        console.error("[notifications] Failed to dispatch task_assigned:", notifErr);
+      }
+    }
+
     res.status(201).json(task);
   }));
 
   app.patch("/api/tasks/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
+    const existingTask = await storage.getTaskById(id);
     const parsed = insertTaskSchema.partial().safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const updated = await storage.updateTask(id, parsed.data);
     if (!updated) return res.status(404).json({ error: "Task not found" });
+
+    // Notification: task_assigned — when assignee changes to a new user
+    if (
+      updated.assignedToUserId &&
+      updated.assignedToUserId !== existingTask?.assignedToUserId
+    ) {
+      try {
+        await createAndDispatchNotification({
+          type: "task_assigned",
+          title: `Task assigned: ${updated.title}`,
+          body: updated.dueDate
+            ? `Due ${new Date(updated.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+            : null,
+          userId: updated.assignedToUserId,
+          accountId: updated.accountsId ?? null,
+          read: false,
+          link: "/tasks",
+          leadId: null,
+        });
+      } catch (notifErr) {
+        console.error("[notifications] Failed to dispatch task_assigned:", notifErr);
+      }
+    }
+
     res.json(updated);
   }));
 
@@ -3133,18 +3506,21 @@ GUARDRAILS
           content: "I've connected you with a human agent. They'll be with you shortly.",
         });
 
-        // In-app notification for admin
+        // In-app notification for all agency (admin) users
         try {
-          await storage.createNotification({
-            type: "escalation",
-            title: "Support escalation",
-            body: `${user.fullName1 || user.email} needs human assistance`,
-            userId: 1,
-            accountId: user.accountsId ?? null,
-            read: false,
-            link: null,
-            leadId: null,
-          });
+          const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+          for (const admin of agencyUsers) {
+            await createAndDispatchNotification({
+              type: "lead_manual_takeover",
+              title: "Support escalation",
+              body: `${user.fullName1 || user.email} needs human assistance`,
+              userId: admin.id!,
+              accountId: user.accountsId ?? null,
+              read: false,
+              link: null,
+              leadId: null,
+            });
+          }
         } catch (notifErr) {
           console.error("[support-chat] Failed to create escalation notification:", notifErr);
         }
@@ -3210,18 +3586,21 @@ GUARDRAILS
       content: "I've notified an agent. They'll be with you shortly. You can continue describing your issue here.",
     });
 
-    // Create in-app notification for admin users (userId 1 = primary admin)
+    // Create in-app notification for all agency (admin) users
     try {
-      await storage.createNotification({
-        type: "escalation",
-        title: "Support escalation",
-        body: `${user.fullName1 || user.email} requested to speak with an agent`,
-        userId: 1, // admin user
-        accountId: user.accountsId ?? null,
-        read: false,
-        link: null,
-        leadId: null,
-      });
+      const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+      for (const admin of agencyUsers) {
+        await createAndDispatchNotification({
+          type: "lead_manual_takeover",
+          title: "Support escalation",
+          body: `${user.fullName1 || user.email} requested to speak with an agent`,
+          userId: admin.id!,
+          accountId: user.accountsId ?? null,
+          read: false,
+          link: null,
+          leadId: null,
+        });
+      }
     } catch (err) {
       console.error("[support-chat] Failed to create notification:", err);
     }
@@ -3877,8 +4256,8 @@ GUARDRAILS
       if (agencyUsers.length === 0) return;
       for (const failure of failures) {
         for (const user of agencyUsers) {
-          await storage.createNotification({
-            type: "automation",
+          await createAndDispatchNotification({
+            type: "critical_automation_failure",
             title: `${failure.workflowName || "Automation"} failed`,
             body: failure.stepName || failure.errorCode || null,
             userId: user.id!,
@@ -3894,6 +4273,22 @@ GUARDRAILS
   }
 
   setInterval(checkAutomationFailures, 5 * 60 * 1000);
+
+  // TODO: task_due_soon — Scheduled job needed. Query tasks where dueDate is
+  // within 24 hours and status is not "Done". Notify the assigned user with
+  // type "task_due_soon". Run every 30-60 minutes via setInterval or cron.
+
+  // TODO: task_overdue — Scheduled job needed. Query tasks where dueDate is
+  // in the past and status is not "Done". Notify the assigned user with
+  // type "task_overdue". Run every 30-60 minutes, deduplicate to avoid
+  // repeat notifications (e.g., check a "last_overdue_notified_at" field or
+  // only notify once per task per day).
+
+  // TODO: campaign_finished — Scheduled job or inline check needed. Detect
+  // when all leads in a campaign have been contacted (no remaining leads with
+  // status "New" or "Queued"). Notify agency users with type "campaign_finished".
+  // Could run as a periodic check or be triggered after the campaign launcher
+  // processes the last batch.
 
   // ─── AI Agents: seed defaults + routes ─────────────────────────────
   await seedDefaultAiAgents(db, aiAgents);
@@ -5259,6 +5654,161 @@ GUARDRAILS
       res.end();
     }
   });
+
+  // ─── Gmail OAuth ──────────────────────────────────────────────────
+
+  app.get("/api/gmail/oauth/authorize", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+    const url = getAuthUrl();
+    res.redirect(url);
+  }));
+
+  app.get("/api/gmail/oauth/callback", wrapAsync(async (req, res) => {
+    console.log("[Gmail OAuth] Callback query params:", JSON.stringify(req.query));
+    const error = req.query.error as string;
+    if (error) {
+      console.error("[Gmail OAuth] Google returned error:", error);
+      const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      return res.redirect(`${base}/agency/settings?gmail=error&reason=${encodeURIComponent(error)}`);
+    }
+    const code = req.query.code as string;
+    if (!code) return res.status(400).json({ message: "Missing authorization code" });
+
+    try {
+      const { tokens, email } = await exchangeCode(code);
+      const encrypted = encryptTokens(tokens);
+
+      await storage.upsertGmailSyncState({
+        accountEmail: email,
+        oauthTokensEncrypted: encrypted,
+        lastHistoryId: null,
+        lastFullSyncAt: null,
+      });
+
+      // Redirect to settings page with success indicator
+      const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      res.redirect(`${base}/agency/settings?gmail=connected`);
+    } catch (err: any) {
+      console.error("[Gmail OAuth] Callback error:", err);
+      const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      res.redirect(`${base}/agency/settings?gmail=error`);
+    }
+  }));
+
+  app.get("/api/gmail/oauth/status", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+    const state = await storage.getGmailSyncState("leadawaker@gmail.com");
+    if (state?.oauthTokensEncrypted) {
+      res.json({ connected: true, email: state.accountEmail });
+    } else {
+      res.json({ connected: false });
+    }
+  }));
+
+  app.post("/api/gmail/oauth/disconnect", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+    await storage.deleteGmailSyncState("leadawaker@gmail.com");
+    res.json({ ok: true });
+  }));
+
+  // Manual sync trigger
+  app.post("/api/gmail/sync", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+    const { syncEmails } = await import("./gmail-sync");
+    await syncEmails();
+    res.json({ ok: true });
+  }));
+
+  // ─── Gmail Send ──────────────────────────────────────────────────
+  app.post("/api/gmail/send", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { to, subject, htmlBody, prospectId, replyToMessageId, threadId } = req.body;
+
+    if (!to || !subject || !htmlBody || !prospectId) {
+      return res.status(400).json({ message: "Missing required fields: to, subject, htmlBody, prospectId" });
+    }
+
+    // 1. Get Gmail client
+    const state = await storage.getGmailSyncState("leadawaker@gmail.com");
+    if (!state?.oauthTokensEncrypted) {
+      return res.status(400).json({ message: "Gmail not connected. Please connect your Gmail account first." });
+    }
+
+    const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
+
+    // 2. Build MIME message
+    const fullHtml = `${htmlBody}\n${BRANDED_SIGNATURE}`;
+
+    const fromHeader = "Gabriel Barbosa Fronza <gabriel@leadawaker.com>";
+    const messageParts = [
+      `From: ${fromHeader}`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset="UTF-8"`,
+    ];
+
+    if (replyToMessageId) {
+      messageParts.push(`In-Reply-To: ${replyToMessageId}`);
+      messageParts.push(`References: ${replyToMessageId}`);
+    }
+
+    messageParts.push("", fullHtml);
+    const rawMessage = Buffer.from(messageParts.join("\r\n")).toString("base64url");
+
+    // 3. Send via Gmail API
+    const sendParams: { userId: string; requestBody: { raw: string; threadId?: string } } = {
+      userId: "me",
+      requestBody: { raw: rawMessage },
+    };
+    if (threadId) {
+      sendParams.requestBody.threadId = threadId;
+    }
+
+    const sent = await gmailClient.users.messages.send(sendParams);
+    const gmailMessageId = sent.data.id || "";
+    const gmailThreadId = sent.data.threadId || threadId || "";
+
+    // 4. Create Interaction record
+    const interaction = await storage.createInteraction({
+      type: "email",
+      direction: "outbound",
+      status: "delivered",
+      content: htmlBody,
+      metadata: {
+        gmailMessageId,
+        gmailThreadId,
+        subject,
+        from: fromHeader,
+        to,
+        fromEmail: "gabriel@leadawaker.com",
+        toEmail: to,
+      },
+      prospectId,
+      sentAt: new Date(),
+      conversationThreadId: gmailThreadId || null,
+      accountId: 1,
+    } as any);
+
+    // 5. Update prospect outreach fields
+    const prospect = await storage.getProspectById(prospectId);
+    if (prospect) {
+      const updates: Record<string, unknown> = {
+        lastContactedAt: new Date(),
+        contactMethod: "email",
+        outreachStatus: "email_sent",
+        followUpCount: (prospect.followUpCount ?? 0) + 1,
+      };
+      if (prospect.status === "New") {
+        updates.status = "Contacted";
+      }
+      if (!prospect.firstContactedAt) {
+        updates.firstContactedAt = new Date();
+      }
+      await storage.updateProspect(prospectId, updates as any);
+    }
+
+    // 6. Broadcast via SSE
+    broadcast(1, "new_interaction", interaction);
+
+    // 7. Return
+    res.status(201).json(interaction);
+  }));
 
   return httpServer;
 }
