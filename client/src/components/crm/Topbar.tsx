@@ -26,6 +26,7 @@ import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { MobileSupportPanel } from "@/components/crm/MobileSupportPanel";
 import { MobileNotificationsPanel } from "@/components/crm/MobileNotificationsPanel";
 import { useSupportChat } from "@/hooks/useSupportChat";
+import { useFounderChat } from "@/hooks/useFounderChat";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useQuery } from "@tanstack/react-query";
 
@@ -90,6 +91,8 @@ export function Topbar({
     markAsRead: supportMarkAsRead,
     notifyOpen: supportNotifyOpen,
   } = useSupportChat();
+
+  const founderChat = useFounderChat();
 
   const [supportOpen, setSupportOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
@@ -1059,6 +1062,15 @@ export function Topbar({
         onOpenInChats={handleSupportOpenInChats}
         aiAgents={topbarAiAgents}
         onOpenAgent={handleOpenAgent}
+        founderChat={!isAgencyUser ? {
+          messages: founderChat.messages as any,
+          sending: founderChat.sending,
+          loading: founderChat.loading,
+          initialize: founderChat.initialize,
+          sendMessage: founderChat.sendMessage,
+          closeSession: founderChat.closeSession,
+          clearContext: founderChat.clearContext,
+        } : undefined}
       />
     )}
 
@@ -1084,6 +1096,15 @@ export function Topbar({
       clearContext={supportClearContext}
       updateBotConfig={supportUpdateBotConfig}
       isAdmin={isAdmin}
+      founderChat={!isAgencyUser ? {
+        messages: founderChat.messages as any,
+        sending: founderChat.sending,
+        loading: founderChat.loading,
+        initialize: founderChat.initialize,
+        sendMessage: founderChat.sendMessage,
+        closeSession: founderChat.closeSession,
+        clearContext: founderChat.clearContext,
+      } : undefined}
     />
     </>
   );

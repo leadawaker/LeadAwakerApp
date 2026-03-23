@@ -1506,13 +1506,14 @@ export default function CalendarPage() {
                                   const isPast = apptDate < todayStart;
                                   const isApptToday = apptDate >= todayStart && apptDate < todayEnd;
                                   const hoverRing = a.no_show ? "hover:ring-red-400" : isPast ? "hover:ring-muted-foreground/40" : isApptToday ? "hover:ring-teal-400" : "hover:ring-amber-400";
+                                  const isFutureAmber = !isPast && !a.no_show && !isApptToday;
                                   const pillColor = isPast
                                     ? "bg-muted/70 text-muted-foreground"
                                     : a.no_show
                                       ? "bg-red-600 text-white"
                                       : isApptToday
                                         ? "bg-teal-600 text-white"
-                                        : "bg-amber-500 text-white";
+                                        : "bg-yellow-400 text-black";
                                   return (
                                     <DraggableBookingCard
                                       key={a.id}
@@ -1522,13 +1523,15 @@ export default function CalendarPage() {
                                       style={{ animationDelay: `${ai * 60}ms` }}
                                     >
                                       <div className={cn(
-                                        "h-9 px-2 rounded-full flex items-center gap-1.5 overflow-hidden",
+                                        "h-9 px-2 rounded-full flex flex-col justify-center overflow-hidden",
                                         pillColor
                                       )}>
-                                        <span className={cn("text-[9px] font-bold truncate flex-1 leading-none",
-                                          isPast ? "text-muted-foreground" : "text-white"
+                                        <span className={cn("text-[9px] font-bold truncate leading-tight",
+                                          isPast ? "text-muted-foreground" : isFutureAmber ? "text-black" : "text-white"
                                         )} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</span>
-                                        <span className="text-[8px] font-medium shrink-0 tabular-nums leading-none opacity-80" data-testid={`booking-time-${a.id}`}>{a.time}</span>
+                                        <span className={cn("text-[8px] font-medium tabular-nums leading-tight opacity-80",
+                                          isPast ? "text-muted-foreground" : isFutureAmber ? "text-black" : "text-white"
+                                        )} data-testid={`booking-time-${a.id}`}>{a.time}</span>
                                       </div>
                                     </DraggableBookingCard>
                                   );

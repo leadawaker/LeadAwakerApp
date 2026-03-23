@@ -3537,6 +3537,15 @@ GUARDRAILS
         }
       } catch {}
 
+      // Inject language instruction into systemPrompt so the AI responds in the user's language
+      // regardless of whether the n8n webhook uses the language field
+      const supportLangInstructionMap: Record<string, string> = {
+        pt: "Always respond in Brazilian Portuguese.",
+        nl: "Always respond in Dutch.",
+      };
+      const supportLangInstruction = supportLangInstructionMap[language as string] ?? "";
+      const fullSystemPrompt = [systemPrompt, supportLangInstruction].filter(Boolean).join("\n\n");
+
       const webhookRes = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -3547,7 +3556,7 @@ GUARDRAILS
           accountId: user.accountsId,
           userName: user.fullName1 || user.email,
           language: language || "en",
-          systemPrompt,
+          systemPrompt: fullSystemPrompt,
           history: history.map((m) => ({ role: m.role, content: m.content })),
         }),
       });

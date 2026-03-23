@@ -49,7 +49,7 @@
     "onboardingDescription": "Restart the guided setup walkthrough",
     "restartTutorial": "Restart Tutorial",
     "tutorialRestarted": "Tutorial restarted",
-    "tutorialRestartedDescription": "The onboarding walkthrough will start on your next page load.",
+    "tutorialRestartedDescription": "The intro video is now playing.",
     "tutorialRestartFailed": "Failed to restart tutorial",
     "lastLogin": "Last login"
   },

@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { wrapAsync } from "./_helpers";
 import { broadcast } from "../sse";
-import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, BRANDED_SIGNATURE } from "../gmail";
+import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, getSignatureForLanguage } from "../gmail";
 
 export function registerGmailRoutes(app: Express): void {
   // ─── Gmail OAuth ─────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ export function registerGmailRoutes(app: Express): void {
   // ─── Gmail Send ────────────────────────────────────────────────────────
 
   app.post("/api/gmail/send", requireAuth, requireAgency, wrapAsync(async (req, res) => {
-    const { to, subject, htmlBody, prospectId, replyToMessageId, threadId } = req.body;
+    const { to, subject, htmlBody, prospectId, replyToMessageId, threadId, language } = req.body;
 
     if (!to || !subject || !htmlBody || !prospectId) {
       return res.status(400).json({ message: "Missing required fields: to, subject, htmlBody, prospectId" });
@@ -81,7 +81,7 @@ export function registerGmailRoutes(app: Express): void {
 
     const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
 
-    const fullHtml = `${htmlBody}\n${BRANDED_SIGNATURE}`;
+    const fullHtml = `${htmlBody}\n${getSignatureForLanguage(language)}`;
 
     const fromHeader = "Gabriel Barbosa Fronza <gabriel@leadawaker.com>";
     const messageParts = [
@@ -157,7 +157,7 @@ export function registerGmailRoutes(app: Express): void {
   // ─── Gmail: Create Draft ─────────────────────────────────────────────────
 
   app.post("/api/gmail/draft", requireAuth, requireAgency, wrapAsync(async (req, res) => {
-    const { to, subject, htmlBody, prospectId, replyToMessageId, threadId } = req.body;
+    const { to, subject, htmlBody, prospectId, replyToMessageId, threadId, language } = req.body;
 
     if (!to || !subject || !htmlBody) {
       return res.status(400).json({ message: "Missing required fields: to, subject, htmlBody" });
@@ -170,7 +170,7 @@ export function registerGmailRoutes(app: Express): void {
 
     const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
 
-    const fullHtml = `${htmlBody}\n${BRANDED_SIGNATURE}`;
+    const fullHtml = `${htmlBody}\n${getSignatureForLanguage(language)}`;
     const fromHeader = "Gabriel Barbosa Fronza <gabriel@leadawaker.com>";
     const messageParts = [
       `From: ${fromHeader}`,

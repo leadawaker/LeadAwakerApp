@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { RightSidebar } from "./RightSidebar";
 import { Topbar } from "@/components/crm/Topbar";
 import { SupportChat } from "@/components/crm/SupportChat";
-import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
 import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
@@ -241,7 +240,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               {children}
             </PageTransition>
           </ErrorBoundary>
-          <OnboardingProvider><></></OnboardingProvider>
         </div>
       </main>
 

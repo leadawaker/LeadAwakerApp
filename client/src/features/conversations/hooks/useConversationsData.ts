@@ -232,7 +232,7 @@ export function useConversationsData(
             return aTs ? -1 : 1;
           });
         const last = msgs[msgs.length - 1];
-        const inboundMsgs = msgs.filter((m) => m.direction === "Inbound");
+        const inboundMsgs = msgs.filter((m) => m.direction?.toLowerCase() === "inbound");
         // Compare inbound messages against the last-read timestamp for this lead
         const lastRead = lastReadAt?.get(leadId);
         const unreadMsgs = lastRead
@@ -357,10 +357,11 @@ export function useConversationsData(
           status: saved.status ?? "sent",
         };
 
-        // Replace optimistic with real
-        setInteractions((prev) =>
-          prev.map((i) => (i.id === tempId ? normalised : i)),
-        );
+        // Replace optimistic with real; also drop any SSE duplicate that arrived first
+        setInteractions((prev) => {
+          const deduped = prev.filter((i) => i.id !== normalised.id);
+          return deduped.map((i) => (i.id === tempId ? normalised : i));
+        });
         toast({ title: "Message sent" });
       } catch (err) {
         // Mark as failed

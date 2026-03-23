@@ -38,16 +38,6 @@ import { apiFetch } from "@/lib/apiUtils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { SkeletonChatThread } from "@/components/ui/skeleton";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -1153,36 +1143,59 @@ export function ChatPanel({
                   <Paperclip className="h-6 w-6" />
                 </button>
 
-                {/* Mic / Send toggle */}
-                {draft.trim() ? (
-                  /* Send button — shown when there's text */
-                  <button
-                    type="button"
-                    className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
-                    disabled={!selected || sending}
-                    onClick={handleSubmit}
-                    data-testid="button-compose-send"
-                    title={t("chat.compose.sendMessage")}
-                  >
-                    {sending ? (
-                      <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 text-white" />
-                    )}
-                  </button>
-                ) : (
-                  /* Mic button — shown when input is empty */
-                  <button
-                    type="button"
-                    className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
-                    disabled={!selected || sending}
-                    onClick={startRecording}
-                    data-testid="button-compose-mic"
-                    title={t("chat.compose.recordVoice")}
-                  >
-                    <Mic className="h-5 w-5 text-white" />
-                  </button>
-                )}
+                {/* Mic / Send toggle (with takeover tooltip) */}
+                <div className="relative shrink-0">
+                  {draft.trim() ? (
+                    /* Send button — shown when there's text */
+                    <button
+                      type="button"
+                      className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors"
+                      disabled={!selected || sending}
+                      onClick={handleSubmit}
+                      data-testid="button-compose-send"
+                      title={t("chat.compose.sendMessage")}
+                    >
+                      {sending ? (
+                        <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 text-white" />
+                      )}
+                    </button>
+                  ) : (
+                    /* Mic button — shown when input is empty */
+                    <button
+                      type="button"
+                      className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors"
+                      disabled={!selected || sending}
+                      onClick={startRecording}
+                      data-testid="button-compose-mic"
+                      title={t("chat.compose.recordVoice")}
+                    >
+                      <Mic className="h-5 w-5 text-white" />
+                    </button>
+                  )}
+                  {/* Takeover confirmation tooltip */}
+                  {showTakeoverConfirm && (
+                    <div className="absolute bottom-10 right-0 z-50 w-52 bg-white dark:bg-popover rounded-xl shadow-lg border border-border/40 p-3 space-y-2">
+                      <p className="text-[11px] font-semibold text-foreground">{t("chat.takeover.title")}</p>
+                      <p className="text-[10px] text-muted-foreground/70 leading-snug">{t("chat.takeover.description")}</p>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={handleTakeoverConfirm}
+                          className="flex-1 px-2 py-1.5 rounded-lg bg-brand-indigo text-white text-[11px] font-semibold hover:bg-brand-indigo/90 transition-colors"
+                        >
+                          {t("chat.takeover.confirmSend")}
+                        </button>
+                        <button
+                          onClick={handleTakeoverCancel}
+                          className="flex-1 px-2 py-1.5 rounded-lg border border-border/50 text-[11px] font-medium text-foreground hover:bg-muted/50 transition-colors"
+                        >
+                          {t("chat.takeover.cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1205,23 +1218,6 @@ export function ChatPanel({
         />
       </section>
 
-      {/* Human takeover confirmation dialog */}
-      <AlertDialog open={showTakeoverConfirm} onOpenChange={(open) => { if (!open) handleTakeoverCancel(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("chat.takeover.title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("chat.takeover.description")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleTakeoverCancel}>{t("chat.takeover.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleTakeoverConfirm}>
-              {t("chat.takeover.confirmSend")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
     </>
     </HideAvatarsContext.Provider>

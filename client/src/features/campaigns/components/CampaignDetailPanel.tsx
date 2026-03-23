@@ -18,7 +18,10 @@ import {
   Settings,
   Layers,
   ListChecks,
+  Sparkles,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   LineChart,
   Line,
@@ -780,6 +783,80 @@ export function CampaignDetailPanel({
               </div>
             </section>
           )}
+
+          {/* DEMO: A/B TESTING ───────────────────────────── */}
+          <Card className="mb-4">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Teste A/B</CardTitle>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">Em execução</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Duração: 14 dias · Confiança estatística: 94%</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">A — Mensagem Padrão</span>
+                  <span className="font-medium">18.3% · 45 leads</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full">
+                  <div className="h-2 bg-muted-foreground/40 rounded-full" style={{ width: '18.3%' }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">B — Mensagem Personalizada</span>
+                  <span className="font-medium text-emerald-600">27.6% · 43 leads 🏆</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full">
+                  <div className="h-2 bg-emerald-500 rounded-full" style={{ width: '27.6%' }} />
+                </div>
+              </div>
+              <p className="text-xs text-emerald-600 font-medium">Variante B vencedora — +51% de melhoria</p>
+            </CardContent>
+          </Card>
+
+          {/* DEMO: FINANCIAL SUMMARY ─────────────────────── */}
+          <Card className="mb-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Resumo Financeiro</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">ROI</p>
+                  <p className="text-lg font-bold text-emerald-600">284%</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Receita Gerada</p>
+                  <p className="text-lg font-bold text-emerald-600">R$ 47.200</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Custo da Campanha</p>
+                  <p className="text-base font-semibold">R$ 1.650</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Economia por Lead</p>
+                  <p className="text-base font-semibold text-emerald-600">R$ 312</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* DEMO: AI ANALYSIS ───────────────────────────── */}
+          <Card className="mb-4">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-500" />
+                <CardTitle className="text-sm font-medium">Análise de IA</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Com base nos dados desta campanha, identificamos que leads com consumo de energia acima de R$350/mês têm 3× mais probabilidade de conversão. A taxa de resposta de 27,6% da Variante B sugere que mensagens personalizadas com menção ao custo atual da conta de luz geram maior engajamento. Recomendamos escalar a Variante B e focar nos horários de envio entre 14h e 16h, quando a taxa de abertura é 42% maior.
+              </p>
+            </CardContent>
+          </Card>
 
           {/* Bottom spacer for mobile chrome */}
           <div className="h-4" />

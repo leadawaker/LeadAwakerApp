@@ -253,20 +253,21 @@ function TemplateEditor({
 export default function OutreachTemplatesView() {
   const [templates, setTemplates] = useState<OutreachTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Partial<OutreachTemplate> | null>(null);
   const [expandedNiches, setExpandedNiches] = useState<Set<string>>(new Set());
 
   const fetchTemplates = useCallback(async () => {
+    setError(false);
+    setLoading(true);
     try {
       const data = await getOutreachTemplates();
       setTemplates(data);
-      // Auto-expand all niches on first load
-      if (expandedNiches.size === 0) {
-        const niches = new Set(data.map((t) => t.niche).filter(Boolean));
-        setExpandedNiches(niches);
-      }
+      // Auto-expand all niches
+      setExpandedNiches(new Set(data.map((t) => t.niche).filter(Boolean) as string[]));
     } catch (err) {
       console.error("Failed to fetch templates", err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -322,6 +323,20 @@ export default function OutreachTemplatesView() {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground text-[13px]">
         Loading templates...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground text-[13px]">
+        <span>Failed to load templates.</span>
+        <button
+          onClick={fetchTemplates}
+          className="h-8 px-4 rounded-full bg-brand-indigo text-white text-[12px] font-semibold hover:opacity-90 transition-opacity duration-150"
+        >
+          Retry
+        </button>
       </div>
     );
   }

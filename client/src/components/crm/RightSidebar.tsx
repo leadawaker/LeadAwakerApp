@@ -438,20 +438,6 @@ export function RightSidebar({
 
             {/* BOTTOM ACTIONS */}
             <div className="px-3 pb-3 pt-2 space-y-2 border-t border-border/40">
-              {!isAgencyUser && (
-                <button
-                  onClick={() => {
-                    try { sessionStorage.setItem("founder-chat-open", "1"); } catch {}
-                    setLocation(`${prefix}/conversations`);
-                    onCloseMobileMenu?.();
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
-                  data-testid="mobile-nav-founder-dm"
-                >
-                  <img src="/founder-photo.webp" alt="Gabriel" className="h-5 w-5 rounded-full object-cover" />
-                  <span className="text-sm font-semibold">{t("sidebar.messageFounder", "Message Gabriel")}</span>
-                </button>
-              )}
               <Link
                 href={`${prefix}/settings`}
                 className={cn(
@@ -718,41 +704,7 @@ export function RightSidebar({
           {/* Bottom actions — pinned to bottom */}
           <TooltipProvider delayDuration={300}>
             <div className={cn("shrink-0 pb-4 pt-2 border-t border-border/30", collapsed ? "px-1.5" : "px-2.5")}>
-              {!isAgencyUser && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => {
-                        try { sessionStorage.setItem("founder-chat-open", "1"); } catch {}
-                        setLocation(`${prefix}/conversations`);
-                      }}
-                      className={cn(
-                        "group/nav relative flex items-center rounded-full transition-colors mb-0.5 text-foreground/70 hover:bg-card hover:text-foreground",
-                        collapsed
-                          ? "h-[44px] w-[44px] justify-center mx-auto"
-                          : "h-[44px] pl-[1.5px] pr-2 gap-2.5"
-                      )}
-                      data-testid="link-nav-founder-dm"
-                    >
-                      <div className="relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-black/[0.125] overflow-hidden">
-                        <img src="/founder-photo.webp" alt="Gabriel" className="h-full w-full object-cover" />
-                      </div>
-                      {!collapsed && (
-                        <span className="text-sm font-bold">{t("sidebar.messageFounder", "Message Gabriel")}</span>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  {collapsed && (
-                    <TooltipContent
-                      side="right"
-                      className="rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1 bg-card text-foreground"
-                    >
-                      {t("sidebar.messageFounder", "Message Gabriel")}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              )}
-              {renderDesktopNavLink({
+                {renderDesktopNavLink({
                 href: `${prefix}/settings`,
                 label: t("sidebar.settings"),
                 labelKey: "Settings",

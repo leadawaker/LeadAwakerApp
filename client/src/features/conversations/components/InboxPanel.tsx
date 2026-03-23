@@ -397,6 +397,7 @@ export function InboxPanel({
 }: InboxPanelProps) {
   // Track which agent is expanded in the support tab
   const [expandedAgentId, setExpandedAgentId] = useState<number | null>(null);
+  const [founderSelected, setFounderSelected] = useState(false);
 
   // Prospects tab state
   const [prospectSearch, setProspectSearch] = useState("");
@@ -831,16 +832,20 @@ export function InboxPanel({
               onClick={() => {
                 onDeselectAgent?.();
                 onSelectSupport?.();
+                setFounderSelected(false);
+                window.dispatchEvent(new Event("switch-to-bot-channel"));
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   onDeselectAgent?.();
                   onSelectSupport?.();
+                  setFounderSelected(false);
+                  window.dispatchEvent(new Event("switch-to-bot-channel"));
                 }
               }}
               className={cn(
                 "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
-                !selectedAgentId ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+                !selectedAgentId && !founderSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
               )}
               data-testid="button-support-tab-open"
             >
@@ -890,6 +895,48 @@ export function InboxPanel({
               />
             ))}
           </div>
+
+          {/* Founder section (non-agency users — direct chat with Gabriel) */}
+          {!isAgencyUser && (
+            <>
+              <div className="px-3 py-1.5 mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <User className="h-3 w-3" />
+                Founder
+              </div>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  onDeselectAgent?.();
+                  onSelectSupport?.();
+                  setFounderSelected(true);
+                  window.dispatchEvent(new Event("switch-to-founder-channel"));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onDeselectAgent?.();
+                    onSelectSupport?.();
+                    setFounderSelected(true);
+                    window.dispatchEvent(new Event("switch-to-founder-channel"));
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
+                  founderSelected && !selectedAgentId ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+                )}
+              >
+                <img src="/founder-photo.webp" alt="Gabriel" className="h-9 w-9 rounded-full object-cover shrink-0" />
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+                    Gabriel Barbosa Fronza
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                    Founder, Lead Awaker
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Founder DMs section (admin only) */}
           {isAgencyUser && onToggleFounderInbox && (

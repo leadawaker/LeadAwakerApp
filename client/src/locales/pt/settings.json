@@ -49,7 +49,7 @@
     "onboardingDescription": "Reiniciar o tutorial guiado de configuracao",
     "restartTutorial": "Reiniciar Tutorial",
     "tutorialRestarted": "Tutorial reiniciado",
-    "tutorialRestartedDescription": "O tutorial de integracao comecara no proximo carregamento da pagina.",
+    "tutorialRestartedDescription": "O video de introducao esta sendo exibido agora.",
     "tutorialRestartFailed": "Falha ao reiniciar tutorial",
     "lastLogin": "Ultimo login"
   },

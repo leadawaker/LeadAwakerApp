@@ -334,13 +334,16 @@ export function SupportChatWidget({
   const [channel, setChannel] = useState<"bot" | "founder">("bot");
   const founderInitializedRef = useRef(false);
 
-  // Listen for external "switch to founder" event (from sidebar navigation)
+  // Listen for external channel-switch events (from InboxPanel navigation)
   useEffect(() => {
-    const handler = () => {
-      if (founderChat) setChannel("founder");
+    const toFounder = () => { if (founderChat) setChannel("founder"); };
+    const toBot = () => setChannel("bot");
+    window.addEventListener("switch-to-founder-channel", toFounder);
+    window.addEventListener("switch-to-bot-channel", toBot);
+    return () => {
+      window.removeEventListener("switch-to-founder-channel", toFounder);
+      window.removeEventListener("switch-to-bot-channel", toBot);
     };
-    window.addEventListener("switch-to-founder-channel", handler);
-    return () => window.removeEventListener("switch-to-founder-channel", handler);
   }, [founderChat]);
 
   // When switching to founder channel, initialize it
@@ -589,8 +592,8 @@ export function SupportChatWidget({
 
           {/* ── Header — matches ChatPanel exactly ── */}
           <div className="shrink-0 bg-white dark:bg-card border-b border-black/[0.06]">
-            {/* ── Channel tabs (only show if founderChat is available) ── */}
-            {founderChat && (
+            {/* ── Channel tabs (floating mode only — inline uses InboxPanel for navigation) ── */}
+            {founderChat && !isInline && (
               <div className="px-4 pt-3 pb-0 flex gap-1">
                 <button
                   onClick={() => setChannel("bot")}

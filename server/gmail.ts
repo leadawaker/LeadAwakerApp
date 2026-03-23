@@ -86,16 +86,29 @@ export async function getGmailClient(encryptedTokens: string) {
 
 // ─── Email Signature ─────────────────────────────────────────────────────────
 
-export const BRANDED_SIGNATURE = `
-<table cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;color:#333;margin-top:20px;border-top:2px solid #4F46E5;padding-top:12px">
+const SIGNATURE_TEMPLATE = (whatsappNumber: string) => `
+<table cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;color:#333;">
   <tr>
-    <td style="padding-right:16px">
-      <img src="https://app.leadawaker.com/5.SideLogo.svg" alt="Lead Awaker" width="120" style="display:block">
+    <td style="padding-bottom:8px;">
+      <img src="https://app.leadawaker.com/5.SideLogo.svg" alt="Lead Awaker" width="300" style="display:block;">
     </td>
-    <td>
-      <strong style="font-size:14px">Gabriel Barbosa Fronza</strong><br>
-      <a href="https://www.leadawaker.com" style="color:#4F46E5;text-decoration:none">www.leadawaker.com</a><br>
-      <span style="color:#666">WhatsApp: (+47) 97400-2162</span>
+  </tr>
+  <tr>
+    <td style="border-left:3px solid #4f46e5;padding-left:14px;padding-top:0;padding-bottom:0;">
+      <span style="font-size:14px;color:#1a1a1a;"><strong>Gabriel Barbosa Fronza</strong></span><br>
+      <a href="https://www.leadawaker.com" style="color:#4f46e5;text-decoration:none;">www.leadawaker.com</a><br>
+      <span style="color:#666;">WhatsApp: ${whatsappNumber}</span>
     </td>
   </tr>
 </table>`.trim();
+
+/** Dutch/NL signature — default for NL and EN outreach */
+export const BRANDED_SIGNATURE = SIGNATURE_TEMPLATE("(+31)62745-8300");
+
+/** Brazilian signature — for PT outreach */
+export const BRANDED_SIGNATURE_BR = SIGNATURE_TEMPLATE("+55 47 7400-2162");
+
+/** Pick the right signature based on email language. Defaults to NL/EN. */
+export function getSignatureForLanguage(language?: string): string {
+  return language === "pt" ? BRANDED_SIGNATURE_BR : BRANDED_SIGNATURE;
+}
