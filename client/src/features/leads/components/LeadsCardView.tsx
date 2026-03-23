@@ -119,6 +119,9 @@ import {
 import {
   Tooltip, TooltipTrigger, TooltipContent,
 } from "@/components/ui/tooltip";
+import { useLeadsSelection } from "./useLeadsSelection";
+import { useLeadsFilters } from "./useLeadsFilters";
+import { LeadsFiltersBar } from "./LeadsFiltersBar";
 
 // ── Re-exports for backward compat — other files importing from LeadsCardView still work ──
 export { getLeadStatusAvatarColor as getStatusAvatarColor, PIPELINE_HEX } from "@/lib/avatarUtils";
@@ -5501,72 +5504,20 @@ export function LeadsCardView({
   }, [isAgencyUser, setLocation]);
 
   // ── Quick action tray state (Feature #41) ────────────────────────────────────
-  const { toast } = useToast();
-  const [quickActionLead, setQuickActionLead]         = useState<Record<string, any> | null>(null);
-  const [quickActionType, setQuickActionType]         = useState<"status" | "note" | "delete" | null>(null);
-  const [quickNoteText, setQuickNoteText]             = useState("");
-  const [quickStatusPending, setQuickStatusPending]   = useState("");
-  const [quickActionBusy, setQuickActionBusy]         = useState(false);
-
-  const openQuickAction = useCallback((lead: Record<string, any>, type: "status" | "note" | "delete") => {
-    setQuickActionLead(lead);
-    setQuickActionType(type);
-    if (type === "status") setQuickStatusPending(getStatus(lead));
-    if (type === "note")   setQuickNoteText("");
-  }, []);
-
-  const closeQuickAction = useCallback(() => {
-    setQuickActionLead(null);
-    setQuickActionType(null);
-    setQuickActionBusy(false);
-  }, []);
-
-  const handleQuickSaveStatus = useCallback(async () => {
-    if (!quickActionLead || !quickStatusPending) return;
-    setQuickActionBusy(true);
-    try {
-      await updateLead(getLeadId(quickActionLead), { pipeline_stage: quickStatusPending });
-      onRefresh?.();
-      toast({ title: "Status updated", description: `Moved to ${quickStatusPending}` });
-      closeQuickAction();
-    } catch {
-      toast({ title: "Failed to update status", variant: "destructive" });
-      setQuickActionBusy(false);
-    }
-  }, [quickActionLead, quickStatusPending, onRefresh, toast, closeQuickAction]);
-
-  const handleQuickSaveNote = useCallback(async () => {
-    if (!quickActionLead || !quickNoteText.trim()) return;
-    setQuickActionBusy(true);
-    try {
-      const existing   = quickActionLead.notes || quickActionLead.Notes || "";
-      const dateStamp  = new Date().toLocaleDateString();
-      const newNotes   = existing
-        ? `${existing}\n\n[${dateStamp}] ${quickNoteText.trim()}`
-        : `[${dateStamp}] ${quickNoteText.trim()}`;
-      await updateLead(getLeadId(quickActionLead), { notes: newNotes });
-      onRefresh?.();
-      toast({ title: "Note added" });
-      closeQuickAction();
-    } catch {
-      toast({ title: "Failed to add note", variant: "destructive" });
-      setQuickActionBusy(false);
-    }
-  }, [quickActionLead, quickNoteText, onRefresh, toast, closeQuickAction]);
-
-  const handleQuickConfirmDelete = useCallback(async () => {
-    if (!quickActionLead) return;
-    setQuickActionBusy(true);
-    try {
-      await deleteLead(getLeadId(quickActionLead));
-      onRefresh?.();
-      toast({ title: "Lead deleted" });
-      closeQuickAction();
-    } catch {
-      toast({ title: "Failed to delete lead", variant: "destructive" });
-      setQuickActionBusy(false);
-    }
-  }, [quickActionLead, onRefresh, toast, closeQuickAction]);
+  const {
+    quickActionLead,
+    quickActionType,
+    quickNoteText,
+    quickStatusPending,
+    quickActionBusy,
+    setQuickNoteText,
+    setQuickStatusPending,
+    openQuickAction,
+    closeQuickAction,
+    handleQuickSaveStatus,
+    handleQuickSaveNote,
+    handleQuickConfirmDelete,
+  } = useLeadsSelection({ onRefresh });
 
   const viewTabs: TabDef[] = [
     { id: "list",     label: t("viewTabs.list"),     icon: List   },
@@ -5574,21 +5525,6 @@ export function LeadsCardView({
     { id: "pipeline", label: t("viewTabs.pipeline"), icon: Kanban },
   ];
 
-  const groupLabels: Record<GroupByOption, string> = {
-    date:     t("sort.mostRecent"),
-    status:   t("group.status"),
-    campaign: t("group.campaign"),
-    tag:      t("detail.sections.tags"),
-    none:     t("group.none"),
-  };
-  const sortLabels: Record<SortByOption, string> = {
-    recent:     t("sort.mostRecent"),
-    name_asc:   t("sort.nameAZ"),
-    name_desc:  t("sort.nameZA"),
-    score_desc: t("sort.scoreDown"),
-    score_asc:  t("sort.scoreUp"),
-  };
-  const dateGroupOrder = [t("time.today"), t("time.yesterday"), t("time.thisWeek"), t("time.thisMonth"), t("time.last3Months"), t("time.older"), t("time.noActivity")];
 
   const [currentPage, setCurrentPage]   = useState(0);
   const [cardAnimKey, setCardAnimKey] = useState(0);
@@ -5666,17 +5602,35 @@ export function LeadsCardView({
     try { localStorage.setItem("list_tags_hidden", String(hideTags)); } catch {}
   }, [hideTags]);
 
-  const [upcomingCallsOnly, setUpcomingCallsOnly] = useState<boolean>(() => {
-    try { return localStorage.getItem("leads_upcoming_calls_only") === "true"; } catch {} return false;
+  // ── Local filter state: account, campaign, tags, upcoming calls, flatItems ──
+  const {
+    filterAccount,
+    filterCampaign,
+    tagSearchInput,
+    upcomingCallsOnly,
+    setFilterAccount,
+    setFilterCampaign,
+    setTagSearchInput,
+    setUpcomingCallsOnly,
+    flatItems,
+    availableAccounts,
+    availableCampaigns,
+    isFilterActive,
+    handleFilterReset,
+  } = useLeadsFilters({
+    leads,
+    listSearch,
+    groupBy,
+    sortBy,
+    filterStatus,
+    filterTags,
+    leadTagsInfo,
+    campaignsById,
+    accountsById,
+    onSortByChange,
+    onToggleFilterStatus,
+    onToggleFilterTag,
   });
-  useEffect(() => {
-    try { localStorage.setItem("leads_upcoming_calls_only", String(upcomingCallsOnly)); } catch {}
-  }, [upcomingCallsOnly]);
-
-  // ── Local filter state: account & campaign ────────────────────────────────
-  const [filterAccount, setFilterAccount] = useState<string>("");
-  const [filterCampaign, setFilterCampaign] = useState<string>("");
-  const [tagSearchInput, setTagSearchInput] = useState<string>("");
 
   // ── Mobile filter bottom sheet state (Feature #42) ───────────────────────
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -5690,166 +5644,10 @@ export function LeadsCardView({
     state.filterTags.forEach((tag) => { if (!filterTags.includes(tag)) onToggleFilterTag(tag); });
     setFilterCampaign(state.filterCampaign);
     setFilterAccount(state.filterAccount);
-  }, [sortBy, filterStatus, filterTags, onSortByChange, onToggleFilterStatus, onToggleFilterTag]);
-
-  const handleFilterReset = useCallback(() => {
-    filterStatus.forEach((s) => onToggleFilterStatus(s));
-    filterTags.forEach((tag) => onToggleFilterTag(tag));
-    setFilterAccount("");
-    setFilterCampaign("");
-    if (sortBy !== "recent") onSortByChange("recent");
-  }, [filterStatus, filterTags, onToggleFilterStatus, onToggleFilterTag, sortBy, onSortByChange]);
-
-  // Derive available accounts from leads + accountsById map
-  const availableAccounts = useMemo(() => {
-    if (!accountsById || accountsById.size === 0) return [];
-    const seen = new Set<string>();
-    const result: { id: string; name: string }[] = [];
-    leads.forEach((l) => {
-      const id = String(l.Accounts_id || l.account_id || l.accounts_id || "");
-      if (id && !seen.has(id)) {
-        seen.add(id);
-        const name = accountsById.get(Number(id)) || `Account ${id}`;
-        result.push({ id, name });
-      }
-    });
-    return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [leads, accountsById]);
-
-  // Derive available campaigns from leads + campaignsById map, cascading with account filter
-  const availableCampaigns = useMemo(() => {
-    const campaignIds = new Set<number>();
-    leads.forEach((l) => {
-      if (filterAccount && String(l.Accounts_id || l.account_id || l.accounts_id || "") !== filterAccount) return;
-      const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-      if (cId) campaignIds.add(cId);
-    });
-    const result: { id: string; name: string }[] = [];
-    campaignIds.forEach((cId) => {
-      const info = campaignsById?.get(cId);
-      result.push({ id: String(cId), name: info?.name || `Campaign ${cId}` });
-    });
-    return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [leads, campaignsById, filterAccount]);
-
-  const flatItems = useMemo((): VirtualListItem[] => {
-    // 1. Text search
-    let filtered = leads;
-    if (listSearch.trim()) {
-      const q = listSearch.toLowerCase();
-      filtered = filtered.filter((l) =>
-        String(l.full_name || "").toLowerCase().includes(q) ||
-        String(l.first_name || "").toLowerCase().includes(q) ||
-        String(l.last_name || "").toLowerCase().includes(q) ||
-        String(l.email || "").toLowerCase().includes(q) ||
-        String(l.phone || "").toLowerCase().includes(q)
-      );
-    }
-
-    // 2. Status filter
-    if (filterStatus.length > 0) {
-      filtered = filtered.filter((l) => filterStatus.includes(getStatus(l)));
-    }
-
-    // 3. Tag filter
-    if (filterTags.length > 0) {
-      filtered = filtered.filter((l) => {
-        const tags = leadTagsInfo.get(getLeadId(l)) || [];
-        return filterTags.some((ft) => tags.some((t) => t.name === ft));
-      });
-    }
-
-    // 3b. Account filter
-    if (filterAccount) {
-      filtered = filtered.filter((l) =>
-        String(l.Accounts_id || l.account_id || l.accounts_id || "") === filterAccount
-      );
-    }
-
-    // 3c. Campaign filter (by ID)
-    if (filterCampaign) {
-      filtered = filtered.filter((l) =>
-        String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") === filterCampaign
-      );
-    }
-
-    // 3d. Upcoming calls only — hides Booked leads whose call date has passed
-    if (upcomingCallsOnly) {
-      const now = new Date();
-      filtered = filtered.filter((l) => {
-        if (getStatus(l) !== "Booked") return true;
-        const d = l.booked_call_date || l.bookedCallDate;
-        if (!d) return true;
-        return new Date(d) >= now;
-      });
-    }
-
-    // 4. Sort
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "name_asc":   return getFullName(a).localeCompare(getFullName(b));
-        case "name_desc":  return getFullName(b).localeCompare(getFullName(a));
-        case "score_desc": return getScore(b) - getScore(a);
-        case "score_asc":  return getScore(a) - getScore(b);
-        default: { // recent
-          const da = a.last_interaction_at || a.last_message_received_at || a.created_at || "";
-          const db = b.last_interaction_at || b.last_message_received_at || b.created_at || "";
-          return db.localeCompare(da);
-        }
-      }
-    });
-
-    // 5. Group and flatten
-    if (groupBy === "none") {
-      return filtered.map((l) => ({ kind: "lead", lead: l, tags: leadTagsInfo.get(getLeadId(l)) || [] }));
-    }
-
-    const buckets = new Map<string, Record<string, any>[]>();
-
-    filtered.forEach((l) => {
-      let key: string;
-      if (groupBy === "date") {
-        const d = l.last_interaction_at || l.last_message_received_at || l.last_message_sent_at || null;
-        key = getDateGroupLabel(d, t);
-      } else if (groupBy === "status") {
-        key = getStatus(l) || "Unknown";
-      } else if (groupBy === "campaign") {
-        const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-        key = (cId && campaignsById?.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || t("group.noCampaign");
-      } else {
-        const tags = leadTagsInfo.get(getLeadId(l)) || [];
-        key = tags[0]?.name || t("group.untagged");
-      }
-      if (!buckets.has(key)) buckets.set(key, []);
-      buckets.get(key)!.push(l);
-    });
-
-    // Sort bucket keys
-    const allBucketKeys = Array.from(buckets.keys());
-    const orderedKeys = groupBy === "status"
-      ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k)).concat(allBucketKeys.filter((k) => !STATUS_GROUP_ORDER.includes(k)))
-      : groupBy === "date"
-      ? dateGroupOrder.filter((k) => buckets.has(k))
-      : allBucketKeys.sort();
-
-    const result: VirtualListItem[] = [];
-    orderedKeys.forEach((key) => {
-      const group = buckets.get(key);
-      if (!group || group.length === 0) return;
-      const headerLabel = groupBy === "status"
-        ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key)
-        : key;
-      result.push({ kind: "header", label: headerLabel, count: group.length });
-      group.forEach((l) => result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(getLeadId(l)) || [] }));
-    });
-
-    return result;
-  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, filterAccount, filterCampaign, leadTagsInfo, campaignsById, upcomingCallsOnly]);
+  }, [sortBy, filterStatus, filterTags, onSortByChange, onToggleFilterStatus, onToggleFilterTag, setFilterCampaign, setFilterAccount]);
 
   // Reset to page 0 whenever the filtered/sorted list changes + bump anim key to re-trigger entrance
   useEffect(() => { setCurrentPage(0); setCardAnimKey((k) => k + 1); }, [flatItems]);
-
-  const isFilterActive     = filterStatus.length > 0 || filterTags.length > 0 || !!filterAccount || !!filterCampaign || upcomingCallsOnly;
 
   return (
     /* Outer shell: transparent — gaps between panels reveal stone-gray page background */
@@ -6091,247 +5889,42 @@ export function LeadsCardView({
             leadTags={leadTagsInfo.get(getLeadId(selectedLead)) || []}
             onRefresh={onRefresh}
             campaignsById={campaignsById}
-            toolbarPrefix={() => {
-              const xBtn = (active: boolean, maxW: string) => cn(
-                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                "transition-[max-width,color,border-color] duration-200 max-w-9", maxW,
-                active ? "border-brand-indigo text-brand-indigo" : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-              );
-              const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
-              return (
-                <>
-                  {/* Back to list — mobile only */}
-                  <button
-                    onClick={() => onMobileViewChange?.("list")}
-                    className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-
-                  {/* +Add */}
-                  <button onClick={onCreateLead} className={xBtn(false, "hover:max-w-[90px]")} title={t("detailView.newLead")}>
-                    <Plus className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>{t("toolbar.add")}</span>
-                  </button>
-
-                  {/* Search — always extended, no fill */}
-                  <SearchPill
-                    value={listSearch}
-                    onChange={onListSearchChange}
-                    open={searchOpen}
-                    onOpenChange={onSearchOpenChange}
-                    placeholder={t("toolbar.searchPlaceholder")}
-                  />
-
-                  {/* Group */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className={xBtn(isGroupNonDefault, "hover:max-w-[115px]")} title={t("toolbar.group")}>
-                        <Layers className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>{t("toolbar.group")}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      {(["date", "status", "campaign", "tag", "none"] as GroupByOption[]).map((opt) => (
-                        <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
-                          {groupLabels[opt]}
-                          {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Sort */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className={xBtn(isSortNonDefault, "hover:max-w-[100px]")} title={t("toolbar.sort")}>
-                        <ArrowUpDown className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>{t("toolbar.sort")}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as SortByOption[]).map((opt) => (
-                        <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-                          {sortLabels[opt]}
-                          {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Filter */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className={xBtn(isFilterActive, "hover:max-w-[110px]")} title={t("toolbar.filter")}>
-                        <Filter className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>{t("toolbar.filter")}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52">
-                      {/* Status — submenu */}
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                          <span className="flex-1">{t("group.status")}</span>
-                          {filterStatus.length > 0 && (
-                            <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>
-                          )}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-48">
-                          {STATUS_GROUP_ORDER.map((s) => (
-                            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                              <span className="flex-1">{t("kanban.stageLabels." + s.replace(/ /g, ""))}</span>
-                              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-
-                      {/* Account — submenu */}
-                      {availableAccounts.length > 0 && (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                            <span className="flex-1">{t("detail.fields.account")}</span>
-                            {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="w-48">
-                            <DropdownMenuItem
-                              onClick={(e) => { e.preventDefault(); setFilterAccount(""); setFilterCampaign(""); }}
-                              className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}
-                            >
-                              {t("filters.allAccounts")}
-                              {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {availableAccounts.map((a) => (
-                              <DropdownMenuItem
-                                key={a.id}
-                                onClick={(e) => { e.preventDefault(); if (filterAccount === a.id) { setFilterAccount(""); } else { setFilterAccount(a.id); setFilterCampaign(""); } }}
-                                className={cn("text-[12px]", filterAccount === a.id && "font-semibold text-brand-indigo")}
-                              >
-                                <span className="flex-1 truncate">{a.name}</span>
-                                {filterAccount === a.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                      )}
-
-                      {/* Campaign — submenu (cascading: scoped to selected account) */}
-                      {availableCampaigns.length > 0 && (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                            <span className="flex-1">{t("detailView.campaign")}</span>
-                            {filterCampaign && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
-                            <DropdownMenuItem
-                              onClick={(e) => { e.preventDefault(); setFilterCampaign(""); }}
-                              className={cn("text-[12px]", !filterCampaign && "font-semibold text-brand-indigo")}
-                            >
-                              {t("filters.allCampaigns")}
-                              {!filterCampaign && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {availableCampaigns.map((c) => (
-                              <DropdownMenuItem
-                                key={c.id}
-                                onClick={(e) => { e.preventDefault(); setFilterCampaign(filterCampaign === c.id ? "" : c.id); }}
-                                className={cn("text-[12px]", filterCampaign === c.id && "font-semibold text-brand-indigo")}
-                              >
-                                <span className="flex-1 truncate">{c.name}</span>
-                                {filterCampaign === c.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                      )}
-
-                      {/* Tags — search-based */}
-                      <DropdownMenuSeparator />
-                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("toolbar.tags")}</div>
-                      <div className="px-2 pb-1.5" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="text"
-                          value={tagSearchInput}
-                          onChange={(e) => setTagSearchInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            e.stopPropagation();
-                            if (e.key === "Enter" && tagSearchInput.trim()) {
-                              const match = allTags.find((t) => t.name.toLowerCase() === tagSearchInput.trim().toLowerCase());
-                              if (match) { onToggleFilterTag(match.name); setTagSearchInput(""); }
-                            }
-                          }}
-                          placeholder={t("detailView.searchTagName")}
-                          className="w-full h-7 px-2 rounded-md border border-black/[0.1] bg-muted/30 text-[11px] placeholder:text-muted-foreground/50 outline-none focus:border-brand-indigo/40"
-                        />
-                      </div>
-                      {(() => {
-                        const q = tagSearchInput.trim().toLowerCase();
-                        const filtered = q ? allTags.filter((t) => t.name.toLowerCase().includes(q)) : [];
-                        const shown = filterTags.length > 0 && !q
-                          ? allTags.filter((t) => filterTags.includes(t.name))
-                          : filtered.slice(0, 8);
-                        return shown.map((t) => (
-                          <DropdownMenuItem key={t.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(t.name); }} className="flex items-center gap-2 text-[12px]">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: resolveColor(t.color) }} />
-                            <span className="flex-1 truncate">{t.name}</span>
-                            {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                          </DropdownMenuItem>
-                        ));
-                      })()}
-
-                      {/* Reset */}
-                      {isFilterActive && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => {
-                            filterStatus.forEach((s) => onToggleFilterStatus(s));
-                            filterTags.forEach((t) => onToggleFilterTag(t));
-                            setFilterAccount("");
-                            setFilterCampaign("");
-                            setTagSearchInput("");
-                          }} className="text-[12px] text-destructive">
-                            Clear all filters
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Tags display settings */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className={xBtn(tagsColorful || hideTags || showContactAlways, "hover:max-w-[100px]")} title={t("toolbar.tags")}>
-                        <TagIcon className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>{t("toolbar.tags")}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => setTagsColorful((v) => !v)} className="flex items-center gap-2 text-[12px]">
-                        <Palette className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Tag Color</span>
-                        {tagsColorful && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setHideTags((v) => !v)} className="flex items-center gap-2 text-[12px]">
-                        {hideTags
-                          ? <EyeOff className="h-3.5 w-3.5 mr-0.5 shrink-0" />
-                          : <Eye className="h-3.5 w-3.5 mr-0.5 shrink-0" />
-                        }
-                        <span className="flex-1">Hide Tags</span>
-                        {hideTags && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setShowContactAlways((v) => !v)} className="flex items-center gap-2 text-[12px]">
-                        <Phone className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Show Phone & Email</span>
-                        {showContactAlways && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-                </>
-              );
-            }}
+            toolbarPrefix={() => (
+              <LeadsFiltersBar
+                listSearch={listSearch}
+                groupBy={groupBy}
+                sortBy={sortBy}
+                filterStatus={filterStatus}
+                filterTags={filterTags}
+                filterAccount={filterAccount}
+                filterCampaign={filterCampaign}
+                tagSearchInput={tagSearchInput}
+                isFilterActive={isFilterActive}
+                isGroupNonDefault={isGroupNonDefault}
+                isSortNonDefault={isSortNonDefault}
+                showContactAlways={showContactAlways}
+                tagsColorful={tagsColorful}
+                hideTags={hideTags}
+                allTags={allTags}
+                availableAccounts={availableAccounts}
+                availableCampaigns={availableCampaigns}
+                onCreateLead={onCreateLead}
+                onSearchChange={onListSearchChange}
+                searchOpen={searchOpen}
+                onSearchOpenChange={onSearchOpenChange}
+                onGroupByChange={onGroupByChange}
+                onSortByChange={onSortByChange}
+                onToggleFilterStatus={onToggleFilterStatus}
+                onToggleFilterTag={onToggleFilterTag}
+                onSetFilterAccount={setFilterAccount}
+                onSetFilterCampaign={setFilterCampaign}
+                onSetTagSearchInput={setTagSearchInput}
+                onSetShowContactAlways={setShowContactAlways}
+                onSetTagsColorful={setTagsColorful}
+                onSetHideTags={setHideTags}
+                onMobileBack={() => onMobileViewChange?.("list")}
+              />
+            )}
           />
         ) : (
           <EmptyDetailState leadsCount={leads.length} />
