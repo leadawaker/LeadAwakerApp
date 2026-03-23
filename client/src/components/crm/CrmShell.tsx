@@ -150,7 +150,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   return (
     <TopbarActionsProvider>
     <div
-      className={cn("min-h-screen bg-background", isAgencyView && "agency-mode", isMobileMenuOpen && "mobile-scroll-lock")}
+      className={cn("min-h-svh bg-background", isAgencyView && "agency-mode", isMobileMenuOpen && "mobile-scroll-lock")}
       data-testid="shell-crm"
       key={isAgencyView ? 'agency' : 'subaccount'}
       style={pageAccent ? {
@@ -228,7 +228,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-screen flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
+          "h-svh flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
           collapsed ? "md:pl-[56px]" : "md:pl-[225px]"
         )}
         style={{ paddingTop: "var(--topbar-h)", paddingBottom: "var(--bottombar-h)" }}
@@ -241,7 +241,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               {children}
             </PageTransition>
           </ErrorBoundary>
-          {!isAgencyView && <OnboardingProvider><></></OnboardingProvider>}
+          <OnboardingProvider><></></OnboardingProvider>
         </div>
       </main>
 

@@ -14,7 +14,8 @@
     "settings": "Settings",
     "support": "Support",
     "help": "Help",
-    "docs": "Docs"
+    "docs": "Docs",
+    "messageFounder": "Message Gabriel"
   },
   "sidebarSections": {
     "engage": "Engage",
@@ -43,6 +44,8 @@
   },
   "search": {
     "leads": "Leads",
+    "campaigns": "Campaigns",
+    "prospects": "Prospects",
     "accounts": "Accounts",
     "users": "Users"
   },

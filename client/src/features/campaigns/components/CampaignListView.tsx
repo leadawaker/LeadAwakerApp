@@ -238,7 +238,7 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-foreground/20 shrink-0">{"2013"}</span>
         <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
         <div className="flex-1 h-px bg-foreground/15" />
       </div>
@@ -752,7 +752,7 @@ export function CampaignListView({
       <div className={cn(
         "w-full md:w-[340px] md:shrink-0 flex-col bg-muted rounded-lg overflow-hidden",
         mobileView === "detail" ? "hidden md:flex" : "flex"
-      )}>
+      )} data-onboarding="campaigns-sidebar">
 
         {/* Header: title + Detail Tab Bar */}
         <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">

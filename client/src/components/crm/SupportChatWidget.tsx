@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { hapticSend } from "@/lib/haptics";
-import { Send, Headphones, Loader2, X, Maximize2, Camera, Pencil, Eraser, Smile, Paperclip, Wallpaper, Mic, Square } from "lucide-react";
+import { Send, Headphones, Loader2, X, Maximize2, Camera, Pencil, Eraser, Smile, Paperclip, Wallpaper, Mic, Square, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SupportChatMessage, type SupportBotConfig } from "@/hooks/useSupportChat";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -207,18 +207,31 @@ function BotAvatarFull({ config, size = 36 }: { config: SupportBotConfig; size?:
 }
 
 // ─── Single message bubble ────────────────────────────────────────────────────
+function FounderAvatarFull({ size = 36 }: { size?: number }) {
+  return (
+    <img
+      src="/founder-photo.webp"
+      alt="Gabriel"
+      className="rounded-full shrink-0 object-cover"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
 function ChatBubble({
   msg,
   botConfig,
   isFirstInGroup,
   avatarSize,
   showBubbleAvatar,
+  activeChannel,
 }: {
   msg: SupportChatMessage;
   botConfig: SupportBotConfig;
   isFirstInGroup: boolean;
   avatarSize: number;
   showBubbleAvatar: boolean;
+  activeChannel: "bot" | "founder";
 }) {
   const isUser = msg.role === "user";
   const time = formatTime(msg.createdAt);
@@ -230,7 +243,9 @@ function ChatBubble({
   return (
     <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
       <div className={cn("flex gap-1.5", isUser ? "justify-end" : "justify-start")}>
-        {showBubbleAvatar && !isUser && isFirstInGroup && <BotAvatarFull config={botConfig} size={avatarSize} />}
+        {showBubbleAvatar && !isUser && isFirstInGroup && (
+          activeChannel === "founder" ? <FounderAvatarFull size={avatarSize} /> : <BotAvatarFull config={botConfig} size={avatarSize} />
+        )}
         {showBubbleAvatar && !isUser && !isFirstInGroup && <div style={{ width: avatarSize }} className="shrink-0" />}
         <div
           className={cn(
@@ -256,6 +271,17 @@ function ChatBubble({
   );
 }
 
+// ─── Founder chat props ──────────────────────────────────────────────────────
+export interface FounderChatProps {
+  messages: SupportChatMessage[];
+  sending: boolean;
+  loading: boolean;
+  initialize: () => void;
+  sendMessage: (text: string) => void;
+  closeSession: () => void;
+  clearContext: () => Promise<void>;
+}
+
 // ─── Props interface ───────────────────────────────────────────────────────────
 interface SupportChatWidgetProps {
   messages: SupportChatMessage[];
@@ -278,6 +304,8 @@ interface SupportChatWidgetProps {
   aiAgents?: { id: number; name: string }[];
   /** Called when user clicks "Switch to: [Agent]" in the footer */
   onOpenAgent?: (id: number) => void;
+  /** Founder direct message channel */
+  founderChat?: FounderChatProps;
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
@@ -298,9 +326,37 @@ export function SupportChatWidget({
   onOpenInChats,
   aiAgents,
   onOpenAgent,
+  founderChat,
 }: SupportChatWidgetProps) {
   const isAgencyUser = isAdmin;
   const isInline = mode === "inline";
+
+  const [channel, setChannel] = useState<"bot" | "founder">("bot");
+  const founderInitializedRef = useRef(false);
+
+  // Listen for external "switch to founder" event (from sidebar navigation)
+  useEffect(() => {
+    const handler = () => {
+      if (founderChat) setChannel("founder");
+    };
+    window.addEventListener("switch-to-founder-channel", handler);
+    return () => window.removeEventListener("switch-to-founder-channel", handler);
+  }, [founderChat]);
+
+  // When switching to founder channel, initialize it
+  useEffect(() => {
+    if (channel === "founder" && founderChat && !founderInitializedRef.current) {
+      founderInitializedRef.current = true;
+      founderChat.initialize();
+    }
+  }, [channel, founderChat]);
+
+  // Active channel data
+  const activeMessages = channel === "founder" && founderChat ? founderChat.messages : messages;
+  const activeSending = channel === "founder" && founderChat ? founderChat.sending : sending;
+  const activeLoading = channel === "founder" && founderChat ? founderChat.loading : loading;
+  const activeSendMessage = channel === "founder" && founderChat ? founderChat.sendMessage : sendMessage;
+  const activeClearContext = channel === "founder" && founderChat ? founderChat.clearContext : clearContext;
 
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -383,7 +439,7 @@ export function SupportChatWidget({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, sending]);
+  }, [activeMessages, activeSending]);
 
   useEffect(() => {
     if (!loading) textareaRef.current?.focus();
@@ -402,7 +458,7 @@ export function SupportChatWidget({
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     hapticSend();
-    sendMessage(text);
+    activeSendMessage(text);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -413,14 +469,18 @@ export function SupportChatWidget({
   };
 
   const handleClose = () => {
-    closeSession();
+    if (channel === "founder" && founderChat) {
+      founderChat.closeSession();
+    } else {
+      closeSession();
+    }
     onClose();
   };
 
   const handleClearContext = async () => {
     setClearing(true);
     try {
-      await clearContext();
+      await activeClearContext();
     } finally {
       setClearing(false);
     }
@@ -432,7 +492,7 @@ export function SupportChatWidget({
     setEditingName(true);
   };
   const saveEditName = async () => {
-    const name = nameInput.trim() || "Sophie";
+    const name = nameInput.trim() || "Tom";
     setEditingName(false);
     await updateBotConfig({ name });
   };
@@ -461,15 +521,15 @@ export function SupportChatWidget({
   > = [];
 
   let lastDateKey = "";
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i];
+  for (let i = 0; i < activeMessages.length; i++) {
+    const msg = activeMessages[i];
     const dk = getDateKey(msg.createdAt);
     if (dk && dk !== lastDateKey) {
       const label = formatDateLabel(msg.createdAt!);
       if (label) renderItems.push({ type: "date", label, key: `date-${dk}` });
       lastDateKey = dk;
     }
-    const prev = i > 0 ? messages[i - 1] : null;
+    const prev = i > 0 ? activeMessages[i - 1] : null;
     const isFirstInGroup = !prev || prev.role !== msg.role;
     renderItems.push({ type: "msg", msg, isFirstInGroup, key: String(msg.id ?? `msg-${i}`) });
   }
@@ -529,65 +589,120 @@ export function SupportChatWidget({
 
           {/* ── Header — matches ChatPanel exactly ── */}
           <div className="shrink-0 bg-white dark:bg-card border-b border-black/[0.06]">
+            {/* ── Channel tabs (only show if founderChat is available) ── */}
+            {founderChat && (
+              <div className="px-4 pt-3 pb-0 flex gap-1">
+                <button
+                  onClick={() => setChannel("bot")}
+                  className={cn(
+                    "flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-t-lg transition-colors",
+                    channel === "bot"
+                      ? "bg-white dark:bg-card text-foreground border border-b-0 border-black/[0.08]"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Headphones className="h-3.5 w-3.5" />
+                  {botConfig.name}
+                </button>
+                <button
+                  onClick={() => setChannel("founder")}
+                  className={cn(
+                    "flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-t-lg transition-colors",
+                    channel === "founder"
+                      ? "bg-white dark:bg-card text-foreground border border-b-0 border-black/[0.08]"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  Gabriel (Founder)
+                </button>
+              </div>
+            )}
+
             <div className="px-4 pt-4 pb-3">
               <div className="flex items-center gap-3">
 
-                {/* Bot avatar — camera hover overlay for admin */}
-                <div
-                  className={cn("relative shrink-0", isAgencyUser && "group cursor-pointer")}
-                  onClick={() => isAgencyUser && botPhotoInputRef.current?.click()}
-                  title={isAgencyUser ? "Change bot photo" : undefined}
-                >
-                  <BotAvatarFull config={botConfig} size={isInline ? 45 : 36} />
-                  {isAgencyUser && (
-                    <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <Camera className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                  {isAgencyUser && (
-                    <input
-                      ref={botPhotoInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handlePhotoChange}
-                    />
-                  )}
-                </div>
+                {/* Avatar */}
+                {channel === "founder" ? (
+                  <img
+                    src="/founder-photo.webp"
+                    alt="Gabriel"
+                    className="rounded-full shrink-0 object-cover"
+                    style={{ width: isInline ? 45 : 36, height: isInline ? 45 : 36 }}
+                  />
+                ) : (
+                  <div
+                    className={cn("relative shrink-0", isAgencyUser && "group cursor-pointer")}
+                    onClick={() => isAgencyUser && botPhotoInputRef.current?.click()}
+                    title={isAgencyUser ? "Change bot photo" : undefined}
+                  >
+                    <BotAvatarFull config={botConfig} size={isInline ? 45 : 36} />
+                    {isAgencyUser && (
+                      <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <Camera className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                    {isAgencyUser && (
+                      <input
+                        ref={botPhotoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePhotoChange}
+                      />
+                    )}
+                  </div>
+                )}
 
-                {/* Bot name */}
+                {/* Name */}
                 <div className="min-w-0 flex-1">
-                  {editingName ? (
-                    <input
-                      autoFocus
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      onBlur={saveEditName}
-                      onKeyDown={handleNameKeyDown}
-                      className={cn(
-                        "font-semibold bg-transparent border-b border-brand-indigo outline-none w-full text-foreground leading-tight",
-                        isInline ? "text-[27px] font-heading" : "text-[15px]"
-                      )}
-                    />
-                  ) : (
-                    <div
-                      className={cn("flex items-center gap-1", isAgencyUser && "group cursor-pointer")}
-                      onClick={() => isAgencyUser && startEditName()}
-                      title={isAgencyUser ? "Click to rename" : undefined}
-                    >
+                  {channel === "founder" ? (
+                    <>
                       <p className={cn(
                         "font-semibold text-foreground leading-tight truncate",
                         isInline ? "text-[27px] font-heading" : "text-[15px]"
                       )}>
-                        {botConfig.name}
+                        Gabriel Barbosa Fronza
                       </p>
-                      {isAgencyUser && (
-                        <Pencil className="h-3 w-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {!isInline && (
+                        <p className="text-[11px] text-muted-foreground leading-tight">Founder, Lead Awaker</p>
                       )}
-                    </div>
-                  )}
-                  {!isInline && (
-                    <p className="text-[11px] text-muted-foreground leading-tight">Support Assistant</p>
+                    </>
+                  ) : (
+                    <>
+                      {editingName ? (
+                        <input
+                          autoFocus
+                          value={nameInput}
+                          onChange={(e) => setNameInput(e.target.value)}
+                          onBlur={saveEditName}
+                          onKeyDown={handleNameKeyDown}
+                          className={cn(
+                            "font-semibold bg-transparent border-b border-brand-indigo outline-none w-full text-foreground leading-tight",
+                            isInline ? "text-[27px] font-heading" : "text-[15px]"
+                          )}
+                        />
+                      ) : (
+                        <div
+                          className={cn("flex items-center gap-1", isAgencyUser && "group cursor-pointer")}
+                          onClick={() => isAgencyUser && startEditName()}
+                          title={isAgencyUser ? "Click to rename" : undefined}
+                        >
+                          <p className={cn(
+                            "font-semibold text-foreground leading-tight truncate",
+                            isInline ? "text-[27px] font-heading" : "text-[15px]"
+                          )}>
+                            {botConfig.name}
+                          </p>
+                          {isAgencyUser && (
+                            <Pencil className="h-3 w-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </div>
+                      )}
+                      {!isInline && (
+                        <p className="text-[11px] text-muted-foreground leading-tight">Support Assistant</p>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -728,8 +843,8 @@ export function SupportChatWidget({
             )}
           </div>
 
-          {/* ── Escalation banner — top of chat view ── */}
-          {escalated && (
+          {/* ── Escalation banner — top of chat view (bot channel only) ── */}
+          {escalated && channel === "bot" && (
             <div
               className="px-4 py-2.5 border-b border-brand-indigo/30 bg-brand-indigo/10 shrink-0 flex items-center gap-2"
               data-testid="escalation-banner"
@@ -746,18 +861,28 @@ export function SupportChatWidget({
             ref={scrollRef}
             className="flex-1 overflow-y-auto px-4 pt-4 pb-4 flex flex-col gap-1.5"
           >
-            {loading ? (
+            {activeLoading ? (
               <div className="flex-1 flex items-center justify-center">
                 <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
               </div>
             ) : (
               <>
-                {messages.length === 0 && (
+                {activeMessages.length === 0 && (
                   <div className="flex flex-col items-start">
                     <div className="flex gap-1.5 justify-start">
-                      {!isInline && <BotAvatarFull config={botConfig} size={avatarSize} />}
+                      {!isInline && channel === "bot" && <BotAvatarFull config={botConfig} size={avatarSize} />}
+                      {!isInline && channel === "founder" && (
+                        <div
+                          className="rounded-full shrink-0 overflow-hidden flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30"
+                          style={{ width: avatarSize, height: avatarSize }}
+                        >
+                          <User className="text-emerald-600 dark:text-emerald-400" style={{ width: avatarSize * 0.44, height: avatarSize * 0.44 }} />
+                        </div>
+                      )}
                       <div className="max-w-[80%] px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-tl-none text-[13px] leading-relaxed shadow-sm">
-                        Hi! I&apos;m {botConfig.name}, your Lead Awaker assistant. How can I help you today?
+                        {channel === "founder"
+                          ? "Hi! I'm Gabriel, the founder of Lead Awaker. Send me a message and I'll get back to you as soon as I can."
+                          : `Hi! I'm ${botConfig.name}, your Lead Awaker assistant. How can I help you today?`}
                       </div>
                     </div>
                   </div>
@@ -773,10 +898,11 @@ export function SupportChatWidget({
                       isFirstInGroup={item.isFirstInGroup}
                       avatarSize={avatarSize}
                       showBubbleAvatar={showBubbleAvatar}
+                      activeChannel={channel}
                     />
                   ),
                 )}
-                {sending && <TypingDots />}
+                {activeSending && channel === "bot" && <TypingDots />}
               </>
             )}
           </div>
@@ -823,7 +949,7 @@ export function SupportChatWidget({
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message…"
-                disabled={sending || loading}
+                disabled={activeSending || activeLoading}
                 className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 leading-5 pl-1"
                 style={{ minHeight: "32px", maxHeight: "120px" }}
               />
@@ -842,7 +968,7 @@ export function SupportChatWidget({
               {input.trim() ? (
                 <button
                   onClick={handleSend}
-                  disabled={sending || loading}
+                  disabled={activeSending || activeLoading}
                   className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
                   title="Send message"
                 >
@@ -868,7 +994,7 @@ export function SupportChatWidget({
               ) : (
                 <button
                   onClick={startRecording}
-                  disabled={sending || loading}
+                  disabled={activeSending || activeLoading}
                   className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
                   title="Record voice message"
                 >

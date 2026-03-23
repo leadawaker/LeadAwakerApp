@@ -1,5 +1,5 @@
 """
-support_chat.py — Webhook handler for Sophie support chat AI responses.
+support_chat.py — Webhook handler for Tom support chat AI responses.
 
 Receives a chat message payload from the Node.js Express layer (forwarded
 from the n8n webhook), enriches the system prompt with live platform
@@ -40,7 +40,7 @@ PORT = int(os.environ.get("SUPPORT_CHAT_PYTHON_PORT", "8766"))
 
 async def build_enriched_system_prompt(base_prompt: str, user_role: str) -> str:
     """
-    Fetch live stats and append them to the base Sophie system prompt.
+    Fetch live stats and append them to the base Tom system prompt.
     Admin users also receive a per-account breakdown.
     """
     try:
@@ -136,7 +136,7 @@ class SupportChatHandler(BaseHTTPRequestHandler):
 
 def run():
     server = HTTPServer(("0.0.0.0", PORT), SupportChatHandler)
-    print(f"[support_chat] Sophie context enrichment server listening on port {PORT}", flush=True)
+    print(f"[support_chat] Tom context enrichment server listening on port {PORT}", flush=True)
     server.serve_forever()
 
 

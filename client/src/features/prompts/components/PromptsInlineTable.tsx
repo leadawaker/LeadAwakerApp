@@ -138,7 +138,7 @@ export function PromptsInlineTable({
                       {p.performanceScore}
                     </span>
                   ) : (
-                    <span className="text-[12px] text-muted-foreground/40">—</span>
+                    <span className="text-[12px] text-muted-foreground/40">{"2014"}</span>
                   )}
                 </td>
               );

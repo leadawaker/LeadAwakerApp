@@ -583,7 +583,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                           const target = fieldMapping[h];
                           return (
                             <td key={h} className="px-3 py-2 max-w-[160px] truncate">
-                              {row[target] || <span className="text-muted-foreground italic">—</span>}
+                              {row[target] || <span className="text-muted-foreground italic">{"2014"}</span>}
                             </td>
                           );
                         })}

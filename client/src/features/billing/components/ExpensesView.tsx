@@ -147,7 +147,7 @@ function ExpenseDataRow({
             {fmtCur(parseNum(row.vatAmount), row.currency || "EUR")}
           </span>
         ) : (
-          <span className="text-foreground/20">—</span>
+          <span className="text-foreground/20">{"2014"}</span>
         )}
       </td>
       <td className="px-3 py-0 text-foreground/40 max-w-[120px] truncate text-[11px]">{row.notes || "—"}</td>
@@ -164,7 +164,7 @@ function ExpenseDataRow({
             <FileText className="h-4 w-4" />
           </a>
         ) : (
-          <span className="text-foreground/20">—</span>
+          <span className="text-foreground/20">{"2014"}</span>
         )}
       </td>
     </tr>

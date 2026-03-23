@@ -148,6 +148,7 @@ async function createEmailInteraction(parsed: ParsedEmail, prospectId: number): 
     status: parsed.direction === "outbound" ? "delivered" : "received",
     sentAt: parsed.date,
     conversationThreadId: parsed.threadId,
+    isRead: parsed.direction === "inbound" ? false : true,
     metadata: {
       gmailMessageId: parsed.messageId,
       gmailThreadId: parsed.threadId,

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import {
-  Building2, Phone, Bot, Globe, Clock, FileText, Ban,
+  Building2, Phone, Globe, Clock, FileText, Ban,
   Eye, EyeOff, Copy, Check,
   Plus, Trash2, FileDown,
   Pencil, X, RefreshCw, Camera,
@@ -223,7 +223,7 @@ function InfoRow({ label, value, editChild }: {
       <div className="min-h-[1.125rem]">
         {editChild ?? (
           <span className="text-[12px] font-semibold text-foreground leading-snug">
-            {value ?? <span className="text-foreground/25 font-normal italic">—</span>}
+            {value ?? <span className="text-foreground/25 font-normal italic">{"2014"}</span>}
           </span>
         )}
       </div>
@@ -296,7 +296,7 @@ function MonoValue({ value }: { value?: string | null }) {
       setTimeout(() => setCopied(false), 1500);
     });
   }, [value]);
-  if (!value) return <span className="text-foreground/25 font-normal italic text-[12px]">—</span>;
+  if (!value) return <span className="text-foreground/25 font-normal italic text-[12px]">{"2014"}</span>;
   return (
     <span className="flex items-center gap-0.5 min-w-0">
       <span className="text-[11px] font-mono text-foreground truncate">{value}</span>
@@ -317,7 +317,7 @@ function SecretDisplay({ value }: { value?: string | null }) {
       setTimeout(() => setCopied(false), 1500);
     });
   }, [value]);
-  if (!value) return <span className="text-foreground/25 font-normal italic text-[12px]">—</span>;
+  if (!value) return <span className="text-foreground/25 font-normal italic text-[12px]">{"2014"}</span>;
   return (
     <span className="flex items-center gap-0.5 min-w-0">
       <span className={cn("text-[11px] font-mono text-foreground truncate", !revealed && "tracking-widest")}>
@@ -1532,6 +1532,35 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
                 value={val("address")}
                 editChild={isEditing ? <EditText value={val("address")} onChange={(v) => set("address", v)} placeholder="Street, City, Country" /> : undefined}
               />
+
+              <SectionHeader label={t("sections.schedule")} icon={Clock} />
+
+              <InfoRow
+                label={t("fields.timezone")}
+                value={val("timezone")}
+                editChild={isEditing ? <EditSelect value={val("timezone")} onChange={(v) => set("timezone", v)} options={TIMEZONE_OPTIONS} /> : undefined}
+              />
+              <InfoRow
+                label={t("fields.hoursOpen")}
+                value={formatTimeDisplay(val("business_hours_start")) || val("business_hours_start")}
+                editChild={isEditing ? <EditText value={val("business_hours_start")} onChange={(v) => set("business_hours_start", v)} type="time" /> : undefined}
+              />
+              <InfoRow
+                label={t("fields.hoursClose")}
+                value={formatTimeDisplay(val("business_hours_end")) || val("business_hours_end")}
+                editChild={isEditing ? <EditText value={val("business_hours_end")} onChange={(v) => set("business_hours_end", v)} type="time" /> : undefined}
+              />
+              <InfoRow
+                label={t("fields.dailySends")}
+                value={val("max_daily_sends")}
+                editChild={isEditing ? <EditText value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined}
+              />
+              <InfoRow
+                label={t("fields.optOutKeyword")}
+                value={val("opt_out_keyword")}
+                editChild={isEditing ? <EditText value={val("opt_out_keyword")} onChange={(v) => set("opt_out_keyword", v)} placeholder="e.g. STOP" /> : undefined}
+              />
+
               <InfoRow
                 label={t("fields.taxId")}
                 value={val("tax_id")}
@@ -1586,72 +1615,16 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
         </div>
 
-        {/* Bottom row: AI & Schedule | Twilio | Placeholder */}
+        {/* Bottom row: Knowledge Base | Integrations | Voice Clone */}
         <div
           className={cn("grid gap-[3px]", isMobile ? "grid-cols-1" : "grid-cols-3", "max-w-[1386px] w-full mr-auto")}
           style={isMobile ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}
         >
 
-          {/* Bottom Col 1: AI & Schedule */}
+          {/* Bottom Col 1: Knowledge Base */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-ai">
-              <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("detail.aiAndSchedule")}</p>
-
-              <SectionHeader label={t("sections.aiConfig")} icon={Bot} />
-
-              <InfoRow
-                label={t("fields.aiName")}
-                value={val("default_ai_name")}
-                editChild={isEditing ? <EditText value={val("default_ai_name")} onChange={(v) => set("default_ai_name", v)} placeholder="e.g. Alex" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.aiRole")}
-                value={val("default_ai_role")}
-                editChild={isEditing ? <EditText value={val("default_ai_role")} onChange={(v) => set("default_ai_role", v)} placeholder="e.g. Sales Assistant" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.aiStyle")}
-                value={val("default_ai_style")}
-                editChild={isEditing ? <EditText value={val("default_ai_style")} onChange={(v) => set("default_ai_style", v)} placeholder="e.g. Friendly, Professional" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.typoFrequency")}
-                value={val("default_typo_frequency")}
-                editChild={isEditing ? <EditText value={val("default_typo_frequency")} onChange={(v) => set("default_typo_frequency", v)} placeholder="e.g. Low" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.optOutKeyword")}
-                value={val("opt_out_keyword")}
-                editChild={isEditing ? <EditText value={val("opt_out_keyword")} onChange={(v) => set("opt_out_keyword", v)} placeholder="e.g. STOP" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.terminology")}
-                value={val("preferred_terminology")}
-                editChild={isEditing ? <EditText value={val("preferred_terminology")} onChange={(v) => set("preferred_terminology", v)} placeholder="e.g. prospects, clients" /> : undefined}
-              />
-
-              <SectionHeader label={t("sections.schedule")} icon={Clock} />
-
-              <InfoRow
-                label={t("fields.timezone")}
-                value={val("timezone")}
-                editChild={isEditing ? <EditSelect value={val("timezone")} onChange={(v) => set("timezone", v)} options={TIMEZONE_OPTIONS} /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.hoursOpen")}
-                value={formatTimeDisplay(val("business_hours_start")) || val("business_hours_start")}
-                editChild={isEditing ? <EditText value={val("business_hours_start")} onChange={(v) => set("business_hours_start", v)} type="time" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.hoursClose")}
-                value={formatTimeDisplay(val("business_hours_end")) || val("business_hours_end")}
-                editChild={isEditing ? <EditText value={val("business_hours_end")} onChange={(v) => set("business_hours_end", v)} type="time" /> : undefined}
-              />
-              <InfoRow
-                label={t("fields.dailySends")}
-                value={val("max_daily_sends")}
-                editChild={isEditing ? <EditText value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined}
-              />
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-kb">
+              <KnowledgeBasePanel accountId={accountId} />
             </div>
           </div>
 
@@ -1756,12 +1729,6 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
         </div>
 
-        {/* Knowledge Base row */}
-        <div className="max-w-[1386px] w-full mr-auto mt-[3px]">
-          <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4">
-            <KnowledgeBasePanel accountId={accountId} />
-          </div>
-        </div>
 
       </div>
 

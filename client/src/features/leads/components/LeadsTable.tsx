@@ -545,6 +545,14 @@ export function LeadsTable() {
 
   const handleCloseKanbanPanel = useCallback(() => { setSelectedKanbanLead(null); }, []);
 
+  // Sync kanban selection when the shared persisted selection changes (e.g. from search)
+  useEffect(() => {
+    if (viewMode !== "pipeline" || !selectedLead) return;
+    const id = selectedLead.Id ?? selectedLead.id;
+    const kanbanId = selectedKanbanLead?.Id ?? selectedKanbanLead?.id;
+    if (id !== kanbanId) setSelectedKanbanLead(selectedLead);
+  }, [selectedLead, viewMode]);
+
   /* ── Derived data for table filter dropdowns ─────────────────────────────── */
   const availableAccounts = useMemo(() => {
     if (!isAgencyView) return [];
@@ -1135,7 +1143,7 @@ export function LeadsTable() {
               {/* Title row: title left, tabs right (desktop only inline) */}
               <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-                <span className="hidden md:block">
+                <span className="hidden md:block" data-onboarding="leads-view-tabs">
                   <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
                 </span>
               </div>

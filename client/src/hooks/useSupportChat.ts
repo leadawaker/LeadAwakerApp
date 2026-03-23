@@ -26,7 +26,7 @@ export interface SupportBotConfig {
 }
 
 const DEFAULT_BOT_CONFIG: SupportBotConfig = {
-  name: "Sophie",
+  name: "Tom",
   photoUrl: null,
   enabled: true,
 };
@@ -227,7 +227,7 @@ export function useSupportChat() {
   const updateBotConfig = useCallback(async (updates: Partial<SupportBotConfig>) => {
     const prevName = botConfigRef.current.name;
     // Build the full merged config — never send partial updates or the backend
-    // resets missing fields to defaults (e.g. photoUrl → null, name → "Sophie")
+    // resets missing fields to defaults (e.g. photoUrl → null, name → "Tom")
     const full = { ...botConfigRef.current, ...updates };
 
     // Update locally + cache immediately

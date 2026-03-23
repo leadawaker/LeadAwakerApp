@@ -314,7 +314,7 @@ function InfoRow({ label, value, mono = false, editChild, richText = false, icon
   label: string; value: React.ReactNode; mono?: boolean; editChild?: React.ReactNode; richText?: boolean; icon?: React.ElementType;
 }) {
   const renderValue = () => {
-    if (value == null) return <span className="text-[12px] text-foreground">—</span>;
+    if (value == null) return <span className="text-[12px] text-foreground">{"2014"}</span>;
     if (richText && typeof value === "string") {
       return (
         <div
@@ -593,7 +593,7 @@ function ABTestCard({ campaign }: { campaign: Campaign }) {
 
   if (loading) {
     return (
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0" data-testid="campaign-detail-view-ab">
+      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0 max-h-[680px]" data-testid="campaign-detail-view-ab">
         <div className="flex items-center min-h-[36px] shrink-0">
           <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">
             {t("abTesting.title")}
@@ -609,7 +609,7 @@ function ABTestCard({ campaign }: { campaign: Campaign }) {
   const hasData = stats?.variants && (stats.variants.A || stats.variants.B);
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0" data-testid="campaign-detail-view-ab">
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0 max-h-[680px]" data-testid="campaign-detail-view-ab">
       {/* Header */}
       <div className="flex items-center justify-between min-h-[36px] shrink-0">
         <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">
@@ -776,7 +776,7 @@ function ContractSelect({
       disabled={loading}
       className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
-      <option value="">—</option>
+      <option value="">{"2014"}</option>
       {contracts.map((c) => (
         <option key={c.id} value={String(c.id)}>
           {c.title || `Contract #${c.id}`}
@@ -1990,7 +1990,7 @@ export function CampaignDetailView({
   const goToConfig = useCallback(() => setActiveTab("configurations"), []);
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view">
+    <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view" data-onboarding="campaign-detail">
 
       {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
@@ -2880,7 +2880,7 @@ export function CampaignDetailView({
             {campaign.ab_enabled ? (
               <ABTestCard campaign={campaign} />
             ) : (
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-activity">
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden max-h-[680px]" data-testid="campaign-detail-view-activity">
                 <div className="flex items-center min-h-[36px] shrink-0">
                   <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.activity")}</span>
                 </div>
@@ -2913,7 +2913,7 @@ export function CampaignDetailView({
             )}
 
             {/* ── Row 2, Col 2: Financials + ROI Trend ── */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-conversions">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden max-h-[680px]" data-testid="campaign-detail-view-conversions">
               <div className="flex items-center min-h-[36px]">
                 <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.financials")}</span>
               </div>
@@ -2956,7 +2956,7 @@ export function CampaignDetailView({
             </div>
 
             {/* ── Row 2, Col 3: AI Summary ── */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-ai-summary">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden max-h-[680px]" data-testid="campaign-detail-view-ai-summary">
               <div className="flex items-center min-h-[36px] shrink-0">
                 <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.aiAnalysis")}</span>
               </div>
@@ -3260,7 +3260,7 @@ export function CampaignDetailView({
 
               <SectionHeader label={t("config.aiSettings")} />
               <InfoRow icon={Cpu} label={t("config.model")} value={campaign.ai_model || "Default"}
-                editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4-mini", "gpt-5.2", "gpt-5.1", "gpt-5.1-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} /> : undefined}
+                editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4", "gpt-5.4-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} /> : undefined}
               />
               <InfoRow icon={Thermometer} label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
                 editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}

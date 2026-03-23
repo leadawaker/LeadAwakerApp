@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
@@ -415,6 +415,16 @@ export function ProspectsInlineTable({
 }: ProspectsInlineTableProps) {
 
   const { t } = useTranslation("prospects");
+
+  // Scroll selected row into view (e.g. from search)
+  useEffect(() => {
+    if (!selectedProspectId) return;
+    const raf = requestAnimationFrame(() => {
+      const row = document.querySelector(`tr[data-prospect-id="${selectedProspectId}"]`) as HTMLElement | null;
+      if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedProspectId]);
 
   // ── Editing state ─────────────────────────────────────────────────────────
   const [editingCell,    setEditingCell]    = useState<{ pid: number; field: ColKey } | null>(null);
@@ -852,6 +862,7 @@ export function ProspectsInlineTable({
                   return (
                     <tr
                       key={pid}
+                      data-prospect-id={pid}
                       className={cn(
                         "group/row cursor-pointer h-[40px] animate-card-enter",
                         isHighlighted ? "bg-white" : "bg-card hover:bg-card-hover",

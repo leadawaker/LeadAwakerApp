@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, Headphones, Search, X, BotMessageSquare, MessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2 } from "lucide-react";
+import { Inbox, BellDot, UserSearch, Headphones, Search, X, BotMessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2, Mail, MessageCircle, User } from "lucide-react";
+import type { ProspectThread } from "../hooks/useProspectConversations";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
@@ -16,6 +17,8 @@ import {
   formatRelativeTime,
 } from "../utils/conversationHelpers";
 import { apiFetch } from "@/lib/apiUtils";
+import { getInitials, getProspectAvatarColor } from "@/lib/avatarUtils";
+import { useLocation } from "wouter";
 
 function getLeadTagNames(lead: Lead): string[] {
   const raw = lead.tags;
@@ -85,7 +88,7 @@ type VirtualItem =
 // ── Types ──────────────────────────────────────────────────────────────────────
 export type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
 export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
-export type InboxTab = "all" | "unread" | "support";
+export type InboxTab = "all" | "unread" | "support" | "prospects";
 
 // ── Agent inbox row (expandable with recent chats) ──────────────────────────────
 interface AgentRecentChat {
@@ -109,7 +112,6 @@ type AgentRowProps = {
 
 function AgentInboxRow({ agent, isSelected, isExpanded, onToggleExpand, onSelectChat, activeSessionId, onSettingsClick }: AgentRowProps) {
   const typeChip: Record<string, string> = {
-    campaign_crafter: "Campaign Crafter",
     code_runner: "Code Runner",
     custom: "Custom",
   };
@@ -148,22 +150,6 @@ function AgentInboxRow({ agent, isSelected, isExpanded, onToggleExpand, onSelect
             alt={agent.name}
             className="h-9 w-9 rounded-full object-cover"
           />
-          <span
-            className={cn(
-              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
-              isSelected ? "border-highlight-selected" : "border-card",
-              isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
-            )}
-          />
-        </div>
-      );
-    }
-    if (agent.type === "campaign_crafter") {
-      return (
-        <div className="relative">
-          <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
-            <MessageSquare className="h-4 w-4 text-brand-indigo" />
-          </div>
           <span
             className={cn(
               "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
@@ -360,6 +346,16 @@ interface InboxPanelProps {
   onDeselectAgent?: () => void;
   /** Map of campaign ID → campaign name, used when grouping by campaign */
   campaignsMap?: Map<number, string>;
+  /** Prospect conversation threads (agency only, prospects tab) */
+  prospectThreads?: ProspectThread[];
+  /** Currently selected prospect ID */
+  selectedProspectId?: number | null;
+  /** Called when user selects a prospect from the list */
+  onSelectProspect?: (prospectId: number) => void;
+  /** Whether the founder inbox is currently shown (admin only) */
+  showFounderInbox?: boolean;
+  /** Toggle the founder inbox view (admin only) */
+  onToggleFounderInbox?: () => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -393,9 +389,82 @@ export function InboxPanel({
   onAgentSettings,
   onDeselectAgent,
   campaignsMap,
+  prospectThreads = [],
+  selectedProspectId,
+  onSelectProspect,
+  showFounderInbox,
+  onToggleFounderInbox,
 }: InboxPanelProps) {
   // Track which agent is expanded in the support tab
   const [expandedAgentId, setExpandedAgentId] = useState<number | null>(null);
+
+  // Prospects tab state
+  const [prospectSearch, setProspectSearch] = useState("");
+  const [prospectSearchOpen, setProspectSearchOpen] = useState(false);
+  const [prospectGroupBy, setProspectGroupBy] = useState<"date" | "status" | "none">("date");
+  const [prospectSortBy, setProspectSortBy] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest");
+  const [prospectFilterStatus, setProspectFilterStatus] = useState<string[]>([]);
+  const [, navigate] = useLocation();
+
+  // Filter prospects by search query + status filter
+  const filteredProspects = useMemo(() => {
+    let result = prospectThreads;
+    if (prospectFilterStatus.length > 0) {
+      result = result.filter((pt) => prospectFilterStatus.includes(pt.outreach_status || "new"));
+    }
+    if (prospectSearch.trim()) {
+      const q = prospectSearch.trim().toLowerCase();
+      result = result.filter((pt) => {
+        const haystack = [pt.company, pt.contact_name, pt.contact_email, pt.name]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (prospectSortBy === "newest") return new Date(b.last_message_at || 0).getTime() - new Date(a.last_message_at || 0).getTime();
+      if (prospectSortBy === "oldest") return new Date(a.last_message_at || 0).getTime() - new Date(b.last_message_at || 0).getTime();
+      if (prospectSortBy === "name_asc") return (a.company || a.name || "").localeCompare(b.company || b.name || "");
+      return (b.company || b.name || "").localeCompare(a.company || a.name || "");
+    });
+    return result;
+  }, [prospectThreads, prospectSearch, prospectFilterStatus, prospectSortBy]);
+
+  // Group prospects by date or status
+  const groupedProspects = useMemo(() => {
+    if (prospectGroupBy === "none") {
+      return [{ label: "All", threads: filteredProspects }];
+    }
+
+    const groups: { label: string; threads: ProspectThread[] }[] = [];
+    const groupMap = new Map<string, ProspectThread[]>();
+
+    for (const pt of filteredProspects) {
+      const label = prospectGroupBy === "status"
+        ? (pt.outreach_status || "new").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        : getDateGroupLabel(pt.last_message_at);
+      if (!groupMap.has(label)) groupMap.set(label, []);
+      groupMap.get(label)!.push(pt);
+    }
+
+    if (prospectGroupBy === "date") {
+      const dateOrder = ["Today", "Yesterday", "This Week", "This Month", "Last 3 Months", "Older", "No Activity"];
+      for (const label of dateOrder) {
+        const threads = groupMap.get(label);
+        if (threads && threads.length > 0) groups.push({ label, threads });
+      }
+    } else {
+      for (const [label, threads] of groupMap) {
+        groups.push({ label, threads });
+      }
+    }
+
+    return groups;
+  }, [filteredProspects, prospectGroupBy]);
+
+  const prospectsPagePath = isAgencyUser ? "/agency/prospects" : "/subaccount/prospects";
 
   const hasNonDefaultControls =
     groupBy !== "date" ||
@@ -652,6 +721,8 @@ export function InboxPanel({
 
   const totalUnread = threads.filter((t) => t.unread).length;
 
+  const prospectUnread = prospectThreads?.reduce((sum, t) => sum + t.unread_count, 0) || 0;
+
   const INBOX_TABS: TabDef[] = [
     { id: "all", label: "Inbox", icon: Inbox },
     {
@@ -665,7 +736,7 @@ export function InboxPanel({
       ) : undefined,
     },
     {
-      id: "support",
+      id: "support" as const,
       label: "Support",
       icon: Headphones,
       badge: supportUnreadCount > 0 ? (
@@ -674,6 +745,16 @@ export function InboxPanel({
         </span>
       ) : undefined,
     },
+    ...(isAgencyUser ? [{
+      id: "prospects" as const,
+      label: "Prospects",
+      icon: UserSearch,
+      badge: prospectUnread > 0 ? (
+        <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold leading-none">
+          {prospectUnread > 99 ? "99+" : prospectUnread}
+        </span>
+      ) : undefined,
+    }] : []),
   ];
 
   return (
@@ -683,6 +764,7 @@ export function InboxPanel({
         className,
       )}
       data-testid="panel-inbox"
+      data-onboarding="conversations-inbox"
     >
       {/* ── Header: title + Inbox/Unread tabs on same row ── */}
       <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
@@ -698,7 +780,7 @@ export function InboxPanel({
       </div>
 
       {/* ── Mobile search bar (hidden on desktop) ── */}
-      {tab !== "support" && onSearchChange && (
+      {tab !== "prospects" && tab !== "support" && onSearchChange && (
         <div
           className="md:hidden px-3 pb-2 shrink-0"
           data-testid="mobile-inbox-search"
@@ -808,12 +890,170 @@ export function InboxPanel({
               />
             ))}
           </div>
+
+          {/* Founder DMs section (admin only) */}
+          {isAgencyUser && onToggleFounderInbox && (
+            <>
+              <div className="px-3 py-1.5 mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <User className="h-3 w-3" />
+                Direct Messages
+              </div>
+              <div className="px-[3px]">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    onDeselectAgent?.();
+                    onToggleFounderInbox();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      onDeselectAgent?.();
+                      onToggleFounderInbox();
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
+                    showFounderInbox ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+                  )}
+                >
+                  <img src="/founder-photo.webp" alt="Gabriel" className="h-9 w-9 rounded-full object-cover shrink-0" />
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+                      Founder Inbox
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                      Direct messages from users
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Prospects tab: prospect conversation list ── */}
+      {tab === "prospects" && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-[3px]">
+            {filteredProspects.length === 0 ? (
+              <DataEmptyState
+                variant="conversations"
+                title={prospectSearch ? "No matching prospects" : "No prospect conversations"}
+                description={prospectSearch ? "Try a different search term." : "Prospect conversations will appear here when you start outreach."}
+                compact
+              />
+            ) : (
+              <div className="flex flex-col gap-[3px]">
+                {groupedProspects.map((group) => (
+                  <div key={group.label}>
+                    {/* Date group header */}
+                    <div className="px-3 py-2">
+                      <div className="flex items-center gap-[10px]">
+                        <div className="flex-1 h-px bg-foreground/15" />
+                        <span className="text-[12px] font-bold text-foreground tracking-wide">{group.label}</span>
+                        <span className="text-foreground/20">-</span>
+                        <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{group.threads.length}</span>
+                        <div className="flex-1 h-px bg-foreground/15" />
+                      </div>
+                    </div>
+
+                    {/* Prospect cards in this group */}
+                    <div className="flex flex-col gap-[3px]">
+                    {group.threads.map((pt) => {
+                      const active = selectedProspectId === pt.prospect_id;
+                      const displayName = pt.company || pt.name || "Unknown";
+                      const avatarColor = getProspectAvatarColor(pt.outreach_status);
+                      const isDealClosed = pt.outreach_status === "deal_closed";
+                      const lastTs = pt.last_message_at;
+                      const timeAgo = lastTs ? formatRelativeTime(lastTs) : "";
+
+                      return (
+                        <div
+                          key={pt.prospect_id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => onSelectProspect?.(pt.prospect_id)}
+                          onKeyDown={(e) => e.key === "Enter" && onSelectProspect?.(pt.prospect_id)}
+                          className={cn(
+                            "group relative rounded-xl cursor-pointer transition-colors",
+                            active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+                          )}
+                          data-testid={`button-prospect-${pt.prospect_id}`}
+                        >
+                          <div className="px-2.5 pt-2.5 pb-2 flex flex-col gap-[3px]">
+                            <div className="flex items-start gap-2">
+                              {/* Avatar with status-based colors */}
+                              <div className="relative shrink-0">
+                                <EntityAvatar
+                                  name={displayName}
+                                  bgColor={isDealClosed ? "#1a1a1a" : avatarColor.bg}
+                                  textColor={isDealClosed ? "#ffffff" : avatarColor.text}
+                                  size={36}
+                                  className="shrink-0"
+                                />
+                                {pt.unread_count > 0 && (
+                                  <span
+                                    className={cn(
+                                      "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5",
+                                      active ? "shadow-[0_0_0_2px_var(--color-highlight-selected)]" : "shadow-[0_0_0_2px_var(--color-card)]"
+                                    )}
+                                  >
+                                    {pt.unread_count > 99 ? "99+" : pt.unread_count}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Company + contact */}
+                              <div className="flex-1 min-w-0 pt-0.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground flex-1 min-w-0">
+                                    {displayName}
+                                  </p>
+                                  <span className="flex items-center gap-1 shrink-0">
+                                    {pt.last_message_type === "email" ? (
+                                      <Mail className="h-3 w-3 text-muted-foreground/50" />
+                                    ) : pt.last_message_type === "whatsapp" ? (
+                                      <MessageCircle className="h-3 w-3 text-muted-foreground/50" />
+                                    ) : null}
+                                    {timeAgo && (
+                                      <span className="text-[10px] text-muted-foreground/70 tabular-nums">
+                                        {timeAgo}
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                {pt.contact_name && (
+                                  <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                                    {pt.contact_name}
+                                  </p>
+                                )}
+
+                                {/* Last message preview: hidden by default, shown on hover */}
+                                {pt.last_message && (
+                                  <p className="hidden group-hover:block text-[13px] text-muted-foreground truncate leading-snug mt-1">
+                                    <span className="truncate">{pt.last_message}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* ── Thread list (all / unread tabs) ── */}
       {/* Outer wrapper: relative so absolute overlay can pin to top */}
-      <div className={cn("flex-1 min-h-0 relative", tab === "support" && "hidden")}>
+      <div className={cn("flex-1 min-h-0 relative", (tab === "support" || tab === "prospects") && "hidden")}>
         {/* Sticky group header overlay — absolute so it doesn't push content down */}
         {groupBy !== "none" && !loading && sorted.length > 0 && activeGroupLabel && (
           <div className="absolute top-0 left-0 right-0 z-20 bg-muted px-3 pt-3 pb-3 pointer-events-none">
@@ -822,7 +1062,7 @@ export function InboxPanel({
               <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">
                 {activeGroupLabel.label}
               </span>
-              <span className="text-foreground/20 shrink-0">–</span>
+              <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
               <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">
                 {activeGroupLabel.count}
               </span>
@@ -894,7 +1134,7 @@ export function InboxPanel({
                       <div className="flex items-center gap-[10px]">
                         <div className="flex-1 h-px bg-foreground/15" />
                         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{item.label}</span>
-                        <span className="text-foreground/20 shrink-0">–</span>
+                        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
                         <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{item.count}</span>
                         <div className="flex-1 h-px bg-foreground/15" />
                       </div>

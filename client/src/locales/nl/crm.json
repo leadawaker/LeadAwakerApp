@@ -14,7 +14,8 @@
     "settings": "Instellingen",
     "support": "Ondersteuning",
     "help": "Help",
-    "docs": "Docs"
+    "docs": "Docs",
+    "messageFounder": "Bericht aan Gabriel"
   },
   "sidebarSections": {
     "engage": "Betrekken",
@@ -43,6 +44,8 @@
   },
   "search": {
     "leads": "Leads",
+    "campaigns": "Campagnes",
+    "prospects": "Prospects",
     "accounts": "Accounts",
     "users": "Gebruikers"
   },

@@ -634,7 +634,7 @@ export function ColorPickerWidget({ open, onClose }: { open: boolean; onClose: (
   return (
     <div
       className="fixed right-3 bottom-3 z-[9999] flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl"
-      style={{ width: 268, maxHeight: "calc(100vh - 70px)" }}
+      style={{ width: 268, maxHeight: "calc(100dvh - 70px)" }}
     >
       {/* ── Header ── */}
       <div className="flex shrink-0 items-center gap-1 border-b border-gray-100 px-2 py-1.5">

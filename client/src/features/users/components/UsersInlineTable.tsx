@@ -289,19 +289,19 @@ export function UsersInlineTable({
           <span className="text-muted-foreground text-[12px] truncate">
             {user.accountsId
               ? (accounts[user.accountsId] || `Account #${user.accountsId}`)
-              : <span className="italic opacity-50">—</span>}
+              : <span className="italic opacity-50">{"2014"}</span>}
           </span>
         );
       case "email":
-        return <span className="text-muted-foreground text-[12px] truncate">{user.email || <span className="italic opacity-50">—</span>}</span>;
+        return <span className="text-muted-foreground text-[12px] truncate">{user.email || <span className="italic opacity-50">{"2014"}</span>}</span>;
       case "phone":
-        return <span className="text-muted-foreground text-[12px] font-mono">{user.phone || <span className="italic opacity-50">—</span>}</span>;
+        return <span className="text-muted-foreground text-[12px] font-mono">{user.phone || <span className="italic opacity-50">{"2014"}</span>}</span>;
       case "role":
         return user.role ? (
           <span className={cn("px-2 py-0.5 rounded-lg text-[11px] font-semibold", ROLE_BADGE[user.role] ?? "bg-muted text-muted-foreground")}>
             {user.role}
           </span>
-        ) : <span className="text-muted-foreground italic text-xs">—</span>;
+        ) : <span className="text-muted-foreground italic text-xs">{"2014"}</span>;
       case "status":
         return (
           <span className={cn(
@@ -325,7 +325,7 @@ export function UsersInlineTable({
       case "memberSince":
         return <span className="text-muted-foreground text-[12px]">{formatShortDate(user.createdAt)}</span>;
       case "timezone":
-        return <span className="text-muted-foreground text-[12px] truncate">{user.timezone || <span className="italic opacity-50">—</span>}</span>;
+        return <span className="text-muted-foreground text-[12px] truncate">{user.timezone || <span className="italic opacity-50">{"2014"}</span>}</span>;
     }
   }
 

@@ -474,8 +474,8 @@ export function GradientTester({
   const exportCode = layers.map(layerToTailwind).join("\n");
 
   const panelStyle: React.CSSProperties = panelPos
-    ? { width: 320, maxHeight: "calc(100vh - 24px)", top: panelPos.y, left: panelPos.x }
-    : { width: 320, maxHeight: "calc(100vh - 70px)", right: 12, bottom: 12 };
+    ? { width: 320, maxHeight: "calc(100dvh - 24px)", top: panelPos.y, left: panelPos.x }
+    : { width: 320, maxHeight: "calc(100dvh - 70px)", right: 12, bottom: 12 };
 
   return (
     <div

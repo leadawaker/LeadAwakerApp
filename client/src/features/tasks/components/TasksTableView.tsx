@@ -349,7 +349,7 @@ export default function TasksTableView({
                         <span className="text-[12px] truncate">{category.name}</span>
                       </>
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">—</span>
+                      <span className="text-[12px] text-muted-foreground">{"2014"}</span>
                     )}
                   </div>
 
@@ -373,8 +373,8 @@ export default function TasksTableView({
                             {tag}
                           </span>
                         );
-                      }) : <span className="text-[12px] text-muted-foreground">—</span>;
-                    })() : <span className="text-[12px] text-muted-foreground/40">—</span>}
+                      }) : <span className="text-[12px] text-muted-foreground">{"2014"}</span>;
+                    })() : <span className="text-[12px] text-muted-foreground/40">{"2014"}</span>}
                   </div>
 
                   {/* 7. Type */}

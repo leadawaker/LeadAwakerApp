@@ -1,0 +1,15 @@
+{
+  "title": "Welcome to LeadAwaker",
+  "subtitle": "Set up your profile to get started.",
+  "fields": {
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Your full name",
+    "timezone": "Timezone"
+  },
+  "continue": "Continue",
+  "saving": "Saving...",
+  "errors": {
+    "nameRequired": "Please enter your full name.",
+    "saveFailed": "Failed to save profile. Please try again."
+  }
+}

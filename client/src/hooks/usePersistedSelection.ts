@@ -1,9 +1,12 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 
 /**
  * Persists selection state (by ID) to localStorage so it survives page navigation.
  * Derives the selected object synchronously from the items array — no extra render
  * cycle when items first arrive, preventing visible "pop" on initial load.
+ *
+ * Listens for external localStorage changes (via "persisted-selection" custom events)
+ * so that e.g. the search popover can select a lead/campaign/prospect from outside.
  */
 export function usePersistedSelection<T>(
   key: string,
@@ -19,6 +22,18 @@ export function usePersistedSelection<T>(
   const [selectedId, setSelectedId] = useState<string | null>(() => {
     try { return localStorage.getItem(key); } catch { return null; }
   });
+
+  // Listen for external selection changes (e.g. from search popover)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.key === key) {
+        setSelectedId(detail.id);
+      }
+    };
+    window.addEventListener("persisted-selection", handler);
+    return () => window.removeEventListener("persisted-selection", handler);
+  }, [key]);
 
   // Derive the selected object synchronously — same render as items arriving
   const selected = useMemo(() => {
@@ -60,4 +75,14 @@ export function usePersistedSelection<T>(
   );
 
   return [selected, setSelected];
+}
+
+/**
+ * Set a persisted selection from outside the component that owns it.
+ * Updates localStorage AND dispatches a custom event so the hook picks it up immediately.
+ */
+export function setPersistedSelection(key: string, id: string | number) {
+  const idStr = String(id);
+  localStorage.setItem(key, idStr);
+  window.dispatchEvent(new CustomEvent("persisted-selection", { detail: { key, id: idStr } }));
 }

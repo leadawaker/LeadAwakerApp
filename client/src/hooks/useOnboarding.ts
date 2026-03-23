@@ -28,13 +28,24 @@ const DEFAULT_STATE: OnboardingState = {
   completedAt: null,
 };
 
-const QUERY_KEY = ["/api/onboarding/status"];
+export const ONBOARDING_QUERY_KEY = ["/api/onboarding/status"];
+const QUERY_KEY = ONBOARDING_QUERY_KEY;
 
 export function useOnboarding() {
   const queryClient = useQueryClient();
   const { currentAccountId, isAgencyUser } = useWorkspace();
   const { campaigns } = useCampaigns(currentAccountId);
   const { leads } = useLeads(currentAccountId);
+
+  // Dev override: allow agency users to test onboarding (reactive via storage event)
+  const [devOnboarding, setDevOnboarding] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem("dev-onboarding") === "true"
+  );
+  useEffect(() => {
+    const handler = () => setDevOnboarding(localStorage.getItem("dev-onboarding") === "true");
+    window.addEventListener("dev-onboarding-changed", handler);
+    return () => window.removeEventListener("dev-onboarding-changed", handler);
+  }, []);
 
   // Fetch onboarding status
   const { data: onboarding = DEFAULT_STATE, isLoading } = useQuery<OnboardingState>({
@@ -45,7 +56,7 @@ export function useOnboarding() {
       return res.json();
     },
     staleTime: 60_000,
-    enabled: !isAgencyUser, // only for subaccount users
+    enabled: !isAgencyUser || devOnboarding,
   });
 
   // Mutations
@@ -72,6 +83,8 @@ export function useOnboarding() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(QUERY_KEY, data);
+      localStorage.removeItem("dev-onboarding");
+      window.dispatchEvent(new CustomEvent("dev-onboarding-changed"));
     },
   });
 
@@ -83,6 +96,8 @@ export function useOnboarding() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(QUERY_KEY, data);
+      localStorage.removeItem("dev-onboarding");
+      window.dispatchEvent(new CustomEvent("dev-onboarding-changed"));
     },
   });
 
@@ -113,7 +128,7 @@ export function useOnboarding() {
   }, [onboarding.completedStages, campaigns, leads]);
 
   // Helpers
-  const isActive = !isAgencyUser && !onboarding.completed && !onboarding.skipped && !isLoading;
+  const isActive = (!isAgencyUser || devOnboarding) && !onboarding.completed && !onboarding.skipped && !isLoading;
 
   const nextStep = useCallback(
     (stage: number, step: number) => {

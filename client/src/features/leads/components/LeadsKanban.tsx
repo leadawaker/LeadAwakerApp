@@ -121,8 +121,8 @@ const STAGE_ICONS: Record<string, LucideIcon> = {
 
 /** Background fill color for stage icon circles */
 const STAGE_ICON_BG: Record<string, string> = {
-  New:                  "#6B7280",
-  Contacted:            "#4F46E5",
+  New:                  "#7C3AED",
+  Contacted:            "#818CF8",
   Responded:            "#14B8A6",
   "Multiple Responses": "#22C55E",
   Qualified:            "#84CC16",
@@ -622,6 +622,7 @@ function KanbanLeadCard({
       {...attributes}
       {...listeners}
       data-testid={`kanban-card-${leadId}`}
+      data-lead-id={leadId}
       onClick={(e) => { e.stopPropagation(); onCardClick?.(lead); }}
       className={cn(
         "cursor-grab active:cursor-grabbing touch-none select-none",
@@ -1055,6 +1056,17 @@ export function LeadsKanban({
   useEffect(() => {
     if (!isDraggingAny) setLocalLeads(leads);
   }, [leads, isDraggingAny]);
+
+  // Scroll selected lead card into view (e.g. from search)
+  useEffect(() => {
+    if (selectedLeadId === undefined || !boardRef.current) return;
+    const raf = requestAnimationFrame(() => {
+      const el = boardRef.current?.querySelector(`[data-lead-id="${selectedLeadId}"]`) as HTMLElement | null;
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedLeadId]);
 
   const groupedLeads = useMemo(() => {
     const groups: Record<string, any[]> = {};

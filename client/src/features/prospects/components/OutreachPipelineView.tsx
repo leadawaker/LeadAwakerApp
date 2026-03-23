@@ -82,8 +82,8 @@ export const OUTREACH_LABELS: Record<OutreachStatus, string> = {
 
 // ── Rainbow color progression (cold → warm) ────────────────────────
 export const OUTREACH_HEX: Record<OutreachStatus, string> = {
-  new:            "#6B7280",
-  contacted:      "#7A73FF",
+  new:            "#7C3AED",
+  contacted:      "#818CF8",
   responded:      "#3ACBDF",
   call_booked:    "#31D35C",
   demo_given:     "#AED62E",
@@ -95,8 +95,8 @@ export const OUTREACH_HEX: Record<OutreachStatus, string> = {
 
 // ── Avatar colors per stage (light mode) ────────────────────────────
 const PROSPECT_AVATAR_BG: Record<OutreachStatus, string> = {
-  new:            "#C9C9C9",
-  contacted:      "#BBB9FF",
+  new:            "#DDD6FE",
+  contacted:      "#C7D2FE",
   responded:      "#B9E7EF",
   call_booked:    "#AFE3BB",
   demo_given:     "#D6E8A3",
@@ -107,8 +107,8 @@ const PROSPECT_AVATAR_BG: Record<OutreachStatus, string> = {
 };
 
 const PROSPECT_AVATAR_TEXT: Record<OutreachStatus, string> = {
-  new:            "#374151",
-  contacted:      "#2E3A6B",
+  new:            "#5B21B6",
+  contacted:      "#3730A3",
   responded:      "#0F5F5A",
   call_booked:    "#166534",
   demo_given:     "#3F6212",
@@ -120,8 +120,8 @@ const PROSPECT_AVATAR_TEXT: Record<OutreachStatus, string> = {
 
 // ── Avatar colors per stage (dark mode) ─────────────────────────────
 const PROSPECT_AVATAR_BG_DARK: Record<OutreachStatus, string> = {
-  new:            "#2A2D33",
-  contacted:      "#272547",
+  new:            "#2E1065",
+  contacted:      "#1E1B4B",
   responded:      "#1A3338",
   call_booked:    "#1A3325",
   demo_given:     "#283314",
@@ -132,8 +132,8 @@ const PROSPECT_AVATAR_BG_DARK: Record<OutreachStatus, string> = {
 };
 
 const PROSPECT_AVATAR_TEXT_DARK: Record<OutreachStatus, string> = {
-  new:            "#9CA3AF",
-  contacted:      "#BBB9FF",
+  new:            "#C4B5FD",
+  contacted:      "#A5B4FC",
   responded:      "#7CDCE8",
   call_booked:    "#6AE87C",
   demo_given:     "#B5E050",
@@ -169,8 +169,8 @@ const STAGE_ICONS: Record<OutreachStatus, LucideIcon> = {
 
 /** Icon circle bg — same as hex except won gets dark bg for contrast */
 const STAGE_ICON_BG: Record<OutreachStatus, string> = {
-  new:            "#6B7280",
-  contacted:      "#7A73FF",
+  new:            "#7C3AED",
+  contacted:      "#818CF8",
   responded:      "#3ACBDF",
   call_booked:    "#31D35C",
   demo_given:     "#AED62E",

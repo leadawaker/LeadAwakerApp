@@ -314,8 +314,8 @@ function OperatorManual({ search }: { search: string }) {
         <p>{t("operator.lifecycle.pipelineDescription")}</p>
         <div className="space-y-1.5 mt-2">
           {([
-            ["new",                "#6B7280"],
-            ["contacted",          "#7A73FF"],
+            ["new",                "#7C3AED"],
+            ["contacted",          "#818CF8"],
             ["responded",          "#3ACBDF"],
             ["multipleResponses",  "#31D35C"],
             ["qualified",          "#AED62E"],
@@ -540,8 +540,8 @@ function ClientGuide({ search }: { search: string }) {
         <p>{t("client.leads.description")}</p>
         <div className="space-y-1.5 mt-2">
           {([
-            ["new",                "#6B7280"],
-            ["contacted",          "#7A73FF"],
+            ["new",                "#7C3AED"],
+            ["contacted",          "#818CF8"],
             ["responded",          "#3ACBDF"],
             ["multipleResponses",  "#31D35C"],
             ["qualified",          "#AED62E"],
@@ -768,8 +768,8 @@ function ClientGuide({ search }: { search: string }) {
         <p>{t("client.reports.pipelineFunnelDescription")}</p>
         <div className="mt-2 space-y-1">
           {([
-            ["new",                "#6B7280", 120],
-            ["contacted",          "#7A73FF", 98],
+            ["new",                "#7C3AED", 120],
+            ["contacted",          "#818CF8", 98],
             ["responded",          "#3ACBDF", 54],
             ["multipleResponses",  "#31D35C", 32],
             ["qualified",          "#AED62E", 18],

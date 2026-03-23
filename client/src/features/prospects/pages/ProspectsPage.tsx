@@ -335,9 +335,7 @@ export default function ProspectsPage() {
 
   const handleSelectProspect = useCallback((prospect: ProspectRow) => {
     setSelectedProspect(prospect);
-    // From table/pipeline views, switch to list view to show the prospect detail
-    if (viewMode !== "list") setViewMode("list");
-  }, [viewMode]);
+  }, []);
 
   // -- Breadcrumb --
   const { setCrumb } = useBreadcrumb();

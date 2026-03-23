@@ -144,6 +144,9 @@ export interface IStorage {
   getInteractionsByLeadId(leadId: number): Promise<Interactions[]>;
   getInteractionsByAccountId(accountId: number): Promise<Interactions[]>;
   getInteractionsByProspectId(prospectId: number, limit?: number, offset?: number): Promise<{ interactions: Interactions[]; total: number }>;
+  getProspectConversations(): Promise<any[]>;
+  getProspectMessages(prospectId: number, limit: number, offset: number): Promise<any[]>;
+  markProspectInteractionsRead(prospectId: number): Promise<void>;
   createInteraction(data: InsertInteractions): Promise<Interactions>;
   deleteInteraction(id: number): Promise<boolean>;
   bulkDeleteInteractions(ids: number[]): Promise<number>;
@@ -270,11 +273,12 @@ export interface IStorage {
 
   // Support Chat
   createSupportSession(data: InsertSupportSession): Promise<SupportSession>;
-  getActiveSupportSession(userId: number): Promise<SupportSession | undefined>;
+  getActiveSupportSession(userId: number, channel?: string): Promise<SupportSession | undefined>;
   getSupportSessionBySessionId(sessionId: string): Promise<SupportSession | undefined>;
   updateSupportSession(id: number, data: Partial<InsertSupportSession>): Promise<SupportSession | undefined>;
   createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
   getSupportMessagesBySessionId(sessionId: string): Promise<SupportMessage[]>;
+  getFounderSessions(): Promise<SupportSession[]>;
   cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }>;
 
   // AI Agents
@@ -511,6 +515,52 @@ export class DatabaseStorage implements IStorage {
     );
 
     return { interactions: dataRows.rows as Interactions[], total };
+  }
+
+  async getProspectConversations(): Promise<any[]> {
+    const result = await pool.query(`
+      SELECT
+        p.id as prospect_id,
+        p.name,
+        p.company,
+        p.contact_name,
+        p.contact_email,
+        p.niche,
+        p.outreach_status,
+        p.priority,
+        COUNT(i.id) FILTER (WHERE i.is_read = false AND i.direction = 'inbound') as unread_count,
+        COUNT(i.id) as total_messages,
+        MAX(i.sent_at) as last_message_at,
+        (SELECT i2."Content" FROM p2mxx34fvbf3ll6."Interactions" i2
+         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message,
+        (SELECT i2.direction FROM p2mxx34fvbf3ll6."Interactions" i2
+         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_direction,
+        (SELECT i2.type FROM p2mxx34fvbf3ll6."Interactions" i2
+         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_type
+      FROM p2mxx34fvbf3ll6."Prospects" p
+      INNER JOIN p2mxx34fvbf3ll6."Interactions" i ON i.prospect_id = p.id
+      GROUP BY p.id
+      ORDER BY MAX(i.sent_at) DESC
+    `);
+    return result.rows;
+  }
+
+  async getProspectMessages(prospectId: number, limit: number, offset: number): Promise<any[]> {
+    const result = await pool.query(`
+      SELECT * FROM p2mxx34fvbf3ll6."Interactions"
+      WHERE prospect_id = $1
+      ORDER BY sent_at ASC
+      LIMIT $2 OFFSET $3
+    `, [prospectId, limit, offset]);
+    return result.rows;
+  }
+
+  async markProspectInteractionsRead(prospectId: number): Promise<void> {
+    await pool.query(`
+      UPDATE p2mxx34fvbf3ll6."Interactions"
+      SET is_read = true
+      WHERE prospect_id = $1 AND is_read = false
+    `, [prospectId]);
   }
 
   async createInteraction(data: InsertInteractions): Promise<Interactions> {
@@ -1038,11 +1088,15 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
-  async getActiveSupportSession(userId: number): Promise<SupportSession | undefined> {
+  async getActiveSupportSession(userId: number, channel = "bot"): Promise<SupportSession | undefined> {
     const [row] = await db
       .select()
       .from(supportSessions)
-      .where(and(eq(supportSessions.userId, userId), inArray(supportSessions.status, ["active", "escalated"])))
+      .where(and(
+        eq(supportSessions.userId, userId),
+        eq(supportSessions.channel, channel),
+        inArray(supportSessions.status, ["active", "escalated"]),
+      ))
       .orderBy(desc(supportSessions.createdAt))
       .limit(1);
     return row;
@@ -1069,6 +1123,17 @@ export class DatabaseStorage implements IStorage {
       .from(supportMessages)
       .where(eq(supportMessages.sessionId, sessionId))
       .orderBy(asc(supportMessages.createdAt));
+  }
+
+  async getFounderSessions(): Promise<SupportSession[]> {
+    return db
+      .select()
+      .from(supportSessions)
+      .where(and(
+        eq(supportSessions.channel, "founder"),
+        inArray(supportSessions.status, ["active", "escalated"]),
+      ))
+      .orderBy(desc(supportSessions.createdAt));
   }
 
   // ─── Tasks ────────────────────────────────────────────────────────────

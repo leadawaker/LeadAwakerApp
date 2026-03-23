@@ -1012,7 +1012,7 @@ export function AgentChatView({
                     msg={msg}
                     agent={agent}
                     isLastInStreak={isLastBeforeStreaming ? false : isLastInStreak}
-                    onApplyCampaign={agent.type === "campaign_crafter" ? handleApplyCampaign : undefined}
+                    onApplyCampaign={undefined}
                   />
                 </div>
               );

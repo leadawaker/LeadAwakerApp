@@ -8,6 +8,7 @@ import {
   requireAgency,
   scopeToAccount,
   registerAuthRoutes,
+  invalidateUserCache,
 } from "./auth";
 import {
   accounts,
@@ -63,7 +64,7 @@ import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, BRANDED_SIGNAT
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { createAndDispatchNotification } from "./notification-dispatcher";
-import { eq, count, and, gte, lte, isNotNull, ilike, type SQL, desc, sql } from "drizzle-orm";
+import { eq, count, and, gte, lte, lt, ne, isNotNull, ilike, type SQL, desc, sql } from "drizzle-orm";
 import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands, formatConversationHistory } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
@@ -326,6 +327,50 @@ export async function registerRoutes(
     }
   }));
 
+  // ─── Knowledge Base ────────────────────────────────────────────────
+
+  const KB_TABLE = 'p2mxx34fvbf3ll6."Account_Knowledge_Base"';
+
+  app.get("/api/accounts/:id/knowledge", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    const { rows } = await pool.query(
+      `SELECT id, account_id AS "accountId", category, title, content, created_at AS "createdAt", updated_at AS "updatedAt"
+       FROM ${KB_TABLE} WHERE account_id = $1 ORDER BY category, id`, [accountId]
+    );
+    res.json(rows);
+  }));
+
+  app.post("/api/accounts/:id/knowledge", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    const { category, title, content } = req.body;
+    if (!category || !title || !content) return res.status(400).json({ message: "category, title, and content are required" });
+    const { rows } = await pool.query(
+      `INSERT INTO ${KB_TABLE} (account_id, category, title, content, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id, account_id AS "accountId", category, title, content`,
+      [accountId, category, title, content]
+    );
+    res.status(201).json(rows[0]);
+  }));
+
+  app.patch("/api/accounts/:id/knowledge/:kbId", requireAgency, wrapAsync(async (req, res) => {
+    const kbId = Number(req.params.kbId);
+    const { category, title, content } = req.body;
+    const { rows } = await pool.query(
+      `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
+       content = COALESCE($3, content), updated_at = NOW()
+       WHERE id = $4 RETURNING id, account_id AS "accountId", category, title, content`,
+      [category, title, content, kbId]
+    );
+    if (!rows.length) return res.status(404).json({ message: "KB entry not found" });
+    res.json(rows[0]);
+  }));
+
+  app.delete("/api/accounts/:id/knowledge/:kbId", requireAgency, wrapAsync(async (req, res) => {
+    const kbId = Number(req.params.kbId);
+    await pool.query(`DELETE FROM ${KB_TABLE} WHERE id = $1`, [kbId]);
+    res.json({ ok: true });
+  }));
+
   // ─── Prospects ───────────────────────────────────────────────────────
 
   app.get("/api/prospects", requireAgency, wrapAsync(async (req, res) => {
@@ -336,6 +381,20 @@ export async function registerRoutes(
     }
     const data = await storage.getProspects();
     res.json(toDbKeysArray(data as any, prospects));
+  }));
+
+  // Prospect conversations (must be before :id route)
+  app.get("/api/prospects/conversations", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const result = await storage.getProspectConversations();
+    res.json(result);
+  }));
+
+  app.get("/api/prospects/:id/messages", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const offset = Number(req.query.offset) || 0;
+    const result = await storage.getProspectMessages(prospectId, limit, offset);
+    res.json(result);
   }));
 
   app.get("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
@@ -3335,7 +3394,7 @@ Rules:
         await storage.createPrompt({
           name: "Lead Awaker Support Bot",
           promptText: "",
-          systemMessage: `You are Sophie, the Lead Awaker support assistant. You help clients understand and get the most out of Lead Awaker — an AI-powered WhatsApp lead reactivation platform that converts inactive leads into booked calls.
+          systemMessage: `You are Tom, the Lead Awaker support assistant. You help clients understand and get the most out of Lead Awaker — an AI-powered WhatsApp lead reactivation platform that converts inactive leads into booked calls.
 
 PERSONALITY
 - Friendly, concise, and professional
@@ -3396,8 +3455,9 @@ GUARDRAILS
   // POST /api/support-chat/sessions — create or get active session
   app.post("/api/support-chat/sessions", requireAuth, wrapAsync(async (req, res) => {
     const user = req.user!;
-    // Check for existing active session
-    const existing = await storage.getActiveSupportSession(user.id!);
+    const channel = req.body.channel === "founder" ? "founder" : "bot";
+    // Check for existing active session for this channel
+    const existing = await storage.getActiveSupportSession(user.id!, channel);
     if (existing) return res.json(existing);
     // Create new session
     const sessionId = `sc_${user.id}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
@@ -3405,6 +3465,7 @@ GUARDRAILS
       sessionId,
       userId: user.id!,
       accountId: user.accountsId ?? null,
+      channel,
       status: "active",
     });
     res.status(201).json(session);
@@ -3466,6 +3527,16 @@ GUARDRAILS
     try {
       // Get conversation history for context
       const history = await storage.getSupportMessagesBySessionId(sessionId);
+      // Fetch the support bot's system prompt from Prompt Library
+      let systemPrompt = "";
+      try {
+        const prompts = await storage.getPrompts();
+        const botPrompt = prompts.find((p: any) => (p.name || p.Name) === "Lead Awaker Support Bot");
+        if (botPrompt) {
+          systemPrompt = (botPrompt as any).systemMessage || (botPrompt as any).system_message || "";
+        }
+      } catch {}
+
       const webhookRes = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -3476,6 +3547,7 @@ GUARDRAILS
           accountId: user.accountsId,
           userName: user.fullName1 || user.email,
           language: language || "en",
+          systemPrompt,
           history: history.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
@@ -3638,13 +3710,13 @@ GUARDRAILS
     } catch {
       // Fallback to defaults
     }
-    res.json({ name: "Sophie", photoUrl: null, enabled: true });
+    res.json({ name: "Tom", photoUrl: null, enabled: true });
   }));
 
   // PATCH /api/support-chat/config — update bot display config (admin only)
   app.patch("/api/support-chat/config", requireAgency, wrapAsync(async (req, res) => {
     const { name, photoUrl, enabled } = req.body;
-    const config = { name: name || "Sophie", photoUrl: photoUrl || null, enabled: enabled !== false };
+    const config = { name: name || "Tom", photoUrl: photoUrl || null, enabled: enabled !== false };
     await storage.updateAccount(1, { supportBotConfig: JSON.stringify(config) } as any);
     res.json(config);
   }));
@@ -3702,6 +3774,111 @@ GUARDRAILS
     res.json({ success: true });
   }));
 
+  // ─── Founder Direct Messages ─────────────────────────────────────────
+
+  // POST /api/support-chat/founder/message — user sends message to founder (no AI)
+  app.post("/api/support-chat/founder/message", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const { sessionId, content } = req.body;
+    if (!sessionId || !content) {
+      return res.status(400).json({ message: "sessionId and content are required" });
+    }
+    const session = await storage.getSupportSessionBySessionId(sessionId);
+    if (!session || session.userId !== user.id! || session.channel !== "founder") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    // Save user message
+    const userMsg = await storage.createSupportMessage({
+      sessionId,
+      userId: user.id!,
+      accountId: user.accountsId ?? null,
+      role: "user",
+      content,
+    });
+
+    // Notify founder via Telegram
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_FOUNDER_CHAT_ID;
+    if (botToken && chatId) {
+      const userName = user.fullName1 || user.email;
+      const text = `New message from ${userName}:\n\n${content}\n\nSession: ${sessionId}`;
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ chat_id: chatId, text }),
+      }).catch((err) => console.error("[founder-dm] Telegram error:", err));
+    }
+
+    // SSE broadcast to agency so admin sees the message in real-time
+    broadcast(1, "founder_message", {
+      sessionId,
+      message: userMsg,
+      userName: user.fullName1 || user.email,
+    });
+
+    res.json({ message: userMsg });
+  }));
+
+  // GET /api/support-chat/founder/sessions — admin lists all active founder sessions
+  app.get("/api/support-chat/founder/sessions", requireAgency, wrapAsync(async (_req, res) => {
+    const sessions = await storage.getFounderSessions();
+    // Enrich with user info and last message
+    const enriched = await Promise.all(sessions.map(async (s) => {
+      const user = await storage.getAppUserById(s.userId);
+      const messages = await storage.getSupportMessagesBySessionId(s.sessionId);
+      const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+      const unread = messages.filter((m) => m.role === "user").length;
+      return {
+        ...s,
+        userName: user?.fullName1 || user?.email || "Unknown",
+        userEmail: user?.email,
+        lastMessage: lastMsg?.content,
+        lastMessageAt: lastMsg?.createdAt,
+        messageCount: messages.length,
+        unreadCount: unread,
+      };
+    }));
+    res.json(enriched);
+  }));
+
+  // POST /api/support-chat/founder/reply — admin replies to a founder session
+  app.post("/api/support-chat/founder/reply", requireAgency, wrapAsync(async (req, res) => {
+    const admin = req.user!;
+    const { sessionId, content } = req.body;
+    if (!sessionId || !content) {
+      return res.status(400).json({ message: "sessionId and content are required" });
+    }
+    const session = await storage.getSupportSessionBySessionId(sessionId);
+    if (!session || session.channel !== "founder") {
+      return res.status(404).json({ message: "Founder session not found" });
+    }
+
+    // Save admin reply as "assistant" role (from the founder)
+    const replyMsg = await storage.createSupportMessage({
+      sessionId,
+      userId: admin.id!,
+      accountId: session.accountId ?? null,
+      role: "assistant",
+      content,
+    });
+
+    // SSE broadcast to the user's account so they see the reply in real-time
+    if (session.accountId) {
+      broadcast(session.accountId, "founder_reply", {
+        sessionId,
+        message: replyMsg,
+      });
+    }
+    // Also broadcast to agency
+    broadcast(1, "founder_reply", {
+      sessionId,
+      message: replyMsg,
+    });
+
+    res.json({ message: replyMsg });
+  }));
+
   // ─── Onboarding Tutorial ──────────────────────────────────────────────
 
   /** Parse the onboarding state from user preferences JSON. */
@@ -3735,7 +3912,9 @@ GUARDRAILS
       } catch {}
     }
     prefs.onboarding = { ...(prefs.onboarding || {}), ...onboarding };
-    return storage.updateAppUser(userId, { preferences: JSON.stringify(prefs) } as any);
+    const updated = await storage.updateAppUser(userId, { preferences: JSON.stringify(prefs) } as any);
+    if (updated) invalidateUserCache(userId);
+    return updated;
   }
 
   // GET /api/onboarding/status
@@ -4174,36 +4353,6 @@ GUARDRAILS
     // Include conversation history
     fullPrompt += formatConversationHistory(allMessages);
 
-    if (agent.type === "campaign_crafter") {
-      try {
-        const campaigns = await storage.getCampaigns();
-        const campaignSummary = campaigns.slice(0, 20).map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          description: c.description?.slice(0, 100),
-          aiName: c.aiName,
-        }));
-        fullPrompt += `[Current campaigns: ${JSON.stringify(campaignSummary)}]\n\n`;
-      } catch {
-        // campaigns context injection failed — proceed without it
-      }
-
-      // Pre-fetch URL if message contains one
-      const urlMatch = message.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) {
-        try {
-          const urlRes = await fetch(urlMatch[0], { signal: AbortSignal.timeout(8000) });
-          if (urlRes.ok) {
-            const text = await urlRes.text();
-            const stripped = text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 3000);
-            fullPrompt += `[Website content from ${urlMatch[0]}:\n${stripped}]\n\n`;
-          }
-        } catch {
-          // URL fetch failed — proceed without it
-        }
-      }
-    }
-
     // If attachment, prepend to prompt
     if (attachmentBase64) {
       fullPrompt += `[User attached a file (base64): ${attachmentBase64.slice(0, 100)}...]\n\n`;
@@ -4274,21 +4423,152 @@ GUARDRAILS
 
   setInterval(checkAutomationFailures, 5 * 60 * 1000);
 
-  // TODO: task_due_soon — Scheduled job needed. Query tasks where dueDate is
-  // within 24 hours and status is not "Done". Notify the assigned user with
-  // type "task_due_soon". Run every 30-60 minutes via setInterval or cron.
+  // ── Task due soon notifier (every 30 min) ──────────────────────────────
+  // Tracks which tasks we already notified about to avoid repeats
+  const taskDueSoonNotified = new Set<number>();
 
-  // TODO: task_overdue — Scheduled job needed. Query tasks where dueDate is
-  // in the past and status is not "Done". Notify the assigned user with
-  // type "task_overdue". Run every 30-60 minutes, deduplicate to avoid
-  // repeat notifications (e.g., check a "last_overdue_notified_at" field or
-  // only notify once per task per day).
+  async function checkTasksDueSoon() {
+    try {
+      const now = new Date();
+      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  // TODO: campaign_finished — Scheduled job or inline check needed. Detect
-  // when all leads in a campaign have been contacted (no remaining leads with
-  // status "New" or "Queued"). Notify agency users with type "campaign_finished".
-  // Could run as a periodic check or be triggered after the campaign launcher
-  // processes the last batch.
+      const dueSoonTasks = await db
+        .select()
+        .from(tasks)
+        .where(
+          and(
+            gte(tasks.dueDate, now),
+            lte(tasks.dueDate, in24h),
+            ne(tasks.status, "done"),
+            ne(tasks.status, "cancelled"),
+            isNotNull(tasks.assignedToUserId),
+          ),
+        );
+
+      for (const task of dueSoonTasks) {
+        if (taskDueSoonNotified.has(task.id)) continue;
+        taskDueSoonNotified.add(task.id);
+
+        await createAndDispatchNotification({
+          type: "task_due_soon",
+          title: `Task due soon: ${task.title}`,
+          body: task.dueDate
+            ? `Due ${new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`
+            : null,
+          userId: task.assignedToUserId!,
+          accountId: task.accountsId ?? null,
+          read: false,
+          link: "/tasks",
+          leadId: task.leadsId ?? null,
+        });
+      }
+    } catch (err) {
+      console.error("[TaskDueSoonNotifier]", err);
+    }
+  }
+
+  setInterval(checkTasksDueSoon, 30 * 60 * 1000);
+
+  // ── Task overdue notifier (every 30 min, max 1 notification per task per day) ─
+  const taskOverdueLastNotified = new Map<number, number>(); // taskId -> timestamp
+
+  async function checkTasksOverdue() {
+    try {
+      const now = new Date();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+
+      const overdueTasks = await db
+        .select()
+        .from(tasks)
+        .where(
+          and(
+            lt(tasks.dueDate, now),
+            ne(tasks.status, "done"),
+            ne(tasks.status, "cancelled"),
+            isNotNull(tasks.assignedToUserId),
+          ),
+        );
+
+      for (const task of overdueTasks) {
+        const lastNotified = taskOverdueLastNotified.get(task.id);
+        if (lastNotified && now.getTime() - lastNotified < oneDayMs) continue;
+        taskOverdueLastNotified.set(task.id, now.getTime());
+
+        await createAndDispatchNotification({
+          type: "task_overdue",
+          title: `Task overdue: ${task.title}`,
+          body: task.dueDate
+            ? `Was due ${new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+            : null,
+          userId: task.assignedToUserId!,
+          accountId: task.accountsId ?? null,
+          read: false,
+          link: "/tasks",
+          leadId: task.leadsId ?? null,
+        });
+      }
+    } catch (err) {
+      console.error("[TaskOverdueNotifier]", err);
+    }
+  }
+
+  setInterval(checkTasksOverdue, 30 * 60 * 1000);
+
+  // ── Campaign finished notifier (every 10 min) ────────────────────────────
+  const campaignFinishedNotified = new Set<number>();
+
+  async function checkCampaignsFinished() {
+    try {
+      // Get active campaigns
+      const activeCampaigns = await db
+        .select()
+        .from(campaigns)
+        .where(eq(campaigns.status, "active"));
+
+      for (const campaign of activeCampaigns) {
+        if (!campaign.id || campaignFinishedNotified.has(campaign.id)) continue;
+
+        // Count leads still pending (New or Queued)
+        const [pending] = await db
+          .select({ cnt: count() })
+          .from(leads)
+          .where(
+            and(
+              eq(leads.campaignsId, campaign.id),
+              sql`${leads.conversionStatus} IN ('New', 'Queued')`,
+            ),
+          );
+
+        // Count total leads to ensure campaign has leads
+        const [total] = await db
+          .select({ cnt: count() })
+          .from(leads)
+          .where(eq(leads.campaignsId, campaign.id));
+
+        if (total.cnt > 0 && pending.cnt === 0) {
+          campaignFinishedNotified.add(campaign.id);
+
+          const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+          for (const user of agencyUsers) {
+            await createAndDispatchNotification({
+              type: "campaign_finished",
+              title: `Campaign finished: ${campaign.title || "Untitled"}`,
+              body: `All ${total.cnt} leads have been contacted`,
+              userId: user.id!,
+              accountId: campaign.accountsId ?? null,
+              read: false,
+              link: "/campaigns",
+              leadId: null,
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[CampaignFinishedNotifier]", err);
+    }
+  }
+
+  setInterval(checkCampaignsFinished, 10 * 60 * 1000);
 
   // ─── AI Agents: seed defaults + routes ─────────────────────────────
   await seedDefaultAiAgents(db, aiAgents);
@@ -5297,27 +5577,6 @@ GUARDRAILS
           fullPrompt += buildPageContextBlock(pageContext);
         }
 
-        // For Campaign Crafter agents, inject existing campaign data
-        if (agent.type === "campaign_crafter") {
-          try {
-            const allCampaigns = await storage.getCampaigns();
-            if (allCampaigns.length > 0) {
-              const campaignSummaries = allCampaigns.map((c: any) => ({
-                id: c.id, name: c.name, status: c.status,
-                channel: c.channel || "sms",
-                targetAudience: c.targetAudience || null,
-                campaignService: c.campaignService || null,
-                firstMessage: c.firstMessage || null,
-                responseRatePercent: c.responseRatePercent || null,
-                bookingsGenerated: c.bookingsGenerated || 0,
-              }));
-              fullPrompt += `[Existing CRM Campaigns]\n${JSON.stringify(campaignSummaries, null, 2)}\n\n`;
-            }
-          } catch (err) {
-            console.error("[Campaign Crafter] Failed to fetch campaign context:", err);
-          }
-        }
-
         // Include ALL file context on first message
         const allConversationFiles = await storage.getAiFilesByConversationId(sessionId);
         const currentFileId = fileId ? Number(fileId) : null;
@@ -5808,6 +6067,175 @@ GUARDRAILS
 
     // 7. Return
     res.status(201).json(interaction);
+  }));
+
+  // ─── Gmail: Create Draft ─────────────────────────────────────────────────
+  app.post("/api/gmail/draft", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { to, subject, htmlBody, prospectId, replyToMessageId, threadId } = req.body;
+
+    if (!to || !subject || !htmlBody) {
+      return res.status(400).json({ message: "Missing required fields: to, subject, htmlBody" });
+    }
+
+    const state = await storage.getGmailSyncState("leadawaker@gmail.com");
+    if (!state?.oauthTokensEncrypted) {
+      return res.status(400).json({ message: "Gmail not connected." });
+    }
+
+    const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
+
+    const fullHtml = `${htmlBody}\n${BRANDED_SIGNATURE}`;
+    const fromHeader = "Gabriel Barbosa Fronza <gabriel@leadawaker.com>";
+    const messageParts = [
+      `From: ${fromHeader}`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset="UTF-8"`,
+    ];
+
+    if (replyToMessageId) {
+      messageParts.push(`In-Reply-To: ${replyToMessageId}`);
+      messageParts.push(`References: ${replyToMessageId}`);
+    }
+
+    messageParts.push("", fullHtml);
+    const rawMessage = Buffer.from(messageParts.join("\r\n")).toString("base64url");
+
+    const draftParams: { userId: string; requestBody: { message: { raw: string; threadId?: string } } } = {
+      userId: "me",
+      requestBody: { message: { raw: rawMessage } },
+    };
+    if (threadId) {
+      draftParams.requestBody.message.threadId = threadId;
+    }
+
+    const draft = await gmailClient.users.drafts.create(draftParams);
+
+    res.json({
+      draftId: draft.data.id,
+      messageId: draft.data.message?.id,
+      threadId: draft.data.message?.threadId,
+    });
+  }));
+
+  // ─── Gmail: Delete/Trash Email ───────────────────────────────────────────
+  app.delete("/api/gmail/messages/:messageId", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { messageId } = req.params;
+    const { permanent } = req.query; // ?permanent=true to permanently delete
+
+    const state = await storage.getGmailSyncState("leadawaker@gmail.com");
+    if (!state?.oauthTokensEncrypted) {
+      return res.status(400).json({ message: "Gmail not connected." });
+    }
+
+    const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
+
+    if (permanent === "true") {
+      await gmailClient.users.messages.delete({ userId: "me", id: messageId });
+    } else {
+      await gmailClient.users.messages.trash({ userId: "me", id: messageId });
+    }
+
+    res.json({ ok: true, action: permanent === "true" ? "deleted" : "trashed" });
+  }));
+
+  // ─── Gmail: Get Email by ID ──────────────────────────────────────────────
+  app.get("/api/gmail/messages/:messageId", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { messageId } = req.params;
+
+    const state = await storage.getGmailSyncState("leadawaker@gmail.com");
+    if (!state?.oauthTokensEncrypted) {
+      return res.status(400).json({ message: "Gmail not connected." });
+    }
+
+    const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
+
+    const msg = await gmailClient.users.messages.get({
+      userId: "me",
+      id: messageId,
+      format: "full",
+    });
+
+    const headers = msg.data.payload?.headers || [];
+    const getHeader = (name: string) =>
+      headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || "";
+
+    res.json({
+      id: msg.data.id,
+      threadId: msg.data.threadId,
+      snippet: msg.data.snippet,
+      from: getHeader("From"),
+      to: getHeader("To"),
+      cc: getHeader("Cc"),
+      subject: getHeader("Subject"),
+      date: getHeader("Date"),
+      labels: msg.data.labelIds,
+    });
+  }));
+
+  // ─── Gmail: Search Emails ────────────────────────────────────────────────
+  app.get("/api/gmail/search", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { q, maxResults } = req.query;
+
+    if (!q) {
+      return res.status(400).json({ message: "Missing required query parameter: q" });
+    }
+
+    const state = await storage.getGmailSyncState("leadawaker@gmail.com");
+    if (!state?.oauthTokensEncrypted) {
+      return res.status(400).json({ message: "Gmail not connected." });
+    }
+
+    const { gmail: gmailClient } = await getGmailClient(state.oauthTokensEncrypted);
+
+    const result = await gmailClient.users.messages.list({
+      userId: "me",
+      q: q as string,
+      maxResults: Math.min(parseInt(maxResults as string) || 20, 100),
+    });
+
+    const messages = result.data.messages || [];
+
+    // Fetch summary for each message
+    const summaries = await Promise.all(
+      messages.map(async (m) => {
+        try {
+          const full = await gmailClient.users.messages.get({
+            userId: "me",
+            id: m.id!,
+            format: "metadata",
+            metadataHeaders: ["From", "To", "Subject", "Date"],
+          });
+          const headers = full.data.payload?.headers || [];
+          const getH = (name: string) =>
+            headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || "";
+          return {
+            id: full.data.id,
+            threadId: full.data.threadId,
+            snippet: full.data.snippet,
+            from: getH("From"),
+            to: getH("To"),
+            subject: getH("Subject"),
+            date: getH("Date"),
+          };
+        } catch {
+          return { id: m.id, error: "Could not fetch" };
+        }
+      })
+    );
+
+    res.json({
+      total: result.data.resultSizeEstimate,
+      messages: summaries,
+    });
+  }));
+
+  app.patch("/api/interactions/mark-read", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { prospectId } = req.body;
+    if (!prospectId) return res.status(400).json({ message: "prospectId required" });
+    await storage.markProspectInteractionsRead(Number(prospectId));
+    res.json({ ok: true });
   }));
 
   return httpServer;

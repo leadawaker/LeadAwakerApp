@@ -1,4 +1,4 @@
-import { Suspense, type ReactElement } from "react";
+import { Suspense, useEffect, useState, type ReactElement } from "react";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
@@ -6,6 +6,7 @@ import { AgentWidgetProvider } from "@/contexts/AgentWidgetContext";
 import { PageEntityProvider } from "@/contexts/PageEntityContext";
 import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget";
 import { Loader2 } from "lucide-react";
+import { apiFetch } from "@/lib/apiUtils";
 
 import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
 import ConversationsPage from "@/pages/Conversations";

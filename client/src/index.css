@@ -993,6 +993,14 @@
   animation: shine-text 10s infinite linear;
 }
 
+/* Viewport height utilities (svh = small viewport, accounts for mobile address bar) */
+@utility h-dvh { height: 100dvh; }
+@utility min-h-dvh { min-height: 100dvh; }
+@utility max-h-dvh { max-height: 100dvh; }
+@utility h-svh { height: 100svh; }
+@utility min-h-svh { min-height: 100svh; }
+@utility max-h-svh { max-height: 100svh; }
+
 @layer components {
   .stars-overlay {
     position: absolute;

@@ -477,7 +477,7 @@ export function ContractsInlineTable({
                     {show("account") && (
                       <td className="px-3" style={{ width: 160, minWidth: 160 }}>
                         <span className="text-[11px] text-muted-foreground truncate block">
-                          {contract.account_name ?? <span className="text-muted-foreground/30">—</span>}
+                          {contract.account_name ?? <span className="text-muted-foreground/30">{"2014"}</span>}
                         </span>
                       </td>
                     )}
@@ -505,7 +505,7 @@ export function ContractsInlineTable({
                             <span className="text-[11px] text-muted-foreground">{dealTypeLabel}</span>
                           )
                         ) : (
-                          <span className="text-muted-foreground/30 text-[11px]">—</span>
+                          <span className="text-muted-foreground/30 text-[11px]">{"2014"}</span>
                         )}
                       </td>
                     )}
@@ -526,14 +526,14 @@ export function ContractsInlineTable({
                             {fmtDate(contract.signed_at)}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground/30 text-[11px]">—</span>
+                          <span className="text-muted-foreground/30 text-[11px]">{"2014"}</span>
                         )}
                       </td>
                     )}
                     {show("description") && (
                       <td className="px-3" style={{ width: 220, minWidth: 220 }}>
                         <span className="text-[11px] text-muted-foreground truncate block max-w-[208px]">
-                          {contract.description ?? <span className="opacity-30">—</span>}
+                          {contract.description ?? <span className="opacity-30">{"2014"}</span>}
                         </span>
                       </td>
                     )}
@@ -557,14 +557,14 @@ export function ContractsInlineTable({
                     {show("fileName") && (
                       <td className="px-3" style={{ width: 180, minWidth: 180 }}>
                         <span className="text-[11px] text-muted-foreground truncate block max-w-[168px]">
-                          {contract.file_name ?? <span className="opacity-30">—</span>}
+                          {contract.file_name ?? <span className="opacity-30">{"2014"}</span>}
                         </span>
                       </td>
                     )}
                     {show("fileType") && (
                       <td className="px-3" style={{ width: 100, minWidth: 100 }}>
                         <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
-                          {contract.file_type ?? <span className="opacity-30">—</span>}
+                          {contract.file_type ?? <span className="opacity-30">{"2014"}</span>}
                         </span>
                       </td>
                     )}

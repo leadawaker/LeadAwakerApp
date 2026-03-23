@@ -1336,7 +1336,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   className="text-[12px] bg-transparent border border-dashed border-border/60 rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50 text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
                   data-testid="inline-edit-campaign-select"
                 >
-                  <option value="">—</option>
+                  <option value="">{"2014"}</option>
                   {campaigns.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -1717,7 +1717,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                       {t("detail.fields.noShow")}
                     </span>
                   ) : (
-                    <span className="text-[12px] text-muted-foreground">—</span>
+                    <span className="text-[12px] text-muted-foreground">{"2014"}</span>
                   )}
                 </div>
                 {/* Reschedule count */}
@@ -2006,7 +2006,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 {(() => {
                   // Status names that get a colored status chip instead of a tag chip
                   const STATUS_TAG_NAMES = new Set(["Contacted","Responded","Multiple Responses","Qualified","Booked","Lost","DND","Opted Out","DNC"]);
-                  const STATUS_HEX: Record<string, string> = { Contacted:"#7A73FF", Responded:"#3ACBDF", "Multiple Responses":"#31D35C", Qualified:"#AED62E", Booked:"#22C55E", Lost:"#DC2626", DND:"#722F37", "Opted Out":"#6B7280", DNC:"#6B7280" };
+                  const STATUS_HEX: Record<string, string> = { Contacted:"#818CF8", Responded:"#3ACBDF", "Multiple Responses":"#31D35C", Qualified:"#AED62E", Booked:"#22C55E", Lost:"#DC2626", DND:"#722F37", "Opted Out":"#6B7280", DNC:"#6B7280" };
                   // Case-insensitive lookup
                   const _sLower = new Map<string, string>();
                   Array.from(STATUS_TAG_NAMES).forEach(s => _sLower.set(s.toLowerCase(), s));
@@ -2116,7 +2116,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                             </p>
                           </div>
                           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            {msgContent || <span className="italic">—</span>}
+                            {msgContent || <span className="italic">{"2014"}</span>}
                           </p>
                           {who && (
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t("timeline.via", { who })}</p>

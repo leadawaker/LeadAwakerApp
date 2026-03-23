@@ -407,7 +407,7 @@ export function SettingsTeamSection() {
   const [inviteOpen, setInviteOpen]       = useState(false);
   const [inviteEmail, setInviteEmail]     = useState("");
   const [inviteRole, setInviteRole]       = useState("Viewer");
-  const [inviteAccountId, setInviteAccountId] = useState("none");
+  const [inviteAccountId, setInviteAccountId] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteResult, setInviteResult]   = useState<{ token: string; email: string } | null>(null);
   const [tokenCopied, setTokenCopied]     = useState(false);
@@ -423,7 +423,7 @@ export function SettingsTeamSection() {
     try {
       const body: Record<string, any> = { email: inviteEmail.trim(), role: inviteRole };
       body.frontendOrigin = window.location.origin;
-      if (inviteAccountId !== "none") body.accountsId = Number(inviteAccountId);
+      if (inviteAccountId) body.accountsId = Number(inviteAccountId);
       const res = await apiFetch("/api/users/invite", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
@@ -595,18 +595,12 @@ export function SettingsTeamSection() {
             <PopoverContent side="bottom" align="start" sideOffset={6} className="w-80 p-0 rounded-xl shadow-lg border border-border/40">
               {inviteResult ? (
                 <div className="p-4 space-y-3">
-                  <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 p-3 space-y-1">
-                    <p className="text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">Invite created for {inviteResult.email}</p>
-                    <p className="text-[10px] text-muted-foreground">Share this invite token with the user:</p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px]">Invite Token</Label>
-                    <div className="flex items-center gap-1.5">
-                      <Input readOnly value={inviteResult.token} className="font-mono text-[10px] bg-muted h-8" />
-                      <Button size="icon" variant="outline" onClick={handleCopyToken} className="h-8 w-8 shrink-0">
-                        {tokenCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      </Button>
+                  <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <p className="text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">Invite email sent to {inviteResult.email}</p>
                     </div>
+                    <p className="text-[10px] text-muted-foreground">They'll receive an email with a link to set up their account. No action needed from you.</p>
                   </div>
                   <Button variant="outline" size="sm" className="w-full h-8 text-[11px]" onClick={() => { setInviteOpen(false); setInviteResult(null); }}>
                     Done
@@ -634,9 +628,8 @@ export function SettingsTeamSection() {
                   <div className="space-y-1.5">
                     <Label htmlFor="invite-account" className="text-[11px]">Account</Label>
                     <Select value={inviteAccountId} onValueChange={setInviteAccountId}>
-                      <SelectTrigger id="invite-account" className="h-8 text-[12px]"><SelectValue placeholder="No account" /></SelectTrigger>
+                      <SelectTrigger id="invite-account" className="h-8 text-[12px]"><SelectValue placeholder="Select account…" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">No account</SelectItem>
                         {Object.entries(accounts).map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -645,7 +638,7 @@ export function SettingsTeamSection() {
                     <Button variant="outline" size="sm" className="flex-1 h-8 text-[11px]" onClick={() => { setInviteOpen(false); setInviteResult(null); }}>
                       Cancel
                     </Button>
-                    <Button size="sm" className="flex-1 h-8 text-[11px]" onClick={handleSendInvite} disabled={inviteLoading || !inviteEmail.trim()}>
+                    <Button size="sm" className="flex-1 h-8 text-[11px]" onClick={handleSendInvite} disabled={inviteLoading || !inviteEmail.trim() || !inviteAccountId}>
                       {inviteLoading ? "Sending…" : "Send Invite"}
                     </Button>
                   </div>

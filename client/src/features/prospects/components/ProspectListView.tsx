@@ -151,7 +151,7 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
 
 const PROSPECT_STATUS_HEX: Record<string, string> = {
   New:              "#3B82F6",
-  Contacted:        "#7A73FF",
+  Contacted:        "#818CF8",
   Responded:        "#3ACBDF",
   "Call Booked":    "#31D35C",
   "Demo Given":     "#AED62E",

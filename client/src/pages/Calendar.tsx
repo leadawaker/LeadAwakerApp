@@ -247,7 +247,7 @@ function ApptGroupHeader({ label, count }: { label: string; count: number }) {
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-foreground/20 shrink-0">{"2013"}</span>
         <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
         <div className="flex-1 h-px bg-foreground/15" />
       </div>
@@ -1109,7 +1109,7 @@ export default function CalendarPage() {
               isMobile && viewMode === "day" ? "flex-1" : "",
               !isMobile && isTablet ? "min-h-[420px]" : "",
               !isMobile && !isTablet ? "h-full" : ""
-            )} data-testid="calendar-main">
+            )} data-testid="calendar-main" data-onboarding="calendar-view">
 
               {/* ── Toolbar ── */}
               <div className="px-4 pt-4 pb-3 flex flex-wrap items-center gap-2 shrink-0 bg-white dark:bg-card border-b border-black/[0.06]">

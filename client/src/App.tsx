@@ -17,6 +17,7 @@ import Services from "@/pages/services";
 import BookDemo from "@/pages/book-demo";
 import Login from "@/pages/login";
 import AcceptInvite from "@/pages/AcceptInvite";
+
 import AppArea from "@/pages/app";
 import Canvas from "@/pages/canvas";
 import PrivacyPolicy from "@/pages/privacy-policy";
@@ -190,11 +191,11 @@ function Router() {
   }, [isAppArea, setPublicMode]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-svh">
       <ScrollToTop />
 
       {isAppArea ? (
-        /* CRM app — theme controlled by the manual toggle */
+        /* CRM app — no navbar/footer */
         <main className="flex-grow">
           {!lang && <AppRoutes />}
         </main>

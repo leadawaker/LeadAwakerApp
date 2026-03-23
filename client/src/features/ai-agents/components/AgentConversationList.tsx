@@ -90,13 +90,6 @@ export function AgentConversationList({
     if (agentPhotoUrl) {
       return <img src={agentPhotoUrl} alt={agentName} className="h-9 w-9 rounded-full object-cover" />;
     }
-    if (agentType === "campaign_crafter") {
-      return (
-        <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center">
-          <MessageSquare className="h-4 w-4 text-brand-indigo" />
-        </div>
-      );
-    }
     if (agentType === "code_runner") {
       return (
         <div className="h-9 w-9 rounded-full bg-green-500/10 flex items-center justify-center">

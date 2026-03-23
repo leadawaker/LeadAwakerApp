@@ -1,6 +1,8 @@
 /**
- * Custom tooltip component for the onboarding walkthrough.
- * Styled to match LeadAwaker's design system (Tailwind + Radix).
+ * Custom tooltip for the onboarding tour.
+ * - Next: advance one step
+ * - Skip: jump to the next stage (via onSkipStage)
+ * - X: close the entire tour
  */
 import type { TooltipRenderProps } from "react-joyride";
 import { X, ChevronRight, ChevronLeft, SkipForward } from "lucide-react";
@@ -8,6 +10,7 @@ import { STAGE_LABELS, TOTAL_STAGES } from "./steps";
 
 interface Props extends TooltipRenderProps {
   currentStage: number;
+  onSkipStage: () => void;
 }
 
 export function OnboardingTooltip({
@@ -17,31 +20,31 @@ export function OnboardingTooltip({
   backProps,
   closeProps,
   primaryProps,
-  skipProps,
   tooltipProps,
   size,
   isLastStep,
   currentStage,
+  onSkipStage,
 }: Props) {
   return (
     <div
       {...tooltipProps}
-      className="bg-background border border-border rounded-xl shadow-lg max-w-sm w-[340px] overflow-hidden"
+      className="bg-white dark:bg-zinc-900 border border-border rounded-xl shadow-lg max-w-sm w-[340px] overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
-            Stage {currentStage}/{TOTAL_STAGES}
+            {STAGE_LABELS[currentStage] || `Stage ${currentStage}`}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {STAGE_LABELS[currentStage]}
+          <span className="text-[10px] text-muted-foreground">
+            {currentStage} of {TOTAL_STAGES}
           </span>
         </div>
         <button
           {...closeProps}
           className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/50"
-          aria-label="Close tutorial"
+          aria-label="End tour"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -60,32 +63,20 @@ export function OnboardingTooltip({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/50">
-        <div className="flex items-center gap-1.5">
-          {/* Progress dots */}
-          {Array.from({ length: size }, (_, i) => (
-            <span
-              key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index
-                  ? "w-4 bg-primary"
-                  : i < index
-                  ? "w-1.5 bg-primary/40"
-                  : "w-1.5 bg-muted-foreground/20"
-              }`}
-            />
-          ))}
-        </div>
+      <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 dark:bg-white/5 border-t border-border/50">
+        {/* Skip section button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSkipStage();
+          }}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50 flex items-center gap-1"
+        >
+          <SkipForward className="h-3 w-3" />
+          Skip section
+        </button>
 
         <div className="flex items-center gap-1.5">
-          <button
-            {...skipProps}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50 flex items-center gap-1"
-          >
-            <SkipForward className="h-3 w-3" />
-            Skip
-          </button>
-
           {index > 0 && (
             <button
               {...backProps}

@@ -17,6 +17,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 import { apiFetch } from "@/lib/apiUtils";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import { NotificationCenter } from "@/components/crm/NotificationCenter";
@@ -49,8 +51,27 @@ export function Topbar({
   const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
   const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount } = useWorkspace();
+  const { crumb } = useBreadcrumb();
   const { isDark, toggleTheme } = useTheme();
   const { toggleWidget: toggleAiWidget } = useAgentWidget();
+
+  const PAGE_LABELS: Record<string, string> = {
+    campaigns: t("sidebar.campaigns"),
+    contacts: t("sidebar.leads"),
+    conversations: t("sidebar.chats"),
+    calendar: t("sidebar.calendar"),
+    accounts: t("sidebar.accounts"),
+    prospects: t("sidebar.prospects"),
+    invoices: t("sidebar.billing"),
+    expenses: t("sidebar.billing"),
+    contracts: t("sidebar.billing"),
+    "prompt-library": t("sidebar.promptLibrary"),
+    tasks: t("sidebar.tasks"),
+    "automation-logs": t("sidebar.automations"),
+    settings: t("sidebar.settings"),
+    docs: t("sidebar.docs"),
+  };
+  const pageLabel = PAGE_LABELS[location.split("/").filter(Boolean)[1] ?? ""] ?? "";
 
   // ── Support Chat ─────────────────────────────────────────────────────────────
   const {
@@ -145,6 +166,8 @@ export function Topbar({
   const [searchQ, setSearchQ] = useState("");
   const [allLeads, setAllLeads] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allCampaigns, setAllCampaigns] = useState<any[]>([]);
+  const [allProspects, setAllProspects] = useState<any[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -161,28 +184,66 @@ export function Topbar({
       }
     }).catch(() => {});
 
+    apiFetch(`/api/campaigns?${params}`).then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        setAllCampaigns(Array.isArray(data) ? data : data?.list || data?.data || []);
+      }
+    }).catch(() => {});
+
     if (isAgencyUser) {
       apiFetch('/api/users').then(async (res) => {
         if (res.ok) { const data = await res.json(); setAllUsers(Array.isArray(data) ? data : []); }
+      }).catch(() => {});
+      apiFetch('/api/prospects').then(async (res) => {
+        if (res.ok) { const data = await res.json(); setAllProspects(Array.isArray(data) ? data : data?.list || data?.data || []); }
       }).catch(() => {});
     }
   }, [searchOpen, currentAccountId, isAgencyUser]);
 
   const searchResults = useMemo(() => {
     const q = searchQ.trim().toLowerCase();
-    if (!q) return [] as { id: number; name: string; phone: string; email: string }[];
+    if (!q) return [] as { id: number; displayName: string; subtitle: string }[];
     return allLeads
-      .filter((l: any) =>
-        [l.full_name || "", l.name || "", l.phone || "", l.email || l.Email || ""].some((v: string) => v.toLowerCase().includes(q))
-      )
+      .filter((l: any) => {
+        const first = l.first_name || "";
+        const last = l.last_name || "";
+        const full = l.full_name || l.name || "";
+        return [full, first, last, `${first} ${last}`, l.phone || "", l.email || l.Email || ""]
+          .some((v: string) => v.toLowerCase().includes(q));
+      })
       .slice(0, 8)
-      .map((l: any) => ({
-        id: l.Id || l.id,
-        name: l.full_name || l.name || `Lead #${l.Id || l.id}`,
-        phone: l.phone || "",
-        email: l.email || l.Email || "",
-      }));
+      .map((l: any) => {
+        const id = l.Id || l.id;
+        const firstName = l.first_name || "";
+        const lastName = l.last_name || "";
+        const fullName = l.full_name || l.name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : "");
+        return {
+          id,
+          displayName: fullName || `Lead #${id}`,
+          subtitle: fullName ? `Lead #${id}` : [l.phone, l.email || l.Email].filter(Boolean).join(" · "),
+        };
+      });
   }, [searchQ, allLeads]);
+
+  const campaignResults = useMemo(() => {
+    const q = searchQ.trim().toLowerCase();
+    if (!q) return [];
+    return allCampaigns
+      .filter((c: any) => (c.name || c.title || "").toLowerCase().includes(q))
+      .slice(0, 5)
+      .map((c: any) => ({ id: c.id || c.Id, name: c.name || c.title || `Campaign #${c.id || c.Id}`, status: c.status || "" }));
+  }, [searchQ, allCampaigns]);
+
+  const prospectResults = useMemo(() => {
+    if (!isAgencyUser) return [];
+    const q = searchQ.trim().toLowerCase();
+    if (!q) return [];
+    return allProspects
+      .filter((p: any) => [p.company || "", p.name || "", p.contact_name || "", p.email || ""].some((v: string) => v.toLowerCase().includes(q)))
+      .slice(0, 5)
+      .map((p: any) => ({ id: p.id || p.Id, company: p.company || p.name || "", contact: p.contact_name || "", status: p.status || "" }));
+  }, [searchQ, allProspects, isAgencyUser]);
 
   const accountResults = useMemo(() => {
     if (!isAgencyUser || !searchQ.trim()) return [];
@@ -197,12 +258,23 @@ export function Topbar({
   }, [searchQ, allUsers, isAgencyUser]);
 
   const handleLeadClick = (leadId: number) => {
-    sessionStorage.setItem("pendingLeadId", String(leadId));
     setSearchOpen(false);
+    setPersistedSelection("selected-lead-id", leadId);
     const base = isAgencyView ? "/agency" : "/subaccount";
-    setLocation(`${base}/leads`);
+    setLocation(`${base}/contacts`);
   };
 
+  const handleCampaignClick = (campaignId: number) => {
+    setSearchOpen(false);
+    setPersistedSelection("selected-campaign-id", campaignId);
+    const base = isAgencyView ? "/agency" : "/subaccount";
+    setLocation(`${base}/campaigns`);
+  };
+  const handleProspectClick = (prospectId: number) => {
+    setSearchOpen(false);
+    setPersistedSelection("selected-prospect-id", prospectId);
+    setLocation(`/agency/prospects`);
+  };
   const handleAccountClick = () => { setSearchOpen(false); setLocation(`/agency/accounts`); };
   const handleUserClick = () => {
     setSearchOpen(false);
@@ -542,11 +614,18 @@ export function Topbar({
       <TooltipProvider delayDuration={400}>
         <div className="hidden md:flex items-center gap-1 md:gap-2 shrink-0">
 
-          {/* ── Booked Calls KPI (compact) ── */}
-          <BookedCallsKpi
-            variant="compact"
-            accountId={currentAccountId > 0 ? currentAccountId : undefined}
-          />
+          {/* ── Breadcrumb — page + selected item ── */}
+          {pageLabel && (
+            <div className="flex items-center gap-1.5 min-w-0 overflow-hidden mr-1">
+              <span className="text-sm font-medium text-muted-foreground shrink-0">{pageLabel}</span>
+              {crumb && (
+                <>
+                  <span className="text-muted-foreground/40 leading-none select-none">/</span>
+                  <span className="text-sm font-semibold text-foreground truncate max-w-[180px]">{crumb}</span>
+                </>
+              )}
+            </div>
+          )}
 
           {/* ── Search Popover ── */}
           <Popover open={searchOpen} onOpenChange={setSearchOpen}>
@@ -556,6 +635,7 @@ export function Topbar({
                   <IconBtn
                     className="hidden sm:flex"
                     data-testid="button-search-top"
+                    data-onboarding="topbar-search"
                     aria-label="Search"
                   >
                     <Search className="h-4 w-4" />
@@ -584,7 +664,7 @@ export function Topbar({
               </div>
               {!searchQ.trim() ? (
                 <div className="px-4 py-3 text-xs text-muted-foreground">{t("topbar.startTyping")}</div>
-              ) : (searchResults.length === 0 && accountResults.length === 0 && userResults.length === 0) ? (
+              ) : (searchResults.length === 0 && campaignResults.length === 0 && prospectResults.length === 0 && accountResults.length === 0 && userResults.length === 0) ? (
                 <div className="px-4 py-3 text-sm text-muted-foreground">{t("topbar.noResults")}</div>
               ) : (
                 <div className="max-h-64 overflow-y-auto divide-y divide-border/10" data-testid="list-search-results">
@@ -596,15 +676,45 @@ export function Topbar({
                         <button
                           key={r.id}
                           onClick={() => handleLeadClick(r.id)}
-                          className="w-full text-left px-4 py-2.5 hover:bg-muted/40 flex flex-col gap-0.5"
+                          className="w-full text-left px-4 py-2.5 hover:bg-muted/40 flex items-baseline gap-2"
                           data-testid={`search-result-lead-${r.id}`}
                         >
-                          <span className="text-sm font-medium text-foreground">{r.name}</span>
-                          {(r.phone || r.email) && (
-                            <span className="text-xs text-muted-foreground">
-                              {[r.phone, r.email].filter(Boolean).join(" · ")}
-                            </span>
+                          <span className="text-sm font-medium text-foreground truncate">{r.displayName}</span>
+                          {r.subtitle && (
+                            <span className="text-[11px] text-muted-foreground shrink-0">{r.subtitle}</span>
                           )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Campaigns section */}
+                  {campaignResults.length > 0 && (
+                    <div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("search.campaigns") || "Campaigns"}</div>
+                      {campaignResults.map((c) => (
+                        <button
+                          key={`camp-${c.id}`}
+                          onClick={() => handleCampaignClick(c.id)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-muted/40 flex items-baseline gap-2"
+                        >
+                          <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
+                          {c.status && <span className="text-[11px] text-muted-foreground shrink-0">{c.status}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Prospects section (agency only) */}
+                  {prospectResults.length > 0 && (
+                    <div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("search.prospects") || "Prospects"}</div>
+                      {prospectResults.map((p) => (
+                        <button
+                          key={`prosp-${p.id}`}
+                          onClick={() => handleProspectClick(p.id)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-muted/40 flex items-baseline gap-2"
+                        >
+                          <span className="text-sm font-medium text-foreground truncate">{p.company}</span>
+                          {p.contact && <span className="text-[11px] text-muted-foreground shrink-0">{p.contact}</span>}
                         </button>
                       ))}
                     </div>
@@ -663,6 +773,7 @@ export function Topbar({
                   <IconBtn
                     onClick={() => setSupportOpen((v) => !v)}
                     data-testid="button-support-chat"
+                    data-onboarding="topbar-support"
                     aria-label={`Customer Support${supportUnreadCount > 0 ? ` (${supportUnreadCount} unread)` : ""}`}
                   >
                     <Headphones className="h-4 w-4" />
@@ -807,6 +918,7 @@ export function Topbar({
                   <IconBtn
                     className="relative"
                     data-testid="button-notifications"
+                    data-onboarding="topbar-notifications"
                     aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
                   >
                     <Bell className="h-4 w-4" />

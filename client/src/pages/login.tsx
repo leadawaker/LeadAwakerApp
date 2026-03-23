@@ -78,7 +78,7 @@ export default function Login() {
         localStorage.removeItem("leadawaker_remember_me");
       }
 
-      // Route to appropriate area based on role (not account ID)
+      // Route to appropriate area based on role
       const isAgency = user.role === "Admin" || user.role === "Operator";
       setLocation(isAgency ? "/agency/campaigns" : "/subaccount/campaigns");
     } catch {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Cpu, Zap, Plus, MessageSquare, Loader2 } from "lucide-react";
+import { Cpu, Zap, Plus, Loader2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { apiFetch } from "@/lib/apiUtils";
 import { CrmShell } from "@/components/crm/CrmShell";
@@ -21,8 +21,6 @@ function AgentIcon({ agent }: { agent: AiAgent }) {
     <div className="h-14 w-14 rounded-full bg-brand-indigo/10 flex items-center justify-center">
       {agent.type === "code_runner" ? (
         <Zap className="h-7 w-7 text-brand-indigo" />
-      ) : agent.type === "campaign_crafter" ? (
-        <MessageSquare className="h-7 w-7 text-brand-indigo" />
       ) : (
         <Cpu className="h-7 w-7 text-brand-indigo" />
       )}
@@ -37,8 +35,6 @@ function AgentCard({ agent }: { agent: AiAgent }) {
   const tagline =
     agent.type === "code_runner"
       ? "Full codebase access · Pi live reload"
-      : agent.type === "campaign_crafter"
-      ? "Campaigns · Web browsing · PDF support"
       : "Custom AI assistant";
 
   return (

@@ -72,8 +72,8 @@ function pastelTextDark(hex: string): string {
 
 // ── Pipeline stage hex colors ─────────────────────────────────────────────────
 export const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#6B7280",
-  Contacted:            "#7A73FF",
+  New:                  "#7C3AED",
+  Contacted:            "#818CF8",
   Responded:            "#3ACBDF",
   "Multiple Responses": "#31D35C",
   Qualified:            "#AED62E",
@@ -85,8 +85,8 @@ export const PIPELINE_HEX: Record<string, string> = {
 
 // ── Lead avatar colors — hand-picked pastels, mutable for Color Tester ───────
 export const LEAD_AVATAR_BG: Record<string, string> = {
-  New:                  "#C9C9C9",
-  Contacted:            "#BBB9FF",
+  New:                  "#DDD6FE",
+  Contacted:            "#C7D2FE",
   Responded:            "#B9E7EF",
   "Multiple Responses": "#AFE3BB",
   Qualified:            "#C7DF7D",
@@ -96,8 +96,8 @@ export const LEAD_AVATAR_BG: Record<string, string> = {
   DND:                  "#D4B5B9",
 };
 export const LEAD_AVATAR_TEXT: Record<string, string> = {
-  New:                  "#374151",
-  Contacted:            "#2E3A6B",
+  New:                  "#5B21B6",
+  Contacted:            "#3730A3",
   Responded:            "#0F5F5A",
   "Multiple Responses": "#166534",
   Qualified:            "#3F6212",
@@ -109,8 +109,8 @@ export const LEAD_AVATAR_TEXT: Record<string, string> = {
 
 // ── Dark mode lead avatar colors ────────────────────────────────────────────
 export const LEAD_AVATAR_BG_DARK: Record<string, string> = {
-  New:                  "#2A2D33",
-  Contacted:            "#272547",
+  New:                  "#2E1065",
+  Contacted:            "#1E1B4B",
   Responded:            "#1A3338",
   "Multiple Responses": "#1A3325",
   Qualified:            "#283314",
@@ -120,8 +120,8 @@ export const LEAD_AVATAR_BG_DARK: Record<string, string> = {
   DND:                  "#3D2228",
 };
 export const LEAD_AVATAR_TEXT_DARK: Record<string, string> = {
-  New:                  "#9CA3AF",
-  Contacted:            "#BBB9FF",
+  New:                  "#C4B5FD",
+  Contacted:            "#A5B4FC",
   Responded:            "#7CDCE8",
   "Multiple Responses": "#6AE87C",
   Qualified:            "#B5E050",
@@ -437,6 +437,70 @@ function hashString(str: string): number {
     h = ((h << 5) - h + str.charCodeAt(i)) | 0;
   }
   return Math.abs(h);
+}
+
+// ── Prospect outreach status avatar colors ──────────────────────────────────
+export type OutreachStatusKey =
+  | "new" | "contacted" | "responded" | "call_booked"
+  | "demo_given" | "proposal_sent" | "negotiating" | "deal_closed" | "lost";
+
+const PROSPECT_AVATAR_BG: Record<OutreachStatusKey, string> = {
+  new:            "#C9C9C9",
+  contacted:      "#BBB9FF",
+  responded:      "#B9E7EF",
+  call_booked:    "#AFE3BB",
+  demo_given:     "#D6E8A3",
+  proposal_sent:  "#FFDB74",
+  negotiating:    "#FDDCB5",
+  deal_closed:    "#F0F0F0",
+  lost:           "#F5BFBF",
+};
+const PROSPECT_AVATAR_TEXT: Record<OutreachStatusKey, string> = {
+  new:            "#374151",
+  contacted:      "#2E3A6B",
+  responded:      "#0F5F5A",
+  call_booked:    "#166534",
+  demo_given:     "#3F6212",
+  proposal_sent:  "#78350F",
+  negotiating:    "#7C2D12",
+  deal_closed:    "#374151",
+  lost:           "#991B1B",
+};
+const PROSPECT_AVATAR_BG_DARK: Record<OutreachStatusKey, string> = {
+  new:            "#2A2D33",
+  contacted:      "#272547",
+  responded:      "#1A3338",
+  call_booked:    "#1A3325",
+  demo_given:     "#283314",
+  proposal_sent:  "#33290A",
+  negotiating:    "#33200A",
+  deal_closed:    "#2A2D33",
+  lost:           "#3D1A1A",
+};
+const PROSPECT_AVATAR_TEXT_DARK: Record<OutreachStatusKey, string> = {
+  new:            "#9CA3AF",
+  contacted:      "#BBB9FF",
+  responded:      "#7CDCE8",
+  call_booked:    "#6AE87C",
+  demo_given:     "#B5E050",
+  proposal_sent:  "#FFD54F",
+  negotiating:    "#FDBA74",
+  deal_closed:    "#E0E0E0",
+  lost:           "#F48A8A",
+};
+
+export function getProspectAvatarColor(outreachStatus: string): { bg: string; text: string } {
+  const key = (outreachStatus || "new") as OutreachStatusKey;
+  if (isDarkMode()) {
+    return {
+      bg:   PROSPECT_AVATAR_BG_DARK[key] ?? "#2A2D33",
+      text: PROSPECT_AVATAR_TEXT_DARK[key] ?? "#9CA3AF",
+    };
+  }
+  return {
+    bg:   PROSPECT_AVATAR_BG[key] ?? "#C9C9C9",
+    text: PROSPECT_AVATAR_TEXT[key] ?? "#374151",
+  };
 }
 
 /** Returns a deterministic icon color + circle bg for a prompt, based on its name. */

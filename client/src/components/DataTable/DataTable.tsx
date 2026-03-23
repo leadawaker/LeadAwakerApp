@@ -241,7 +241,7 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   // ─────────────────────
   /** When true, uses TanStack Virtual for efficient rendering of 1000+ rows */
   virtualized?: boolean;
-  /** Height of the virtualized scroll container (default: "calc(100vh - 320px)") */
+  /** Height of the virtualized scroll container (default: "calc(100dvh - 320px)") */
   virtualizedContainerHeight?: string;
 
   // ─────────────────────
@@ -879,7 +879,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   const exportFilename = props.exportFilename ?? "export";
 
   const virtualized = props.virtualized ?? false;
-  const virtualizedContainerHeight = props.virtualizedContainerHeight ?? "calc(100vh - 320px)";
+  const virtualizedContainerHeight = props.virtualizedContainerHeight ?? "calc(100dvh - 320px)";
 
   // Ref for the scroll container used by the row virtualizer
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1995,7 +1995,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                       </div>
                                     </div>
                                   </SheetHeader>
-                                  <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
+                                  <ScrollArea className="h-[calc(100dvh-140px)] py-6 pr-4">
                                     <div className="space-y-6">
                                       {columns.filter((c) => !hiddenFields.includes(c)).map((c) => (
                                         <div key={c} className="space-y-1.5">
@@ -2285,7 +2285,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                       </div>
                                     </div>
                                   </SheetHeader>
-                                  <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
+                                  <ScrollArea className="h-[calc(100dvh-140px)] py-6 pr-4">
                                     <div className="space-y-6">
                                       {(() => {
                                         const visibleCols = columns.filter((c) => !hiddenFields.includes(c));

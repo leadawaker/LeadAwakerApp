@@ -805,7 +805,7 @@ export default function TagsPage() {
 
               {/* RIGHT — STICKY SIDE PANEL */}
               <div className="space-y-4 sticky top-6">
-                <div className="bg-card rounded-2xl shadow-sm border border-border flex flex-col max-h-[calc(100vh-200px)]">
+                <div className="bg-card rounded-2xl shadow-sm border border-border flex flex-col max-h-[calc(100dvh-200px)]">
                   <div className="p-4 border-b space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="font-bold text-sm" data-testid="side-panel-title">

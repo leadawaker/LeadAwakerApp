@@ -1009,7 +1009,7 @@ export default function AutomationLogsPage() {
                                   <td className="px-3" style={{ width: 240, minWidth: 240 }}>
                                     {(() => {
                                       const group = executionByRow.get(r.id);
-                                      if (!group) return <span className="text-muted-foreground/30">—</span>;
+                                      if (!group) return <span className="text-muted-foreground/30">{"2014"}</span>;
                                       const currentStepIdx = group.steps.findIndex((s: any) => s.id === r.id);
                                       const stepColor = currentStepIdx >= 0
                                         ? getGradientColor(currentStepIdx, group.steps.length, group.automationType.id)

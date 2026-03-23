@@ -727,7 +727,7 @@ function InlineEditField({ value, field, leadId, onSaved, type = "text" }: {
   return (
     <div className="group/edit flex items-center gap-1 min-w-0 cursor-text" onClick={() => setEditing(true)}>
       <span className={cn("text-[12px] font-semibold text-foreground leading-snug truncate", type === "tel" && "font-mono")}>
-        {value || <span className="text-foreground/25 font-normal italic">—</span>}
+        {value || <span className="text-foreground/25 font-normal italic">{"2014"}</span>}
       </span>
       {value && (
         <button
@@ -1025,7 +1025,7 @@ function ContactWidget({
               }}
               className="text-[12px] bg-transparent border border-dashed border-border/60 rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50 text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
             >
-              <option value="">—</option>
+              <option value="">{"2014"}</option>
               {accountCampaigns.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
             </select>
           </div>
@@ -3408,7 +3408,7 @@ export function LeadDetailView({
     style.textContent = `
       @media print {
         body > * { display: none !important; }
-        #${id} { display: flex !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; overflow: hidden !important; z-index: 9999 !important; }
+        #${id} { display: flex !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; overflow: hidden !important; z-index: 9999 !important; }
       }
     `;
     document.head.appendChild(style);
@@ -4206,7 +4206,7 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-foreground/20 shrink-0">{"2013"}</span>
         <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
         <div className="flex-1 h-px bg-foreground/15" />
       </div>

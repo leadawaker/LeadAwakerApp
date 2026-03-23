@@ -357,6 +357,7 @@ export const interactions = nocodb.table("Interactions", {
   sentimentDetected: varchar("sentiment_detected"),
   isManualFollowUp: boolean("is_manual_follow_up"),
   prospectId: integer("prospect_id"),
+  isRead: boolean("is_read").default(true),
 }, (t) => [
   index("interactions_leads_id_idx").on(t.leadsId),
   index("interactions_accounts_id_idx").on(t.accountsId),
@@ -866,6 +867,7 @@ export const supportSessions = nocodb.table("Support_Sessions", {
   sessionId: text("session_id").notNull().unique(),
   userId: integer("user_id").notNull(),
   accountId: integer("account_id"),
+  channel: text("channel").notNull().default("bot"), // "bot" | "founder"
   status: text("status").notNull().default("active"), // "active" | "escalated" | "closed"
   createdAt: timestamp("created_at").defaultNow(),
   escalatedAt: timestamp("escalated_at"),
@@ -1005,7 +1007,7 @@ export type InsertTaskSubtask = z.infer<typeof insertTaskSubtaskSchema>;
 export const aiAgents = nocodb.table("AI_Agents", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type").notNull().default("custom"), // 'campaign_crafter' | 'code_runner' | 'custom'
+  type: text("type").notNull().default("custom"), // 'code_runner' | 'custom'
   systemPrompt: text("system_prompt"),
   photoUrl: text("photo_url"),
   config: text("config"), // JSON string for extra config

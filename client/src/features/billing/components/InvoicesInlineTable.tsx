@@ -454,7 +454,7 @@ export function InvoicesInlineTable({
         {show("invoiceNum") && (
           <td className="px-3" style={{ width: 130, minWidth: 130 }}>
             <span className="text-[11px] font-mono text-foreground/70 truncate block">
-              {invoice.invoice_number ?? <span className="text-muted-foreground/30">—</span>}
+              {invoice.invoice_number ?? <span className="text-muted-foreground/30">{"2014"}</span>}
             </span>
           </td>
         )}
@@ -468,7 +468,7 @@ export function InvoicesInlineTable({
         {show("account") && (
           <td className="px-3" style={{ width: 160, minWidth: 160 }}>
             <span className="text-[11px] text-muted-foreground truncate block">
-              {invoice.account_name ?? <span className="text-muted-foreground/30">—</span>}
+              {invoice.account_name ?? <span className="text-muted-foreground/30">{"2014"}</span>}
             </span>
           </td>
         )}
@@ -485,7 +485,7 @@ export function InvoicesInlineTable({
         {show("currency") && (
           <td className="px-3 text-center" style={{ width: 80, minWidth: 80 }}>
             <span className="text-[11px] text-muted-foreground">
-              {invoice.currency ?? <span className="text-muted-foreground/30">—</span>}
+              {invoice.currency ?? <span className="text-muted-foreground/30">{"2014"}</span>}
             </span>
           </td>
         )}
@@ -494,7 +494,7 @@ export function InvoicesInlineTable({
             <span className="text-[12px] font-semibold text-foreground tabular-nums">
               {invoice.total != null
                 ? fmtAmt(invoice.total, invoice.currency ?? "EUR")
-                : <span className="text-muted-foreground/30 font-normal">—</span>}
+                : <span className="text-muted-foreground/30 font-normal">{"2014"}</span>}
             </span>
           </td>
         )}
@@ -513,28 +513,28 @@ export function InvoicesInlineTable({
         {show("subtotal") && (
           <td className="px-3 text-right" style={{ width: 110, minWidth: 110 }}>
             <span className="text-[11px] text-muted-foreground tabular-nums">
-              {invoice.subtotal != null ? fmtAmt(invoice.subtotal, invoice.currency ?? "EUR") : <span className="opacity-30">—</span>}
+              {invoice.subtotal != null ? fmtAmt(invoice.subtotal, invoice.currency ?? "EUR") : <span className="opacity-30">{"2014"}</span>}
             </span>
           </td>
         )}
         {show("taxPct") && (
           <td className="px-3 text-right" style={{ width: 80, minWidth: 80 }}>
             <span className="text-[11px] text-muted-foreground">
-              {invoice.tax_percent != null ? `${invoice.tax_percent}%` : <span className="opacity-30">—</span>}
+              {invoice.tax_percent != null ? `${invoice.tax_percent}%` : <span className="opacity-30">{"2014"}</span>}
             </span>
           </td>
         )}
         {show("taxAmt") && (
           <td className="px-3 text-right" style={{ width: 110, minWidth: 110 }}>
             <span className="text-[11px] text-muted-foreground tabular-nums">
-              {invoice.tax_amount != null ? fmtAmt(invoice.tax_amount, invoice.currency ?? "EUR") : <span className="opacity-30">—</span>}
+              {invoice.tax_amount != null ? fmtAmt(invoice.tax_amount, invoice.currency ?? "EUR") : <span className="opacity-30">{"2014"}</span>}
             </span>
           </td>
         )}
         {show("discount") && (
           <td className="px-3 text-right" style={{ width: 100, minWidth: 100 }}>
             <span className="text-[11px] text-muted-foreground tabular-nums">
-              {invoice.discount_amount != null ? fmtAmt(invoice.discount_amount, invoice.currency ?? "EUR") : <span className="opacity-30">—</span>}
+              {invoice.discount_amount != null ? fmtAmt(invoice.discount_amount, invoice.currency ?? "EUR") : <span className="opacity-30">{"2014"}</span>}
             </span>
           </td>
         )}
@@ -548,7 +548,7 @@ export function InvoicesInlineTable({
             {invoice.paid_at ? (
               <span className="text-[11px] font-medium" style={{ color: "#065F46" }}>{fmtDate(invoice.paid_at)}</span>
             ) : (
-              <span className="text-[11px] text-muted-foreground/30">—</span>
+              <span className="text-[11px] text-muted-foreground/30">{"2014"}</span>
             )}
           </td>
         )}
@@ -567,14 +567,14 @@ export function InvoicesInlineTable({
         {show("notes") && (
           <td className="px-3" style={{ width: 200, minWidth: 200 }}>
             <span className="text-[11px] text-muted-foreground truncate block max-w-[188px]">
-              {invoice.notes ?? <span className="opacity-30">—</span>}
+              {invoice.notes ?? <span className="opacity-30">{"2014"}</span>}
             </span>
           </td>
         )}
         {show("paymentInfo") && (
           <td className="px-3" style={{ width: 180, minWidth: 180 }}>
             <span className="text-[11px] text-muted-foreground truncate block max-w-[168px]">
-              {invoice.payment_info ?? <span className="opacity-30">—</span>}
+              {invoice.payment_info ?? <span className="opacity-30">{"2014"}</span>}
             </span>
           </td>
         )}

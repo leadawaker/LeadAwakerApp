@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { hapticSave } from "@/lib/haptics";
@@ -30,6 +30,7 @@ import { SkeletonSettingsSection } from "@/components/ui/skeleton";
 import { LanguageSelector } from "@/components/crm/LanguageSelector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { OnboardingContext } from "@/components/onboarding/OnboardingProvider";
 
 // ── User profile type ────────────────────────────────────────────────
 type UserProfile = {
@@ -195,6 +196,7 @@ function SettingsContent() {
   const session = useSession();
   const { isAgencyUser, currentAccountId } = useWorkspace();
   const queryClient = useQueryClient();
+  const { triggerRestart } = useContext(OnboardingContext);
   const [location, setLocation] = useLocation();
   const isMobile = useIsMobile();
   const { isDark, toggleTheme } = useTheme();
@@ -1011,45 +1013,45 @@ function SettingsContent() {
             </div>
           </div>
 
-          {/* Tutorial restart — only for subaccount users */}
-          {!isAgencyUser && (
-            <div className="rounded-2xl bg-muted/40 px-5 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{t("profile.onboardingTutorial")}</p>
-                    <p className="text-xs text-muted-foreground truncate">{t("profile.onboardingDescription")}</p>
-                  </div>
+          {/* Tutorial restart */}
+          <div className="rounded-2xl bg-muted/40 px-5 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <button
-                  type="button"
-                  className="text-xs font-semibold px-4 py-2 rounded-full border border-border/60 hover:bg-background transition-colors shrink-0"
-                  data-testid="button-restart-tutorial"
-                  onClick={async () => {
-                    try {
-                      const res = await apiFetch("/api/onboarding/restart", { method: "POST" });
-                      if (res.ok) {
-                        const data = await res.json();
-                        queryClient.setQueryData(["/api/onboarding/status"], data);
-                        toast({ title: t("profile.tutorialRestarted"), description: t("profile.tutorialRestartedDescription") });
-                        setLocation("/subaccount/campaigns");
-                        setTimeout(() => window.dispatchEvent(new CustomEvent("onboarding-restart")), 50);
-                      } else {
-                        toast({ title: t("security.error"), description: t("profile.tutorialRestartFailed"), variant: "destructive" });
-                      }
-                    } catch {
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{t("profile.onboardingTutorial")}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t("profile.onboardingDescription")}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="text-xs font-semibold px-4 py-2 rounded-full border border-border/60 hover:bg-background transition-colors shrink-0"
+                data-testid="button-restart-tutorial"
+                onClick={async () => {
+                  try {
+                    // Enable dev override for agency users
+                    if (isAgencyUser) {
+                      localStorage.setItem("dev-onboarding", "true");
+                      window.dispatchEvent(new CustomEvent("dev-onboarding-changed"));
+                    }
+                    const res = await apiFetch("/api/onboarding/restart", { method: "POST" });
+                    if (res.ok) {
+                      toast({ title: t("profile.tutorialRestarted"), description: t("profile.tutorialRestartedDescription") });
+                      triggerRestart();
+                    } else {
                       toast({ title: t("security.error"), description: t("profile.tutorialRestartFailed"), variant: "destructive" });
                     }
-                  }}
-                >
-                  {t("profile.restartTutorial")}
-                </button>
-              </div>
+                  } catch {
+                    toast({ title: t("security.error"), description: t("profile.tutorialRestartFailed"), variant: "destructive" });
+                  }
+                }}
+              >
+                {t("profile.restartTutorial")}
+              </button>
             </div>
-          )}
+          </div>
 
           {/* ── Gmail Integration (Agency only) ────────────────────── */}
           {isAgencyUser && <div className="rounded-xl border border-border bg-card p-4 space-y-3">

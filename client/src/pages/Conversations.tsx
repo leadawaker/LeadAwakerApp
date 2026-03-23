@@ -13,6 +13,8 @@ import { ChevronLeft, Layers, ArrowUpDown, Filter, Check, Plus, Settings, Zap, C
 import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
 import { InboxPanel, type ChatGroupBy, type ChatSortBy, type InboxTab, GROUP_LABELS, SORT_LABELS } from "@/features/conversations/components/InboxPanel";
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
+import { ProspectChatPanel } from "@/features/conversations/components/ProspectChatPanel";
+import { useProspectConversations } from "@/features/conversations/hooks/useProspectConversations";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
 import { AgentChatView } from "@/features/ai-agents/components/AgentChatView";
 import { AgentConversationList } from "@/features/ai-agents/components/AgentConversationList";
@@ -22,7 +24,9 @@ import { ThinkingToggle } from "@/features/ai-agents/components/ThinkingToggle";
 import { useAgentChat } from "@/features/ai-agents/hooks/useAgentChat";
 import { SearchPill } from "@/components/ui/search-pill";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
+import { FounderInbox } from "@/components/crm/FounderInbox";
 import { useSupportChat } from "@/hooks/useSupportChat";
+import { useFounderChat } from "@/hooks/useFounderChat";
 import { apiFetch } from "@/lib/apiUtils";
 import { useChatDoodle } from "@/hooks/useChatDoodle";
 import { useTheme } from "@/hooks/useTheme";
@@ -91,9 +95,21 @@ export default function ConversationsPage() {
     } catch {}
   };
 
+  // Prospect selection state (hooks only — effects that depend on `tab` are below its declaration)
+  const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null);
+  const { data: prospectThreads = [] } = useProspectConversations();
+
+  const handleSelectProspect = (prospectId: number) => {
+    setSelectedProspectId(prospectId);
+    setSelectedLeadId(null);
+    setSelectedAgentId(null);
+    setMobileView("chat");
+  };
+
   const handleSelectAgent = (agentId: number) => {
     setSelectedAgentId(agentId);
     setSelectedLeadId(null);
+    setSelectedProspectId(null);
     setTab("all");
     setMobileView("chat");
   };
@@ -177,16 +193,25 @@ export default function ConversationsPage() {
   const [mobileView, setMobileView] = useState<"inbox" | "chat">("inbox");
   const [mobileTransitioning, setMobileTransitioning] = useState(false);
 
-  // Inbox tab — check sessionStorage for support-chat-open flag set by widget's "expand" button
-  const [tab, setTab] = useState<InboxTab>(() => {
-    try {
-      if (sessionStorage.getItem("support-chat-open") === "1") {
-        sessionStorage.removeItem("support-chat-open");
-        return "support";
-      }
-    } catch {}
-    return "all";
-  });
+  // Inbox tab
+  const [tab, setTab] = useState<InboxTab>("all");
+
+  // Read URL params on mount for deep linking (prospect tab)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "prospects") {
+      setTab("prospects");
+      const pid = params.get("prospectId");
+      if (pid) setSelectedProspectId(Number(pid));
+    }
+  }, []);
+
+  // Auto-select newest prospect when switching to prospects tab with nothing selected
+  useEffect(() => {
+    if (tab === "prospects" && !selectedProspectId && prospectThreads.length > 0) {
+      setSelectedProspectId(prospectThreads[0].prospect_id);
+    }
+  }, [tab, selectedProspectId, prospectThreads]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(true); // starts expanded
@@ -245,7 +270,7 @@ export default function ConversationsPage() {
   const { threads, loading, error, sending, handleSend, handleToggleTakeover, handleUpdateLead, handleRetry, refresh } = useConversationsData(
     effectiveAccountId,
     campaignId,
-    tab === "support" ? "all" : tab,
+    tab === "support" || tab === "prospects" ? "all" : tab,
     searchQuery,
     "all",
     "newest",
@@ -287,6 +312,11 @@ export default function ConversationsPage() {
     clearContext: supportClearContext,
     notifyOpen: supportNotifyOpen,
   } = useSupportChat();
+  const founderChat = useFounderChat();
+  const [showFounderInbox, setShowFounderInbox] = useState(false);
+
+  // Auto-open founder chat when navigated from sidebar "Message Gabriel" button
+  // (temporarily disabled for debugging)
 
   // Mark support chat as "open" when the support tab is visible
   useEffect(() => {
@@ -362,6 +392,7 @@ export default function ConversationsPage() {
   const handleSelectLead = (id: number) => {
     setSelectedLeadId(id);
     setSelectedAgentId(null);
+    setSelectedProspectId(null);
     setMobileView("chat");
     setMobileTransitioning(false);
     markAsRead(id);
@@ -389,6 +420,7 @@ export default function ConversationsPage() {
     (isAgencyUser && filterAccountId !== "all");
 
   const isSupport = tab === "support";
+  const isProspects = tab === "prospects";
 
   return (
     <CrmShell>
@@ -404,6 +436,9 @@ export default function ConversationsPage() {
                 if (isAgentSelected && isSupport) {
                   // Back from agent chat to support tab inbox
                   setSelectedAgentId(null);
+                  setMobileView("inbox");
+                } else if (isProspects) {
+                  setSelectedProspectId(null);
                   setMobileView("inbox");
                 } else if (isAgentSelected) {
                   setSelectedAgentId(null);
@@ -421,16 +456,20 @@ export default function ConversationsPage() {
           <h1 className="text-2xl font-extrabold tracking-tight truncate min-w-0">
             {mobileView === "chat" && isAgentSelected
               ? (chatAgent?.name ?? aiAgents.find(a => a.id === selectedAgentId)?.name ?? "AI Agent")
-              : mobileView === "chat" && selected && !isSupport
+              : mobileView === "chat" && isProspects && selectedProspectId
+              ? (prospectThreads.find(p => p.prospect_id === selectedProspectId)?.company || "Prospect")
+              : mobileView === "chat" && selected && !isSupport && !isProspects
               ? selected.lead.full_name ||
                 `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
               : isSupport
               ? supportBotConfig.name
+              : isProspects
+              ? "Prospects"
               : t("page.title")}
           </h1>
         </div>
 
-        {error && threads.length === 0 && !loading && !isSupport ? (
+        {error && threads.length === 0 && !loading && !isSupport && !isProspects ? (
           <ApiErrorFallback
             error={error}
             onRetry={() => refresh()}
@@ -443,10 +482,9 @@ export default function ConversationsPage() {
               mobileView === "chat" ? "flex-col lg:flex-row" : "flex-col lg:flex-row"
             )}
             data-testid="layout-conversations"
-            data-onboarding="conversations-inbox"
           >
             {/* Left panel: AgentConversationList (agent selected, NOT support tab) or InboxPanel */}
-            {isAgentSelected && selectedAgentId !== null && !isSupport ? (
+            {isAgentSelected && selectedAgentId !== null && !isSupport && !isProspects ? (
               <div
                 className={cn(
                   "w-full lg:w-[340px] lg:flex-shrink-0 bg-muted rounded-lg overflow-hidden h-full",
@@ -470,7 +508,7 @@ export default function ConversationsPage() {
                   }}
                   onBack={() => {
                     setSelectedAgentId(null);
-                    setTab("support");
+                    setTab("all");
                   }}
                   className="w-full"
                 />
@@ -496,6 +534,7 @@ export default function ConversationsPage() {
                 supportBotConfig={supportBotConfig}
                 onSelectSupport={() => {
                   setSelectedAgentId(null);
+                  setShowFounderInbox(false);
                   setMobileView("chat");
                 }}
                 onSearchChange={setSearchQuery}
@@ -507,6 +546,15 @@ export default function ConversationsPage() {
                 onAgentSettings={handleAgentSettings}
                 onDeselectAgent={() => setSelectedAgentId(null)}
                 campaignsMap={campaignsMap}
+                prospectThreads={prospectThreads}
+                selectedProspectId={selectedProspectId}
+                onSelectProspect={handleSelectProspect}
+                showFounderInbox={showFounderInbox}
+                onToggleFounderInbox={() => {
+                  setShowFounderInbox(true);
+                  setSelectedAgentId(null);
+                  setMobileView("chat");
+                }}
                 className={cn(
                   "w-full lg:w-[340px] lg:flex-shrink-0",
                   mobileView === "chat" ? "hidden lg:flex" : "flex"
@@ -524,23 +572,60 @@ export default function ConversationsPage() {
                 data-testid="mobile-chat-panel"
                 data-onboarding="conversations-chat"
               >
-                {/* Bob support chat — visible on support tab when no agent selected */}
+                {/* Support chat or Founder inbox — visible on support tab when no agent selected */}
                 <div className={cn("flex-1 min-h-0 flex flex-col", isSupport && !isAgentSelected ? "flex" : "hidden")}>
-                  <SupportChatWidget
-                    mode="inline"
-                    messages={supportMessages}
-                    sending={supportSending}
-                    loading={supportLoading}
-                    escalated={supportEscalated}
-                    botConfig={supportBotConfig}
-                    initialize={supportInitialize}
-                    sendMessage={supportSendMessage}
-                    closeSession={supportCloseSession}
-                    updateBotConfig={supportUpdateBotConfig}
-                    clearContext={supportClearContext}
-                    isAdmin={isAdmin}
-                    onClose={() => setTab("all")}
-                  />
+                  {isAdmin && showFounderInbox ? (
+                    <FounderInbox />
+                  ) : (
+                    <SupportChatWidget
+                      mode="inline"
+                      messages={supportMessages}
+                      sending={supportSending}
+                      loading={supportLoading}
+                      escalated={supportEscalated}
+                      botConfig={supportBotConfig}
+                      initialize={supportInitialize}
+                      sendMessage={supportSendMessage}
+                      closeSession={supportCloseSession}
+                      updateBotConfig={supportUpdateBotConfig}
+                      clearContext={supportClearContext}
+                      isAdmin={isAdmin}
+                      onClose={() => setTab("all")}
+                      founderChat={{
+                        messages: founderChat.messages as any,
+                        sending: founderChat.sending,
+                        loading: founderChat.loading,
+                        initialize: founderChat.initialize,
+                        sendMessage: founderChat.sendMessage,
+                        closeSession: founderChat.closeSession,
+                        clearContext: founderChat.clearContext,
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Prospect chat panel — visible on prospects tab when a prospect is selected */}
+                <div className={cn("flex-1 min-h-0 flex flex-col", isProspects && selectedProspectId && !isAgentSelected ? "flex" : "hidden")}>
+                  {selectedProspectId && (() => {
+                    const pt = prospectThreads.find((p) => p.prospect_id === selectedProspectId);
+                    return pt ? (
+                      <ProspectChatPanel
+                        prospectId={selectedProspectId}
+                        prospectName={pt.contact_name || pt.name}
+                        prospectCompany={pt.company}
+                        contactEmail={pt.contact_email}
+                        outreachStatus={pt.outreach_status}
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                        Select a prospect to view messages
+                      </div>
+                    );
+                  })()}
+                </div>
+                {/* Prospect empty state — visible on prospects tab when no prospect selected */}
+                <div className={cn("flex-1 min-h-0 flex items-center justify-center text-muted-foreground", isProspects && !selectedProspectId && !isAgentSelected ? "flex" : "hidden")}>
+                  Select a prospect to view messages
                 </div>
 
                 {/* Agent chat — visible when any agent is selected on any tab */}
@@ -667,7 +752,7 @@ export default function ConversationsPage() {
                     localStorage.setItem("leads-view-mode", "list");
                     setLocation(`${basePath}/contacts`);
                   }}
-                  className={cn("flex-1 min-w-0", !isSupport && !isAgentSelected ? "flex" : "hidden")}
+                  className={cn("flex-1 min-w-0", !isSupport && !isProspects && !isAgentSelected ? "flex" : "hidden")}
                   headerActions={
                     <>
                       {/* Search — starts expanded */}
@@ -845,20 +930,22 @@ export default function ConversationsPage() {
               </div>
 
             {/* Contact sidebar — hidden in support mode and agent mode */}
-            {!isSupport && !isAgentSelected && showContactPanel && (
-              <ContactSidebar
-                selected={selected}
-                loading={loading}
-                onClose={() => setShowContactPanel(false)}
-                onUpdateLead={handleUpdateLead}
-                onNavigateToLead={(leadId) => {
-                  localStorage.setItem("selected-lead-id", String(leadId));
-                  localStorage.setItem("leads-view-mode", "list");
-                  setLocation(`${basePath}/contacts`);
-                }}
-                onRefresh={refresh}
-                className="hidden lg:flex w-[340px] flex-shrink-0"
-              />
+            {!isSupport && !isProspects && !isAgentSelected && showContactPanel && (
+              <div data-onboarding="conversations-contact" className="hidden lg:flex w-[340px] flex-shrink-0">
+                <ContactSidebar
+                  selected={selected}
+                  loading={loading}
+                  onClose={() => setShowContactPanel(false)}
+                  onUpdateLead={handleUpdateLead}
+                  onNavigateToLead={(leadId) => {
+                    localStorage.setItem("selected-lead-id", String(leadId));
+                    localStorage.setItem("leads-view-mode", "list");
+                    setLocation(`${basePath}/contacts`);
+                  }}
+                  onRefresh={refresh}
+                  className="w-full"
+                />
+              </div>
             )}
           </div>
         )}

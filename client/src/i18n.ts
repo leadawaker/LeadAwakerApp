@@ -34,6 +34,7 @@ import enPrompts from "./locales/en/prompts.json";
 import enUsers from "./locales/en/users.json";
 import enCalendar from "./locales/en/calendar.json";
 import enTags from "./locales/en/tags.json";
+import enSetup from "./locales/en/setup.json";
 
 import ptDocs from "./locales/pt/docs.json";
 import ptCommon from "./locales/pt/common.json";
@@ -64,6 +65,7 @@ import ptPrompts from "./locales/pt/prompts.json";
 import ptUsers from "./locales/pt/users.json";
 import ptCalendar from "./locales/pt/calendar.json";
 import ptTags from "./locales/pt/tags.json";
+import ptSetup from "./locales/pt/setup.json";
 
 import nlDocs from "./locales/nl/docs.json";
 import nlCommon from "./locales/nl/common.json";
@@ -94,6 +96,7 @@ import nlPrompts from "./locales/nl/prompts.json";
 import nlUsers from "./locales/nl/users.json";
 import nlCalendar from "./locales/nl/calendar.json";
 import nlTags from "./locales/nl/tags.json";
+import nlSetup from "./locales/nl/setup.json";
 
 const resources = {
   en: {
@@ -125,6 +128,7 @@ const resources = {
     users: enUsers,
     calendar: enCalendar,
     tags: enTags,
+    setup: enSetup,
   },
   pt: {
     common: ptCommon,
@@ -155,6 +159,7 @@ const resources = {
     users: ptUsers,
     calendar: ptCalendar,
     tags: ptTags,
+    setup: ptSetup,
   },
   nl: {
     common: nlCommon,
@@ -185,6 +190,7 @@ const resources = {
     users: nlUsers,
     calendar: nlCalendar,
     tags: nlTags,
+    setup: nlSetup,
   },
 };
 
@@ -226,6 +232,7 @@ i18n
       "users",
       "calendar",
       "tags",
+      "setup",
     ],
 
     interpolation: {

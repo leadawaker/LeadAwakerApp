@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
-import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
+import { SupportChatWidget, type FounderChatProps } from "@/components/crm/SupportChatWidget";
 import type { SupportChatMessage, SupportBotConfig } from "@/hooks/useSupportChat";
 
 interface MobileSupportPanelProps {
@@ -19,6 +19,7 @@ interface MobileSupportPanelProps {
   clearContext: () => Promise<void>;
   updateBotConfig: (updates: Partial<SupportBotConfig>) => Promise<void>;
   isAdmin: boolean;
+  founderChat?: FounderChatProps;
 }
 
 /**
@@ -41,6 +42,7 @@ export function MobileSupportPanel({
   clearContext,
   updateBotConfig,
   isAdmin,
+  founderChat,
 }: MobileSupportPanelProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -97,6 +99,7 @@ export function MobileSupportPanel({
               isAdmin={isAdmin}
               onClose={onClose}
               mode="inline"
+              founderChat={founderChat}
             />
           </div>
         </motion.div>

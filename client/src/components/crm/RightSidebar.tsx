@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import {
@@ -26,11 +26,11 @@ import {
   Receipt,
   Settings,
   Settings2,
-  Palette,
 } from "lucide-react";
-import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
-import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
   DropdownMenu,
@@ -87,8 +87,8 @@ export function RightSidebar({
 }) {
   const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
-  const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const { crumb } = useBreadcrumb();
+
+
   const {
     currentAccount,
     currentAccountId,
@@ -97,6 +97,32 @@ export function RightSidebar({
     accounts,
     isAgencyUser,
   } = useWorkspace();
+
+  // Booked calls this month (badge on Calendar icon)
+  // Matches Calendar.tsx logic: only count leads with status "Booked" AND a real booking date
+  const { data: bookedThisMonth = 0 } = useQuery<number>({
+    queryKey: ["/api/leads", "booked-badge", currentAccountId],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (currentAccountId > 0) params.set("accountId", String(currentAccountId));
+      const qs = params.toString();
+      const res = await apiFetch(`/api/leads${qs ? `?${qs}` : ""}`);
+      if (!res.ok) return 0;
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : data?.list || data?.data || [];
+      const now = new Date();
+      return list.filter((l: any) => {
+        const status = l.conversion_status || l.Conversion_Status || "";
+        if (status !== "Booked") return false;
+        const dateStr = l.booked_call_date || l.booking_confirmed_at || l.bookingConfirmedAt;
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        return !isNaN(d.getTime()) && d >= now;
+      }).length;
+    },
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+  });
 
   // Read current user info from localStorage
   const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
@@ -200,23 +226,6 @@ export function RightSidebar({
     return true;
   });
 
-  const PAGE_LABELS: Record<string, string> = {
-    campaigns: t("sidebar.campaigns"),
-    contacts: t("sidebar.leads"),
-    conversations: t("sidebar.chats"),
-    calendar: t("sidebar.calendar"),
-    accounts: t("sidebar.accounts"),
-    prospects: t("sidebar.prospects"),
-    invoices: t("sidebar.billing"),
-    expenses: t("sidebar.billing"),
-    contracts: t("sidebar.billing"),
-    "prompt-library": t("sidebar.promptLibrary"),
-    tasks: t("sidebar.tasks"),
-    "automation-logs": t("sidebar.automations"),
-    settings: t("sidebar.settings"),
-    docs: t("sidebar.docs"),
-  };
-  const pageLabel = PAGE_LABELS[location.split("/").filter(Boolean)[1] ?? ""] ?? "";
 
   /** Check if a nav item is active (exact match or sub-route match) */
   const isActive = (href: string) => {
@@ -234,6 +243,9 @@ export function RightSidebar({
     const active = isActive(it.href);
     const Icon = it.icon;
     const showUnreadCount = it.testId === "nav-chats" && !!unreadChatCount && unreadChatCount > 0;
+    const isCalendar = it.testId === "nav-calendar" && bookedThisMonth > 0;
+    const showBookedBadge = isCalendar && active;
+    const showBookedOnHover = isCalendar && !active;
 
     return (
       <Tooltip key={it.href}>
@@ -241,7 +253,7 @@ export function RightSidebar({
           <Link
             href={it.href}
             className={cn(
-              "relative flex items-center rounded-full transition-colors mb-0.5",
+              "group/nav relative flex items-center rounded-full transition-colors mb-0.5",
               collapsed
                 ? "h-[44px] w-[44px] justify-center mx-auto"
                 : "h-[44px] pl-[1.5px] pr-2 gap-2.5",
@@ -258,6 +270,16 @@ export function RightSidebar({
               {showUnreadCount && (
                 <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold flex items-center justify-center border border-background">
                   {unreadChatCount! > 9 ? "9+" : unreadChatCount}
+                </span>
+              )}
+              {showBookedBadge && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-[#FCB803] text-[#131B49] text-[10px] font-bold flex items-center justify-center border border-background">
+                  {bookedThisMonth > 9 ? "9+" : bookedThisMonth}
+                </span>
+              )}
+              {showBookedOnHover && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-[#FCB803] text-[#131B49] text-[10px] font-bold flex items-center justify-center border border-background opacity-0 group-hover/nav:opacity-100 transition-opacity">
+                  {bookedThisMonth > 9 ? "9+" : bookedThisMonth}
                 </span>
               )}
             </div>
@@ -416,6 +438,20 @@ export function RightSidebar({
 
             {/* BOTTOM ACTIONS */}
             <div className="px-3 pb-3 pt-2 space-y-2 border-t border-border/40">
+              {!isAgencyUser && (
+                <button
+                  onClick={() => {
+                    try { sessionStorage.setItem("founder-chat-open", "1"); } catch {}
+                    setLocation(`${prefix}/conversations`);
+                    onCloseMobileMenu?.();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
+                  data-testid="mobile-nav-founder-dm"
+                >
+                  <img src="/founder-photo.webp" alt="Gabriel" className="h-5 w-5 rounded-full object-cover" />
+                  <span className="text-sm font-semibold">{t("sidebar.messageFounder", "Message Gabriel")}</span>
+                </button>
+              )}
               <Link
                 href={`${prefix}/settings`}
                 className={cn(
@@ -679,45 +715,43 @@ export function RightSidebar({
             </nav>
           </TooltipProvider>
 
-          {/* Color Picker toggle — round 40px button */}
-          <div className={cn("shrink-0 pb-2", collapsed ? "px-1.5" : "px-2.5")}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setColorPickerOpen((p) => !p)}
-                  className={cn(
-                    "h-10 w-10 rounded-full flex items-center justify-center border border-black/[0.125] transition-colors",
-                    colorPickerOpen
-                      ? "bg-brand-indigo text-white border-brand-indigo"
-                      : "text-foreground/50 hover:text-foreground hover:bg-card"
-                  )}
-                  title="Color Tester"
-                >
-                  <Palette className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                Color Tester
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Breadcrumb — current page + selected item */}
-          {!collapsed && pageLabel && (
-            <div className="shrink-0 px-4 pb-3 min-w-0 flex items-center gap-1 overflow-hidden">
-              <span className="text-[12px] font-medium text-muted-foreground shrink-0">{pageLabel}</span>
-              {crumb && (
-                <>
-                  <span className="text-[12px] text-muted-foreground/50 shrink-0">/</span>
-                  <span className="text-[12px] font-semibold text-foreground truncate">{crumb}</span>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Settings — pinned to bottom */}
+          {/* Bottom actions — pinned to bottom */}
           <TooltipProvider delayDuration={300}>
             <div className={cn("shrink-0 pb-4 pt-2 border-t border-border/30", collapsed ? "px-1.5" : "px-2.5")}>
+              {!isAgencyUser && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        try { sessionStorage.setItem("founder-chat-open", "1"); } catch {}
+                        setLocation(`${prefix}/conversations`);
+                      }}
+                      className={cn(
+                        "group/nav relative flex items-center rounded-full transition-colors mb-0.5 text-foreground/70 hover:bg-card hover:text-foreground",
+                        collapsed
+                          ? "h-[44px] w-[44px] justify-center mx-auto"
+                          : "h-[44px] pl-[1.5px] pr-2 gap-2.5"
+                      )}
+                      data-testid="link-nav-founder-dm"
+                    >
+                      <div className="relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-black/[0.125] overflow-hidden">
+                        <img src="/founder-photo.webp" alt="Gabriel" className="h-full w-full object-cover" />
+                      </div>
+                      {!collapsed && (
+                        <span className="text-sm font-bold">{t("sidebar.messageFounder", "Message Gabriel")}</span>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent
+                      side="right"
+                      className="rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1 bg-card text-foreground"
+                    >
+                      {t("sidebar.messageFounder", "Message Gabriel")}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              )}
               {renderDesktopNavLink({
                 href: `${prefix}/settings`,
                 label: t("sidebar.settings"),
@@ -728,11 +762,6 @@ export function RightSidebar({
             </div>
           </TooltipProvider>
 
-          {/* Color Picker Widget */}
-          <ColorPickerWidget
-            open={colorPickerOpen}
-            onClose={() => setColorPickerOpen(false)}
-          />
         </div>
       </aside>
     </>

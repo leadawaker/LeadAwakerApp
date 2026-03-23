@@ -581,6 +581,16 @@ export function LeadsInlineTable({
   // Reset page when data changes
   useEffect(() => { setTablePage(0); }, [displayItems.length]);
 
+  // Scroll selected row into view (e.g. from search)
+  useEffect(() => {
+    if (!selectedLeadId) return;
+    const raf = requestAnimationFrame(() => {
+      const row = document.querySelector(`tr[data-lead-id="${selectedLeadId}"]`) as HTMLElement | null;
+      if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedLeadId]);
+
   const totalPages = Math.ceil(leadCount / TABLE_PAGE_SIZE);
   const paginatedItems = useMemo(() => {
     if (leadCount <= TABLE_PAGE_SIZE) return displayItems;
@@ -751,6 +761,7 @@ export function LeadsInlineTable({
                   return (
                     <tr
                       key={leadId}
+                      data-lead-id={leadId}
                       className={cn(
                         "group/row cursor-pointer h-[52px] animate-card-enter",
                         isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",

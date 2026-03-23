@@ -1,0 +1,15 @@
+{
+  "title": "Welkom bij LeadAwaker",
+  "subtitle": "Stel je profiel in om te beginnen.",
+  "fields": {
+    "fullName": "Volledige Naam",
+    "fullNamePlaceholder": "Je volledige naam",
+    "timezone": "Tijdzone"
+  },
+  "continue": "Doorgaan",
+  "saving": "Opslaan...",
+  "errors": {
+    "nameRequired": "Voer je volledige naam in.",
+    "saveFailed": "Profiel opslaan mislukt. Probeer het opnieuw."
+  }
+}

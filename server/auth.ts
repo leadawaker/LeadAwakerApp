@@ -37,6 +37,16 @@ export async function hashPassword(password: string): Promise<string> {
   return `scrypt:${salt}:${derived.toString("hex")}`;
 }
 
+// Short-lived in-process cache so deserializeUser doesn't hit the DB on
+// every authenticated request (passport calls this once per API call).
+const _userCache = new Map<number, { user: Users; expiresAt: number }>();
+const USER_CACHE_TTL_MS = 60_000;
+
+/** Bust the user cache so the next request reads fresh data from the DB. */
+export function invalidateUserCache(userId: number) {
+  _userCache.delete(userId);
+}
+
 export function setupAuth(app: Express) {
   // Enforce SESSION_SECRET in production — never fall back to the dev default
   if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
@@ -93,20 +103,15 @@ export function setupAuth(app: Express) {
     done(null, user.id);
   });
 
-  // Short-lived in-process cache so deserializeUser doesn't hit the DB on
-  // every authenticated request (passport calls this once per API call).
-  const userCache = new Map<number, { user: Users; expiresAt: number }>();
-  const USER_CACHE_TTL_MS = 60_000;
-
   passport.deserializeUser(async (id: unknown, done) => {
     const numId = Number(id);
-    const cached = userCache.get(numId);
+    const cached = _userCache.get(numId);
     if (cached && cached.expiresAt > Date.now()) {
       return done(null, cached.user);
     }
     try {
       const user = await storage.getAppUserById(numId);
-      if (user) userCache.set(numId, { user, expiresAt: Date.now() + USER_CACHE_TTL_MS });
+      if (user) _userCache.set(numId, { user, expiresAt: Date.now() + USER_CACHE_TTL_MS });
       done(null, user ?? false);
     } catch (err) {
       done(err);
@@ -116,13 +121,22 @@ export function setupAuth(app: Express) {
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "";
+
+/** Check session auth OR internal API key (for Python automations on same host). */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) return next();
+  // Internal API key bypass (automations running on same Pi)
+  const key = req.headers["x-internal-key"] as string | undefined;
+  if (INTERNAL_API_KEY && key === INTERNAL_API_KEY) return next();
   res.status(401).json({ message: "Unauthorized" });
 }
 
 /** Only the agency account (accountsId === 1) or Admin role can access this route. */
 export function requireAgency(req: Request, res: Response, next: NextFunction) {
+  // Internal API key = agency-level access
+  const key = req.headers["x-internal-key"] as string | undefined;
+  if (INTERNAL_API_KEY && key === INTERNAL_API_KEY) return next();
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
   const user = req.user!;
   if (user.accountsId !== 1 && user.role !== "Admin") {
@@ -266,7 +280,7 @@ export function registerAuthRoutes(app: Express) {
   /** POST /api/auth/accept-invite — validate invite token and activate a new user account */
   app.post("/api/auth/accept-invite", async (req, res) => {
     try {
-      const { token, email, password, confirmPassword, fullName } = req.body;
+      const { token, email, password, confirmPassword, fullName, timezone, language } = req.body;
 
       // 1. Validate all fields are present
       if (!token || !email || !password || !confirmPassword || !fullName) {
@@ -342,24 +356,44 @@ export function registerAuthRoutes(app: Express) {
       // 10. Hash the new password
       const newHash = await hashPassword(password);
 
-      // 11. Strip invite_token from preferences, record acceptance timestamp
+      // 11. Strip invite_token from preferences, record acceptance timestamp, save timezone + language
       const { invite_token: _removed, ...restPrefs } = prefs;
-      const newPrefs = { ...restPrefs, invite_accepted_at: new Date().toISOString() };
+      const newPrefs = {
+        ...restPrefs,
+        invite_accepted_at: new Date().toISOString(),
+        ...(language ? { language } : {}),
+      };
       const newPrefsJson = JSON.stringify(newPrefs);
 
       // 12. Persist updates
       if (user.id === null) {
         return res.status(500).json({ message: "Failed to activate account." });
       }
-      await storage.updateAppUser(user.id, {
+      const updatedUser = await storage.updateAppUser(user.id, {
         passwordHash: newHash,
         status: "Active",
         fullName1: fullName,
+        ...(timezone ? { timezone } : {}),
         preferences: newPrefsJson,
       } as any);
 
-      // 13. Success
-      return res.status(200).json({ message: "Account activated successfully. You can now sign in." });
+      // 13. Auto-login: create session so user doesn't have to log in separately
+      if (updatedUser) {
+        await new Promise<void>((resolve, reject) => {
+          (req as any).login({ ...updatedUser, passwordHash: undefined }, (err: any) => {
+            if (err) reject(err); else resolve();
+          });
+        });
+      }
+
+      // 14. Return user info for client-side redirect
+      const role = updatedUser?.role || user.role || "Viewer";
+      const accountsId = updatedUser?.accountsId ?? user.accountsId;
+      return res.status(200).json({
+        message: "Account activated successfully.",
+        autoLogin: true,
+        user: { id: user.id, email, role, accountsId, fullName1: fullName },
+      });
     } catch (err: any) {
       console.error("Error accepting invite:", err);
       return res.status(500).json({ message: "Failed to activate account." });

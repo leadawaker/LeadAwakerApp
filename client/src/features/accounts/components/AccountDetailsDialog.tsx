@@ -313,7 +313,7 @@ export function AccountDetailsDialog({
       const val = form[key];
       return (
         <span className="text-sm text-foreground break-words">
-          {val || <span className="text-muted-foreground italic">—</span>}
+          {val || <span className="text-muted-foreground italic">{"2014"}</span>}
         </span>
       );
     }
@@ -344,7 +344,7 @@ export function AccountDetailsDialog({
    * Returns "—" for empty/null values.
    */
   function formatTimeDisplay(val: string | null | undefined): React.ReactNode {
-    if (!val) return <span className="text-muted-foreground italic">—</span>;
+    if (!val) return <span className="text-muted-foreground italic">{"2014"}</span>;
     // Strip seconds if present: "09:00:00" → "09:00"
     const parts = val.split(":");
     if (parts.length < 2) return <span className="text-foreground text-sm">{val}</span>;
@@ -399,7 +399,7 @@ export function AccountDetailsDialog({
     if (!editing) {
       return (
         <span className="text-sm text-foreground">
-          {val ? getLabel(val) : <span className="text-muted-foreground italic">—</span>}
+          {val ? getLabel(val) : <span className="text-muted-foreground italic">{"2014"}</span>}
         </span>
       );
     }
@@ -427,7 +427,7 @@ export function AccountDetailsDialog({
       const val = form[key];
       return (
         <span className="text-sm text-foreground">
-          {val != null ? String(val) : <span className="text-muted-foreground italic">—</span>}
+          {val != null ? String(val) : <span className="text-muted-foreground italic">{"2014"}</span>}
         </span>
       );
     }
@@ -478,7 +478,7 @@ export function AccountDetailsDialog({
     if (!editing) {
       const cats = parseServiceCategories(val);
       if (cats.length === 0) {
-        return <span className="text-muted-foreground italic text-sm">—</span>;
+        return <span className="text-muted-foreground italic text-sm">{"2014"}</span>;
       }
       return (
         <div

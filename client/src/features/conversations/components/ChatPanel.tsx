@@ -1760,7 +1760,7 @@ function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) 
 
   if (!isBump) {
     // Non-bump threads = start of a contact attempt → render as "Contacted" status chip
-    const hex = PIPELINE_HEX["Contacted"] ?? "#7A73FF";
+    const hex = PIPELINE_HEX["Contacted"] ?? "#818CF8";
     const ContactedIcon = STAGE_ICON["Contacted"] ?? Send;
     return (
       <div className="flex justify-center my-4" data-testid={`thread-divider-${group.threadIndex}`}>
