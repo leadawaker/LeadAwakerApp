@@ -4,6 +4,7 @@ import { requireAuth, requireAgency } from "../auth";
 import {
   accounts,
   prospects,
+  interactions,
   outreachTemplates,
   insertAccountsSchema,
   insertProspectsSchema,
@@ -16,6 +17,7 @@ import { pool } from "../db";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl, frontendBaseUrl, setFrontendUrlWarned } from "./_helpers";
 import { storage as storageImport } from "../storage";
 import { sendInviteEmail } from "../email";
+import { broadcast } from "../sse";
 import crypto from "crypto";
 
 export function registerAccountsRoutes(app: Express): void {
@@ -85,7 +87,7 @@ export function registerAccountsRoutes(app: Express): void {
   app.get("/api/accounts/:id/knowledge", requireAuth, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);
     const { rows } = await pool.query(
-      `SELECT id, account_id AS "accountId", category, title, content, created_at AS "createdAt", updated_at AS "updatedAt"
+      `SELECT id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", created_at AS "createdAt", updated_at AS "updatedAt"
        FROM ${KB_TABLE} WHERE account_id = $1 ORDER BY category, id`, [accountId]
     );
     res.json(rows);
@@ -93,12 +95,12 @@ export function registerAccountsRoutes(app: Express): void {
 
   app.post("/api/accounts/:id/knowledge", requireAgency, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);
-    const { category, title, content } = req.body;
+    const { category, title, content, campaignIds } = req.body;
     if (!category || !title || !content) return res.status(400).json({ message: "category, title, and content are required" });
     const { rows } = await pool.query(
-      `INSERT INTO ${KB_TABLE} (account_id, category, title, content, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id, account_id AS "accountId", category, title, content`,
-      [accountId, category, title, content]
+      `INSERT INTO ${KB_TABLE} (account_id, category, title, content, campaign_ids, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds"`,
+      [accountId, category, title, content, campaignIds !== undefined ? campaignIds : null]
     );
     res.status(201).json(rows[0]);
   }));
@@ -106,11 +108,17 @@ export function registerAccountsRoutes(app: Express): void {
   app.patch("/api/accounts/:id/knowledge/:kbId", requireAgency, wrapAsync(async (req, res) => {
     const kbId = Number(req.params.kbId);
     const { category, title, content } = req.body;
+    const hasCampaignIds = 'campaignIds' in req.body;
+    const campaignIdsValue = req.body.campaignIds ?? null;
     const { rows } = await pool.query(
-      `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
-       content = COALESCE($3, content), updated_at = NOW()
-       WHERE id = $4 RETURNING id, account_id AS "accountId", category, title, content`,
-      [category, title, content, kbId]
+      hasCampaignIds
+        ? `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
+           content = COALESCE($3, content), campaign_ids = $4, updated_at = NOW()
+           WHERE id = $5 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds"`
+        : `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
+           content = COALESCE($3, content), updated_at = NOW()
+           WHERE id = $4 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds"`,
+      hasCampaignIds ? [category, title, content, campaignIdsValue, kbId] : [category, title, content, kbId]
     );
     if (!rows.length) return res.status(404).json({ message: "KB entry not found" });
     res.json(rows[0]);
@@ -257,6 +265,66 @@ export function registerAccountsRoutes(app: Express): void {
       account: toDbKeys(account as any, accounts),
       prospect: toDbKeys(updatedProspect as any, prospects),
     });
+  }));
+
+  app.post("/api/prospects/:id/whatsapp/send", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { message } = req.body as { message?: string };
+
+    if (!message?.trim()) {
+      return res.status(400).json({ message: "message is required" });
+    }
+
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    const phone = (prospect as any).phone || (prospect as any).contactPhone || null;
+    if (!phone) {
+      return res.status(400).json({ message: "Prospect has no phone number" });
+    }
+
+    const token = process.env.WHATSAPP_TOKEN;
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    let sendStatus: string = "queued";
+
+    if (token && phoneNumberId) {
+      const waRes = await fetch(
+        `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: String(phone).replace(/\D/g, ""),
+            type: "text",
+            text: { body: message.trim() },
+          }),
+        }
+      );
+      if (!waRes.ok) {
+        const err = await waRes.json().catch(() => ({}));
+        return res.status(502).json({ message: "WhatsApp API error", detail: err });
+      }
+      sendStatus = "sent";
+    }
+
+    const interaction = await storage.createInteraction({
+      prospectId,
+      accountsId: 1,
+      content: message.trim(),
+      type: "whatsapp",
+      direction: "outbound",
+      status: sendStatus,
+      sentAt: new Date(),
+    });
+
+    const responseBody = toDbKeys(interaction as any, interactions);
+    broadcast(1, "new_interaction", responseBody);
+
+    res.status(201).json({ interaction: responseBody });
   }));
 
   app.delete("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {

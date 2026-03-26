@@ -571,7 +571,7 @@
       "parseFailed": "Falha na an\u00e1lise: {{message}}",
       "aiParseFailed": "Falha na an\u00e1lise por IA: {{message}}",
       "saveFailed": "Falha ao salvar: {{message}}",
-      "noApiKeyTitle": "ANTHROPIC_API_KEY",
+      "noApiKeyTitle": "OPEN_AI_API_KEY",
       "noApiKeyDesc": "n\u00e3o configurada no servidor. Preencha os campos manualmente ou configure a chave no arquivo .env e reinicie o servidor.",
       "noApiKeyDescAlt": "n\u00e3o configurada. Preencha os campos manualmente ou configure a chave no .env e reinicie o servidor.",
       "date": "Data",

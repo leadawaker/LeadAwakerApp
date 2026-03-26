@@ -1872,11 +1872,23 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
   // ─── Automation Logs ──────────────────────────────────────────────
   // Agency-only
 
-  app.get("/api/automation-logs", requireAgency, wrapAsync(async (req, res) => {
+  app.get("/api/automation-logs/summary", requireAgency, wrapAsync(async (req, res) => {
     const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
-    const data = accountId
-      ? await storage.getAutomationLogsByAccountId(accountId)
-      : await storage.getAutomationLogs();
+    const data = await storage.getAutomationLogsSummary(accountId);
+    res.json(data);
+  }));
+
+  app.get("/api/automation-logs", requireAgency, wrapAsync(async (req, res) => {
+    const { page = '0', limit = '50', accountId, status, workflowName, dateFrom, dateTo } = req.query;
+    const data = await storage.getAutomationLogsPaginated({
+      page: Number(page),
+      limit: Number(limit),
+      accountId: accountId ? Number(accountId) : undefined,
+      status: status as string | undefined,
+      workflowName: workflowName as string | undefined,
+      dateFrom: dateFrom as string | undefined,
+      dateTo: dateTo as string | undefined,
+    });
     res.json(data);
   }));
 

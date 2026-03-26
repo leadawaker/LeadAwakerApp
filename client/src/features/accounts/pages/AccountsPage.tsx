@@ -2,9 +2,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import {
-  List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check, Pencil, X,
-} from "lucide-react";
+import { List, Table2 } from "lucide-react";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { AccountListView } from "../components/AccountListView";
@@ -16,123 +14,24 @@ import { useAccountsData } from "../hooks/useAccountsData";
 import { deleteAccount } from "../api/accountsApi";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { SearchPill } from "@/components/ui/search-pill";
 import { createAccount, updateAccount } from "../api/accountsApi";
+import {
+  AccountViewMode,
+  AccountGroupBy,
+  AccountSortBy,
+  TableSortByOption,
+  TableGroupByOption,
+  VIEW_MODE_KEY,
+  VISIBLE_COLS_KEY,
+  LIST_PREFS_KEY,
+  TABLE_PREFS_KEY,
+  DEFAULT_VISIBLE,
+  ACCOUNT_STATUS_ORDER,
+  TableToolbar,
+} from "./pageWidgets";
 
-export type AccountViewMode = "list" | "table";
-export type AccountGroupBy  = "status" | "type" | "none";
-export type AccountSortBy   = "recent" | "name_asc" | "name_desc";
-
-const VIEW_MODE_KEY    = "accounts-view-mode";
-const VISIBLE_COLS_KEY = "accounts-table-visible-cols";
-const LIST_PREFS_KEY   = "accounts-list-prefs";
-const TABLE_PREFS_KEY  = "accounts-table-prefs";
-
-/* ── Table column metadata for Fields dropdown ── */
-const TABLE_COL_META_KEYS = [
-  { key: "name",            labelKey: "columns.name",          defaultVisible: true  },
-  { key: "status",          labelKey: "columns.status",        defaultVisible: true  },
-  { key: "type",            labelKey: "columns.type",          defaultVisible: true  },
-  { key: "owner_email",     labelKey: "columns.ownerEmail",    defaultVisible: true  },
-  { key: "phone",           labelKey: "columns.phone",         defaultVisible: true  },
-  { key: "business_niche",  labelKey: "columns.niche",         defaultVisible: true  },
-  { key: "website",         labelKey: "columns.website",       defaultVisible: false },
-  { key: "timezone",        labelKey: "columns.timezone",      defaultVisible: false },
-  { key: "max_daily_sends", labelKey: "columns.dailySends",    defaultVisible: false },
-  { key: "notes",           labelKey: "columns.notes",         defaultVisible: false },
-];
-
-const DEFAULT_VISIBLE = TABLE_COL_META_KEYS.filter((c) => c.defaultVisible).map((c) => c.key);
-
-/* ── Table sort / group types ── */
-type TableSortByOption  = "recent" | "name_asc" | "name_desc";
-type TableGroupByOption = "status" | "type" | "none";
-
-const TABLE_SORT_KEYS: Record<TableSortByOption, string> = {
-  recent:    "sort.mostRecent",
-  name_asc:  "sort.nameAZ",
-  name_desc: "sort.nameZA",
-};
-
-const TABLE_GROUP_KEYS: Record<TableGroupByOption, string> = {
-  status: "group.status",
-  type:   "group.type",
-  none:   "group.none",
-};
-
-const STATUS_OPTIONS = ["Active", "Trial", "Inactive", "Suspended"];
-const ACCOUNT_STATUS_ORDER = ["Active", "Trial", "Inactive", "Suspended"];
-
-const STATUS_DOT: Record<string, string> = {
-  Active:    "bg-emerald-500",
-  Trial:     "bg-amber-500",
-  Inactive:  "bg-slate-400",
-  Suspended: "bg-rose-500",
-};
-
-/* ── Expand-on-hover button constants ── */
-const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
-
-/* ── Tab definitions ── */
-// VIEW_TABS labels are set inside component via t()
-
-// ── Inline confirmation button ────────────────────────────────────────────────
-function ConfirmToolbarButton({
-  icon: Icon, label, onConfirm, variant = "default", confirmYes = "Yes", confirmNo = "No",
-}: {
-  icon: React.ElementType; label: string;
-  onConfirm: () => Promise<void> | void;
-  variant?: "default" | "danger";
-  confirmYes?: string; confirmNo?: string;
-}) {
-  const [confirming, setConfirming] = useState(false);
-  const [loading, setLoading] = useState(false);
-  if (confirming) {
-    return (
-      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
-        <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
-        <button
-          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
-          onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
-          disabled={loading}
-        >
-          {loading ? "…" : confirmYes}
-        </button>
-        <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setConfirming(false)}>{confirmNo}</button>
-      </div>
-    );
-  }
-  // Determine max-w based on label length
-  const labelLen = label.length;
-  const hoverMaxW = labelLen <= 4 ? "hover:max-w-[80px]" : labelLen <= 6 ? "hover:max-w-[100px]" : "hover:max-w-[120px]";
-  return (
-    <button
-      className={cn(
-        xBase, hoverMaxW,
-        variant === "danger"
-          ? "border-red-300/50 text-red-500 hover:text-red-600"
-          : xDefault,
-      )}
-      onClick={() => setConfirming(true)}
-    >
-      <Icon className="h-4 w-4 shrink-0" />
-      <span className={xSpan}>{label}</span>
-    </button>
-  );
-}
+export type { AccountViewMode, AccountGroupBy, AccountSortBy } from "./pageWidgets";
 
 export default function AccountsPage() {
   const { t } = useTranslation("accounts");
@@ -142,11 +41,6 @@ export default function AccountsPage() {
     { id: "list",  label: t("views.list"),  icon: List   },
     { id: "table", label: t("views.table"), icon: Table2 },
   ];
-
-  const TABLE_COL_META = TABLE_COL_META_KEYS.map((c) => ({
-    ...c,
-    label: t(c.labelKey),
-  }));
 
   /* ── View mode (persisted) ─────────────────────────────────────────────── */
   const [viewMode, setViewMode] = useState<AccountViewMode>(() => {
@@ -314,7 +208,6 @@ export default function AccountsPage() {
     setTableFilterType("");
   }, []);
   const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterType;
-  const tableActiveFilterCount = tableFilterStatus.length + (tableFilterType ? 1 : 0);
 
   /* ── Table bulk handlers ────────────────────────────────────────────────── */
   const handleAddAccount = useCallback(async () => {
@@ -427,198 +320,6 @@ export default function AccountsPage() {
     return result;
   }, [rows, tableFilterStatus, tableFilterType, tableSortBy, tableGroupBy]);
 
-  /* ── Table toolbar (rendered inline with tab buttons) ─────────────────── */
-  const tableToolbar = (
-    <>
-      <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
-
-      {/* Search */}
-      <SearchPill
-        value={tableSearch}
-        onChange={setTableSearch}
-        open={!!tableSearch}
-        onOpenChange={() => {}}
-        placeholder={t("page.searchPlaceholder")}
-      />
-
-      {/* +Add */}
-      <ConfirmToolbarButton icon={Plus} label={t("toolbar.add")} onConfirm={handleAddAccount} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
-
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, tableSortBy !== "recent" ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(Object.keys(TABLE_SORT_KEYS) as TableSortByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-indigo")}>
-              {t(TABLE_SORT_KEYS[opt])}
-              {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isTableFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filter.status")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {STATUS_OPTIONS.map((s) => (
-            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-              <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
-              <span className="flex-1">{s}</span>
-              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-            </DropdownMenuItem>
-          ))}
-
-          {availableTypes.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.type")}</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={(e) => { e.preventDefault(); setTableFilterType(""); }}
-                className={cn("text-[12px]", !tableFilterType && "font-semibold text-brand-indigo")}
-              >
-                {t("filter.allTypes")} {!tableFilterType && <Check className="h-3 w-3 ml-auto" />}
-              </DropdownMenuItem>
-              {availableTypes.map((t) => (
-                <DropdownMenuItem
-                  key={t}
-                  onClick={(e) => { e.preventDefault(); setTableFilterType(tableFilterType === t ? "" : t); }}
-                  className={cn("text-[12px]", tableFilterType === t && "font-semibold text-brand-indigo")}
-                >
-                  <span className="flex-1 truncate">{t}</span>
-                  {tableFilterType === t && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-            </>
-          )}
-
-          {isTableFilterActive && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Group */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, tableGroupBy !== "status" ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          {(Object.keys(TABLE_GROUP_KEYS) as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {t(TABLE_GROUP_KEYS[opt])}
-              {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Fields (Column Visibility) */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, visibleCols.size !== DEFAULT_VISIBLE.length ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <Eye className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.fields")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.showHideColumns")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {TABLE_COL_META.map((col) => {
-            const isVisible = visibleCols.has(col.key);
-            return (
-              <DropdownMenuItem
-                key={col.key}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setVisibleCols((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); }
-                    else next.add(col.key);
-                    return next;
-                  });
-                }}
-                className="flex items-center gap-2 text-[12px]"
-              >
-                <div className={cn(
-                  "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
-                  isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50"
-                )}>
-                  {isVisible && <Check className="h-2 w-2 text-white" />}
-                </div>
-                <span className="flex-1">{col.label}</span>
-                {!col.defaultVisible && (
-                  <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>
-                )}
-              </DropdownMenuItem>
-            );
-          })}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE))} className="text-[12px] text-muted-foreground">
-            {t("toolbar.resetToDefault")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Selection actions — far right, when rows selected */}
-      {tableSelectedIds.size > 0 && (
-        <>
-          <div className="flex-1 min-w-0" />
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Change Status dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={cn(xBase, xDefault, "hover:max-w-[140px]")}>
-                  <Pencil className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("toolbar.changeStatus")}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {STATUS_OPTIONS.map((s) => (
-                  <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s)} className="text-[12px]">
-                    {s}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateAccounts} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
-            <ConfirmToolbarButton icon={Trash2} label={t("toolbar.delete")} onConfirm={handleBulkDeleteAccounts} variant="danger" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
-
-            {/* Count badge with dismiss */}
-            <button
-              className="h-9 inline-flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 text-[12px] font-medium shrink-0 cursor-default ml-1 text-foreground/60"
-              onClick={() => setTableSelectedIds(new Set())}
-            >
-              <span className="tabular-nums">{tableSelectedIds.size}</span>
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </>
-      )}
-    </>
-  );
-
   return (
     <>
       <div className="flex flex-col h-full">
@@ -669,7 +370,29 @@ export default function AccountsPage() {
                   </div>
                   <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
                   {/* Inline table toolbar */}
-                  {tableToolbar}
+                  <TableToolbar
+                    tableSearch={tableSearch}
+                    onTableSearchChange={setTableSearch}
+                    tableSortBy={tableSortBy}
+                    onTableSortByChange={setTableSortBy}
+                    isTableFilterActive={isTableFilterActive}
+                    tableFilterStatus={tableFilterStatus}
+                    onToggleTableFilterStatus={toggleTableFilterStatus}
+                    availableTypes={availableTypes}
+                    tableFilterType={tableFilterType}
+                    onTableFilterTypeChange={setTableFilterType}
+                    onClearTableFilters={clearTableFilters}
+                    tableGroupBy={tableGroupBy}
+                    onTableGroupByChange={setTableGroupBy}
+                    visibleCols={visibleCols}
+                    onVisibleColsChange={setVisibleCols}
+                    tableSelectedIds={tableSelectedIds}
+                    onClearSelection={() => setTableSelectedIds(new Set())}
+                    onAddAccount={handleAddAccount}
+                    onBulkStatusChange={handleBulkStatusChange}
+                    onDuplicateAccounts={handleDuplicateAccounts}
+                    onBulkDeleteAccounts={handleBulkDeleteAccounts}
+                  />
                 </div>
 
                 {/* Table content */}

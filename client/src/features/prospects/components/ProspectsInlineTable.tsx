@@ -272,7 +272,7 @@ function EditableCell({
         onChange={(e) => onSave(e.target.value)}
         onBlur={() => onSave(editValue)}
         onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-        className="w-full h-[26px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
+        className="w-full h-[26px] text-[11px] bg-white dark:bg-card rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
       >
         {options.map((s) => (
           <option key={s} value={s}>{s}</option>
@@ -305,7 +305,7 @@ function EditableCell({
             ta.style.height = Math.max(32, ta.scrollHeight) + "px";
             ta.selectionStart = ta.selectionEnd = ta.value.length;
           }}
-          className="absolute top-0 left-0 w-full min-h-[32px] max-h-[300px] text-[12px] leading-relaxed bg-white px-2.5 py-1.5 ring-2 ring-brand-indigo/50 shadow-[0_4px_24px_rgba(0,0,0,0.12)] outline-none resize-none rounded-none"
+          className="absolute top-0 left-0 w-full min-h-[32px] max-h-[300px] text-[12px] leading-relaxed bg-white dark:bg-card px-2.5 py-1.5 ring-2 ring-brand-indigo/50 shadow-[0_4px_24px_rgba(0,0,0,0.12)] outline-none resize-none rounded-none"
           style={{ zIndex: 9999, minWidth: 240, borderRadius: 0 }}
         />
       </div>
@@ -344,7 +344,7 @@ function SortableHeaderCell({ col, isFirst, t, onResizeStart }: { col: ColumnDef
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    position: "relative",
+    ...(isFirst ? {} : { position: "relative" as const }),
   };
   return (
     <th
@@ -732,7 +732,7 @@ export function ProspectsInlineTable({
             </colgroup>
 
             {/* Sticky header */}
-            <thead className="sticky top-0 z-20" style={{ boxShadow: "0 2px 0 0 hsl(var(--muted))" }}>
+            <thead className="sticky top-0 z-40 bg-muted" style={{ boxShadow: "0 2px 0 0 hsl(var(--muted))" }}>
               <tr>
                 {/* Select-all checkbox */}
                 <th className="sticky left-0 z-30 w-[36px] px-1 bg-muted border-b border-border/20">
@@ -855,7 +855,7 @@ export function ProspectsInlineTable({
                   const company = String(prospect.company || t("detail.unnamedProspect"));
                   const niche = String(prospect.niche || "");
                   const nicheColor = getNicheColor(niche);
-                  const bgClass = isHighlighted ? "bg-white" : "bg-card group-hover/row:bg-card-hover";
+                  const bgClass = isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover";
 
                   const isRowEditing = editingCell?.pid === pid;
                   const currentRowIdx = rowIdx++;
@@ -865,7 +865,7 @@ export function ProspectsInlineTable({
                       data-prospect-id={pid}
                       className={cn(
                         "group/row cursor-pointer h-[40px] animate-card-enter",
-                        isHighlighted ? "bg-white" : "bg-card hover:bg-card-hover",
+                        isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
                       style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms`, ...(isRowEditing ? { position: "relative" as const, zIndex: 50 } : {}) }}
                       onClick={(e) => handleRowClick(prospect, e)}

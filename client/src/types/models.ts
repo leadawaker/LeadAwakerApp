@@ -51,6 +51,9 @@ export type Campaign = {
   bump_1_delay_hours: number;
   bump_2_delay_hours: number;
   bump_3_delay_hours: number;
+  bump_1_ai_reference?: boolean;
+  bump_2_ai_reference?: boolean;
+  bump_3_ai_reference?: boolean;
   daily_lead_limit: number;
   message_interval_minutes: number;
   active_hours_start: string;

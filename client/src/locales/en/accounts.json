@@ -247,6 +247,14 @@
     "contentPlaceholder": "Content the AI will use to answer questions...",
     "emptyTitle": "No knowledge base entries yet",
     "emptyDescription": "Add pricing, services, FAQs, and more so the AI can answer lead questions accurately.",
+    "campaigns": {
+      "label": "Campaigns",
+      "all": "All",
+      "hidden": "Hidden",
+      "allCampaigns": "All campaigns",
+      "hiddenFromAll": "Hidden from all",
+      "count": "campaigns"
+    },
     "categories": {
       "pricing": "Pricing",
       "services": "Services",

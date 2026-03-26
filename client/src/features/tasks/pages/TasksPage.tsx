@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
@@ -149,14 +149,13 @@ export default function TasksPage() {
   const { data: categories = [] } = useTaskCategories();
   const ganttToolbarRef = useRef<HTMLDivElement>(null);
 
-  // Persisted state
-  const [sort, setSort] = useState<SortOption>(() => loadLocal("tasks-sort", "due_date_asc"));
+  // Persisted state (viewMode first: other states reference it for per-view keys)
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const stored = loadLocal<string>("tasks-view-mode", "kanban");
-    // Migrate: tree view was removed, fallback to gantt
     if (stored === "tree") return "gantt";
     return stored as ViewMode;
   });
+  const [sort, setSort] = useState<SortOption>(() => loadLocal(`tasks-${viewMode}-sort`, "due_date_asc"));
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [showTags, setShowTags] = useState<boolean>(() => loadLocal("tasks-show-tags", true));
   const [tableGroupBy, setTableGroupBy] = useState<GroupOption>(() => loadLocal("tasks-table-group", "category"));
@@ -214,10 +213,12 @@ export default function TasksPage() {
   // Transient state
   const [searchOpen, setSearchOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTags, setFilterTags] = useState<string[]>(() => loadLocal<string[]>("tasks-filter-tags", []));
-  const [filterStatuses, setFilterStatuses] = useState<TaskStatus[]>(() => loadLocal<TaskStatus[]>("tasks-filter-statuses", ["todo", "in_progress"]));
-  const [filterPriorities, setFilterPriorities] = useState<TaskPriority[]>(() => loadLocal<TaskPriority[]>("tasks-filter-priorities", []));
-  const [dateRange, setDateRange] = useState<DateRange>(() => loadLocal<DateRange>("tasks-filter-daterange", "all"));
+  const deferredSearch = useDeferredValue(searchQuery);
+  const [filterTags, setFilterTags] = useState<string[]>(() => loadLocal<string[]>(`tasks-${viewMode}-filter-tags`, []));
+  const [filterStatuses, setFilterStatuses] = useState<TaskStatus[]>(() => loadLocal<TaskStatus[]>(`tasks-${viewMode}-filter-statuses`, viewMode === "kanban" ? [] : ["todo", "in_progress"]));
+  const [filterPriorities, setFilterPriorities] = useState<TaskPriority[]>(() => loadLocal<TaskPriority[]>(`tasks-${viewMode}-filter-priorities`, []));
+  const [dateRange, setDateRange] = useState<DateRange>(() => loadLocal<DateRange>(`tasks-${viewMode}-filter-daterange`, "all"));
+  const [kanbanLeafOnly, setKanbanLeafOnly] = useState<boolean>(() => loadLocal("tasks-kanban-leaf-only", true));
   const [ganttMaxDepth, setGanttMaxDepth] = useState<number | null>(() => loadLocal<number | null>("tasks-gantt-maxdepth", null));
   const [ganttGroupBy, setGanttGroupBy] = useState<"hierarchy" | "status" | "priority">(() => loadLocal<"hierarchy" | "status" | "priority">("tasks-gantt-groupby", "hierarchy"));
 
@@ -233,11 +234,39 @@ export default function TasksPage() {
   // Desktop detail panel state (for table views)
   const [desktopSelectedTaskId, setDesktopSelectedTaskId] = useState<number | null>(null);
 
-  // Setters with persistence
+  // ── Per-view filter reload (each view keeps its own filters) ────────
+  const prevViewRef = useRef(viewMode);
+  useEffect(() => {
+    if (prevViewRef.current === viewMode) return;
+    prevViewRef.current = viewMode;
+    setSort(loadLocal(`tasks-${viewMode}-sort`, "due_date_asc"));
+    setFilterStatuses(loadLocal(`tasks-${viewMode}-filter-statuses`, viewMode === "kanban" ? [] : ["todo", "in_progress"]));
+    setFilterPriorities(loadLocal(`tasks-${viewMode}-filter-priorities`, []));
+    setFilterTags(loadLocal(`tasks-${viewMode}-filter-tags`, []));
+    setDateRange(loadLocal(`tasks-${viewMode}-filter-daterange`, "all"));
+  }, [viewMode]);
+
+  // ── Task depth map (for L3+ kanban filter) ────────────────────────────
+  const taskDepthMap = useMemo(() => {
+    const parentMap = new Map(tasks.map(t => [t.id, t.parentTaskId]));
+    const depths = new Map<number, number>();
+    function getDepth(id: number): number {
+      if (depths.has(id)) return depths.get(id)!;
+      const pid = parentMap.get(id);
+      if (!pid) { depths.set(id, 1); return 1; }
+      const d = getDepth(pid) + 1;
+      depths.set(id, d);
+      return d;
+    }
+    for (const t of tasks) getDepth(t.id);
+    return depths;
+  }, [tasks]);
+
+  // Setters with persistence (per-view keys)
   const handleSort = useCallback((v: SortOption) => {
     setSort(v);
-    saveLocal("tasks-sort", v);
-  }, []);
+    saveLocal(`tasks-${viewMode}-sort`, v);
+  }, [viewMode]);
 
   const handleViewMode = useCallback((v: ViewMode) => {
     setViewMode(v);
@@ -260,45 +289,53 @@ export default function TasksPage() {
   const toggleFilterTag = useCallback((tag: string) => {
     setFilterTags((prev) => {
       const next = prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag];
-      saveLocal("tasks-filter-tags", next);
+      saveLocal(`tasks-${viewMode}-filter-tags`, next);
       return next;
     });
-  }, []);
+  }, [viewMode]);
 
   const toggleFilterStatus = useCallback((status: TaskStatus) => {
     setFilterStatuses((prev) => {
       const next = prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status];
-      saveLocal("tasks-filter-statuses", next);
+      saveLocal(`tasks-${viewMode}-filter-statuses`, next);
       return next;
     });
-  }, []);
+  }, [viewMode]);
 
   const toggleFilterPriority = useCallback((priority: TaskPriority) => {
     setFilterPriorities((prev) => {
       const next = prev.includes(priority) ? prev.filter((p) => p !== priority) : [...prev, priority];
-      saveLocal("tasks-filter-priorities", next);
+      saveLocal(`tasks-${viewMode}-filter-priorities`, next);
       return next;
     });
-  }, []);
+  }, [viewMode]);
 
   const handleSetFilterStatuses = useCallback((v: TaskStatus[]) => {
     setFilterStatuses(v);
-    saveLocal("tasks-filter-statuses", v);
-  }, []);
+    saveLocal(`tasks-${viewMode}-filter-statuses`, v);
+  }, [viewMode]);
 
   const handleSetFilterPriorities = useCallback((v: TaskPriority[]) => {
     setFilterPriorities(v);
-    saveLocal("tasks-filter-priorities", v);
-  }, []);
+    saveLocal(`tasks-${viewMode}-filter-priorities`, v);
+  }, [viewMode]);
 
   const handleSetFilterTags = useCallback((v: string[]) => {
     setFilterTags(v);
-    saveLocal("tasks-filter-tags", v);
-  }, []);
+    saveLocal(`tasks-${viewMode}-filter-tags`, v);
+  }, [viewMode]);
 
   const handleSetDateRange = useCallback((v: DateRange) => {
     setDateRange(v);
-    saveLocal("tasks-filter-daterange", v);
+    saveLocal(`tasks-${viewMode}-filter-daterange`, v);
+  }, [viewMode]);
+
+  const handleKanbanLeafOnly = useCallback(() => {
+    setKanbanLeafOnly(prev => {
+      const next = !prev;
+      saveLocal("tasks-kanban-leaf-only", next);
+      return next;
+    });
   }, []);
 
   const handleSetGanttMaxDepth = useCallback((v: number | null) => {
@@ -343,12 +380,17 @@ export default function TasksPage() {
       }
     }
 
+    // Kanban L3+ filter: only show actionable (leaf-level) tasks
+    if (viewMode === "kanban" && kanbanLeafOnly) {
+      result = result.filter(t => (taskDepthMap.get(t.id) ?? 1) >= 3);
+    }
+
     return result;
-  }, [tasks, dateRange, filterTags, selectedCategoryId, filterStatuses, filterPriorities, viewMode]);
+  }, [tasks, dateRange, filterTags, selectedCategoryId, filterStatuses, filterPriorities, viewMode, kanbanLeafOnly, taskDepthMap]);
 
   // Mobile tasks: filtered + searched + sorted
   const mobileTasks = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = deferredSearch.toLowerCase().trim();
     const rangeFiltered = tasks.filter((t) => taskInRange(t, dateRange));
     const tagFiltered = filterTags.length
       ? rangeFiltered.filter((t) => {
@@ -366,7 +408,7 @@ export default function TasksPage() {
         )
       : tagFiltered;
     return sortTasks(searched, sort);
-  }, [tasks, filterTags, dateRange, searchQuery, sort]);
+  }, [tasks, filterTags, dateRange, deferredSearch, sort]);
 
   // Mobile: tasks filtered to the active tab
   const tabTasks = useMemo(
@@ -503,7 +545,21 @@ export default function TasksPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* 7. Levels filter (gantt only) */}
+      {/* 7a. L3+ filter (kanban only) */}
+      {viewMode === "kanban" && (
+        <button
+          onClick={handleKanbanLeafOnly}
+          className={cn(xBase, "md:hover:max-w-[100px]", kanbanLeafOnly ? [xActive, xExpanded] : xDefault)}
+          title="Show only actionable tasks (L3+)"
+        >
+          <Layers className="h-4 w-4 shrink-0" />
+          <span className={kanbanLeafOnly ? xSpanVisible : xSpan}>
+            {kanbanLeafOnly ? "L3+" : "All levels"}
+          </span>
+        </button>
+      )}
+
+      {/* 7b. Levels filter (gantt only) */}
       {viewMode === "gantt" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -747,7 +803,7 @@ export default function TasksPage() {
               <div className="flex-1 min-h-0 overflow-hidden pb-16">
                 <TasksInlineTable
                   tasks={filteredTasks}
-                  searchQuery={searchQuery}
+                  searchQuery={deferredSearch}
                   sort={sort}
                   groupBy="none"
                   onSelectTask={(id) => setSelectedTaskId(id)}
@@ -766,7 +822,7 @@ export default function TasksPage() {
               <div className="flex-1 min-h-0 overflow-hidden pb-16">
                 <TasksGanttView
                   tasks={filteredTasks}
-                  searchQuery={searchQuery}
+                  searchQuery={deferredSearch}
                   onTaskClick={(id) => setSelectedTaskId(id)}
                   maxDepth={ganttMaxDepth}
                   groupBy={ganttGroupBy}
@@ -797,14 +853,14 @@ export default function TasksPage() {
               {viewMode === "kanban" && (
                 <TasksKanbanView
                   tasks={filteredTasks}
-                  searchQuery={searchQuery}
+                  searchQuery={deferredSearch}
                   sort={sort}
                 />
               )}
               {viewMode === "table" && (
                 <TasksInlineTable
                   tasks={filteredTasks}
-                  searchQuery={searchQuery}
+                  searchQuery={deferredSearch}
                   sort={sort}
                   groupBy={tableGroupBy}
                   onSelectTask={setDesktopSelectedTaskId}
@@ -822,7 +878,7 @@ export default function TasksPage() {
               {viewMode === "gantt" && (
                 <TasksGanttView
                   tasks={filteredTasks}
-                  searchQuery={searchQuery}
+                  searchQuery={deferredSearch}
                   onTaskClick={setDesktopSelectedTaskId}
                   toolbarPortal={ganttToolbarRef}
                   maxDepth={ganttMaxDepth}

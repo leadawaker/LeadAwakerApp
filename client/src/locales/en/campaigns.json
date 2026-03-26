@@ -225,7 +225,10 @@
     "bump2VoiceNote": "Bump 2 as voice note",
     "bump3VoiceNote": "Bump 3 as voice note",
     "aiReplyVoiceNote": "AI replies as voice notes",
-    "voiceId": "Voice ID"
+    "voiceId": "Voice ID",
+    "bump1AiReference": "Use as AI reference",
+    "bump2AiReference": "Use as AI reference",
+    "bump3AiReference": "Use as AI reference"
   },
 
   "meta": {

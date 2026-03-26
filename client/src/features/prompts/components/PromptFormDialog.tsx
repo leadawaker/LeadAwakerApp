@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { EMPTY_FORM, type PromptFormData, getPromptId } from "../types";
+import { EMPTY_FORM, type PromptFormData, type PromptVersion, getPromptId } from "../types";
 
 interface PromptFormDialogProps {
   open: boolean;
@@ -19,6 +19,20 @@ interface PromptFormDialogProps {
   prompt: any | null;
   onSaved: (prompt: any) => void;
   campaigns?: { id: number; name: string; aiModel: string }[];
+}
+
+function formatVersionDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatVersionDateTime(iso: string): string {
+  const d = new Date(iso);
+  return (
+    d.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) +
+    " " +
+    d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 
 export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [] }: PromptFormDialogProps) {
@@ -29,28 +43,98 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
   const [form, setForm] = useState<PromptFormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
+  const initialized = useRef(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Refs for uncontrolled textareas (preserves browser Ctrl+Z undo history)
+  const promptTextRef = useRef<string>("");
+  const systemMessageRef = useRef<string>("");
+  const notesRef = useRef<string>("");
+  const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const systemMessageTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Version history state
+  const [versions, setVersions] = useState<PromptVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [savingVersion, setSavingVersion] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState("");
+  const [versionDropdownOpen, setVersionDropdownOpen] = useState(false);
+  const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
       if (isEdit && prompt) {
+        const promptTextVal = prompt.promptText || prompt.prompt_text || "";
+        const systemMessageVal = prompt.systemMessage || prompt.system_message || "";
+        const notesVal = prompt.notes || "";
         setForm({
           name: prompt.name || "",
-          promptText: prompt.promptText || prompt.prompt_text || "",
-          systemMessage: prompt.systemMessage || prompt.system_message || "",
+          promptText: promptTextVal,
+          systemMessage: systemMessageVal,
           model: prompt.model || "gpt-5.1",
           temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
           maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
           status: prompt.status || "active",
           useCase: prompt.useCase || prompt.use_case || "",
-          notes: prompt.notes || "",
+          notes: notesVal,
           campaignsId: prompt.campaignsId != null ? String(prompt.campaignsId) : (prompt.Campaigns_id != null ? String(prompt.Campaigns_id) : ""),
         });
+        promptTextRef.current = promptTextVal;
+        systemMessageRef.current = systemMessageVal;
+        notesRef.current = notesVal;
+
+        // Fetch version history
+        setVersions([]);
+        setSelectedVersion("");
+        setVersionsLoading(true);
+        apiFetch(`/api/prompts/${getPromptId(prompt)}/versions`)
+          .then((r) => r.json())
+          .then((data) => setVersions(data))
+          .catch(() => {})
+          .finally(() => setVersionsLoading(false));
       } else {
         setForm(EMPTY_FORM);
+        promptTextRef.current = "";
+        systemMessageRef.current = "";
+        notesRef.current = "";
+        setVersions([]);
+        setSelectedVersion("");
       }
       setErrors({});
+      initialized.current = false;
+      const timer = setTimeout(() => { initialized.current = true; }, 150);
+      return () => clearTimeout(timer);
     }
   }, [open, prompt, isEdit]);
+
+  // Close version dropdown on outside click
+  useEffect(() => {
+    if (!versionDropdownOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (versionDropdownRef.current && !versionDropdownRef.current.contains(e.target as Node)) {
+        setVersionDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [versionDropdownOpen]);
+
+  function scheduleAutoSave() {
+    if (!isEdit || !initialized.current) return;
+    clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      handleSubmit(true);
+    }, 800);
+  }
+
+  // Auto-save on structured field changes (name, status, campaign, etc.)
+  useEffect(() => {
+    if (!isEdit || !initialized.current) return;
+    scheduleAutoSave();
+    return () => clearTimeout(autoSaveTimerRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
 
   function setField(field: keyof PromptFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -60,7 +144,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
   function validate(): boolean {
     const newErrors: Partial<PromptFormData> = {};
     if (!form.name.trim()) newErrors.name = t("form.nameRequired");
-    if (!form.promptText.trim()) newErrors.promptText = t("form.promptTextRequired");
+    if (!promptTextRef.current.trim()) newErrors.promptText = t("form.promptTextRequired");
     const temp = parseFloat(form.temperature);
     if (isNaN(temp) || temp < 0 || temp > 2) newErrors.temperature = t("form.temperatureError");
     const tokens = parseInt(form.maxTokens, 10);
@@ -69,20 +153,20 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
     return Object.keys(newErrors).length === 0;
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(silent = false) {
     if (!validate()) return;
     setSaving(true);
     try {
       const payload = {
         name: form.name.trim(),
-        promptText: form.promptText.trim(),
-        systemMessage: form.systemMessage.trim() || null,
+        promptText: promptTextRef.current.trim(),
+        systemMessage: systemMessageRef.current.trim() || null,
         model: form.model || null,
         temperature: form.temperature,
         maxTokens: parseInt(form.maxTokens, 10),
         status: form.status || "active",
         useCase: form.useCase.trim() || null,
-        notes: form.notes.trim() || null,
+        notes: notesRef.current.trim() || null,
         campaignsId: form.campaignsId ? parseInt(form.campaignsId, 10) : null,
       };
 
@@ -108,13 +192,15 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
 
       const saved = await res.json();
       onSaved(saved);
-      toast({
-        title: isEdit ? t("toast.updated") : t("toast.created"),
-        description: isEdit
-          ? t("toast.updatedDescription", { name: form.name })
-          : t("toast.createdDescription", { name: form.name }),
-      });
-      onClose();
+      if (!silent) {
+        toast({
+          title: isEdit ? t("toast.updated") : t("toast.created"),
+          description: isEdit
+            ? t("toast.updatedDescription", { name: form.name })
+            : t("toast.createdDescription", { name: form.name }),
+        });
+        onClose();
+      }
     } catch (err: any) {
       toast({
         title: isEdit ? t("toast.updateFailed") : t("toast.createFailed"),
@@ -124,6 +210,45 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
     } finally {
       setSaving(false);
     }
+  }
+
+  async function saveVersion(bumpType: "minor" | "major") {
+    if (!isEdit || !prompt) return;
+    setSavingVersion(true);
+    try {
+      const res = await apiFetch(`/api/prompts/${getPromptId(prompt)}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bumpType,
+          promptText: promptTextRef.current.trim(),
+          systemMessage: systemMessageRef.current.trim() || null,
+          notes: notesRef.current.trim() || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const newVersion: PromptVersion = await res.json();
+      setVersions((prev) => [newVersion, ...prev]);
+      toast({ title: t("versions.saved"), description: `v${newVersion.versionNumber}` });
+    } catch {
+      toast({ title: t("versions.saveFailed"), variant: "destructive" });
+    } finally {
+      setSavingVersion(false);
+    }
+  }
+
+  function loadVersion(versionNumber: string) {
+    if (!versionNumber) return;
+    const v = versions.find((ver) => ver.versionNumber === versionNumber);
+    if (!v) return;
+    setSelectedVersion(versionNumber);
+    promptTextRef.current = v.promptText || "";
+    systemMessageRef.current = v.systemMessage || "";
+    notesRef.current = v.notes || "";
+    if (promptTextareaRef.current) promptTextareaRef.current.value = v.promptText || "";
+    if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = v.systemMessage || "";
+    if (notesTextareaRef.current) notesTextareaRef.current.value = v.notes || "";
+    toast({ title: t("versions.loaded"), description: `v${versionNumber}` });
   }
 
   // INPUT STYLING — stone-gray system:
@@ -200,17 +325,100 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
             </div>
           </div>
 
+          {/* Version toolbar — edit mode only */}
+          {isEdit && (
+            <div className="flex items-center gap-2 py-1.5 border-y border-border/20">
+              {/* Custom version dropdown */}
+              <div ref={versionDropdownRef} className="relative">
+                <button
+                  type="button"
+                  className="h-8 min-w-[200px] rounded-lg border border-border/30 bg-card/60 px-2 text-xs outline-none focus:ring-1 focus:ring-brand-indigo/30 flex items-center justify-between gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={versionsLoading || versions.length === 0}
+                  onClick={() => setVersionDropdownOpen((o) => !o)}
+                >
+                  <span className="truncate">
+                    {versionsLoading
+                      ? t("versions.loading")
+                      : versions.length === 0
+                      ? t("versions.noVersions")
+                      : selectedVersion
+                      ? (() => {
+                          const v = versions.find((v) => v.versionNumber === selectedVersion);
+                          return v ? `v${v.versionNumber} — ${formatVersionDateTime(v.savedAt)}` : t("versions.selectVersion");
+                        })()
+                      : t("versions.selectVersion")}
+                  </span>
+                  <svg className="w-3 h-3 shrink-0 opacity-50" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M2 4l4 4 4-4" />
+                  </svg>
+                </button>
+                {versionDropdownOpen && versions.length > 0 && (
+                  <div className="absolute left-0 top-full mt-1 z-50 min-w-[240px] max-w-[340px] rounded-xl border border-border/30 bg-card shadow-lg overflow-hidden">
+                    {versions.map((v) => (
+                      <div
+                        key={v.id}
+                        className={`group px-3 py-2 cursor-pointer transition-colors ${
+                          selectedVersion === v.versionNumber
+                            ? "bg-brand-indigo/10 text-brand-indigo"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => {
+                          loadVersion(v.versionNumber);
+                          setVersionDropdownOpen(false);
+                        }}
+                      >
+                        <div className="text-xs font-medium">
+                          v{v.versionNumber} — {formatVersionDateTime(v.savedAt)}
+                        </div>
+                        {v.notes && (
+                          <div className="mt-1 text-[11px] text-muted-foreground leading-snug whitespace-pre-wrap hidden group-hover:block">
+                            {v.notes}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1" />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs px-3"
+                onClick={() => saveVersion("minor")}
+                disabled={savingVersion}
+              >
+                {savingVersion ? t("versions.saving") : t("versions.saveVersion")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs px-3"
+                onClick={() => saveVersion("major")}
+                disabled={savingVersion}
+                title={t("versions.majorVersionHint")}
+              >
+                {t("versions.majorVersion")}
+              </Button>
+            </div>
+          )}
+
           {/* Prompt Text */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground" htmlFor="prompt-text">
               {t("form.promptText")} <span className="text-red-500">*</span>
             </label>
             <textarea
+              ref={promptTextareaRef}
               id="prompt-text"
               className={`${textareaBase} min-h-[120px] ${errors.promptText ? "border-red-400" : "border-border/30"}`}
               placeholder={t("form.promptTextPlaceholder")}
-              value={form.promptText}
-              onChange={(e) => setField("promptText", e.target.value)}
+              defaultValue={form.promptText}
+              onChange={(e) => {
+                promptTextRef.current = e.target.value;
+                setErrors((prev) => ({ ...prev, promptText: undefined }));
+                scheduleAutoSave();
+              }}
               data-testid="textarea-prompt-text"
             />
             {errors.promptText && <p className="text-xs text-red-500">{errors.promptText}</p>}
@@ -222,11 +430,15 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
               {t("form.systemMessage")}
             </label>
             <textarea
+              ref={systemMessageTextareaRef}
               id="prompt-system-message"
               className={`${textareaBase} min-h-[80px] border-border/30`}
               placeholder={t("form.systemMessagePlaceholder")}
-              value={form.systemMessage}
-              onChange={(e) => setField("systemMessage", e.target.value)}
+              defaultValue={form.systemMessage}
+              onChange={(e) => {
+                systemMessageRef.current = e.target.value;
+                scheduleAutoSave();
+              }}
               data-testid="textarea-system-message"
             />
           </div>
@@ -237,11 +449,15 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
               {t("form.notes")}
             </label>
             <textarea
+              ref={notesTextareaRef}
               id="prompt-notes"
               className={`${textareaBase} min-h-[80px] border-border/30`}
               placeholder={t("form.notesPlaceholder")}
-              value={form.notes}
-              onChange={(e) => setField("notes", e.target.value)}
+              defaultValue={form.notes}
+              onChange={(e) => {
+                notesRef.current = e.target.value;
+                scheduleAutoSave();
+              }}
               data-testid="textarea-prompt-notes"
             />
           </div>
@@ -329,7 +545,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
             {t("actions.cancel")}
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={saving}
             data-testid="button-save-prompt"
           >

@@ -1,5 +1,6 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, memo, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   DndContext,
   DragOverlay,
@@ -83,7 +84,7 @@ interface TasksKanbanViewProps {
 
 // ── Sortable card wrapper ──────────────────────────────────────────────
 
-function SortableTaskCard({ task }: { task: Task }) {
+const SortableTaskCard = memo(function SortableTaskCard({ task }: { task: Task }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id });
 
@@ -104,9 +105,12 @@ function SortableTaskCard({ task }: { task: Task }) {
       <TaskCard task={task} />
     </div>
   );
-}
+});
 
 // ── Droppable column ───────────────────────────────────────────────────
+
+const CARD_ESTIMATE_PX = 80; // approx card height for initial virtualizer estimate
+const CARD_GAP_PX = 12; // matches gap-3
 
 function KanbanColumn({
   status,
@@ -123,6 +127,15 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
     data: { type: "column", status },
+  });
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: tasks.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => CARD_ESTIMATE_PX,
+    gap: CARD_GAP_PX,
+    overscan: 3,
   });
 
   const theme = COLUMN_THEME[status];
@@ -158,20 +171,28 @@ function KanbanColumn({
         </span>
       </div>
 
-      {/* Column body */}
+      {/* Column body — virtualized */}
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex-1 overflow-y-auto px-2 pb-3 min-h-0">
-          <div className="flex flex-col gap-3">
-            {tasks.length > 0 ? (
-              tasks.map((task) => (
-                <SortableTaskCard key={task.id} task={task} />
-              ))
-            ) : (
-              <div className="flex items-center justify-center py-12 text-[13px] text-muted-foreground/50">
-                {t("page.noTasks")}
-              </div>
-            )}
-          </div>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 pb-3 min-h-0">
+          {tasks.length === 0 ? (
+            <div className="flex items-center justify-center py-12 text-[13px] text-muted-foreground/50">
+              {t("page.noTasks")}
+            </div>
+          ) : (
+            <div className="relative" style={{ height: virtualizer.getTotalSize() }}>
+              {virtualizer.getVirtualItems().map((vi) => (
+                <div
+                  key={tasks[vi.index].id}
+                  ref={virtualizer.measureElement}
+                  data-index={vi.index}
+                  className="absolute left-0 right-0"
+                  style={{ transform: `translateY(${vi.start}px)` }}
+                >
+                  <SortableTaskCard task={tasks[vi.index]} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </SortableContext>
     </div>

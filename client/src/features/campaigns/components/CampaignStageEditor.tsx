@@ -4,24 +4,21 @@
  * The "Configurations" tab content of CampaignDetailView.
  * Contains: Business & Campaign info, AI Settings (templates, bumps, voice notes),
  * and Behavior (timing, channel, contract, A/B test).
+ *
+ * Sub-components live in ./formFields/
  */
-import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   Clock,
   Zap,
   Bot,
-  CheckCircle2,
-  XCircle,
   ChevronRight,
   FileText,
-  ArrowRight,
   Tag,
   Building2,
   Mic,
   Send,
-  Settings2,
   CalendarClock,
   Globe,
   Link2,
@@ -41,260 +38,25 @@ import {
   FlaskConical,
   Percent,
   Megaphone,
-  Copy,
-  Check,
 } from "lucide-react";
 import type { Campaign } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { apiFetch } from "@/lib/apiUtils";
 import type { ContractFinancials } from "./useCampaignDetail";
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatHours(h: number | null | undefined): string {
-  if (!h && h !== 0) return "—";
-  if (h < 24) return `${h}h`;
-  const d = Math.floor(h / 24);
-  const rem = h % 24;
-  return rem > 0 ? `${d}d ${rem}h` : `${d}d`;
-}
-
-function fmtCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
-}
-
-function formatDate(s: string | null | undefined): string {
-  if (!s) return "—";
-  try {
-    return new Date(s).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
-  } catch {
-    return s;
-  }
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function InfoRow({ label, value, mono = false, editChild, richText = false, icon: Icon }: {
-  label: string; value: React.ReactNode; mono?: boolean; editChild?: React.ReactNode; richText?: boolean; icon?: React.ElementType;
-}) {
-  const renderValue = () => {
-    if (value == null) return <span className="text-[12px] text-foreground">{"—"}</span>;
-    if (richText && typeof value === "string") {
-      return (
-        <div
-          className={cn("text-[12px] text-foreground break-words leading-relaxed", mono && "font-mono text-[11px]")}
-          style={{ whiteSpace: "pre-wrap" }}
-          dangerouslySetInnerHTML={{
-            __html: value
-              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-              .replace(/\*(.*?)\*/g, "<em>$1</em>")
-              .replace(/\n/g, "<br/>"),
-          }}
-        />
-      );
-    }
-    if (typeof value === "string" && value.includes("\n")) {
-      return (
-        <pre className={cn("text-[12px] text-foreground break-words leading-relaxed font-sans", mono && "font-mono text-[11px]")}>
-          {value}
-        </pre>
-      );
-    }
-    return (
-      <span className={cn("text-[12px] text-foreground break-words", mono && "font-mono text-[11px]")}>
-        {value}
-      </span>
-    );
-  };
-  return (
-    <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 flex items-center gap-1">
-        {Icon && <Icon className="w-3 h-3" />}
-        {label}
-      </span>
-      {editChild ?? renderValue()}
-    </div>
-  );
-}
-
-function BoolRow({ label, value, editChild, icon: Icon }: {
-  label: string; value: boolean | null | undefined; editChild?: React.ReactNode; icon?: React.ElementType;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 flex items-center gap-1">
-        {Icon && <Icon className="w-3 h-3" />}
-        {label}
-      </span>
-      {editChild ?? (value
-        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-        : <XCircle className="w-4 h-4 text-foreground/25" />
-      )}
-    </div>
-  );
-}
-
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-1.5 pt-3 mt-1 mb-1 border-t border-white/30">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{label}</span>
-    </div>
-  );
-}
-
-function CopyButton({ value }: { value: string }) {
-  const { t } = useTranslation("campaigns");
-  const [copied, setCopied] = useState(false);
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const doCopy = () => { setCopied(true); setTimeout(() => setCopied(false), 1500); };
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(value).then(doCopy).catch(() => {
-        const ta = document.createElement("textarea"); ta.value = value; ta.style.position = "fixed"; ta.style.opacity = "0";
-        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); doCopy();
-      });
-    } else {
-      const ta = document.createElement("textarea"); ta.value = value; ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); doCopy();
-    }
-  };
-  return (
-    <button onClick={handleCopy} className="p-1 rounded hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors text-foreground/40 hover:text-foreground shrink-0" title={t("copy")}>
-      {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-    </button>
-  );
-}
-
-// ── Editable field helpers ────────────────────────────────────────────────────
-
-function EditText({ value, onChange, placeholder, multiline = false }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean;
-}) {
-  const taRef = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    if (!taRef.current) return;
-    taRef.current.style.height = "auto";
-    taRef.current.style.height = Math.min(taRef.current.scrollHeight, 320) + "px";
-  }, [value]);
-  if (multiline) {
-    return (
-      <textarea
-        ref={taRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-        className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30 overflow-y-auto"
-        style={{ minHeight: "72px", maxHeight: "320px" }}
-      />
-    );
-  }
-  return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
-    />
-  );
-}
-
-function EditNumber({ value, onChange, placeholder }: {
-  value: string | number; onChange: (v: string) => void; placeholder?: string;
-}) {
-  return (
-    <input
-      type="number"
-      value={String(value)}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
-    />
-  );
-}
-
-function EditDate({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <input
-      type="date"
-      value={value ? value.slice(0, 10) : ""}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
-    />
-  );
-}
-
-function EditSelect({ value, onChange, options }: {
-  value: string; onChange: (v: string) => void; options: string[];
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
-    >
-      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-    </select>
-  );
-}
-
-function EditToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      className={cn(
-        "inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors",
-        value ? "bg-brand-indigo" : "bg-foreground/20"
-      )}
-    >
-      <span className={cn(
-        "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
-        value ? "translate-x-[18px]" : "translate-x-0"
-      )} />
-    </button>
-  );
-}
-
-// Need useRef imported
-import { useRef } from "react";
-
-// ── ContractSelect ────────────────────────────────────────────────────────────
-
-function ContractSelect({ value, onChange, accountsId }: {
-  value: string; onChange: (v: string) => void; accountsId?: number | null;
-}) {
-  const [contracts, setContracts] = useState<{ id: number; title: string | null }[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    const url = accountsId ? `/api/contracts?accountId=${accountsId}` : "/api/contracts";
-    apiFetch(url)
-      .then((r) => r.json())
-      .then((data) => { const list = Array.isArray(data) ? data : data?.list ?? []; setContracts(list); })
-      .catch(() => setContracts([]))
-      .finally(() => setLoading(false));
-  }, [accountsId]);
-
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={loading}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
-    >
-      <option value="">{"—"}</option>
-      {contracts.map((c) => (
-        <option key={c.id} value={String(c.id)}>{c.title || `Contract #${c.id}`}</option>
-      ))}
-    </select>
-  );
-}
-
-// ── CampaignStageEditor (main export) ─────────────────────────────────────────
+import {
+  formatHours,
+  fmtCurrency,
+  formatDate,
+  CopyButton,
+  EditText,
+  EditNumber,
+  EditDate,
+  EditSelect,
+  EditToggle,
+  InfoRow,
+  BoolRow,
+  SectionHeader,
+} from "./formFields";
 
 export interface CampaignStageEditorProps {
   campaign: Campaign;
@@ -443,14 +205,17 @@ export function CampaignStageEditor({
           )}
         </div>
 
-        {/* Bump 1 */}
+        {/* Bumps 1–3 */}
         {[1, 2, 3].map((n) => {
           const templateKey = `bump_${n}_template` as keyof Campaign;
           const delayKey = `bump_${n}_delay_hours` as keyof Campaign;
+          const aiRefKey = `bump_${n}_ai_reference` as keyof Campaign;
           const templateVal = campaign[templateKey] as string | undefined;
           const delayVal = campaign[delayKey] as number | undefined;
+          const aiRefVal = campaign[aiRefKey] as boolean | undefined;
           const draftTemplateKey = `bump_${n}_template`;
           const draftDelayKey = `bump_${n}_delay_hours`;
+          const draftAiRefKey = `bump_${n}_ai_reference`;
           return (
             <div key={n} className="space-y-2">
               <div className="flex items-center justify-between">
@@ -486,6 +251,9 @@ export function CampaignStageEditor({
                   ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{templateVal}</p>
                   : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
               )}
+              <BoolRow icon={Bot} label={t(`config.bump${n}AiReference`)} value={aiRefVal ?? false}
+                editChild={isEditing ? <EditToggle value={Boolean(draft[draftAiRefKey] ?? aiRefVal)} onChange={(v) => setDraft(d => ({...d, [draftAiRefKey]: v}))} /> : undefined}
+              />
             </div>
           );
         })}

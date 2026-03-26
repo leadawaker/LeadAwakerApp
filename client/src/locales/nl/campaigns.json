@@ -225,7 +225,10 @@
     "bump2VoiceNote": "Bump 2 als spraakbericht",
     "bump3VoiceNote": "Bump 3 als spraakbericht",
     "aiReplyVoiceNote": "AI-antwoorden als spraakberichten",
-    "voiceId": "Stem-ID"
+    "voiceId": "Stem-ID",
+    "bump1AiReference": "Gebruiken als AI-referentie",
+    "bump2AiReference": "Gebruiken als AI-referentie",
+    "bump3AiReference": "Gebruiken als AI-referentie"
   },
 
   "meta": {

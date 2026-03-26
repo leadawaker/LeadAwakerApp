@@ -55,7 +55,7 @@ export function ExpenseDetailViewEmpty({
         </div>
       )}
       <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
-      <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
+      <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 dark:from-stone-800 dark:to-stone-700 flex items-center justify-center ring-1 ring-stone-200/50 dark:ring-stone-600/50">
         <FileText className="h-10 w-10 text-stone-400" />
       </div>
       <div className="space-y-1.5">
@@ -161,13 +161,13 @@ export function ExpenseDetailView({
       {/* Warm gradient bloom background */}
       {!noBackground && (
         <>
-          <div className="absolute inset-0 bg-[#ffffff]" />
+          <div className="absolute inset-0 bg-[#ffffff] dark:bg-card" />
           {/* Layer 1: White bloom — disabled */}
           {/* Layer 2: Yellow — disabled */}
           {/* Layer 3: Peach — disabled */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_140%_at_40%_91%,rgba(255,204,204,0.4)_0%,transparent_69%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#C7E0FF_5%,transparent_30%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_136%_152%_at_53%_59%,rgba(255,216,116,0.4)_0%,transparent_66%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_140%_at_40%_91%,rgba(255,204,204,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#C7E0FF_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_136%_152%_at_53%_59%,rgba(255,216,116,0.4)_0%,transparent_66%)] dark:opacity-[0.08]" />
         </>
       )}
 

@@ -403,6 +403,7 @@ export function useConversationsData(
           ),
         );
         toast({ variant: "destructive", title: "Failed to update takeover state" });
+        throw err;
       }
     },
     [toast],

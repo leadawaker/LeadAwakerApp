@@ -122,3 +122,15 @@ export function getScoreColorClasses(score: string | null | undefined): string {
 export function getPromptId(p: any): number {
   return p.id || p.Id;
 }
+
+export interface PromptVersion {
+  id: number;
+  promptsId: number;
+  versionNumber: string;
+  promptText: string | null;
+  systemMessage: string | null;
+  notes: string | null;
+  label: string | null;
+  savedAt: string;
+  savedBy: string | null;
+}

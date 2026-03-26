@@ -42,6 +42,7 @@ import {
   HelpCircle,
   Loader2,
 } from "lucide-react";
+import { STATUS_OPTIONS, TYPE_OPTIONS, TYPO_FREQUENCY_OPTIONS, TIMEZONE_OPTIONS, STATUS_I18N_KEY, TYPE_I18N_KEY, TYPO_FREQ_I18N_KEY, statusBadgeProps, SectionHeader, FieldRow } from "./dialogWidgets";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -90,105 +91,6 @@ interface AccountDetailsDialogProps {
   onSave: (accountId: number, patch: Partial<AccountRow>) => Promise<void>;
   /** When true, renders as an inline panel instead of a modal dialog */
   panelMode?: boolean;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
-const TYPE_OPTIONS = ["Agency", "Client"];
-const TYPO_FREQUENCY_OPTIONS = ["None", "Rare", "Occasional", "Frequent"];
-const TIMEZONE_OPTIONS = [
-  "America/Sao_Paulo",
-  "Europe/Amsterdam",
-];
-
-// i18n key maps (data-as-labels pattern — safe at module level)
-const STATUS_I18N_KEY: Record<string, string> = {
-  Active: "status.active",
-  Inactive: "status.inactive",
-  Trial: "status.trial",
-  Suspended: "status.suspended",
-  Unknown: "status.unknown",
-};
-
-const TYPE_I18N_KEY: Record<string, string> = {
-  Agency: "type.agency",
-  Client: "type.client",
-};
-
-const TYPO_FREQ_I18N_KEY: Record<string, string> = {
-  None: "typoFrequency.none",
-  Rare: "typoFrequency.rare",
-  Occasional: "typoFrequency.occasional",
-  Frequent: "typoFrequency.frequent",
-};
-
-function statusBadgeProps(status: string) {
-  switch (status) {
-    case "Active":
-      return {
-        icon: <CheckCircle2 className="h-3 w-3" />,
-        cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
-      };
-    case "Trial":
-      return {
-        icon: <Clock className="h-3 w-3" />,
-        cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25",
-      };
-    case "Suspended":
-      return {
-        icon: <Ban className="h-3 w-3" />,
-        cls: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/25",
-      };
-    case "Inactive":
-      return {
-        icon: <PauseCircle className="h-3 w-3" />,
-        cls: "bg-slate-400/15 text-slate-600 dark:text-slate-400 border-slate-400/25",
-      };
-    default:
-      return {
-        icon: <HelpCircle className="h-3 w-3" />,
-        cls: "bg-slate-400/15 text-slate-600 dark:text-slate-400 border-slate-400/25",
-      };
-  }
-}
-
-// ── Section Header ────────────────────────────────────────────────────────────
-
-function SectionHeader({
-  icon,
-  title,
-}: {
-  icon: React.ReactNode;
-  title: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 mb-3 mt-5">
-      <div className="text-primary">{icon}</div>
-      <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-        {title}
-      </h3>
-    </div>
-  );
-}
-
-// ── Field Row ─────────────────────────────────────────────────────────────────
-
-function FieldRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid grid-cols-[140px_1fr] gap-3 items-start py-2 border-b border-border/40 last:border-0">
-      <Label className="text-xs text-muted-foreground pt-2 leading-tight">
-        {label}
-      </Label>
-      <div>{children}</div>
-    </div>
-  );
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────

@@ -170,5 +170,31 @@
     "nameZA": "Nome Z \u2192 A",
     "scoreDesc": "Pontua\u00e7\u00e3o \u2193",
     "scoreAsc": "Pontua\u00e7\u00e3o \u2191"
+  },
+  "versions": {
+    "saveVersion": "Salvar Vers\u00e3o",
+    "majorVersion": "Major \u2191",
+    "majorVersionHint": "Incrementa a vers\u00e3o principal (ex: 1.2 \u2192 2.0)",
+    "saving": "Salvando\u2026",
+    "saved": "Vers\u00e3o salva",
+    "saveFailed": "Falha ao salvar vers\u00e3o",
+    "loading": "Carregando vers\u00f5es\u2026",
+    "noVersions": "Sem vers\u00f5es ainda",
+    "selectVersion": "Carregar uma vers\u00e3o\u2026",
+    "loaded": "Versão carregada",
+    "deleted": "Versão excluída",
+    "deleteFailed": "Falha ao excluir versão",
+    "reverted": "Revertido para atual",
+    "confirmLoadTitle": "Carregar v{{v}}?",
+    "confirmLoadDesc": "Isso substituirá o conteúdo atual do prompt.",
+    "labelPlaceholder": "Rótulo (opcional) — ex: Adicionado suporte em espanhol",
+    "revertToCurrent": "← Atual",
+    "deleteVersion": "Excluir versão",
+    "current": "Atual",
+    "load": "Carregar",
+    "versionCount_one": "{{count}} versão",
+    "versionCount_other": "{{count}} versões",
+    "minorUpdate": "Menor (+0.1)",
+    "majorUpdate": "Maior (+1.0)"
   }
 }

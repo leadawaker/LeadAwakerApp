@@ -237,7 +237,7 @@ function SortableHeaderCell({ col, isFirst, t, onResizeStart }: { col: ColumnDef
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    position: "relative",
+    ...(isFirst ? {} : { position: "relative" as const }),
   };
   return (
     <th
@@ -638,7 +638,7 @@ export function LeadsInlineTable({
             </colgroup>
 
             {/* Sticky header with select-all checkbox + boxShadow */}
-            <thead className="sticky top-0 z-20" style={{ boxShadow: "0 2px 0 0 hsl(var(--muted))" }}>
+            <thead className="sticky top-0 z-40 bg-muted" style={{ boxShadow: "0 2px 0 0 hsl(var(--muted))" }}>
               <tr>
                 {/* Select-all checkbox */}
                 <th

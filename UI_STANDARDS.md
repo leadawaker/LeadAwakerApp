@@ -326,17 +326,9 @@ Selecting a card in a split-pane left panel **smoothly scrolls** the list to bri
 
 ---
 
-## 8. Glassmorphism
+## 8. Glassmorphism — BANNED
 
-**Only for decorative accents.** Never on functional data surfaces (tables, cards, chat bubbles).
-
-| Utility | Blur | Usage |
-|---------|------|-------|
-| `glass-overlay` | 12px | Frosted glass for overlay backgrounds (panels, modals). |
-| `glass-divider` | 8px | Section dividers, sticky headers. |
-| `glass-accent` | 16px | Decorative background panels. |
-| `glass-surface` | 6px | Empty state backgrounds. |
-| `glass-nav` | 14px | Mobile bottom bar, sticky sub-headers. |
+**Never use glassmorphism anywhere.** No `backdrop-blur`, no semi-transparent backgrounds on functional UI (popovers, dialogs, dropdowns, panels, modals). All overlays and surfaces use solid white (`bg-white`) or solid `bg-popover`/`bg-card` with a clean `shadow-md` and `border border-border/60`. Use the `bg-white` tooltip-style pattern (§19).
 
 ---
 

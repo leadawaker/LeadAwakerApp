@@ -648,6 +648,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [localStatus, setLocalStatus] = useState<string>("");
   const [savingStatus, setSavingStatus] = useState(false);
   const [stageSaved, setStageSaved] = useState(false);
+  const [localAiSummary, setLocalAiSummary] = useState<string | null>(null);
 
   // ── Tags state ──
   const [leadTags, setLeadTags] = useState<TagData[]>([]);
@@ -917,8 +918,20 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         setLocalStatus(prevStatus); // revert on error
       } else {
         setStageSaved(true);
-        // Clear the "saved" checkmark after 2 seconds
         setTimeout(() => setStageSaved(false), 2000);
+        // After booking/closing, the Python engine generates an AI summary async.
+        // Refetch the lead after ~3.5s to pick it up without requiring a page refresh.
+        if (["Booked", "Closed"].includes(newStage)) {
+          setTimeout(async () => {
+            try {
+              const r = await apiFetch(`/api/leads/${leadId}`);
+              if (r.ok) {
+                const updated = await r.json();
+                if (updated.ai_summary) setLocalAiSummary(updated.ai_summary);
+              }
+            } catch { /* silent */ }
+          }, 3500);
+        }
       }
     } catch {
       setLocalStatus(prevStatus); // revert on error
@@ -1760,7 +1773,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           )}
 
           {/* AI Insights */}
-          {(lead.ai_sentiment || lead.ai_memory || lead.ai_summary) && (
+          {(lead.ai_sentiment || lead.ai_memory || lead.ai_summary || localAiSummary) && (
             <>
               <SectionTitle icon={<Bot className="h-3.5 w-3.5" />} title={t("detail.sections.aiInsights")} />
               <div
@@ -1768,10 +1781,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 data-testid="ai-insights-section"
               >
                 {/* AI summary */}
-                {lead.ai_summary && (
+                {(localAiSummary || lead.ai_summary) && (
                   <div className="py-1.5 border-b border-border/30">
                     <div className="text-[11px] text-muted-foreground mb-1">{t("detail.fields.aiSummary")}</div>
-                    <p className="text-[12px] text-foreground/80 leading-relaxed">{lead.ai_summary}</p>
+                    <p className="text-[12px] text-foreground/80 leading-relaxed">{localAiSummary || lead.ai_summary}</p>
                   </div>
                 )}
                 {/* Sentiment badge — color coded */}

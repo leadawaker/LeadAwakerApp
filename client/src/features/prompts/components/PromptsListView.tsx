@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useImperativeHandle, forwardRef, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { hapticSave } from "@/lib/haptics";
 import { useTranslation } from "react-i18next";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
@@ -9,12 +9,13 @@ import {
   Layers,
   Filter,
   Check,
-  Save,
   Trash2,
   ChevronLeft,
   List,
   Table2,
   Bot,
+  Save,
+  RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   getStatusBadgeClasses,
   getScoreColorClasses,
@@ -39,6 +41,7 @@ import {
   type PromptSortOption,
   type PromptGroupOption,
   type PromptFormData,
+  type PromptVersion,
 } from "../types";
 
 /* ── Module-level i18n key maps ─────────────────────────────────────────── */
@@ -99,18 +102,19 @@ function formatRelativeTime(dateStr: string | null | undefined, t: TFn): string 
 
 /* ── EditPanel ───────────────────────────────────────────────────────────── */
 
-interface EditPanelHandle {
-  save: () => void;
-  isSaving: boolean;
-}
-
-const EditPanel = forwardRef<EditPanelHandle, {
+function EditPanel({
+  prompt,
+  onSaved,
+  onDelete,
+  campaigns = [],
+  versionOverride = null,
+}: {
   prompt: any;
   onSaved: (saved: any) => void;
   onDelete: (prompt: any) => void;
-  onSavingChange?: (saving: boolean) => void;
   campaigns?: { id: number; name: string; aiModel: string }[];
-}>(function EditPanel({ prompt, onSaved, onDelete, onSavingChange, campaigns = [] }, ref) {
+  versionOverride?: PromptVersion | null;
+}) {
   const { toast } = useToast();
   const { t } = useTranslation("prompts");
   const [saving, setSaving] = useState(false);
@@ -127,29 +131,41 @@ const EditPanel = forwardRef<EditPanelHandle, {
     campaignsId: "",
   });
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
+  // Uncontrolled refs for the 3 textarea fields — keeps browser undo history intact
+  const promptTextValRef = useRef<string>("");
+  const systemMessageValRef = useRef<string>("");
+  const notesValRef = useRef<string>("");
   const promptTextRef = useRef<HTMLTextAreaElement>(null);
+  const systemMessageTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Stable ref to latest handleSave — avoids stale closure in useImperativeHandle
   const handleSaveRef = useRef<() => Promise<void>>(async () => {});
 
   const promptId = getPromptId(prompt);
-
-  useImperativeHandle(ref, () => ({
-    save: () => { handleSaveRef.current(); },
-    get isSaving() { return saving; },
-  }), [saving]);
+  const initialized = useRef(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
+    const promptText = prompt.promptText || prompt.prompt_text || "";
+    const systemMessage = prompt.systemMessage || prompt.system_message || "";
+    const notes = (prompt.notes || "").replace(/^System prompt\s*[-–—]?\s*auto[- ]created.*$/im, "").trim();
+    promptTextValRef.current = promptText;
+    systemMessageValRef.current = systemMessage;
+    notesValRef.current = notes;
+    if (promptTextRef.current) promptTextRef.current.value = promptText;
+    if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = systemMessage;
+    if (notesTextareaRef.current) notesTextareaRef.current.value = notes;
     setForm({
       name: prompt.name || "",
-      promptText: prompt.promptText || prompt.prompt_text || "",
-      systemMessage: prompt.systemMessage || prompt.system_message || "",
+      promptText,
+      systemMessage,
       model: prompt.model || "gpt-5.1",
       temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
       maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
       status: (prompt.status || "active").toLowerCase(),
       useCase: prompt.useCase || prompt.use_case || "",
-      notes: (prompt.notes || "").replace(/^System prompt\s*[-–—]?\s*auto[- ]created.*$/im, "").trim(),
+      notes,
       campaignsId:
         prompt.campaignsId != null
           ? String(prompt.campaignsId)
@@ -158,7 +174,46 @@ const EditPanel = forwardRef<EditPanelHandle, {
           : "",
     });
     setErrors({});
+    initialized.current = false;
+    const t = setTimeout(() => { initialized.current = true; }, 150);
+    return () => clearTimeout(t);
   }, [promptId]);
+
+  // Sync form.status when header pill changes status externally
+  useEffect(() => {
+    const newStatus = (prompt.status || "active").toLowerCase();
+    setForm((prev) => prev.status === newStatus ? prev : { ...prev, status: newStatus });
+  }, [prompt.status]);
+
+  // Apply a loaded version's content into the uncontrolled textareas
+  useEffect(() => {
+    if (!versionOverride) return;
+    const pt = versionOverride.promptText || "";
+    const sm = versionOverride.systemMessage || "";
+    const nt = versionOverride.notes || "";
+    promptTextValRef.current = pt;
+    systemMessageValRef.current = sm;
+    notesValRef.current = nt;
+    if (promptTextRef.current) { promptTextRef.current.value = pt; autoResize(promptTextRef.current); }
+    if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = sm;
+    if (notesTextareaRef.current) notesTextareaRef.current.value = nt;
+    scheduleAutoSave();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionOverride]);
+
+  // Auto-save for structured fields (textarea fields call scheduleAutoSave directly)
+  useEffect(() => {
+    if (!initialized.current) return;
+    scheduleAutoSave();
+    return () => clearTimeout(autoSaveTimerRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.name, form.model, form.temperature, form.maxTokens, form.status, form.useCase, form.campaignsId]);
+
+  function scheduleAutoSave() {
+    if (!initialized.current) return;
+    clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => handleSaveRef.current(true), 800);
+  }
 
   function setField(field: keyof PromptFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -168,7 +223,7 @@ const EditPanel = forwardRef<EditPanelHandle, {
   function validate(): boolean {
     const e: Partial<PromptFormData> = {};
     if (!form.name.trim()) e.name = t("form.required");
-    if (!form.promptText.trim()) e.promptText = t("form.required");
+    if (!promptTextValRef.current.trim()) e.promptText = t("form.required");
     const temp = parseFloat(form.temperature);
     if (isNaN(temp) || temp < 0 || temp > 2) e.temperature = t("form.temperatureError");
     const tokens = parseInt(form.maxTokens, 10);
@@ -177,21 +232,20 @@ const EditPanel = forwardRef<EditPanelHandle, {
     return Object.keys(e).length === 0;
   }
 
-  async function handleSave() {
+  async function handleSave(silent = false) {
     if (!validate()) return;
     setSaving(true);
-    onSavingChange?.(true);
     try {
       const payload = {
         name: form.name.trim(),
-        promptText: form.promptText.trim(),
-        systemMessage: form.systemMessage.trim() || null,
+        promptText: promptTextValRef.current.trim(),
+        systemMessage: systemMessageValRef.current.trim() || null,
         model: form.model || null,
         temperature: form.temperature,
         maxTokens: parseInt(form.maxTokens, 10),
         status: form.status || "active",
         useCase: form.useCase.trim() || null,
-        notes: form.notes.trim() || null,
+        notes: notesValRef.current.trim() || null,
         campaignsId: form.campaignsId ? parseInt(form.campaignsId, 10) : null,
       };
       const res = await apiFetch(`/api/prompts/${promptId}`, {
@@ -205,8 +259,10 @@ const EditPanel = forwardRef<EditPanelHandle, {
       }
       const saved = await res.json();
       onSaved(saved);
-      hapticSave();
-      toast({ title: t("toast.saved"), description: t("toast.savedDescription", { name: form.name }) });
+      if (!silent) {
+        hapticSave();
+        toast({ title: t("toast.saved"), description: t("toast.savedDescription", { name: form.name }) });
+      }
     } catch (err: any) {
       toast({
         title: t("toast.saveFailed"),
@@ -215,7 +271,6 @@ const EditPanel = forwardRef<EditPanelHandle, {
       });
     } finally {
       setSaving(false);
-      onSavingChange?.(false);
     }
   }
 
@@ -223,20 +278,29 @@ const EditPanel = forwardRef<EditPanelHandle, {
   handleSaveRef.current = handleSave;
 
   // Auto-resize prompt textarea on content change.
-  // Saves/restores scroll container position to prevent mobile scroll jumps
-  // caused by the brief height-collapse needed to measure scrollHeight.
+  // Uses an off-screen mirror textarea to measure the required height without
+  // collapsing the real element, which avoids triggering browser cursor-follow
+  // scroll that would snap the viewport when the user presses Enter.
   const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
     if (!el) return;
-    const container = scrollContainerRef.current;
-    const savedTop = container ? container.scrollTop : 0;
-    el.style.height = "0px";
-    el.style.height = el.scrollHeight + "px";
-    if (container) container.scrollTop = savedTop;
+    const cs = getComputedStyle(el);
+    const mirror = document.createElement("textarea");
+    mirror.style.cssText =
+      `position:fixed;top:-9999px;left:-9999px;visibility:hidden;overflow:hidden;height:0;` +
+      `width:${el.getBoundingClientRect().width}px;` +
+      `padding:${cs.paddingTop} ${cs.paddingRight} ${cs.paddingBottom} ${cs.paddingLeft};` +
+      `border:${cs.border};font-size:${cs.fontSize};font-family:${cs.fontFamily};` +
+      `line-height:${cs.lineHeight};letter-spacing:${cs.letterSpacing};white-space:pre-wrap;`;
+    mirror.value = el.value;
+    document.body.appendChild(mirror);
+    const newHeight = Math.max(mirror.scrollHeight, 200);
+    document.body.removeChild(mirror);
+    el.style.height = newHeight + "px";
   }, []);
 
   useEffect(() => {
     autoResize(promptTextRef.current);
-  }, [form.promptText, autoResize]);
+  }, [autoResize]);
 
   const inputCls =
     "w-full h-9 rounded-xl bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30";
@@ -250,50 +314,10 @@ const EditPanel = forwardRef<EditPanelHandle, {
     <div className="flex flex-col flex-1 min-h-0">
       {/* Scrollable two-column body */}
       <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-[3px] pb-[3px] [scrollbar-width:thin]">
-        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px] max-w-[1386px] w-full mr-auto">
+        <div className="flex flex-col gap-[3px] max-w-[1386px] w-full mr-auto">
 
-          {/* ── Left column (wide): Prompt Content + System Message ── */}
-          <div className="flex flex-col gap-[3px]">
-            {/* Prompt Content */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.promptContent")}
-              </p>
-              <textarea
-                ref={promptTextRef}
-                className={cn(
-                  textareaCls,
-                  "min-h-[120px] overflow-hidden resize-none",
-                  errors.promptText ? "ring-2 ring-red-400/40" : "",
-                )}
-                value={form.promptText}
-                onChange={(e) => { setField("promptText", e.target.value); autoResize(e.target); }}
-                placeholder={t("form.mainPromptPlaceholder")}
-              />
-              {errors.promptText && (
-                <p className="text-[10px] text-red-500 mt-0.5">{errors.promptText}</p>
-              )}
-            </div>
-
-            {/* System Message */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.systemMessage")}
-              </p>
-              <div>
-                <textarea
-                  className={cn(textareaCls, "min-h-[80px]")}
-                  value={form.systemMessage}
-                  onChange={(e) => setField("systemMessage", e.target.value)}
-                  placeholder={t("form.systemMessagePlaceholderAlt")}
-                />
-              </div>
-            </div>
-
-          </div>
-
-          {/* ── Right column (narrow): Identity + Configuration + Notes ── */}
-          <div className="flex flex-col gap-[3px]">
+          {/* ── Top row: Identity + Configuration + Notes (3 columns) ── */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-[3px]">
             {/* Identity */}
             <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
               <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
@@ -346,26 +370,6 @@ const EditPanel = forwardRef<EditPanelHandle, {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>{t("detail.model")}</label>
-                  <div className={`${selectCls} opacity-60 cursor-default`}>
-                    {(() => {
-                      const c = campaigns.find((c) => String(c.id) === form.campaignsId);
-                      return c?.aiModel || t("form.noCampaignModel");
-                    })()}
-                  </div>
-                </div>
-                <div>
-                  <label className={labelCls}>{t("labels.status")}</label>
-                  <select
-                    className={selectCls}
-                    value={form.status}
-                    onChange={(e) => setField("status", e.target.value)}
-                  >
-                    <option value="active">{t("status.active")}</option>
-                    <option value="archived">{t("status.archived")}</option>
-                  </select>
-                </div>
-                <div>
                   <label className={labelCls}>{t("form.temperature")} {t("form.temperatureRange")}</label>
                   <input
                     type="number"
@@ -403,10 +407,51 @@ const EditPanel = forwardRef<EditPanelHandle, {
               </p>
               <div>
                 <textarea
-                  className={cn(textareaCls, "min-h-[80px]")}
-                  value={form.notes}
-                  onChange={(e) => setField("notes", e.target.value)}
+                  ref={notesTextareaRef}
+                  className={cn(textareaCls, "min-h-[118px] h-full")}
+                  defaultValue={notesValRef.current}
+                  onChange={(e) => { notesValRef.current = e.target.value; scheduleAutoSave(); }}
                   placeholder={t("form.notesPlaceholderAlt")}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bottom: Prompt Content + System Message (full width) ── */}
+          <div className="flex flex-col gap-[3px]">
+            {/* Prompt Content */}
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
+                {t("form.promptContent")}
+              </p>
+              <textarea
+                ref={promptTextRef}
+                className={cn(
+                  textareaCls,
+                  "min-h-[200px] overflow-hidden resize-none",
+                  errors.promptText ? "ring-2 ring-red-400/40" : "",
+                )}
+                defaultValue={promptTextValRef.current}
+                onChange={(e) => { promptTextValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
+                placeholder={t("form.mainPromptPlaceholder")}
+              />
+              {errors.promptText && (
+                <p className="text-[10px] text-red-500 mt-0.5">{errors.promptText}</p>
+              )}
+            </div>
+
+            {/* System Message */}
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
+                {t("form.systemMessage")}
+              </p>
+              <div>
+                <textarea
+                  ref={systemMessageTextareaRef}
+                  className={cn(textareaCls, "min-h-[80px]")}
+                  defaultValue={systemMessageValRef.current}
+                  onChange={(e) => { systemMessageValRef.current = e.target.value; scheduleAutoSave(); }}
+                  placeholder={t("form.systemMessagePlaceholderAlt")}
                 />
               </div>
             </div>
@@ -416,7 +461,7 @@ const EditPanel = forwardRef<EditPanelHandle, {
       </div>
     </div>
   );
-});
+}
 
 /* ── Left panel card ─────────────────────────────────────────────────────── */
 
@@ -435,6 +480,8 @@ function PromptListCard({
   const name = prompt.name || t("labels.untitled");
   const aId = prompt.accountsId || prompt.Accounts_id;
   const iconColor = getPromptIconColor(aId ? `account-${aId}` : "agency-bots");
+  const normalizedStatus = (prompt.status || "").toLowerCase().trim();
+  const isInactive = normalizedStatus !== "" && normalizedStatus !== "active";
   const cId = prompt.campaignsId || prompt.Campaigns_id;
   const campaignName = cId ? campaignMap.get(cId) : null;
   const updatedAt = prompt.updatedAt || prompt.updated_at;
@@ -457,10 +504,10 @@ function PromptListCard({
       <div className="px-3 py-2.5 flex items-center gap-2.5">
         {/* Avatar */}
         <div
-          className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
-          style={{ backgroundColor: iconColor.bg }}
+          className={cn("h-9 w-9 rounded-full flex items-center justify-center shrink-0", isInactive && "bg-muted")}
+          style={isInactive ? undefined : { backgroundColor: iconColor.bg }}
         >
-          <Bot className="h-4.5 w-4.5" style={{ color: iconColor.icon }} />
+          <Bot className={cn("h-4.5 w-4.5", isInactive ? "text-muted-foreground/40" : "")} style={isInactive ? undefined : { color: iconColor.icon }} />
         </div>
         {/* Name */}
         <p className="flex-1 min-w-0 text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
@@ -490,7 +537,7 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">{"2013"}</span>
+        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
         <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
         <div className="flex-1 h-px bg-foreground/15" />
       </div>
@@ -578,8 +625,21 @@ export function PromptsListView({
   const { t } = useTranslation("prompts");
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [editSaving, setEditSaving] = useState(false);
-  const editPanelRef = useRef<EditPanelHandle>(null);
+
+  async function handleStatusChange(newStatus: string) {
+    if (!selectedPrompt || !selectedId) return;
+    try {
+      const res = await apiFetch(`/api/prompts/${selectedId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) return;
+      const saved = await res.json();
+      setSelectedPrompt(saved);
+      onSaved(saved);
+    } catch {}
+  }
 
   // Compute VIEW_TABS from tKeys inside component (hooks requirement)
   const VIEW_TABS = useMemo<TabDef[]>(
@@ -603,6 +663,96 @@ export function PromptsListView({
 
   // Derive selectedId from selectedPrompt
   const selectedId = selectedPrompt ? getPromptId(selectedPrompt) : null;
+
+  // Version history state
+  const [versions, setVersions] = useState<PromptVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [savingVersion, setSavingVersion] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState("");
+  const [versionOverride, setVersionOverride] = useState<PromptVersion | null>(null);
+  const [liveSnap, setLiveSnap] = useState<{
+    promptText: string | null; systemMessage: string | null; notes: string | null;
+  } | null>(null);
+const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveBumpType, setSaveBumpType] = useState<"minor" | "major">("minor");
+  const [saveLabel, setSaveLabel] = useState("");
+
+  useEffect(() => {
+    if (!selectedId) { setVersions([]); setSelectedVersion(""); setVersionOverride(null); setLiveSnap(null); return; }
+    setVersions([]);
+    setSelectedVersion("");
+    setVersionOverride(null);
+    setLiveSnap(null);
+    setVersionsLoading(true);
+    apiFetch(`/api/prompts/${selectedId}/versions`)
+      .then((r) => r.json())
+      .then((data) => setVersions(data))
+      .catch(() => {})
+      .finally(() => setVersionsLoading(false));
+  }, [selectedId]);
+
+  async function saveVersion(bumpType: "minor" | "major", label: string) {
+    if (!selectedId) return;
+    setSavingVersion(true);
+    try {
+      const res = await apiFetch(`/api/prompts/${selectedId}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bumpType,
+          promptText: selectedPrompt?.promptText || selectedPrompt?.prompt_text || null,
+          systemMessage: selectedPrompt?.systemMessage || selectedPrompt?.system_message || null,
+          notes: selectedPrompt?.notes || null,
+          label: label || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const newVersion: PromptVersion = await res.json();
+      setVersions((prev) => [newVersion, ...prev]);
+      setSelectedPrompt((prev: any) => prev ? { ...prev, version: newVersion.versionNumber } : prev);
+      toast({ title: t("versions.saved"), description: `v${newVersion.versionNumber}` });
+    } catch {
+      toast({ title: t("versions.saveFailed"), variant: "destructive" });
+    } finally {
+      setSavingVersion(false);
+    }
+  }
+
+  function loadVersion(v: PromptVersion) {
+    if (!liveSnap) setLiveSnap({
+      promptText: selectedPrompt?.promptText || selectedPrompt?.prompt_text || null,
+      systemMessage: selectedPrompt?.systemMessage || selectedPrompt?.system_message || null,
+      notes: selectedPrompt?.notes || null,
+    });
+    setSelectedVersion(v.versionNumber);
+    setVersionOverride(v);
+    toast({ title: t("versions.loaded"), description: `v${v.versionNumber}` });
+  }
+
+  function revertToCurrent() {
+    if (!liveSnap) return;
+    setVersionOverride({
+      id: -1, promptsId: selectedId!,
+      versionNumber: "", savedAt: "", savedBy: null, label: null,
+      promptText: liveSnap.promptText,
+      systemMessage: liveSnap.systemMessage,
+      notes: liveSnap.notes,
+    });
+    setSelectedVersion("");
+    setLiveSnap(null);
+    toast({ title: t("versions.reverted") });
+  }
+
+  async function deleteVersion(versionId: number) {
+    const target = versions.find(v => v.id === versionId);
+    const res = await apiFetch(`/api/prompts/${selectedId}/versions/${versionId}`, { method: "DELETE" });
+    if (!res.ok) return toast({ title: t("versions.deleteFailed"), variant: "destructive" });
+    setVersions(prev => prev.filter(v => v.id !== versionId));
+    if (target && selectedVersion === target.versionNumber) {
+      setSelectedVersion(""); setVersionOverride(null);
+    }
+    toast({ title: t("versions.deleted") });
+  }
 
   // Smooth scroll to selected prompt card (§29)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -891,6 +1041,128 @@ export function PromptsListView({
               {/* Spacer */}
               <div className="flex-1 min-w-0" />
 
+              {/* Version picker + save buttons */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="h-8 rounded-lg border border-border bg-white dark:bg-popover px-2.5 text-xs outline-none hover:border-foreground/30 transition-colors shrink-0 min-w-[80px] max-w-[220px] truncate text-left"
+                    disabled={versionsLoading}
+                  >
+                    {versionsLoading
+                      ? t("versions.loading")
+                      : selectedVersion
+                      ? (() => {
+                          const sv = versions.find((v) => v.versionNumber === selectedVersion);
+                          return sv
+                            ? `v${sv.versionNumber} — ${new Date(sv.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })} ${new Date(sv.savedAt).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}`
+                            : `v${selectedVersion}`;
+                        })()
+                      : liveSnap
+                      ? `${t("versions.current")} ●`
+                      : versions.length > 0
+                      ? `v${versions[0].versionNumber}`
+                      : selectedPrompt?.version
+                      ? `v${selectedPrompt.version}`
+                      : t("versions.noVersions")}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="p-1 min-w-[220px] bg-white dark:bg-popover shadow-md border border-border/60">
+                  {liveSnap && (
+                    <button
+                      onClick={revertToCurrent}
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-medium"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      {t("versions.revertToCurrent")}
+                    </button>
+                  )}
+                  {versions.length === 0 && !liveSnap && (
+                    <p className="px-2.5 py-1.5 text-xs text-muted-foreground">{t("versions.noVersions")}</p>
+                  )}
+                  {versions.map((v) => (
+                    <div
+                      key={v.id}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-muted/60 group/vrow",
+                        selectedVersion === v.versionNumber && "bg-muted font-medium"
+                      )}
+                      onClick={() => loadVersion(v)}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs flex-1 min-w-0 truncate">
+                          v{v.versionNumber}
+                          {v.label ? ` — ${v.label}` : ` — ${new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })} ${new Date(v.savedAt).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}`}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }}
+                          className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0"
+                          title={t("versions.deleteVersion")}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                      {v.notes && (
+                        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 hidden group-hover/vrow:block whitespace-pre-wrap">
+                          {v.notes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </PopoverContent>
+              </Popover>
+              <Popover open={saveDialogOpen} onOpenChange={(open) => { if (open) { setSaveBumpType("minor"); setSaveLabel(""); } setSaveDialogOpen(open); }}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors shrink-0 disabled:opacity-50"
+                    disabled={savingVersion}
+                    title={t("versions.saveVersion")}
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="p-3 w-64 bg-white dark:bg-popover shadow-md border border-border/60">
+                  <p className="text-xs font-medium mb-2">{t("versions.saveVersion")}</p>
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => setSaveBumpType("minor")}
+                      className={cn(
+                        "flex-1 text-xs py-1.5 rounded-lg border transition-colors",
+                        saveBumpType === "minor"
+                          ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      )}
+                    >
+                      {t("versions.minorUpdate")}
+                    </button>
+                    <button
+                      onClick={() => setSaveBumpType("major")}
+                      className={cn(
+                        "flex-1 text-xs py-1.5 rounded-lg border transition-colors",
+                        saveBumpType === "major"
+                          ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      )}
+                    >
+                      {t("versions.majorUpdate")}
+                    </button>
+                  </div>
+                  <input
+                    className="w-full h-8 rounded-lg border border-border bg-background px-2.5 text-xs outline-none focus:ring-2 focus:ring-brand-indigo/30 mb-2"
+                    placeholder={t("versions.labelPlaceholder")}
+                    value={saveLabel}
+                    onChange={(e) => setSaveLabel(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); } }}
+                  />
+                  <button
+                    onClick={() => { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); }}
+                    disabled={savingVersion}
+                    className="w-full text-xs py-1.5 rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors disabled:opacity-50"
+                  >
+                    {t("actions.save")}
+                  </button>
+                </PopoverContent>
+              </Popover>
+
               {/* Score badge */}
               {selectedPrompt.performanceScore != null && (
                 <span
@@ -903,16 +1175,6 @@ export function PromptsListView({
                   {selectedPrompt.performanceScore}
                 </span>
               )}
-
-              {/* Save button */}
-              <button
-                onClick={() => editPanelRef.current?.save()}
-                disabled={editSaving}
-                className={cn(xBase, "hover:max-w-[80px] border-brand-indigo text-brand-indigo")}
-              >
-                <Save className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{editSaving ? t("actions.saving") : t("actions.save")}</span>
-              </button>
 
               {/* Delete button */}
               <button
@@ -944,14 +1206,37 @@ export function PromptsListView({
                 </h2>
               </div>
               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                <span
-                  className={cn(
-                    "text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full",
-                    getStatusBadgeClasses(selectedPrompt.status),
-                  )}
-                >
-                  {t(STATUS_I18N_KEY[selectedPrompt.status?.toLowerCase() ?? ""] ?? "status.unknown")}
+                <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground/60 font-mono">
+                  #{selectedId}
                 </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={cn(
+                        "text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full transition-opacity hover:opacity-70 cursor-pointer",
+                        getStatusBadgeClasses(selectedPrompt.status),
+                      )}
+                    >
+                      {t(STATUS_I18N_KEY[selectedPrompt.status?.toLowerCase() ?? ""] ?? "status.unknown")}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-36">
+                    <DropdownMenuItem
+                      className={cn("text-[12px]", selectedPrompt.status === "active" && "font-semibold text-brand-indigo")}
+                      onClick={() => handleStatusChange("active")}
+                    >
+                      {t("status.active")}
+                      {selectedPrompt.status === "active" && <Check className="h-3 w-3 ml-auto" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className={cn("text-[12px]", selectedPrompt.status === "archived" && "font-semibold text-brand-indigo")}
+                      onClick={() => handleStatusChange("archived")}
+                    >
+                      {t("status.archived")}
+                      {selectedPrompt.status === "archived" && <Check className="h-3 w-3 ml-auto" />}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {selectedPrompt.model && (
                   <>
                     <span className="text-foreground/25 text-[13px]">·</span>
@@ -960,25 +1245,16 @@ export function PromptsListView({
                     </span>
                   </>
                 )}
-                {selectedPrompt.version && (
-                  <>
-                    <span className="text-foreground/25 text-[13px]">·</span>
-                    <span className="text-[13px] text-foreground/50 font-mono">
-                      v{selectedPrompt.version}
-                    </span>
-                  </>
-                )}
               </div>
             </div>
 
             {/* Body: always-editable two-column panel */}
             <EditPanel
-              ref={editPanelRef}
               prompt={selectedPrompt}
               onSaved={onSaved}
               onDelete={onDelete}
-              onSavingChange={setEditSaving}
               campaigns={campaigns}
+              versionOverride={versionOverride}
             />
           </div>
         ) : (
@@ -987,6 +1263,8 @@ export function PromptsListView({
           </div>
         )}
       </div>
+
+
     </div>
   );
 }

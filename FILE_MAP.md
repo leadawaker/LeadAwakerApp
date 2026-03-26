@@ -309,6 +309,17 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 
 ---
 
+## Automation Feature (`features/automation/`)
+
+| Component | File | Notes |
+|-----------|------|-------|
+| PipelineView | `components/PipelineView.tsx` | Automation logs pipeline view — shown on the AutomationLogs page |
+| ExecutionProgressBar | `components/ExecutionProgressBar.tsx` | Progress bar for in-progress execution groups |
+| useExecutionGroups | `hooks/useExecutionGroups.ts` | Groups log entries by `workflow_execution_id` for timeline display |
+| automationRegistry | `automationRegistry.ts` | Maps workflow names → icons, labels, descriptions — add new automation types here |
+
+---
+
 ## AI Agents Feature (`features/ai-agents/`)
 
 | Component | File | Notes |
@@ -362,3 +373,4 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | `FILE_MAP.md` | This file — quick component lookup |
 | `EXPENSES.md` | Expenses feature: DB, BTW/VAT, PDF parsing, architecture |
 | `specs/<feature>/` | Feature specs: requirements.md, implementation-plan.md, action-required.md |
+| `/home/gabriel/automations/CLAUDE.md` | Python automation engine — WAT architecture, bump/campaign launcher, AI conversation pipeline, guardrails, logging patterns |

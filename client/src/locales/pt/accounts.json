@@ -247,6 +247,14 @@
     "contentPlaceholder": "Conte\u00fado que a IA usar\u00e1 para responder perguntas...",
     "emptyTitle": "Ainda sem entradas na base de conhecimento",
     "emptyDescription": "Adicione pre\u00e7os, servi\u00e7os, FAQs e mais para que a IA possa responder \u00e0s perguntas dos leads com precis\u00e3o.",
+    "campaigns": {
+      "label": "Campanhas",
+      "all": "Todas",
+      "hidden": "Oculto",
+      "allCampaigns": "Todas as campanhas",
+      "hiddenFromAll": "Oculto de todas",
+      "count": "campanhas"
+    },
     "categories": {
       "pricing": "Pre\u00e7os",
       "services": "Servi\u00e7os",

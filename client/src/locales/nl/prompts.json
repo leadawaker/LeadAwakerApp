@@ -174,5 +174,31 @@
     "nameZA": "Naam Z \u2192 A",
     "scoreDesc": "Score \u2193",
     "scoreAsc": "Score \u2191"
+  },
+  "versions": {
+    "saveVersion": "Versie Opslaan",
+    "majorVersion": "Hoofd \u2191",
+    "majorVersionHint": "Verhoogt de hoofdversie (bijv. 1.2 \u2192 2.0)",
+    "saving": "Opslaan\u2026",
+    "saved": "Versie opgeslagen",
+    "saveFailed": "Versie opslaan mislukt",
+    "loading": "Versies laden\u2026",
+    "noVersions": "Nog geen versies",
+    "selectVersion": "Versie laden\u2026",
+    "loaded": "Versie geladen",
+    "deleted": "Versie verwijderd",
+    "deleteFailed": "Versie verwijderen mislukt",
+    "reverted": "Teruggezet naar huidig",
+    "confirmLoadTitle": "Versie v{{v}} laden?",
+    "confirmLoadDesc": "Dit vervangt de huidige promptinhoud.",
+    "labelPlaceholder": "Label (optioneel) — bijv. Spaans toegevoegd",
+    "revertToCurrent": "← Huidig",
+    "deleteVersion": "Versie verwijderen",
+    "current": "Huidig",
+    "load": "Laden",
+    "versionCount_one": "{{count}} versie",
+    "versionCount_other": "{{count}} versies",
+    "minorUpdate": "Klein (+0.1)",
+    "majorUpdate": "Groot (+1.0)"
   }
 }

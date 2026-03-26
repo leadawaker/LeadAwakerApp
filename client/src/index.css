@@ -305,6 +305,12 @@
 .animate-bubble-right {
   animation: bubble-enter-right 0.2s ease-out both;
 }
+.bubble-shadow {
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+}
+.dark .bubble-shadow {
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.50));
+}
 
 /* ── Detail panel slide-up — smooth entrance when selecting a new card ── */
 @keyframes panel-slide-up {

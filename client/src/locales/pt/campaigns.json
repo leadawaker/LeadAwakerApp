@@ -213,7 +213,10 @@
     "bump2VoiceNote": "Bump 2 como nota de voz",
     "bump3VoiceNote": "Bump 3 como nota de voz",
     "aiReplyVoiceNote": "Respostas IA como notas de voz",
-    "voiceId": "ID da Voz"
+    "voiceId": "ID da Voz",
+    "bump1AiReference": "Usar como referência IA",
+    "bump2AiReference": "Usar como referência IA",
+    "bump3AiReference": "Usar como referência IA"
   },
 
   "meta": {

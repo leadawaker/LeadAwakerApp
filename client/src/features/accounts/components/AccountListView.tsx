@@ -2,16 +2,11 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Building2,
-  List,
-  Table2,
-  Layers,
   ArrowUpDown,
   Filter,
-  Mail,
-  Phone,
   Plus,
   Check,
-  Users,
+  Layers,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,282 +23,24 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
 import { AccountCreatePanel } from "./AccountCreatePanel";
-import { getInitials, getAccountAvatarColor, ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import type { NewAccountForm } from "./AccountCreateDialog";
 import type { AccountViewMode, AccountGroupBy, AccountSortBy } from "../pages/AccountsPage";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonAccountPanel } from "@/components/ui/skeleton";
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getAccountId(a: AccountRow): number {
-  return a.Id ?? a.id ?? 0;
-}
-
-function formatRelativeTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "";
-    const diffMs = Date.now() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86_400_000);
-    if (diffDays === 0) {
-      const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "Just now" : `${h}h ago`;
-    }
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
-  } catch { return ""; }
-}
-
-// ── Group / Sort metadata ─────────────────────────────────────────────────────
-
-// tKey pattern: module-level constants store i18n keys (hooks can't be called at module level)
-const GROUP_TKEYS: Record<AccountGroupBy, string> = {
-  status: "group.status",
-  type:   "group.type",
-  none:   "group.none",
-};
-
-const SORT_TKEYS: Record<AccountSortBy, string> = {
-  recent:    "sort.mostRecent",
-  name_asc:  "sort.nameAZ",
-  name_desc: "sort.nameZA",
-};
-
-// Status values from DB → i18n keys
-const STATUS_I18N_KEY: Record<string, string> = {
-  Active:    "status.active",
-  Trial:     "status.trial",
-  Inactive:  "status.inactive",
-  Suspended: "status.suspended",
-  Unknown:   "status.unknown",
-};
-
-const STATUS_GROUP_ORDER = ["Active", "Trial", "Inactive", "Suspended"];
-const STATUS_FILTER_OPTIONS = ["Active", "Trial", "Inactive", "Suspended"];
-
-// ── View tab definitions ──────────────────────────────────────────────────────
-
-// tKey pattern: translated inside component where hook is available
-const VIEW_TABS_CONFIG: { id: AccountViewMode; tKey: string; icon: typeof List }[] = [
-  { id: "list",  tKey: "views.list",  icon: List   },
-  { id: "table", tKey: "views.table", icon: Table2 },
-];
-
-// ── Virtual list item types ───────────────────────────────────────────────────
-
-type VirtualListItem =
-  | { kind: "header"; label: string; count: number }
-  | { kind: "account"; account: AccountRow };
-
-// ── Account card ─────────────────────────────────────────────────────────────
-
-function AccountListCard({
-  account,
-  isActive,
-  onClick,
-  campaignNames,
-  leadCount,
-}: {
-  account: AccountRow;
-  isActive: boolean;
-  onClick: () => void;
-  campaignNames: string[];
-  leadCount: number | null;
-}) {
-  const { t } = useTranslation("accounts");
-  const name = String(account.name || t("detail.unnamedAccount"));
-  const initials = getInitials(name);
-  const status = String(account.status || "");
-  const avatarColor = getAccountAvatarColor(status);
-  const statusHex = ACCOUNT_STATUS_HEX[status] || "#94A3B8";
-  const lastUpdated = account.updated_at || account.created_at;
-  const email = String(account.owner_email || "");
-  const phone = String((account as any).phone || "");
-  const niche = String(account.business_niche || "");
-  const timezone = String(account.timezone || "");
-  const type = String(account.type || "");
-
-  const hasHoverContent = !!(email || phone || niche || timezone || campaignNames.length > 0);
-
-  // Campaign pills: max 3 visible, then "+N more"
-  const visibleCampaigns = campaignNames.slice(0, 3);
-  const extraCount = campaignNames.length - visibleCampaigns.length;
-
-  return (
-    <div
-      className={cn(
-        "group rounded-xl cursor-pointer",
-        "transition-[background-color,box-shadow] duration-150 ease-out",
-        "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-      )}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
-      data-testid="account-mobile-card"
-    >
-      <div className="px-3 pt-3 pb-2.5 flex flex-col gap-2">
-
-        {/* Top row: Avatar + Name + Type badge */}
-        <div className="flex items-start gap-2.5">
-          <EntityAvatar
-            name={name}
-            photoUrl={account.logo_url}
-            bgColor={avatarColor.bg}
-            textColor={avatarColor.text}
-          />
-          <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-start justify-between gap-1.5">
-              <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
-                {name}
-              </p>
-              {type && (
-                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-black/[0.07] text-foreground/40 mt-0.5 whitespace-nowrap">
-                  {type}
-                </span>
-              )}
-            </div>
-            {/* Status dot + label + lead count + last updated — one compact line */}
-            <div className="flex items-center justify-between gap-1 mt-[3px]">
-              <div className="flex items-center gap-1 min-w-0">
-                <span
-                  className="h-1.5 w-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: statusHex }}
-                />
-                <span className="text-[11px] text-muted-foreground truncate">{status ? t(STATUS_I18N_KEY[status] ?? status) : t("status.unknown")}</span>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {leadCount !== null && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground/50" data-testid="account-card-lead-count">
-                    <Users className="h-3 w-3" />
-                    <span className="tabular-nums">{leadCount}</span>
-                  </span>
-                )}
-                {lastUpdated && (
-                  <span className="text-[10px] text-muted-foreground/45 tabular-nums">
-                    {formatRelativeTime(lastUpdated)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hover-reveal: niche + timezone + email + phone + campaign pills */}
-        {hasHoverContent && (
-          <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[80px] group-hover:opacity-100 transition-[max-height,opacity] duration-200 ease-out">
-            <div className="flex flex-col gap-1.5 pt-1.5 border-t border-black/[0.06]">
-              {/* Niche + timezone */}
-              {(niche || timezone) && (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {niche && (
-                    <span className="text-[10px] text-foreground/40 truncate">{niche}</span>
-                  )}
-                  {niche && timezone && (
-                    <span className="text-[10px] text-foreground/25 shrink-0">&middot;</span>
-                  )}
-                  {timezone && (
-                    <span className="text-[10px] text-foreground/40 truncate">{timezone}</span>
-                  )}
-                </div>
-              )}
-              {/* Email + phone row */}
-              {(email || phone) && (
-                <div className="flex items-center gap-3 min-w-0">
-                  {email && (
-                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 truncate min-w-0">
-                      <Mail className="h-3 w-3 shrink-0 text-muted-foreground/35" />
-                      <span className="truncate">{email}</span>
-                    </span>
-                  )}
-                  {phone && (
-                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 shrink-0">
-                      <Phone className="h-3 w-3 shrink-0 text-muted-foreground/35" />
-                      {phone}
-                    </span>
-                  )}
-                </div>
-              )}
-              {/* Campaign name pills */}
-              {visibleCampaigns.length > 0 && (
-                <div className="flex items-center gap-1 flex-wrap">
-                  {visibleCampaigns.map((cname, i) => (
-                    <span
-                      key={i}
-                      className="text-[9px] font-medium rounded px-1.5 py-0.5 truncate max-w-[100px]"
-                      style={{
-                        backgroundColor: isActive ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
-                        color: "rgba(0,0,0,0.45)",
-                      }}
-                    >
-                      {cname}
-                    </span>
-                  ))}
-                  {extraCount > 0 && (
-                    <span
-                      className="text-[9px] font-medium rounded px-1.5 py-0.5"
-                      style={{
-                        backgroundColor: isActive ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
-                        color: "rgba(0,0,0,0.45)",
-                      }}
-                    >
-                      {t("related.more", { count: extraCount })}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
-
-// ── Group header ──────────────────────────────────────────────────────────────
-
-function GroupHeader({ label, count }: { label: string; count: number }) {
-  return (
-    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
-      <div className="flex items-center gap-[10px]">
-        <div className="flex-1 h-px bg-foreground/15" />
-        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">{"2013"}</span>
-        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15" />
-      </div>
-    </div>
-  );
-}
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function ListSkeleton() {
-  return (
-    <div className="space-y-0 p-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 px-4 py-3.5 rounded-lg animate-pulse"
-          style={{ animationDelay: `${i * 50}ms` }}
-        >
-          <div className="h-10 w-10 rounded-full bg-foreground/10 shrink-0" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 bg-foreground/10 rounded-full w-2/3" />
-            <div className="h-2.5 bg-foreground/8 rounded-full w-1/2" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+import {
+  getAccountId,
+  GROUP_TKEYS,
+  SORT_TKEYS,
+  STATUS_I18N_KEY,
+  STATUS_GROUP_ORDER,
+  STATUS_FILTER_OPTIONS,
+  VIEW_TABS_CONFIG,
+  type VirtualListItem,
+  AccountListCard,
+  GroupHeader,
+  ListSkeleton,
+} from "./listWidgets";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 

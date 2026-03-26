@@ -145,7 +145,9 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-indigo/10 text-brand-indigo text-xs font-bold flex items-center justify-center mt-0.5">
         {n}
       </span>
-      <span>{children}</span>
+      {typeof children === "string"
+        ? <span dangerouslySetInnerHTML={{ __html: children }} />
+        : <span>{children}</span>}
     </div>
   );
 }
@@ -154,7 +156,9 @@ function Tip({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-800 dark:text-amber-200">
       <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
-      <span>{children}</span>
+      {typeof children === "string"
+        ? <span dangerouslySetInnerHTML={{ __html: children }} />
+        : <span>{children}</span>}
     </div>
   );
 }

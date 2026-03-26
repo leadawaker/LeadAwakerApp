@@ -2,9 +2,6 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X,
-  Clock,
-  MessageSquare,
-  Calendar,
   Link2,
   Bot,
   Users,
@@ -13,7 +10,6 @@ import {
   Zap,
   CheckCircle2,
   XCircle,
-  ChevronRight,
   BarChart2,
   Settings,
   Layers,
@@ -22,19 +18,16 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { formatDate } from "./formFields/campaignFormatters";
+import {
+  QualificationCriteriaDisplay,
+  BumpCard,
+  PerformanceChart,
+  MetricSummaryRow,
+} from "./detailPanelWidgets";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -57,24 +50,14 @@ function getStatusColor(status: string): { bg: string; text: string; dot: string
   }
 }
 
-function formatHours(h: number | null | undefined): string {
-  if (!h && h !== 0) return "—";
-  if (h < 24) return `${h}h`;
-  const d = Math.floor(h / 24);
-  const rem = h % 24;
-  return rem > 0 ? `${d}d ${rem}h` : `${d}d`;
+/** Get ROI color class based on value */
+function getRoiColor(roi: number): string {
+  if (roi >= 100) return "text-emerald-600 dark:text-emerald-400";
+  if (roi >= 0) return "text-blue-600 dark:text-blue-400";
+  return "text-rose-600 dark:text-rose-400";
 }
 
-function formatDate(s: string | null | undefined): string {
-  if (!s) return "—";
-  try {
-    return new Date(s).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
-  } catch {
-    return s;
-  }
-}
-
-// ── Sub-components ──────────────────────────────────────────────────────────
+// ── Local sub-components (read-only variants, used only in this panel) ──────
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -110,334 +93,6 @@ function BoolRow({ label, value }: { label: string; value: boolean | null | unde
       ) : (
         <XCircle className="w-4 h-4 text-slate-400 shrink-0" />
       )}
-    </div>
-  );
-}
-
-/** Renders qualification criteria in a structured, readable format */
-function QualificationCriteriaDisplay({ raw }: { raw: string | null | undefined }) {
-  const { t } = useTranslation("campaigns");
-  if (!raw) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center py-6 text-center"
-        data-testid="campaign-detail-qualification-empty"
-      >
-        <ListChecks className="w-6 h-6 text-muted-foreground/30 mb-2" />
-        <p className="text-[12px] text-muted-foreground italic">{t("panel.noQualificationCriteria")}</p>
-      </div>
-    );
-  }
-
-  // Try to parse as JSON
-  let parsed: Record<string, unknown> | null = null;
-  try {
-    const p = JSON.parse(raw);
-    if (typeof p === "object" && p !== null && !Array.isArray(p)) {
-      parsed = p as Record<string, unknown>;
-    }
-  } catch {
-    // Not valid JSON — fall through to plain text
-  }
-
-  if (parsed) {
-    return (
-      <div
-        className="space-y-2"
-        data-testid="campaign-detail-qualification-criteria"
-      >
-        {Object.entries(parsed).map(([key, value]) => {
-          const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-          let displayValue: React.ReactNode;
-
-          if (typeof value === "boolean") {
-            displayValue = value ? (
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {t("confirm.yes")}
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-slate-500">
-                <XCircle className="w-3.5 h-3.5" />
-                {t("confirm.no")}
-              </span>
-            );
-          } else if (Array.isArray(value)) {
-            displayValue = (
-              <div className="flex flex-wrap gap-1 justify-end">
-                {(value as unknown[]).map((item, i) => (
-                  <span
-                    key={i}
-                    className="inline-block bg-muted rounded-md px-1.5 py-0.5 text-[10px] font-medium text-foreground"
-                  >
-                    {String(item)}
-                  </span>
-                ))}
-              </div>
-            );
-          } else if (typeof value === "number") {
-            displayValue = (
-              <span className="font-mono text-[11px] text-foreground">
-                {value.toLocaleString()}
-              </span>
-            );
-          } else {
-            displayValue = (
-              <span className="text-[12px] text-foreground break-words text-right max-w-[60%]">
-                {String(value ?? "—")}
-              </span>
-            );
-          }
-
-          return (
-            <div
-              key={key}
-              className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0"
-            >
-              <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">{label}</span>
-              <span className="text-right">{displayValue}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  // Plain text fallback
-  return (
-    <div
-      className="rounded-lg bg-muted/30 p-3"
-      data-testid="campaign-detail-qualification-criteria"
-    >
-      <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-        {raw}
-      </p>
-    </div>
-  );
-}
-
-/** Renders a single bump template block */
-function BumpCard({
-  bumpNumber,
-  template,
-  delayHours,
-}: {
-  bumpNumber: number;
-  template: string | null | undefined;
-  delayHours: number | null | undefined;
-}) {
-  const { t } = useTranslation("campaigns");
-  return (
-    <div
-      className="rounded-xl border border-border bg-muted/30 p-3 space-y-2"
-      data-testid={`campaign-detail-bump-${bumpNumber}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Bump {bumpNumber}
-          </span>
-          <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
-        </div>
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <Clock className="w-3 h-3" />
-          <span>{t("config.delayLabel", { value: formatHours(delayHours) })}</span>
-        </div>
-      </div>
-      {template ? (
-        <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-          {template}
-        </p>
-      ) : (
-        <p className="text-[11px] text-muted-foreground italic">{t("config.noTemplateSet")}</p>
-      )}
-    </div>
-  );
-}
-
-/** Performance chart using Recharts */
-function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[] }) {
-  const { t } = useTranslation("campaigns");
-  const chartData = useMemo(() => {
-    return [...metrics]
-      .sort((a, b) => (a.metric_date || "").localeCompare(b.metric_date || ""))
-      .map((m) => ({
-        date: m.metric_date
-          ? new Date(m.metric_date).toLocaleDateString(undefined, { month: "short", day: "numeric" })
-          : "",
-        "Response %": Number(m.response_rate_percent) || 0,
-        "Booking %": Number(m.booking_rate_percent) || 0,
-        "ROI %": Number(m.roi_percent) || 0,
-      }));
-  }, [metrics]);
-
-  if (chartData.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <BarChart2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
-        <p className="text-[12px] text-muted-foreground">{t("panel.noPerformanceData")}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full" style={{ height: 180 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-            tickLine={false}
-            axisLine={false}
-            interval="preserveStartEnd"
-          />
-          <YAxis
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            contentStyle={{
-              borderRadius: "10px",
-              border: "1px solid hsl(var(--border))",
-              backgroundColor: "hsl(var(--card))",
-              color: "hsl(var(--foreground))",
-              fontSize: "11px",
-              padding: "6px 10px",
-            }}
-          />
-          <Legend
-            wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }}
-          />
-          <Line
-            type="monotone"
-            dataKey="Response %"
-            stroke="#6366f1"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 3 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="Booking %"
-            stroke="#f59e0b"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 3 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="ROI %"
-            stroke="#10b981"
-            strokeWidth={1.5}
-            dot={false}
-            activeDot={{ r: 3 }}
-            strokeDasharray="4 2"
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** Get ROI color class based on value */
-function getRoiColor(roi: number): string {
-  if (roi >= 100) return "text-emerald-600 dark:text-emerald-400";
-  if (roi >= 0) return "text-blue-600 dark:text-blue-400";
-  return "text-rose-600 dark:text-rose-400";
-}
-
-/** Latest metric summary row */
-function MetricSummaryRow({
-  metrics,
-}: {
-  metrics: CampaignMetricsHistory[];
-}) {
-  const { t } = useTranslation("campaigns");
-  const latest = useMemo(() => {
-    if (metrics.length === 0) return null;
-    return [...metrics].sort((a, b) =>
-      (b.metric_date || "").localeCompare(a.metric_date || "")
-    )[0];
-  }, [metrics]);
-
-  const totals = useMemo(() => {
-    return metrics.reduce(
-      (acc, m) => ({
-        leadsTargeted: acc.leadsTargeted + (Number(m.total_leads_targeted) || 0),
-        messagesSent: acc.messagesSent + (Number(m.total_messages_sent) || 0),
-        responses: acc.responses + (Number(m.total_responses_received) || 0),
-        bookings: acc.bookings + (Number(m.bookings_generated) || 0),
-        cost: acc.cost + (Number(m.total_cost) || 0),
-      }),
-      { leadsTargeted: 0, messagesSent: 0, responses: 0, bookings: 0, cost: 0 }
-    );
-  }, [metrics]);
-
-  if (!latest) return null;
-
-  const roiValue = Number(latest.roi_percent) || 0;
-  const costPerLead = Number(latest.cost_per_lead) || 0;
-  const costPerBooking = Number(latest.cost_per_booking) || 0;
-
-  const pills: { label: string; value: string; color: string; testId?: string }[] = [
-    { label: t("panel.metrics.leads"), value: totals.leadsTargeted.toLocaleString(), color: "text-violet-600 dark:text-violet-400" },
-    { label: t("panel.metrics.messages"), value: totals.messagesSent.toLocaleString(), color: "text-blue-600 dark:text-blue-400" },
-    { label: t("panel.metrics.responses"), value: totals.responses.toLocaleString(), color: "text-cyan-600 dark:text-cyan-400" },
-    { label: t("panel.metrics.bookings"), value: totals.bookings.toLocaleString(), color: "text-amber-600 dark:text-amber-400" },
-    {
-      label: t("panel.metrics.responseRate"),
-      value: `${Number(latest.response_rate_percent) || 0}%`,
-      color: "text-indigo-600 dark:text-indigo-400",
-    },
-    {
-      label: t("panel.metrics.bookingRate"),
-      value: `${Number(latest.booking_rate_percent) || 0}%`,
-      color: "text-orange-600 dark:text-orange-400",
-    },
-    {
-      label: t("panel.metrics.totalCost"),
-      value: `$${totals.cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-      color: "text-rose-600 dark:text-rose-400",
-      testId: "campaign-detail-total-cost",
-    },
-    {
-      label: t("panel.metrics.costPerLead"),
-      value: `$${costPerLead.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
-      color: "text-orange-600 dark:text-orange-400",
-      testId: "campaign-detail-cost-per-lead",
-    },
-    {
-      label: t("panel.metrics.costPerBooking"),
-      value: costPerBooking > 0
-        ? `$${costPerBooking.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-        : "—",
-      color: "text-pink-600 dark:text-pink-400",
-      testId: "campaign-detail-cost-per-booking",
-    },
-    {
-      label: t("panel.metrics.roi"),
-      value: `${roiValue >= 0 ? "+" : ""}${roiValue}%`,
-      color: getRoiColor(roiValue),
-      testId: "campaign-detail-roi-percent",
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-5 gap-2" data-testid="campaign-detail-metrics-summary">
-      {pills.map((p) => (
-        <div
-          key={p.label}
-          className="rounded-xl bg-muted/40 p-2.5 text-center"
-          data-testid={p.testId}
-        >
-          <div className={cn("text-sm font-black tabular-nums leading-tight", p.color)}>{p.value}</div>
-          <div className="text-[9px] text-muted-foreground mt-0.5 font-semibold uppercase tracking-wider">
-            {p.label}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

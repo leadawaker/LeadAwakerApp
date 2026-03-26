@@ -247,6 +247,14 @@
     "contentPlaceholder": "Inhoud die de AI gebruikt om vragen te beantwoorden...",
     "emptyTitle": "Nog geen kennisbank items",
     "emptyDescription": "Voeg prijzen, diensten, FAQ's en meer toe zodat de AI vragen van leads nauwkeurig kan beantwoorden.",
+    "campaigns": {
+      "label": "Campagnes",
+      "all": "Alle",
+      "hidden": "Verborgen",
+      "allCampaigns": "Alle campagnes",
+      "hiddenFromAll": "Verborgen voor alle",
+      "count": "campagnes"
+    },
     "categories": {
       "pricing": "Prijzen",
       "services": "Diensten",

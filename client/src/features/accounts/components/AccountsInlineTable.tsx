@@ -385,7 +385,7 @@ export function AccountsInlineTable({
           <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 700 }}>
 
             {/* Sticky header */}
-            <thead className="sticky top-0 z-20">
+            <thead className="sticky top-0 z-40 bg-muted">
               <tr>
                 {/* Select-all checkbox */}
                 <th className="sticky left-0 z-30 w-[36px] px-0 bg-muted border-b border-border/20">

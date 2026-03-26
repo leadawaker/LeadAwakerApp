@@ -41,7 +41,9 @@ export function useUpdateTask() {
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(TASKS_KEY, context.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: TASKS_KEY }),
+    // Mark stale but don't trigger an immediate refetch — the optimistic update
+    // already reflects the change. A full refetch happens on next focus/remount.
+    onSettled: () => qc.invalidateQueries({ queryKey: TASKS_KEY, refetchType: "none" }),
   });
 }
 

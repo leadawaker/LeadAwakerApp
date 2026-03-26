@@ -320,5 +320,13 @@
     "sendFailed": "Verzenden mislukt",
     "sendFailedDescription": "Kon de e-mail niet verzenden. Probeer het opnieuw.",
     "reply": "Beantwoorden"
+  },
+  "whatsappComposer": {
+    "title": "WhatsApp",
+    "placeholder": "Typ een WhatsApp-bericht...",
+    "send": "Verzenden",
+    "sending": "Verzenden...",
+    "noPhone": "Geen telefoonnummer beschikbaar",
+    "sendFailed": "Verzenden mislukt. Probeer het opnieuw."
   }
 }

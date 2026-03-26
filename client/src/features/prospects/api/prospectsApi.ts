@@ -49,3 +49,16 @@ export const deleteProspect = async (rowId: number | string) => {
   });
   if (!res.ok) throw new Error("Failed to delete prospect");
 };
+
+export const sendWhatsAppMessage = async (prospectId: number, message: string) => {
+  const res = await apiFetch(`/api/prospects/${prospectId}/whatsapp/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Failed to send" }));
+    throw new Error(err.message || "Failed to send WhatsApp message");
+  }
+  return await res.json();
+};

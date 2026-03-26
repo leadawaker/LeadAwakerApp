@@ -571,7 +571,7 @@
       "parseFailed": "Parseren mislukt: {{message}}",
       "aiParseFailed": "AI-parseren mislukt: {{message}}",
       "saveFailed": "Opslaan mislukt: {{message}}",
-      "noApiKeyTitle": "ANTHROPIC_API_KEY",
+      "noApiKeyTitle": "OPEN_AI_API_KEY",
       "noApiKeyDesc": "niet ingesteld op de server. Vul velden handmatig in, of stel de sleutel in uw .env-bestand in en herstart de server.",
       "noApiKeyDescAlt": "niet ingesteld. Vul velden handmatig in, of stel de sleutel in .env in en herstart de server.",
       "date": "Datum",

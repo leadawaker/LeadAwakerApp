@@ -723,13 +723,34 @@ export default function TasksGanttView({
     return map;
   }, [categories]);
 
+  // ── Fast task lookup — always reflects latest data ─────────────────
+  const taskById = useMemo(
+    () => new Map(tasks.map((t) => [t.id, t])),
+    [tasks]
+  );
+
   // ── Build tree + flatten ─────────────────────────────────────────────
+  // Structural key: only fields that affect tree shape/order. Changes here
+  // force a rebuild. Pure display fields (title, dueDate, etc.) don't affect
+  // tree structure, so changes to them skip the rebuild; the render loop reads
+  // fresh data from `taskById` instead.
+  const treeStructuralKey = useMemo(
+    () =>
+      tasks
+        .map((t) => `${t.id}:${t.parentTaskId ?? 0}:${t.status ?? ""}:${t.priority ?? ""}`)
+        .join("|"),
+    [tasks]
+  );
+
   const tree = useMemo(() => {
     if (ganttGroupBy === "status" || ganttGroupBy === "priority") {
+      // Grouped modes need a rebuild on any relevant change — treeStructuralKey
+      // includes status/priority, so this stays correct.
       return buildGroupedTree(tasks, ganttGroupBy);
     }
     return buildTree(tasks);
-  }, [tasks, ganttGroupBy]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treeStructuralKey, ganttGroupBy]);
 
   // Auto-expand virtual group nodes when using grouped mode
   useEffect(() => {
@@ -869,7 +890,7 @@ export default function TasksGanttView({
       const now = new Date();
       const hourFrac = (now.getHours() + now.getMinutes() / 60) / 24;
       const nowX = todayX + hourFrac * pxPerDay;
-      panel.scrollLeft = Math.max(0, nowX - panel.clientWidth * 0.3);
+      panel.scrollLeft = Math.max(0, nowX - panel.clientWidth * 0.5);
     }
   }, [todayX, pxPerDay]);
 
@@ -915,6 +936,10 @@ export default function TasksGanttView({
     origEnd: Date;
   } | null>(null);
   const [dragDaysDelta, setDragDaysDelta] = useState(0);
+  // RAF ref: throttle setDragDaysDelta to at most one React render per animation frame
+  const dragRafRef = useRef<number | null>(null);
+  // Track latest mouse delta without triggering renders
+  const latestDxRef = useRef(0);
 
   const startDrag = useCallback(
     (
@@ -929,6 +954,7 @@ export default function TasksGanttView({
       e.preventDefault();
       e.stopPropagation();
       setDragDaysDelta(0);
+      latestDxRef.current = 0;
       setDragState({
         taskId: task.id,
         mode,
@@ -944,10 +970,20 @@ export default function TasksGanttView({
     if (!dragState) return;
     const pxRef = pxPerDay; // capture for closure
     const onMove = (e: MouseEvent) => {
-      const dx = e.clientX - dragState.startMouseX;
-      setDragDaysDelta(Math.round(dx / pxRef));
+      latestDxRef.current = e.clientX - dragState.startMouseX;
+      // Throttle React state updates to one per animation frame
+      if (!dragRafRef.current) {
+        dragRafRef.current = requestAnimationFrame(() => {
+          setDragDaysDelta(Math.round(latestDxRef.current / pxRef));
+          dragRafRef.current = null;
+        });
+      }
     };
     const onUp = (e: MouseEvent) => {
+      if (dragRafRef.current) {
+        cancelAnimationFrame(dragRafRef.current);
+        dragRafRef.current = null;
+      }
       const dx = e.clientX - dragState.startMouseX;
       const delta = Math.round(dx / pxRef);
       // Single API call on release
@@ -977,6 +1013,7 @@ export default function TasksGanttView({
     return () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      if (dragRafRef.current) { cancelAnimationFrame(dragRafRef.current); dragRafRef.current = null; }
     };
   }, [dragState, pxPerDay, updateTask]);
 
@@ -998,7 +1035,7 @@ export default function TasksGanttView({
   // ── Determine color for a row (respects color-by mode) ──
   const getRowColor = useCallback(
     (row: FlatRow): string => {
-      const task = row.node.task;
+      const task = taskById.get(row.node.task.id) ?? row.node.task;
       if (colorBy === "status") {
         return STATUS_COLORS[task.status as TaskStatus] ?? "#6366f1";
       }
@@ -1012,7 +1049,7 @@ export default function TasksGanttView({
         : undefined;
       return catColor ?? STATUS_COLORS[task.status as TaskStatus] ?? "#6366f1";
     },
-    [categoryColorMap, colorBy]
+    [categoryColorMap, colorBy, taskById]
   );
 
   // ── Precompute L2 parent row spans (for extending deadline lines through children) ──
@@ -1052,10 +1089,12 @@ export default function TasksGanttView({
     const cache = new Map<number, { start: Date | null; end: Date | null }>();
     for (let i = 0; i < flatRows.length; i++) {
       const row = flatRows[i];
-      cache.set(i, row.hasChildren ? getNodeSpan(row.node) : getEffectiveDates(row.node.task));
+      // Use taskById for fresh date data (tree nodes may be stale on display-only changes)
+      const task = taskById.get(row.node.task.id) ?? row.node.task;
+      cache.set(i, row.hasChildren ? getNodeSpan(row.node) : getEffectiveDates(task));
     }
     return cache;
-  }, [flatRows]);
+  }, [flatRows, taskById]);
 
   // ── Precompute L1 background bands (category color spans across all children) ──
   const l1Bands = useMemo(() => {
@@ -1142,7 +1181,9 @@ export default function TasksGanttView({
             {firstVisibleRow > 0 && <div style={{ height: firstVisibleRow * ROW_HEIGHT }} />}
             {flatRows.slice(firstVisibleRow, lastVisibleRow + 1).map((row, sliceIdx) => {
               const i = firstVisibleRow + sliceIdx;
-              const { task } = row.node;
+              // Use taskById for fresh data — tree nodes can be stale when only display
+              // fields changed (structural key skips tree rebuild in that case)
+              const task = taskById.get(row.node.task.id) ?? row.node.task;
               const catColorRaw = task.categoryId ? categoryColorMap.get(task.categoryId) : undefined;
               const catColor = catColorRaw ?? "#6366f1";
               const isDone = task.status === "done";
@@ -1307,10 +1348,11 @@ export default function TasksGanttView({
                 const i = firstVisibleRow + sliceIdx;
                 const isRootRow = row.depth === 0;
                 const isL1Row = row.depth === 1 && row.hasChildren;
+                const stripeTask = taskById.get(row.node.task.id) ?? row.node.task;
                 const l1CatColor = isL1Row && colorBy === "category"
-                  ? (row.node.task.categoryId ? categoryColorMap.get(row.node.task.categoryId) : undefined)
+                  ? (stripeTask.categoryId ? categoryColorMap.get(stripeTask.categoryId) : undefined)
                   : undefined;
-                const isSelectedRow = expandedTaskId === row.node.task.id;
+                const isSelectedRow = expandedTaskId === stripeTask.id;
 
                 return (
                   <div
@@ -1358,10 +1400,10 @@ export default function TasksGanttView({
 
                   const parentSpan = nodeSpanCache.get(row.parentIndex) ?? (parentRow.hasChildren
                     ? getNodeSpan(parentRow.node)
-                    : getEffectiveDates(parentRow.node.task));
+                    : getEffectiveDates(taskById.get(parentRow.node.task.id) ?? parentRow.node.task));
                   const childSpan = nodeSpanCache.get(i) ?? (row.hasChildren
                     ? getNodeSpan(row.node)
-                    : getEffectiveDates(row.node.task));
+                    : getEffectiveDates(taskById.get(row.node.task.id) ?? row.node.task));
 
                   const parentPos = getBarPos(parentSpan.start, parentSpan.end);
                   const childPos = getBarPos(childSpan.start, childSpan.end);
@@ -1405,7 +1447,7 @@ export default function TasksGanttView({
               {/* ── Task bars (virtualized) ────────────────────────── */}
               {flatRows.slice(firstVisibleRow, lastVisibleRow + 1).map((row, sliceIdx) => {
                 const i = firstVisibleRow + sliceIdx;
-                const { task } = row.node;
+                const task = taskById.get(row.node.task.id) ?? row.node.task;
                 const isParent = row.hasChildren;
                 const isRoot = row.depth === 0;
                 const isL1 = row.depth === 1 && isParent;
@@ -1435,10 +1477,12 @@ export default function TasksGanttView({
                       }}
                       onClick={() => { toggleTaskExpand(task.id); onTaskClick?.(task.id); }}
                       onMouseEnter={(e) => {
+                        if (dragState) return;
                         setHoveredRow(i);
                         tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start: barStart, end: barEndDate });
                       }}
                       onMouseMove={(e) => {
+                        if (dragState) return;
                         tooltipPosRef.current = { x: e.clientX, y: e.clientY };
                         if (tooltipElRef.current) { tooltipElRef.current.style.left = `${e.clientX}px`; tooltipElRef.current.style.top = `${e.clientY - 12}px`; }
                       }}
@@ -1496,11 +1540,13 @@ export default function TasksGanttView({
                 const commonHandlers = {
                   onClick: () => { toggleTaskExpand(task.id); onTaskClick?.(task.id); },
                   onMouseEnter: (e: React.MouseEvent) => {
+                    if (dragState) return; // skip hover effects during drag
                     setHoveredRow(i);
                     tooltipPosRef.current = { x: e.clientX, y: e.clientY };
                     setTooltipData({ task, start, end });
                   },
                   onMouseMove: (e: React.MouseEvent) => {
+                    if (dragState) return; // skip tooltip update during drag
                     tooltipPosRef.current = { x: e.clientX, y: e.clientY };
                     if (tooltipElRef.current) {
                       tooltipElRef.current.style.left = `${e.clientX}px`;
@@ -1552,10 +1598,12 @@ export default function TasksGanttView({
                           }}
                           onClick={() => onTaskClick?.(task.id)}
                           onMouseEnter={(e) => {
+                            if (dragState) return;
                             setHoveredRow(i);
                             tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start, end });
                           }}
                           onMouseMove={(e) => {
+                            if (dragState) return;
                             tooltipPosRef.current = { x: e.clientX, y: e.clientY };
                             if (tooltipElRef.current) { tooltipElRef.current.style.left = `${e.clientX}px`; tooltipElRef.current.style.top = `${e.clientY - 12}px`; }
                           }}
@@ -1638,10 +1686,12 @@ export default function TasksGanttView({
                           }}
                           onClick={() => onTaskClick?.(task.id)}
                           onMouseEnter={(e) => {
+                            if (dragState) return;
                             setHoveredRow(i);
                             tooltipPosRef.current = { x: e.clientX, y: e.clientY }; setTooltipData({ task, start, end });
                           }}
                           onMouseMove={(e) => {
+                            if (dragState) return;
                             tooltipPosRef.current = { x: e.clientX, y: e.clientY };
                             if (tooltipElRef.current) { tooltipElRef.current.style.left = `${e.clientX}px`; tooltipElRef.current.style.top = `${e.clientY - 12}px`; }
                           }}
@@ -1835,7 +1885,7 @@ export default function TasksGanttView({
         const rowIdx = flatRows.findIndex((r) => r.node.task.id === expandedTaskId);
         if (rowIdx < 0) return null;
         const row = flatRows[rowIdx];
-        const task = row.node.task;
+        const task = taskById.get(row.node.task.id) ?? row.node.task;
         const dates = getEffectiveDates(task);
         const tags = parseTags((task as any).tags);
         const catColor = getRowColor(row);

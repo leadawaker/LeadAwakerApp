@@ -572,7 +572,7 @@
       "parseFailed": "Parse failed: {{message}}",
       "aiParseFailed": "AI parse failed: {{message}}",
       "saveFailed": "Save failed: {{message}}",
-      "noApiKeyTitle": "ANTHROPIC_API_KEY",
+      "noApiKeyTitle": "OPEN_AI_API_KEY",
       "noApiKeyDesc": "not set on the server. Enter fields manually, or set the key in your .env file and restart the server.",
       "noApiKeyDescAlt": "not set. Fill in fields manually, or set the key in .env and restart the server.",
       "date": "Date",

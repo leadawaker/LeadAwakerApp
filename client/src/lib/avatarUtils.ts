@@ -8,7 +8,7 @@ function isDarkMode(): boolean {
 
 // ── Universal initials extraction ─────────────────────────────────────────────
 export function getInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
+  return String(name || "").split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
 }
 
 /** Lead-specific: builds initials from first_name + last_name fields */

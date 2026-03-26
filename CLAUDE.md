@@ -51,6 +51,15 @@ Never use `process.exit()` in Vite or server error handlers — it kills the ent
 - `leadawaker.com` = Vercel production (auto-deploys from GitHub `main` after `git push`)
 - `api.leadawaker.com` = Pi API (used by Vercel frontend via `VITE_API_URL`)
 
+## Automation Engine (Python)
+
+The campaign launcher, bump scheduler, AI conversation pipeline, and inbound handler are a **separate Python service** at `/home/gabriel/automations/`. It runs independently from the Express backend.
+
+- Read `/home/gabriel/automations/CLAUDE.md` before touching anything bump/campaign/AI-conversation related
+- Key files: `src/automations/campaign_launcher.py`, `bump_scheduler.py`, `ai_conversation.py`, `inbound_handler.py`
+- Campaign config fields (First_Message, bump_1_template, bump_2_template, etc.) are read from the DB by this service — not by Express
+- The CRM's AutomationLogs page (`AutomationLogs.tsx` → `features/automation/`) displays logs written by this service
+
 ## Feature Specs
 
 When working on a planned feature, check `specs/<feature-name>/` first:

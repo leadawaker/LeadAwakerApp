@@ -7,6 +7,7 @@ import {
   insertCampaignsSchema,
   insertPrompt_LibrarySchema,
   insertCampaignMetricsHistorySchema,
+  insertPromptVersionsSchema,
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
@@ -543,6 +544,52 @@ export function registerCampaignsRoutes(app: Express): void {
     const id = Number(req.params.id);
     const deleted = await storage.deletePrompt(id);
     if (!deleted) return res.status(404).json({ error: "Prompt not found" });
+    res.json({ success: true });
+  }));
+
+  // ─── Prompt Versions ──────────────────────────────────────────────
+
+  app.get("/api/prompts/:id/versions", requireAgency, wrapAsync(async (req, res) => {
+    const promptId = Number(req.params.id);
+    const versions = await storage.getPromptVersions(promptId);
+    res.json(versions);
+  }));
+
+  app.post("/api/prompts/:id/versions", requireAgency, wrapAsync(async (req, res) => {
+    const promptId = Number(req.params.id);
+    const bumpType = req.body.bumpType as "minor" | "major";
+
+    const latest = await storage.getLatestPromptVersion(promptId);
+    let nextVersion = "1.0";
+    if (latest?.versionNumber) {
+      const [major, minor] = latest.versionNumber.split(".").map(Number);
+      nextVersion = bumpType === "major" ? `${major + 1}.0` : `${major}.${minor + 1}`;
+    }
+
+    const payload = {
+      promptsId: promptId,
+      versionNumber: nextVersion,
+      promptText: req.body.promptText ?? null,
+      systemMessage: req.body.systemMessage ?? null,
+      notes: req.body.notes ?? null,
+      savedAt: new Date(),
+      savedBy: (req as any).user?.email ?? null,
+      label: req.body.label ?? null,
+    };
+
+    const parsed = insertPromptVersionsSchema.partial().safeParse(payload);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const version = await storage.createPromptVersion(parsed.data as any);
+
+    await storage.updatePrompt(promptId, { version: nextVersion });
+
+    res.status(201).json(version);
+  }));
+
+  app.delete("/api/prompts/:id/versions/:versionId", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.versionId);
+    const deleted = await storage.deletePromptVersion(id);
+    if (!deleted) return res.status(404).json({ error: "Version not found" });
     res.json({ success: true });
   }));
 

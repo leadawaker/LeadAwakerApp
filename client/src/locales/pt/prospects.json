@@ -320,5 +320,13 @@
     "sendFailed": "Falha no envio",
     "sendFailedDescription": "Nao foi possivel enviar o e-mail. Tente novamente.",
     "reply": "Responder"
+  },
+  "whatsappComposer": {
+    "title": "WhatsApp",
+    "placeholder": "Digite uma mensagem no WhatsApp...",
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "noPhone": "Nenhum numero de telefone cadastrado",
+    "sendFailed": "Falha ao enviar. Tente novamente."
   }
 }

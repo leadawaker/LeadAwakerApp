@@ -313,5 +313,13 @@
     "sendFailed": "Send failed",
     "sendFailedDescription": "Could not send the email. Please try again.",
     "reply": "Reply"
+  },
+  "whatsappComposer": {
+    "title": "WhatsApp",
+    "placeholder": "Type a WhatsApp message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "noPhone": "No phone number on file",
+    "sendFailed": "Failed to send. Please try again."
   }
 }

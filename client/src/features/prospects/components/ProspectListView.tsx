@@ -48,6 +48,7 @@ import { SkeletonAccountPanel } from "@/components/ui/skeleton";
 import { ProspectTasks } from "./ProspectTasks";
 import { EmailComposeModal } from "./EmailComposeModal";
 import { InteractionTimeline } from "./InteractionTimeline";
+import { WhatsAppComposer } from "./WhatsAppComposer";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -350,7 +351,7 @@ function ProspectListCard({
                       className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1 text-white"
                       style={{ backgroundColor: OUTREACH_HEX[outreachStatus] || "#6B7280" }}
                     >
-                      <span className="w-1 h-1 rounded-full bg-white/70" />
+                      <span className="w-1 h-1 rounded-full bg-white/70 dark:bg-white/[0.07]" />
                       {OUTREACH_LABELS[outreachStatus] || outreachStatus.replace(/_/g, " ")}
                     </span>
                   </>
@@ -666,7 +667,7 @@ export function ProspectListView({
       className={cn(
         className,
         "outline-none rounded px-1 -mx-1 transition-colors cursor-text",
-        "focus:bg-white/80 focus:ring-1 focus:ring-brand-blue/40",
+        "focus:bg-white/80 dark:focus:bg-card/80 focus:ring-1 focus:ring-brand-blue/40",
         "hover:bg-black/[0.03]",
         !value && "text-muted-foreground/40 italic",
       )}
@@ -699,7 +700,7 @@ export function ProspectListView({
       className={cn(
         className,
         "outline-none rounded-lg px-2.5 py-1 -mx-2.5 transition-colors cursor-text whitespace-pre-wrap",
-        "focus:bg-white/80 focus:ring-1 focus:ring-brand-blue/40",
+        "focus:bg-white/80 dark:focus:bg-card/80 focus:ring-1 focus:ring-brand-blue/40",
         "hover:bg-black/[0.03]",
         !value && "text-muted-foreground/40 italic",
       )}
@@ -1228,7 +1229,7 @@ export function ProspectListView({
               <>
                 {gradientLayers.map(layer => {
                   const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+                  return style ? <div key={layer.id} className="absolute inset-0 dark:opacity-[0.08]" style={style} /> : null;
                 })}
                 {gradientDragMode && (
                   <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
@@ -1238,15 +1239,15 @@ export function ProspectListView({
               <>
                 {savedGradient.map((layer: GradientLayer) => {
                   const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
+                  return style ? <div key={layer.id} className="absolute inset-0 dark:opacity-[0.08]" style={style} /> : null;
                 })}
               </>
             ) : (
               <>
-                <div className="absolute inset-0 bg-[#ffffff]" />
-                <div className="absolute inset-0 bg-[linear-gradient(157deg,rgba(252,62,255,0.12)_0%,rgba(242,225,155,0.55)_100%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_148%_200%_at_100%_100%,rgba(255,200,134,0.4)_0%,transparent_80%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_0%_0%,rgba(158,143,255,0.1)_0%,transparent_80%)]" />
+                <div className="absolute inset-0 bg-white dark:bg-background" />
+                <div className="absolute inset-0 dark:opacity-[0.08] bg-[linear-gradient(157deg,rgba(252,62,255,0.12)_0%,rgba(242,225,155,0.55)_100%)]" />
+                <div className="absolute inset-0 dark:opacity-[0.08] bg-[radial-gradient(ellipse_148%_200%_at_100%_100%,rgba(255,200,134,0.4)_0%,transparent_80%)]" />
+                <div className="absolute inset-0 dark:opacity-[0.08] bg-[radial-gradient(ellipse_200%_200%_at_0%_0%,rgba(158,143,255,0.1)_0%,transparent_80%)]" />
               </>
             )}
 
@@ -1322,7 +1323,7 @@ export function ProspectListView({
                       {/* Status dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 backdrop-blur-sm border border-black/[0.06] hover:border-black/[0.15] transition-colors cursor-pointer"
+                          <button className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.15] dark:hover:border-white/[0.15] transition-colors cursor-pointer"
                             style={{ color: PROSPECT_STATUS_HEX[String(selectedProspect.status)] || "#3B82F6" }}
                           >
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PROSPECT_STATUS_HEX[String(selectedProspect.status)] || "#3B82F6" }} />
@@ -1346,7 +1347,7 @@ export function ProspectListView({
                         const label = OUTREACH_LABELS[key] || key.replace(/_/g, " ");
                         return (
                           <span
-                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 backdrop-blur-sm border border-black/[0.06]"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08]"
                             style={{ color: hex }}
                           >
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hex }} />
@@ -1356,7 +1357,7 @@ export function ProspectListView({
                       })()}
                       {selectedProspect.niche && (
                         <span
-                          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm border border-black/[0.06]"
+                          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08]"
                           style={{ color: getNicheColor(String(selectedProspect.niche)).hex }}
                         >
                           {selectedProspect.niche}
@@ -1365,7 +1366,7 @@ export function ProspectListView({
                       {/* Priority dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="inline-flex items-center px-2 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-black/[0.06] hover:border-black/[0.15] transition-colors cursor-pointer">
+                          <button className="inline-flex items-center px-2 py-1 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.15] dark:hover:border-white/[0.15] transition-colors cursor-pointer">
                             <SignalBars priority={String(selectedProspect.priority || "")} />
                           </button>
                         </DropdownMenuTrigger>
@@ -1409,7 +1410,7 @@ export function ProspectListView({
                         onChange={(e) => setDateEditValue(e.target.value)}
                         onBlur={commitDateEdit}
                         onKeyDown={(e) => { if (e.key === "Escape") setDateEditField(null); }}
-                        className="text-[12px] bg-white/80 border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 w-full"
+                        className="text-[12px] bg-white/80 dark:bg-card/80 border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 w-full"
                       />
                     ) : selectedProspect.next_follow_up_date ? (
                       <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
@@ -1449,6 +1450,14 @@ export function ProspectListView({
                         setReplyContext(ctx);
                         setEmailComposeOpen(true);
                       }}
+                    />
+
+                    {/* WhatsApp Composer */}
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">WhatsApp</h4>
+                    <WhatsAppComposer
+                      prospectId={selectedProspect.Id ?? selectedProspect.id ?? 0}
+                      prospectPhone={selectedProspect.phone || selectedProspect.contact_phone || null}
                     />
 
                     {/* Pipeline info */}

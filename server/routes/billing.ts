@@ -14,6 +14,7 @@ import { handleZodError, wrapAsync, coerceDates } from "./_helpers";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 export function registerBillingRoutes(app: Express): void {
   // ─── Invoices ────────────────────────────────────────────────────────
@@ -299,9 +300,10 @@ export function registerBillingRoutes(app: Express): void {
     const { pdf_data } = req.body;
     if (!pdf_data) return res.status(400).json({ error: "pdf_data required" });
 
-    const fileData = (pdf_data as string).startsWith("data:")
-      ? pdf_data as string
-      : `data:application/pdf;base64,${pdf_data}`;
+    // Strip data URI prefix to get raw base64
+    const base64 = (pdf_data as string).startsWith("data:")
+      ? (pdf_data as string).split(",")[1]
+      : pdf_data as string;
 
     const prompt = `You are a Dutch business expense parser for Lead Awaker (owner: Gabriel Barbosa Fronza, NL VAT NL002488258B44, BTW registration start: 17 December 2025).
 
@@ -326,32 +328,28 @@ Rules:
 - currency: EUR or USD (or actual currency on invoice)
 - vat_rate_pct: 0, 9, or 21 (Dutch rates) or actual rate shown
 - nl_btw_deductible: true ONLY if the invoice charges Dutch/EU VAT (BTW) that can be reclaimed as voorbelasting on the NL BTW return. US companies and non-EU companies not charging EU VAT = false.
-- notes: helpful tax notes, e.g. "US company — no EU VAT charged" or "Pre-start expense — claim in Q1 2026 BTW return" or "NL supplier, 21% BTW reclaimable"
+- notes: helpful tax notes, e.g. "US company - no EU VAT charged" or "Pre-start expense - claim in Q1 2026 BTW return" or "NL supplier, 21% BTW reclaimable"
 - If a field cannot be determined, use null`;
 
+    const tmpPdf = `/tmp/invoice_parse_${Date.now()}.pdf`;
     try {
-      const response = await fetch("https://api.openai.com/v1/responses", {
+      // Write PDF to disk, extract text with pdftotext
+      fs.writeFileSync(tmpPdf, Buffer.from(base64, "base64"));
+      let pdfText = "";
+      try {
+        pdfText = execSync(`pdftotext "${tmpPdf}" -`, { maxBuffer: 1024 * 1024 }).toString().trim();
+      } catch {
+        return res.status(500).json({ error: "Could not extract text from PDF" });
+      }
+      if (!pdfText) return res.status(500).json({ error: "PDF has no extractable text" });
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "gpt-4o-mini",
-          input: [{
-            role: "user",
-            content: [
-              {
-                type: "input_file",
-                filename: "invoice.pdf",
-                file_data: fileData,
-              },
-              {
-                type: "input_text",
-                text: prompt,
-              },
-            ],
-          }],
+          temperature: 0,
+          messages: [{ role: "user", content: `${prompt}\n\nPDF TEXT:\n${pdfText.slice(0, 8000)}` }],
         }),
       });
       if (!response.ok) {
@@ -360,14 +358,15 @@ Rules:
         return res.status(500).json({ error: "OpenAI API error", detail: errBody });
       }
       const result = await response.json() as any;
-      const text = result?.output?.[0]?.content?.[0]?.text || "";
+      const text = result?.choices?.[0]?.message?.content || "";
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return res.status(500).json({ error: "Could not parse AI response", raw: text });
-      const extracted = JSON.parse(jsonMatch[0]);
-      res.json(extracted);
+      res.json(JSON.parse(jsonMatch[0]));
     } catch (e: any) {
       console.error("[parse-pdf] error:", e);
       res.status(500).json({ error: e.message });
+    } finally {
+      try { fs.unlinkSync(tmpPdf); } catch {}
     }
   }));
 

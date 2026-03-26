@@ -174,5 +174,31 @@
     "nameZA": "Name Z \u2192 A",
     "scoreDesc": "Score \u2193",
     "scoreAsc": "Score \u2191"
+  },
+  "versions": {
+    "saveVersion": "Save Version",
+    "majorVersion": "Major \u2191",
+    "majorVersionHint": "Bumps the major version (e.g. 1.2 \u2192 2.0)",
+    "saving": "Saving\u2026",
+    "saved": "Version saved",
+    "saveFailed": "Failed to save version",
+    "loading": "Loading versions\u2026",
+    "noVersions": "No versions yet",
+    "selectVersion": "Load a version\u2026",
+    "loaded": "Version loaded",
+    "deleted": "Version deleted",
+    "deleteFailed": "Failed to delete version",
+    "reverted": "Reverted to current",
+    "confirmLoadTitle": "Load v{{v}}?",
+    "confirmLoadDesc": "This will replace the current prompt content.",
+    "labelPlaceholder": "Label (optional) — e.g. Added Spanish support",
+    "revertToCurrent": "← Current",
+    "deleteVersion": "Delete version",
+    "current": "Current",
+    "load": "Load",
+    "versionCount_one": "{{count}} version",
+    "versionCount_other": "{{count}} versions",
+    "minorUpdate": "Minor (+0.1)",
+    "majorUpdate": "Major (+1.0)"
   }
 }
