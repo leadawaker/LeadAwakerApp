@@ -60,6 +60,19 @@
     "hoursAgo": "{{count}}h ago",
     "daysAgo": "{{count}}d ago"
   },
+  "summary": {
+    "totalExecutions": "Total Executions",
+    "successRate": "Success Rate",
+    "errorsToday": "Errors Today",
+    "avgDuration": "Avg Duration",
+    "lastRun": "Last Run",
+    "neverRun": "Never"
+  },
+  "pagination": {
+    "page": "Page {{current}} of {{total}}",
+    "prev": "Previous",
+    "next": "Next"
+  },
   "pipeline": {
     "executions": "Executions",
     "selectExecution": "Select an execution to view its pipeline",

@@ -199,6 +199,9 @@ export const automationLogs = nocodb.table("Automation_Logs", {
   leadId: bigint("lead_id", { mode: "number" }),
 }, (t) => [
   index("automation_logs_accounts_id_idx").on(t.accountsId),
+  index("automation_logs_created_at_idx").on(t.createdAt),
+  index("automation_logs_status_idx").on(t.status),
+  index("automation_logs_exec_id_idx").on(t.workflowExecutionId),
 ]);
 
 export const insertAutomation_LogsSchema = createInsertSchema(automationLogs).omit({
@@ -233,6 +236,7 @@ export const campaigns = nocodb.table("Campaigns", {
   bump1Template: text("bump_1_template"),
   bump2Template: text("bump_2_template"),
   bump3Template: text("bump_3_template"),
+  bump4Template: text("bump_4_template"),
   bump1DelayHours: bigint("bump_1_delay_hours", { mode: "number" }),
   bump3DelayHours: bigint("bump_3_delay_hours", { mode: "number" }),
   bump2DelayHours: bigint("bump_2_delay_hours", { mode: "number" }),
@@ -252,6 +256,9 @@ export const campaigns = nocodb.table("Campaigns", {
   bump1VoiceNote: boolean("bump_1_voice_note").default(false),
   bump2VoiceNote: boolean("bump_2_voice_note").default(false),
   bump3VoiceNote: boolean("bump_3_voice_note").default(false),
+  bump1AiReference: boolean("bump_1_ai_reference").default(false),
+  bump2AiReference: boolean("bump_2_ai_reference").default(false),
+  bump3AiReference: boolean("bump_3_ai_reference").default(false),
   aiReplyVoiceNote: boolean("ai_reply_voice_note").default(false),
   ttsVoiceId: text("tts_voice_id"),
   campaignNicheOverride: text("campaign_niche_override"),
@@ -531,6 +538,31 @@ export const insertPrompt_LibrarySchema = createInsertSchema(promptLibrary).omit
 });
 export type Prompt_Library = typeof promptLibrary.$inferSelect;
 export type InsertPrompt_Library = z.infer<typeof insertPrompt_LibrarySchema>;
+
+
+// ─── Prompt_Versions ──────────────────────────────────────────────────────────
+
+export const promptVersions = nocodb.table("Prompt_Versions", {
+  id: integer("id"),
+  promptsId: integer("prompts_id"),
+  versionNumber: text("version_number"),
+  promptText: text("prompt_text"),
+  systemMessage: text("system_message"),
+  notes: text("notes"),
+  label: text("label"),
+  savedAt: timestamp("saved_at"),
+  savedBy: varchar("saved_by"),
+  createdAt: timestamp("created_at"),
+}, (t) => [
+  index("pv_prompts_id_idx").on(t.promptsId),
+]);
+
+export const insertPromptVersionsSchema = createInsertSchema(promptVersions).omit({
+  id: true,
+  createdAt: true,
+});
+export type Prompt_Version = typeof promptVersions.$inferSelect;
+export type InsertPrompt_Version = z.infer<typeof insertPromptVersionsSchema>;
 
 
 // ─── Tags ───────────────────────────────────────────────────────────────

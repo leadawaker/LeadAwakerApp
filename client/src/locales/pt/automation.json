@@ -57,6 +57,19 @@
     "hoursAgo": "{{count}}h atr\u00e1s",
     "daysAgo": "{{count}}d atr\u00e1s"
   },
+  "summary": {
+    "totalExecutions": "Total de Execuções",
+    "successRate": "Taxa de Sucesso",
+    "errorsToday": "Erros Hoje",
+    "avgDuration": "Duração Média",
+    "lastRun": "Última Execução",
+    "neverRun": "Nunca"
+  },
+  "pagination": {
+    "page": "Página {{current}} de {{total}}",
+    "prev": "Anterior",
+    "next": "Próxima"
+  },
   "pipeline": {
     "executions": "Execu\u00e7\u00f5es",
     "selectExecution": "Selecione uma execu\u00e7\u00e3o para ver seu pipeline",

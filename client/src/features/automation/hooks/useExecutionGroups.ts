@@ -100,11 +100,18 @@ export function useExecutionGroups(rows: any[]): ExecutionGroup[] {
         0,
       );
 
-      // Entity data from first row
-      const first = sorted[0];
-      const leadName = first.lead_name || first.leadName || null;
-      const accountName = first.account_name || first.accountName || null;
-      const campaignName = first.campaign_name || first.campaignName || null;
+      // Entity data: try denormalized columns first, then JOIN fields, propagate from siblings
+      const entityRow = sorted.find((r) =>
+        (r.lead_name || r.leadName || r.leadFirstName || r.Leads_id || r.leadsId) &&
+        (r.campaign_name || r.campaignName || r.campaignJoinName || r.Campaigns_id || r.campaignsId)
+      ) || sorted[0];
+      const first = entityRow;
+      const leadFirst = first.leadFirstName || first.lead_first_name || "";
+      const leadLast = first.leadLastName || first.lead_last_name || "";
+      const leadFullJoin = [leadFirst, leadLast].filter(Boolean).join(" ") || null;
+      const leadName = first.lead_name || first.leadName || leadFullJoin || null;
+      const accountName = first.account_name || first.accountName || first.accountJoinName || null;
+      const campaignName = first.campaign_name || first.campaignName || first.campaignJoinName || null;
 
       // Latest timestamp across all steps
       const latestTimestamp = steps.reduce((latest, s) => {
@@ -123,9 +130,21 @@ export function useExecutionGroups(rows: any[]): ExecutionGroup[] {
         leadName,
         accountName,
         campaignName,
-        lead: first.lead ?? null,
-        account: first.account ?? null,
-        campaign: first.campaign ?? null,
+        lead: first.lead ?? (first.Leads_id || first.leadsId ? {
+          id: first.Leads_id || first.leadsId,
+          firstName: first.leadFirstName, lastName: first.leadLastName,
+          conversion_status: first.lead_conversion_status || "",
+        } : null),
+        account: first.account ?? (first.Accounts_id || first.accountsId ? {
+          id: first.Accounts_id || first.accountsId,
+          name: first.accountJoinName || accountName,
+          logo_url: first.accountLogoUrl || null,
+        } : null),
+        campaign: first.campaign ?? (first.Campaigns_id || first.campaignsId ? {
+          id: first.Campaigns_id || first.campaignsId,
+          name: first.campaignJoinName || campaignName,
+          campaign_sticker: first.campaign_sticker || null,
+        } : null),
         latestTimestamp,
       });
     }

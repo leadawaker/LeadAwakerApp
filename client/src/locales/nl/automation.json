@@ -60,6 +60,19 @@
     "hoursAgo": "{{count}}h geleden",
     "daysAgo": "{{count}}d geleden"
   },
+  "summary": {
+    "totalExecutions": "Totaal Uitvoeringen",
+    "successRate": "Slagingspercentage",
+    "errorsToday": "Fouten Vandaag",
+    "avgDuration": "Gem. Duur",
+    "lastRun": "Laatst Uitgevoerd",
+    "neverRun": "Nooit"
+  },
+  "pagination": {
+    "page": "Pagina {{current}} van {{total}}",
+    "prev": "Vorige",
+    "next": "Volgende"
+  },
   "pipeline": {
     "executions": "Uitvoeringen",
     "selectExecution": "Selecteer een uitvoering om de pipeline te bekijken",
