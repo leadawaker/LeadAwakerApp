@@ -1295,7 +1295,17 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               label={t("detail.fields.name")}
               value={fullName}
               icon={<User className="h-3 w-3" />}
-              onSave={(v) => handleInlineFieldSave("full_name", v)}
+              onSave={async (v) => {
+                if (!leadId) return;
+                const parts = v.trim().split(/\s+/);
+                const firstName = parts[0] || "";
+                const lastName = parts.slice(1).join(" ") || "";
+                await apiFetch(`/api/leads/${leadId}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+                });
+              }}
               testId="inline-edit-name"
             />
             <InlineEditField

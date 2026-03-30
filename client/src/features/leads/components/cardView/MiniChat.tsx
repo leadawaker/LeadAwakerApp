@@ -187,11 +187,12 @@ export function MiniBotAvatar() {
 
 // ── Run wrappers with sticky bottom avatars (matching ChatPanel) ──────────────
 
-export function MiniLeadRunWrapper({ msgs, metas, leadName, leadAvatarColors }: {
+export function MiniLeadRunWrapper({ msgs, metas, leadName, leadAvatarColors, isAgency }: {
   msgs: Interaction[];
   metas: MiniMsgMeta[];
   leadName: string;
   leadAvatarColors: { bgColor: string; textColor: string };
+  isAgency?: boolean;
 }) {
   return (
     <div className="flex justify-start gap-1">
@@ -205,25 +206,26 @@ export function MiniLeadRunWrapper({ msgs, metas, leadName, leadAvatarColors }: 
       </div>
       <div className="flex flex-col min-w-0 flex-1">
         {msgs.map((m, i) => (
-          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} suppressAvatar />
+          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} isAgency={isAgency} suppressAvatar />
         ))}
       </div>
     </div>
   );
 }
 
-export function MiniAgentRunWrapper({ msgs, metas, leadName, leadAvatarColors, currentUser }: {
+export function MiniAgentRunWrapper({ msgs, metas, leadName, leadAvatarColors, currentUser, isAgency }: {
   msgs: Interaction[];
   metas: MiniMsgMeta[];
   leadName: string;
   leadAvatarColors: { bgColor: string; textColor: string };
   currentUser: SessionUser | null;
+  isAgency?: boolean;
 }) {
   return (
     <div className="flex justify-end gap-1">
       <div className="flex flex-col min-w-0 flex-1">
         {msgs.map((m, i) => (
-          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} suppressAvatar />
+          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} isAgency={isAgency} suppressAvatar />
         ))}
       </div>
       <div className="w-8 shrink-0 self-end sticky bottom-0">
@@ -233,17 +235,18 @@ export function MiniAgentRunWrapper({ msgs, metas, leadName, leadAvatarColors, c
   );
 }
 
-export function MiniBotRunWrapper({ msgs, metas, leadName, leadAvatarColors }: {
+export function MiniBotRunWrapper({ msgs, metas, leadName, leadAvatarColors, isAgency }: {
   msgs: Interaction[];
   metas: MiniMsgMeta[];
   leadName: string;
   leadAvatarColors: { bgColor: string; textColor: string };
+  isAgency?: boolean;
 }) {
   return (
     <div className="flex justify-end gap-1">
       <div className="flex flex-col min-w-0 flex-1">
         {msgs.map((m, i) => (
-          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} suppressAvatar />
+          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} isAgency={isAgency} suppressAvatar />
         ))}
       </div>
       <div className="w-8 shrink-0 self-end sticky bottom-0">
@@ -426,12 +429,13 @@ export function MiniStatusEventChip({ statusName, time }: { statusName: string; 
 
 // ── Chat bubble (matches ChatPanel — 45% width, time-only, suppressAvatar) ────
 
-export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppressAvatar = false }: {
+export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppressAvatar = false, isAgency = false }: {
   item: Interaction;
   meta: MiniMsgMeta;
   leadName: string;
   leadAvatarColors: { bgColor: string; textColor: string };
   suppressAvatar?: boolean;
+  isAgency?: boolean;
 }) {
   const outbound = String(item.direction || "").toLowerCase() === "outbound";
   const inbound = !outbound;
@@ -441,6 +445,17 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
   const time = formatBubbleTime(rawTs);
   const statusNorm = ((item as any).status ?? "").toLowerCase();
   const { isLastInRun } = meta;
+
+  // AI cost tooltip (agency-only)
+  const aiTokens = aiMsg && isAgency
+    ? (Number(item.ai_prompt_tokens ?? (item as any).aiPromptTokens ?? 0) + Number(item.ai_completion_tokens ?? (item as any).aiCompletionTokens ?? 0))
+    : 0;
+  const aiCostVal = aiMsg && isAgency
+    ? Number(item.ai_cost ?? (item as any).aiCost ?? 0)
+    : 0;
+  const aiCostTitle = aiTokens > 0
+    ? `${aiTokens.toLocaleString()} tokens, $${aiCostVal.toFixed(4)}`
+    : undefined;
 
   const bubbleRadius = inbound
     ? isLastInRun ? "rounded-sm rounded-bl-none" : "rounded-sm"
@@ -459,6 +474,7 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
 
       {/* Bubble — 45% max-width, time-only, ChatPanel colors + hard-light outline */}
       <div
+        {...(aiCostTitle ? { "data-cost-tooltip": aiCostTitle } : {})}
         className={cn(
           "max-w-[80%] px-2.5 pt-1.5 pb-1 text-[13px] relative",
           bubbleRadius,

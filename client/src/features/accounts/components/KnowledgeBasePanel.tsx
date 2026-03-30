@@ -11,6 +11,7 @@ interface KBEntry {
   title: string;
   content: string;
   campaignIds?: number[] | null;
+  minInboundMessages?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -53,7 +54,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ category: "faq", title: "", content: "", campaignIds: null as number[] | null });
+  const [form, setForm] = useState({ category: "faq", title: "", content: "", campaignIds: null as number[] | null, minInboundMessages: null as number | null });
   const [saving, setSaving] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(CATEGORIES));
   const [campaignPickerOpen, setCampaignPickerOpen] = useState(false);
@@ -88,10 +89,22 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, [campaignPickerOpen]);
 
+  const campaignShortName = (campaign: Campaign) => {
+    const match = campaign.name.match(/^(C\d+)/i);
+    if (match) return match[1].toUpperCase();
+    const idx = campaigns.findIndex(c => c.id === campaign.id);
+    return `C${idx + 1}`;
+  };
+
   const campaignLabel = (ids: number[] | null | undefined) => {
     if (ids === null || ids === undefined) return t("knowledge.campaigns.all", "All");
     if (ids.length === 0) return t("knowledge.campaigns.hidden", "Hidden");
-    return `${ids.length} ${t("knowledge.campaigns.count", "campaigns")}`;
+    if (campaigns.length > 0 && ids.length >= campaigns.length) return t("knowledge.campaigns.all", "All");
+    const names = ids
+      .map(id => campaigns.find(c => c.id === id))
+      .filter(Boolean)
+      .map(c => campaignShortName(c!));
+    return names.length > 0 ? names.join("+") : `${ids.length}C`;
   };
 
   const handleAdd = async () => {
@@ -105,7 +118,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
       });
       if (res.ok) {
         await fetchEntries();
-        setForm({ category: "faq", title: "", content: "", campaignIds: null });
+        setForm({ category: "faq", title: "", content: "", campaignIds: null, minInboundMessages: null });
         setAdding(false);
         setCampaignPickerOpen(false);
       }
@@ -125,7 +138,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
       if (res.ok) {
         await fetchEntries();
         setEditingId(null);
-        setForm({ category: "faq", title: "", content: "", campaignIds: null });
+        setForm({ category: "faq", title: "", content: "", campaignIds: null, minInboundMessages: null });
         setCampaignPickerOpen(false);
       }
     } catch { /* */ }
@@ -141,7 +154,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
 
   const startEdit = (entry: KBEntry) => {
     setEditingId(entry.id);
-    setForm({ category: entry.category, title: entry.title, content: entry.content, campaignIds: entry.campaignIds ?? null });
+    setForm({ category: entry.category, title: entry.title, content: entry.content, campaignIds: entry.campaignIds ?? null, minInboundMessages: entry.minInboundMessages ?? null });
     setAdding(false);
     setCampaignPickerOpen(false);
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
@@ -150,7 +163,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
   const cancelEdit = () => {
     setEditingId(null);
     setAdding(false);
-    setForm({ category: "faq", title: "", content: "", campaignIds: null });
+    setForm({ category: "faq", title: "", content: "", campaignIds: null, minInboundMessages: null });
     setCampaignPickerOpen(false);
   };
 
@@ -299,6 +312,25 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
               )}
             </div>
           </div>
+          {/* Deferral control */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-foreground/50 shrink-0">Inject after</span>
+            {([null, 1, 2, 3, 4, 5] as (number | null)[]).map(v => (
+              <button
+                key={String(v)}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, minInboundMessages: v }))}
+                className={cn(
+                  "px-2 py-0.5 text-[10px] rounded border transition-colors",
+                  form.minInboundMessages === v
+                    ? "bg-brand-indigo/15 text-brand-indigo border-brand-indigo/30 font-medium"
+                    : "text-foreground/40 border-foreground/10 hover:border-foreground/20"
+                )}
+              >
+                {v === null ? "always" : `${v}msg`}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2 justify-end">
             <button onClick={cancelEdit} className="text-[11px] text-foreground/50 hover:text-foreground px-2 py-1">
               {t("knowledge.cancel", "Cancel")}
@@ -354,9 +386,19 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
                               {t("knowledge.campaigns.hidden", "Hidden")}
                             </span>
                           )}
-                          {Array.isArray(entry.campaignIds) && entry.campaignIds.length > 0 && (
+                          {Array.isArray(entry.campaignIds) && entry.campaignIds.length > 0 && campaigns.length > 0 && entry.campaignIds.length < campaigns.length && (
                             <span className="text-[9px] px-1 py-0.5 bg-amber-500/10 text-amber-600 rounded shrink-0">
-                              {entry.campaignIds.length}C
+                              {campaignLabel(entry.campaignIds)}
+                            </span>
+                          )}
+                          {Array.isArray(entry.campaignIds) && entry.campaignIds.length > 0 && campaigns.length > 0 && entry.campaignIds.length >= campaigns.length && (
+                            <span className="text-[9px] px-1 py-0.5 bg-brand-indigo/10 text-brand-indigo rounded shrink-0">
+                              {t("knowledge.campaigns.all", "All")}
+                            </span>
+                          )}
+                          {entry.minInboundMessages != null && entry.minInboundMessages !== 2 && (
+                            <span className="text-[9px] px-1 py-0.5 bg-violet-500/10 text-violet-500 rounded shrink-0">
+                              {entry.minInboundMessages}msg
                             </span>
                           )}
                         </div>

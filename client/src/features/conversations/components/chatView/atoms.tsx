@@ -11,7 +11,7 @@ import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { SessionUser } from "@/hooks/useSession";
 import { PIPELINE_HEX } from "../../utils/conversationHelpers";
 import { STAGE_ICON } from "../ContactSidebar";
-import type { ThreadGroup } from "./types";
+import { type ThreadGroup, useTimezone } from "./types";
 import { TAG_HEX, CONVERSION_STATUS_TAGS, _STATUS_LOWER } from "./constants";
 import { formatBubbleTime, formatThreadLabel } from "./utils";
 
@@ -146,9 +146,10 @@ export function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFa
 
 export function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) {
   const { t } = useTranslation("conversations");
+  const timezone = useTimezone();
   const firstMsg = group.msgs[0];
   const ts = firstMsg?.created_at || firstMsg?.createdAt;
-  const time = ts ? formatBubbleTime(ts) : null;
+  const time = ts ? formatBubbleTime(ts, timezone) : null;
   const isBump = group.threadId.startsWith("bump-");
 
   if (!isBump) {

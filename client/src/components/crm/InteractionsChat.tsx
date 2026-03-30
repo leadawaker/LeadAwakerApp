@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Interaction, Lead } from "@/types/models";
 import { useInteractions } from "@/hooks/useApiData";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
@@ -16,10 +17,16 @@ const INTERACTION_TYPE_I18N_KEY: Record<string, string> = {
 
 export function InteractionsChat({ lead }: { lead: Lead | null }) {
   const { t } = useTranslation("crm");
+  const { accounts } = useWorkspace();
   const { interactions, loading } = useInteractions(
     undefined,
     lead?.id
   );
+  const timezone = useMemo(() => {
+    if (!lead) return "Europe/Amsterdam";
+    const acct = accounts.find((a) => a.id === (lead.account_id ?? lead.accounts_id));
+    return (acct?.timezone as string) || "Europe/Amsterdam";
+  }, [lead, accounts]);
 
   const items = useMemo(() => {
     if (!lead) return [];
@@ -60,7 +67,7 @@ export function InteractionsChat({ lead }: { lead: Lead | null }) {
             />
           </div>
         ) : (
-          items.map((it) => <Bubble key={it.id} item={it} interactionTypeKey={INTERACTION_TYPE_I18N_KEY} />)
+          items.map((it) => <Bubble key={it.id} item={it} interactionTypeKey={INTERACTION_TYPE_I18N_KEY} timezone={timezone} />)
         )}
       </div>
 
@@ -73,7 +80,7 @@ export function InteractionsChat({ lead }: { lead: Lead | null }) {
   );
 }
 
-function Bubble({ item, interactionTypeKey }: { item: Interaction; interactionTypeKey: Record<string, string> }) {
+function Bubble({ item, interactionTypeKey, timezone }: { item: Interaction; interactionTypeKey: Record<string, string>; timezone: string }) {
   const { t } = useTranslation("crm");
   const outbound = item.direction === "Outbound";
   const typeLabel = t(interactionTypeKey[item.type] ?? `chat.interactionTypes.${item.type}`, item.type);
@@ -93,7 +100,7 @@ function Bubble({ item, interactionTypeKey }: { item: Interaction; interactionTy
       >
         <div className="whitespace-pre-wrap leading-relaxed">{item.content}</div>
         <div className={cn("mt-1 text-[11px] opacity-80", outbound ? "text-white/80" : "text-muted-foreground")}>
-          {item.created_at ? new Date(item.created_at).toLocaleString() : ""} • {typeLabel}
+          {item.created_at ? new Date(item.created_at).toLocaleString([], { timeZone: timezone }) : ""} • {typeLabel}
         </div>
       </div>
     </div>

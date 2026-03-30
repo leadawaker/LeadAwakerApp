@@ -114,6 +114,7 @@ export function DetailViewBody({
             dailyStats={detail.dailyStats}
             linkedContract={detail.linkedContract}
             contractLoading={detail.contractLoading}
+            aiCosts={detail.aiCosts}
             localAiSummary={detail.localAiSummary}
             localAiSummaryAt={detail.localAiSummaryAt}
             onAiSummaryRefreshed={detail.handleAiSummaryRefreshed}

@@ -279,7 +279,7 @@ function FounderChatView({
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 shrink-0 bg-white dark:bg-card border-t border-black/[0.04]">
-        <div className="flex items-end gap-1.5 bg-muted/50 rounded-lg border border-black/[0.08] px-3 py-2">
+        <div className="flex items-center gap-1.5 bg-muted/50 rounded-lg border border-black/[0.08] pl-3 pr-4 py-[3px] min-h-[62px]">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -288,8 +288,8 @@ function FounderChatView({
             onKeyDown={handleKeyDown}
             placeholder="Reply as founder..."
             disabled={sending}
-            className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 leading-5 pl-1"
-            style={{ minHeight: "32px", maxHeight: "120px" }}
+            className="flex-1 text-[17px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 leading-5 pl-1 pr-2"
+            style={{ maxHeight: "120px" }}
           />
           {input.trim() ? (
             <button

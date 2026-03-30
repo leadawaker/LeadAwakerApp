@@ -248,6 +248,29 @@ export function registerCampaignsRoutes(app: Express): void {
     });
   }));
 
+  // GET /api/campaigns/:id/ai-costs — AI token usage + cost for financials widget
+  app.get("/api/campaigns/:id/ai-costs", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const campaign = await storage.getCampaignById(campaignId);
+    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+    if (req.user!.accountsId !== 1 && campaign.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const result = await pool.query(
+      `SELECT
+         COALESCE(SUM(ai_prompt_tokens + ai_completion_tokens), 0)::bigint AS ai_tokens,
+         COALESCE(SUM(ai_cost::numeric), 0)::numeric AS ai_cost_usd
+       FROM p2mxx34fvbf3ll6."Interactions"
+       WHERE campaign_id = $1 AND ai_generated = true`,
+      [campaignId]
+    );
+    const row = result.rows[0];
+    res.json({
+      aiTokens: Number(row.ai_tokens),
+      aiCostUsd: parseFloat(row.ai_cost_usd) || 0,
+    });
+  }));
+
   // GET /api/campaigns/:id/ab-stats — A/B test variant performance
   app.get("/api/campaigns/:id/ab-stats", requireAuth, async (req, res) => {
     try {

@@ -9,6 +9,10 @@ export function useBubbleWidth() { return useContext(BubbleWidthContext); }
 export const HideAvatarsContext = createContext<boolean>(false);
 export function useHideAvatars() { return useContext(HideAvatarsContext); }
 
+/** Account timezone for displaying message timestamps (e.g. "Europe/Amsterdam") */
+export const TimezoneContext = createContext<string | undefined>(undefined);
+export function useTimezone() { return useContext(TimezoneContext); }
+
 export interface ChatPanelProps {
   selected: Thread | null;
   loading?: boolean;

@@ -158,6 +158,8 @@
     "paymentTrigger": "Gatilho de Pagamento",
     "projectedRevenue": "Receita Projetada",
     "returnOnInvestment": "Retorno sobre Investimento",
+    "aiTokens": "Tokens de IA Usados",
+    "aiCost": "Custo de IA (USD)",
     "linkContractPrompt": "Vincular um contrato em Config \u2192",
     "est": "est.",
     "dealTypes": {

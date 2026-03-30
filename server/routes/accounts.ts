@@ -87,7 +87,7 @@ export function registerAccountsRoutes(app: Express): void {
   app.get("/api/accounts/:id/knowledge", requireAuth, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);
     const { rows } = await pool.query(
-      `SELECT id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", created_at AS "createdAt", updated_at AS "updatedAt"
+      `SELECT id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages", created_at AS "createdAt", updated_at AS "updatedAt"
        FROM ${KB_TABLE} WHERE account_id = $1 ORDER BY category, id`, [accountId]
     );
     res.json(rows);
@@ -95,12 +95,12 @@ export function registerAccountsRoutes(app: Express): void {
 
   app.post("/api/accounts/:id/knowledge", requireAgency, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);
-    const { category, title, content, campaignIds } = req.body;
+    const { category, title, content, campaignIds, minInboundMessages } = req.body;
     if (!category || !title || !content) return res.status(400).json({ message: "category, title, and content are required" });
     const { rows } = await pool.query(
-      `INSERT INTO ${KB_TABLE} (account_id, category, title, content, campaign_ids, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds"`,
-      [accountId, category, title, content, campaignIds !== undefined ? campaignIds : null]
+      `INSERT INTO ${KB_TABLE} (account_id, category, title, content, campaign_ids, min_inbound_messages, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages"`,
+      [accountId, category, title, content, campaignIds !== undefined ? campaignIds : null, minInboundMessages ?? null]
     );
     res.status(201).json(rows[0]);
   }));
@@ -110,15 +110,28 @@ export function registerAccountsRoutes(app: Express): void {
     const { category, title, content } = req.body;
     const hasCampaignIds = 'campaignIds' in req.body;
     const campaignIdsValue = req.body.campaignIds ?? null;
+    const hasMinInbound = 'minInboundMessages' in req.body;
+    const minInboundValue = req.body.minInboundMessages ?? null;
     const { rows } = await pool.query(
-      hasCampaignIds
+      hasCampaignIds && hasMinInbound
+        ? `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
+           content = COALESCE($3, content), campaign_ids = $4, min_inbound_messages = $5, updated_at = NOW()
+           WHERE id = $6 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages"`
+        : hasCampaignIds
         ? `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
            content = COALESCE($3, content), campaign_ids = $4, updated_at = NOW()
-           WHERE id = $5 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds"`
+           WHERE id = $5 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages"`
+        : hasMinInbound
+        ? `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
+           content = COALESCE($3, content), min_inbound_messages = $4, updated_at = NOW()
+           WHERE id = $5 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages"`
         : `UPDATE ${KB_TABLE} SET category = COALESCE($1, category), title = COALESCE($2, title),
            content = COALESCE($3, content), updated_at = NOW()
-           WHERE id = $4 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds"`,
-      hasCampaignIds ? [category, title, content, campaignIdsValue, kbId] : [category, title, content, kbId]
+           WHERE id = $4 RETURNING id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages"`,
+      hasCampaignIds && hasMinInbound ? [category, title, content, campaignIdsValue, minInboundValue, kbId]
+        : hasCampaignIds ? [category, title, content, campaignIdsValue, kbId]
+        : hasMinInbound ? [category, title, content, minInboundValue, kbId]
+        : [category, title, content, kbId]
     );
     if (!rows.length) return res.status(404).json({ message: "KB entry not found" });
     res.json(rows[0]);

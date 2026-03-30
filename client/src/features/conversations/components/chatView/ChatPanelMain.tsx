@@ -41,8 +41,9 @@ import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getLeadStatusAvatarColor, getInitials } from "@/lib/avatarUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useSession, type SessionUser } from "@/hooks/useSession";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import type { ChatPanelProps, ThreadGroup, SenderKey, MsgMeta } from "./types";
-import { BubbleWidthContext, HideAvatarsContext } from "./types";
+import { BubbleWidthContext, HideAvatarsContext, TimezoneContext } from "./types";
 import { BUBBLE_WIDTH_KEY, DEFAULT_BUBBLE_WIDTH } from "./constants";
 import {
   getDateKey,
@@ -70,6 +71,13 @@ export function ChatPanel({
   headerActions,
 }: ChatPanelProps) {
   const isHuman = selected?.lead.manual_takeover === true;
+  const { accounts } = useWorkspace();
+  const accountTimezone = useMemo(() => {
+    if (!selected) return undefined;
+    const aid = selected.lead.accounts_id ?? selected.lead.account_id;
+    const acct = accounts.find((a) => a.id === aid);
+    return (acct?.timezone as string) || undefined;
+  }, [selected, accounts]);
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevLeadId = useRef<number | null>(null);
@@ -388,6 +396,7 @@ export function ChatPanel({
   return (
     <BubbleWidthContext.Provider value={bubbleWidth}>
     <HideAvatarsContext.Provider value={doodleConfig.hideAvatars}>
+    <TimezoneContext.Provider value={accountTimezone}>
     <>
       <section
         className={cn(
@@ -766,11 +775,11 @@ export function ChatPanel({
                     for (let mi = 0; mi < group.msgs.length; mi++) {
                       const m = group.msgs[mi];
                       const ts = m.created_at ?? m.createdAt;
-                      const dk = getDateKey(ts);
+                      const dk = getDateKey(ts, accountTimezone);
 
                       // Date separator before this message (once per day)
                       if (dk && dk !== lastDateKey) {
-                        if (ts) tokens.push({ kind: "date", label: formatDateLabel(ts, t), key: `date-${gi}-${mi}` });
+                        if (ts) tokens.push({ kind: "date", label: formatDateLabel(ts, t, accountTimezone), key: `date-${gi}-${mi}` });
                         lastDateKey = dk;
                       }
 
@@ -1048,43 +1057,13 @@ export function ChatPanel({
                 </button>
               </div>
             ) : (
-              <div className="flex items-end gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] shadow-sm px-3 py-2">
-                {/* Emoji button */}
-                <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-                      title={t("chat.compose.emoji")}
-                    >
-                      <Smile className="h-7 w-7" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-52 p-2" align="start" side="top">
-                    <div className="grid grid-cols-6 gap-0.5">
-                      {["😀","😂","❤️","👍","🙏","🎉","🔥","✨","👏","💪","🤔","😊","😍","🙌","💯","🎯","✅","😄","🥰","😅","💡","🚀","🌟","💬","📱","💼","🎊","😎","🤝","❓"].map((e) => (
-                        <button
-                          key={e}
-                          type="button"
-                          onClick={() => {
-                            setDraft((d) => d + e);
-                            setEmojiOpen(false);
-                            textareaRef.current?.focus();
-                          }}
-                          className="h-8 text-lg flex items-center justify-center rounded hover:bg-muted transition-colors"
-                        >
-                          {e}
-                        </button>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
+              <div className="flex items-center gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] shadow-sm pl-3 pr-4 py-[3px] min-h-[62px]">
 
                 {/* Textarea */}
                 <textarea
                   ref={textareaRef}
-                  className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5 pl-1"
-                  style={{ minHeight: "44px", maxHeight: "120px" }}
+                  className="flex-1 text-[17px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5 pl-1 pr-2"
+                  style={{ maxHeight: "120px" }}
                   placeholder={!selected ? t("chat.compose.placeholderNoContact") : isHuman ? t("chat.compose.placeholderHuman") : t("chat.compose.placeholderDefault")}
                   disabled={!selected || sending}
                   value={draft}
@@ -1196,6 +1175,7 @@ export function ChatPanel({
 
 
     </>
+    </TimezoneContext.Provider>
     </HideAvatarsContext.Provider>
     </BubbleWidthContext.Provider>
   );

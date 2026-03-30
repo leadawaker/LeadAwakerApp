@@ -283,6 +283,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
             leadName={leadName}
             leadAvatarColors={leadAvatarColors}
             currentUser={currentUser}
+            isAgency={isAgencyView}
           />
         );
       } else if (senderType === "inbound") {
@@ -293,6 +294,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
             metas={runMetas}
             leadName={leadName}
             leadAvatarColors={leadAvatarColors}
+            isAgency={isAgencyView}
           />
         );
       } else {
@@ -303,6 +305,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
             metas={runMetas}
             leadName={leadName}
             leadAvatarColors={leadAvatarColors}
+            isAgency={isAgencyView}
           />
         );
       }
@@ -311,7 +314,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
     }
 
     return items;
-  }, [sorted, leadName, leadAvatarColors, currentUser, showTags, tagEvents]);
+  }, [sorted, leadName, leadAvatarColors, currentUser, isAgencyView, showTags, tagEvents]);
 
   return (
     <div className="flex flex-col h-full min-h-0">

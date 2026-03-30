@@ -75,6 +75,7 @@ export interface CampaignMetricsPanelProps {
   dailyStats: { sentToday: number; dailyLimit: number; channel: string } | null;
   linkedContract: ContractFinancials | null;
   contractLoading: boolean;
+  aiCosts: { aiTokens: number; aiCostUsd: number } | null;
   localAiSummary: string | null;
   localAiSummaryAt: string | null;
   onAiSummaryRefreshed: (summary: string, generatedAt: string) => void;
@@ -96,6 +97,7 @@ export function CampaignMetricsPanel({
   dailyStats,
   linkedContract,
   contractLoading,
+  aiCosts,
   localAiSummary,
   localAiSummaryAt,
   onAiSummaryRefreshed,
@@ -239,6 +241,7 @@ export function CampaignMetricsPanel({
           campaign={campaign}
           contract={linkedContract}
           contractLoading={contractLoading}
+          aiCosts={aiCosts}
           isAgencyUser={isAgencyUser}
           onGoToConfig={onGoToConfig}
         />

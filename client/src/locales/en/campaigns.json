@@ -159,6 +159,8 @@
     "paymentTrigger": "Payment Trigger",
     "projectedRevenue": "Projected Revenue",
     "returnOnInvestment": "Return on Investment",
+    "aiTokens": "AI Tokens Used",
+    "aiCost": "AI Cost (USD)",
     "linkContractPrompt": "Link a contract in Config \u2192",
     "est": "est.",
     "dealTypes": {

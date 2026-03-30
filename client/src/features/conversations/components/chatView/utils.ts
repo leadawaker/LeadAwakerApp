@@ -5,30 +5,43 @@ import { AI_TRIGGERED_BY, _STATUS_LOWER, CONVERSION_STATUS_TAGS, THREAD_GAP_MS }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-export function getDateKey(ts: string | null | undefined): string {
+export function getDateKey(ts: string | null | undefined, timezone?: string): string {
   if (!ts) return "";
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "";
+  if (timezone) {
+    return d.toLocaleDateString("en-CA", { timeZone: timezone }); // YYYY-MM-DD in target tz
+  }
   return d.toDateString();
 }
 
-export function formatDateLabel(ts: string, t: TFunction): string {
+export function formatDateLabel(ts: string, t: TFunction, timezone?: string): string {
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "";
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diff = Math.round((today.getTime() - msgDay.getTime()) / 86_400_000);
-  if (diff === 0) return t("chat.dateLabels.today");
-  if (diff === 1) return t("chat.dateLabels.yesterday");
-  return d.toLocaleDateString([], { month: "long", day: "numeric" });
+  // Use Intl to get the date parts in the target timezone
+  const opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "2-digit", day: "2-digit" };
+  if (timezone) opts.timeZone = timezone;
+  const fmt = new Intl.DateTimeFormat("en-CA", opts); // en-CA gives YYYY-MM-DD
+  const msgDateStr = fmt.format(d);
+  const nowDateStr = fmt.format(new Date());
+  if (msgDateStr === nowDateStr) return t("chat.dateLabels.today");
+  // Check yesterday
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = fmt.format(yesterday);
+  if (msgDateStr === yesterdayStr) return t("chat.dateLabels.yesterday");
+  const displayOpts: Intl.DateTimeFormatOptions = { month: "long", day: "numeric" };
+  if (timezone) displayOpts.timeZone = timezone;
+  return d.toLocaleDateString([], displayOpts);
 }
 
-export function formatBubbleTime(ts: string | null | undefined): string {
+export function formatBubbleTime(ts: string | null | undefined, timezone?: string): string {
   if (!ts) return "";
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const opts: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+  if (timezone) opts.timeZone = timezone;
+  return d.toLocaleTimeString([], opts);
 }
 
 // ─── AI / sender detection ────────────────────────────────────────────────────

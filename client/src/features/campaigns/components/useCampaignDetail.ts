@@ -151,6 +151,17 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
       .finally(() => setContractLoading(false));
   }, [campaign.contract_id, (campaign as any).contract_id]);
 
+  // ── AI token usage + cost (for financials widget) ──────────────────────────
+  const [aiCosts, setAiCosts] = useState<{ aiTokens: number; aiCostUsd: number } | null>(null);
+  useEffect(() => {
+    const id = campaign.id || (campaign as any).Id;
+    if (!id) return;
+    apiFetch(`/api/campaigns/${id}/ai-costs`)
+      .then((r) => r.json())
+      .then(setAiCosts)
+      .catch(() => {});
+  }, [campaign.id, (campaign as any).Id]);
+
   // ── Local AI summary state ─────────────────────────────────────────────────
   const [localAiSummary, setLocalAiSummary] = useState<string | null>(campaign.ai_summary ?? null);
   const [localAiSummaryAt, setLocalAiSummaryAt] = useState<string | null>(campaign.ai_summary_generated_at ?? null);
@@ -299,6 +310,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     // Contract
     linkedContract,
     contractLoading,
+    // AI costs
+    aiCosts,
     // AI summary
     localAiSummary,
     localAiSummaryAt,

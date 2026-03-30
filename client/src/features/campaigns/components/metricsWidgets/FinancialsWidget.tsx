@@ -30,6 +30,7 @@ export function FinancialsWidget({
   campaign,
   contract,
   contractLoading,
+  aiCosts,
   isAgencyUser,
   onGoToConfig,
 }: {
@@ -37,6 +38,7 @@ export function FinancialsWidget({
   campaign: Campaign;
   contract: ContractFinancials | null;
   contractLoading: boolean;
+  aiCosts: { aiTokens: number; aiCostUsd: number } | null;
   isAgencyUser: boolean;
   onGoToConfig: () => void;
 }) {
@@ -93,6 +95,22 @@ export function FinancialsWidget({
           <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.costPerBooking")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrencyDecimals(costPerBooking)}</div>
+          </div>
+        </div>
+      )}
+      {isAgencyUser && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
+            <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.aiTokens")}</div>
+            <div className="text-[18px] font-bold tabular-nums text-foreground">
+              {aiCosts && aiCosts.aiTokens > 0 ? aiCosts.aiTokens.toLocaleString() : "—"}
+            </div>
+          </div>
+          <div className="rounded-xl bg-white dark:bg-white/[0.12] px-3 py-3">
+            <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.aiCost")}</div>
+            <div className="text-[18px] font-bold tabular-nums text-foreground">
+              {aiCosts && aiCosts.aiCostUsd > 0 ? fmtCurrencyDecimals(aiCosts.aiCostUsd) : "—"}
+            </div>
           </div>
         </div>
       )}

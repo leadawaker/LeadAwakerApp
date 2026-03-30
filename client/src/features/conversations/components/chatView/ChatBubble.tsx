@@ -5,7 +5,7 @@ import type { SessionUser } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import type { Interaction } from "../../hooks/useConversationsData";
 import type { MsgMeta } from "./types";
-import { useBubbleWidth, useHideAvatars } from "./types";
+import { useBubbleWidth, useHideAvatars, useTimezone } from "./types";
 import { formatBubbleTime, isAiMessage, isHumanAgentMessage } from "./utils";
 import { MessageStatusIcon, AgentAvatar, BotAvatar } from "./atoms";
 import { VoiceMemoPlayer } from "./VoiceMemoPlayer";
@@ -36,6 +36,7 @@ export function ChatBubble({
   const { t } = useTranslation("conversations");
   const bubbleWidth = useBubbleWidth();
   const hideAvatars = useHideAvatars();
+  const timezone = useTimezone();
   const outbound = item.direction?.toLowerCase() === "outbound";
   const inbound = !outbound;
   const statusNorm = (item.status ?? "").toLowerCase();
@@ -48,8 +49,20 @@ export function ChatBubble({
   const humanAgentMsg = outbound && isHumanAgentMessage(item);
   const { isFirstInRun, isLastInRun } = meta;
   const rawTs = item.created_at ?? item.createdAt ?? (item as any).Created_At ?? (item as any).CreatedAt ?? null;
-  const time = formatBubbleTime(rawTs);
+  const time = formatBubbleTime(rawTs, timezone);
   const who = (item.Who ?? item.who ?? "").trim();
+
+  // AI cost tooltip (agency-only, hover-to-reveal on AI messages)
+  const isAgency = currentUser?.accountsId === 1;
+  const aiTokens = aiMsg && isAgency
+    ? (Number(item.ai_prompt_tokens ?? item.aiPromptTokens ?? 0) + Number(item.ai_completion_tokens ?? item.aiCompletionTokens ?? 0))
+    : 0;
+  const aiCostVal = aiMsg && isAgency
+    ? Number(item.ai_cost ?? item.aiCost ?? 0)
+    : 0;
+  const aiCostTitle = aiTokens > 0
+    ? `${aiTokens.toLocaleString()} tokens, $${aiCostVal.toFixed(4)}`
+    : undefined;
 
   // Last in run: sharp corner where tail connects, rounded on all others
   // Not last in run: all corners rounded
@@ -94,6 +107,7 @@ export function ChatBubble({
           isFailed && "opacity-80",
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
+        {...(aiCostTitle ? { "data-cost-tooltip": aiCostTitle } : {})}
       >
         {/* Tail triangle — only on last message in a consecutive run */}
         {isLastInRun && inbound && (
@@ -215,3 +229,5 @@ export function ChatBubble({
     </div>
   );
 }
+
+

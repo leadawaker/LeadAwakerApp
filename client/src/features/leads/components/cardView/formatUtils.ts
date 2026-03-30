@@ -83,22 +83,28 @@ export function formatDateLabel(ts: string, t: (key: string) => string): string 
   return d.toLocaleDateString([], { month: "long", day: "numeric" });
 }
 
-export function formatBubbleTime(ts: string | null | undefined): string {
+export function formatBubbleTime(ts: string | null | undefined, timezone?: string): string {
   if (!ts) return "";
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const opts: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+  if (timezone) opts.timeZone = timezone;
+  return d.toLocaleTimeString([], opts);
 }
 
-export function formatMsgTime(dateStr: string): string {
+export function formatMsgTime(dateStr: string, timezone?: string): string {
   if (!dateStr) return "";
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return "";
+    const timeOpts: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+    const dateOpts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+    if (timezone) { timeOpts.timeZone = timezone; dateOpts.timeZone = timezone; }
     const now = new Date();
-    const sameDay = d.toDateString() === now.toDateString();
-    if (sameDay) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    return d.toLocaleDateString([], { month: "short", day: "numeric" }) + " · " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const dayFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", ...(timezone ? { timeZone: timezone } : {}) });
+    const sameDay = dayFmt.format(d) === dayFmt.format(now);
+    if (sameDay) return d.toLocaleTimeString([], timeOpts);
+    return d.toLocaleDateString([], dateOpts) + " · " + d.toLocaleTimeString([], timeOpts);
   } catch { return ""; }
 }
 

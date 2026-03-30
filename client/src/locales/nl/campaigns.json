@@ -159,6 +159,8 @@
     "paymentTrigger": "Betalingstrigger",
     "projectedRevenue": "Verwachte omzet",
     "returnOnInvestment": "Rendement op investering",
+    "aiTokens": "AI Tokens Gebruikt",
+    "aiCost": "AI Kosten (USD)",
     "linkContractPrompt": "Koppel een contract in Config \u2192",
     "est": "gesch.",
     "dealTypes": {

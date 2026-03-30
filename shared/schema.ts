@@ -26,8 +26,8 @@ const nocodb = pgSchema("p2mxx34fvbf3ll6");
 
 export const accounts = nocodb.table("Accounts", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -82,8 +82,8 @@ export type InsertAccounts = z.infer<typeof insertAccountsSchema>;
 
 export const prospects = nocodb.table("Prospects", {
   id: serial("id").primaryKey(),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -121,14 +121,14 @@ export const prospects = nocodb.table("Prospects", {
   topPost: text("top_post"),
   aiSummary: text("ai_summary"),
   conversationStarters: text("conversation_starters"),
-  enrichedAt: timestamp("enriched_at"),
+  enrichedAt: timestamp("enriched_at", { withTimezone: true }),
   enrichmentStatus: text("enrichment_status"),
   // Outreach tracking
   outreachStatus: text("outreach_status"),
-  firstContactedAt: timestamp("first_contacted_at"),
-  lastContactedAt: timestamp("last_contacted_at"),
+  firstContactedAt: timestamp("first_contacted_at", { withTimezone: true }),
+  lastContactedAt: timestamp("last_contacted_at", { withTimezone: true }),
   followUpCount: integer("follow_up_count"),
-  nextFollowUpDate: timestamp("next_follow_up_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date", { withTimezone: true }),
   contactMethod: text("contact_method"),
   photoUrl: text("photo_url"),
 });
@@ -148,8 +148,8 @@ export type InsertProspects = z.infer<typeof insertProspectsSchema>;
 // ─── Outreach Templates ──────────────────────────────────────────────────────────
 export const outreachTemplates = nocodb.table("OutreachTemplates", {
   id: serial("id").primaryKey(),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   name: text("name"),
   niche: text("niche"),
   templateType: text("template_type"),
@@ -172,8 +172,8 @@ export type InsertOutreachTemplate = z.infer<typeof insertOutreachTemplatesSchem
 
 export const automationLogs = nocodb.table("Automation_Logs", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -220,8 +220,8 @@ export type InsertAutomation_Logs = z.infer<typeof insertAutomation_LogsSchema>;
 
 export const campaigns = nocodb.table("Campaigns", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -289,11 +289,11 @@ export const campaigns = nocodb.table("Campaigns", {
   roiPercent: numeric("roi_percent"),
   contractId:         integer("contract_id"),
   valuePerBooking:    numeric("value_per_booking"),
-  lastMetricsCalculatedAt: timestamp("last_metrics_calculated_at"),
+  lastMetricsCalculatedAt: timestamp("last_metrics_calculated_at", { withTimezone: true }),
   campaignSticker: text("campaign_sticker"),
   campaignHue: integer("campaign_hue"),
   aiSummary: text("ai_summary"),
-  aiSummaryGeneratedAt: timestamp("ai_summary_generated_at"),
+  aiSummaryGeneratedAt: timestamp("ai_summary_generated_at", { withTimezone: true }),
   abEnabled: boolean("ab_enabled").default(false),
   abSplitRatio: integer("ab_split_ratio").default(50),
 }, (t) => [
@@ -316,8 +316,8 @@ export type InsertCampaigns = z.infer<typeof insertCampaignsSchema>;
 
 export const interactions = nocodb.table("Interactions", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -341,10 +341,10 @@ export const interactions = nocodb.table("Interactions", {
   aiCompletionTokens: bigint("ai_completion_tokens", { mode: "number" }),
   aiTotalTokens: bigint("ai_total_tokens", { mode: "number" }),
   aiCost: numeric("ai_cost"),
-  sentAt: timestamp("sent_at"),
-  deliveredAt: timestamp("delivered_at"),
-  readAt: timestamp("read_at"),
-  failedAt: timestamp("failed_at"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  failedAt: timestamp("failed_at", { withTimezone: true }),
   bumpNumber: bigint("bump_number", { mode: "number" }),
   triggeredBy: text("triggered_by"),
   isBump: boolean("is_bump"),
@@ -388,8 +388,8 @@ export type InsertInteractions = z.infer<typeof insertInteractionsSchema>;
 
 export const leads = nocodb.table("Leads", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -403,18 +403,18 @@ export const leads = nocodb.table("Leads", {
   source: text("Source"),
   lastInteractionAt: date("last_interaction_at"),
   notes: text("notes"),
-  bookedCallDate: timestamp("booked_call_date"),
+  bookedCallDate: timestamp("booked_call_date", { withTimezone: true }),
   automationStatus: text("automation_status"),
-  lastMessageSentAt: timestamp("last_message_sent_at"),
-  lastMessageReceivedAt: timestamp("last_message_received_at"),
+  lastMessageSentAt: timestamp("last_message_sent_at", { withTimezone: true }),
+  lastMessageReceivedAt: timestamp("last_message_received_at", { withTimezone: true }),
   messageCountSent: bigint("message_count_sent", { mode: "number" }),
   messageCountReceived: bigint("message_count_received", { mode: "number" }),
   aiMemory: json("ai_memory"),
-  bump1SentAt: timestamp("bump_1_sent_at"),
-  bump2SentAt: timestamp("bump_2_sent_at"),
-  bump3SentAt: timestamp("bump_3_sent_at"),
-  firstMessageSentAt: timestamp("first_message_sent_at"),
-  nextActionAt: timestamp("next_action_at"),
+  bump1SentAt: timestamp("bump_1_sent_at", { withTimezone: true }),
+  bump2SentAt: timestamp("bump_2_sent_at", { withTimezone: true }),
+  bump3SentAt: timestamp("bump_3_sent_at", { withTimezone: true }),
+  firstMessageSentAt: timestamp("first_message_sent_at", { withTimezone: true }),
+  nextActionAt: timestamp("next_action_at", { withTimezone: true }),
   currentBumpStage: bigint("current_bump_stage", { mode: "number" }),
   optedOut: boolean("opted_out"),
   aiSentiment: text("ai_sentiment"),
@@ -425,7 +425,7 @@ export const leads = nocodb.table("Leads", {
   priority: text("priority"),
   language: text("language"),
   timeZone: text("time_zone"),
-  bookingConfirmedAt: timestamp("booking_confirmed_at_"),
+  bookingConfirmedAt: timestamp("booking_confirmed_at_", { withTimezone: true }),
   textCol: text("Text"),
   bookingConfirmationSent: boolean("booking_confirmation_sent"),
   noShow: boolean("no_show"),
@@ -443,7 +443,7 @@ export const leads = nocodb.table("Leads", {
   activityScore: integer("activity_score"),
   channelIdentifier: text("channel_identifier"),
   aiNotes: text("ai_notes"),
-  aiNotesGeneratedAt: timestamp("ai_notes_generated_at"),
+  aiNotesGeneratedAt: timestamp("ai_notes_generated_at", { withTimezone: true }),
   abVariant: text("ab_variant"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
@@ -466,15 +466,15 @@ export type InsertLeads = z.infer<typeof insertLeadsSchema>;
 
 export const leadsTags = nocodb.table("Leads_Tags", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   ncOrder: numeric("nc_order"),
   workflow: text("workflow"),
   leadsId: integer("Leads_id"),
   tagsId: integer("Tags_id"),
   createdBy: varchar("created_by"),
   workflowStep: text("workflow_step"),
-  removedAt: timestamp("removed_at"),
+  removedAt: timestamp("removed_at", { withTimezone: true }),
   removedBy: text("removed_by"),
   notes: text("notes"),
   appliedBy: text("applied_by"),
@@ -504,8 +504,8 @@ export type InsertLeads_Tags = z.infer<typeof insertLeads_TagsSchema>;
 
 export const promptLibrary = nocodb.table("Prompt_Library", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -550,9 +550,9 @@ export const promptVersions = nocodb.table("Prompt_Versions", {
   systemMessage: text("system_message"),
   notes: text("notes"),
   label: text("label"),
-  savedAt: timestamp("saved_at"),
+  savedAt: timestamp("saved_at", { withTimezone: true }),
   savedBy: varchar("saved_by"),
-  createdAt: timestamp("created_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
 }, (t) => [
   index("pv_prompts_id_idx").on(t.promptsId),
 ]);
@@ -569,8 +569,8 @@ export type InsertPrompt_Version = z.infer<typeof insertPromptVersionsSchema>;
 
 export const tags = nocodb.table("Tags", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -605,8 +605,8 @@ export type InsertTags = z.infer<typeof insertTagsSchema>;
 
 export const users = nocodb.table("Users", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -619,7 +619,7 @@ export const users = nocodb.table("Users", {
   n8nWebhookUrl: text("n8n_webhook_url"),
   notificationEmail: boolean("notification_email"),
   notificationSms: boolean("notification_sms"),
-  lastLoginAt: timestamp("last_login_at"),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   accountsId: integer("Accounts_id"),
   email: varchar("email"),
   passwordHash: text("password_hash"),
@@ -650,7 +650,7 @@ export const leadScoreHistory = nocodb.table("Lead_Score_History", {
   engagementScore: integer("engagement_score"),
   activityScore: integer("activity_score"),
   conversionStatus: varchar("conversion_status"),
-  createdAt: timestamp("created_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
 }, (t) => [
   index("lsh_leads_id_idx").on(t.leadsId),
 ]);
@@ -679,7 +679,7 @@ export const campaignMetricsHistory = nocodb.table("Campaign_Metrics_History", {
   costPerLead: numeric("cost_per_lead"),
   costPerBooking: numeric("cost_per_booking"),
   roiPercent: numeric("roi_percent"),
-  createdAt: timestamp("created_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
 }, (t) => [
   index("cmh_campaigns_id_idx").on(t.campaignsId),
   index("cmh_metric_date_idx").on(t.metricDate),
@@ -697,8 +697,8 @@ export type InsertCampaign_Metrics_History = z.infer<typeof insertCampaignMetric
 
 export const invoices = nocodb.table("Invoices", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -717,9 +717,9 @@ export const invoices = nocodb.table("Invoices", {
   paymentInfo: text("payment_info"),
   issuedDate: date("issued_date"),
   dueDate: date("due_date"),
-  sentAt: timestamp("sent_at"),
-  paidAt: timestamp("paid_at"),
-  viewedAt: timestamp("viewed_at"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  viewedAt: timestamp("viewed_at", { withTimezone: true }),
   viewedCount: integer("viewed_count"),
   viewToken: varchar("view_token"),
   accountName: text("account_name"),
@@ -745,8 +745,8 @@ export type InsertInvoices = z.infer<typeof insertInvoicesSchema>;
 
 export const contracts = nocodb.table("Contracts", {
   id: integer("id"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
   createdBy: varchar("created_by"),
   updatedBy: varchar("updated_by"),
   ncOrder: numeric("nc_order"),
@@ -760,9 +760,9 @@ export const contracts = nocodb.table("Contracts", {
   fileType: varchar("file_type"),
   startDate: date("start_date"),
   endDate: date("end_date"),
-  signedAt: timestamp("signed_at"),
-  sentAt: timestamp("sent_at"),
-  viewedAt: timestamp("viewed_at"),
+  signedAt: timestamp("signed_at", { withTimezone: true }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  viewedAt: timestamp("viewed_at", { withTimezone: true }),
   viewedCount: integer("viewed_count"),
   viewToken: varchar("view_token"),
   accountName: text("account_name"),
@@ -817,8 +817,8 @@ export const expenses = nocodb.table("Expenses", {
   nlBtwDeductible: boolean("nl_btw_deductible").default(false),
   notes: text("notes"),
   pdfPath: varchar("pdf_path", { length: 500 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const insertExpensesSchema = createInsertSchema(expenses).omit({
@@ -842,7 +842,7 @@ export const notifications = nocodb.table("Notifications", {
   accountId: integer("account_id"),
   read: boolean("read").notNull().default(false),
   link: text("link"), // URL path to navigate to
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("notifications_user_id_idx").on(t.userId),
   index("notifications_account_id_idx").on(t.accountId),
@@ -868,8 +868,8 @@ export const notificationPreferences = nocodb.table("Notification_Preferences", 
   webPushEnabled: boolean("web_push_enabled").notNull().default(true),
   telegramChatId: text("telegram_chat_id"),
   typeOverrides: json("type_overrides").notNull().default({}),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({ id: true, createdAt: true, updatedAt: true });
@@ -885,7 +885,7 @@ export const pushSubscriptions = nocodb.table("Push_Subscriptions", {
   endpoint: text("endpoint").notNull(),
   subscription: json("subscription").notNull(), // Full PushSubscription JSON
   deviceLabel: text("device_label"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const insertPushSubscriptionsSchema = createInsertSchema(pushSubscriptions).omit({ id: true, createdAt: true });
@@ -901,9 +901,9 @@ export const supportSessions = nocodb.table("Support_Sessions", {
   accountId: integer("account_id"),
   channel: text("channel").notNull().default("bot"), // "bot" | "founder"
   status: text("status").notNull().default("active"), // "active" | "escalated" | "closed"
-  createdAt: timestamp("created_at").defaultNow(),
-  escalatedAt: timestamp("escalated_at"),
-  closedAt: timestamp("closed_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  escalatedAt: timestamp("escalated_at", { withTimezone: true }),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
 }, (t) => [
   index("support_sessions_user_id_idx").on(t.userId),
   index("support_sessions_session_id_idx").on(t.sessionId),
@@ -923,7 +923,7 @@ export const supportMessages = nocodb.table("Support_Messages", {
   accountId: integer("account_id"),
   role: text("role").notNull(), // "user" | "assistant" | "system"
   content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("support_messages_session_id_idx").on(t.sessionId),
   index("support_messages_created_at_idx").on(t.createdAt),
@@ -998,8 +998,8 @@ export const taskCategories = nocodb.table("Task_Categories", {
   color: text("color"),
   sortOrder: integer("sort_order"),
   isDefault: boolean("is_default").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const insertTaskCategorySchema = createInsertSchema(taskCategories).omit({
@@ -1019,8 +1019,8 @@ export const taskSubtasks = nocodb.table("Task_Subtasks", {
   title: text("title").notNull(),
   isCompleted: boolean("is_completed").notNull().default(false),
   sortOrder: integer("sort_order"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("task_subtasks_task_id_idx").on(t.taskId),
 ]);
@@ -1051,8 +1051,8 @@ export const aiAgents = nocodb.table("AI_Agents", {
   pageAwarenessEnabled: boolean("page_awareness_enabled").notNull().default(true),
   systemPromptId: integer("system_prompt_id"),
   createdBy: integer("created_by"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const insertAiAgentSchema = createInsertSchema(aiAgents).omit({ id: true, createdAt: true });
@@ -1072,8 +1072,8 @@ export const aiSessions = nocodb.table("AI_Sessions", {
   totalInputTokens: integer("total_input_tokens").notNull().default(0),
   totalOutputTokens: integer("total_output_tokens").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("ai_sessions_user_id_idx").on(t.userId),
   index("ai_sessions_agent_id_idx").on(t.agentId),
@@ -1093,7 +1093,7 @@ export const aiMessages = nocodb.table("AI_Messages", {
   metadata: json("metadata"),
   attachments: json("attachments"),
   pageContext: json("page_context"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("ai_messages_session_id_idx").on(t.sessionId),
   index("ai_messages_created_at_idx").on(t.createdAt),
@@ -1114,7 +1114,7 @@ export const aiFiles = nocodb.table("AI_Files", {
   filePath: text("file_path").notNull(),
   fileSize: integer("file_size"),
   transcription: text("transcription"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("ai_files_conversation_id_idx").on(t.conversationId),
   index("ai_files_message_id_idx").on(t.messageId),
@@ -1130,10 +1130,10 @@ export const gmailSyncState = nocodb.table("Gmail_Sync_State", {
   id: serial("id").primaryKey(),
   accountEmail: varchar("account_email", { length: 255 }).notNull(),
   lastHistoryId: varchar("last_history_id", { length: 100 }),
-  lastFullSyncAt: timestamp("last_full_sync_at"),
+  lastFullSyncAt: timestamp("last_full_sync_at", { withTimezone: true }),
   oauthTokensEncrypted: text("oauth_tokens_encrypted"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
   index("gmail_sync_state_account_email_idx").on(t.accountEmail),
 ]);
