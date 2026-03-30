@@ -414,16 +414,28 @@ export function registerCampaignsRoutes(app: Express): void {
     const campaignId = Number(req.params.id);
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
-    const language: string = (req.body?.language as string) || "en";
+
+    const campaign = await storage.getCampaignById(campaignId);
+    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+
+    // Resolve language from account (source of truth), with fallback
+    let language: string = (req.body?.language as string) || "en";
+    const accountId = (campaign as any).accountsId;
+    if (accountId) {
+      const account = await storage.getAccountById(accountId);
+      if (account?.language) {
+        const accountLangMap: Record<string, string> = {
+          "Portuguese": "pt", "Dutch": "nl", "English": "en",
+        };
+        language = accountLangMap[account.language] || language;
+      }
+    }
     const languageInstructionMap: Record<string, string> = {
       pt: "Respond in Brazilian Portuguese.",
       nl: "Respond in Dutch.",
       en: "",
     };
     const languageInstruction = languageInstructionMap[language] ?? "";
-
-    const campaign = await storage.getCampaignById(campaignId);
-    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
 
     // Fetch leads for this campaign to build context
     const leadList = await storage.getLeadsByCampaignId(campaignId);

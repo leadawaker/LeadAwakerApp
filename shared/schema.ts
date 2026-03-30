@@ -37,6 +37,7 @@ export const accounts = nocodb.table("Accounts", {
   website: text("website"),
   type: text("type"),
   timezone: text("timezone"),
+  language: text("language"),
   notes: text("notes"),
   twilioAccountSid: text("twilio_account_sid"),
   twilioAuthToken: text("twilio_auth_token"),
@@ -296,6 +297,7 @@ export const campaigns = nocodb.table("Campaigns", {
   aiSummaryGeneratedAt: timestamp("ai_summary_generated_at", { withTimezone: true }),
   abEnabled: boolean("ab_enabled").default(false),
   abSplitRatio: integer("ab_split_ratio").default(50),
+  botToken: text("bot_token"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
@@ -429,6 +431,7 @@ export const leads = nocodb.table("Leads", {
   textCol: text("Text"),
   bookingConfirmationSent: boolean("booking_confirmation_sent"),
   noShow: boolean("no_show"),
+  previousBookedCallDate: timestamp("previous_booked_call_date", { withTimezone: true }),
   reScheduledCount: bigint("re_scheduled_count", { mode: "number" }),
   callDurationMinutes: integer("call_duration_minutes"),
   whatHasTheLeadDone: text("what_has_the_lead_done"),

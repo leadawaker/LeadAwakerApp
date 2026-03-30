@@ -195,6 +195,18 @@ export function useConversationsData(
       }
     });
 
+    es.addEventListener("interaction_updated", (e: MessageEvent) => {
+      try {
+        const patch = JSON.parse(e.data);
+        if (!patch?.id) return;
+        setInteractions((prev) =>
+          prev.map((i) => i.id === patch.id ? { ...i, ...patch } : i)
+        );
+      } catch (err) {
+        console.error("[sse] Failed to parse interaction_updated event:", err);
+      }
+    });
+
     es.onerror = () => {
       // Browser auto-reconnects — no manual handling needed
     };

@@ -217,7 +217,13 @@ export function LeadDetailView({
   }, [leadId]);
 
   // ── Gradient tester (agency-only) ─────────────────────────────────────────
-  const { isAgencyUser } = useWorkspace();
+  const { isAgencyUser, accounts } = useWorkspace();
+  const accountTimezone = useMemo(() => {
+    const aid = lead.Accounts_id || lead.account_id || lead.accounts_id;
+    if (!aid) return undefined;
+    const acct = accounts.find((a) => a.id === Number(aid));
+    return (acct?.timezone as string) || undefined;
+  }, [lead.Accounts_id, lead.account_id, lead.accounts_id, accounts]);
   const GRADIENT_KEY = "la:gradient:leads";
   const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
     try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
@@ -424,7 +430,10 @@ export function LeadDetailView({
                 {(lead.booked_call_date || lead.bookedCallDate) && (
                   <div>
                     <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detail.fields.callDate", "Booked Call")}</div>
-                    <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate)}</div>
+                    {(lead.previous_booked_call_date || lead.previousBookedCallDate) && Number(lead.re_scheduled_count || lead.reScheduledCount || 0) > 0 && (
+                      <div className="text-[10px] text-muted-foreground/50 line-through leading-none mb-0.5">{formatBookedDate(lead.previous_booked_call_date || lead.previousBookedCallDate, accountTimezone)}</div>
+                    )}
+                    <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate, accountTimezone)}</div>
                   </div>
                 )}
               </div>
@@ -575,7 +584,7 @@ export function KanbanDetailPanel({
 
       {/* ── Active widget ── */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        {activeTab === "chat" && <ConversationWidget lead={lead} />}
+        {activeTab === "chat" && <ConversationWidget lead={lead} showHeader />}
         {activeTab === "contact" && (
           <div className="h-full overflow-y-auto p-3">
             <ContactWidget lead={lead} />

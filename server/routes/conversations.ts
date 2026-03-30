@@ -14,6 +14,7 @@ import { broadcast, addClient, removeClient } from "../sse";
 import { handleZodError, wrapAsync, getPagination } from "./_helpers";
 import { eq, type SQL } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { sendToChannel, sendVoiceToChannel } from "../channel-sender";
 
 export function registerConversationsRoutes(app: Express): void {
   // ─── Interactions ─────────────────────────────────────────────────
@@ -102,6 +103,92 @@ export function registerConversationsRoutes(app: Express): void {
     // Broadcast to SSE clients (covers manual messages sent from UI)
     if (interaction.accountsId) {
       broadcast(interaction.accountsId, "new_interaction", responseBody);
+    }
+
+    // ── Deliver outbound manual messages to the actual channel ──────────
+    if ((parsed.data as any).direction?.toLowerCase() === "outbound") {
+      // Fire-and-forget so the API response isn't blocked by delivery
+      (async () => {
+        try {
+          const leadId = (interaction as any).leadsId ?? (interaction as any).leadId;
+          if (!leadId) return;
+          const lead = await storage.getLeadById(leadId);
+          if (!lead) return;
+          const channelId = (lead as any).channelIdentifier;
+          if (!channelId) {
+            console.log(`[channel-sender] No channel_identifier for lead ${leadId}, skipping delivery`);
+            return;
+          }
+          // Resolve campaign channel (telegram, whatsapp_cloud, etc.) and bot token
+          const campaignId = (lead as any).campaignsId ?? (lead as any).campaignId;
+          let campaignChannel = "telegram"; // default for tg: identifiers
+          let campaignBotToken: string | undefined;
+          if (campaignId) {
+            const campaign = await storage.getCampaignById(campaignId);
+            if (campaign) {
+              campaignChannel = (campaign as any).channel || campaignChannel;
+              campaignBotToken = (campaign as any).botToken ?? undefined;
+            }
+          }
+
+          const content = (interaction as any).content ?? "";
+          const isAudio = (parsed.data as any).type === "audio" || content.startsWith("data:audio/");
+
+          let result;
+          if (isAudio) {
+            // Voice memo: send as Telegram voice message
+            const mimeType = content.match(/^data:(audio\/[^;]+)/)?.[1] || "audio/ogg";
+            result = await sendVoiceToChannel(channelId, campaignChannel, content, mimeType, campaignBotToken);
+          } else {
+            result = await sendToChannel(channelId, campaignChannel, content, campaignBotToken);
+          }
+
+          if (result.success) {
+            console.log(`[channel-sender] Delivered to ${result.channel} (msg ${result.messageId}) for lead ${leadId}`);
+            await storage.updateInteraction(interaction.id, {
+              status: "delivered",
+              deliveredAt: new Date(),
+            } as any);
+            if (interaction.accountsId) {
+              broadcast(interaction.accountsId, "interaction_updated", {
+                id: interaction.id,
+                status: "delivered",
+                delivered_at: new Date().toISOString(),
+              });
+            }
+          } else {
+            console.error(`[channel-sender] Failed for lead ${leadId}: ${result.error}`);
+            await storage.updateInteraction(interaction.id, {
+              status: "failed",
+              failedAt: new Date(),
+            } as any);
+            if (interaction.accountsId) {
+              broadcast(interaction.accountsId, "interaction_updated", {
+                id: interaction.id,
+                status: "failed",
+                failed_at: new Date().toISOString(),
+              });
+            }
+            // Notify all agency users of delivery failure
+            const leadName = (lead as any).name ?? (lead as any).Name ?? `Lead ${leadId}`;
+            const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+            for (const admin of agencyUsers) {
+              await createAndDispatchNotification({
+                type: "system",
+                title: "Message delivery failed",
+                body: `Failed to deliver message to ${leadName}: ${result.error ?? "unknown error"}`,
+                userId: admin.id!,
+                accountId: interaction.accountsId ?? null,
+                read: false,
+                link: "/leads",
+                leadId: leadId,
+              });
+            }
+          }
+        } catch (err) {
+          console.error("[channel-sender] Unexpected error:", err);
+        }
+      })();
     }
 
     // Notification: lead_responded — when an inbound message arrives

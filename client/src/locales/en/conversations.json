@@ -90,7 +90,8 @@
     },
     "recording": {
       "label": "Recording\u2026",
-      "stopAndSend": "Stop and send voice message"
+      "stopAndSend": "Stop and send voice message",
+      "cancel": "Cancel recording"
     },
     "customization": {
       "title": "Customization",
@@ -192,7 +193,9 @@
       "messagesReceived": "Messages received",
       "totalInteractions": "Total interactions",
       "lastActive": "Last active",
-      "automationStatus": "Automation status"
+      "automationStatus": "Automation status",
+      "aiTokensUsed": "AI tokens used",
+      "aiCost": "AI cost"
     },
     "notes": {
       "placeholder": "Add notes about this lead...",

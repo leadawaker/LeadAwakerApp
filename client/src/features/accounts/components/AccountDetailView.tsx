@@ -42,6 +42,11 @@ const TIMEZONE_OPTIONS = [
   "America/Sao_Paulo",
   "Europe/Amsterdam",
 ];
+const LANGUAGE_OPTIONS = [
+  "English",
+  "Portuguese",
+  "Dutch",
+];
 
 // ── Draft type ────────────────────────────────────────────────────────────────
 
@@ -51,7 +56,7 @@ type AccountDraft = {
   business_description: string; notes: string; service_categories: string;
   default_ai_name: string; default_ai_role: string; default_ai_style: string;
   default_typo_frequency: string; opt_out_keyword: string; preferred_terminology: string;
-  timezone: string; business_hours_start: string; business_hours_end: string; max_daily_sends: string;
+  timezone: string; language: string; business_hours_start: string; business_hours_end: string; max_daily_sends: string;
   twilio_account_sid: string; twilio_auth_token: string; twilio_messaging_service_sid: string;
   twilio_default_from_number: string; webhook_url: string; webhook_secret: string; logo_url: string;
   instagram_user_id: string; instagram_access_token: string;
@@ -151,6 +156,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       opt_out_keyword:            String(account.opt_out_keyword         || ""),
       preferred_terminology:      String(account.preferred_terminology   || ""),
       timezone:                   String(account.timezone                || "UTC"),
+      language:                   String(account.language                || "English"),
       business_hours_start:       String(account.business_hours_start    || ""),
       business_hours_end:         String(account.business_hours_end      || ""),
       max_daily_sends:            account.max_daily_sends != null ? String(account.max_daily_sends) : "",
@@ -480,6 +486,11 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
                 label={t("fields.timezone")}
                 value={val("timezone")}
                 editChild={isEditing ? <EditSelect value={val("timezone")} onChange={(v) => set("timezone", v)} options={TIMEZONE_OPTIONS} /> : undefined}
+              />
+              <InfoRow
+                label={t("fields.language")}
+                value={val("language")}
+                editChild={isEditing ? <EditSelect value={val("language")} onChange={(v) => set("language", v)} options={LANGUAGE_OPTIONS} /> : undefined}
               />
               <InfoRow
                 label={t("fields.hoursOpen")}

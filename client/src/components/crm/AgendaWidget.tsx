@@ -28,6 +28,7 @@ type AgendaItem = {
   score?: number;
   lastMessage?: string;
   conversionStatus?: string;
+  timezone?: string;
 };
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
@@ -61,24 +62,50 @@ function getLeadScore(l: LeadRow): number {
   return Number(l.lead_score ?? l.leadScore ?? l.Lead_Score ?? 0);
 }
 
-function formatTime(dateStr: string): string {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+/** Extract a short UTC offset label like "(UTC+2)" from an IANA timezone name. */
+function getUtcOffsetLabel(timezone: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: timezone, timeZoneName: "shortOffset" }).formatToParts(new Date());
+    const tzPart = parts.find((p) => p.type === "timeZoneName");
+    return tzPart ? `(${tzPart.value})` : "";
+  } catch { return ""; }
 }
 
-function formatDate(dateStr: string): string {
+function formatTime(dateStr: string, timezone?: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit", hour12: true };
+  if (timezone) opts.timeZone = timezone;
+  const time = d.toLocaleTimeString("en-US", opts);
+  if (timezone) {
+    const offset = getUtcOffsetLabel(timezone);
+    return offset ? `${time} ${offset}` : time;
+  }
+  return time;
+}
+
+function formatDate(dateStr: string, timezone?: string): string {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return "";
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diff = (target.getTime() - today.getTime()) / 86400000;
+  // Compare dates in the target timezone to get correct "Today"/"Tomorrow" labels
+  const dayFmt = timezone
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" })
+    : new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
+  const targetDay = dayFmt.format(d);
+  const todayDay = dayFmt.format(now);
+  // Calculate diff using the formatted date strings (YYYY-MM-DD)
+  const targetMs = new Date(targetDay).getTime();
+  const todayMs = new Date(todayDay).getTime();
+  const diff = (targetMs - todayMs) / 86400000;
 
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
-  if (diff > 1 && diff <= 6) return d.toLocaleDateString("en-US", { weekday: "short" });
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const weekdayOpts: Intl.DateTimeFormatOptions = { weekday: "short" };
+  const dateOpts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  if (timezone) { weekdayOpts.timeZone = timezone; dateOpts.timeZone = timezone; }
+  if (diff > 1 && diff <= 6) return d.toLocaleDateString("en-US", weekdayOpts);
+  return d.toLocaleDateString("en-US", dateOpts);
 }
 
 function getUrgency(dateStr: string | null): "now" | "today" | "week" | "info" {
@@ -121,7 +148,7 @@ export interface AgendaWidgetProps {
 
 export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetProps) {
   const [, setLocation] = useLocation();
-  const { isAgencyUser } = useWorkspace();
+  const { isAgencyUser, accounts } = useWorkspace();
   const prefix = isAgencyUser ? "/agency" : "/subaccount";
 
   // ── Leads query ──────────────────────────────────────────────────────────
@@ -144,6 +171,15 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
   // (Activity feed query removed — CRM Updates are now static feature announcements)
 
   // ── Build agenda items ───────────────────────────────────────────────────
+  // Build a map of account ID → timezone for quick lookup
+  const accountTzMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const acct of accounts) {
+      if (acct.timezone) map.set(acct.id, String(acct.timezone));
+    }
+    return map;
+  }, [accounts]);
+
   const { upcomingCalls, takeoverLeads } = useMemo(() => {
     const now = new Date();
     const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 23, 59, 59);
@@ -153,6 +189,8 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
     for (const lead of allLeads) {
       const lid = lead.id || lead.Id;
       const convStatus = lead.conversion_status || lead.Conversion_Status || "";
+      const aid = lead.accounts_id ?? lead.account_id ?? lead.Accounts_id;
+      const tz = aid ? accountTzMap.get(Number(aid)) : undefined;
 
       if (isBooked(lead)) {
         const bDate = getBookedDate(lead);
@@ -165,10 +203,11 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
                 id: lid, type: "upcoming_call",
                 name: getLeadName(lead),
                 phone: lead.phone || null, email: lead.email || null,
-                dateStr: bDate, dateLabel: formatDate(bDate), timeLabel: formatTime(bDate),
+                dateStr: bDate, dateLabel: formatDate(bDate, tz), timeLabel: formatTime(bDate, tz),
                 urgency: getUrgency(bDate),
                 campaignName: lead.campaign_name || lead.Campaign_name || undefined,
                 conversionStatus: convStatus,
+                timezone: tz,
               });
             }
           }
@@ -195,7 +234,7 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
     });
 
     return { upcomingCalls: calls, takeoverLeads: takeovers };
-  }, [allLeads]);
+  }, [allLeads, accountTzMap]);
 
   // ── Takeover dismiss (optimistic local + API) ──────────────────────────
   const [dismissedTakeovers, setDismissedTakeovers] = useState<Set<number>>(new Set);

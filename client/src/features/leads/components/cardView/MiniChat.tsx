@@ -447,14 +447,11 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
   const { isLastInRun } = meta;
 
   // AI cost tooltip (agency-only)
-  const aiTokens = aiMsg && isAgency
-    ? (Number(item.ai_prompt_tokens ?? (item as any).aiPromptTokens ?? 0) + Number(item.ai_completion_tokens ?? (item as any).aiCompletionTokens ?? 0))
-    : 0;
-  const aiCostVal = aiMsg && isAgency
-    ? Number(item.ai_cost ?? (item as any).aiCost ?? 0)
-    : 0;
-  const aiCostTitle = aiTokens > 0
-    ? `${aiTokens.toLocaleString()} tokens, $${aiCostVal.toFixed(4)}`
+  const aiPrompt = aiMsg && isAgency ? Number(item.ai_prompt_tokens ?? (item as any).aiPromptTokens ?? 0) : 0;
+  const aiCompletion = aiMsg && isAgency ? Number(item.ai_completion_tokens ?? (item as any).aiCompletionTokens ?? 0) : 0;
+  const aiCostVal = aiMsg && isAgency ? Number(item.ai_cost ?? (item as any).aiCost ?? 0) : 0;
+  const aiCostTitle = (aiPrompt + aiCompletion) > 0
+    ? `In: ${aiPrompt.toLocaleString()} / Out: ${aiCompletion.toLocaleString()}, $${aiCostVal.toFixed(4)}`
     : undefined;
 
   const bubbleRadius = inbound
@@ -474,7 +471,7 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
 
       {/* Bubble — 45% max-width, time-only, ChatPanel colors + hard-light outline */}
       <div
-        {...(aiCostTitle ? { "data-cost-tooltip": aiCostTitle } : {})}
+        title={aiCostTitle}
         className={cn(
           "max-w-[80%] px-2.5 pt-1.5 pb-1 text-[13px] relative",
           bubbleRadius,

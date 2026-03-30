@@ -11,6 +11,7 @@ import {
   Smile,
   Mic,
   Square,
+  X,
 } from "lucide-react";
 import { STAGE_ICON } from "../ContactSidebar";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ import {
 import { DateSeparator, TagEventChip, StatusEventChip, ThreadDivider } from "./atoms";
 import { AgentRunWrapper, LeadRunWrapper, BotRunWrapper } from "./runWrappers";
 import { ChatBubble } from "./ChatBubble";
+import { getUtcOffsetLabel } from "@/features/leads/components/cardView/formatUtils";
 
 export function ChatPanel({
   selected,
@@ -128,18 +130,20 @@ export function ChatPanel({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingCancelledRef = useRef(false);
 
   const startRecording = useCallback(async () => {
     if (!selected) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mr = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm" });
+      recordingCancelledRef.current = false;
       recordingChunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data.size > 0) recordingChunksRef.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        if (recordingCancelledRef.current) return; // cancelled, discard audio
         const blob = new Blob(recordingChunksRef.current, { type: mr.mimeType });
-        // Convert to base64 data URL for inline playback (no upload endpoint yet)
         const reader = new FileReader();
         reader.onloadend = async () => {
           const dataUrl = reader.result as string;
@@ -160,6 +164,15 @@ export function ChatPanel({
   }, [selected, onSend, toast]);
 
   const stopRecording = useCallback(() => {
+    if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null; }
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+    setIsRecording(false);
+    setRecordingSeconds(0);
+  }, []);
+
+  const cancelRecording = useCallback(() => {
+    recordingCancelledRef.current = true;
     if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null; }
     mediaRecorderRef.current?.stop();
     mediaRecorderRef.current = null;
@@ -644,11 +657,13 @@ export function ChatPanel({
                   const formatted = callDate.toLocaleString(undefined, {
                     month: "short", day: "numeric", year: "numeric",
                     hour: "2-digit", minute: "2-digit",
+                    ...(accountTimezone ? { timeZone: accountTimezone } : {}),
                   });
+                  const tzLabel = accountTimezone ? getUtcOffsetLabel(accountTimezone) : "";
                   return (
-                    <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 h-[34px] rounded-full text-[11px] font-medium bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-400/30 shrink-0 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 h-[34px] rounded-full text-[11px] font-medium bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-400/30 shrink-0 whitespace-nowrap">
                       <Calendar className="h-3 w-3 shrink-0" />
-                      Booked call: {formatted}
+                      Booked call: {formatted}{tzLabel ? ` ${tzLabel}` : ""}
                     </span>
                   );
                 })()}
@@ -793,7 +808,7 @@ export function ChatPanel({
                       if (dir !== "outbound") {
                         inboundN++;
                         const rawTs = m.created_at ?? m.createdAt ?? "";
-                        const timeStr = rawTs ? new Date(rawTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+                        const timeStr = rawTs ? new Date(rawTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(accountTimezone ? { timeZone: accountTimezone } : {}) }) : "";
                         if (inboundN === 1 && !existingTagNames.has("responded")) {
                           tokens.push({ kind: "status-event", statusName: "Responded", time: timeStr, key: "synth-responded" });
                         }
@@ -835,7 +850,7 @@ export function ChatPanel({
                         while (tei < allTagEvents.length && allTagEvents[tei].created_at && new Date(allTagEvents[tei].created_at).getTime() <= msgTs) {
                           const te = allTagEvents[tei];
                           const teTime = new Date(te.created_at);
-                          const timeStr = teTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                          const timeStr = teTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(accountTimezone ? { timeZone: accountTimezone } : {}) });
                           const canonical = canonicalStatus(te.tag_name);
                           if (canonical && te.event_type !== "removed") {
                             mergedTokens.push({ kind: "status-event", statusName: canonical, time: timeStr, key: `status-event-${te.id}` });
@@ -858,7 +873,7 @@ export function ChatPanel({
                     while (tei < allTagEvents.length) {
                       const te = allTagEvents[tei];
                       const timeStr = te.created_at
-                        ? new Date(te.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                        ? new Date(te.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(accountTimezone ? { timeZone: accountTimezone } : {}) })
                         : "";
                       const canonical = canonicalStatus(te.tag_name);
                       if (canonical && te.event_type !== "removed") {
@@ -1045,6 +1060,16 @@ export function ChatPanel({
                 <span className="text-[13px] text-red-500 font-medium flex-1">
                   {t("chat.recording.label")} {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")}
                 </span>
+                {/* Cancel */}
+                <button
+                  type="button"
+                  onClick={cancelRecording}
+                  className="h-9 w-9 rounded-full border border-black/10 bg-muted/50 text-muted-foreground hover:bg-red-50 hover:text-red-500 hover:border-red-200 flex items-center justify-center shrink-0 transition-colors"
+                  title={t("chat.recording.cancel")}
+                  data-testid="button-cancel-recording"
+                >
+                  <X className="h-4 w-4" />
+                </button>
                 {/* Stop = send */}
                 <button
                   type="button"

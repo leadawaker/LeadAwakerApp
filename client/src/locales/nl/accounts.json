@@ -64,6 +64,7 @@
     "niche": "Niche",
     "website": "Website",
     "timezone": "Tijdzone",
+    "language": "Taal",
     "dailySends": "Dagelijkse Verzendingen",
     "notes": "Notities"
   },
@@ -109,6 +110,7 @@
     "phone": "Telefoon",
     "website": "Website",
     "timezone": "Tijdzone",
+    "language": "Taal",
     "businessHoursOpen": "Openingstijd",
     "businessHoursClose": "Sluitingstijd",
     "maxDailySends": "Max Dagelijkse Verzendingen",

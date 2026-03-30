@@ -64,6 +64,7 @@
     "niche": "Niche",
     "website": "Website",
     "timezone": "Timezone",
+    "language": "Language",
     "dailySends": "Daily Sends",
     "notes": "Notes"
   },
@@ -109,6 +110,7 @@
     "phone": "Phone",
     "website": "Website",
     "timezone": "Timezone",
+    "language": "Language",
     "businessHoursOpen": "Business Hours Open",
     "businessHoursClose": "Business Hours Close",
     "maxDailySends": "Max Daily Sends",

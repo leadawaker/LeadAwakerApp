@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X, Phone, Mail, TrendingUp, Calendar, User, ClipboardList, FileText,
@@ -9,6 +9,7 @@ import { useScoreBreakdown, TIER_COLORS, TIER_BAR_COLOR, TrendIcon, type ScoreBr
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonContactPanel } from "@/components/ui/skeleton";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { useToast } from "@/hooks/use-toast";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import {
@@ -214,6 +215,14 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
   const { toast } = useToast();
 
   const lead = selected?.lead ?? null;
+  const { accounts } = useWorkspace();
+  const accountTimezone = useMemo(() => {
+    if (!lead) return undefined;
+    const aid = (lead as any).accounts_id ?? (lead as any).account_id ?? (lead as any).Accounts_id;
+    if (!aid) return undefined;
+    const acct = accounts.find((a) => a.id === Number(aid));
+    return (acct?.timezone as string) || undefined;
+  }, [lead, accounts]);
   const { breakdown, loading: scoreLoading, resetToZero: resetScoreToZero } = useScoreBreakdown(lead?.id ?? null);
   const score = breakdown?.lead_score ?? 0;
   const status = lead ? getStatus(lead) || "New" : "New";
@@ -401,17 +410,35 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                     const rawCallDate = (selected.lead as any).booked_call_date ?? (selected.lead as any).bookedCallDate ?? null;
                     const callDate = rawCallDate ? new Date(rawCallDate as string) : null;
                     const isPastCall = callDate ? callDate < new Date() : false;
-                    const formattedCall = callDate ? callDate.toLocaleString(undefined, {
+                    const callOpts: Intl.DateTimeFormatOptions = {
                       month: "short", day: "numeric", year: "numeric",
                       hour: "2-digit", minute: "2-digit",
-                    }) : null;
+                    };
+                    if (accountTimezone) callOpts.timeZone = accountTimezone;
+                    let formattedCall = callDate ? callDate.toLocaleString(undefined, callOpts) : null;
+                    if (formattedCall && accountTimezone) {
+                      try {
+                        const parts = new Intl.DateTimeFormat("en", { timeZone: accountTimezone, timeZoneName: "shortOffset" }).formatToParts(new Date());
+                        const tzPart = parts.find((p) => p.type === "timeZoneName");
+                        if (tzPart) formattedCall += ` (${tzPart.value})`;
+                      } catch { /* ignore */ }
+                    }
+                    const rawPrevCallDate = (selected.lead as any).previous_booked_call_date ?? (selected.lead as any).previousBookedCallDate ?? null;
+                    const prevCallDate = rawPrevCallDate ? new Date(rawPrevCallDate as string) : null;
+                    const formattedPrevCall = prevCallDate ? prevCallDate.toLocaleString(undefined, callOpts) : null;
+                    const reScheduledCount = Number((selected.lead as any).re_scheduled_count ?? (selected.lead as any).reScheduledCount ?? 0);
                     return (
                       <>
                         <Icon className="h-5 w-5 shrink-0" style={hex ? { color: hex } : { color: "#6B7280" }} />
                         <div className="flex flex-col min-w-0">
                           <span className="text-[13px] font-semibold text-foreground">{status || "—"}</span>
+                          {formattedPrevCall && reScheduledCount > 0 && (
+                            <span className="text-[10px] text-muted-foreground/50 line-through">
+                              {formattedPrevCall}
+                            </span>
+                          )}
                           {formattedCall && (
-                            <span className={cn("text-[11px] text-muted-foreground", isPastCall && "line-through")}>
+                            <span className="text-[11px] text-muted-foreground">
                               {formattedCall}
                             </span>
                           )}
@@ -511,24 +538,40 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             {/* ── Activity ── */}
             <div className="border-t border-border/20" />
             <SectionHeader id="activity" label={t("contact.sections.activity")} icon={ClipboardList} collapsed={collapsedSections.has("activity")} onToggle={toggleSection} />
-            {!collapsedSections.has("activity") && (
-              <div className="px-4 pb-5">
-                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2">
-                  {[
-                    { label: t("contact.activity.messagesSent"),      value: String(selected.lead.message_count_sent ?? selected.lead.messageCountSent ?? "\u2014") },
-                    { label: t("contact.activity.messagesReceived"),  value: String(selected.lead.message_count_received ?? selected.lead.messageCountReceived ?? "\u2014") },
-                    { label: t("contact.activity.totalInteractions"), value: String(selected.lead.interaction_count ?? selected.lead.interactionCount ?? "\u2014") },
-                    { label: t("contact.activity.lastActive"),        value: formatRelativeTime(selected.lead.last_interaction_at || selected.lead.last_message_received_at) || "\u2014" },
-                    { label: t("contact.activity.automationStatus"),  value: String(selected.lead.automation_status ?? selected.lead.automationStatus ?? "\u2014") },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] text-muted-foreground">{label}</span>
-                      <span className="text-[12px] font-semibold text-foreground tabular-nums">{value}</span>
-                    </div>
-                  ))}
+            {!collapsedSections.has("activity") && (() => {
+              // Compute total AI tokens + cost from thread messages
+              const totalTokens = (selected.msgs ?? []).reduce((sum, m) => {
+                return sum + Number((m as any).ai_total_tokens ?? (m as any).aiTotalTokens ?? 0);
+              }, 0);
+              const totalCost = (selected.msgs ?? []).reduce((sum, m) => {
+                return sum + Number((m as any).ai_cost ?? (m as any).aiCost ?? 0);
+              }, 0);
+
+              const rows = [
+                { label: t("contact.activity.messagesSent"),      value: String(selected.lead.message_count_sent ?? selected.lead.messageCountSent ?? "\u2014") },
+                { label: t("contact.activity.messagesReceived"),  value: String(selected.lead.message_count_received ?? selected.lead.messageCountReceived ?? "\u2014") },
+                { label: t("contact.activity.totalInteractions"), value: String(selected.lead.interaction_count ?? selected.lead.interactionCount ?? "\u2014") },
+                { label: t("contact.activity.lastActive"),        value: formatRelativeTime(selected.lead.last_interaction_at || selected.lead.last_message_received_at) || "\u2014" },
+                { label: t("contact.activity.automationStatus"),  value: String(selected.lead.automation_status ?? selected.lead.automationStatus ?? "\u2014") },
+                ...(totalTokens > 0 ? [
+                  { label: t("contact.activity.aiTokensUsed"), value: totalTokens.toLocaleString() },
+                  { label: t("contact.activity.aiCost"),       value: `$${totalCost.toFixed(4)}` },
+                ] : []),
+              ];
+
+              return (
+                <div className="px-4 pb-5">
+                  <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2">
+                    {rows.map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-muted-foreground">{label}</span>
+                        <span className="text-[12px] font-semibold text-foreground tabular-nums">{value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* ── Notes ── */}
             <div className="border-t border-border/20" />

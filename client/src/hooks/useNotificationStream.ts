@@ -27,6 +27,7 @@ export type NotificationType =
   | "task_due_soon"
   | "task_overdue"
   | "booking_confirmed"
+  | "booking_reminder"
   | "lead_responded"
   | "lead_manual_takeover"
   | "critical_automation_failure"

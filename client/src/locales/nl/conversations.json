@@ -90,7 +90,8 @@
     },
     "recording": {
       "label": "Opnemen\u2026",
-      "stopAndSend": "Stoppen en spraakbericht verzenden"
+      "stopAndSend": "Stoppen en spraakbericht verzenden",
+      "cancel": "Opname annuleren"
     },
     "customization": {
       "title": "Aanpassing",
@@ -192,7 +193,9 @@
       "messagesReceived": "Berichten ontvangen",
       "totalInteractions": "Totaal interacties",
       "lastActive": "Laatst actief",
-      "automationStatus": "Automatiseringsstatus"
+      "automationStatus": "Automatiseringsstatus",
+      "aiTokensUsed": "AI tokens gebruikt",
+      "aiCost": "AI kosten"
     },
     "notes": {
       "placeholder": "Voeg notities toe over deze lead...",

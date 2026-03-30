@@ -251,6 +251,7 @@
       "nextAction": "Next Action",
       "whatTheyDid": "What They Did",
       "callDate": "Call Date",
+      "previousCallDate": "Previous",
       "confirmedAt": "Confirmed At",
       "noShow": "No Show",
       "rescheduled": "Rescheduled",

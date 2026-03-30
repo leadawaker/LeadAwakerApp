@@ -31,9 +31,17 @@ export const EMPTY_FORM: PromptFormData = {
 
 export const MODEL_OPTIONS = [
   "gpt-5.4",
+  "gpt-5.4-pro",
   "gpt-5.4-mini",
   "gpt-5.4-nano",
+  "gpt-5.3-chat-latest",
+  "gpt-5.3-codex",
+  "gpt-5.2",
+  "gpt-5.2-chat-latest",
+  "gpt-5.2-codex",
+  "gpt-5.2-pro",
   "gpt-5.1",
+  "gpt-5.1-chat-latest",
   "gpt-4.1",
   "gpt-4.1-mini",
   "gpt-4.1-nano",

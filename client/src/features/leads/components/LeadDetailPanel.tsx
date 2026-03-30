@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Sheet,
   SheetContent,
@@ -59,6 +59,8 @@ import { useScoreBreakdown, TIER_COLORS, TIER_ARC_COLOR, TrendIcon } from "@/hoo
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { formatBookedDate } from "@/features/leads/components/cardView/formatUtils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -641,6 +643,13 @@ function funnelContext(lead: Record<string, any> | null): string {
 
 export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const { t } = useTranslation("leads");
+  const { accounts } = useWorkspace();
+  const accountTimezone = useMemo(() => {
+    if (!lead) return undefined;
+    const aid = lead.account_id ?? lead.accounts_id;
+    const acct = accounts.find((a: any) => a.id === Number(aid));
+    return (acct?.timezone as string) || undefined;
+  }, [lead, accounts]);
   const [, setLocation] = useLocation();
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
@@ -1726,7 +1735,13 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
                 data-testid="booked-call-section"
               >
-                <InfoRow label={t("detail.fields.callDate")} value={fmtDateTime(lead.booked_call_date)} />
+                {lead.previous_booked_call_date && lead.re_scheduled_count != null && lead.re_scheduled_count > 0 && (
+                  <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30">
+                    <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.previousCallDate", "Previous")}</span>
+                    <span className="text-[12px] text-muted-foreground/50 line-through tabular-nums">{formatBookedDate(lead.previous_booked_call_date, accountTimezone)}</span>
+                  </div>
+                )}
+                <InfoRow label={t("detail.fields.callDate")} value={formatBookedDate(lead.booked_call_date, accountTimezone)} />
                 <InfoRow label={t("detail.fields.confirmedAt")} value={fmtDateTime(lead.booking_confirmed_at)} />
                 {/* No-show indicator */}
                 <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">

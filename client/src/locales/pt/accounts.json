@@ -64,6 +64,7 @@
     "niche": "Nicho",
     "website": "Website",
     "timezone": "Fuso Horario",
+    "language": "Idioma",
     "dailySends": "Envios Diarios",
     "notes": "Notas"
   },
@@ -109,6 +110,7 @@
     "phone": "Telefone",
     "website": "Website",
     "timezone": "Fuso Horario",
+    "language": "Idioma",
     "businessHoursOpen": "Horario de Abertura",
     "businessHoursClose": "Horario de Fechamento",
     "maxDailySends": "Envios Diarios Maximos",

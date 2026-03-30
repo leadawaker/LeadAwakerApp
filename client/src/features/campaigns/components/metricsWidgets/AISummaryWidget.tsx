@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ export function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }:
   generatedAt: string | null;
   onRefreshed: (summary: string, generatedAt: string) => void;
 }) {
-  const { t, i18n } = useTranslation("campaigns");
+  const { t } = useTranslation("campaigns");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +35,7 @@ export function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }:
       const httpRes = await apiFetch(`/api/campaigns/${campaign.id || (campaign as any).Id}/generate-summary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: i18n.language?.split("-")[0] || "en" }),
+        body: JSON.stringify({}),
       });
       const res = await httpRes.json() as any;
       if (res.error === "NO_GROQ_API_KEY") { setError(t("summary.groqApiKeyMissing")); return; }
@@ -46,7 +46,7 @@ export function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }:
     } finally {
       setLoading(false);
     }
-  }, [campaign, onRefreshed, i18n.language, t]);
+  }, [campaign, onRefreshed, t]);
 
   const paragraphs = useMemo(() => {
     if (!summary) return [];

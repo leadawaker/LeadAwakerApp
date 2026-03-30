@@ -90,7 +90,8 @@
     },
     "recording": {
       "label": "Gravando\u2026",
-      "stopAndSend": "Parar e enviar mensagem de voz"
+      "stopAndSend": "Parar e enviar mensagem de voz",
+      "cancel": "Cancelar gravação"
     },
     "customization": {
       "title": "Personalização",
@@ -192,7 +193,9 @@
       "messagesReceived": "Mensagens recebidas",
       "totalInteractions": "Total de intera\u00e7\u00f5es",
       "lastActive": "\u00daltima atividade",
-      "automationStatus": "Status de automa\u00e7\u00e3o"
+      "automationStatus": "Status de automa\u00e7\u00e3o",
+      "aiTokensUsed": "Tokens de IA usados",
+      "aiCost": "Custo de IA"
     },
     "notes": {
       "placeholder": "Adicione notas sobre este lead...",

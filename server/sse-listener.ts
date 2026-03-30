@@ -10,6 +10,7 @@ import pg from "pg";
 import { broadcast } from "./sse";
 
 const CHANNEL = "new_interaction";
+const RESET_CHANNEL = "lead_reset";
 const RECONNECT_DELAY_MS = 5_000;
 
 export function startSseListener() {
@@ -17,17 +18,19 @@ export function startSseListener() {
 
   client.connect().then(() => {
     client.query(`LISTEN ${CHANNEL}`);
-    console.log(`[sse-listener] Listening on channel "${CHANNEL}"`);
+    client.query(`LISTEN ${RESET_CHANNEL}`);
+    console.log(`[sse-listener] Listening on channels "${CHANNEL}", "${RESET_CHANNEL}"`);
 
     client.on("notification", (msg) => {
       if (!msg.payload) return;
       try {
         const data = JSON.parse(msg.payload);
         const accountId = data.accounts_id ?? data.Accounts_id;
-        console.log(`[sse-listener] NOTIFY received: accountId=${accountId}, leadId=${data.leads_id}, direction=${data.direction}`);
+        const eventName = msg.channel === RESET_CHANNEL ? "lead_reset" : "new_interaction";
+        console.log(`[sse-listener] NOTIFY received: channel=${msg.channel}, accountId=${accountId}, leadId=${data.leads_id}`);
         if (typeof accountId === "number") {
-          broadcast(accountId, "new_interaction", data);
-          console.log(`[sse-listener] Broadcast sent to accountId=${accountId}`);
+          broadcast(accountId, eventName, data);
+          console.log(`[sse-listener] Broadcast sent: event=${eventName}, accountId=${accountId}`);
         } else {
           console.warn(`[sse-listener] Skipped broadcast: accountId is not a number (got ${JSON.stringify(accountId)})`);
         }

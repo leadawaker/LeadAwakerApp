@@ -117,12 +117,56 @@ export function formatTagTime(dateStr: string | null | undefined): string {
   } catch { return "—"; }
 }
 
-export function formatBookedDate(dateStr: string): string {
+/** Extract the hour (0–23) from a date in a given timezone, falls back to getHours(). */
+export function getHoursInTimezone(date: Date, timezone?: string): number {
+  if (!timezone) return date.getHours();
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: timezone, hour: "numeric", hour12: false }).formatToParts(date);
+    const h = parts.find((p) => p.type === "hour");
+    return h ? Number(h.value) % 24 : date.getHours();
+  } catch { return date.getHours(); }
+}
+
+/** Extract the minutes (0–59) from a date in a given timezone, falls back to getMinutes(). */
+export function getMinutesInTimezone(date: Date, timezone?: string): number {
+  if (!timezone) return date.getMinutes();
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: timezone, minute: "numeric" }).formatToParts(date);
+    const m = parts.find((p) => p.type === "minute");
+    return m ? Number(m.value) : date.getMinutes();
+  } catch { return date.getMinutes(); }
+}
+
+/** Return a "YYYY-MM-DD" string for the given date in a given timezone (for day grouping). */
+export function toLocaleDateStringTz(date: Date, timezone?: string): string {
+  if (!timezone) return new Intl.DateTimeFormat("en-CA").format(date);
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(date);
+  } catch { return new Intl.DateTimeFormat("en-CA").format(date); }
+}
+
+/** Extract a short UTC offset label like "(UTC+2)" from an IANA timezone name. */
+export function getUtcOffsetLabel(timezone: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: timezone, timeZoneName: "shortOffset" }).formatToParts(new Date());
+    const tzPart = parts.find((p) => p.type === "timeZoneName");
+    return tzPart ? `(${tzPart.value})` : "";
+  } catch { return ""; }
+}
+
+export function formatBookedDate(dateStr: string, timezone?: string): string {
   if (!dateStr) return "";
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString([], { month: "short", day: "numeric" }) +
-      " · " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const dateOpts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+    const timeOpts: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+    if (timezone) { dateOpts.timeZone = timezone; timeOpts.timeZone = timezone; }
+    const label = d.toLocaleDateString([], dateOpts) + " · " + d.toLocaleTimeString([], timeOpts);
+    if (timezone) {
+      const offset = getUtcOffsetLabel(timezone);
+      return offset ? `${label} ${offset}` : label;
+    }
+    return label;
   } catch { return ""; }
 }

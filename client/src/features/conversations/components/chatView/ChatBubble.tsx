@@ -54,14 +54,11 @@ export function ChatBubble({
 
   // AI cost tooltip (agency-only, hover-to-reveal on AI messages)
   const isAgency = currentUser?.accountsId === 1;
-  const aiTokens = aiMsg && isAgency
-    ? (Number(item.ai_prompt_tokens ?? item.aiPromptTokens ?? 0) + Number(item.ai_completion_tokens ?? item.aiCompletionTokens ?? 0))
-    : 0;
-  const aiCostVal = aiMsg && isAgency
-    ? Number(item.ai_cost ?? item.aiCost ?? 0)
-    : 0;
-  const aiCostTitle = aiTokens > 0
-    ? `${aiTokens.toLocaleString()} tokens, $${aiCostVal.toFixed(4)}`
+  const aiPrompt = aiMsg && isAgency ? Number(item.ai_prompt_tokens ?? item.aiPromptTokens ?? 0) : 0;
+  const aiCompletion = aiMsg && isAgency ? Number(item.ai_completion_tokens ?? item.aiCompletionTokens ?? 0) : 0;
+  const aiCostVal = aiMsg && isAgency ? Number(item.ai_cost ?? item.aiCost ?? 0) : 0;
+  const aiCostTitle = (aiPrompt + aiCompletion) > 0
+    ? `In: ${aiPrompt.toLocaleString()} / Out: ${aiCompletion.toLocaleString()}, $${aiCostVal.toFixed(4)}`
     : undefined;
 
   // Last in run: sharp corner where tail connects, rounded on all others
@@ -107,7 +104,7 @@ export function ChatBubble({
           isFailed && "opacity-80",
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
-        {...(aiCostTitle ? { "data-cost-tooltip": aiCostTitle } : {})}
+        title={aiCostTitle}
       >
         {/* Tail triangle — only on last message in a consecutive run */}
         {isLastInRun && inbound && (

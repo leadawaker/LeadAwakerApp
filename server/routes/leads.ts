@@ -18,7 +18,7 @@ import { createAndDispatchNotification } from "../notification-dispatcher";
 import { broadcast } from "../sse";
 import { addClient, removeClient } from "../sse";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates } from "./_helpers";
-import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
+import { eq, count, and, gte, lte, ne, isNotNull, type SQL, desc } from "drizzle-orm";
 import type { Request, Response } from "express";
 
 export function registerLeadsRoutes(app: Express): void {
@@ -143,7 +143,7 @@ export function registerLeadsRoutes(app: Express): void {
             userId: admin.id!,
             accountId: lead.accountsId ?? null,
             read: false,
-            link: "/leads",
+            link: "/calendar",
             leadId: lead.id,
           });
         }
@@ -802,4 +802,70 @@ export function registerLeadsRoutes(app: Express): void {
     });
     res.json(data);
   }));
+}
+
+// ── Background booking reminder notifier — called once at startup ──────────
+
+export function startBookingReminders(): void {
+  // Track which lead IDs have already been reminded (prevents duplicate reminders)
+  const bookingRemindedLeads = new Set<number>();
+
+  async function checkUpcomingBookings() {
+    try {
+      const now = new Date();
+      const in1h = new Date(now.getTime() + 60 * 60 * 1000);
+
+      // Find all leads with a booked call in the next hour that haven't been reminded yet
+      const upcomingBookings = await db
+        .select()
+        .from(leads)
+        .where(
+          and(
+            gte(leads.bookedCallDate, now),
+            lte(leads.bookedCallDate, in1h),
+            eq(leads.conversionStatus, "Booked"),
+            ne(leads.noShow, true),
+          ),
+        );
+
+      for (const lead of upcomingBookings) {
+        if (bookingRemindedLeads.has(lead.id)) continue;
+        bookingRemindedLeads.add(lead.id);
+
+        const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(" ") || "Lead";
+        const callDate = new Date(lead.bookedCallDate!);
+        const minutesUntil = Math.round((callDate.getTime() - now.getTime()) / 60000);
+
+        // Notify all agency users
+        const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
+        for (const admin of agencyUsers) {
+          await createAndDispatchNotification({
+            type: "booking_reminder",
+            title: `Upcoming call: ${leadName}`,
+            body: `Starts in ${minutesUntil} min (${callDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })})`,
+            userId: admin.id!,
+            accountId: lead.accountsId ?? null,
+            read: false,
+            link: "/calendar",
+            leadId: lead.id,
+          });
+        }
+      }
+
+      // Clean up old entries (calls that have passed) to prevent memory growth
+      for (const id of bookingRemindedLeads) {
+        const lead = upcomingBookings.find((l) => l.id === id);
+        if (!lead) {
+          // Lead no longer in upcoming window, safe to remove from set
+          bookingRemindedLeads.delete(id);
+        }
+      }
+    } catch (err) {
+      console.error("[BookingReminderNotifier]", err);
+    }
+  }
+
+  // Run immediately on startup, then every 10 minutes
+  checkUpcomingBookings();
+  setInterval(checkUpcomingBookings, 10 * 60 * 1000);
 }

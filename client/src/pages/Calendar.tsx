@@ -32,6 +32,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { apiFetch } from "@/lib/apiUtils";
+import { formatBubbleTime, getHoursInTimezone, getMinutesInTimezone, toLocaleDateStringTz } from "@/features/leads/components/cardView/formatUtils";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import {
   DndContext,
@@ -73,10 +74,12 @@ type Appointment = {
   no_show: boolean;
   re_scheduled_count: number;
   raw_booked_call_date: string;
+  raw_previous_booked_call_date: string | null;
   phone: string | null;
   email: string | null;
   callDurationMinutes: number;
   rawLead: Record<string, any>;
+  timezone?: string;
 };
 
 // ── View mode tab config (labels resolved inside component via t()) ──────────
@@ -332,6 +335,11 @@ function AppointmentCard({
           <span className="text-[11px] text-muted-foreground tabular-nums leading-tight" data-testid={`date-${appt.id}`}>
             {appt.formattedDate}
           </span>
+          {appt.raw_previous_booked_call_date && appt.re_scheduled_count > 0 && (
+            <span className="text-[10px] text-muted-foreground/50 tabular-nums leading-tight line-through" data-testid={`prev-time-${appt.id}`}>
+              {formatBubbleTime(appt.raw_previous_booked_call_date, appt.timezone)}
+            </span>
+          )}
           <span className="text-[11px] font-bold tabular-nums leading-tight text-foreground" data-testid={`time-${appt.id}`}>
             {appt.time}
           </span>
@@ -525,7 +533,7 @@ export default function CalendarPage() {
     }
   }, [viewMode]);
 
-  const todayStr = new Date().toLocaleDateString();
+  const todayStr = new Intl.DateTimeFormat("en-CA").format(new Date());
 
   // Sync local filter when global account switcher changes
   useEffect(() => {
@@ -557,28 +565,32 @@ export default function CalendarPage() {
         const firstName = l.first_name || "";
         const lastName = l.last_name || "";
         const fullName = l.full_name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : t("appointment.unknownLead"));
+        const aid = l.account_id || l.accounts_id;
+        const tz = accounts.find((a: any) => a.id === Number(aid))?.timezone as string | undefined;
         return {
           id: l.id,
           lead_name: fullName,
           campaign_name: l.campaign_name || null,
-          date: d.toLocaleDateString(),
+          date: toLocaleDateStringTz(d, tz),
           formattedDate: formatDate(d, t),
-          time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          hour: d.getHours(),
-          minutes: d.getMinutes(),
+          time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(tz ? { timeZone: tz } : {}) }),
+          hour: getHoursInTimezone(d, tz),
+          minutes: getMinutesInTimezone(d, tz),
           status: l.conversion_status,
           calendar_link: l.calendar_link || "https://cal.example.com/leadawaker",
           no_show: l.no_show === true || l.no_show === "true" || l.no_show === 1,
           re_scheduled_count: Number(l.re_scheduled_count) || 0,
           raw_booked_call_date: (l.booked_call_date || l.booking_confirmed_at || l.bookingConfirmedAt) as string,
+          raw_previous_booked_call_date: (l.previous_booked_call_date || l.previousBookedCallDate || null) as string | null,
           phone: l.phone || l.Phone || null,
           email: l.email || l.Email || null,
           callDurationMinutes: Number(l.call_duration_minutes) || 60,
           rawLead: l,
+          timezone: tz || undefined,
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  }, [leads, currentAccountId, isAgencyUser, effectiveAccountFilter, campaignId, t]);
+  }, [leads, currentAccountId, isAgencyUser, effectiveAccountFilter, campaignId, t, accounts]);
 
   const [anchorDate, setAnchorDate] = useState(() => {
     const d = new Date();
@@ -598,7 +610,7 @@ export default function CalendarPage() {
     for (let i = 0; i < 42; i++) {
       const d = new Date(gridStart);
       d.setDate(gridStart.getDate() + i);
-      const key = d.toLocaleDateString();
+      const key = new Intl.DateTimeFormat("en-CA").format(d);
       const count = appts.filter((a) => a.date === key).length;
       out.push({ date: d, count });
     }
@@ -962,6 +974,7 @@ export default function CalendarPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          previous_booked_call_date: appt.raw_booked_call_date,
           booked_call_date: newBookedCallDate,
           re_scheduled_count: newRescheduledCount,
         }),
@@ -977,7 +990,7 @@ export default function CalendarPage() {
       }
 
       if (isTimeSlotDrop) {
-        const timeStr = newDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const timeStr = newDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(appt.timezone ? { timeZone: appt.timezone } : {}) });
         setDragToast({ message: t("toast.rescheduledToWithTime", { name: appt.lead_name, date: formatDate(newDate, t), time: timeStr }), type: "success" });
       } else {
         setDragToast({ message: t("toast.rescheduledTo", { name: appt.lead_name, date: formatDate(newDate, t) }), type: "success" });
@@ -1447,10 +1460,10 @@ export default function CalendarPage() {
                   <div className="flex-1 grid grid-cols-7 overflow-y-auto" data-testid="grid-days">
                     {days.map((d, idx) => {
                       const inMonth = d.date.getMonth() === month.getMonth();
-                      const isToday = d.date.toLocaleDateString() === todayStr;
-                      const isSelected = selectedDate === d.date.toLocaleDateString();
+                      const isToday = new Intl.DateTimeFormat("en-CA").format(d.date) === todayStr;
+                      const isSelected = selectedDate === new Intl.DateTimeFormat("en-CA").format(d.date);
                       const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
-                      const dateKey = d.date.toLocaleDateString();
+                      const dateKey = new Intl.DateTimeFormat("en-CA").format(d.date);
                       return (
                         <DroppableDay
                           key={idx}
@@ -1565,7 +1578,7 @@ export default function CalendarPage() {
                     >
                       <div className="shrink-0 border-r border-border/20" style={{ width: LABEL_W }} />
                       {gridDays.map((d, i) => {
-                        const isToday = d.toLocaleDateString() === todayStr;
+                        const isToday = new Intl.DateTimeFormat("en-CA").format(d) === todayStr;
                         const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                         return (
                           <div key={i} className={cn(
@@ -1613,9 +1626,9 @@ export default function CalendarPage() {
                       {/* Day columns */}
                       <div className="absolute top-0 bottom-0 right-0 flex" style={{ left: LABEL_W }}>
                         {gridDays.map((d, i) => {
-                          const isToday = d.toLocaleDateString() === todayStr;
+                          const isToday = new Intl.DateTimeFormat("en-CA").format(d) === todayStr;
                           const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                          const dateKey = d.toLocaleDateString();
+                          const dateKey = new Intl.DateTimeFormat("en-CA").format(d);
                           return (
                             <div key={i} className={cn(
                               "flex-1 relative border-r border-border/20 last:border-r-0",

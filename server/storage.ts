@@ -151,6 +151,7 @@ export interface IStorage {
   getProspectMessages(prospectId: number, limit: number, offset: number): Promise<any[]>;
   markProspectInteractionsRead(prospectId: number): Promise<void>;
   createInteraction(data: InsertInteractions): Promise<Interactions>;
+  updateInteraction(id: number, data: Partial<InsertInteractions>): Promise<Interactions | undefined>;
   deleteInteraction(id: number): Promise<boolean>;
   bulkDeleteInteractions(ids: number[]): Promise<number>;
   deleteInteractionsByLeadId(leadId: number): Promise<void>;
@@ -583,6 +584,14 @@ export class DatabaseStorage implements IStorage {
       updatedAt: now,
       ...data,
     } as any).returning();
+    return row;
+  }
+
+  async updateInteraction(id: number, data: Partial<InsertInteractions>): Promise<Interactions | undefined> {
+    const [row] = await db.update(interactions)
+      .set({ ...data, updatedAt: new Date() } as any)
+      .where(eq(interactions.id, id))
+      .returning();
     return row;
   }
 

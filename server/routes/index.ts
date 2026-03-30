@@ -10,7 +10,7 @@ import { type Server } from "http";
 import { registerAuthAndAdminRoutes } from "./auth";
 import { registerAccountsRoutes } from "./accounts";
 import { registerCampaignsRoutes } from "./campaigns";
-import { registerLeadsRoutes } from "./leads";
+import { registerLeadsRoutes, startBookingReminders } from "./leads";
 import { registerConversationsRoutes } from "./conversations";
 import { registerTasksRoutes, startTaskNotifiers } from "./tasks";
 import { registerBillingRoutes } from "./billing";
@@ -46,6 +46,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // ── Background notifiers ──────────────────────────────────────────────
   startSupportCleanup();            // daily support session cleanup
   startTaskNotifiers();             // task due-soon (30min) + task overdue (30min)
+  startBookingReminders();          // booking reminder 1h before call (10min check)
   startAutomationFailureNotifier(); // automation failure check (5min)
   startCampaignFinishedNotifier();  // campaign finished check (10min)
 

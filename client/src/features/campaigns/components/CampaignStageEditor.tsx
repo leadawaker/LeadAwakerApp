@@ -176,15 +176,15 @@ export function CampaignStageEditor({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("config.firstMessage")}</span>
-            {!isEditing && (campaign.first_message_template || campaign.First_Message) && (
-              <CopyButton value={campaign.first_message_template || campaign.First_Message || ""} />
+            {!isEditing && (campaign.First_Message || campaign.First_Message) && (
+              <CopyButton value={campaign.First_Message || campaign.First_Message || ""} />
             )}
           </div>
           {isEditing ? (
-            <EditText value={String(draft.first_message_template ?? "")} onChange={(v) => setDraft(d => ({...d, first_message_template: v}))} multiline placeholder="Hi {name}, we noticed…" />
+            <EditText value={String(draft.First_Message ?? "")} onChange={(v) => setDraft(d => ({...d, First_Message: v}))} multiline placeholder="Hi {name}, we noticed…" />
           ) : (
-            campaign.first_message_template || campaign.First_Message
-              ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.first_message_template || campaign.First_Message}</p>
+            campaign.First_Message || campaign.First_Message
+              ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.First_Message || campaign.First_Message}</p>
               : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
           )}
         </div>
@@ -280,7 +280,7 @@ export function CampaignStageEditor({
 
         <SectionHeader label={t("config.aiSettings")} />
         <InfoRow icon={Cpu} label={t("config.model")} value={campaign.ai_model || "Default"}
-          editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4", "gpt-5.4-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} /> : undefined}
+          editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4", "gpt-5.4-pro", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.3-chat-latest", "gpt-5.3-codex", "gpt-5.2", "gpt-5.2-chat-latest", "gpt-5.2-codex", "gpt-5.2-pro", "gpt-5.1", "gpt-5.1-chat-latest", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} /> : undefined}
         />
         <InfoRow icon={Thermometer} label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
           editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}

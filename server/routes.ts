@@ -1055,7 +1055,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       return res.status(403).json({ message: "Forbidden" });
     }
     const LEAD_DATE_FIELDS = [
-      "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
+      "bookedCallDate", "previousBookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
       "bump1SentAt", "bump2SentAt", "bump3SentAt", "firstMessageSentAt",
       "nextActionAt", "bookingConfirmedAt", "createdAt", "updatedAt",
     ];
