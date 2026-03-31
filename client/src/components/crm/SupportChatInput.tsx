@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export interface SupportChatInputProps {
   input: string;
   setInput: (v: string | ((prev: string) => string)) => void;
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
   emojiOpen: boolean;
   setEmojiOpen: (v: boolean) => void;
   activeSending: boolean;

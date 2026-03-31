@@ -76,7 +76,7 @@ export interface DataTableToolbarProps {
   // Search
   searchValue?: string;
   onSearchValueChange?: (value: string) => void;
-  searchInputRef?: React.RefObject<HTMLInputElement>;
+  searchInputRef?: React.RefObject<HTMLInputElement | null>;
 
   // Filter
   filterConfig?: Record<string, string>;
@@ -120,7 +120,7 @@ export interface DataTableToolbarProps {
   onExportCSV?: () => void;
   exportable?: boolean;
   onOpenExportDialog?: () => void;
-  fileInputRef?: React.RefObject<HTMLInputElement>;
+  fileInputRef?: React.RefObject<HTMLInputElement | null>;
 
   // Extra slots
   filterSlot?: React.ReactNode;

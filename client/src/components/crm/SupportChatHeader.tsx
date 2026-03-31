@@ -1,4 +1,5 @@
 import { type RefObject, type KeyboardEvent } from "react";
+import { type ChatDoodleConfig } from "@/hooks/useChatDoodle";
 import { Headphones, Loader2, X, Maximize2, Camera, Pencil, Eraser, Wallpaper, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SupportBotConfig } from "@/hooks/useSupportChat";
@@ -28,7 +29,7 @@ export interface SupportChatHeaderProps {
   isInline: boolean;
   isAgencyUser: boolean;
   founderChat?: FounderChatRef;
-  botPhotoInputRef: RefObject<HTMLInputElement>;
+  botPhotoInputRef: RefObject<HTMLInputElement | null>;
   handlePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   editingName: boolean;
   nameInput: string;
@@ -39,14 +40,8 @@ export interface SupportChatHeaderProps {
   handleClearContext: () => void;
   clearing: boolean;
   loading: boolean;
-  doodleConfig: {
-    bgStyle: ChatBgStyle;
-    enabled: boolean;
-    patternId: string;
-    color: number;
-    size: number;
-  };
-  setDoodleConfig: (updates: Partial<SupportChatHeaderProps["doodleConfig"]>) => void;
+  doodleConfig: ChatDoodleConfig;
+  setDoodleConfig: (updates: Partial<ChatDoodleConfig>) => void;
   handleClose: () => void;
   onOpenInChats?: () => void;
   aiAgents?: { id: number; name: string }[];
