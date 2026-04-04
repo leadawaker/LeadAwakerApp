@@ -5,19 +5,33 @@ export function EditText({
   onChange,
   placeholder,
   multiline = false,
+  autoFocus = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   multiline?: boolean;
+  autoFocus?: boolean;
 }) {
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!taRef.current) return;
     taRef.current.style.height = "auto";
     taRef.current.style.height = Math.min(taRef.current.scrollHeight, 320) + "px";
   }, [value]);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const el = taRef.current ?? inputRef.current;
+    if (el) {
+      el.focus();
+      // place cursor at end
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (multiline) {
     return (
@@ -35,6 +49,7 @@ export function EditText({
 
   return (
     <input
+      ref={inputRef}
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}

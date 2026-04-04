@@ -314,7 +314,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
           </div>
           {/* Deferral control */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-foreground/50 shrink-0">Inject after</span>
+            <span className="text-[11px] text-foreground/50 shrink-0">{t("knowledge.injectAfter", "Inject after")}</span>
             {([null, 1, 2, 3, 4, 5] as (number | null)[]).map(v => (
               <button
                 key={String(v)}

@@ -80,7 +80,7 @@ export function ProspectChatPanel({
   const sorted = [...filtered].sort((a: any, b: any) => {
     const aTime = new Date(a.sent_at || a.created_at).getTime();
     const bTime = new Date(b.sent_at || b.created_at).getTime();
-    return sortMode === "newest" ? aTime - bTime : bTime - aTime;
+    return sortMode === "newest" ? bTime - aTime : aTime - bTime;
   });
 
   // Group by date

@@ -426,12 +426,12 @@ export function CampaignDetailPanel({
           </section>
 
           {/* AUDIENCE ────────────────────────────────────────── */}
-          {(campaign.target_audience || campaign.campaign_niche_override || campaign.campaign_service) && (
+          {(campaign.target_audience || campaign.niche || campaign.campaign_service) && (
             <section data-testid="campaign-detail-section-audience">
               <SectionHeader icon={<Users className="w-3.5 h-3.5" />} title={t("panel.audienceTargeting")} />
               <div className="rounded-xl border border-border bg-card p-3 space-y-0">
                 <InfoRow label={t("panel.targetAudience")} value={campaign.target_audience} />
-                <InfoRow label={t("panel.niche")} value={campaign.campaign_niche_override} />
+                <InfoRow label={t("panel.niche")} value={campaign.niche} />
                 <InfoRow label={t("panel.serviceLabel")} value={campaign.campaign_service} />
                 <InfoRow label={t("panel.usp")} value={campaign.campaign_usp} />
                 <InfoRow label={t("panel.inquiryTimeframe")} value={campaign.inquiry_timeframe} />

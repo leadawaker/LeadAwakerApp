@@ -74,6 +74,29 @@ export async function sendVoiceToChannel(
   return { success: false, channel: campaignChannel, error: `Voice not supported for channel: ${campaignChannel}` };
 }
 
+/**
+ * Send a photo (image URL or base64) to the lead's channel.
+ * botToken: the campaign's Telegram bot token (from Campaigns.bot_token). Falls back to TELEGRAM_BOT_TOKEN env var.
+ * caption: optional text caption for the photo.
+ */
+export async function sendPhotoToChannel(
+  channelIdentifier: string,
+  campaignChannel: string,
+  imageUrl: string,
+  caption?: string,
+  botToken?: string,
+): Promise<SendResult> {
+  if (
+    channelIdentifier.startsWith("tg:") ||
+    channelIdentifier.startsWith("tg-") ||
+    campaignChannel === "telegram"
+  ) {
+    return sendTelegramPhoto(channelIdentifier, imageUrl, caption, botToken);
+  }
+
+  return { success: false, channel: campaignChannel, error: `Photo not supported for channel: ${campaignChannel}` };
+}
+
 // ── Telegram ─────────────────────────────────────────────────────────────────
 
 async function sendTelegramText(channelId: string, text: string, botToken?: string): Promise<SendResult> {
@@ -144,6 +167,40 @@ async function sendTelegramVoice(
       return { success: true, channel: "telegram", messageId: data.result?.message_id };
     }
     return { success: false, channel: "telegram", error: data.description || "Telegram sendVoice error" };
+  } catch (err: any) {
+    return { success: false, channel: "telegram", error: err.message };
+  }
+}
+
+async function sendTelegramPhoto(
+  channelId: string,
+  imageUrl: string,
+  caption?: string,
+  botToken?: string,
+): Promise<SendResult> {
+  const { token, chatId } = resolveTelegramBot(channelId, botToken);
+  if (!token) return { success: false, channel: "telegram", error: "No bot token configured" };
+
+  try {
+    const payload: any = {
+      chat_id: chatId,
+      photo: imageUrl,
+    };
+
+    if (caption) {
+      payload.caption = caption;
+    }
+
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json() as any;
+    if (data.ok) {
+      return { success: true, channel: "telegram", messageId: data.result?.message_id };
+    }
+    return { success: false, channel: "telegram", error: data.description || "Telegram sendPhoto error" };
   } catch (err: any) {
     return { success: false, channel: "telegram", error: err.message };
   }

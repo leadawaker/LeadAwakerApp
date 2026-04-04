@@ -140,15 +140,15 @@ export default function Services() {
           )}
         </ul>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <p className="text-slate-700 text-[15px] leading-relaxed">
+        <div className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/30 p-5">
+          <p className="text-slate-700 dark:text-muted-foreground text-[15px] leading-relaxed">
             <Trans
               i18nKey={`cases.${config.key}.additionalUseCases`}
               ns="services"
               components={{ strong: <strong /> }}
             />
           </p>
-          <p className="text-slate-700 text-[15px] leading-relaxed mt-3">
+          <p className="text-slate-700 dark:text-muted-foreground text-[15px] leading-relaxed mt-3">
             <Trans
               i18nKey={`cases.${config.key}.agentProfile`}
               ns="services"
@@ -162,17 +162,17 @@ export default function Services() {
   }));
 
   return (
-    <div className="min-h-screen pt-[126px] pb-20 bg-slate-50 dark:bg-muted">
+    <div className="min-h-screen pt-[126px] pb-20 bg-slate-50 dark:bg-background">
       <div className="container mx-auto px-4 md:px-0">
         <div className="max-w-6xl mx-auto text-center mb-16 px-0">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold mb-6 text-slate-900"
+            className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 dark:text-foreground"
           >
             {t("pageTitle")}
           </motion.h1>
-          <p className="text-xl text-slate-600">
+          <p className="text-xl text-slate-600 dark:text-muted-foreground">
             {t("pageSubtitle")}
           </p>
         </div>
@@ -184,8 +184,8 @@ export default function Services() {
               onClick={() => setActiveCase(index)}
               className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-0 flex-1 relative overflow-hidden ${
                 activeCase === index
-                  ? "bg-white shadow-xl scale-105 z-10"
-                  : "bg-white/50 border-slate-200 hover:border-slate-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
+                  ? "bg-white dark:bg-card shadow-xl scale-105 z-10"
+                  : "bg-white/50 dark:bg-card/50 border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-border grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
               }`}
               style={
                 activeCase === index
@@ -215,14 +215,14 @@ export default function Services() {
                 {item.icon}
               </div>
 
-              <span className={`font-bold text-center leading-tight relative z-10 ${activeCase === index ? "text-slate-900" : "text-slate-500"}`}>
+              <span className={`font-bold text-center leading-tight relative z-10 ${activeCase === index ? "text-slate-900 dark:text-foreground" : "text-slate-500 dark:text-muted-foreground"}`}>
                 {item.title}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-100 mx-0">
+        <div className="bg-white dark:bg-card rounded-[2rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-border mx-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCase}
@@ -234,8 +234,8 @@ export default function Services() {
             >
               <div className="order-1 w-full lg:flex-1 lg:max-w-4xl lg:pr-12 pb-8 lg:pb-0">
                 {CASES[activeCase].description}
-                <div className="mt-8 pt-8 border-t border-slate-100">
-                  <p className="text-slate-500 text-sm italic">
+                <div className="mt-8 pt-8 border-t border-slate-100 dark:border-border">
+                  <p className="text-slate-500 dark:text-muted-foreground text-sm italic">
                     {t("footnote")}
                   </p>
                 </div>

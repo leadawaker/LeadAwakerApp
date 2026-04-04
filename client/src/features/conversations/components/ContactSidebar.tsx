@@ -251,8 +251,8 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       setNotesDirty(false);
       setNotesSaved(true);
       setTimeout(() => setNotesSaved(false), 2000);
-    } catch {
-      // error toast already shown by onUpdateLead
+    } catch (err) {
+      console.error("[ContactSidebar] Notes save failed:", err);
     } finally {
       setNotesSaving(false);
     }

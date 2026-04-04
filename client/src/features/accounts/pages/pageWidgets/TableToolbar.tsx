@@ -1,5 +1,5 @@
 // src/features/accounts/pages/pageWidgets/TableToolbar.tsx
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowUpDown, Filter, Layers, Eye, Check, Plus, Copy, Trash2, Pencil, X } from "lucide-react";
 import {
@@ -27,6 +27,7 @@ import {
   type TableGroupByOption,
 } from "./accountsPageConstants";
 import { ConfirmToolbarButton } from "./ConfirmToolbarButton";
+import { useToast } from "@/hooks/use-toast";
 
 interface TableToolbarProps {
   tableSearch: string;
@@ -76,6 +77,8 @@ export function TableToolbar({
   onBulkDeleteAccounts,
 }: TableToolbarProps) {
   const { t } = useTranslation("accounts");
+  const { toast } = useToast();
+  const [searchOpen, setSearchOpen] = useState(false);
   const TABLE_COL_META = TABLE_COL_META_KEYS.map((c) => ({ ...c, label: t(c.labelKey) }));
 
   return (
@@ -86,8 +89,8 @@ export function TableToolbar({
       <SearchPill
         value={tableSearch}
         onChange={onTableSearchChange}
-        open={!!tableSearch}
-        onOpenChange={() => {}}
+        open={searchOpen || !!tableSearch}
+        onOpenChange={setSearchOpen}
         placeholder={t("page.searchPlaceholder")}
       />
 
@@ -202,8 +205,16 @@ export function TableToolbar({
                 onClick={(e) => {
                   e.preventDefault();
                   const next = new Set(visibleCols);
-                  if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); }
-                  else next.add(col.key);
+                  if (next.has(col.key)) {
+                    if (next.size > 1) {
+                      next.delete(col.key);
+                    } else {
+                      toast({ description: t("toolbar.cannotHideLastColumn", "At least one column must remain visible.") });
+                      return;
+                    }
+                  } else {
+                    next.add(col.key);
+                  }
                   onVisibleColsChange(next);
                 }}
                 className="flex items-center gap-2 text-[12px]"

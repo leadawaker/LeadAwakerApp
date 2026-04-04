@@ -101,7 +101,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-slate-50 pt-20 pb-10 border-t border-slate-200 relative overflow-hidden">
+    <footer className="bg-slate-50 dark:bg-background pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-4 md:mb-16 relative z-10">
           <div>
@@ -200,7 +200,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-1 text-sm text-muted-foreground relative z-10">
+        <div className="border-t border-slate-200 dark:border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-1 text-sm text-muted-foreground relative z-10">
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div className="flex gap-6">
             <Link

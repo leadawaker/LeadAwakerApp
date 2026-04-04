@@ -9,6 +9,7 @@ import {
   Check,
   X,
   ArrowUpDown,
+  ChevronDown,
   LayoutDashboard,
   Settings2,
 } from "lucide-react";
@@ -293,6 +294,8 @@ interface CampaignFilterBottomSheetProps {
   onSortByChange: (v: CampaignSortBy) => void;
   filterStatus: string[];
   onFilterStatusSet: (v: string[]) => void;
+  showDemoCampaigns: boolean;
+  onShowDemoCampaignsChange: (v: boolean) => void;
   onReset: () => void;
 }
 
@@ -303,22 +306,28 @@ function CampaignFilterBottomSheet({
   onSortByChange,
   filterStatus,
   onFilterStatusSet,
+  showDemoCampaigns,
+  onShowDemoCampaignsChange,
   onReset,
 }: CampaignFilterBottomSheetProps) {
   const { t } = useTranslation("campaigns");
   const [mounted, setMounted] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Pending state — only commits when Apply is pressed
   const [pendingSortBy, setPendingSortBy] = useState<CampaignSortBy>(sortBy);
   const [pendingStatus, setPendingStatus] = useState<string[]>([...filterStatus]);
+  const [pendingDemo, setPendingDemo] = useState(showDemoCampaigns);
 
   // Sync pending state when sheet opens
   useEffect(() => {
     if (open) {
       setPendingSortBy(sortBy);
       setPendingStatus([...filterStatus]);
+      setPendingDemo(showDemoCampaigns);
+      setExpandedSection(null);
     }
-  }, [open, sortBy, filterStatus]);
+  }, [open, sortBy, filterStatus, showDemoCampaigns]);
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
@@ -329,20 +338,25 @@ function CampaignFilterBottomSheet({
     );
   };
 
+  const toggleSection = (name: string) =>
+    setExpandedSection((prev) => (prev === name ? null : name));
+
   const handleApply = () => {
     onSortByChange(pendingSortBy);
     onFilterStatusSet(pendingStatus);
+    onShowDemoCampaignsChange(pendingDemo);
     onClose();
   };
 
   const handleReset = () => {
     setPendingSortBy("recent");
     setPendingStatus([]);
+    setPendingDemo(false);
     onReset();
     onClose();
   };
 
-  const isModified = pendingStatus.length > 0 || pendingSortBy !== "recent";
+  const isModified = pendingStatus.length > 0 || pendingSortBy !== "recent" || pendingDemo;
 
   return createPortal(
     <AnimatePresence>
@@ -395,73 +409,119 @@ function CampaignFilterBottomSheet({
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-5 space-y-5 min-h-0">
-              {/* Sort section */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("toolbar.sortBy")}
-                  </h3>
-                </div>
-                <div className="space-y-1">
-                  {SORT_FILTER_OPTIONS.map(({ value, optKey }) => (
-                    <button
-                      key={value}
-                      onClick={() => setPendingSortBy(value)}
-                      className={cn(
-                        "w-full flex items-center justify-between min-h-[44px] px-4 rounded-2xl text-[14px] font-medium transition-colors",
-                        pendingSortBy === value
-                          ? "bg-brand-indigo/10 text-brand-indigo"
-                          : "bg-card text-foreground/80 hover:bg-muted"
-                      )}
-                    >
-                      <span>{t(optKey)}</span>
-                      {pendingSortBy === value && (
-                        <Check className="h-4 w-4 text-brand-indigo shrink-0" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="flex-1 overflow-y-auto px-5 space-y-2 min-h-0">
 
-              {/* Status filter section */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("filter.status")}
-                  </h3>
-                </div>
-                <div className="space-y-1">
-                  {STATUS_FILTER_OPTIONS.map((status) => {
-                    const active = pendingStatus.includes(status);
-                    return (
+              {/* Sort section — collapsible */}
+              <div className="rounded-2xl overflow-hidden border border-border/40">
+                <button
+                  onClick={() => toggleSection("sort")}
+                  className="w-full flex items-center justify-between min-h-[48px] px-4 bg-card text-foreground/80 hover:bg-muted transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[13px] font-semibold">{t("toolbar.sortBy")}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {pendingSortBy !== "recent" && (
+                      <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                    )}
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expandedSection === "sort" && "rotate-180")} />
+                  </div>
+                </button>
+                {expandedSection === "sort" && (
+                  <div className="px-2 pb-2 space-y-1 bg-card border-t border-border/30">
+                    {SORT_FILTER_OPTIONS.map(({ value, optKey }) => (
                       <button
-                        key={status}
-                        onClick={() => toggleStatus(status)}
+                        key={value}
+                        onClick={() => setPendingSortBy(value)}
                         className={cn(
-                          "w-full flex items-center gap-3 min-h-[44px] px-4 rounded-2xl text-[14px] font-medium transition-colors",
-                          active
+                          "w-full flex items-center justify-between min-h-[44px] px-4 rounded-xl text-[14px] font-medium transition-colors",
+                          pendingSortBy === value
                             ? "bg-brand-indigo/10 text-brand-indigo"
-                            : "bg-card text-foreground/80 hover:bg-muted"
+                            : "text-foreground/80 hover:bg-muted"
                         )}
                       >
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: STATUS_COLOR[status] ?? "#9ca3af" }}
-                        />
-                        <span className="flex-1 text-left">
-                          {t(`statusLabels.${status}`, status)}
-                        </span>
-                        {active && (
-                          <Check className="h-4 w-4 text-brand-indigo shrink-0" />
-                        )}
+                        <span>{t(optKey)}</span>
+                        {pendingSortBy === value && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                       </button>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Status section — collapsible */}
+              <div className="rounded-2xl overflow-hidden border border-border/40">
+                <button
+                  onClick={() => toggleSection("status")}
+                  className="w-full flex items-center justify-between min-h-[48px] px-4 bg-card text-foreground/80 hover:bg-muted transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[13px] font-semibold">{t("filter.status")}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {pendingStatus.length > 0 && (
+                      <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">{pendingStatus.length}</span>
+                    )}
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expandedSection === "status" && "rotate-180")} />
+                  </div>
+                </button>
+                {expandedSection === "status" && (
+                  <div className="px-2 pb-2 space-y-1 bg-card border-t border-border/30">
+                    {STATUS_FILTER_OPTIONS.map((status) => {
+                      const active = pendingStatus.includes(status);
+                      return (
+                        <button
+                          key={status}
+                          onClick={() => toggleStatus(status)}
+                          className={cn(
+                            "w-full flex items-center gap-3 min-h-[44px] px-4 rounded-xl text-[14px] font-medium transition-colors",
+                            active ? "bg-brand-indigo/10 text-brand-indigo" : "text-foreground/80 hover:bg-muted"
+                          )}
+                        >
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLOR[status] ?? "#9ca3af" }} />
+                          <span className="flex-1 text-left">{t(`statusLabels.${status}`, status)}</span>
+                          {active && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Type section — collapsible */}
+              <div className="rounded-2xl overflow-hidden border border-border/40">
+                <button
+                  onClick={() => toggleSection("type")}
+                  className="w-full flex items-center justify-between min-h-[48px] px-4 bg-card text-foreground/80 hover:bg-muted transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[13px] font-semibold">{t("filter.type", "Type")}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {pendingDemo && (
+                      <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                    )}
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expandedSection === "type" && "rotate-180")} />
+                  </div>
+                </button>
+                {expandedSection === "type" && (
+                  <div className="px-2 pb-2 space-y-1 bg-card border-t border-border/30">
+                    <button
+                      onClick={() => setPendingDemo(!pendingDemo)}
+                      className={cn(
+                        "w-full flex items-center gap-3 min-h-[44px] px-4 rounded-xl text-[14px] font-medium transition-colors",
+                        pendingDemo ? "bg-brand-indigo/10 text-brand-indigo" : "text-foreground/80 hover:bg-muted"
+                      )}
+                    >
+                      <span className="flex-1 text-left">{t("config.showDemoCampaigns")}</span>
+                      {pendingDemo && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                    </button>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* Footer: Reset + Apply */}
@@ -517,6 +577,8 @@ interface CampaignListViewProps {
   filterAccount?: string;
   onFilterAccountChange?: (a: string) => void;
   availableAccounts?: string[];
+  showDemoCampaigns?: boolean;
+  onShowDemoCampaignsChange?: (v: boolean) => void;
   hasNonDefaultControls: boolean;
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
@@ -553,6 +615,8 @@ export function CampaignListView({
   filterAccount = "",
   onFilterAccountChange,
   availableAccounts = [],
+  showDemoCampaigns = false,
+  onShowDemoCampaignsChange,
   hasNonDefaultControls,
   isGroupNonDefault,
   isSortNonDefault,
@@ -572,6 +636,9 @@ export function CampaignListView({
   const PAGE_SIZE = 20;
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
+    try { return localStorage.getItem("campaigns-left-panel-collapsed") === "true"; } catch { return false; }
+  });
 
   // Active filter state
   const isFilterActive = filterStatus.length > 0 || !!filterAccount;
@@ -601,6 +668,9 @@ export function CampaignListView({
     if (filterAccount) {
       filtered = filtered.filter((c) => String(c.account_name || "") === filterAccount);
     }
+
+    // 2c. Demo filter — when on, show ONLY demo campaigns; when off, hide all demos
+    filtered = filtered.filter((c) => showDemoCampaigns ? c.is_demo : !c.is_demo);
 
     // 3. Sort
     filtered = [...filtered].sort((a, b) => {
@@ -656,7 +726,7 @@ export function CampaignListView({
     });
 
     return result;
-  }, [campaigns, listSearch, filterStatus, filterAccount, sortBy, groupBy]);
+  }, [campaigns, listSearch, filterStatus, filterAccount, showDemoCampaigns, sortBy, groupBy]);
 
   // Paginate
   const totalCampaigns = flatItems.filter((i) => i.kind === "campaign").length;
@@ -692,7 +762,7 @@ export function CampaignListView({
   }, [flatItems, currentPage, totalCampaigns]);
 
   // Reset page on filter change
-  useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, filterAccount, groupBy, sortBy]);
+  useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, filterAccount, showDemoCampaigns, groupBy, sortBy]);
 
   // ── Responsive compact layout for right panel ─────────────────────────────
   // Right panel is flex-1. Compact (stacked) when < 700px wide.
@@ -750,8 +820,10 @@ export function CampaignListView({
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
       <div className={cn(
-        "w-full md:w-[340px] md:shrink-0 flex-col bg-muted rounded-lg overflow-hidden",
-        mobileView === "detail" ? "hidden md:flex" : "flex"
+        "flex-col bg-muted rounded-lg overflow-hidden",
+        leftPanelCollapsed
+          ? cn(mobileView === "detail" ? "hidden" : "flex", "md:hidden")
+          : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
         {/* Header: title + Detail Tab Bar */}
@@ -762,7 +834,7 @@ export function CampaignListView({
               <ViewTabBar tabs={DETAIL_TABS} activeId={detailTab} onTabChange={(id) => onDetailTabChange(id as CampaignDetailTab)} variant="segment" />
             </span>
           </div>
-          {/* Mobile: Detail tabs + Filter button row */}
+          {/* Mobile: Detail tabs + Demo toggle + Filter button row */}
           <div className="md:hidden flex items-center gap-2">
             <div className="flex-1">
               <ViewTabBar tabs={DETAIL_TABS} activeId={detailTab} onTabChange={(id) => onDetailTabChange(id as CampaignDetailTab)} variant="segment" />
@@ -783,7 +855,7 @@ export function CampaignListView({
               <span>{t("toolbar.filter")}</span>
               {(isFilterActive || isSortNonDefault) && (
                 <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">
-                  {filterStatus.length + (isSortNonDefault ? 1 : 0)}
+                  {filterStatus.length + (isSortNonDefault ? 1 : 0) + (showDemoCampaigns ? 1 : 0)}
                 </span>
               )}
             </button>
@@ -886,12 +958,13 @@ export function CampaignListView({
         onSortByChange={onSortByChange}
         filterStatus={filterStatus}
         onFilterStatusSet={onFilterStatusSet ?? ((v) => {
-          // Fallback: diff against current filterStatus and toggle each
           const toAdd = v.filter((s) => !filterStatus.includes(s));
           const toRemove = filterStatus.filter((s) => !v.includes(s));
           toAdd.forEach((s) => onToggleFilterStatus(s));
           toRemove.forEach((s) => onToggleFilterStatus(s));
         })}
+        showDemoCampaigns={showDemoCampaigns ?? false}
+        onShowDemoCampaignsChange={onShowDemoCampaignsChange ?? (() => {})}
         onReset={onResetControls}
       />
 
@@ -931,12 +1004,20 @@ export function CampaignListView({
               filterAccount={filterAccount}
               onFilterAccountChange={onFilterAccountChange}
               isFilterActive={isFilterActive}
+              showDemoCampaigns={showDemoCampaigns}
+              onShowDemoCampaignsChange={onShowDemoCampaignsChange}
               groupBy={groupBy}
               onGroupByChange={onGroupByChange}
               isGroupNonDefault={isGroupNonDefault}
               availableAccounts={availableAccounts}
               onResetControls={onResetControls}
               onBack={() => setMobileView("list")}
+              leftPanelCollapsed={leftPanelCollapsed}
+              onToggleLeftPanel={() => {
+                const next = !leftPanelCollapsed;
+                setLeftPanelCollapsed(next);
+                try { localStorage.setItem("campaigns-left-panel-collapsed", String(next)); } catch {}
+              }}
             />
           ) : (
             <CampaignDetailViewEmpty />

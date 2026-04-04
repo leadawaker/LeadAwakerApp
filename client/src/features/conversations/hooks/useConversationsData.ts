@@ -424,19 +424,20 @@ export function useConversationsData(
   // Update a lead field (status, notes, etc.) with optimistic update
   const handleUpdateLead = useCallback(
     async (leadId: number, patch: Record<string, unknown>) => {
-      const prevLeads = [...leads];
-      setLeads((prev) =>
-        prev.map((l) => (l.id === leadId ? { ...l, ...patch } : l)),
-      );
+      let snapshot: typeof leads = [];
+      setLeads((prev) => {
+        snapshot = prev;
+        return prev.map((l) => (l.id === leadId ? { ...l, ...patch } : l));
+      });
       try {
         await updateLead(leadId, patch);
         toast({ title: "Lead updated" });
       } catch (err) {
-        setLeads(prevLeads);
+        setLeads(snapshot);
         toast({ variant: "destructive", title: "Failed to update lead" });
       }
     },
-    [leads, toast],
+    [toast],
   );
 
   // Retry a failed message — remove the failed entry and re-send

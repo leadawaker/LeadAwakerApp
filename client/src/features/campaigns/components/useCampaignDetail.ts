@@ -177,6 +177,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
 
   // ── Inline editing state ───────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
+  const [focusField, setFocusField] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
@@ -237,8 +238,67 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     setIsEditing(true);
   }, [campaign]);
 
+  const startEditForField = useCallback((field: string) => {
+    setFocusField(field);
+    // startEdit reads campaign from closure — call it directly
+    const c = campaignRef.current;
+    const lp = conversationPrompts.find((p) => Number(p.campaigns_id || p.campaignsId || p.Campaigns_id) === (c.id || (c as any).Id)) ?? null;
+    const d: Record<string, unknown> = {
+      name: c.name || "",
+      status: c.status || "",
+      type: c.type || "",
+      description: c.description || "",
+      start_date: c.start_date || "",
+      end_date: c.end_date || "",
+      active_hours_start: c.active_hours_start || "",
+      active_hours_end: c.active_hours_end || "",
+      daily_lead_limit: c.daily_lead_limit ?? "",
+      message_interval_minutes: c.message_interval_minutes ?? "",
+      stop_on_response: c.stop_on_response ?? false,
+      use_ai_bumps: c.use_ai_bumps ?? false,
+      first_message_voice_note: c.first_message_voice_note ?? false,
+      bump_1_voice_note: c.bump_1_voice_note ?? false,
+      bump_2_voice_note: c.bump_2_voice_note ?? false,
+      bump_3_voice_note: c.bump_3_voice_note ?? false,
+      ai_reply_voice_note: c.ai_reply_voice_note ?? false,
+      tts_voice_id: c.tts_voice_id || "",
+      max_bumps: c.max_bumps ?? "",
+      ai_model: c.ai_model || "",
+      ai_temperature: c.ai_temperature ?? "",
+      agent_name: c.agent_name || "",
+      service_name: c.service_name || "",
+      booking_mode_override: c.booking_mode_override || "",
+      niche_question: c.niche_question || "",
+      what_lead_did: c.what_lead_did || "",
+      inquiries_source: c.inquiries_source || "",
+      website: c.website || "",
+      calendar_link_override: c.calendar_link_override || c.calendar_link || "",
+      campaign_usp: c.campaign_usp || "",
+      prompt_linked_id: lp ? String(lp.id || lp.Id) : "",
+      ai_prompt_template: c.ai_prompt_template || "",
+      first_message_template: c.first_message_template || c.First_Message || "",
+      second_message: c.second_message || "",
+      bump_1_template: c.bump_1_template || "",
+      bump_1_delay_hours: c.bump_1_delay_hours ?? "",
+      bump_1_ai_reference: c.bump_1_ai_reference ?? false,
+      bump_2_template: c.bump_2_template || "",
+      bump_2_delay_hours: c.bump_2_delay_hours ?? "",
+      bump_2_ai_reference: c.bump_2_ai_reference ?? false,
+      bump_3_template: c.bump_3_template || "",
+      bump_3_delay_hours: c.bump_3_delay_hours ?? "",
+      bump_3_ai_reference: c.bump_3_ai_reference ?? false,
+      contract_id: String(c.contract_id || (c as any).contract_id || ""),
+      value_per_booking: c.value_per_booking ?? "",
+      channel: c.channel || "sms",
+    };
+    setOriginalDraft(d);
+    setDraft(d);
+    setIsEditing(true);
+  }, [conversationPrompts]);
+
   const cancelEdit = useCallback(() => {
     setIsEditing(false);
+    setFocusField(null);
     setDraft({});
     setOriginalDraft({});
   }, []);
@@ -290,6 +350,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
       );
       await onSaveRef.current(id, campaignPatch);
       setIsEditing(false);
+      setFocusField(null);
       setDraft({});
       setOriginalDraft({});
       toast({ title: t("toolbar.save"), description: "Campaign updated." });
@@ -318,6 +379,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     handleAiSummaryRefreshed,
     // Edit state
     isEditing,
+    focusField,
+    startEditForField,
     deleteConfirm,
     setDeleteConfirm,
     deleting,

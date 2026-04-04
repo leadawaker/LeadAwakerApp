@@ -21,6 +21,10 @@ Lead Reactivation CRM for WhatsApp outreach. Core features: WhatsApp inbox (conv
 | `shared/schema.ts` | Drizzle ORM schema for all DB tables |
 | `specs/<feature>/` | Feature specs: requirements.md, implementation-plan.md, action-required.md |
 
+## Before Making Changes
+
+Do not make any changes until you have 95% confidence in what you need to build. Ask follow-up questions until you reach that confidence threshold. This applies to code changes, file structure, architecture decisions, and significant refactors.
+
 ## Critical Rules
 
 ### Running the App

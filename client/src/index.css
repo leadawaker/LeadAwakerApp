@@ -1473,3 +1473,23 @@
     outline-color: hsl(var(--ring));
   }
 }
+
+/* ── Responsive zoom — scale down on tablet/small screens ──
+   Viewport-unit classes (h-svh, h-screen, etc.) are overridden because
+   CSS zoom does not affect vh/svh calculations — they still reference the
+   physical viewport. Compensating with (100svh / zoom) fills the screen. */
+@media (max-width: 1366px) {
+  html { zoom: 0.8; }
+  .h-svh, .h-screen { height: calc(100svh / 0.8) !important; }
+  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.8) !important; }
+}
+@media (max-width: 1024px) {
+  html { zoom: 0.8; }
+  .h-svh, .h-screen { height: calc(100svh / 0.8) !important; }
+  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.8) !important; }
+}
+@media (max-width: 820px) {
+  html { zoom: 0.75; }
+  .h-svh, .h-screen { height: calc(100svh / 0.75) !important; }
+  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.75) !important; }
+}

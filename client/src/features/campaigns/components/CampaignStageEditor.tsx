@@ -67,6 +67,8 @@ export interface CampaignStageEditorProps {
   conversationPrompts: any[];
   linkedContract: ContractFinancials | null;
   compact?: boolean;
+  focusField?: string | null;
+  onStartEditField?: (field: string) => void;
 }
 
 export function CampaignStageEditor({
@@ -78,10 +80,35 @@ export function CampaignStageEditor({
   conversationPrompts,
   linkedContract,
   compact = false,
+  focusField = null,
+  onStartEditField,
 }: CampaignStageEditorProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser } = useWorkspace();
   const [, navigate] = useLocation();
+
+  // ── Inline editing helpers ───────────────────────────────────────────────────
+  // editFor(field) — props to add to InfoRow so clicking the value enters edit mode
+  const editFor = (field: string) =>
+    onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
+
+  // focusFor(field) — props to add to EditText/EditNumber/EditSelect to auto-focus on mount
+  const focusFor = (field: string) => ({ autoFocus: focusField === field });
+
+  // directToggle(field, currentValue) — props for BoolRow to toggle immediately in view mode
+  const directToggle = (field: string, currentValue: boolean | null | undefined) =>
+    onStartEditField && !isEditing
+      ? { onDirectToggle: () => { onStartEditField(field); setDraft(d => ({ ...d, [field]: !currentValue })); } }
+      : {};
+
+  // clickToEdit — wrapper class + onClick for freeform text sections
+  const clickToEdit = (field: string) =>
+    onStartEditField && !isEditing
+      ? {
+          onClick: () => onStartEditField(field),
+          className: "cursor-text rounded px-0.5 -mx-0.5 hover:bg-muted/50 transition-colors",
+        }
+      : { className: "" };
 
   return (
     <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px]", "max-w-[1386px] w-full mr-auto")}>
@@ -92,27 +119,52 @@ export function CampaignStageEditor({
 
         <SectionHeader label="Business Info" />
         <InfoRow icon={Building2} label={t("config.businessDescription")} value={campaign.description} richText={true}
-          editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline placeholder="Business description…" /> : undefined}
+          {...editFor("description")}
+          editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline placeholder="Business description…" {...focusFor("description")} /> : undefined}
         />
         <InfoRow icon={Globe} label={t("config.website")} value={campaign.website || ""}
-          editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://example.com" /> : undefined}
+          {...editFor("website")}
+          editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://example.com" {...focusFor("website")} /> : undefined}
         />
         <InfoRow icon={Link2} label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
-          editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" /> : undefined}
+          {...editFor("calendar_link_override")}
+          editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" {...focusFor("calendar_link_override")} /> : undefined}
         />
 
         <SectionHeader label="Campaign Info" />
+        <InfoRow icon={Globe} label={t("config.language")} value={campaign.language}
+          {...editFor("language")}
+          editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["", "English", "Portuguese", "Dutch", "Spanish"]} {...focusFor("language")} /> : undefined}
+        />
+        {(isEditing ? draft.is_demo : campaign.is_demo) && (
+          <InfoRow icon={Building2} label={t("config.demoClientName")} value={campaign.demo_client_name}
+            {...editFor("demo_client_name")}
+            editChild={isEditing ? <EditText value={String(draft.demo_client_name ?? "")} onChange={(v) => setDraft(d => ({...d, demo_client_name: v}))} placeholder="Client company name…" {...focusFor("demo_client_name")} /> : undefined}
+          />
+        )}
         <InfoRow icon={HelpCircle} label={t("config.nicheQuestion")} value={campaign.niche_question}
-          editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder="e.g. Are you still looking for…?" /> : undefined}
+          {...editFor("niche_question")}
+          editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder="e.g. Are you still looking for…?" {...focusFor("niche_question")} /> : undefined}
+        />
+        <InfoRow icon={MapPin} label={t("config.niche")} value={campaign.niche}
+          {...editFor("niche")}
+          editChild={isEditing ? <EditText value={String(draft.niche ?? "")} onChange={(v) => setDraft(d => ({...d, niche: v}))} placeholder="e.g. Solar Energy, Real Estate" {...focusFor("niche")} /> : undefined}
         />
         <InfoRow icon={MousePointerClick} label={t("config.whatLeadDid")} value={campaign.what_lead_did} richText={true}
-          editChild={isEditing ? <EditText value={String(draft.what_lead_did ?? "")} onChange={(v) => setDraft(d => ({...d, what_lead_did: v}))} multiline placeholder="e.g. Filled out a form, clicked an ad…" /> : undefined}
+          {...editFor("what_lead_did")}
+          editChild={isEditing ? <EditText value={String(draft.what_lead_did ?? "")} onChange={(v) => setDraft(d => ({...d, what_lead_did: v}))} multiline placeholder="e.g. Filled out a form, clicked an ad…" {...focusFor("what_lead_did")} /> : undefined}
         />
         <InfoRow icon={MapPin} label={t("config.inquiriesSource")} value={campaign.inquiries_source}
-          editChild={isEditing ? <EditText value={String(draft.inquiries_source ?? "")} onChange={(v) => setDraft(d => ({...d, inquiries_source: v}))} placeholder="e.g. Contact form, landing page" /> : undefined}
+          {...editFor("inquiries_source")}
+          editChild={isEditing ? <EditText value={String(draft.inquiries_source ?? "")} onChange={(v) => setDraft(d => ({...d, inquiries_source: v}))} placeholder="e.g. Contact form, landing page" {...focusFor("inquiries_source")} /> : undefined}
+        />
+        <InfoRow icon={Clock} label={t("config.inquiryTimeframe")} value={campaign.inquiry_timeframe}
+          {...editFor("inquiry_timeframe")}
+          editChild={isEditing ? <EditText value={String(draft.inquiry_timeframe ?? "")} onChange={(v) => setDraft(d => ({...d, inquiry_timeframe: v}))} placeholder="e.g. Last 6 months, 2+ years ago" {...focusFor("inquiry_timeframe")} /> : undefined}
         />
         <InfoRow icon={Award} label={t("config.usp")} value={campaign.campaign_usp} richText={true}
-          editChild={isEditing ? <EditText value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} multiline placeholder="What makes this offer unique…" /> : undefined}
+          {...editFor("campaign_usp")}
+          editChild={isEditing ? <EditText value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} multiline placeholder="What makes this offer unique…" {...focusFor("campaign_usp")} /> : undefined}
         />
       </div>
 
@@ -121,10 +173,16 @@ export function CampaignStageEditor({
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.aiSettings")}</h3>
         <SectionHeader label="Agent" />
         <InfoRow icon={Bot} label={t("config.agent")} value={campaign.agent_name}
-          editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} /> : undefined}
+          {...editFor("agent_name")}
+          editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} {...focusFor("agent_name")} /> : undefined}
+        />
+        <InfoRow icon={Tag} label={t("config.aiRole")} value={campaign.ai_role}
+          {...editFor("ai_role")}
+          editChild={isEditing ? <EditText value={String(draft.ai_role ?? "")} onChange={(v) => setDraft(d => ({...d, ai_role: v}))} placeholder="e.g. admin, support, specialist" {...focusFor("ai_role")} /> : undefined}
         />
         <InfoRow icon={Megaphone} label={t("config.service")} value={campaign.service_name}
-          editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} /> : undefined}
+          {...editFor("service_name")}
+          editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} {...focusFor("service_name")} /> : undefined}
         />
 
         {/* Templates */}
@@ -181,11 +239,11 @@ export function CampaignStageEditor({
             )}
           </div>
           {isEditing ? (
-            <EditText value={String(draft.First_Message ?? "")} onChange={(v) => setDraft(d => ({...d, First_Message: v}))} multiline placeholder="Hi {name}, we noticed…" />
+            <EditText value={String(draft.First_Message ?? "")} onChange={(v) => setDraft(d => ({...d, First_Message: v}))} multiline placeholder="Hi {name}, we noticed…" {...focusFor("first_message_template")} />
           ) : (
             campaign.First_Message || campaign.First_Message
-              ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.First_Message || campaign.First_Message}</p>
-              : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+              ? <p {...clickToEdit("first_message_template")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("first_message_template").className)}>{campaign.First_Message || campaign.First_Message}</p>
+              : <p {...clickToEdit("first_message_template")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("first_message_template").className)}>{t("config.noTemplateSet")}</p>
           )}
         </div>
 
@@ -197,11 +255,11 @@ export function CampaignStageEditor({
           </div>
           <p className="text-[10px] text-foreground/40 italic">Auto-sent on first lead reply, before AI takes over</p>
           {isEditing ? (
-            <EditText value={String(draft.second_message ?? "")} onChange={(v) => setDraft(d => ({...d, second_message: v}))} multiline placeholder="Nice! My manager asked me to reach out but I didn't want to spam you. Are you still looking?" />
+            <EditText value={String(draft.second_message ?? "")} onChange={(v) => setDraft(d => ({...d, second_message: v}))} multiline placeholder="Nice! My manager asked me to reach out but I didn't want to spam you. Are you still looking?" {...focusFor("second_message")} />
           ) : (
             campaign.second_message
-              ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.second_message}</p>
-              : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+              ? <p {...clickToEdit("second_message")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("second_message").className)}>{campaign.second_message}</p>
+              : <p {...clickToEdit("second_message")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("second_message").className)}>{t("config.noTemplateSet")}</p>
           )}
         </div>
 
@@ -236,7 +294,10 @@ export function CampaignStageEditor({
                       />
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1 text-[11px] text-foreground/50">
+                    <div
+                      className={cn("flex items-center gap-1 text-[11px] text-foreground/50", onStartEditField && "cursor-text hover:bg-muted/50 rounded px-0.5 -mx-0.5 transition-colors")}
+                      onClick={onStartEditField && !isEditing ? () => onStartEditField(draftDelayKey) : undefined}
+                    >
                       <Clock className="w-3 h-3" />
                       <span>{t("config.delayLabel", { value: formatHours(delayVal) })}</span>
                     </div>
@@ -245,13 +306,14 @@ export function CampaignStageEditor({
                 </div>
               </div>
               {isEditing ? (
-                <EditText value={String(draft[draftTemplateKey] ?? "")} onChange={(v) => setDraft(d => ({...d, [draftTemplateKey]: v}))} multiline placeholder={`Bump ${n} message…`} />
+                <EditText value={String(draft[draftTemplateKey] ?? "")} onChange={(v) => setDraft(d => ({...d, [draftTemplateKey]: v}))} multiline placeholder={`Bump ${n} message…`} {...focusFor(draftTemplateKey)} />
               ) : (
                 templateVal
-                  ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{templateVal}</p>
-                  : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
+                  ? <p {...clickToEdit(draftTemplateKey)} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit(draftTemplateKey).className)}>{templateVal}</p>
+                  : <p {...clickToEdit(draftTemplateKey)} className={cn("text-[11px] text-foreground/40 italic", clickToEdit(draftTemplateKey).className)}>{t("config.noTemplateSet")}</p>
               )}
               <BoolRow icon={Bot} label={t(`config.bump${n}AiReference`)} value={aiRefVal ?? false}
+                {...directToggle(draftAiRefKey, Boolean(draft[draftAiRefKey] ?? aiRefVal))}
                 editChild={isEditing ? <EditToggle value={Boolean(draft[draftAiRefKey] ?? aiRefVal)} onChange={(v) => setDraft(d => ({...d, [draftAiRefKey]: v}))} /> : undefined}
               />
             </div>
@@ -260,30 +322,42 @@ export function CampaignStageEditor({
 
         <SectionHeader label="Voice Notes" />
         <BoolRow icon={Mic} label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false}
+          {...directToggle("first_message_voice_note", Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)} onChange={(v) => setDraft(d => ({...d, first_message_voice_note: v}))} /> : undefined}
         />
         <BoolRow icon={Mic} label={t("config.bump1VoiceNote")} value={campaign.bump_1_voice_note ?? false}
+          {...directToggle("bump_1_voice_note", Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_1_voice_note: v}))} /> : undefined}
         />
         <BoolRow icon={Mic} label={t("config.bump2VoiceNote")} value={campaign.bump_2_voice_note ?? false}
+          {...directToggle("bump_2_voice_note", Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_2_voice_note: v}))} /> : undefined}
         />
         <BoolRow icon={Mic} label={t("config.bump3VoiceNote")} value={campaign.bump_3_voice_note ?? false}
+          {...directToggle("bump_3_voice_note", Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_3_voice_note: v}))} /> : undefined}
         />
         <BoolRow icon={Mic} label={t("config.aiReplyVoiceNote")} value={campaign.ai_reply_voice_note ?? false}
+          {...directToggle("ai_reply_voice_note", Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note)} onChange={(v) => setDraft(d => ({...d, ai_reply_voice_note: v}))} /> : undefined}
         />
         <InfoRow icon={Hash} label={t("config.voiceId")} value={campaign.tts_voice_id || null}
-          editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Voice ID" /> : undefined}
+          {...editFor("tts_voice_id")}
+          editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Voice ID" {...focusFor("tts_voice_id")} /> : undefined}
         />
 
         <SectionHeader label={t("config.aiSettings")} />
         <InfoRow icon={Cpu} label={t("config.model")} value={campaign.ai_model || "Default"}
-          editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4", "gpt-5.4-pro", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.3-chat-latest", "gpt-5.3-codex", "gpt-5.2", "gpt-5.2-chat-latest", "gpt-5.2-codex", "gpt-5.2-pro", "gpt-5.1", "gpt-5.1-chat-latest", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} /> : undefined}
+          {...editFor("ai_model")}
+          editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={["", "gpt-5.4", "gpt-5.4-pro", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.3-chat-latest", "gpt-5.3-codex", "gpt-5.2", "gpt-5.2-chat-latest", "gpt-5.2-codex", "gpt-5.2-pro", "gpt-5.1", "gpt-5.1-chat-latest", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5"]} {...focusFor("ai_model")} /> : undefined}
         />
         <InfoRow icon={Thermometer} label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
-          editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}
+          {...editFor("ai_temperature")}
+          editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" {...focusFor("ai_temperature")} /> : undefined}
+        />
+        <InfoRow icon={Bot} label={t("config.aiStyleOverride")} value={campaign.ai_style_override}
+          {...editFor("ai_style_override")}
+          editChild={isEditing ? <EditText value={String(draft.ai_style_override ?? "")} onChange={(v) => setDraft(d => ({...d, ai_style_override: v}))} multiline placeholder="Custom style instructions for the AI…" {...focusFor("ai_style_override")} /> : undefined}
         />
       </div>
 
@@ -292,10 +366,28 @@ export function CampaignStageEditor({
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Behavior</h3>
 
         <SectionHeader label="Campaign Settings" />
+        <InfoRow icon={FileText} label={t("config.campaignName") || "Campaign Name"} value={campaign.name}
+          {...editFor("name")}
+          editChild={isEditing ? <EditText value={String(draft.name ?? campaign.name ?? "")} onChange={(v) => setDraft(d => ({...d, name: v}))} placeholder="Campaign name…" {...focusFor("name")} /> : undefined}
+        />
+        {isAgencyUser && (
+          <>
+            <BoolRow icon={FlaskConical} label={t("config.isDemo")} value={campaign.is_demo ?? false}
+              {...directToggle("is_demo", Boolean(draft.is_demo ?? campaign.is_demo))}
+              editChild={isEditing ? <EditToggle value={Boolean(draft.is_demo ?? campaign.is_demo)} onChange={(v) => setDraft(d => ({...d, is_demo: v}))} /> : undefined}
+            />
+            <InfoRow icon={Building2} label={t("config.accountId")} value={campaign.account_name || `Account ${campaign.account_id}`}
+              {...editFor("accountsId")}
+              editChild={isEditing ? <EditNumber value={Number(draft.accountsId ?? campaign.account_id ?? 1)} onChange={(v) => setDraft(d => ({...d, accountsId: v}))} {...focusFor("accountsId")} /> : undefined}
+            />
+          </>
+        )}
         <InfoRow icon={Zap} label={t("columns.status")} value={String(campaign.status || "—")}
-          editChild={isEditing ? <EditSelect value={String(draft.status ?? campaign.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Active", "Paused", "Draft", "Completed", "Inactive"]} /> : undefined}
+          {...editFor("status")}
+          editChild={isEditing ? <EditSelect value={String(draft.status ?? campaign.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Active", "Paused", "Draft", "Completed", "Inactive"]} {...focusFor("status")} /> : undefined}
         />
         <InfoRow icon={Tag} label={t("config.type")} value={campaign.type}
+          {...editFor("type")}
           editChild={isEditing ? (
             <select
               value={draft.type as string || ""}
@@ -316,7 +408,7 @@ export function CampaignStageEditor({
           <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("config.bookingMode")}</span>
           {isEditing ? (
             <div className="flex gap-1 flex-wrap">
-              {(["Call Agent", "Direct Booking", "Qualifying"] as const).map((mode) => (
+              {(["Call Agent", "Direct Booking"] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -333,7 +425,12 @@ export function CampaignStageEditor({
               ))}
             </div>
           ) : (
-            <span className="text-[12px] text-foreground">{campaign.booking_mode_override || "—"}</span>
+            <span
+              {...(onStartEditField ? { onClick: () => onStartEditField("booking_mode_override") } : {})}
+              className={cn("text-[12px] text-foreground", onStartEditField && "cursor-text rounded px-0.5 -mx-0.5 hover:bg-muted/50 transition-colors")}
+            >
+              {campaign.booking_mode_override || "—"}
+            </span>
           )}
         </div>
 
@@ -359,7 +456,12 @@ export function CampaignStageEditor({
               ))}
             </div>
           ) : (
-            <span className="text-[12px] text-foreground">{campaign.typo_count ?? 1}</span>
+            <span
+              {...(onStartEditField ? { onClick: () => onStartEditField("typo_count") } : {})}
+              className={cn("text-[12px] text-foreground", onStartEditField && "cursor-text rounded px-0.5 -mx-0.5 hover:bg-muted/50 transition-colors")}
+            >
+              {campaign.typo_count ?? 1}
+            </span>
           )}
         </div>
 
@@ -367,9 +469,10 @@ export function CampaignStageEditor({
         <InfoRow icon={Clock}
           label={t("config.activeHours")}
           value={campaign.active_hours_start || campaign.active_hours_end ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}` : null}
+          {...editFor("active_hours_start")}
           editChild={isEditing ? (
             <div className="flex items-center gap-1 flex-1 min-w-0">
-              <EditText value={String(draft.active_hours_start ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_start: v}))} placeholder="09:00" />
+              <EditText value={String(draft.active_hours_start ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_start: v}))} placeholder="09:00" {...focusFor("active_hours_start")} />
               <span className="text-foreground/40 text-[11px]">→</span>
               <EditText value={String(draft.active_hours_end ?? "")} onChange={(v) => setDraft(d => ({...d, active_hours_end: v}))} placeholder="18:00" />
             </div>
@@ -378,6 +481,7 @@ export function CampaignStageEditor({
         <InfoRow icon={CalendarClock}
           label="Campaign Duration"
           value={campaign.start_date || campaign.end_date ? `${formatDate(campaign.start_date)} → ${formatDate(campaign.end_date)}` : null}
+          {...editFor("start_date")}
           editChild={isEditing ? (
             <div className="flex items-center gap-1 flex-1 min-w-0">
               <EditDate value={String(draft.start_date ?? "")} onChange={(v) => setDraft(d => ({...d, start_date: v}))} />
@@ -388,11 +492,13 @@ export function CampaignStageEditor({
         />
         {(isEditing ? draft.channel : campaign.channel) !== "whatsapp" && (
           <InfoRow icon={Gauge} label={t("config.dailyLimit")} value={campaign.daily_lead_limit?.toLocaleString()}
-            editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit ?? "")} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} placeholder="e.g. 50" /> : undefined}
+            {...editFor("daily_lead_limit")}
+            editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit ?? "")} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} placeholder="e.g. 50" {...focusFor("daily_lead_limit")} /> : undefined}
           />
         )}
         <InfoRow icon={Timer} label={t("config.interval")} value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null}
-          editChild={isEditing ? <EditNumber value={String(draft.message_interval_minutes ?? "")} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} placeholder="minutes" /> : undefined}
+          {...editFor("message_interval_minutes")}
+          editChild={isEditing ? <EditNumber value={String(draft.message_interval_minutes ?? "")} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} placeholder="minutes" {...focusFor("message_interval_minutes")} /> : undefined}
         />
 
         <SectionHeader label="Channel & Outreach" />
@@ -410,7 +516,8 @@ export function CampaignStageEditor({
               <span className="capitalize">{campaign.channel || "WhatsApp"}</span>
             </div>
           }
-          editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} /> : undefined}
+          {...editFor("channel")}
+          editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} {...focusFor("channel")} /> : undefined}
         />
         {campaign.channel === "whatsapp" && (
           <InfoRow
@@ -425,13 +532,16 @@ export function CampaignStageEditor({
           />
         )}
         <BoolRow icon={StopCircle} label={t("config.stopOnResponse")} value={campaign.stop_on_response}
+          {...directToggle("stop_on_response", Boolean(draft.stop_on_response ?? campaign.stop_on_response))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.stop_on_response ?? campaign.stop_on_response)} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
         />
         <BoolRow icon={Repeat} label={t("config.useAiBumps")} value={campaign.use_ai_bumps}
+          {...directToggle("use_ai_bumps", Boolean(draft.use_ai_bumps ?? campaign.use_ai_bumps))}
           editChild={isEditing ? <EditToggle value={Boolean(draft.use_ai_bumps ?? campaign.use_ai_bumps)} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
         />
         <InfoRow icon={Hash} label={t("config.maxBumps")} value={campaign.max_bumps}
-          editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" /> : undefined}
+          {...editFor("max_bumps")}
+          editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" {...focusFor("max_bumps")} /> : undefined}
         />
 
         {/* Buying Signal Response */}
@@ -443,11 +553,12 @@ export function CampaignStageEditor({
               onChange={(v) => setDraft(d => ({...d, buying_signal_response: v}))}
               multiline
               placeholder={t("config.buyingSignalResponsePlaceholder")}
+              {...focusFor("buying_signal_response")}
             />
           ) : (
             campaign.buying_signal_response
-              ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.buying_signal_response}</p>
-              : <p className="text-[11px] text-foreground/40 italic">{t("config.buyingSignalResponseDefault")}</p>
+              ? <p {...clickToEdit("buying_signal_response")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("buying_signal_response").className)}>{campaign.buying_signal_response}</p>
+              : <p {...clickToEdit("buying_signal_response")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("buying_signal_response").className)}>{t("config.buyingSignalResponseDefault")}</p>
           )}
         </div>
 
@@ -509,6 +620,7 @@ export function CampaignStageEditor({
 
         <SectionHeader label={t("abTesting.title")} />
         <BoolRow icon={FlaskConical} label={t("abTesting.enabled")} value={campaign.ab_enabled}
+          {...directToggle("ab_enabled", Boolean(draft.ab_enabled ?? campaign.ab_enabled))}
           editChild={isEditing ? (
             <EditToggle value={Boolean(draft.ab_enabled ?? campaign.ab_enabled)} onChange={(v) => setDraft(d => ({...d, ab_enabled: v}))} />
           ) : undefined}
@@ -516,8 +628,9 @@ export function CampaignStageEditor({
         {(isEditing ? draft.ab_enabled : campaign.ab_enabled) && (
           <InfoRow icon={Percent} label={t("abTesting.splitRatio")}
             value={campaign.ab_split_ratio != null ? `${campaign.ab_split_ratio}%` : "50%"}
+            {...editFor("ab_split_ratio")}
             editChild={isEditing ? (
-              <EditNumber value={String(draft.ab_split_ratio ?? 50)} onChange={(v) => setDraft(d => ({...d, ab_split_ratio: v}))} placeholder="50" />
+              <EditNumber value={String(draft.ab_split_ratio ?? 50)} onChange={(v) => setDraft(d => ({...d, ab_split_ratio: v}))} placeholder="50" {...focusFor("ab_split_ratio")} />
             ) : undefined}
           />
         )}

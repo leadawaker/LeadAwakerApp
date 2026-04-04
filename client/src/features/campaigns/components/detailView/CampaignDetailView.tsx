@@ -58,20 +58,25 @@ export interface CampaignDetailViewProps {
   filterAccount?: string;
   onFilterAccountChange?: (a: string) => void;
   isFilterActive?: boolean;
+  showDemoCampaigns?: boolean;
+  onShowDemoCampaignsChange?: (v: boolean) => void;
   groupBy?: CampaignGroupBy;
   onGroupByChange?: (v: CampaignGroupBy) => void;
   isGroupNonDefault?: boolean;
   availableAccounts?: string[];
   onResetControls?: () => void;
   onBack?: () => void;
+  leftPanelCollapsed?: boolean;
+  onToggleLeftPanel?: () => void;
 }
 
 export function CampaignDetailView({
   campaign, metrics, allCampaigns, onToggleStatus, onSave, onRefresh, onDelete, onDuplicate, compact = false,
   onCreateCampaign, activeTab: activeTabProp, onActiveTabChange, listSearch, onListSearchChange, searchOpen, onSearchOpenChange,
   sortBy, onSortByChange, isSortNonDefault, filterStatus, onToggleFilterStatus,
-  filterAccount, onFilterAccountChange, isFilterActive, groupBy, onGroupByChange,
-  isGroupNonDefault, availableAccounts, onResetControls, onBack,
+  filterAccount, onFilterAccountChange, isFilterActive, showDemoCampaigns, onShowDemoCampaignsChange,
+  groupBy, onGroupByChange, isGroupNonDefault, availableAccounts, onResetControls, onBack,
+  leftPanelCollapsed, onToggleLeftPanel,
 }: CampaignDetailViewProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser, isAdmin } = useWorkspace();
@@ -366,11 +371,15 @@ export function CampaignDetailView({
             filterAccount={filterAccount}
             onFilterAccountChange={onFilterAccountChange}
             isFilterActive={isFilterActive}
+            showDemoCampaigns={showDemoCampaigns}
+            onShowDemoCampaignsChange={onShowDemoCampaignsChange}
             groupBy={groupBy}
             onGroupByChange={onGroupByChange}
             isGroupNonDefault={isGroupNonDefault}
             availableAccounts={availableAccounts}
             onResetControls={onResetControls}
+            leftPanelCollapsed={leftPanelCollapsed}
+            onToggleLeftPanel={onToggleLeftPanel}
             t={t}
           />
 

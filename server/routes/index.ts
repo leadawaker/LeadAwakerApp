@@ -4,7 +4,7 @@
  *
  * Signature matches the original: registerRoutes(httpServer, app): Promise<Server>
  */
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { type Server } from "http";
 
 import { registerAuthAndAdminRoutes } from "./auth";
@@ -25,6 +25,23 @@ import {
 import { registerGmailRoutes } from "./gmail";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
+  // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
+  // Forward all /webhook/* requests to the Python engine (port 8100).
+  // Uses fetch so the already-parsed body (req.body) is re-serialized cleanly.
+  app.use("/webhook", async (req: Request, res: Response) => {
+    const targetUrl = `http://localhost:8100${req.originalUrl}`;
+    const body = req.method !== "GET" && req.method !== "HEAD"
+      ? JSON.stringify(req.body)
+      : undefined;
+    const upstream = await fetch(targetUrl, {
+      method: req.method,
+      headers: { "content-type": "application/json" },
+      body,
+    });
+    const data = await upstream.text();
+    res.status(upstream.status).set("content-type", upstream.headers.get("content-type") || "application/json").send(data);
+  });
+
   // ── Core routes ───────────────────────────────────────────────────────
   registerAuthAndAdminRoutes(app);
   registerAccountsRoutes(app);

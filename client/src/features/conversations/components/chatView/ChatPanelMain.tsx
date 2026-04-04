@@ -76,7 +76,8 @@ export function ChatPanel({
   const { accounts } = useWorkspace();
   const accountTimezone = useMemo(() => {
     if (!selected) return undefined;
-    const aid = selected.lead.accounts_id ?? selected.lead.account_id;
+    const lead = selected.lead as any;
+    const aid = lead.Accounts_id ?? lead.accounts_id ?? lead.account_id;
     const acct = accounts.find((a) => a.id === aid);
     return (acct?.timezone as string) || undefined;
   }, [selected, accounts]);
@@ -85,7 +86,6 @@ export function ChatPanel({
   const prevLeadId = useRef<number | null>(null);
   const prevMsgCount = useRef(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [emojiOpen, setEmojiOpen] = useState(false);
 
   // ── Mobile keyboard handling via visualViewport API ──────────────────────────
   // When the on-screen keyboard opens on mobile, visualViewport.height shrinks.
@@ -1103,25 +1103,61 @@ export function ChatPanel({
                   data-testid="input-compose"
                 />
 
-                {/* Clip (attachment stub) */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,audio/*,.pdf,.doc,.docx"
-                  className="hidden"
-                  onChange={() => {
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                    toast({ title: t("chat.compose.attachmentsComingSoon"), description: t("chat.compose.attachmentsDescription") });
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-                  title={t("chat.compose.attachFile")}
-                >
-                  <Paperclip className="h-6 w-6" />
-                </button>
+                {/* Image attachment (manual takeover only) */}
+                {isHuman && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !selected) return;
+
+                        try {
+                          // Upload or convert to data URL (small images)
+                          if (file.size < 5 * 1024 * 1024) {
+                            const reader = new FileReader();
+                            reader.onload = async (evt) => {
+                              const dataUrl = evt.target?.result as string;
+                              // Send as interaction with attachment metadata
+                              await apiFetch("/api/interactions", {
+                                method: "POST",
+                                body: JSON.stringify({
+                                  type: "text",
+                                  direction: "outbound",
+                                  content: "",
+                                  leads_id: selected.lead.id,
+                                  attachment: {
+                                    imageUrl: dataUrl,
+                                    caption: ""
+                                  }
+                                }),
+                              });
+                              toast({ title: t("chat.compose.imageSent") || "Image sent" });
+                            };
+                            reader.readAsDataURL(file);
+                          } else {
+                            toast({ title: "Image too large", description: "Max 5MB", variant: "destructive" });
+                          }
+                        } catch (err) {
+                          toast({ title: "Failed to send image", variant: "destructive" });
+                        }
+
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
+                      title={t("chat.compose.attachImage") || "Send image"}
+                    >
+                      <Paperclip className="h-6 w-6" />
+                    </button>
+                  </>
+                )}
 
                 {/* Mic / Send toggle (with takeover tooltip) */}
                 <div className="shrink-0">

@@ -85,6 +85,8 @@
       "recordVoice": "Record voice message",
       "emoji": "Emoji",
       "attachFile": "Attach file",
+      "attachImage": "Send image",
+      "imageSent": "Image sent",
       "attachmentsComingSoon": "Attachments coming soon",
       "attachmentsDescription": "File upload support is being set up."
     },

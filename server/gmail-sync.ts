@@ -188,6 +188,9 @@ async function processMessage(gmail: gmail_v1.Gmail, messageId: string): Promise
 
   const parsed = parseGmailMessage(msg.data);
 
+  // Skip drafts — only log actually sent/received messages
+  if (parsed.labels.includes("DRAFT")) return;
+
   // Match: for outbound, match by recipient; for inbound, match by sender
   const matchEmail = parsed.direction === "outbound" ? parsed.toEmail : parsed.fromEmail;
   const prospectId = await matchProspectByEmail(matchEmail);

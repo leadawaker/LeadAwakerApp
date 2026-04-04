@@ -108,7 +108,7 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
       setPlaying(false);
       stopRaf();
     } else {
-      a.play().then(() => { setPlaying(true); startRaf(); }).catch(() => {});
+      a.play().then(() => { setPlaying(true); startRaf(); }).catch((err) => console.error("[VoiceMemoPlayer] Audio play failed:", err));
     }
   };
 

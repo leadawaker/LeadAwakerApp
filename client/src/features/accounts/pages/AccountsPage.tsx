@@ -129,7 +129,7 @@ export default function AccountsPage() {
     setSelectedAccount(null);
   }, []);
 
-  const handleSelectAccount = useCallback((account: AccountRow) => {
+  const handleSelectAccount = useCallback((account: AccountRow | null) => {
     setSelectedAccount(account);
   }, []);
 
@@ -332,7 +332,7 @@ export default function AccountsPage() {
               loading={loading}
               selectedAccount={selectedAccount}
               onSelectAccount={handleSelectAccount}
-              onAddAccount={() => {}}
+              onAddAccount={handleAddAccount}
               onCreate={handleCreate}
               onSave={handleFieldSave}
               onDelete={handleDeleteAccount}

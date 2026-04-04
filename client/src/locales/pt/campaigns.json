@@ -178,6 +178,7 @@
 
   "config": {
     "configuration": "Configura\u00e7\u00e3o",
+    "campaignName": "Nome da Campanha",
     "schedule": "Agenda",
     "behavior": "Comportamento",
     "contract": "Contrato",
@@ -218,7 +219,13 @@
     "voiceId": "ID da Voz",
     "bump1AiReference": "Usar como referência IA",
     "bump2AiReference": "Usar como referência IA",
-    "bump3AiReference": "Usar como referência IA"
+    "bump3AiReference": "Usar como referência IA",
+    "demoClientName": "Nome da Empresa do Cliente",
+    "aiStyleOverride": "Substituição de Estilo da IA",
+    "isDemo": "Campanha de Demonstração",
+    "accountId": "Conta",
+    "showDemoCampaigns": "Mostrar Campanhas de Demonstração",
+    "language": "Idioma"
   },
 
   "meta": {

@@ -48,7 +48,7 @@ interface AccountListViewProps {
   accounts: AccountRow[];
   loading: boolean;
   selectedAccount: AccountRow | null;
-  onSelectAccount: (account: AccountRow) => void;
+  onSelectAccount: (account: AccountRow | null) => void;
   onAddAccount: () => void;
   onCreate: (data: NewAccountForm) => Promise<void>;
   onSave: (field: string, value: string) => Promise<void>;
@@ -112,7 +112,6 @@ export function AccountListView({
     [t]
   );
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
-  const [_editDialogAccount, _setEditDialogAccount] = useState<AccountRow | null>(null);
   const PAGE_SIZE = 25;
 
   // Campaign names per account — fetched once, used for card hover pills
@@ -134,7 +133,7 @@ export function AccountListView({
         });
         setCampaignNamesByAccount(byAccount);
       })
-      .catch(() => {});
+      .catch((err) => console.error("[AccountListView] campaigns fetch failed:", err));
   }, []);
 
   // Lead counts per account — fetched once, grouped client-side
@@ -154,7 +153,7 @@ export function AccountListView({
         });
         setLeadCountsByAccount(byAccount);
       })
-      .catch(() => {});
+      .catch((err) => console.error("[AccountListView] leads fetch failed:", err));
   }, []);
 
   // Build flat grouped list
@@ -498,11 +497,11 @@ export function AccountListView({
           <AccountDetailView
             account={selectedAccount}
             onSave={onSave}
-            onAddAccount={onAddAccount}
+            onAddAccount={() => setPanelMode("create")}
             onDelete={onDelete}
             onToggleStatus={onToggleStatus}
             toolbarPrefix={toolbarPrefix}
-            onBack={() => (onSelectAccount as unknown as (v: null) => void)(null)}
+            onBack={() => onSelectAccount(null)}
           />
         ) : (
           <AccountDetailViewEmpty toolbarPrefix={toolbarPrefix} />

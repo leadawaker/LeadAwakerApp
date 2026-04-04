@@ -11,12 +11,16 @@ import {
   Check,
   Trash2,
   ChevronLeft,
+  ChevronRight,
   List,
   Table2,
   Bot,
   Save,
   RotateCcw,
+  Eye,
+  EyeOff,
 } from "lucide-react";
+import { resolveVariablesHtml, type CampaignForPreview } from "../utils/resolveVariables";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,12 +112,16 @@ function EditPanel({
   onDelete,
   campaigns = [],
   versionOverride = null,
+  previewOpen,
+  setPreviewOpen,
 }: {
   prompt: any;
   onSaved: (saved: any) => void;
   onDelete: (prompt: any) => void;
-  campaigns?: { id: number; name: string; aiModel: string }[];
+  campaigns?: CampaignForPreview[];
   versionOverride?: PromptVersion | null;
+  previewOpen: boolean;
+  setPreviewOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
 }) {
   const { toast } = useToast();
   const { t } = useTranslation("prompts");
@@ -131,14 +139,20 @@ function EditPanel({
     campaignsId: "",
   });
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
+  // highlightTick triggers backdrop + preview re-render on every keystroke
+  const [highlightTick, setHighlightTick] = useState(0);
+  const [sampleLead, setSampleLead] = useState<import("../utils/resolveVariables").LeadForPreview | null>(null);
   // Uncontrolled refs for the 3 textarea fields — keeps browser undo history intact
   const promptTextValRef = useRef<string>("");
   const systemMessageValRef = useRef<string>("");
   const notesValRef = useRef<string>("");
   const promptTextRef = useRef<HTMLTextAreaElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const systemMessageTextareaRef = useRef<HTMLTextAreaElement>(null);
   const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const previewPaneRef = useRef<HTMLDivElement>(null);
+  const syncingScrollRef = useRef(false);
   // Stable ref to latest handleSave — avoids stale closure in useImperativeHandle
   const handleSaveRef = useRef<() => Promise<void>>(async () => {});
 
@@ -174,6 +188,7 @@ function EditPanel({
           : "",
     });
     setErrors({});
+    setHighlightTick((n) => n + 1); // re-render backdrop/preview with new prompt text
     initialized.current = false;
     const t = setTimeout(() => { initialized.current = true; }, 150);
     return () => clearTimeout(t);
@@ -197,6 +212,7 @@ function EditPanel({
     if (promptTextRef.current) { promptTextRef.current.value = pt; autoResize(promptTextRef.current); }
     if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = sm;
     if (notesTextareaRef.current) notesTextareaRef.current.value = nt;
+    setHighlightTick((n) => n + 1);
     scheduleAutoSave();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionOverride]);
@@ -208,6 +224,42 @@ function EditPanel({
     return () => clearTimeout(autoSaveTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.name, form.model, form.temperature, form.maxTokens, form.status, form.useCase, form.campaignsId]);
+
+  // Backdrop content — highlights all {variable} tokens in amber; updates on every keystroke
+  const renderBackdrop = useMemo(() => {
+    const text = promptTextValRef.current ?? "";
+    const parts = text.split(/(\{\w+\})/);
+    return (
+      <>
+        {parts.filter(p => p).map((part, idx) => {
+          if (/^\{\w+\}$/.test(part)) {
+            return <mark key={idx} className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">{part}</mark>;
+          }
+          return <>{part}</>;
+        })}
+      </>
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightTick]);
+
+  // Fetch sample lead when preview opens and a campaign is selected
+  useEffect(() => {
+    if (!previewOpen || !form.campaignsId) { setSampleLead(null); return; }
+    apiFetch(`/api/leads?campaignId=${form.campaignsId}&limit=1`)
+      .then((r) => r.json())
+      .then((data: any[]) => {
+        const lead = Array.isArray(data) ? data[0] : null;
+        setSampleLead(lead ? {
+          firstName: lead.firstName ?? lead.first_name ?? null,
+          lastName: lead.lastName ?? lead.last_name ?? null,
+          phone: lead.phone ?? null,
+          email: lead.email ?? null,
+          whatHasTheLeadDone: lead.whatHasTheLeadDone ?? lead.what_has_the_lead_done ?? null,
+        } : null);
+      })
+      .catch(() => setSampleLead(null));
+  }, [previewOpen, form.campaignsId]);
+
 
   function scheduleAutoSave() {
     if (!initialized.current) return;
@@ -298,9 +350,77 @@ function EditPanel({
     el.style.height = newHeight + "px";
   }, []);
 
+  // Sync backdrop div styles with textarea for perfect alignment
+  useEffect(() => {
+    const ta = promptTextRef.current;
+    const bd = backdropRef.current;
+    if (!ta || !bd) return;
+    const cs = getComputedStyle(ta);
+    bd.style.font = cs.font;
+    bd.style.letterSpacing = cs.letterSpacing;
+    bd.style.lineHeight = cs.lineHeight;
+    bd.style.wordWrap = cs.wordWrap;
+    bd.style.whiteSpace = cs.whiteSpace;
+  }, [promptTextValRef.current?.length]);
+
   useEffect(() => {
     autoResize(promptTextRef.current);
   }, [autoResize]);
+
+  // Sync backdrop transform + synchronized proportional scrolling between textarea and preview pane
+  useEffect(() => {
+    const textarea = promptTextRef.current;
+    const backdrop = backdropRef.current;
+    const preview = previewPaneRef.current;
+
+    if (!textarea || !backdrop) return;
+
+    const handleTextareaScroll = () => {
+      // Sync backdrop with transform (absolute positioned divs respond to transform, not scrollTop)
+      backdrop.style.transform = `translateY(-${textarea.scrollTop}px)`;
+
+      // Sync preview scroll with proportional calculation if preview is open
+      if (!previewOpen || !preview) return;
+      if (syncingScrollRef.current) return;
+      syncingScrollRef.current = true;
+
+      // Proportional scroll: textarea scroll ratio applied to preview
+      const textareaScrollHeight = textarea.scrollHeight - textarea.clientHeight;
+      const previewScrollHeight = preview.scrollHeight - preview.clientHeight;
+
+      if (textareaScrollHeight > 0 && previewScrollHeight > 0) {
+        const scrollRatio = textarea.scrollTop / textareaScrollHeight;
+        preview.scrollTop = scrollRatio * previewScrollHeight;
+      }
+
+      setTimeout(() => { syncingScrollRef.current = false; }, 0);
+    };
+
+    const handlePreviewScroll = () => {
+      if (!preview) return;
+      if (syncingScrollRef.current) return;
+      syncingScrollRef.current = true;
+
+      // Proportional scroll: preview scroll ratio applied to textarea
+      const previewScrollHeight = preview.scrollHeight - preview.clientHeight;
+      const textareaScrollHeight = textarea.scrollHeight - textarea.clientHeight;
+
+      if (previewScrollHeight > 0 && textareaScrollHeight > 0) {
+        const scrollRatio = preview.scrollTop / previewScrollHeight;
+        textarea.scrollTop = scrollRatio * textareaScrollHeight;
+      }
+
+      setTimeout(() => { syncingScrollRef.current = false; }, 0);
+    };
+
+    textarea.addEventListener("scroll", handleTextareaScroll);
+    if (preview) preview.addEventListener("scroll", handlePreviewScroll);
+
+    return () => {
+      textarea.removeEventListener("scroll", handleTextareaScroll);
+      if (preview) preview.removeEventListener("scroll", handlePreviewScroll);
+    };
+  }, [previewOpen]);
 
   const inputCls =
     "w-full h-9 rounded-xl bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30";
@@ -312,129 +432,40 @@ function EditPanel({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Scrollable two-column body */}
-      <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-[3px] pb-[3px] [scrollbar-width:thin]">
-        <div className="flex flex-col gap-[3px] max-w-[1386px] w-full mr-auto">
-
-          {/* ── Top row: Identity + Configuration + Notes (3 columns) ── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-[3px]">
-            {/* Identity */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.identity")}
-              </p>
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className={labelCls}>{t("form.name")} *</label>
-                  <input
-                    className={cn(inputCls, errors.name && "ring-2 ring-red-400/40")}
-                    value={form.name}
-                    onChange={(e) => setField("name", e.target.value)}
-                    placeholder={t("form.namePlaceholderAlt")}
-                  />
-                  {errors.name && (
-                    <p className="text-[10px] text-red-500 mt-0.5">{errors.name}</p>
-                  )}
-                </div>
-                <div>
-                  <label className={labelCls}>{t("form.useCase")}</label>
-                  <input
-                    className={inputCls}
-                    value={form.useCase}
-                    onChange={(e) => setField("useCase", e.target.value)}
-                    placeholder={t("form.useCasePlaceholder")}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Configuration */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.configuration")}
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className={labelCls}>{t("labels.campaign")}</label>
-                  <select
-                    className={selectCls}
-                    value={form.campaignsId}
-                    onChange={(e) => setField("campaignsId", e.target.value)}
-                  >
-                    <option value="">{t("form.noneOption")}</option>
-                    {campaigns.map((c) => (
-                      <option key={c.id} value={String(c.id)}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>{t("form.temperature")} {t("form.temperatureRange")}</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="2"
-                    className={cn(inputCls, errors.temperature && "ring-2 ring-red-400/40")}
-                    value={form.temperature}
-                    onChange={(e) => setField("temperature", e.target.value)}
-                  />
-                  {errors.temperature && (
-                    <p className="text-[10px] text-red-500 mt-0.5">{errors.temperature}</p>
-                  )}
-                </div>
-                <div>
-                  <label className={labelCls}>{t("form.maxTokens")}</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className={cn(inputCls, errors.maxTokens && "ring-2 ring-red-400/40")}
-                    value={form.maxTokens}
-                    onChange={(e) => setField("maxTokens", e.target.value)}
-                  />
-                  {errors.maxTokens && (
-                    <p className="text-[10px] text-red-500 mt-0.5">{errors.maxTokens}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.notes")}
-              </p>
-              <div>
-                <textarea
-                  ref={notesTextareaRef}
-                  className={cn(textareaCls, "min-h-[118px] h-full")}
-                  defaultValue={notesValRef.current}
-                  onChange={(e) => { notesValRef.current = e.target.value; scheduleAutoSave(); }}
-                  placeholder={t("form.notesPlaceholderAlt")}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ── Bottom: Prompt Content + System Message (full width) ── */}
-          <div className="flex flex-col gap-[3px]">
-            {/* Prompt Content */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+      {/* Scrollable content panels */}
+      <div className={cn("flex flex-1 min-h-0", previewOpen ? "flex-row" : "flex-col")}>
+        {/* Left scrollable editor panel */}
+        <div ref={scrollContainerRef} className={cn("min-h-0 overflow-y-auto overscroll-contain px-[3px] pb-[3px] [scrollbar-width:thin]", previewOpen ? "w-1/2" : "flex-1")}>
+          <div className="flex flex-col gap-[3px] max-w-[1386px] w-full mr-auto">
+            {/* ── Prompt Content + System Message ── */}
+            <div className="flex flex-col gap-[3px]">
+              {/* Prompt Content */}
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
               <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
                 {t("form.promptContent")}
               </p>
-              <textarea
-                ref={promptTextRef}
-                className={cn(
-                  textareaCls,
-                  "min-h-[200px] overflow-hidden resize-none",
-                  errors.promptText ? "ring-2 ring-red-400/40" : "",
-                )}
-                defaultValue={promptTextValRef.current}
-                onChange={(e) => { promptTextValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
-                placeholder={t("form.mainPromptPlaceholder")}
-              />
+              <div className="relative">
+                {/* Amber-highlight backdrop — floats over textarea, pointer-events:none */}
+                <div
+                  ref={backdropRef}
+                  aria-hidden="true"
+                  className="absolute inset-0 pointer-events-none z-[1] overflow-hidden rounded-xl px-2.5 py-2 text-[12px] whitespace-pre-wrap break-words text-transparent"
+                >
+                  {renderBackdrop}
+                </div>
+                <textarea
+                  ref={promptTextRef}
+                  className={cn(
+                    textareaCls,
+                    "h-[400px] overflow-y-auto resize-none relative",
+                    errors.promptText ? "ring-2 ring-red-400/40" : "",
+                  )}
+                  defaultValue={promptTextValRef.current}
+                  onChange={(e) => { promptTextValRef.current = e.target.value; scheduleAutoSave(); }}
+                  onInput={() => setHighlightTick((t) => t + 1)}
+                  placeholder={t("form.mainPromptPlaceholder")}
+                />
+              </div>
               {errors.promptText && (
                 <p className="text-[10px] text-red-500 mt-0.5">{errors.promptText}</p>
               )}
@@ -455,10 +486,141 @@ function EditPanel({
                 />
               </div>
             </div>
+
+            {/* ── Bottom row: Identity + Configuration + Notes (3 columns) ── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-[3px]">
+              {/* Identity */}
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
+                  {t("form.identity")}
+                </p>
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className={labelCls}>{t("form.name")} *</label>
+                    <input
+                      className={cn(inputCls, errors.name && "ring-2 ring-red-400/40")}
+                      value={form.name}
+                      onChange={(e) => setField("name", e.target.value)}
+                      placeholder={t("form.namePlaceholderAlt")}
+                    />
+                    {errors.name && (
+                      <p className="text-[10px] text-red-500 mt-0.5">{errors.name}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className={labelCls}>{t("form.useCase")}</label>
+                    <input
+                      className={inputCls}
+                      value={form.useCase}
+                      onChange={(e) => setField("useCase", e.target.value)}
+                      placeholder={t("form.useCasePlaceholder")}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Configuration */}
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
+                  {t("form.configuration")}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className={labelCls}>{t("labels.campaign")}</label>
+                    <select
+                      className={selectCls}
+                      value={form.campaignsId}
+                      onChange={(e) => setField("campaignsId", e.target.value)}
+                    >
+                      <option value="">{t("form.noneOption")}</option>
+                      {campaigns.map((c) => (
+                        <option key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>{t("form.temperature")} {t("form.temperatureRange")}</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="2"
+                      className={cn(inputCls, errors.temperature && "ring-2 ring-red-400/40")}
+                      value={form.temperature}
+                      onChange={(e) => setField("temperature", e.target.value)}
+                    />
+                    {errors.temperature && (
+                      <p className="text-[10px] text-red-500 mt-0.5">{errors.temperature}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className={labelCls}>{t("form.maxTokens")}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className={cn(inputCls, errors.maxTokens && "ring-2 ring-red-400/40")}
+                      value={form.maxTokens}
+                      onChange={(e) => setField("maxTokens", e.target.value)}
+                    />
+                    {errors.maxTokens && (
+                      <p className="text-[10px] text-red-500 mt-0.5">{errors.maxTokens}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
+                  {t("form.notes")}
+                </p>
+                <div>
+                  <textarea
+                    ref={notesTextareaRef}
+                    className={cn(textareaCls, "min-h-[118px] h-full")}
+                    defaultValue={notesValRef.current}
+                    onChange={(e) => { notesValRef.current = e.target.value; scheduleAutoSave(); }}
+                    placeholder={t("form.notesPlaceholderAlt")}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
+
+      {/* Right-side preview pane (split screen when preview is open) */}
+      {previewOpen && (() => {
+        const text = promptTextValRef.current ?? "";
+        void highlightTick;
+        const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
+        const highlighted = resolveVariablesHtml(text, selectedCampaign, sampleLead);
+        const leadLabel = sampleLead?.firstName
+          ? `${sampleLead.firstName}${sampleLead.lastName ? " " + sampleLead.lastName : ""}`
+          : form.campaignsId ? "no leads" : "no campaign";
+        return (
+          <div ref={previewPaneRef} className="w-1/2 min-h-0 overflow-y-auto border-l border-border/30 bg-muted/20 flex flex-col">
+            <div className="px-4 py-3 border-b border-border/30 text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
+              <Eye className="h-3 w-3" />
+              <span>Preview · <span className="italic">{leadLabel}</span></span>
+            </div>
+            <div className="p-4 flex-1">
+              {text.trim() ? (
+                <div
+                  className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground"
+                  dangerouslySetInnerHTML={{ __html: highlighted }}
+                />
+              ) : (
+                <p className="text-muted-foreground italic text-[12px]">Nothing to preview yet.</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+    </div>
     </div>
   );
 }
@@ -624,6 +786,9 @@ export function PromptsListView({
 }: PromptsListViewProps) {
   const { t } = useTranslation("prompts");
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
+    try { return localStorage.getItem("prompts-left-panel-collapsed") === "true"; } catch { return false; }
+  });
   const [searchOpen, setSearchOpen] = useState(false);
 
   async function handleStatusChange(newStatus: string) {
@@ -663,6 +828,9 @@ export function PromptsListView({
 
   // Derive selectedId from selectedPrompt
   const selectedId = selectedPrompt ? getPromptId(selectedPrompt) : null;
+
+  // Preview state — lifted to PromptsListView so button lives in sticky toolbar
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Version history state
   const [versions, setVersions] = useState<PromptVersion[]>([]);
@@ -800,7 +968,12 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   return (
     <div className="flex h-full gap-[3px]" data-testid="prompts-list-view">
       {/* ── LEFT PANEL ──────────────────────────────────────────────────── */}
-      <div className={cn("w-full md:w-[340px] md:shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden", mobileView === "detail" ? "hidden md:flex" : "flex")}>
+      <div className={cn(
+        "flex-col bg-muted rounded-lg overflow-hidden",
+        leftPanelCollapsed
+          ? cn(mobileView === "detail" ? "hidden" : "flex", "md:hidden")
+          : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
+      )}>
         {/* Header: title + view tabs (§16 standard) */}
         <div className="px-3.5 pt-5 pb-3 shrink-0 flex items-center justify-between">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
@@ -859,6 +1032,30 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
                 <ChevronLeft className="h-4 w-4" />
               </button>
 
+              {/* Collapse left panel (desktop only) */}
+              <button
+                onClick={() => {
+                  const next = !leftPanelCollapsed;
+                  setLeftPanelCollapsed(next);
+                  try { localStorage.setItem("prompts-left-panel-collapsed", String(next)); } catch {}
+                }}
+                className="hidden md:grid h-9 w-9 rounded-full border border-black/[0.125] bg-background place-items-center shrink-0"
+                title={leftPanelCollapsed ? "Show list" : "Hide list"}
+              >
+                {leftPanelCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </button>
+
+              {/* Search — always visible */}
+              <SearchPill
+                value={q}
+                onChange={onQChange}
+                open={searchOpen}
+                onOpenChange={setSearchOpen}
+                placeholder={t("toolbar.searchPlaceholder")}
+              />
+
+              {/* List controls — hidden when left panel is collapsed */}
+              {!leftPanelCollapsed && (<>
               {/* +Create */}
               <button
                 className={cn(xBase, "hover:max-w-[100px]", xDefault)}
@@ -867,15 +1064,6 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
                 <Plus className="h-4 w-4 shrink-0" />
                 <span className={xSpan}>{t("toolbar.create")}</span>
               </button>
-
-              {/* Search */}
-              <SearchPill
-                value={q}
-                onChange={onQChange}
-                open={searchOpen}
-                onOpenChange={setSearchOpen}
-                placeholder={t("toolbar.searchPlaceholder")}
-              />
 
               {/* Sort */}
               <DropdownMenu>
@@ -1037,9 +1225,27 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>)}
 
               {/* Spacer */}
               <div className="flex-1 min-w-0" />
+
+              {/* Preview toggle */}
+              {selectedPrompt && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewOpen((p) => !p)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs transition-colors shrink-0",
+                    previewOpen
+                      ? "border-brand-indigo text-brand-indigo bg-brand-indigo/5"
+                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 bg-white dark:bg-popover"
+                  )}
+                >
+                  {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {previewOpen ? "Hide preview" : "Preview"}
+                </button>
+              )}
 
               {/* Version picker + save buttons */}
               <Popover>
@@ -1255,6 +1461,8 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               onDelete={onDelete}
               campaigns={campaigns}
               versionOverride={versionOverride}
+              previewOpen={previewOpen}
+              setPreviewOpen={setPreviewOpen}
             />
           </div>
         ) : (

@@ -19,12 +19,14 @@ import {
   Paintbrush,
   Camera,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   MapPin,
   X,
   UserPlus,
   RefreshCw,
   Sparkles,
+  LayoutDashboard,
 } from "lucide-react";
 import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
@@ -549,6 +551,10 @@ interface ProspectListViewProps {
   onToggleFilterStatus: (s: string) => void;
   filterCountry: string[];
   onToggleFilterCountry: (s: string) => void;
+  filterPriority: string[];
+  onToggleFilterPriority: (s: string) => void;
+  filterSource: string[];
+  onToggleFilterSource: (s: string) => void;
   hasNonDefaultControls: boolean;
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
@@ -583,6 +589,10 @@ export function ProspectListView({
   onToggleFilterStatus,
   filterCountry,
   onToggleFilterCountry,
+  filterPriority,
+  onToggleFilterPriority,
+  filterSource,
+  onToggleFilterSource,
   hasNonDefaultControls,
   isGroupNonDefault,
   isSortNonDefault,
@@ -597,6 +607,9 @@ export function ProspectListView({
     [t]
   );
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
+    try { return localStorage.getItem("prospects-left-panel-collapsed") === "true"; } catch { return false; }
+  });
   const PAGE_SIZE = 25;
 
   // ── Email compose state ──────────────────────────────────────────────────
@@ -804,6 +817,16 @@ export function ProspectListView({
       filtered = filtered.filter((p) => filterCountry.includes(String(p.country || "")));
     }
 
+    // Priority filter
+    if (filterPriority.length > 0) {
+      filtered = filtered.filter((p) => filterPriority.includes(String(p.priority || "")));
+    }
+
+    // Source filter
+    if (filterSource.length > 0) {
+      filtered = filtered.filter((p) => filterSource.includes(String(p.source || "")));
+    }
+
     // Sort
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
@@ -861,7 +884,7 @@ export function ProspectListView({
       group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
     });
     return result;
-  }, [prospects, listSearch, filterNiche, filterStatus, filterCountry, sortBy, groupBy]);
+  }, [prospects, listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, sortBy, groupBy]);
 
   const totalProspects = flatItems.filter((i) => i.kind === "prospect").length;
   const maxPage = Math.max(0, Math.ceil(totalProspects / PAGE_SIZE) - 1);
@@ -892,7 +915,7 @@ export function ProspectListView({
   }, [flatItems, currentPage, totalProspects]);
 
   // Reset page on filter change
-  useEffect(() => { setCurrentPage(0); }, [listSearch, filterNiche, filterStatus, filterCountry, groupBy, sortBy]);
+  useEffect(() => { setCurrentPage(0); }, [listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, groupBy, sortBy]);
 
   // Auto-select first prospect
   useEffect(() => {
@@ -904,7 +927,7 @@ export function ProspectListView({
 
   // (mobile sheet removed — narrow screens now show detail inline like Leads page)
 
-  const isFilterActive = filterNiche.length > 0 || filterStatus.length > 0 || filterCountry.length > 0;
+  const isFilterActive = filterNiche.length > 0 || filterStatus.length > 0 || filterCountry.length > 0 || filterPriority.length > 0 || filterSource.length > 0;
 
   // ── Niche color map (same as table view) ──────────────────────────────────
   const nicheColorMap = useMemo(() => {
@@ -923,6 +946,12 @@ export function ProspectListView({
   const availableCountries = useMemo(() => {
     const seen = new Set<string>();
     prospects.forEach((p) => { const v = String(p.country || ""); if (v) seen.add(v); });
+    return Array.from(seen).sort();
+  }, [prospects]);
+
+  const availableSources = useMemo(() => {
+    const seen = new Set<string>();
+    prospects.forEach((p) => { const v = String(p.source || ""); if (v) seen.add(v); });
     return Array.from(seen).sort();
   }, [prospects]);
 
@@ -952,6 +981,32 @@ export function ProspectListView({
   const xActive  = "border-brand-indigo text-brand-indigo";
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
+  // ── Collapse left panel button (desktop only) ────────────────────────────────
+  const collapseButton = (
+    <button
+      onClick={() => {
+        const next = !leftPanelCollapsed;
+        setLeftPanelCollapsed(next);
+        try { localStorage.setItem("prospects-left-panel-collapsed", String(next)); } catch {}
+      }}
+      className="hidden lg:grid h-9 w-9 rounded-full border border-black/[0.125] bg-background place-items-center shrink-0"
+      title={leftPanelCollapsed ? "Show list" : "Hide list"}
+    >
+      {leftPanelCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+    </button>
+  );
+
+  // ── Search pill — always visible ─────────────────────────────────────────────
+  const searchPill = (
+    <SearchPill
+      value={listSearch}
+      onChange={onListSearchChange}
+      open={searchOpen}
+      onOpenChange={onSearchOpenChange}
+      placeholder={t("page.searchPlaceholder")}
+    />
+  );
+
   // ── Toolbar prefix for the right panel ──────────────────────────────────────
   const toolbarPrefix = (
     <>
@@ -963,15 +1018,6 @@ export function ProspectListView({
         <Plus className="h-4 w-4 shrink-0" />
         <span className={xSpan}>{t("toolbar.add")}</span>
       </button>
-
-      {/* Search */}
-      <SearchPill
-        value={listSearch}
-        onChange={onListSearchChange}
-        open={searchOpen}
-        onOpenChange={onSearchOpenChange}
-        placeholder={t("page.searchPlaceholder")}
-      />
 
       {/* Sort */}
       <DropdownMenu>
@@ -1061,6 +1107,41 @@ export function ProspectListView({
               ))}
             </FilterAccordionSection>
           )}
+          <FilterAccordionSection
+            label={t("filter.priority")}
+            activeCount={filterPriority.length}
+            defaultOpen={filterPriority.length > 0}
+          >
+            {INLINE_PRIORITY_OPTIONS.map((s) => (
+              <DropdownMenuItem
+                key={`priority-${s}`}
+                onClick={(e) => { e.preventDefault(); onToggleFilterPriority(s); }}
+                className="flex items-center gap-2 text-[12px]"
+              >
+                <SignalBars priority={s} />
+                <span className="flex-1 capitalize">{s}</span>
+                {filterPriority.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+              </DropdownMenuItem>
+            ))}
+          </FilterAccordionSection>
+          {availableSources.length > 0 && (
+            <FilterAccordionSection
+              label={t("filter.source")}
+              activeCount={filterSource.length}
+              defaultOpen={filterSource.length > 0}
+            >
+              {availableSources.map((s) => (
+                <DropdownMenuItem
+                  key={`source-${s}`}
+                  onClick={(e) => { e.preventDefault(); onToggleFilterSource(s); }}
+                  className="flex items-center gap-2 text-[12px]"
+                >
+                  <span className="flex-1">{s}</span>
+                  {filterSource.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </FilterAccordionSection>
+          )}
           {isFilterActive && (
             <>
               <DropdownMenuSeparator />
@@ -1108,8 +1189,9 @@ export function ProspectListView({
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
         "flex-col bg-muted rounded-lg overflow-hidden",
-        "w-full lg:w-[340px] lg:shrink-0",
-        isNarrow && selectedProspect ? "hidden" : "flex"
+        leftPanelCollapsed
+          ? cn(isNarrow && selectedProspect ? "hidden" : "flex", "lg:hidden")
+          : cn("w-full lg:w-[340px] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
 
         {/* Header: title + ViewTabBar */}
@@ -1264,7 +1346,9 @@ export function ProspectListView({
                       <span className="text-sm">←</span>
                     </button>
                   )}
-                  {toolbarPrefix}
+                  {collapseButton}
+                  {searchPill}
+                  {!leftPanelCollapsed && toolbarPrefix}
                 </div>
 
                 {/* Name + badges */}
@@ -1386,15 +1470,73 @@ export function ProspectListView({
               </div>
             </div>
 
-            {/* ── 3-column body (Actions | Enrichment/Notes | Contact) ── */}
+            {/* ── 3-column body (Contact | Actions | Enrichment) + new panels below ── */}
             {(() => {
               const hasEnrichment = !!(selectedProspect.ai_summary || selectedProspect.headline || selectedProspect.top_post || selectedProspect.conversation_starters);
-              const colWidth = hasEnrichment ? "md:w-1/3" : "md:w-1/2";
+              const starters: string[] = (() => {
+                const raw = selectedProspect.conversation_starters;
+                if (!raw) return [];
+                try { return JSON.parse(raw); } catch { return raw.split("\n").filter(Boolean); }
+              })();
               return (
-                <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-[3px] px-[3px] pb-[3px] pt-3 overflow-y-auto md:overflow-hidden relative z-10">
+                <div className="flex-1 min-h-0 overflow-y-auto px-[3px] pb-[3px] pt-3 relative z-10 flex flex-col gap-[3px]">
 
-                  {/* Column 1: Actions & Follow-up (was Column 3) */}
-                  <div className={cn("w-full shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex flex-col gap-3", colWidth)}>
+                  {/* Row 1: 3 panels side-by-side */}
+                  <div className="flex flex-col md:flex-row gap-[3px]">
+
+                  {/* Column 1: Contact Info */}
+                  <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
+
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                      {editableField("city", String(selectedProspect.city || ""), "Add location", "text-[12px] text-muted-foreground flex-1 min-w-0")}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                      {editableField("website", String(selectedProspect.website || ""), "Add website", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                    </div>
+                    <div className="h-px bg-border/30" />
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Primary Contact</h4>
+                      {selectedProspect.Accounts_id ? (
+                        <a href={`/accounts`} onClick={(e) => { e.preventDefault(); localStorage.setItem("selectedAccountId", String(selectedProspect.Accounts_id)); window.location.href = "/accounts"; }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors cursor-pointer">
+                          <Building2 className="h-3 w-3" />
+                          Account #{selectedProspect.Accounts_id}
+                        </a>
+                      ) : (
+                        <button onClick={handleConvertToAccount} disabled={converting} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50">
+                          <Plus className="h-3 w-3" />
+                          Create Account
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {editableField("contact_name", String(selectedProspect.contact_name || ""), "Add name", "text-[13px] font-medium text-foreground")}
+                      {editableField("contact_role", String(selectedProspect.contact_role || ""), "Add role", "text-[11px] text-muted-foreground")}
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        {editableField("contact_email", String(selectedProspect.contact_email || ""), "Add email", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        {editableField("contact_phone", String(selectedProspect.contact_phone || ""), "Add phone", "text-[12px] text-foreground flex-1 min-w-0")}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Linkedin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        {editableField("contact_linkedin", String(selectedProspect.contact_linkedin || ""), "Add LinkedIn", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                      </div>
+                    </div>
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Source</h4>
+                    {editableField("source", String(selectedProspect.source || ""), "Add source", "text-[12px] text-muted-foreground")}
+                    <div className="h-px bg-border/30" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.notes")}</h4>
+                    {editableMultiline("notes", String(selectedProspect.notes || ""), "No notes yet", "text-[12px] leading-relaxed text-foreground")}
+                  </div>
+
+                  {/* Column 2: Actions & Follow-up */}
+                  <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
 
                     <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Next Action</h4>
                     {editableMultiline("next_action", String(selectedProspect.next_action || ""), "No next action set", "text-[13px] leading-relaxed text-foreground")}
@@ -1475,9 +1617,9 @@ export function ProspectListView({
                     )}
                   </div>
 
-                  {/* Column 2: Enrichment & Notes (collapses when empty) */}
+                  {/* Column 3: Enrichment */}
                   {hasEnrichment ? (
-                    <div className={cn("flex shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3", "w-full md:w-1/3")}>
+                    <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
                       <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
 
                       {selectedProspect.headline && (
@@ -1526,7 +1668,7 @@ export function ProspectListView({
                     </div>
                   ) : (
                     /* Collapsed enrichment: just notes */
-                    <div className={cn("flex shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3", "w-full md:w-1/3")}>
+                    <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
                       <div className="flex items-center gap-2">
                         <Sparkles className="h-3.5 w-3.5 text-muted-foreground/30" />
                         <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
@@ -1535,77 +1677,55 @@ export function ProspectListView({
                     </div>
                   )}
 
-                  {/* Column 3: Contact Info — all fields contentEditable */}
-                  <div className={cn("flex shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-4 flex-col gap-3", "w-full", colWidth)}>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
+                  </div>{/* end Row 1 */}
 
-                    {/* Location */}
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      {editableField("city", String(selectedProspect.city || ""), "Add location", "text-[12px] text-muted-foreground flex-1 min-w-0")}
-                    </div>
-
-                    {/* Website */}
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      {editableField("website", String(selectedProspect.website || ""), "Add website", "text-[12px] text-brand-indigo flex-1 min-w-0")}
-                    </div>
-
-                    <div className="h-px bg-border/30" />
-
-                    {/* Primary contact header + Create Account */}
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Primary Contact</h4>
-                      {selectedProspect.Accounts_id ? (
-                        <a href={`/accounts`} onClick={(e) => { e.preventDefault(); localStorage.setItem("selectedAccountId", String(selectedProspect.Accounts_id)); window.location.href = "/accounts"; }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors cursor-pointer">
-                          <Building2 className="h-3 w-3" />
-                          Account #{selectedProspect.Accounts_id}
-                        </a>
-                      ) : (
-                        <button
-                          onClick={handleConvertToAccount}
-                          disabled={converting}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Create Account
+                  {/* Row 2: new panels */}
+                  <div className="flex flex-col md:flex-row gap-[3px]">
+                    {/* Panel A: Cold Call Prep */}
+                    <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="h-3.5 w-3.5 text-brand-indigo/70" />
+                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Cold Call Prep</h4>
+                      </div>
+                      {starters.length > 0 ? starters.map((s, i) => (
+                        <button key={i} onClick={() => navigator.clipboard.writeText(s)}
+                          className="text-left text-[12px] text-foreground leading-relaxed p-2 rounded-lg bg-muted/40 hover:bg-brand-indigo/10 hover:text-brand-indigo transition-colors w-full">
+                          {s}
                         </button>
+                      )) : <p className="text-[12px] text-muted-foreground/40 italic">No conversation starters — enrich this prospect first</p>}
+                      {selectedProspect.ai_summary && (
+                        <>
+                          <div className="h-px bg-border/30" />
+                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Company Summary</h4>
+                          <p className="text-[12px] text-foreground leading-relaxed">{selectedProspect.ai_summary}</p>
+                        </>
                       )}
                     </div>
-                    <div className="flex flex-col gap-2">
-                      {editableField("contact_name", String(selectedProspect.contact_name || ""), "Add name", "text-[13px] font-medium text-foreground")}
-                      {editableField("contact_role", String(selectedProspect.contact_role || ""), "Add role", "text-[11px] text-muted-foreground")}
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        {editableField("contact_email", String(selectedProspect.contact_email || ""), "Add email", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+
+                    {/* Panel B: Placeholder */}
+                    <div className="flex-1 min-w-0 shrink-0 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2 items-center justify-center" style={{ height: 520 }}>
+                      <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground/30" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        {editableField("contact_phone", String(selectedProspect.contact_phone || ""), "Add phone", "text-[12px] text-foreground flex-1 min-w-0")}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Linkedin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        {editableField("contact_linkedin", String(selectedProspect.contact_linkedin || ""), "Add LinkedIn", "text-[12px] text-brand-indigo flex-1 min-w-0")}
-                      </div>
+                      <p className="text-[11px] text-muted-foreground/40 italic text-center">Coming soon</p>
                     </div>
 
-                    {/* Source */}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Source</h4>
-                    {editableField("source", String(selectedProspect.source || ""), "Add source", "text-[12px] text-muted-foreground")}
+                    {/* Panel C: Placeholder */}
+                    <div className="flex-1 min-w-0 shrink-0 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2 items-center justify-center" style={{ height: 520 }}>
+                      <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground/30" />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground/40 italic text-center">Coming soon</p>
+                    </div>
+                  </div>{/* end Row 2 */}
 
-                    {/* Notes */}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.notes")}</h4>
-                    {editableMultiline("notes", String(selectedProspect.notes || ""), "No notes yet", "text-[12px] leading-relaxed text-foreground")}
-                  </div>
                 </div>
               );
             })()}
 
           </div>
         ) : (
-          <ProspectDetailViewEmpty toolbarPrefix={toolbarPrefix} />
+          <ProspectDetailViewEmpty toolbarPrefix={<>{collapseButton}{searchPill}{!leftPanelCollapsed && toolbarPrefix}</>} />
         )}
       </div>
 

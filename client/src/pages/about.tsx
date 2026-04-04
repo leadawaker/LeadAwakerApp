@@ -51,14 +51,14 @@ export default function About() {
                 {/* Leaking bucket illustration */}
                 <div className="flex justify-center">
                   <img
-                    src="/images/leaking-bucket.png?v=6"
+                    src="/images/leaking-bucket.png?v=7"
                     alt="Leaking bucket illustration"
-                    className="w-full system-dark-hidden"
+                    className="w-full max-w-sm system-dark-hidden"
                   />
                   <img
                     src="/images/leaking-bucket-dark.png?v=1"
                     alt="Leaking bucket illustration"
-                    className="w-full hidden system-dark-block"
+                    className="w-full max-w-sm hidden system-dark-block"
                   />
                 </div>
 

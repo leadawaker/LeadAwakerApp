@@ -85,6 +85,8 @@
       "recordVoice": "Spraakbericht opnemen",
       "emoji": "Emoji",
       "attachFile": "Bestand bijvoegen",
+      "attachImage": "Afbeelding verzenden",
+      "imageSent": "Afbeelding verzonden",
       "attachmentsComingSoon": "Bijlagen binnenkort beschikbaar",
       "attachmentsDescription": "Ondersteuning voor bestandsuploads wordt ingesteld."
     },

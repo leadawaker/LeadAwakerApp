@@ -172,7 +172,13 @@ export function LeadDetailView({
   const handleSaveEdit = useCallback(async () => {
     setSaving(true);
     try {
-      await updateLead(leadId, editFields);
+      const nameParts = (editFields.full_name || "").trim().split(/\s+/);
+      const patch: Record<string, string> = {
+        first_name: nameParts[0] || "",
+        last_name: nameParts.slice(1).join(" ") || "",
+      };
+      if (editFields.source !== undefined) patch.source = editFields.source;
+      await updateLead(leadId, patch);
       hapticSave();
       setIsEditing(false);
       onRefresh?.();
@@ -375,14 +381,30 @@ export function LeadDetailView({
                 )}
               </div>
             </div>
-            {/* Metachips — absolute, centered on panel 2/3 boundary (66.67%) */}
+            {/* Metachips — absolute, centered on panel 2/3 boundary (66.67%), desktop only */}
             {(() => {
               const campName = lead.campaign_name || lead.Campaign || "";
               const acctName = lead.account_name || lead.Account || "";
-              const hasAny = campName || acctName || lead.last_interaction_at || lead.last_message_received_at || lead.booked_call_date;
+              const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+              const hasAny = campName || acctName || hasActivity || lead.booked_call_date || lead.bookedCallDate;
               if (!hasAny) return null;
               return (
               <div className="absolute -translate-x-1/2 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-8 whitespace-nowrap pointer-events-auto z-10" style={{ left: "66.67%" }}>
+                {hasActivity && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("contact.lastActivity", "Last Activity")}</div>
+                    <div className="text-[12px] font-bold text-foreground leading-none">{formatRelativeTime(hasActivity, t)}</div>
+                  </div>
+                )}
+                {(lead.booked_call_date || lead.bookedCallDate) && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detail.fields.callDate", "Booked Call")}</div>
+                    {(lead.previous_booked_call_date || lead.previousBookedCallDate) && Number(lead.re_scheduled_count || lead.reScheduledCount || 0) > 0 && (
+                      <div className="text-[10px] text-muted-foreground/50 line-through leading-none mb-0.5">{formatBookedDate(lead.previous_booked_call_date || lead.previousBookedCallDate, accountTimezone)}</div>
+                    )}
+                    <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate, accountTimezone)}</div>
+                  </div>
+                )}
                 {campName && (
                   <div className="flex items-center gap-1.5">
                     {campaignStickerUrl ? (
@@ -421,10 +443,24 @@ export function LeadDetailView({
                     </div>
                   </div>
                 )}
-                {(lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at) && (
+              </div>
+              );
+            })()}
+          </div>
+
+          {/* Mobile metachips — shown below name row on narrow screens */}
+          {isNarrow && (() => {
+            const campName = lead.campaign_name || lead.Campaign || "";
+            const acctName = lead.account_name || lead.Account || "";
+            const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+            const hasAny = campName || acctName || hasActivity || lead.booked_call_date || lead.bookedCallDate;
+            if (!hasAny) return null;
+            return (
+              <div className="flex flex-wrap gap-x-5 gap-y-2.5 mt-1">
+                {hasActivity && (
                   <div>
                     <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("contact.lastActivity", "Last Activity")}</div>
-                    <div className="text-[12px] font-bold text-foreground leading-none">{formatRelativeTime(lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at, t)}</div>
+                    <div className="text-[12px] font-bold text-foreground leading-none">{formatRelativeTime(hasActivity, t)}</div>
                   </div>
                 )}
                 {(lead.booked_call_date || lead.bookedCallDate) && (
@@ -436,10 +472,35 @@ export function LeadDetailView({
                     <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate, accountTimezone)}</div>
                   </div>
                 )}
+                {campName && (
+                  <div className="flex items-center gap-1.5">
+                    {campaignStickerUrl ? (
+                      <img src={campaignStickerUrl} alt="" className="h-[32px] w-[32px] object-contain shrink-0" />
+                    ) : (
+                      <EntityAvatar name={campName} bgColor={getCampaignAvatarColor("Active").bg} textColor={getCampaignAvatarColor("Active").text} size={32} className="shrink-0" />
+                    )}
+                    <div>
+                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Campaign{campaignNumber ? ` #${campaignNumber}` : ""}</div>
+                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[110px]">{campName}</div>
+                    </div>
+                  </div>
+                )}
+                {acctName && (
+                  <div className="flex items-center gap-1.5">
+                    {accountLogo ? (
+                      <img src={accountLogo} alt="" className="h-[25px] w-[25px] rounded-full object-cover shrink-0" />
+                    ) : (
+                      <EntityAvatar name={acctName} bgColor="rgba(0,0,0,0.08)" textColor="#374151" size={25} className="shrink-0" />
+                    )}
+                    <div>
+                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Account</div>
+                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[110px]">{acctName}</div>
+                    </div>
+                  </div>
+                )}
               </div>
-              );
-            })()}
-          </div>
+            );
+          })()}
 
           {/* Pipeline tube */}
           {status && (
@@ -452,24 +513,24 @@ export function LeadDetailView({
 
       {/* ── Body — fills remaining viewport, columns scroll internally ── */}
       <div
-        className="relative flex-1 -mt-[80px] pt-[83px] overflow-hidden min-h-0"
+        className={cn("relative flex-1 -mt-[80px] pt-[83px] min-h-0", isNarrow ? "overflow-y-auto" : "overflow-hidden")}
         style={{
           maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
         }}
       >
-        <div ref={containerRef} className="p-[3px] h-full flex flex-col gap-[3px] max-w-[1386px] w-full mr-auto">
-          <div className="grid gap-[3px] flex-1 min-h-0" style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
+        <div ref={containerRef} className={cn("p-[3px] max-w-[1386px] w-full mr-auto", isNarrow ? "" : "h-full flex flex-col gap-[3px]")}>
+          <div className={cn("grid gap-[3px]", isNarrow ? "" : "flex-1 min-h-0")} style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Contact */}
-            <div className="overflow-y-auto rounded-xl min-h-0">
+            <div className={cn("overflow-y-auto rounded-xl", isNarrow ? "min-h-[340px]" : "min-h-0")}>
               <ContactWidget lead={lead} onRefresh={onRefresh} accountLogo={accountLogo} campaignStickerUrl={campaignStickerUrl} campaignsById={campaignsById} />
             </div>
             {/* Chat */}
-            <div className="overflow-hidden rounded-xl bg-white/60 dark:bg-white/[0.10] flex flex-col min-h-0">
+            <div className={cn("overflow-hidden rounded-xl bg-white/60 dark:bg-white/[0.10] flex flex-col", isNarrow ? "min-h-[420px]" : "min-h-0")}>
               <ConversationWidget lead={lead} showHeader />
             </div>
             {/* Lead Score */}
-            <div className="overflow-y-auto rounded-xl min-h-0">
+            <div className={cn("overflow-y-auto rounded-xl", isNarrow ? "min-h-[340px]" : "min-h-0")}>
               <ScoreWidget score={score} lead={lead} status={status} />
             </div>
           </div>

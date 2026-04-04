@@ -155,7 +155,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       default_typo_frequency:     String(account.default_typo_frequency  || ""),
       opt_out_keyword:            String(account.opt_out_keyword         || ""),
       preferred_terminology:      String(account.preferred_terminology   || ""),
-      timezone:                   String(account.timezone                || "UTC"),
+      timezone:                   TIMEZONE_OPTIONS.includes(String(account.timezone || "")) ? String(account.timezone || "") : "",
       language:                   String(account.language                || "English"),
       business_hours_start:       String(account.business_hours_start    || ""),
       business_hours_end:         String(account.business_hours_end      || ""),

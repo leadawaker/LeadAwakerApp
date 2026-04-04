@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Eye, EyeOff } from "lucide-react";
+import "./PromptFormDialog.css";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -12,13 +14,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { EMPTY_FORM, type PromptFormData, type PromptVersion, getPromptId } from "../types";
+import { resolveVariables, type CampaignForPreview, type LeadForPreview } from "../utils/resolveVariables";
 
 interface PromptFormDialogProps {
   open: boolean;
   onClose: () => void;
   prompt: any | null;
   onSaved: (prompt: any) => void;
-  campaigns?: { id: number; name: string; aiModel: string }[];
+  campaigns?: CampaignForPreview[];
 }
 
 function formatVersionDate(iso: string): string {
@@ -53,6 +56,11 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
   const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
   const systemMessageTextareaRef = useRef<HTMLTextAreaElement>(null);
   const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Preview state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [sampleLead, setSampleLead] = useState<LeadForPreview | null>(null);
+  const [previewTick, setPreviewTick] = useState(0);
 
   // Version history state
   const [versions, setVersions] = useState<PromptVersion[]>([]);
@@ -119,6 +127,27 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [versionDropdownOpen]);
+
+  // Fetch a sample lead when preview opens and a campaign is selected
+  useEffect(() => {
+    if (!previewOpen || !form.campaignsId) {
+      setSampleLead(null);
+      return;
+    }
+    apiFetch(`/api/leads?campaignId=${form.campaignsId}&limit=1`)
+      .then((r) => r.json())
+      .then((data: any[]) => {
+        const lead = Array.isArray(data) ? data[0] : null;
+        setSampleLead(lead ? {
+          firstName: lead.firstName ?? lead.first_name ?? null,
+          lastName: lead.lastName ?? lead.last_name ?? null,
+          phone: lead.phone ?? null,
+          email: lead.email ?? null,
+          whatHasTheLeadDone: lead.whatHasTheLeadDone ?? lead.what_has_the_lead_done ?? null,
+        } : null);
+      })
+      .catch(() => setSampleLead(null));
+  }, [previewOpen, form.campaignsId]);
 
   function scheduleAutoSave() {
     if (!isEdit || !initialized.current) return;
@@ -405,9 +434,19 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
 
           {/* Prompt Text */}
           <div className="space-y-1">
-            <label className="text-sm font-medium text-foreground" htmlFor="prompt-text">
-              {t("form.promptText")} <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-foreground" htmlFor="prompt-text">
+                {t("form.promptText")} <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen((p) => !p)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {previewOpen ? "Hide preview" : "Preview"}
+              </button>
+            </div>
             <textarea
               ref={promptTextareaRef}
               id="prompt-text"
@@ -419,9 +458,56 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
                 setErrors((prev) => ({ ...prev, promptText: undefined }));
                 scheduleAutoSave();
               }}
+              onInput={() => { if (previewOpen) setPreviewTick((t) => t + 1); }}
               data-testid="textarea-prompt-text"
             />
             {errors.promptText && <p className="text-xs text-red-500">{errors.promptText}</p>}
+            {previewOpen && (() => {
+              const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
+              void previewTick; // trigger re-render on typing
+              const text = promptTextRef.current ?? "";
+              const { resolved, missing } = resolveVariables(text, selectedCampaign, sampleLead);
+
+              // Split text by variables and render with proper React elements
+              const renderHighlighted = () => {
+                const parts = resolved.split(/(\{\w+\})/);
+                return (
+                  <>
+                    {parts.filter(p => p).map((part, idx) => {
+                      if (/^\{\w+\}$/.test(part)) {
+                        return <mark key={idx} className="prompt-variable">{part}</mark>;
+                      }
+                      return <>{part}</>;
+                    })}
+                  </>
+                );
+              };
+
+              const leadLabel = sampleLead?.firstName
+                ? `${sampleLead.firstName}${sampleLead.lastName ? " " + sampleLead.lastName : ""}`
+                : form.campaignsId
+                ? "no leads in campaign"
+                : "no campaign selected";
+              return (
+                <div className="mt-1.5 rounded-xl border border-border/30 bg-muted/30 p-3 text-sm">
+                  <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
+                    <span>Preview · <span className="italic">{leadLabel}</span></span>
+                    {missing.length > 0 && (
+                      <span className="text-amber-600 dark:text-amber-400">
+                        {missing.length} unresolved variable{missing.length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+                  {text.trim() ? (
+                    <div className="whitespace-pre-wrap leading-relaxed text-foreground">
+                      {renderHighlighted()}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground italic">Nothing to preview yet.</p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* System Message */}

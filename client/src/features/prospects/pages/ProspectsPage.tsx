@@ -259,6 +259,7 @@ export default function ProspectsPage() {
     filterNiche: [] as string[],
     filterCountry: [] as string[],
     filterPriority: [] as string[],
+    filterSource: [] as string[],
   });
   const tableSortBy = tablePrefs.sortBy;
   const tableGroupBy = tablePrefs.groupBy;
@@ -266,12 +267,14 @@ export default function ProspectsPage() {
   const tableFilterNiche = tablePrefs.filterNiche;
   const tableFilterCountry = tablePrefs.filterCountry;
   const tableFilterPriority = tablePrefs.filterPriority;
+  const tableFilterSource = tablePrefs.filterSource ?? [];
   const setTableSortBy = useCallback((v: TableSortByOption) => setTablePrefs(p => ({ ...p, sortBy: v })), [setTablePrefs]);
   const setTableGroupBy = useCallback((v: TableGroupByOption) => setTablePrefs(p => ({ ...p, groupBy: v })), [setTablePrefs]);
   const setTableFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTablePrefs]);
   const setTableFilterNiche = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterNiche: typeof v === "function" ? v(p.filterNiche) : v })), [setTablePrefs]);
   const setTableFilterCountry = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterCountry: typeof v === "function" ? v(p.filterCountry) : v })), [setTablePrefs]);
   const setTableFilterPriority = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterPriority: typeof v === "function" ? v(p.filterPriority) : v })), [setTablePrefs]);
+  const setTableFilterSource = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterSource: typeof v === "function" ? v(p.filterSource ?? []) : v })), [setTablePrefs]);
   const [tableSelectedIds,  setTableSelectedIds]  = useState<Set<number>>(new Set());
 
   /* -- Column visibility (persisted) -- */
@@ -388,14 +391,18 @@ export default function ProspectsPage() {
   const toggleTableFilterPriority = useCallback((s: string) =>
     setTableFilterPriority((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]),
   []);
+  const toggleTableFilterSource = useCallback((s: string) =>
+    setTableFilterSource((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]),
+  []);
   const clearTableFilters = useCallback(() => {
     setTableFilterStatus([]);
     setTableFilterNiche([]);
     setTableFilterCountry([]);
     setTableFilterPriority([]);
+    setTableFilterSource([]);
   }, []);
-  const isTableFilterActive    = tableFilterStatus.length > 0 || tableFilterNiche.length > 0 || tableFilterCountry.length > 0 || tableFilterPriority.length > 0;
-  const tableActiveFilterCount = tableFilterStatus.length + tableFilterNiche.length + tableFilterCountry.length + tableFilterPriority.length;
+  const isTableFilterActive    = tableFilterStatus.length > 0 || tableFilterNiche.length > 0 || tableFilterCountry.length > 0 || tableFilterPriority.length > 0 || tableFilterSource.length > 0;
+  const tableActiveFilterCount = tableFilterStatus.length + tableFilterNiche.length + tableFilterCountry.length + tableFilterPriority.length + tableFilterSource.length;
 
   /* -- Table bulk handlers -- */
   const handleAddProspect = useCallback(async () => {
@@ -495,6 +502,12 @@ export default function ProspectsPage() {
     return Array.from(seen).sort();
   }, [rows]);
 
+  const availableSources = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => { const v = String(r.source || ""); if (v) seen.add(v); });
+    return Array.from(seen).sort();
+  }, [rows]);
+
   /* -- Pipeline toolbar state -- */
   const [pipelineCompactMode, setPipelineCompactMode] = useState(false);
   const [pipelineSearch, setPipelineSearch] = useState("");
@@ -525,9 +538,11 @@ export default function ProspectsPage() {
   const [listFilterNiche, setListFilterNiche] = useState<string[]>([]);
   const [listFilterStatus, setListFilterStatus] = useState<string[]>([]);
   const [listFilterCountry, setListFilterCountry] = useState<string[]>([]);
+  const [listFilterPriority, setListFilterPriority] = useState<string[]>([]);
+  const [listFilterSource, setListFilterSource] = useState<string[]>([]);
   const isListGroupNonDefault = listGroupBy !== "niche";
   const isListSortNonDefault = listSortBy !== "recent";
-  const isListFilterActive = listFilterNiche.length > 0 || listFilterStatus.length > 0 || listFilterCountry.length > 0;
+  const isListFilterActive = listFilterNiche.length > 0 || listFilterStatus.length > 0 || listFilterCountry.length > 0 || listFilterPriority.length > 0 || listFilterSource.length > 0;
   const hasListNonDefaultControls = isListGroupNonDefault || isListSortNonDefault || isListFilterActive;
   const toggleListFilterNiche = useCallback((s: string) => {
     setListFilterNiche((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
@@ -538,7 +553,13 @@ export default function ProspectsPage() {
   const toggleListFilterCountry = useCallback((s: string) => {
     setListFilterCountry((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
   }, []);
-  const clearListFilters = useCallback(() => { setListFilterNiche([]); setListFilterStatus([]); setListFilterCountry([]); }, []);
+  const toggleListFilterPriority = useCallback((s: string) => {
+    setListFilterPriority((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  }, []);
+  const toggleListFilterSource = useCallback((s: string) => {
+    setListFilterSource((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  }, []);
+  const clearListFilters = useCallback(() => { setListFilterNiche([]); setListFilterStatus([]); setListFilterCountry([]); setListFilterPriority([]); setListFilterSource([]); }, []);
 
   /* -- Follow-ups state -- */
   type FollowUpGroupBy = "none" | "niche" | "country" | "priority" | "contact_method";
@@ -632,6 +653,10 @@ export default function ProspectsPage() {
     if (tableFilterPriority.length > 0) {
       source = source.filter((p) => tableFilterPriority.includes(String(p.priority || "")));
     }
+    // Filter by source
+    if (tableFilterSource.length > 0) {
+      source = source.filter((p) => tableFilterSource.includes(String(p.source || "")));
+    }
 
     // Sort
     if (tableSortBy === "priority") {
@@ -690,7 +715,7 @@ export default function ProspectsPage() {
       group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
     });
     return result;
-  }, [rows, tableSearch, tableFilterStatus, tableFilterNiche, tableFilterCountry, tableFilterPriority, tableSortBy, tableGroupBy]);
+  }, [rows, tableSearch, tableFilterStatus, tableFilterNiche, tableFilterCountry, tableFilterPriority, tableFilterSource, tableSortBy, tableGroupBy]);
 
   /* -- Table toolbar (rendered inline with tab buttons) -- */
   const tableToolbar = (
@@ -779,6 +804,16 @@ export default function ProspectsPage() {
                 <DropdownMenuItem key={p} onClick={(e) => { e.preventDefault(); toggleTableFilterPriority(p); }} className="flex items-center gap-2 text-[12px]">
                   <span className="flex-1 truncate">{p}</span>
                   {tableFilterPriority.includes(p) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </FilterAccordionSection>
+          )}
+          {availableSources.length > 0 && (
+            <FilterAccordionSection label="Source" activeCount={tableFilterSource.length} defaultOpen={tableFilterSource.length > 0}>
+              {availableSources.map((s) => (
+                <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterSource(s); }} className="flex items-center gap-2 text-[12px]">
+                  <span className="flex-1 truncate">{s}</span>
+                  {tableFilterSource.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               ))}
             </FilterAccordionSection>
@@ -1150,6 +1185,10 @@ export default function ProspectsPage() {
                 onToggleFilterStatus={toggleListFilterStatus}
                 filterCountry={listFilterCountry}
                 onToggleFilterCountry={toggleListFilterCountry}
+                filterPriority={listFilterPriority}
+                onToggleFilterPriority={toggleListFilterPriority}
+                filterSource={listFilterSource}
+                onToggleFilterSource={toggleListFilterSource}
                 hasNonDefaultControls={hasListNonDefaultControls}
                 isGroupNonDefault={isListGroupNonDefault}
                 isSortNonDefault={isListSortNonDefault}

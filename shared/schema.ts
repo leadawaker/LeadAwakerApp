@@ -262,7 +262,7 @@ export const campaigns = nocodb.table("Campaigns", {
   bump3AiReference: boolean("bump_3_ai_reference").default(false),
   aiReplyVoiceNote: boolean("ai_reply_voice_note").default(false),
   ttsVoiceId: text("tts_voice_id"),
-  campaignNicheOverride: text("campaign_niche_override"),
+  niche: text("niche"),
   campaignService: text("campaign_service"),
   campaignUsp: text("campaign_usp"),
   targetAudience: text("target_audience"),
@@ -298,6 +298,10 @@ export const campaigns = nocodb.table("Campaigns", {
   abEnabled: boolean("ab_enabled").default(false),
   abSplitRatio: integer("ab_split_ratio").default(50),
   botToken: text("bot_token"),
+  language: text("language"),
+  isDemo: boolean("is_demo").default(false),
+  demoClientName: text("demo_client_name"),
+  aiStyleOverride: text("ai_style_override"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);

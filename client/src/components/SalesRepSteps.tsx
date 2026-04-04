@@ -124,7 +124,7 @@ const FullscreenStep = ({
           <div className="relative">
             <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500">
               <CardContent className="p-8">
-                <div className="mb-6 p-3 bg-slate-200 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
+                <div className="mb-6 p-3 bg-slate-200 dark:bg-zinc-700 w-fit rounded-xl text-gray-600 dark:text-zinc-300 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
                   {icon}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-foreground" data-testid={`step-title-${number}`}>{cardTitle}</h3>
@@ -248,7 +248,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
   <CardContent className="p-8">
-    <div className="mb-6 p-3 bg-[#fff7e0] w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+    <div className="mb-6 p-3 bg-[#fff7e0] dark:bg-yellow-900/30 w-fit rounded-xl text-gray-600 dark:text-zinc-300 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
       {step.icon}
     </div>
     <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-foreground" data-testid={`step-title-${step.number}`}>
@@ -424,7 +424,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
         <button
           onClick={handlePrev}
           data-testid="button-prev-step-card-mobile"
-          className="p-2 text-gray-600 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 rounded-full"
+          className="p-2 text-gray-600 dark:text-zinc-400 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 rounded-full"
           aria-label={t('common.prevStep')}
         >
           <ChevronLeft className="w-6 h-6" />
@@ -451,7 +451,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
         <button
           onClick={handleNext}
           data-testid="button-next-step-card-mobile"
-          className="p-2 text-gray-600 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 rounded-full"
+          className="p-2 text-gray-600 dark:text-zinc-400 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 rounded-full"
           aria-label={t('common.nextStep')}
         >
           <ChevronRight className="w-6 h-6" />
@@ -470,7 +470,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
           {step.leftText && step.leftText.split('\n').map((line: string, i: number) => (
             <div key={i} className="flex items-start gap-3">
               <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
-              <div className="font-medium text-gray-600 text-[16px]">
+              <div className="font-medium text-gray-600 dark:text-zinc-400 text-[16px]">
                 {line}
               </div>
             </div>
@@ -628,11 +628,10 @@ export const SalesRepSteps = () => {
         background: 'linear-gradient(to top, rgba(254, 243, 199, 0.45) 0%, rgba(254, 243, 199, 0.2) 15%, transparent 50%)',
         zIndex: 0
       }} />
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{
-        background: 'linear-gradient(to bottom, transparent 0%, #F4F5F9 100%)',
-        height: '25vh',
-        zIndex: 5
-      }} />
+      <div
+        className="absolute inset-x-0 bottom-0 pointer-events-none [background:linear-gradient(to_bottom,transparent_0%,#F4F5F9_100%)] dark:[background:linear-gradient(to_bottom,transparent_0%,hsl(var(--background))_100%)]"
+        style={{ height: '25vh', zIndex: 5 }}
+      />
       <Plane startTrigger={planeStarted} />
       <div className="relative z-10">
       {/* Pain Points Section */}

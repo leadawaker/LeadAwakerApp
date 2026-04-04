@@ -15,7 +15,9 @@ export function ConnectionBanner() {
   const [state, setState] = useState<ConnectionState>("checking");
   const [retryCount, setRetryCount] = useState(0);
   const wasDisconnected = useRef(false);
+  const failureStartTimeRef = useRef<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const GRACE_PERIOD_MS = 3000; // Don't show "disconnected" for brief < 3s outages
 
   const checkConnection = useCallback(async (isManualRetry = false) => {
     if (isManualRetry) {
@@ -33,6 +35,7 @@ export function ConnectionBanner() {
       clearTimeout(timeout);
 
       if (res.ok) {
+        failureStartTimeRef.current = null;
         if (wasDisconnected.current) {
           // Was disconnected, now reconnected — show recovery
           setState("recovered");
@@ -46,8 +49,17 @@ export function ConnectionBanner() {
       // Server responded but with error status
       throw new Error(`HTTP ${res.status}`);
     } catch {
-      setState("disconnected");
-      wasDisconnected.current = true;
+      // Track when the failure started
+      if (failureStartTimeRef.current === null) {
+        failureStartTimeRef.current = Date.now();
+      }
+
+      // Only show disconnected if failure has persisted beyond grace period
+      const failureDuration = Date.now() - failureStartTimeRef.current;
+      if (failureDuration >= GRACE_PERIOD_MS) {
+        setState("disconnected");
+        wasDisconnected.current = true;
+      }
     }
   }, []);
 

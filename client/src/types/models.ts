@@ -88,6 +88,9 @@ export type Campaign = {
   ai_summary_generated_at?: string | null;
   ab_enabled?: boolean;
   ab_split_ratio?: number;
+  // Demo campaigns
+  is_demo?: boolean;
+  demo_client_name?: string | null;
   // Computed/joined fields
   account_name?: string;
   [key: string]: any;

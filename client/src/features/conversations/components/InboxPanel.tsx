@@ -136,7 +136,7 @@ function AgentInboxRow({ agent, isSelected, isExpanded, onToggleExpand, onSelect
         setRecentChats(data.slice(0, 5));
         fetchedRef.current = true;
       })
-      .catch(() => {})
+      .catch((err) => console.error("[InboxPanel] Failed to fetch agent conversations:", err))
       .finally(() => { if (!cancelled) setLoadingChats(false); });
     return () => { cancelled = true; };
   }, [isExpanded, agent.id, activeSessionId]);

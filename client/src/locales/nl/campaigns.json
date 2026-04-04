@@ -179,6 +179,7 @@
 
   "config": {
     "configuration": "Configuratie",
+    "campaignName": "Campagnenaam",
     "schedule": "Planning",
     "behavior": "Gedrag",
     "contract": "Contract",
@@ -230,7 +231,13 @@
     "voiceId": "Stem-ID",
     "bump1AiReference": "Gebruiken als AI-referentie",
     "bump2AiReference": "Gebruiken als AI-referentie",
-    "bump3AiReference": "Gebruiken als AI-referentie"
+    "bump3AiReference": "Gebruiken als AI-referentie",
+    "demoClientName": "Bedrijfsnaam klant",
+    "aiStyleOverride": "AI-stijloverride",
+    "isDemo": "Democampagne",
+    "accountId": "Account",
+    "showDemoCampaigns": "Toon democampagnes",
+    "language": "Taal"
   },
 
   "meta": {

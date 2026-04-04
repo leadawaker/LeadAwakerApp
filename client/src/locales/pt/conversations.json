@@ -85,6 +85,8 @@
       "recordVoice": "Gravar mensagem de voz",
       "emoji": "Emoji",
       "attachFile": "Anexar arquivo",
+      "attachImage": "Enviar imagem",
+      "imageSent": "Imagem enviada",
       "attachmentsComingSoon": "Anexos em breve",
       "attachmentsDescription": "O suporte para upload de arquivos est\u00e1 sendo configurado."
     },

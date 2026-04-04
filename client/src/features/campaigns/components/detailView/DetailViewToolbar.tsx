@@ -1,5 +1,6 @@
 import {
   ChevronLeft,
+  ChevronRight,
   Pencil,
   PauseCircle,
   PlayCircle,
@@ -12,12 +13,16 @@ import {
   Layers,
   Check,
   Palette,
+  Link as LinkIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Campaign } from "@/types/models";
@@ -35,7 +40,7 @@ import {
   DETAIL_STATUS_FILTER_OPTIONS,
   DETAIL_STATUS_HEX,
 } from "./constants";
-import { DuplicateButton } from "./atoms";
+import { DuplicateButton, DemoLinkButton } from "./atoms";
 
 interface DetailViewToolbarProps {
   detail: ReturnType<typeof useCampaignDetail>;
@@ -63,11 +68,15 @@ interface DetailViewToolbarProps {
   filterAccount?: string;
   onFilterAccountChange?: (a: string) => void;
   isFilterActive?: boolean;
+  showDemoCampaigns?: boolean;
+  onShowDemoCampaignsChange?: (v: boolean) => void;
   groupBy?: CampaignGroupBy;
   onGroupByChange?: (v: CampaignGroupBy) => void;
   isGroupNonDefault?: boolean;
   availableAccounts?: string[];
   onResetControls?: () => void;
+  leftPanelCollapsed?: boolean;
+  onToggleLeftPanel?: () => void;
   t: (key: string, fallback?: string) => string;
 }
 
@@ -96,11 +105,15 @@ export function DetailViewToolbar({
   filterAccount,
   onFilterAccountChange,
   isFilterActive,
+  showDemoCampaigns,
+  onShowDemoCampaignsChange,
   groupBy,
   onGroupByChange,
   isGroupNonDefault,
   availableAccounts,
   onResetControls,
+  leftPanelCollapsed,
+  onToggleLeftPanel,
   t,
 }: DetailViewToolbarProps) {
   return (
@@ -136,6 +149,16 @@ export function DetailViewToolbar({
         </>
       ) : (
         <>
+          {onToggleLeftPanel && (
+            <button
+              onClick={onToggleLeftPanel}
+              className="hidden md:grid h-9 w-9 rounded-full border border-black/[0.125] bg-background place-items-center shrink-0"
+              title={leftPanelCollapsed ? "Show list" : "Hide list"}
+            >
+              {leftPanelCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          )}
+
           {activeTab === "configurations" && (
             <button onClick={() => detail.startEdit(detail.linkedPrompt)} className={cn(xBase, "hover:max-w-[80px]", xDefault)}>
               <Pencil className="h-4 w-4 shrink-0" /><span className={xSpan}>{t("toolbar.edit")}</span>
@@ -143,12 +166,14 @@ export function DetailViewToolbar({
           )}
 
           {onCreateCampaign && (
+            <SearchPill value={listSearch ?? ""} onChange={(v) => onListSearchChange?.(v)} open={true} onOpenChange={() => {}} placeholder="Search campaigns..." />
+          )}
+
+          {!leftPanelCollapsed && onCreateCampaign && (
             <>
               <button onClick={onCreateCampaign} className={cn(xBase, "hover:max-w-[80px]", xDefault)}>
                 <Plus className="h-4 w-4 shrink-0" /><span className={xSpan}>{t("toolbar.add")}</span>
               </button>
-
-              <SearchPill value={listSearch ?? ""} onChange={(v) => onListSearchChange?.(v)} open={true} onOpenChange={() => {}} placeholder="Search campaigns..." />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -172,33 +197,71 @@ export function DetailViewToolbar({
                     <Filter className="h-4 w-4 shrink-0" /><span className={xSpan}>{t("toolbar.filter")}</span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-                  <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("filter.status")}</div>
-                  <DropdownMenuSeparator />
-                  {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
-                    <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus?.(s); }} className="flex items-center gap-2 text-[12px]">
-                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }} />
-                      <span className={cn("flex-1", filterStatus?.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
-                      {filterStatus?.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  ))}
-                  {(availableAccounts?.length ?? 0) > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("filter.account")}</div>
-                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}>
-                        <span className="flex-1">{t("filter.allAccounts")}</span>
-                        {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {availableAccounts?.map((a) => (
-                        <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}>
-                          <span className="flex-1 truncate">{a}</span>
-                          {filterAccount === a && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                <DropdownMenuContent align="start" className="w-44 bg-white">
+                  {/* Status sub-menu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="text-[12px]">
+                      <span className="flex-1">{t("filter.status")}</span>
+                      {(filterStatus?.length ?? 0) > 0 && (
+                        <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">
+                          {filterStatus!.length}
+                        </span>
+                      )}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44 bg-white">
+                      {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus?.(s); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }} />
+                          <span className={cn("flex-1", filterStatus?.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
+                          {filterStatus?.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                         </DropdownMenuItem>
                       ))}
-                    </>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  {/* Account sub-menu — agency only */}
+                  {(availableAccounts?.length ?? 0) > 0 && (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <span className="flex-1">{t("filter.account")}</span>
+                        {filterAccount && (
+                          <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                        )}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-44 bg-white">
+                        <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}>
+                          <span className="flex-1">{t("filter.allAccounts")}</span>
+                          {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {availableAccounts?.map((a) => (
+                          <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}>
+                            <span className="flex-1 truncate">{a}</span>
+                            {filterAccount === a && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
                   )}
+
+                  {/* Type sub-menu */}
+                  {onShowDemoCampaignsChange && (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <span className="flex-1">{t("filter.type", "Type")}</span>
+                        {showDemoCampaigns && (
+                          <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                        )}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-44 bg-white">
+                        <DropdownMenuItem onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }} className="flex items-center gap-2 text-[12px]">
+                          <span className={cn("flex-1", showDemoCampaigns && "font-bold text-brand-indigo")}>{t("config.showDemoCampaigns")}</span>
+                          {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  )}
+
                   {isFilterActive && (
                     <>
                       <DropdownMenuSeparator />
@@ -238,6 +301,7 @@ export function DetailViewToolbar({
           <button onClick={onRefresh} className={cn(xBase, "hover:max-w-[110px]", xDefault)}>
             <RefreshCw className="h-4 w-4 shrink-0" /><span className={xSpan}>{t("toolbar.refresh")}</span>
           </button>
+          <DemoLinkButton campaign={campaign} />
           {isAgencyUser && (
             <button onClick={onToggleGradientTester} className={cn(xBase, "hover:max-w-[120px]", gradientTesterOpen ? xActive : xDefault)}>
               <Palette className="h-4 w-4 shrink-0" /><span className={xSpan}>Gradient</span>

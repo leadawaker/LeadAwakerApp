@@ -178,8 +178,7 @@ BUSINESS CONTEXT
 
 LEAD CONTEXT
 - Name: {first_name}
-- What they did: {what_has_the_lead_done}
-- When: {when}
+- What they did: {what_lead_did}
 - Source: {inquiries_source}
 - Timeframe: {inquiry_timeframe}
 

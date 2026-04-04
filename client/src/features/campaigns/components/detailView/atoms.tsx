@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Copy, Megaphone } from "lucide-react";
+import { Copy, Megaphone, Link as LinkIcon, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import type { Campaign } from "@/types/models";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { xBase, xDefault, xSpan } from "./constants";
 
 // ── Duplicate button (inline confirm) ─────────────────────────────────────────
@@ -46,6 +47,84 @@ export function DuplicateButton({
       <Copy className="h-4 w-4 shrink-0" />
       <span className={xSpan}>{t("toolbar.duplicate")}</span>
     </button>
+  );
+}
+
+// ── Demo Link Button ──────────────────────────────────────────────────────────
+
+export function DemoLinkButton({
+  campaign,
+}: {
+  campaign: Campaign;
+}) {
+  const { t } = useTranslation("campaigns");
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const campaignId = campaign.id || campaign.Id;
+  const demoLink = `https://t.me/lead_awaker_demo?start=campaign_${campaignId}`;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(demoLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Only show for demo campaigns — check multiple field name variations
+  const isDemo = campaign.is_demo || (campaign as any).isDemo || (campaign as any).is_demo === true;
+  if (!isDemo) return null;
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={cn(xBase, "hover:max-w-[140px]", xDefault)}
+        title="Generate demo link for this campaign"
+      >
+        <LinkIcon className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>Demo Link</span>
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Demo Campaign Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Share this link with prospects to start the demo:
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={demoLink}
+                readOnly
+                className="flex-1 px-3 py-2 text-sm border border-black/[0.125] rounded-md bg-muted/50 font-mono"
+              />
+              <button
+                onClick={handleCopy}
+                className="h-9 px-4 rounded-full bg-brand-indigo text-white font-medium text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Campaign ID: <span className="font-mono font-semibold">{campaignId}</span>
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

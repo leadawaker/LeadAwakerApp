@@ -134,6 +134,8 @@ export function DetailViewBody({
             conversationPrompts={detail.conversationPrompts}
             linkedContract={detail.linkedContract}
             compact={compact}
+            focusField={detail.focusField}
+            onStartEditField={detail.startEditForField}
           />
         )}
       </div>

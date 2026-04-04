@@ -104,7 +104,7 @@ export function LeadRunWrapper({
       {/* Avatar column — sticky to bottom, left side */}
       {!hideAvatars && (
         <div className="w-12 shrink-0 self-end sticky bottom-0">
-          <button type="button" onClick={onNavigateToLead} className="focus:outline-none rounded-full">
+          <button type="button" onClick={onNavigateToLead ? onNavigateToLead : undefined} className="focus:outline-none rounded-full">
             <EntityAvatar
               name={leadName || "?"}
               bgColor={leadAvatarColors.bgColor}

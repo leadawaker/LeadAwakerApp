@@ -1,0 +1,15 @@
+mark.prompt-variable {
+  background-color: #fcd34d;
+  color: #78350f;
+  padding: 0;
+  margin: 0;
+  font-weight: inherit;
+  font-style: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  mark.prompt-variable {
+    background-color: #92400e;
+    color: #fef3c7;
+  }
+}

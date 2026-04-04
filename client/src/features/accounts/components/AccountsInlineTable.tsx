@@ -151,7 +151,7 @@ function EditableCell({
       title={hasError ? t("table.saveFailed") : value}
     >
       <span className="truncate flex-1">
-        {value || <span className="text-muted-foreground/35 italic not-italic">{"2014"}</span>}
+        {value || <span className="text-muted-foreground/35 italic not-italic">{"—"}</span>}
       </span>
       {isSaving && (
         <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
@@ -595,7 +595,7 @@ export function AccountsInlineTable({
                           return (
                             <td key="max_daily_sends" className={cn("px-2.5 tabular-nums", tdClass)} style={{ width: 110, minWidth: 110 }}>
                               <span className="text-[11px] font-medium text-foreground">
-                                {val || <span className="text-muted-foreground/30">{"2014"}</span>}
+                                {val || <span className="text-muted-foreground/30">{"—"}</span>}
                               </span>
                             </td>
                           );
@@ -655,7 +655,7 @@ export function AccountsInlineTable({
                         return (
                           <td key={col.key} className={cn("px-2.5", tdClass)} style={{ width: col.width, minWidth: col.width }}>
                             <span className="text-[11px] text-muted-foreground truncate block">
-                              {getCellValue(account, col.key) || <span className="text-muted-foreground/30">{"2014"}</span>}
+                              {getCellValue(account, col.key) || <span className="text-muted-foreground/30">{"—"}</span>}
                             </span>
                           </td>
                         );

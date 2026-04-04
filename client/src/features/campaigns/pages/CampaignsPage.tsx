@@ -119,15 +119,18 @@ function CampaignsContent() {
     sortBy: "recent" as CampaignSortBy,
     filterStatus: [] as string[],
     filterAccount: "",
+    showDemoCampaigns: false as boolean,
   });
   const groupBy = listPrefs.groupBy;
   const sortBy = listPrefs.sortBy;
   const filterStatus = listPrefs.filterStatus;
   const listFilterAccount = listPrefs.filterAccount;
+  const showDemoCampaigns = listPrefs.showDemoCampaigns;
   const setGroupBy = useCallback((v: CampaignGroupBy) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
   const setSortBy = useCallback((v: CampaignSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
   const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
   const setListFilterAccount = useCallback((v: string) => setListPrefs(p => ({ ...p, filterAccount: v })), [setListPrefs]);
+  const setShowDemoCampaigns = useCallback((v: boolean) => setListPrefs(p => ({ ...p, showDemoCampaigns: v })), [setListPrefs]);
 
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
@@ -252,7 +255,7 @@ function CampaignsContent() {
   // ── List-view control helpers ──────────────────────────────────────────────
   const isGroupNonDefault     = groupBy !== "status";
   const isSortNonDefault      = sortBy !== "recent";
-  const isFilterActive        = filterStatus.length > 0 || !!listFilterAccount;
+  const isFilterActive        = filterStatus.length > 0 || !!listFilterAccount || showDemoCampaigns;
   const hasNonDefaultControls = isGroupNonDefault || isSortNonDefault || isFilterActive;
 
   const toggleFilterStatus = useCallback((s: string) =>
@@ -263,6 +266,7 @@ function CampaignsContent() {
     setGroupBy("status");
     setSortBy("recent");
     setListFilterAccount("");
+    setShowDemoCampaigns(false);
   }, []);
 
   // ── Available accounts (for list filter dropdown) ──────────────────────────
@@ -297,7 +301,20 @@ function CampaignsContent() {
 
   const handleAddCampaign = useCallback(async () => {
     try {
-      const newCampaign = await createCampaign({ name: "New Campaign", status: "Draft", type: "Re-engagement", description: "", start_date: new Date().toISOString().slice(0, 10) });
+      const payload: Record<string, unknown> = {
+        name: "New Campaign",
+        status: "Draft",
+        type: "Re-engagement",
+        description: "",
+        start_date: new Date().toISOString().slice(0, 10),
+        is_demo: true, // Default to demo for agency campaigns
+        agent_name: "Sofia", // Default agent name
+        calendar_link: "https://cal.com/lead-awaker-orlfpr/demo", // Demo calendar
+      };
+      if (isAgencyUser) {
+        payload.Accounts_id = 1; // Lead Awaker (use DB field name, gets converted by fromDbKeys)
+      }
+      const newCampaign = await createCampaign(payload);
       await handleRefresh();
       const campaignId = newCampaign?.id ?? newCampaign?.Id;
       if (campaignId) {
@@ -395,6 +412,8 @@ function CampaignsContent() {
             filterAccount={listFilterAccount}
             onFilterAccountChange={setListFilterAccount}
             availableAccounts={availableAccounts}
+            showDemoCampaigns={showDemoCampaigns}
+            onShowDemoCampaignsChange={isAgencyUser ? setShowDemoCampaigns : () => {}}
             hasNonDefaultControls={hasNonDefaultControls}
             isGroupNonDefault={isGroupNonDefault}
             isSortNonDefault={isSortNonDefault}

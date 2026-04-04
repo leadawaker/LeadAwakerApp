@@ -14,7 +14,7 @@ import { broadcast, addClient, removeClient } from "../sse";
 import { handleZodError, wrapAsync, getPagination } from "./_helpers";
 import { eq, type SQL } from "drizzle-orm";
 import type { Request, Response } from "express";
-import { sendToChannel, sendVoiceToChannel } from "../channel-sender";
+import { sendToChannel, sendVoiceToChannel, sendPhotoToChannel } from "../channel-sender";
 
 export function registerConversationsRoutes(app: Express): void {
   // ─── Interactions ─────────────────────────────────────────────────
@@ -133,12 +133,17 @@ export function registerConversationsRoutes(app: Express): void {
 
           const content = (interaction as any).content ?? "";
           const isAudio = (parsed.data as any).type === "audio" || content.startsWith("data:audio/");
+          const attachment = (req.body as any).attachment;
+          const isPhoto = !!attachment?.imageUrl;
 
           let result;
           if (isAudio) {
             // Voice memo: send as Telegram voice message
             const mimeType = content.match(/^data:(audio\/[^;]+)/)?.[1] || "audio/ogg";
             result = await sendVoiceToChannel(channelId, campaignChannel, content, mimeType, campaignBotToken);
+          } else if (isPhoto) {
+            // Photo: send as Telegram photo with optional caption
+            result = await sendPhotoToChannel(channelId, campaignChannel, attachment.imageUrl, content || attachment.caption, campaignBotToken);
           } else {
             result = await sendToChannel(channelId, campaignChannel, content, campaignBotToken);
           }

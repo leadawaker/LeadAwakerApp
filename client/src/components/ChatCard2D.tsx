@@ -145,7 +145,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB", leadFullN
 
   return (
     <div ref={containerRef} className="w-full max-w-2xl mx-auto relative">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden relative">
+      <div className="bg-white dark:bg-card rounded-2xl shadow-xl border border-slate-100 dark:border-border overflow-hidden relative">
         <div className="p-4 flex items-center gap-3" style={{ backgroundColor: `color-mix(in srgb, ${themeColor}, black 15%)` }}>
           <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }}>
             {headerName[0]}
@@ -161,7 +161,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB", leadFullN
 
         <div 
           ref={scrollRef}
-          className="p-6 space-y-4 bg-slate-50 h-[600px] overflow-y-auto relative"
+          className="p-6 space-y-4 bg-slate-50 dark:bg-background h-[600px] overflow-y-auto relative"
           style={{ scrollBehavior: 'smooth' }}
         >
           <div className="relative z-10 space-y-4">
@@ -169,14 +169,14 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB", leadFullN
               <div key={msg.id || idx}>
                 {msg.type === 'system' ? (
                   <motion.div className="flex justify-center py-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <div className="text-xs text-slate-400 font-medium">--- {msg.content} ---</div>
+                    <div className="text-xs text-slate-400 dark:text-muted-foreground font-medium">--- {msg.content} ---</div>
                   </motion.div>
                 ) : (
                   <motion.div className={`flex ${msg.type === 'agent' ? 'justify-end' : 'justify-start'}`} variants={messageVariants} initial="hidden" animate="visible">
                     <div className={`flex flex-col ${msg.type === 'agent' ? 'items-end' : 'items-start'} gap-1 max-w-[85%]`}>
-                      <div className={`rounded-2xl px-4 py-3 shadow-sm text-sm relative pb-6 ${msg.type === 'agent' ? 'text-white rounded-tr-sm' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'}`} style={msg.type === 'agent' ? { backgroundColor: themeColor } : {}}>
+                      <div className={`rounded-2xl px-4 py-3 shadow-sm text-sm relative pb-6 ${msg.type === 'agent' ? 'text-white rounded-tr-sm' : 'bg-white dark:bg-muted text-slate-700 dark:text-foreground border border-slate-100 dark:border-border rounded-tl-sm'}`} style={msg.type === 'agent' ? { backgroundColor: themeColor } : {}}>
                         {msg.content?.split('\n').map((line, i) => <div key={i}>{line}</div>)}
-                        <span className={`absolute bottom-1 right-3 text-[10px] ${msg.type === 'agent' ? 'text-white/70' : 'text-slate-400'}`}>
+                        <span className={`absolute bottom-1 right-3 text-[10px] ${msg.type === 'agent' ? 'text-white/70' : 'text-slate-400 dark:text-muted-foreground'}`}>
                           {msg.time}
                         </span>
                       </div>
@@ -187,7 +187,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB", leadFullN
             ))}
             {isAnimating && currentStep < chatMessages.length && (
               <div className="flex justify-start items-center gap-3">
-                <div className="bg-slate-200 rounded-full px-4 py-2 flex gap-1">
+                <div className="bg-slate-200 dark:bg-muted rounded-full px-4 py-2 flex gap-1">
                   <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }}>•</motion.span>
                   <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}>•</motion.span>
                   <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}>•</motion.span>
@@ -198,7 +198,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB", leadFullN
         </div>
 
         {!isAnimating && currentStep < chatMessages.length && (
-          <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
+          <div className="p-6 bg-slate-50 dark:bg-background border-t border-slate-200 dark:border-border flex justify-center">
             <Button onClick={startAnimation} className="rounded-xl px-8" style={{ backgroundColor: `color-mix(in srgb, ${themeColor}, black 15%)` }}>
               Continue
             </Button>
