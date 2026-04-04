@@ -25,7 +25,6 @@ import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
 import SalesRepSteps from "@/components/SalesRepSteps";
 import RevenueCalculator from "@/components/RevenueCalculator";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
-import DemoVideoSection from "@/components/DemoVideoSection";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 
@@ -349,9 +348,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Demo Video Section */}
-      <DemoVideoSection />
 
       {/* Revenue Calculator */}
       <RevenueCalculator />
