@@ -79,6 +79,11 @@
       "roi": "Jouw ROI"
     }
   },
+  "demo": {
+    "badge": "Live Demo",
+    "title": "Zie het platform achter de resultaten",
+    "subtitle": "Bekijk hoe een echt gesprek van koude lead naar geboekte afspraak gaat, automatisch."
+  },
   "bottomCta": {
     "title": "AI in de praktijk",
     "quote": "Bekijk live hoe onze AI gesprekken afhandelt als een agent voor jouw bedrijf, zodat je team kan focussen op wat echt telt.",

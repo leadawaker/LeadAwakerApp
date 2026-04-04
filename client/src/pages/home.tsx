@@ -25,6 +25,7 @@ import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
 import SalesRepSteps from "@/components/SalesRepSteps";
 import RevenueCalculator from "@/components/RevenueCalculator";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
+import DemoVideoSection from "@/components/DemoVideoSection";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 
@@ -36,9 +37,9 @@ export default function Home() {
   const [isFinished, setIsFinished] = useState(false);
 
   return (
-    <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible bg-[#F9FAFC] dark:bg-background">
+    <div className="min-h-screen pt-32 overflow-x-clip md:overflow-visible bg-[#F9FAFC] dark:bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-20 md:pb-32 bg-[#F9FAFC]">
+      <section className="relative overflow-x-clip pb-20 md:pb-32 bg-[#F9FAFC] dark:bg-background">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
 
         <div className="container mx-auto px-4 md:px-6">
@@ -80,13 +81,13 @@ export default function Home() {
                 </motion.span>
 
                 <motion.span
-                  className="relative block w-full"
+                  className="relative block w-full isolate"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.5 }}
                 >
                   <motion.span
-                    className="absolute top-0 bottom-0 -z-10"
+                    className="absolute top-0 bottom-0 z-0"
                     style={{
                       background:
                         "linear-gradient(to right, transparent 0%, #FEB800 15%, #FEB800 70%, rgba(255,255,255,0.6) 85%, transparent 100%)",
@@ -349,11 +350,14 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Demo Video Section */}
+      <DemoVideoSection />
+
       {/* Revenue Calculator */}
       <RevenueCalculator />
 
       {/* Security & AI Guardrails Section */}
-      <section className="py-48 bg-[#F6F5FA]">
+      <section className="py-48 bg-[#F6F5FA] dark:bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -403,7 +407,7 @@ export default function Home() {
       </section>
 
       {/* Bottom Demo CTA Section */}
-      <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
+      <section className="py-32 bg-primary dark:bg-[#1a3060] text-primary-foreground relative overflow-hidden">
         {/* Dotted surface animation (white dots on dark bg) */}
         <DottedSurface className="opacity-60" />
         <div className="container mx-auto px-4 md:px-6 relative z-10">

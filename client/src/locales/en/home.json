@@ -79,6 +79,11 @@
       "roi": "Your ROI"
     }
   },
+  "demo": {
+    "badge": "Live Demo",
+    "title": "See the platform behind the results",
+    "subtitle": "Watch how a real conversation goes from cold lead to booked call, automatically."
+  },
   "bottomCta": {
     "title": "AI in Action",
     "quote": "See our AI live handling conversations like an agent for your business, so your team can focus on what matters.",

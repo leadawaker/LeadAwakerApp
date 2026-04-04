@@ -80,6 +80,11 @@
       "roi": "Seu ROI"
     }
   },
+  "demo": {
+    "badge": "Demo ao Vivo",
+    "title": "Veja a plataforma por trás dos resultados",
+    "subtitle": "Assista como uma conversa real vai de lead frio até ligação agendada, automaticamente."
+  },
   "bottomCta": {
     "title": "IA na Prática",
     "quote": "Veja ao vivo a nossa IA atendendo como um agente do seu negócio, para que seu time foque no que importa.",
