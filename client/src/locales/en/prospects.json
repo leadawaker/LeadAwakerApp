@@ -41,7 +41,8 @@
     "of": "of",
     "fold": "Fold",
     "unfold": "Unfold",
-    "contactInfo": "Contact Info"
+    "contactInfo": "Contact Info",
+    "overdue": "Overdue"
   },
   "followups": {
     "noFollowUps": "No follow-ups due",
@@ -62,6 +63,7 @@
     "country": "Country",
     "priority": "Priority",
     "outreachStatus": "Outreach Stage",
+    "date": "Date",
     "none": "None"
   },
   "filter": {
@@ -147,7 +149,19 @@
     "contact2": "Contact 2",
     "pipeline": "Pipeline",
     "enrichment": "LinkedIn Enrichment",
-    "notes": "Notes"
+    "outreachTimeline": "Outreach Timeline",
+    "person": "Person",
+    "starters": "Starters",
+    "notes": "Notes",
+    "aiSummary": "AI Summary",
+    "businessIdeas": "Business Ideas",
+    "websiteEnrichment": "Website",
+    "nextAction": "Next Action",
+    "emails": "Emails",
+    "whatsApp": "WhatsApp",
+    "interactions": "Interactions",
+    "tasks": "Tasks",
+    "offerIdeas": "Offer Ideas"
   },
   "fields": {
     "name": "Name",
@@ -196,7 +210,11 @@
     "topPost": "Top Post",
     "aiSummary": "AI Summary",
     "conversationStarters": "Conversation Starters",
-    "notEnriched": "Not enriched yet"
+    "notEnriched": "Not enriched yet",
+    "notEnrichedHint": "Use the Enrich button to pull in LinkedIn and website data",
+    "personBrief": "About this person",
+    "icebreaker": "Icebreaker",
+    "companySummary": "Company Summary"
   },
   "addContact2": "Add Contact 2",
   "hideContact2": "Hide Contact 2",
@@ -221,7 +239,14 @@
     "savePhoto": "Save Photo",
     "convertToAccount": "Convert to Account",
     "converting": "Converting...",
-    "linkedAccount": "Account"
+    "linkedAccount": "Account",
+    "advanceStage": "Advance to next stage",
+    "markLost": "Mark as lost",
+    "filterByNiche": "Filter by niche",
+    "enrichRefreshWebsite": "Website",
+    "enrichRefreshLinkedIn": "LinkedIn",
+    "enrichRefreshBoth": "Both",
+    "enrichRefreshing": "Enriching..."
   },
   "related": {
     "unnamed": "Unnamed",
@@ -321,5 +346,46 @@
     "sending": "Sending...",
     "noPhone": "No phone number on file",
     "sendFailed": "Failed to send. Please try again."
+  },
+  "tabs": {
+    "company": "Company",
+    "contact1": "Contact 1",
+    "contact2": "Contact 2"
+  },
+  "enrich": {
+    "website": "Website",
+    "contact1": "Contact 1",
+    "contact2": "Contact 2",
+    "start": "Start"
+  },
+  "offerActions": {
+    "refresh": "Refresh from website",
+    "addOffer": "Add manually",
+    "addOfferAi": "Generate AI offer"
+  },
+  "outreach": {
+    "title": "Outreach Generator",
+    "generate": "Generate",
+    "generating": "Generating...",
+    "anyOffer": "Any offer",
+    "company": "Company",
+    "customInstructions": "Custom instructions for this message...",
+    "styles": {
+      "hormozi": "Hormozi",
+      "saraev": "Saraev",
+      "cashvertising": "Cashvertising",
+      "professional": "Professional"
+    },
+    "formats": {
+      "whatsapp": "WhatsApp",
+      "linkedinNote": "LinkedIn Note",
+      "linkedinMessage": "LinkedIn Message",
+      "companyMessage": "Company Message",
+      "email": "Email",
+      "cold_call": "Cold Call Anchors"
+    },
+    "stylePlaceholder": "Style",
+    "formatPlaceholder": "Format",
+    "languagePlaceholder": "Lang"
   }
 }

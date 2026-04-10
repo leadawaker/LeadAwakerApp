@@ -48,7 +48,8 @@
     "importCSV": "Importeer CSV",
     "fold": "Invouwen",
     "unfold": "Uitvouwen",
-    "contactInfo": "Contactgegevens"
+    "contactInfo": "Contactgegevens",
+    "overdue": "Achterstallig"
   },
   "followups": {
     "noFollowUps": "Geen opvolgingen gepland",
@@ -69,6 +70,7 @@
     "country": "Land",
     "priority": "Prioriteit",
     "outreachStatus": "Outreach Fase",
+    "date": "Datum",
     "none": "Geen"
   },
   "filter": {
@@ -154,7 +156,19 @@
     "contact2": "Contact 2",
     "pipeline": "Pipeline",
     "enrichment": "LinkedIn Verrijking",
-    "notes": "Notities"
+    "outreachTimeline": "Outreach Tijdlijn",
+    "person": "Persoon",
+    "starters": "Starters",
+    "notes": "Notities",
+    "aiSummary": "AI Samenvatting",
+    "businessIdeas": "Zakelijke Ideeën",
+    "websiteEnrichment": "Website",
+    "nextAction": "Volgende Actie",
+    "emails": "E-mails",
+    "whatsApp": "WhatsApp",
+    "interactions": "Interacties",
+    "tasks": "Taken",
+    "offerIdeas": "Aanbiedingsideeën"
   },
   "fields": {
     "name": "Naam",
@@ -203,7 +217,10 @@
     "topPost": "Beste Post",
     "aiSummary": "AI Samenvatting",
     "conversationStarters": "Gespreksopeners",
-    "notEnriched": "Nog niet verrijkt"
+    "notEnriched": "Nog niet verrijkt",
+    "notEnrichedHint": "Gebruik de Verrijk-knop om LinkedIn- en websitedata op te halen",
+    "personBrief": "Over deze persoon",
+    "icebreaker": "Ijsbreker"
   },
   "addContact2": "Contact 2 toevoegen",
   "hideContact2": "Contact 2 verbergen",
@@ -228,7 +245,14 @@
     "savePhoto": "Foto Opslaan",
     "convertToAccount": "Omzetten naar Account",
     "converting": "Omzetten...",
-    "linkedAccount": "Account"
+    "linkedAccount": "Account",
+    "advanceStage": "Naar volgende fase",
+    "markLost": "Markeer als verloren",
+    "filterByNiche": "Filter op niche",
+    "enrichRefreshWebsite": "Website",
+    "enrichRefreshLinkedIn": "LinkedIn",
+    "enrichRefreshBoth": "Beide",
+    "enrichRefreshing": "Verrijken..."
   },
   "related": {
     "unnamed": "Naamloos",
@@ -328,5 +352,46 @@
     "sending": "Verzenden...",
     "noPhone": "Geen telefoonnummer beschikbaar",
     "sendFailed": "Verzenden mislukt. Probeer het opnieuw."
+  },
+  "tabs": {
+    "company": "Bedrijf",
+    "contact1": "Contact 1",
+    "contact2": "Contact 2"
+  },
+  "enrich": {
+    "website": "Website",
+    "contact1": "Contact 1",
+    "contact2": "Contact 2",
+    "start": "Start"
+  },
+  "offerActions": {
+    "refresh": "Vernieuwen van website",
+    "addOffer": "Handmatig toevoegen",
+    "addOfferAi": "AI-aanbieding genereren"
+  },
+  "outreach": {
+    "title": "Berichtgenerator",
+    "generate": "Genereren",
+    "generating": "Genereren...",
+    "anyOffer": "Elke aanbieding",
+    "company": "Bedrijf",
+    "customInstructions": "Aangepaste instructies voor dit bericht...",
+    "styles": {
+      "hormozi": "Hormozi",
+      "saraev": "Saraev",
+      "cashvertising": "Cashvertising",
+      "professional": "Professioneel"
+    },
+    "formats": {
+      "whatsapp": "WhatsApp",
+      "linkedinNote": "LinkedIn Notitie",
+      "linkedinMessage": "LinkedIn Bericht",
+      "companyMessage": "Bedrijfsbericht",
+      "email": "E-mail",
+      "cold_call": "Cold Call Ankers"
+    },
+    "stylePlaceholder": "Stijl",
+    "formatPlaceholder": "Formaat",
+    "languagePlaceholder": "Taal"
   }
 }

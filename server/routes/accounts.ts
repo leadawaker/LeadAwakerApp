@@ -18,7 +18,21 @@ import { handleZodError, wrapAsync, getPagination, getEngineUrl, frontendBaseUrl
 import { storage as storageImport } from "../storage";
 import { sendInviteEmail } from "../email";
 import { broadcast } from "../sse";
+import { sendWhatsAppCloudImage } from "../channel-sender";
 import crypto from "crypto";
+import { buildOutreachPrompt } from "../outreachStyles";
+
+/**
+ * Normalize a phone number to E.164 digits-only format.
+ * Strips all non-digits, validates minimum length (7) and maximum (15).
+ * Returns null if the number is invalid.
+ */
+function normalizePhone(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const digits = String(raw).replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return null;
+  return digits;
+}
 
 export function registerAccountsRoutes(app: Express): void {
   // ─── Accounts ─────────────────────────────────────────────────────
@@ -65,6 +79,31 @@ export function registerAccountsRoutes(app: Express): void {
     const ok = await storage.deleteAccount(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Account not found" });
     res.status(204).end();
+  }));
+
+  app.post("/api/accounts/:id/clone-voice", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    const { audioDataUrl, language, fileName } = req.body;
+    if (!audioDataUrl || !language || !["en", "pt", "nl"].includes(language)) {
+      return res.status(400).json({ message: "audioDataUrl, language (en|pt|nl), and fileName required" });
+    }
+    const engineUrl = getEngineUrl();
+    const engineRes = await fetch(`${engineUrl}/api/voice/clone`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audio_data_url: audioDataUrl, filename: fileName, language, account_id: accountId }),
+    });
+    if (!engineRes.ok) {
+      const errText = await engineRes.text();
+      return res.status(502).json({ message: "Voice cloning failed", error: errText });
+    }
+    const result = await engineRes.json() as { success: boolean; model_id?: string; error?: string };
+    if (!result.success) {
+      return res.status(400).json({ message: result.error || "Voice cloning failed" });
+    }
+    const field = `tts_voice_id_${language}`;
+    await storage.updateAccount(accountId, { [field]: result.model_id } as any);
+    res.json({ success: true, model_id: result.model_id, language });
   }));
 
   app.post("/api/accounts/:id/sync-instagram", requireAgency, wrapAsync(async (req, res) => {
@@ -280,7 +319,179 @@ export function registerAccountsRoutes(app: Express): void {
     });
   }));
 
-  app.post("/api/prospects/:id/whatsapp/send", requireAgency, wrapAsync(async (req, res) => {
+  // ─── Prospect Enrichment ────────────────────────────────────────
+  app.post("/api/prospects/:id/enrich", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { type, contactSlot } = req.body as { type?: "website" | "linkedin" | "both"; contactSlot?: 1 | 2 };
+    if (!type || !["website", "linkedin", "both"].includes(type)) {
+      return res.status(400).json({ message: "type must be 'website', 'linkedin', or 'both'" });
+    }
+
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    const results: { website?: string; linkedin?: any } = {};
+    const slot = contactSlot ?? 1;
+
+    const spawnWebsiteEnricher = async () => {
+      const { spawn } = await import("child_process");
+      const args = ["-m", "tools.prospect_enricher", "--prospect-id", String(prospectId), "--force"];
+      if (slot === 2) args.push("--contact-slot", "2");
+      const child = spawn("/home/gabriel/automations/.venv/bin/python3", args, {
+        cwd: "/home/gabriel/automations", detached: true, stdio: "ignore",
+      });
+      child.unref();
+      results.website = "started";
+    };
+
+    if (type === "both") {
+      // Run LinkedIn first so Python enricher can read the data from DB
+      try {
+        const { enrichLinkedIn } = await import("../linkedinEnricher");
+        results.linkedin = await enrichLinkedIn(prospectId, slot);
+      } catch (err: any) {
+        console.error("[Enrich] LinkedIn error:", err.message);
+        results.linkedin = { error: err.message };
+      }
+      // Then spawn website enricher (reads LinkedIn data from DB)
+      await spawnWebsiteEnricher();
+    } else if (type === "website") {
+      await spawnWebsiteEnricher();
+    } else if (type === "linkedin") {
+      try {
+        const { enrichLinkedIn } = await import("../linkedinEnricher");
+        results.linkedin = await enrichLinkedIn(prospectId, slot);
+      } catch (err: any) {
+        console.error("[Enrich] LinkedIn error:", err.message);
+        results.linkedin = { error: err.message };
+      }
+    }
+
+    res.json({ ok: true, results });
+  }));
+
+  // ─── Outreach Message Generation ─────────────────────────────────
+  app.post("/api/prospects/:id/generate-messages", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { style, format, language = "en", offer, contact, customInstructions } = req.body;
+
+    if (!style || !format) {
+      return res.status(400).json({ message: "style and format are required" });
+    }
+
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+    // Enrichment is optional: generate messages even without aiSummary (less context)
+
+    const { interactions } = await storage.getInteractionsByProspectId(prospectId, 10);
+
+    const prompt = buildOutreachPrompt(prospect, style, format, language, interactions.map(i => ({
+      content: i.content || "",
+      direction: i.direction || "outbound",
+      sentAt: i.sentAt,
+    })), { selectedOffer: offer, selectedContact: contact, customInstructions });
+
+    const { execFile } = await import("child_process");
+    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
+
+    const result = await new Promise<string>((resolve, reject) => {
+      execFile(CLAUDE_BIN, ["-p", prompt, "--model", "sonnet", "--max-turns", "1"],
+        { timeout: 120000, maxBuffer: 1024 * 1024 },
+        (error, stdout, stderr) => {
+          if (error) reject(error);
+          else resolve(stdout);
+        }
+      );
+    });
+
+    // Strip markdown fences if present (claude sometimes wraps JSON)
+    let cleaned = result.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    }
+
+    const newMessages: Array<{ title: string; text: string }> = JSON.parse(cleaned);
+
+    // Merge with existing saved messages: keep favorites, replace non-favorites
+    let existing: Array<{ title: string; text: string; saved?: boolean }> = [];
+    try {
+      if (prospect.generatedMessages) existing = JSON.parse(prospect.generatedMessages);
+    } catch { /* ignore */ }
+
+    const favorites = existing.filter(m => m.saved);
+    const merged = [...favorites, ...newMessages.map(m => ({ ...m, saved: false }))];
+    await storage.updateProspect(prospectId, { generatedMessages: JSON.stringify(merged) });
+
+    res.json({ messages: merged });
+  }));
+
+  // ─── Append Offer Idea (AI-generated) ────────────────────────────
+  app.post("/api/prospects/:id/append-offer", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { count } = req.body as { count?: number };
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    // Parse existing offers (handles both string[] and {text,checked}[] formats)
+    let existingOffers: Array<{ text: string; checked?: boolean }> = [];
+    try {
+      if (prospect.offerIdeas) {
+        const parsed = JSON.parse(prospect.offerIdeas);
+        if (Array.isArray(parsed)) {
+          existingOffers = parsed.map((item: any) =>
+            typeof item === "string" ? { text: item } : { text: item.text, checked: item.checked }
+          );
+        }
+      }
+    } catch {
+      existingOffers = [];
+    }
+
+    const existingTexts = existingOffers.map(o => o.text);
+    const companyName = prospect.company || prospect.name || "this company";
+    const niche = prospect.niche ? ` in the ${prospect.niche} industry` : "";
+    const summary = prospect.aiSummary ? `\nCompany summary: ${prospect.aiSummary}` : "";
+    const pageSummaries = prospect.pageSummaries ? `\nWebsite research: ${String(prospect.pageSummaries).slice(0, 1500)}` : "";
+    const numToGenerate = count ?? (existingOffers.length === 0 ? 5 : 1);
+    const existingBlock = existingTexts.length > 0
+      ? `\nExisting offers (do NOT repeat these): ${existingTexts.join("; ")}`
+      : "";
+
+    const prompt = `You are generating offer ideas for Lead Awaker, an AI lead reactivation agency. Lead Awaker uses AI to reactivate dead/old leads via WhatsApp conversations, automate intake/booking, and handle after-hours inquiries.
+
+Company: ${companyName}${niche}${summary}${pageSummaries}${existingBlock}
+
+Generate exactly ${numToGenerate} unique offer idea${numToGenerate > 1 ? "s" : ""} for how Lead Awaker could help ${companyName}. Each offer should reference something specific about their business.
+Format: one offer per line, each as "Title: description". No numbering, no quotes, no extra text.
+Return ONLY the offer lines, nothing else.`;
+
+    const { execFile } = await import("child_process");
+    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
+
+    const result = await new Promise<string>((resolve, reject) => {
+      execFile(CLAUDE_BIN, ["-p", prompt, "--model", "haiku", "--max-turns", "1"],
+        { timeout: 60000, maxBuffer: 1024 * 1024 },
+        (error, stdout, stderr) => {
+          if (error) reject(error);
+          else resolve(stdout);
+        }
+      );
+    });
+
+    const newOfferTexts = result.trim().split("\n").map(l => l.replace(/^\d+[\.\)]\s*/, "").trim()).filter(Boolean);
+    const newOffers = newOfferTexts.map(text => ({ text, checked: false }));
+
+    const updatedOffers = [...existingOffers, ...newOffers];
+    await storage.updateProspect(prospectId, { offerIdeas: JSON.stringify(updatedOffers) });
+
+    res.json({ offers: newOfferTexts });
+  }));
+
+  app.post("/api/prospects/:id/whatsapp/send", (req, res, next) => {
+    console.log(`[WA-Send-PRE] prospect=${req.params.id} auth=${req.isAuthenticated()} user=${(req.user as any)?.id} role=${(req.user as any)?.role} acctId=${(req.user as any)?.accountsId}`);
+    next();
+  }, requireAgency, wrapAsync(async (req, res) => {
+    console.log(`[WA-Send] prospect=${req.params.id} body=`, JSON.stringify(req.body).slice(0, 200));
     const prospectId = Number(req.params.id);
     const { message } = req.body as { message?: string };
 
@@ -291,9 +502,9 @@ export function registerAccountsRoutes(app: Express): void {
     const prospect = await storage.getProspectById(prospectId);
     if (!prospect) return res.status(404).json({ message: "Prospect not found" });
 
-    const phone = (prospect as any).phone || (prospect as any).contactPhone || null;
+    const phone = normalizePhone((prospect as any).phone || (prospect as any).contactPhone);
     if (!phone) {
-      return res.status(400).json({ message: "Prospect has no phone number" });
+      return res.status(400).json({ message: "Prospect has no valid phone number", code: "invalid_phone" });
     }
 
     const token = process.env.WHATSAPP_TOKEN;
@@ -302,7 +513,7 @@ export function registerAccountsRoutes(app: Express): void {
 
     if (token && phoneNumberId) {
       const waRes = await fetch(
-        `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+        `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
         {
           method: "POST",
           headers: {
@@ -311,7 +522,7 @@ export function registerAccountsRoutes(app: Express): void {
           },
           body: JSON.stringify({
             messaging_product: "whatsapp",
-            to: String(phone).replace(/\D/g, ""),
+            to: phone,
             type: "text",
             text: { body: message.trim() },
           }),
@@ -319,6 +530,11 @@ export function registerAccountsRoutes(app: Express): void {
       );
       if (!waRes.ok) {
         const err = await waRes.json().catch(() => ({}));
+        // Meta error 131047 = message outside 24-hour customer service window
+        const errorCode = err?.error?.code;
+        if (errorCode === 131047) {
+          return res.status(422).json({ message: "WhatsApp 24-hour window expired", code: "window_expired", detail: err });
+        }
         return res.status(502).json({ message: "WhatsApp API error", detail: err });
       }
       sendStatus = "sent";
@@ -331,6 +547,197 @@ export function registerAccountsRoutes(app: Express): void {
       type: "whatsapp",
       direction: "outbound",
       status: sendStatus,
+      sentAt: new Date(),
+    });
+
+    const responseBody = toDbKeys(interaction as any, interactions);
+    broadcast(1, "new_interaction", responseBody);
+
+    res.status(201).json({ interaction: responseBody });
+  }));
+
+  // Typing indicator — best-effort, always returns 200
+  app.post("/api/prospects/:id/whatsapp/typing", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    const phone = normalizePhone((prospect as any).phone || (prospect as any).contactPhone);
+    if (!phone) return res.status(400).json({ message: "Prospect has no phone number" });
+
+    const token = process.env.WHATSAPP_TOKEN;
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    if (token && phoneNumberId) {
+      // Fire-and-forget — typing indicators are best-effort
+      fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: phone,
+          type: "typing",
+          typing: { duration: 25000 },
+        }),
+      }).catch(() => {});
+    }
+    res.status(200).json({ ok: true });
+  }));
+
+  app.post("/api/prospects/:id/whatsapp/send-image", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { imageData, mimeType, caption } = req.body as { imageData?: string; mimeType?: string; caption?: string };
+
+    if (!imageData || !mimeType) {
+      return res.status(400).json({ message: "imageData and mimeType are required" });
+    }
+
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    const phone = normalizePhone((prospect as any).phone || (prospect as any).contactPhone);
+    if (!phone) {
+      return res.status(400).json({ message: "Prospect has no valid phone number", code: "invalid_phone" });
+    }
+
+    const result = await sendWhatsAppCloudImage(phone, imageData, mimeType, caption);
+    if (!result.success) {
+      const errMsg = result.error ?? "Failed to send image";
+      if (errMsg.includes("131047")) {
+        return res.status(422).json({ message: "WhatsApp 24-hour window expired", code: "window_expired" });
+      }
+      return res.status(502).json({ message: errMsg });
+    }
+
+    const interaction = await storage.createInteraction({
+      prospectId,
+      accountsId: 1,
+      content: caption || "[Image]",
+      type: "whatsapp",
+      direction: "outbound",
+      status: "sent",
+      sentAt: new Date(),
+      attachment: imageData,
+    });
+
+    const responseBody = toDbKeys(interaction as any, interactions);
+    broadcast(1, "new_interaction", responseBody);
+
+    res.status(201).json({ interaction: responseBody });
+  }));
+
+  // ─── WhatsApp Message Templates (Meta) ───────────────────────────
+
+  app.get("/api/whatsapp/templates", requireAgency, wrapAsync(async (req, res) => {
+    const token = process.env.WHATSAPP_TOKEN;
+    const wabaId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+    if (!token || !wabaId) {
+      return res.status(500).json({ message: "WhatsApp Business Account not configured" });
+    }
+    const metaRes = await fetch(
+      `https://graph.facebook.com/v22.0/${wabaId}/message_templates?limit=50&status=APPROVED`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!metaRes.ok) {
+      const err = await metaRes.json().catch(() => ({}));
+      return res.status(502).json({ message: "Failed to fetch templates", detail: err });
+    }
+    const { data } = await metaRes.json() as { data: any[] };
+    const templates = data.map((t: any) => ({
+      name: t.name,
+      language: t.language,
+      category: t.category,
+      status: t.status,
+      components: t.components,
+    }));
+    res.json(templates);
+  }));
+
+  app.post("/api/prospects/:id/whatsapp/send-template", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { templateName, languageCode, variables } = req.body as {
+      templateName?: string;
+      languageCode?: string;
+      variables?: { body?: string[]; header?: string[]; button?: string[] };
+    };
+
+    if (!templateName || !languageCode) {
+      return res.status(400).json({ message: "templateName and languageCode are required" });
+    }
+
+    const prospect = await storage.getProspectById(prospectId);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    const phone = normalizePhone((prospect as any).phone || (prospect as any).contactPhone);
+    if (!phone) {
+      return res.status(400).json({ message: "Prospect has no valid phone number", code: "invalid_phone" });
+    }
+
+    const token = process.env.WHATSAPP_TOKEN;
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    if (!token || !phoneNumberId) {
+      return res.status(500).json({ message: "WhatsApp not configured" });
+    }
+
+    // Build components array from variables
+    const components: any[] = [];
+    if (variables?.header?.length) {
+      components.push({
+        type: "header",
+        parameters: variables.header.map((v) => ({ type: "text", text: v })),
+      });
+    }
+    if (variables?.body?.length) {
+      components.push({
+        type: "body",
+        parameters: variables.body.map((v) => ({ type: "text", text: v })),
+      });
+    }
+    if (variables?.button?.length) {
+      components.push({
+        type: "button",
+        sub_type: "url",
+        index: 0,
+        parameters: variables.button.map((v) => ({ type: "text", text: v })),
+      });
+    }
+
+    const waRes = await fetch(
+      `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: phone,
+          type: "template",
+          template: {
+            name: templateName,
+            language: { code: languageCode },
+            ...(components.length > 0 ? { components } : {}),
+          },
+        }),
+      }
+    );
+
+    if (!waRes.ok) {
+      const err = await waRes.json().catch(() => ({}));
+      return res.status(502).json({ message: "WhatsApp API error", detail: err });
+    }
+
+    // Build a human-readable content string for the interaction log
+    const bodyVars = variables?.body?.join(", ") || "";
+    const content = `[Template: ${templateName} (${languageCode})]${bodyVars ? ` Variables: ${bodyVars}` : ""}`;
+
+    const interaction = await storage.createInteraction({
+      prospectId,
+      accountsId: 1,
+      content,
+      type: "whatsapp",
+      direction: "outbound",
+      status: "sent",
       sentAt: new Date(),
     });
 

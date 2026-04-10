@@ -48,7 +48,8 @@
     "importCSV": "Importar CSV",
     "fold": "Recolher",
     "unfold": "Expandir",
-    "contactInfo": "Info de Contacto"
+    "contactInfo": "Info de Contacto",
+    "overdue": "Atrasado"
   },
   "followups": {
     "noFollowUps": "Sem follow-ups pendentes",
@@ -69,6 +70,7 @@
     "country": "Pa\u00eds",
     "priority": "Prioridade",
     "outreachStatus": "Etapa de Prospecção",
+    "date": "Data",
     "none": "Nenhum"
   },
   "filter": {
@@ -154,7 +156,19 @@
     "contact2": "Contato 2",
     "pipeline": "Pipeline",
     "enrichment": "Enriquecimento LinkedIn",
-    "notes": "Notas"
+    "outreachTimeline": "Linha do Tempo de Outreach",
+    "person": "Pessoa",
+    "starters": "Starters",
+    "notes": "Notas",
+    "aiSummary": "Resumo IA",
+    "businessIdeas": "Ideias de Negócio",
+    "websiteEnrichment": "Website",
+    "nextAction": "Próxima Ação",
+    "emails": "E-mails",
+    "whatsApp": "WhatsApp",
+    "interactions": "Interações",
+    "tasks": "Tarefas",
+    "offerIdeas": "Ideias de Oferta"
   },
   "fields": {
     "name": "Nome",
@@ -203,7 +217,10 @@
     "topPost": "Melhor Post",
     "aiSummary": "Resumo IA",
     "conversationStarters": "Iniciadores de Conversa",
-    "notEnriched": "Ainda nao enriquecido"
+    "notEnriched": "Ainda nao enriquecido",
+    "notEnrichedHint": "Use o botao Enriquecer para obter dados do LinkedIn e website",
+    "personBrief": "Sobre esta pessoa",
+    "icebreaker": "Quebra-gelo"
   },
   "addContact2": "Adicionar Contato 2",
   "hideContact2": "Ocultar Contato 2",
@@ -228,7 +245,14 @@
     "savePhoto": "Guardar Foto",
     "convertToAccount": "Converter em Conta",
     "converting": "Convertendo...",
-    "linkedAccount": "Conta"
+    "linkedAccount": "Conta",
+    "advanceStage": "Avançar para próxima etapa",
+    "markLost": "Marcar como perdido",
+    "filterByNiche": "Filtrar por nicho",
+    "enrichRefreshWebsite": "Website",
+    "enrichRefreshLinkedIn": "LinkedIn",
+    "enrichRefreshBoth": "Ambos",
+    "enrichRefreshing": "A enriquecer..."
   },
   "related": {
     "unnamed": "Sem Nome",
@@ -328,5 +352,46 @@
     "sending": "Enviando...",
     "noPhone": "Nenhum numero de telefone cadastrado",
     "sendFailed": "Falha ao enviar. Tente novamente."
+  },
+  "tabs": {
+    "company": "Empresa",
+    "contact1": "Contato 1",
+    "contact2": "Contato 2"
+  },
+  "enrich": {
+    "website": "Website",
+    "contact1": "Contato 1",
+    "contact2": "Contato 2",
+    "start": "Iniciar"
+  },
+  "offerActions": {
+    "refresh": "Atualizar do website",
+    "addOffer": "Adicionar manualmente",
+    "addOfferAi": "Gerar oferta com IA"
+  },
+  "outreach": {
+    "title": "Gerador de Mensagens",
+    "generate": "Gerar",
+    "generating": "Gerando...",
+    "anyOffer": "Qualquer oferta",
+    "company": "Empresa",
+    "customInstructions": "Instrucoes personalizadas para esta mensagem...",
+    "styles": {
+      "hormozi": "Hormozi",
+      "saraev": "Saraev",
+      "cashvertising": "Cashvertising",
+      "professional": "Profissional"
+    },
+    "formats": {
+      "whatsapp": "WhatsApp",
+      "linkedinNote": "Nota LinkedIn",
+      "linkedinMessage": "Mensagem LinkedIn",
+      "companyMessage": "Mensagem Empresa",
+      "email": "E-mail",
+      "cold_call": "Roteiro Cold Call"
+    },
+    "stylePlaceholder": "Estilo",
+    "formatPlaceholder": "Formato",
+    "languagePlaceholder": "Idioma"
   }
 }

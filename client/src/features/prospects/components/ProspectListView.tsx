@@ -21,14 +21,37 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Maximize2,
+  Minimize2,
   MapPin,
   X,
   UserPlus,
   RefreshCw,
+  Lightbulb,
   Sparkles,
-  LayoutDashboard,
+  Target,
+  CheckSquare,
+  MessageSquare,
 } from "lucide-react";
-import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
+import { GradientTester, GradientControlPoints, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
+
+/** Matches the hardcoded CSS fallback gradients for this page */
+const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  { id: 1, label: "Pink-Yellow sweep", enabled: true, type: "linear", angle: 157, ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [
+    { color: "#fc3eff", opacity: 0.12, position: 0 },
+    { color: "#f2e19b", opacity: 0.55, position: 100 },
+  ]},
+  { id: 2, label: "Warm corner BR", enabled: true, type: "radial", ellipseW: 148, ellipseH: 200, posX: 100, posY: 100, colorStops: [
+    { color: "#ffc886", opacity: 0.4, position: 0 },
+    { color: "#ffc886", opacity: 0, position: 80 },
+  ]},
+  { id: 3, label: "Purple corner TL", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 0, posY: 0, colorStops: [
+    { color: "#9e8fff", opacity: 0.1, position: 0 },
+    { color: "#9e8fff", opacity: 0, position: 80 },
+  ]},
+];
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +65,8 @@ import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ProspectDetailView, ProspectDetailViewEmpty } from "./ProspectDetailView";
-import { OUTREACH_HEX, OUTREACH_LABELS, type OutreachStatus } from "./OutreachPipelineView";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
+import { OUTREACH_HEX, OUTREACH_LABELS, OUTREACH_STATUSES, type OutreachStatus } from "./OutreachPipelineView";
 import { ProspectCreatePanel } from "./ProspectCreatePanel";
 import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
@@ -51,6 +75,10 @@ import { ProspectTasks } from "./ProspectTasks";
 import { EmailComposeModal } from "./EmailComposeModal";
 import { InteractionTimeline } from "./InteractionTimeline";
 import { WhatsAppComposer } from "./WhatsAppComposer";
+import { EnrichmentPanel } from "./EnrichmentPanel";
+import { ProspectBusinessIdeas } from "./ProspectBusinessIdeas";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { OutreachTimeline } from "./OutreachTimeline";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -123,7 +151,7 @@ export interface NewProspectForm {
 }
 
 export type ProspectViewMode = "list" | "table" | "pipeline" | "followups" | "templates";
-export type ProspectGroupBy = "status" | "niche" | "country" | "priority" | "none";
+export type ProspectGroupBy = "status" | "niche" | "country" | "priority" | "date" | "none";
 export type ProspectSortBy = "recent" | "name_asc" | "name_desc" | "priority";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -149,6 +177,23 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
     return `${Math.floor(diffDays / 30)}mo ago`;
   } catch { return ""; }
 }
+
+function getDateBucket(dateStr: string | null | undefined): string {
+  if (!dateStr) return "Unknown";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "Unknown";
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffDays = Math.floor(diffMs / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return "This Week";
+  if (diffDays < 30) return "This Month";
+  if (diffDays < 90) return "Last 3 Months";
+  return "Older";
+}
+
+const DATE_BUCKET_ORDER = ["Today", "Yesterday", "This Week", "This Month", "Last 3 Months", "Older", "Unknown"];
 
 // ── Status colors ─────────────────────────────────────────────────────────────
 
@@ -231,6 +276,7 @@ const GROUP_TKEYS: Record<ProspectGroupBy, string> = {
   niche:    "group.niche",
   country:  "group.country",
   priority: "group.priority",
+  date:     "group.date",
   none:     "group.none",
 };
 
@@ -250,7 +296,6 @@ const VIEW_TABS_CONFIG: { id: ProspectViewMode; tKey: string; icon: typeof List 
   { id: "list",      tKey: "views.list",      icon: List   },
   { id: "table",     tKey: "views.table",     icon: Table2 },
   { id: "pipeline",  tKey: "views.pipeline",  icon: Kanban },
-  { id: "followups", tKey: "views.followups", icon: Clock },
   { id: "templates", tKey: "views.templates", icon: FileText },
 ];
 
@@ -530,7 +575,7 @@ interface ProspectListViewProps {
   selectedProspect: ProspectRow | null;
   onSelectProspect: (prospect: ProspectRow) => void;
   onAddProspect: () => void;
-  onCreate: (data: NewProspectForm) => Promise<void>;
+  onCreate: (data: NewProspectForm) => Promise<ProspectRow | void>;
   onSave: (field: string, value: string) => Promise<void>;
   onDelete: () => void;
   onToggleStatus: (prospect: ProspectRow) => void;
@@ -559,6 +604,7 @@ interface ProspectListViewProps {
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
   onResetControls: () => void;
+  onRefreshProspect?: () => void;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -597,6 +643,7 @@ export function ProspectListView({
   isGroupNonDefault,
   isSortNonDefault,
   onResetControls,
+  onRefreshProspect,
 }: ProspectListViewProps) {
   const { t } = useTranslation("prospects");
   const isNarrow = useIsMobile(1024); // below lg: show list OR detail, not both
@@ -607,6 +654,7 @@ export function ProspectListView({
     [t]
   );
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
+  const [filterOverdue, setFilterOverdue] = useState(false);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
     try { return localStorage.getItem("prospects-left-panel-collapsed") === "true"; } catch { return false; }
   });
@@ -616,13 +664,53 @@ export function ProspectListView({
   const [emailComposeOpen, setEmailComposeOpen] = useState(false);
   const [replyContext, setReplyContext] = useState<{ messageId: string; threadId: string; subject: string } | null>(null);
 
+  // ── Contact slot toggle (1 or 2) ───────────────────────────────────────────
+  const [contactSlot, setContactSlot] = useState<1 | 2>(1);
+  useEffect(() => setContactSlot(1), [selectedProspect?.id ?? selectedProspect?.Id]);
+
+  // ── Publish selected prospect to AI chat context ──────────────────────────
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    if (!selectedProspect) return;
+    const pid = selectedProspect.Id ?? selectedProspect.id ?? 0;
+    publishEntity({
+      entityType: "prospect",
+      entityId: pid,
+      entityName: selectedProspect.company || selectedProspect.name || "Unknown Prospect",
+      summary: {
+        id: pid,
+        company: selectedProspect.company,
+        name: selectedProspect.name,
+        contactName: selectedProspect.contact_name,
+        contactRole: selectedProspect.contact_role,
+        contactEmail: selectedProspect.contact_email,
+        contactPhone: selectedProspect.contact_phone,
+        email: selectedProspect.email,
+        phone: selectedProspect.phone,
+        website: selectedProspect.website,
+        linkedin: selectedProspect.linkedin,
+        niche: selectedProspect.niche,
+        city: selectedProspect.city,
+        country: selectedProspect.country,
+        status: selectedProspect.status,
+        priority: selectedProspect.priority,
+        source: selectedProspect.source,
+        notes: selectedProspect.notes,
+        nextAction: selectedProspect.next_action,
+        aiSummary: selectedProspect.ai_summary,
+        headline: selectedProspect.headline,
+      },
+      updatedAt: Date.now(),
+    });
+  }, [selectedProspect, publishEntity]);
+
   // ── Gradient tester state ──────────────────────────────────────────────────
   const GRADIENT_KEY = "la:gradient:prospects";
   const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
     try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
   });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(savedGradient ?? PAGE_DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
 
   const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
@@ -630,17 +718,24 @@ export function ProspectListView({
     if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
     setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
   }, []);
-  const handleApplyGradient = useCallback(() => {
+  const handleSaveGradient = useCallback(() => {
     localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
     setSavedGradient(gradientLayers);
-    setGradientTesterOpen(false);
   }, [gradientLayers]);
+  const handleApplyGradient = useCallback(() => {
+    handleSaveGradient();
+    setGradientTesterOpen(false);
+  }, [handleSaveGradient]);
   const toggleGradientTester = useCallback(() => {
-    setGradientTesterOpen(prev => {
-      if (!prev && savedGradient) setGradientLayers(savedGradient);
-      return !prev;
-    });
-  }, [savedGradient]);
+    if (!gradientTesterOpen) {
+      try {
+        const raw = localStorage.getItem(GRADIENT_KEY);
+        if (raw) setGradientLayers(JSON.parse(raw) as GradientLayer[]);
+        else setGradientLayers(PAGE_DEFAULT_LAYERS);
+      } catch { /* keep current layers */ }
+    }
+    setGradientTesterOpen(prev => !prev);
+  }, [gradientTesterOpen]);
 
   // ── Inline editing (contentEditable) ──────────────────────────────────────
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -827,6 +922,15 @@ export function ProspectListView({
       filtered = filtered.filter((p) => filterSource.includes(String(p.source || "")));
     }
 
+    // Overdue filter
+    if (filterOverdue) {
+      const now = Date.now();
+      filtered = filtered.filter((p) => {
+        if (!p.next_follow_up_date) return false;
+        return new Date(p.next_follow_up_date).getTime() < now;
+      });
+    }
+
     // Sort
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
@@ -858,6 +962,7 @@ export function ProspectListView({
         case "niche":    key = String(p.niche || "Other"); break;
         case "country":  key = String(p.country || "Unknown"); break;
         case "priority": key = String(p.priority || "Medium"); break;
+        case "date":     key = getDateBucket(p.updated_at || p.created_at); break;
         default:         key = String(p.status || "New"); break;
       }
       if (!buckets.has(key)) buckets.set(key, []);
@@ -871,6 +976,8 @@ export function ProspectListView({
     } else if (groupBy === "priority") {
       orderedKeys = ["High", "Medium", "Low"].filter((k) => buckets.has(k))
         .concat(Array.from(buckets.keys()).filter((k) => !["High", "Medium", "Low"].includes(k)));
+    } else if (groupBy === "date") {
+      orderedKeys = DATE_BUCKET_ORDER.filter((k) => buckets.has(k));
     } else {
       // niche, country — alphabetical
       orderedKeys = Array.from(buckets.keys()).sort();
@@ -884,7 +991,7 @@ export function ProspectListView({
       group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
     });
     return result;
-  }, [prospects, listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, sortBy, groupBy]);
+  }, [prospects, listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, filterOverdue, sortBy, groupBy]);
 
   const totalProspects = flatItems.filter((i) => i.kind === "prospect").length;
   const maxPage = Math.max(0, Math.ceil(totalProspects / PAGE_SIZE) - 1);
@@ -982,20 +1089,6 @@ export function ProspectListView({
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
   // ── Collapse left panel button (desktop only) ────────────────────────────────
-  const collapseButton = (
-    <button
-      onClick={() => {
-        const next = !leftPanelCollapsed;
-        setLeftPanelCollapsed(next);
-        try { localStorage.setItem("prospects-left-panel-collapsed", String(next)); } catch {}
-      }}
-      className="hidden lg:grid h-9 w-9 rounded-full border border-black/[0.125] bg-background place-items-center shrink-0"
-      title={leftPanelCollapsed ? "Show list" : "Hide list"}
-    >
-      {leftPanelCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-    </button>
-  );
-
   // ── Search pill — always visible ─────────────────────────────────────────────
   const searchPill = (
     <SearchPill
@@ -1004,21 +1097,13 @@ export function ProspectListView({
       open={searchOpen}
       onOpenChange={onSearchOpenChange}
       placeholder={t("page.searchPlaceholder")}
+      className="max-w-[180px]"
     />
   );
 
   // ── Toolbar prefix for the right panel ──────────────────────────────────────
   const toolbarPrefix = (
     <>
-      {/* +Add */}
-      <button
-        className={cn(xBase, xDefault, "hover:max-w-[80px]")}
-        onClick={() => setPanelMode("create")}
-      >
-        <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.add")}</span>
-      </button>
-
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1142,10 +1227,19 @@ export function ProspectListView({
               ))}
             </FilterAccordionSection>
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={(e) => { e.preventDefault(); setFilterOverdue((v) => !v); }}
+            className="flex items-center gap-2 text-[12px]"
+          >
+            <Clock className="h-3 w-3 text-red-500/60 shrink-0" />
+            <span className="flex-1">{t("toolbar.overdue")}</span>
+            {filterOverdue && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+          </DropdownMenuItem>
           {isFilterActive && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-muted-foreground">
+              <DropdownMenuItem onClick={() => { onResetControls(); setFilterOverdue(false); }} className="text-[12px] text-muted-foreground">
                 {t("toolbar.clearAllFilters")}
               </DropdownMenuItem>
             </>
@@ -1171,15 +1265,15 @@ export function ProspectListView({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Gradient Tester toggle */}
+      {/* +Add */}
       <button
-        onClick={toggleGradientTester}
-        className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
-        title="Gradient Tester"
+        className={cn(xBase, xDefault, "hover:max-w-[80px]")}
+        onClick={() => setPanelMode("create")}
       >
-        <Paintbrush className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>Style</span>
+        <Plus className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>{t("toolbar.add")}</span>
       </button>
+
     </>
   );
 
@@ -1194,8 +1288,11 @@ export function ProspectListView({
           : cn("w-full lg:w-[340px] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
 
+        {/* Scrollable area: header + toolbar + prospect list */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+
         {/* Header: title + ViewTabBar */}
-        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 flex items-center">
           <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
             <ViewTabBar
@@ -1207,8 +1304,14 @@ export function ProspectListView({
           </div>
         </div>
 
+        {/* List toolbar: search + create + sort + filter + group */}
+        <div className="px-2 pb-2 flex items-center gap-1">
+          {searchPill}
+          {toolbarPrefix}
+        </div>
+
         {/* Prospect list */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+        <div className="p-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -1266,6 +1369,7 @@ export function ProspectListView({
             </div>
           )}
         </div>
+        </div>
 
         {/* Pagination footer */}
         {totalProspects > PAGE_SIZE && (
@@ -1298,7 +1402,11 @@ export function ProspectListView({
       )}>
         {panelMode === "create" ? (
           <ProspectCreatePanel
-            onCreate={async (data) => { await onCreate(data); setPanelMode("view"); }}
+            onCreate={async (data) => {
+              const created = await onCreate(data);
+              setPanelMode("view");
+              if (created) onSelectProspect(created);
+            }}
             onClose={() => setPanelMode("view")}
           />
         ) : loading && !selectedProspect ? (
@@ -1335,20 +1443,45 @@ export function ProspectListView({
 
             {/* ── Header ── */}
             <div className="shrink-0 relative z-10">
-              <div className="relative px-4 pt-6 pb-4 md:pb-6 space-y-3">
-                {/* Toolbar row */}
-                <div className="flex items-center gap-1">
-                  {isNarrow && (
+              <div className="relative px-4 pt-3 md:pt-1 pb-4 md:pb-6 space-y-1">
+                {/* Back button (mobile) + collapse button (desktop) + gradient tester */}
+                <div className="flex items-center justify-between gap-1">
+                  <div className="flex items-center gap-1">
+                    {isNarrow && (
+                      <button
+                        onClick={() => (onSelectProspect as unknown as (v: null) => void)(null)}
+                        className="h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0 mr-2"
+                      >
+                        <span className="text-sm">←</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => (onSelectProspect as unknown as (v: null) => void)(null)}
-                      className="h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0 mr-2"
+                      onClick={() => {
+                        const next = !leftPanelCollapsed;
+                        setLeftPanelCollapsed(next);
+                        try { localStorage.setItem("prospects-left-panel-collapsed", String(next)); } catch {}
+                      }}
+                      className="hidden lg:grid h-9 w-9 rounded-full border border-black/[0.125] place-items-center shrink-0 text-foreground/60 hover:text-foreground transition-colors"
+                      title={leftPanelCollapsed ? "Show list" : "Hide list"}
                     >
-                      <span className="text-sm">←</span>
+                      {leftPanelCollapsed ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
                     </button>
-                  )}
-                  {collapseButton}
-                  {searchPill}
-                  {!leftPanelCollapsed && toolbarPrefix}
+                    {/* Gradient Tester toggle */}
+                    <button
+                      onClick={toggleGradientTester}
+                      className={cn(
+                        "h-7 w-7 rounded-md border grid place-items-center shrink-0",
+                        gradientTesterOpen
+                          ? "border-indigo-200 text-indigo-600 bg-indigo-100"
+                          : "border-black/[0.125] text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
+                      )}
+                      title="Gradient Tester"
+                    >
+                      <Paintbrush className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Name + badges */}
@@ -1402,50 +1535,63 @@ export function ProspectListView({
                         </button>
                       )}
                     </div>
-                    {/* Status / Outreach / Niche / Priority — all on one row, clickable */}
+                    {/* Outreach / Niche / Priority — all on one row, clickable */}
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {/* Status dropdown */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.15] dark:hover:border-white/[0.15] transition-colors cursor-pointer"
-                            style={{ color: PROSPECT_STATUS_HEX[String(selectedProspect.status)] || "#3B82F6" }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PROSPECT_STATUS_HEX[String(selectedProspect.status)] || "#3B82F6" }} />
-                            {selectedProspect.status || "New"}
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-40">
-                          {INLINE_STATUS_OPTIONS.map((s) => (
-                            <DropdownMenuItem key={s} onClick={() => onSave("status", s)} className={cn("text-[12px]", String(selectedProspect.status) === s && "font-semibold")}>
-                              <span className="w-2 h-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: PROSPECT_STATUS_HEX[s] || "#3B82F6" }} />
-                              {s}
-                              {String(selectedProspect.status) === s && <Check className="h-3 w-3 ml-auto" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      {/* Outreach status */}
-                      {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (() => {
+                      {/* Outreach status + duration + advance/lost buttons */}
+                      {(() => {
                         const key = (selectedProspect.outreach_status || "new") as OutreachStatus;
                         const hex = OUTREACH_HEX[key] || "#6B7280";
                         const label = OUTREACH_LABELS[key] || key.replace(/_/g, " ");
+                        const currentIdx = OUTREACH_STATUSES.indexOf(key);
+                        const canAdvance = currentIdx >= 0 && currentIdx < OUTREACH_STATUSES.length - 2;
+                        const isTerminal = key === "deal_closed" || key === "lost";
+                        const nextStatus = canAdvance ? OUTREACH_STATUSES[currentIdx + 1] : null;
+                        const stageDate = key === "new"
+                          ? selectedProspect.created_at
+                          : (selectedProspect.last_contacted_at || selectedProspect.first_contacted_at || selectedProspect.created_at);
+                        const daysInStage = stageDate ? Math.floor((Date.now() - new Date(stageDate).getTime()) / 86400000) : null;
                         return (
-                          <span
-                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08]"
-                            style={{ color: hex }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hex }} />
-                            {label}
-                          </span>
+                          <div className="inline-flex items-center gap-1">
+                            <span
+                              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08]"
+                              style={{ color: hex }}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hex }} />
+                              {label}
+                              {daysInStage !== null && (
+                                <span className="opacity-50 tabular-nums ml-0.5">{daysInStage}d</span>
+                              )}
+                            </span>
+                            {!isTerminal && nextStatus && (
+                              <button
+                                onClick={() => onSave("outreach_status", nextStatus)}
+                                className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.15] dark:hover:border-white/[0.15] transition-colors"
+                                title={`Advance to ${OUTREACH_LABELS[nextStatus] || nextStatus}`}
+                              >
+                                <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                            )}
+                            {key !== "lost" && (
+                              <button
+                                onClick={() => onSave("outreach_status", "lost")}
+                                className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08] hover:border-red-300 dark:hover:border-red-500/30 transition-colors"
+                                title="Mark as lost"
+                              >
+                                <X className="h-3 w-3 text-muted-foreground/50 hover:text-red-500" />
+                              </button>
+                            )}
+                          </div>
                         );
                       })()}
                       {selectedProspect.niche && (
-                        <span
-                          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08]"
+                        <button
+                          onClick={() => onToggleFilterNiche(String(selectedProspect.niche))}
+                          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.15] dark:hover:border-white/[0.15] transition-colors cursor-pointer"
                           style={{ color: getNicheColor(String(selectedProspect.niche)).hex }}
+                          title="Filter by this niche"
                         >
                           {selectedProspect.niche}
-                        </span>
+                        </button>
                       )}
                       {/* Priority dropdown */}
                       <DropdownMenu>
@@ -1470,122 +1616,110 @@ export function ProspectListView({
               </div>
             </div>
 
-            {/* ── 3-column body (Contact | Actions | Enrichment) + new panels below ── */}
-            {(() => {
-              const hasEnrichment = !!(selectedProspect.ai_summary || selectedProspect.headline || selectedProspect.top_post || selectedProspect.conversation_starters);
-              const starters: string[] = (() => {
-                const raw = selectedProspect.conversation_starters;
-                if (!raw) return [];
-                try { return JSON.parse(raw); } catch { return raw.split("\n").filter(Boolean); }
-              })();
-              return (
-                <div className="flex-1 min-h-0 overflow-y-auto px-[3px] pb-[3px] pt-3 relative z-10 flex flex-col gap-[3px]">
+            {/* ── 3-column body (Contact | Enrichment | Actions) ── */}
+            <div className="flex-1 min-h-0 overflow-hidden px-1.5 pb-1.5 pt-3 relative z-10 flex flex-col md:flex-row gap-1.5">
 
-                  {/* Row 1: 3 panels side-by-side */}
-                  <div className="flex flex-col md:flex-row gap-[3px]">
-
-                  {/* Column 1: Contact Info */}
-                  <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
-
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      {editableField("city", String(selectedProspect.city || ""), "Add location", "text-[12px] text-muted-foreground flex-1 min-w-0")}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      {editableField("website", String(selectedProspect.website || ""), "Add website", "text-[12px] text-brand-indigo flex-1 min-w-0")}
-                    </div>
-                    <div className="h-px bg-border/30" />
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Primary Contact</h4>
-                      {selectedProspect.Accounts_id ? (
-                        <a href={`/accounts`} onClick={(e) => { e.preventDefault(); localStorage.setItem("selectedAccountId", String(selectedProspect.Accounts_id)); window.location.href = "/accounts"; }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors cursor-pointer">
-                          <Building2 className="h-3 w-3" />
-                          Account #{selectedProspect.Accounts_id}
-                        </a>
-                      ) : (
-                        <button onClick={handleConvertToAccount} disabled={converting} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50">
-                          <Plus className="h-3 w-3" />
-                          Create Account
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {editableField("contact_name", String(selectedProspect.contact_name || ""), "Add name", "text-[13px] font-medium text-foreground")}
-                      {editableField("contact_role", String(selectedProspect.contact_role || ""), "Add role", "text-[11px] text-muted-foreground")}
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        {editableField("contact_email", String(selectedProspect.contact_email || ""), "Add email", "text-[12px] text-brand-indigo flex-1 min-w-0")}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        {editableField("contact_phone", String(selectedProspect.contact_phone || ""), "Add phone", "text-[12px] text-foreground flex-1 min-w-0")}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Linkedin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        {editableField("contact_linkedin", String(selectedProspect.contact_linkedin || ""), "Add LinkedIn", "text-[12px] text-brand-indigo flex-1 min-w-0")}
-                      </div>
-                    </div>
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Source</h4>
-                    {editableField("source", String(selectedProspect.source || ""), "Add source", "text-[12px] text-muted-foreground")}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.notes")}</h4>
-                    {editableMultiline("notes", String(selectedProspect.notes || ""), "No notes yet", "text-[12px] leading-relaxed text-foreground")}
+              {/* Panel 1: Contact */}
+              <div className="flex-1 min-w-0 min-h-0 overflow-hidden bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg flex flex-col">
+                {/* Fixed top section */}
+                <div className="p-3 pb-0 flex flex-col gap-2 shrink-0">
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
+                  <div className="group/field flex items-center gap-2 rounded-md px-1 -mx-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 group-hover/field:text-muted-foreground/70 transition-colors" />
+                    {editableField("city", String(selectedProspect.city || ""), "Add location", "text-[12px] text-muted-foreground flex-1 min-w-0")}
                   </div>
-
-                  {/* Column 2: Actions & Follow-up */}
-                  <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
-
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Next Action</h4>
-                    {editableMultiline("next_action", String(selectedProspect.next_action || ""), "No next action set", "text-[13px] leading-relaxed text-foreground")}
-
-                    {/* Follow-up info */}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Follow-up</h4>
-                    {dateEditField === "next_follow_up_date" ? (
-                      <input
-                        autoFocus
-                        type="date"
-                        value={dateEditValue}
-                        onChange={(e) => setDateEditValue(e.target.value)}
-                        onBlur={commitDateEdit}
-                        onKeyDown={(e) => { if (e.key === "Escape") setDateEditField(null); }}
-                        className="text-[12px] bg-white/80 dark:bg-card/80 border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 w-full"
-                      />
-                    ) : selectedProspect.next_follow_up_date ? (
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
-                        const d = new Date(selectedProspect.next_follow_up_date!);
-                        startDateEdit("next_follow_up_date", d.toISOString().split("T")[0]);
-                      }}>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                          <span className={cn("text-[13px] font-medium", new Date(selectedProspect.next_follow_up_date) < new Date() ? "text-red-500" : "text-foreground")}>
-                            {new Date(selectedProspect.next_follow_up_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                          </span>
-                          {new Date(selectedProspect.next_follow_up_date) < new Date() && (
-                            <span className="text-[9px] font-bold text-red-500 uppercase">Overdue</span>
-                          )}
-                        </div>
-                        {selectedProspect.follow_up_count != null && Number(selectedProspect.follow_up_count) > 0 && (
-                          <span className="text-[11px] text-muted-foreground">{selectedProspect.follow_up_count} follow-up{Number(selectedProspect.follow_up_count) > 1 ? "s" : ""} sent</span>
-                        )}
+                  <div className="group/field flex items-center gap-2 rounded-md px-1 -mx-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors">
+                    <Globe className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 group-hover/field:text-muted-foreground/70 transition-colors" />
+                    {editableField("website", String(selectedProspect.website || ""), "Add website", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                  </div>
+                  <div className="h-px bg-border/30" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact</h4>
+                      <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-muted/40">
+                        {([1, 2] as const).map((slot) => (
+                          <button
+                            key={slot}
+                            onClick={() => setContactSlot(slot)}
+                            className={cn(
+                              "text-[10px] font-semibold w-5 h-5 rounded flex items-center justify-center transition-all",
+                              contactSlot === slot
+                                ? "bg-white dark:bg-card shadow-sm text-foreground"
+                                : "text-muted-foreground/50 hover:text-muted-foreground"
+                            )}
+                          >
+                            {slot}
+                          </button>
+                        ))}
                       </div>
+                    </div>
+                    {selectedProspect.Accounts_id ? (
+                      <a href={`/accounts`} onClick={(e) => { e.preventDefault(); localStorage.setItem("selectedAccountId", String(selectedProspect.Accounts_id)); window.location.href = "/accounts"; }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors cursor-pointer">
+                        <Building2 className="h-3 w-3" />
+                        Account #{selectedProspect.Accounts_id}
+                      </a>
                     ) : (
-                      <p className="text-[12px] text-muted-foreground/40 italic cursor-pointer hover:bg-black/[0.03] rounded px-1 -mx-1 transition-colors" onClick={() => startDateEdit("next_follow_up_date", new Date().toISOString().split("T")[0])}>
-                        No follow-up scheduled (click to set)
-                      </p>
+                      <button onClick={handleConvertToAccount} disabled={converting} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50">
+                        <Plus className="h-3 w-3" />
+                        Create Account
+                      </button>
                     )}
+                  </div>
+                  {(() => {
+                    const nameKey = contactSlot === 1 ? "contact_name" : "contact2_name";
+                    const roleKey = contactSlot === 1 ? "contact_role" : "contact2_role";
+                    const emailKey = contactSlot === 1 ? "contact_email" : "contact2_email";
+                    const phoneKey = contactSlot === 1 ? "contact_phone" : "contact2_phone";
+                    const linkedinKey = contactSlot === 1 ? "contact_linkedin" : "contact2_linkedin";
+                    return (
+                      <div className="flex flex-col gap-2">
+                        {editableField(nameKey, String(selectedProspect[nameKey] || ""), "Add name", "text-[13px] font-medium text-foreground")}
+                        {editableField(roleKey, String(selectedProspect[roleKey] || ""), "Add role", "text-[11px] text-muted-foreground")}
+                        <div className="group/field flex items-center gap-2 rounded-md px-1 -mx-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors">
+                          <Mail className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 group-hover/field:text-muted-foreground/70 transition-colors" />
+                          {editableField(emailKey, String(selectedProspect[emailKey] || ""), "Add email", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                        </div>
+                        <div className="group/field flex items-center gap-2 rounded-md px-1 -mx-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors">
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 group-hover/field:text-muted-foreground/70 transition-colors" />
+                          {editableField(phoneKey, String(selectedProspect[phoneKey] || ""), "Add phone", "text-[12px] text-foreground flex-1 min-w-0")}
+                        </div>
+                        <div className="group/field flex items-center gap-2 rounded-md px-1 -mx-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors">
+                          <Linkedin className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 group-hover/field:text-muted-foreground/70 transition-colors" />
+                          {editableField(linkedinKey, String(selectedProspect[linkedinKey] || ""), "Add LinkedIn", "text-[12px] text-brand-indigo flex-1 min-w-0")}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <div className="h-px bg-border/30" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Source</h4>
+                  {editableField("source", String(selectedProspect.source || ""), "Add source", "text-[12px] text-muted-foreground")}
+                </div>
 
-                    {/* Tasks */}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Tasks</h4>
-                    <ProspectTasks prospectCompanyName={selectedProspect.company || ""} compact />
+                {/* Scrollable collapsible sections */}
+                <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-6 scroll-fade-bottom">
+                  <CollapsibleSection id="contact-ideas" title={t("sections.offerIdeas")} icon={Lightbulb} hasData={!!selectedProspect.offer_ideas}>
+                    <ProspectBusinessIdeas offerIdeas={selectedProspect.offer_ideas} compact prospectId={selectedProspect.Id || selectedProspect.id} onRefresh={onRefreshProspect} />
+                  </CollapsibleSection>
 
-                    {/* Email Interactions */}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Emails</h4>
+                  <CollapsibleSection id="contact-notes" title={t("sections.notes")} icon={FileText} hasData={!!selectedProspect.notes}>
+                    {editableMultiline("notes", String(selectedProspect.notes || ""), "No notes yet", "text-[12px] leading-relaxed text-foreground")}
+                  </CollapsibleSection>
+                </div>
+              </div>
+
+              {/* Panel 2: Enrichment */}
+              <div className="flex-1 min-w-0 min-h-0 overflow-hidden bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg">
+                <EnrichmentPanel prospect={selectedProspect} onRefresh={onRefreshProspect} />
+              </div>
+
+              {/* Panel 3: Actions */}
+              <div className="flex-1 min-w-0 min-h-0 overflow-hidden bg-white/70 dark:bg-card/70 backdrop-blur-sm rounded-lg flex flex-col">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-6 scroll-fade-bottom">
+                  <CollapsibleSection id="actions-next" title={t("sections.nextAction")} icon={Target} hasData={!!selectedProspect.next_action}>
+                    {editableMultiline("next_action", String(selectedProspect.next_action || ""), "No next action set", "text-[13px] leading-relaxed text-foreground")}
+                  </CollapsibleSection>
+
+                  <CollapsibleSection id="actions-emails" title={t("sections.emails")} icon={Mail} hasData>
                     <InteractionTimeline
                       prospectId={selectedProspect.Id ?? selectedProspect.id ?? 0}
                       onReply={(ctx) => {
@@ -1593,139 +1727,50 @@ export function ProspectListView({
                         setEmailComposeOpen(true);
                       }}
                     />
+                  </CollapsibleSection>
 
-                    {/* WhatsApp Composer */}
-                    <div className="h-px bg-border/30" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">WhatsApp</h4>
+                  <CollapsibleSection id="actions-whatsapp" title={t("sections.whatsApp")} icon={MessageSquare} hasData>
                     <WhatsAppComposer
                       prospectId={selectedProspect.Id ?? selectedProspect.id ?? 0}
                       prospectPhone={selectedProspect.phone || selectedProspect.contact_phone || null}
                     />
+                  </CollapsibleSection>
 
-                    {/* Pipeline info */}
-                    {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (
-                      <>
-                        <div className="h-px bg-border/30" />
-                        <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-muted/50">
-                          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/50">Pipeline Stage</span>
+                  <CollapsibleSection id="actions-interactions" title={t("sections.interactions")} icon={Clock} hasData>
+                    <OutreachTimeline prospectId={selectedProspect.Id ?? selectedProspect.id ?? 0} />
+                  </CollapsibleSection>
+
+                  <CollapsibleSection id="actions-tasks" title={t("sections.tasks")} icon={CheckSquare} hasData>
+                    <ProspectTasks prospectCompanyName={selectedProspect.company || ""} compact />
+                  </CollapsibleSection>
+
+                  {/* Pipeline info (not collapsible) */}
+                  {selectedProspect.outreach_status && selectedProspect.outreach_status !== "new" && (
+                    <>
+                      <div className="h-px bg-border/30 mt-3" />
+                      <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-gradient-to-br from-brand-indigo/[0.04] to-transparent border border-brand-indigo/[0.08] mt-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/50">Pipeline Stage</span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: OUTREACH_HEX[(selectedProspect.outreach_status as OutreachStatus)] || "#6B7280" }}
+                          />
                           <span className="text-[13px] font-medium text-foreground capitalize">{selectedProspect.outreach_status.replace(/_/g, " ")}</span>
-                          {selectedProspect.first_contacted_at && (
-                            <span className="text-[10px] text-muted-foreground">First contact: {new Date(selectedProspect.first_contacted_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-                          )}
                         </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Column 3: Enrichment */}
-                  {hasEnrichment ? (
-                    <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
-
-                      {selectedProspect.headline && (
-                        <p className="text-[13px] font-medium text-foreground">{selectedProspect.headline}</p>
-                      )}
-
-                      {(selectedProspect.connection_count || selectedProspect.follower_count) && (
-                        <div className="flex gap-4">
-                          {selectedProspect.connection_count && (
-                            <span className="text-[11px] text-muted-foreground">
-                              <span className="font-semibold text-foreground">{Number(selectedProspect.connection_count).toLocaleString()}</span> {t("fields.connectionCount").toLowerCase()}
-                            </span>
-                          )}
-                          {selectedProspect.follower_count && (
-                            <span className="text-[11px] text-muted-foreground">
-                              <span className="font-semibold text-foreground">{Number(selectedProspect.follower_count).toLocaleString()}</span> {t("fields.followerCount").toLowerCase()}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {selectedProspect.ai_summary && (
-                        <>
-                          <div className="h-px bg-border/30" />
-                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.aiSummary")}</h4>
-                          <p className="text-[12px] text-foreground leading-relaxed">{selectedProspect.ai_summary}</p>
-                        </>
-                      )}
-
-                      {selectedProspect.top_post && (
-                        <>
-                          <div className="h-px bg-border/30" />
-                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.topPost")}</h4>
-                          <p className="text-[12px] text-foreground/70 leading-relaxed italic">{selectedProspect.top_post}</p>
-                        </>
-                      )}
-
-                      {selectedProspect.conversation_starters && (
-                        <>
-                          <div className="h-px bg-border/30" />
-                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("fields.conversationStarters")}</h4>
-                          <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap">{selectedProspect.conversation_starters}</p>
-                        </>
-                      )}
-
-                    </div>
-                  ) : (
-                    /* Collapsed enrichment: just notes */
-                    <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-muted-foreground/30" />
-                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">{t("sections.enrichment")}</h4>
+                        {selectedProspect.first_contacted_at && (
+                          <span className="text-[10px] text-muted-foreground">First contact: {new Date(selectedProspect.first_contacted_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        )}
                       </div>
-                      <p className="text-[12px] text-muted-foreground/40 italic">{t("fields.notEnriched")}</p>
-                    </div>
+                    </>
                   )}
-
-                  </div>{/* end Row 1 */}
-
-                  {/* Row 2: new panels */}
-                  <div className="flex flex-col md:flex-row gap-[3px]">
-                    {/* Panel A: Cold Call Prep */}
-                    <div className="flex-1 min-w-0 shrink-0 overflow-y-auto bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2" style={{ height: 520 }}>
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="h-3.5 w-3.5 text-brand-indigo/70" />
-                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Cold Call Prep</h4>
-                      </div>
-                      {starters.length > 0 ? starters.map((s, i) => (
-                        <button key={i} onClick={() => navigator.clipboard.writeText(s)}
-                          className="text-left text-[12px] text-foreground leading-relaxed p-2 rounded-lg bg-muted/40 hover:bg-brand-indigo/10 hover:text-brand-indigo transition-colors w-full">
-                          {s}
-                        </button>
-                      )) : <p className="text-[12px] text-muted-foreground/40 italic">No conversation starters — enrich this prospect first</p>}
-                      {selectedProspect.ai_summary && (
-                        <>
-                          <div className="h-px bg-border/30" />
-                          <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Company Summary</h4>
-                          <p className="text-[12px] text-foreground leading-relaxed">{selectedProspect.ai_summary}</p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Panel B: Placeholder */}
-                    <div className="flex-1 min-w-0 shrink-0 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2 items-center justify-center" style={{ height: 520 }}>
-                      <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
-                        <LayoutDashboard className="h-4 w-4 text-muted-foreground/30" />
-                      </div>
-                      <p className="text-[11px] text-muted-foreground/40 italic text-center">Coming soon</p>
-                    </div>
-
-                    {/* Panel C: Placeholder */}
-                    <div className="flex-1 min-w-0 shrink-0 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2 items-center justify-center" style={{ height: 520 }}>
-                      <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
-                        <LayoutDashboard className="h-4 w-4 text-muted-foreground/30" />
-                      </div>
-                      <p className="text-[11px] text-muted-foreground/40 italic text-center">Coming soon</p>
-                    </div>
-                  </div>{/* end Row 2 */}
-
                 </div>
-              );
-            })()}
+              </div>
+
+            </div>
 
           </div>
         ) : (
-          <ProspectDetailViewEmpty toolbarPrefix={<>{collapseButton}{searchPill}{!leftPanelCollapsed && toolbarPrefix}</>} />
+          <ProspectDetailViewEmpty />
         )}
       </div>
 
@@ -1750,9 +1795,10 @@ export function ProspectListView({
         onClose={() => setGradientTesterOpen(false)}
         layers={gradientLayers}
         onUpdateLayer={updateGradientLayer}
-        onResetLayers={() => setGradientLayers(DEFAULT_LAYERS)}
+        onResetLayers={() => setGradientLayers(PAGE_DEFAULT_LAYERS)}
         dragMode={gradientDragMode}
         onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+        onSave={handleSaveGradient}
         onApply={handleApplyGradient}
       />
     </div>
