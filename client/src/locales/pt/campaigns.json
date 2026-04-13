@@ -25,7 +25,10 @@
     "refresh": "Atualizar",
     "save": "Salvar",
     "saving": "Salvando\u2026",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "openPrompt": "Prompt",
+    "closePrompt": "Fechar Prompt",
+    "promptPanel": "Editor de Prompt"
   },
 
   "columns": {
@@ -208,6 +211,8 @@
     "promptTemplate": "Template de Prompt",
     "firstMessage": "Primeira Mensagem",
     "noTemplateSet": "Nenhum template definido",
+    "voiceScript": "Script de voz",
+    "noVoiceScriptSet": "Nenhum script de voz — usa o template de texto",
     "delayLabel": "Atraso: {{value}}",
     "delayHours": "Atraso (h):",
     "voiceNotes": "Notas de Voz",
@@ -215,7 +220,12 @@
     "bump1VoiceNote": "Bump 1 como nota de voz",
     "bump2VoiceNote": "Bump 2 como nota de voz",
     "bump3VoiceNote": "Bump 3 como nota de voz",
+    "bump4VoiceNote": "Bump 4 como nota de voz",
     "aiReplyVoiceNote": "Respostas IA como notas de voz",
+    "voiceReplyMode": "Modo de Voz IA",
+    "voiceReplyOff": "Desligado",
+    "voiceReplySmart": "Smart (IA decide por mensagem)",
+    "voiceReplyVoiceReply": "Responder voz com voz",
     "voiceId": "ID da Voz",
     "bump1AiReference": "Usar como referência IA",
     "bump2AiReference": "Usar como referência IA",
@@ -223,6 +233,7 @@
     "demoClientName": "Nome da Empresa do Cliente",
     "aiStyleOverride": "Substituição de Estilo da IA",
     "isDemo": "Campanha de Demonstração",
+    "optOutNotice": "Aviso de cancelamento na primeira mensagem",
     "accountId": "Conta",
     "showDemoCampaigns": "Mostrar Campanhas de Demonstração",
     "language": "Idioma"
@@ -279,6 +290,7 @@
     "niche": "Nicho",
     "serviceLabel": "Servi\u00e7o",
     "usp": "USP",
+    "kb": "Base de Conhecimento",
     "inquiryTimeframe": "Per\u00edodo de consulta",
     "metrics": {
       "leads": "Leads",

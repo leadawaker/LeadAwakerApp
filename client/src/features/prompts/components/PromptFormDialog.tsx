@@ -47,7 +47,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
   const initialized = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Refs for uncontrolled textareas (preserves browser Ctrl+Z undo history)
   const promptTextRef = useRef<string>("");

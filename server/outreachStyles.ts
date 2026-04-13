@@ -127,12 +127,8 @@ export function buildOutreachPrompt(
   }
   if (prospect.personBrief)
     contextLines.push(`- Person brief: ${prospect.personBrief}`);
-  if (prospect.conversationStarters)
-    contextLines.push(`- Existing conversation starters: ${prospect.conversationStarters}`);
   if (prospect.offerIdeas)
     contextLines.push(`- Offer ideas: ${prospect.offerIdeas}`);
-  if (prospect.icebreaker)
-    contextLines.push(`- Existing icebreaker: ${prospect.icebreaker}`);
 
   // FOCUS ANGLE block (when a specific offer is selected)
   if (options?.selectedOffer) {
@@ -172,7 +168,7 @@ export function buildOutreachPrompt(
     outputBlock = `Generate exactly 5 cold call talking point anchors. Each is 1-2 sentences. Return ONLY valid JSON: [{"title":"Anchor Name","text":"The talking point..."}]`;
   } else {
     outputBlock = `Generate exactly 5 different variations. Each must take a unique angle or hook.
-Each variation should combine an icebreaker (reference to their specific situation), a hook (attention-grabbing element), and a pitch (clear value proposition) into one cohesive message.
+Each variation should combine a personal reference (to their specific situation), a hook (attention-grabbing element), and a pitch (clear value proposition) into one cohesive message.
 Give each variation a short, descriptive title (2-4 words) that captures the angle used.
 Return ONLY valid JSON, no markdown fences, no explanation. Format:
 [{"title":"The Industry Insider","text":"..."},{"title":"Pain Point Angle","text":"..."},{"title":"Mutual Connection","text":"..."},{"title":"Data-Driven","text":"..."},{"title":"Bold Offer","text":"..."}]`;

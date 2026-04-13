@@ -208,8 +208,85 @@ async function sendTelegramPhoto(
 
 // ── WhatsApp Cloud ───────────────────────────────────────────────────────────
 
+async function uploadWhatsAppMedia(
+  base64Data: string,
+  mimeType: string,
+): Promise<{ mediaId: string } | { error: string }> {
+  const token = process.env.WHATSAPP_TOKEN ?? process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneNumberId) return { error: "WhatsApp Cloud not configured" };
+
+  // Convert base64 to buffer
+  const buffer = Buffer.from(base64Data.replace(/^data:[^;]+;base64,/, ""), "base64");
+
+  // Build multipart form — Node's FormData (available in Node 18+)
+  const form = new FormData();
+  form.append("messaging_product", "whatsapp");
+  form.append("type", mimeType);
+  form.append("file", new Blob([buffer], { type: mimeType }), "upload");
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v22.0/${phoneNumberId}/media`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      },
+    );
+    const data = await res.json() as any;
+    if (data.id) return { mediaId: data.id };
+    return { error: JSON.stringify(data.error || data) };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function sendWhatsAppCloudImage(
+  phone: string,
+  base64Data: string,
+  mimeType: string,
+  caption?: string,
+): Promise<SendResult> {
+  const token = process.env.WHATSAPP_TOKEN ?? process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneNumberId) {
+    return { success: false, channel: "whatsapp_cloud", error: "WhatsApp Cloud not configured" };
+  }
+
+  const upload = await uploadWhatsAppMedia(base64Data, mimeType);
+  if ("error" in upload) {
+    return { success: false, channel: "whatsapp_cloud", error: upload.error };
+  }
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: phone?.replace(/\D/g, ""),
+          type: "image",
+          image: { id: upload.mediaId, ...(caption ? { caption } : {}) },
+        }),
+      },
+    );
+    const data = await res.json() as any;
+    const msgId = data.messages?.[0]?.id;
+    if (msgId) return { success: true, channel: "whatsapp_cloud", messageId: msgId };
+    return { success: false, channel: "whatsapp_cloud", error: JSON.stringify(data.error || data) };
+  } catch (err: any) {
+    return { success: false, channel: "whatsapp_cloud", error: err.message };
+  }
+}
+
 async function sendWhatsAppCloudText(phone: string, text: string): Promise<SendResult> {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const token = process.env.WHATSAPP_TOKEN ?? process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   if (!token || !phoneNumberId) {
     return { success: false, channel: "whatsapp_cloud", error: "WhatsApp Cloud not configured" };
@@ -217,7 +294,7 @@ async function sendWhatsAppCloudText(phone: string, text: string): Promise<SendR
 
   try {
     const res = await fetch(
-      `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+      `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
       {
         method: "POST",
         headers: {

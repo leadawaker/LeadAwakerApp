@@ -10,6 +10,7 @@ import {
 import { cn, relativeTime } from "@/lib/utils";
 import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks, useTaskCategories } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import type { TaskSubtask } from "@shared/schema";
 
 // ── i18n key maps for data-as-labels ──────────────────────────────────────────
@@ -72,6 +73,29 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     () => (tasks as any[])?.find((t: any) => t.id === taskId),
     [tasks, taskId],
   );
+
+  // ── Publish entity data for AI chat context ──────────────────────────────
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    if (!task) return;
+    publishEntity({
+      entityType: "task",
+      entityId: task.id,
+      entityName: task.title || "Unknown Task",
+      summary: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        taskType: task.task_type,
+        dueDate: task.due_date,
+        tags: task.tags,
+        parentTaskId: task.parent_task_id,
+      },
+      updatedAt: Date.now(),
+    });
+  }, [publishEntity, task]);
 
   // ── Local form state ────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");

@@ -58,6 +58,7 @@
   },
   "sort": {
     "mostRecent": "Meest Recent",
+    "name": "Naam",
     "nameAZ": "Naam A -> Z",
     "nameZA": "Naam Z -> A",
     "priority": "Prioriteit",
@@ -369,13 +370,23 @@
     "addOffer": "Handmatig toevoegen",
     "addOfferAi": "AI-aanbieding genereren"
   },
+  "contact": {
+    "addLinkedinHint": "Voeg een LinkedIn-URL toe om dit contact te verrijken",
+    "enrichHint": "Verrijk LinkedIn om contactinzichten te zien",
+    "enrichLinkedin": "LinkedIn verrijken"
+  },
+  "company": {
+    "emptyHint": "Verrijk de website om bedrijfsinzichten te zien"
+  },
   "outreach": {
     "title": "Berichtgenerator",
     "generate": "Genereren",
     "generating": "Genereren...",
     "anyOffer": "Elke aanbieding",
     "company": "Bedrijf",
+    "contactGeneric": "Alleen bedrijf",
     "customInstructions": "Aangepaste instructies voor dit bericht...",
+    "customInstructionsPlaceholder": "Aangepaste instructies voor dit bericht...",
     "styles": {
       "hormozi": "Hormozi",
       "saraev": "Saraev",

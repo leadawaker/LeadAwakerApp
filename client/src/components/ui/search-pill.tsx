@@ -13,25 +13,19 @@ interface SearchPillProps {
 
 export function SearchPill({ value, onChange, open, onOpenChange, placeholder = "Search...", className }: SearchPillProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-
-  const expanded = open || hovered || focused || !!value;
 
   return (
     <div
       role="search"
       className={cn(
-        "inline-flex items-center h-9 pl-[9px] pr-2.5 rounded-full border font-medium overflow-hidden shrink-0 cursor-text",
-        "transition-[max-width,color,border-color] duration-200",
-        expanded ? "max-w-[180px]" : "max-w-9",
+        "flex-1 min-w-9 max-w-[158px] inline-flex items-center h-9 pl-[9px] pr-2.5 rounded-full border font-medium overflow-hidden cursor-text",
+        "transition-[color,border-color] duration-200",
         value || focused
           ? "border-brand-indigo/40 text-brand-indigo"
           : "border-black/[0.125] text-foreground/60 hover:text-foreground",
         className
       )}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       onClick={() => inputRef.current?.focus()}
     >
       <Search className="h-4 w-4 shrink-0" />
@@ -42,11 +36,7 @@ export function SearchPill({ value, onChange, open, onOpenChange, placeholder = 
         placeholder={placeholder}
         onFocus={() => { setFocused(true); onOpenChange(true); }}
         onBlur={() => { setFocused(false); if (!value) onOpenChange(false); }}
-        className={cn(
-          "bg-transparent outline-none min-w-0 text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[130px]",
-          "pl-1.5 transition-opacity duration-150",
-          expanded ? "opacity-100" : "opacity-0"
-        )}
+        className="bg-transparent outline-none min-w-0 text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[130px] pl-1.5"
       />
       {value && (
         <button

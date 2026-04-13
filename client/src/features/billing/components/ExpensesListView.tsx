@@ -16,6 +16,7 @@ interface ExpensesListViewProps {
   selectedId: number | null;
   onSelect: (expense: ExpenseRow) => void;
   groupBy?: "none" | "year_quarter";
+  groupDirection?: "asc" | "desc";
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -183,6 +184,7 @@ export function ExpensesListView({
   selectedId,
   onSelect,
   groupBy = "none",
+  groupDirection = "desc",
 }: ExpensesListViewProps) {
   const { t } = useTranslation("billing");
   const { data, isLoading, isError, error } = useQuery<ExpenseRow[]>({
@@ -254,8 +256,10 @@ export function ExpensesListView({
       buckets.get(key)!.push(row);
     }
 
-    // Sort groups descending by year·quarter (e.g. "2026 · Q1" > "2025 · Q4")
-    const sortedKeys = Array.from(buckets.keys()).sort((a, b) => b.localeCompare(a));
+    // Sort groups by year·quarter, direction controlled by groupDirection prop
+    const sortedKeys = Array.from(buckets.keys()).sort((a, b) =>
+      groupDirection === "asc" ? a.localeCompare(b) : b.localeCompare(a)
+    );
 
     const result: ListItem[] = [];
     for (const key of sortedKeys) {
@@ -266,7 +270,7 @@ export function ExpensesListView({
       }
     }
     return result;
-  }, [filteredExpenses, groupBy]);
+  }, [filteredExpenses, groupBy, groupDirection]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

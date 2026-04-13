@@ -33,9 +33,6 @@ export function useScoreBreakdown(leadId: number | null) {
 
   useEffect(() => {
     fetchScore();
-    // Poll every 20s so score updates live during demos / active conversations
-    const iv = setInterval(fetchScore, 20_000);
-    return () => clearInterval(iv);
   }, [fetchScore]);
 
   const resetToZero = useCallback(() => {
@@ -102,9 +99,6 @@ export function useScoreHistory(leadId: number | null) {
         .finally(() => setLoading(false));
     };
     fetch();
-    // Poll every 20s so chart updates live during demos
-    const iv = setInterval(fetch, 20_000);
-    return () => clearInterval(iv);
   }, [leadId]);
 
   return { history, loading };

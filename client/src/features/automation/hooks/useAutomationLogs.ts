@@ -44,7 +44,7 @@ export function useAutomationLogs(filters: AutomationLogsFilters) {
       if (!res.ok) throw new Error("Failed to fetch automation logs");
       return res.json();
     },
-    keepPreviousData: true,
+    placeholderData: (prev: any) => prev,
   });
 }
 

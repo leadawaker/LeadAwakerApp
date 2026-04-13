@@ -20,6 +20,9 @@ export default defineConfig({
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
   },
+  optimizeDeps: {
+    exclude: ["emoji-mart", "@emoji-mart/react", "@emoji-mart/data"],
+  },
   css: {
     postcss: {
       plugins: [],

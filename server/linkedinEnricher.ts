@@ -130,6 +130,79 @@ export async function enrichLinkedIn(prospectId: number, contactSlot: 1 | 2 = 1)
 
   const result = await fetchLinkedInProfile(username);
 
+  // Fetch prospect context for person_brief generation
+  const [prospectData] = await db
+    .select({
+      company: prospects.company,
+      niche: prospects.niche,
+      contactName: prospects.contactName,
+      contactRole: prospects.contactRole,
+      contact2Name: prospects.contact2Name,
+      contact2Role: prospects.contact2Role,
+    })
+    .from(prospects)
+    .where(eq(prospects.id, prospectId))
+    .limit(1);
+
+  const name = contactSlot === 2 ? prospectData?.contact2Name : prospectData?.contactName;
+  const role = contactSlot === 2 ? prospectData?.contact2Role : prospectData?.contactRole;
+
+  // Generate person_brief via Claude CLI (best-effort)
+  let personBrief: string | null = null;
+  if (result.headline || result.topPost) {
+    const briefPrompt = `You are creating a sales intelligence brief about a business contact. Based on their LinkedIn data, create a well-categorized person brief.
+
+Name: ${name || "Unknown"}
+Role: ${role || "Unknown"}
+Company: ${prospectData?.company || "Unknown"}
+Industry: ${prospectData?.niche || "Unknown"}
+LinkedIn Headline: ${result.headline || "N/A"}
+Connections: ${result.connectionCount || "N/A"}
+Followers: ${result.followerCount || "N/A"}
+Recent LinkedIn Post: ${result.topPost || "N/A"}
+
+Generate 6-10 bullet points organized into these categories:
+- ROLE: Their current position, responsibilities, and seniority level
+- BACKGROUND: Career trajectory, specializations, expertise areas
+- CONTENT: What they post about, their thought leadership topics, tone of their posts (translate any non-English posts to English for the summary)
+- ENGAGEMENT: Their network size, influence level, how active they are
+- RAPPORT: Anything useful for building connection (interests, values, communication style visible from their content)
+
+Rules:
+- Each bullet is one concise sentence
+- Be specific, not generic
+- If a post is in another language, translate the key points to English
+- Skip categories where no data is available
+- Format as a flat JSON array of strings: ["ROLE: ...", "BACKGROUND: ...", ...]
+
+Return ONLY the JSON array, no markdown fences.`;
+
+    const { execFile } = await import("child_process");
+    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
+
+    try {
+      const briefResult = await new Promise<string>((resolve, reject) => {
+        execFile(
+          CLAUDE_BIN,
+          ["-p", briefPrompt, "--model", "haiku", "--max-turns", "1"],
+          { timeout: 60000, maxBuffer: 1024 * 1024 },
+          (error, stdout) => {
+            if (error) reject(error);
+            else resolve(stdout);
+          }
+        );
+      });
+      let cleaned = briefResult.trim();
+      if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      }
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) personBrief = JSON.stringify(parsed);
+    } catch (err: any) {
+      console.error("[LinkedIn] Person brief generation failed:", err.message);
+    }
+  }
+
   const linkedinFields = contactSlot === 2
     ? {
         contact2Headline: result.headline,
@@ -137,6 +210,7 @@ export async function enrichLinkedIn(prospectId: number, contactSlot: 1 | 2 = 1)
         contact2FollowerCount: result.followerCount,
         contact2PhotoUrl: result.photoUrl,
         contact2TopPost: result.topPost,
+        contact2PersonBrief: personBrief,
       }
     : {
         headline: result.headline,
@@ -144,6 +218,7 @@ export async function enrichLinkedIn(prospectId: number, contactSlot: 1 | 2 = 1)
         followerCount: result.followerCount,
         photoUrl: result.photoUrl,
         topPost: result.topPost,
+        personBrief: personBrief,
       };
 
   await db

@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { deleteExpense as deleteExpenseApi } from "../api/expensesApi";
 import {
-  Search,
   Building2,
   Receipt,
   ChevronLeft,
@@ -23,13 +22,17 @@ import {
   CheckCircle2,
   SendHorizontal,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   CalendarDays,
   Filter,
   Eye,
   ListTree,
   Printer,
   Paintbrush,
+  Search,
 } from "lucide-react";
+import { SearchPill } from "@/components/ui/search-pill";
 import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
   Popover,
@@ -370,6 +373,7 @@ export function BillingListView({
   const [toolbarFieldsOpen, setToolbarFieldsOpen] = useState(false);
   const [toolbarGroupOpen, setToolbarGroupOpen] = useState(false);
   const [expenseGroupBy, setExpenseGroupBy] = useState<"none" | "year_quarter">("year_quarter");
+  const [groupDirection, setGroupDirection] = useState<"asc" | "desc">("desc");
   const [invoiceGroupBy, setInvoiceGroupBy] = useState<"none" | "year_quarter">("year_quarter");
   const [expenseExportTrigger, setExpenseExportTrigger] = useState(0);
 
@@ -852,7 +856,7 @@ export function BillingListView({
     </div>
   );
 
-  // ── Right panel list-mode toolbar (Sort, Filter, Date, Search, +) ────────
+  // ── Right panel list-mode toolbar (mobile back + view toggle + gradient) ────
 
   const toolbarControls = (
     <>
@@ -869,62 +873,36 @@ export function BillingListView({
 
       <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
 
-      {/* Add button — expand-on-hover */}
-      {isAgencyUser && (
-        <button
-          onClick={isExpensesTab ? () => { setExpensePanelOpen(true); setMobileView("detail"); } : handleAddClick}
-          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className={xSpan}>{isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}</span>
-        </button>
-      )}
+      {/* Gradient tester toggle — expand-on-hover */}
+      <button
+        type="button"
+        onClick={() => {
+          if (!gradientTesterOpen) setGradientLayers(savedGradient ?? getTabLayers(activeTab));
+          setGradientTesterOpen(prev => !prev);
+        }}
+        className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
+        title="Gradient Tester"
+      >
+        <Paintbrush className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>{t("toolbar.style")}</span>
+      </button>
+    </>
+  );
 
-      {/* Inline search bar */}
-      <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-white/60 dark:bg-white/[0.10] px-3 shrink-0">
-        <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-        <input
-          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-          placeholder={isExpensesTab ? t("toolbar.searchExpenses") : isInvoicesTab ? t("toolbar.searchInvoices") : t("toolbar.searchContracts")}
-          value={isExpensesTab ? expenseSearch : listSearch}
-          onChange={(e) => isExpensesTab ? setExpenseSearch(e.target.value) : setListSearch(e.target.value)}
-        />
-        {(isExpensesTab ? expenseSearch : listSearch) && (
-          <button onClick={() => isExpensesTab ? setExpenseSearch("") : setListSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
-            <X className="h-3 w-3" />
-          </button>
-        )}
-      </div>
+  // ── Left panel list-mode toolbar (Search + Sort + Filter + Date + Group + Create) ──
 
-      {/* Sort — expand-on-hover */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(isExpensesTab
-            ? ([
-                { key: "recent" as SortBy, tKey: "sort.recent" },
-                { key: "amount_desc" as SortBy, tKey: "sort.amountDesc" },
-                { key: "amount_asc" as SortBy, tKey: "sort.amountAsc" },
-                { key: "name_asc" as SortBy, tKey: "sort.supplierAZ" },
-              ])
-            : (Object.keys(SORT_TKEYS) as SortBy[]).map((k) => ({ key: k, tKey: SORT_TKEYS[k] }))
-          ).map(({ key: opt, tKey }) => (
-            <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-              {t(tKey)}
-              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+  const leftPanelToolbar = (
+    <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+      {/* Search */}
+      <SearchPill
+        value={isExpensesTab ? expenseSearch : listSearch}
+        onChange={(v) => isExpensesTab ? setExpenseSearch(v) : setListSearch(v)}
+        open={isExpensesTab ? expenseSearchOpen : searchOpen}
+        onOpenChange={(o) => isExpensesTab ? setExpenseSearchOpen(o) : setSearchOpen(o)}
+        placeholder={isExpensesTab ? t("toolbar.searchExpenses") : isInvoicesTab ? t("toolbar.searchInvoices") : t("toolbar.searchContracts")}
+      />
 
-      {/* Filter — expand-on-hover (Status + Account) — not on expenses */}
+      {/* Filter (Status + Account) — not on expenses */}
       {!isExpensesTab && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -974,7 +952,77 @@ export function BillingListView({
         </DropdownMenu>
       )}
 
-      {/* Date — expand-on-hover (Quarter + Year) */}
+      {/* Sort */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.sort")}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {/* Recent — flat row */}
+          <DropdownMenuItem
+            onSelect={(e) => { e.preventDefault(); setSortBy("recent"); }}
+            className="text-[12px] flex items-center gap-2"
+          >
+            <span className={cn("flex-1", sortBy === "recent" && "font-semibold !text-brand-indigo")}>{t("sort.recent")}</span>
+          </DropdownMenuItem>
+          {/* Amount — paired asc/desc row */}
+          {(() => {
+            const isActive = sortBy === "amount_desc" || sortBy === "amount_asc";
+            const activeDir: "asc" | "desc" = sortBy === "amount_asc" ? "asc" : "desc";
+            return (
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); setSortBy(isActive ? sortBy : "amount_desc"); }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sort.amountDesc").replace(" High", "")}</span>
+                {isActive && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_desc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="High to Low"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_asc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Low to High"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                  </>
+                )}
+              </DropdownMenuItem>
+            );
+          })()}
+          {/* Due Soonest — flat row (invoices/contracts only) */}
+          {!isExpensesTab && (
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); setSortBy("due_asc"); }}
+              className="text-[12px] flex items-center gap-2"
+            >
+              <span className={cn("flex-1", sortBy === "due_asc" && "font-semibold !text-brand-indigo")}>{t("sort.dueSoonest")}</span>
+            </DropdownMenuItem>
+          )}
+          {/* Name A-Z — flat row */}
+          <DropdownMenuItem
+            onSelect={(e) => { e.preventDefault(); setSortBy("name_asc"); }}
+            className="text-[12px] flex items-center gap-2"
+          >
+            <span className={cn("flex-1", sortBy === "name_asc" && "font-semibold !text-brand-indigo")}>{isExpensesTab ? t("sort.supplierAZ") : t("sort.nameAZ")}</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Date (Quarter + Year) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[80px]", isDateActive ? xActive : xDefault)}>
@@ -1021,7 +1069,7 @@ export function BillingListView({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Group — expand-on-hover (expenses only) */}
+      {/* Group (expenses only) */}
       {isExpensesTab && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -1030,35 +1078,57 @@ export function BillingListView({
               <span className={xSpan}>{t("toolbar.group")}</span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-40">
+          <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.groupBy")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setExpenseGroupBy("none")} className={cn("text-[12px]", expenseGroupBy === "none" && "font-semibold text-brand-indigo")}>
-              {t("groupOptions.none")}
-              {expenseGroupBy === "none" && <Check className="h-3 w-3 ml-auto" />}
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); setExpenseGroupBy("none"); }}
+              className="text-[12px] flex items-center gap-2"
+            >
+              <span className={cn("flex-1", expenseGroupBy === "none" && "font-semibold !text-brand-indigo")}>{t("groupOptions.none")}</span>
+              {expenseGroupBy === "none" && <Check className="h-3 w-3" />}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setExpenseGroupBy("year_quarter")} className={cn("text-[12px]", expenseGroupBy === "year_quarter" && "font-semibold text-brand-indigo")}>
-              {t("groupOptions.yearQuarter")}
-              {expenseGroupBy === "year_quarter" && <Check className="h-3 w-3 ml-auto" />}
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); setExpenseGroupBy("year_quarter"); }}
+              className="text-[12px] flex items-center gap-2"
+            >
+              <span className={cn("flex-1", expenseGroupBy === "year_quarter" && "font-semibold !text-brand-indigo")}>{t("groupOptions.yearQuarter")}</span>
+              {expenseGroupBy === "year_quarter" && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("asc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Ascending"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("desc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Descending"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                </>
+              )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}
 
-      {/* Gradient tester toggle — expand-on-hover */}
-      <button
-        type="button"
-        onClick={() => {
-          if (!gradientTesterOpen) setGradientLayers(savedGradient ?? getTabLayers(activeTab));
-          setGradientTesterOpen(prev => !prev);
-        }}
-        className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
-        title="Gradient Tester"
-      >
-        <Paintbrush className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.style")}</span>
-      </button>
-    </>
+      {/* Create button — agency only */}
+      {isAgencyUser && (
+        <button
+          onClick={isExpensesTab ? () => { setExpensePanelOpen(true); setMobileView("detail"); } : handleAddClick}
+          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
+        >
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className={xSpan}>{isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}</span>
+        </button>
+      )}
+    </div>
   );
 
   // ── Card list (list mode, non-expenses tab) ────────────────────────────────
@@ -1628,6 +1698,9 @@ export function BillingListView({
           <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden min-h-[300px] md:min-h-0", mobileView === "detail" ? "hidden md:flex" : "flex")}>
             {leftPanelHeader}
 
+            {/* ── List toolbar: search + create + sort + filter + date + group ── */}
+            {leftPanelToolbar}
+
             {/* Card list (invoices / contracts) */}
             {!isExpensesTab && cardList}
 
@@ -1645,6 +1718,7 @@ export function BillingListView({
                   setMobileView("detail");
                 }}
                 groupBy={expenseGroupBy}
+                groupDirection={groupDirection}
               />
             )}
           </div>

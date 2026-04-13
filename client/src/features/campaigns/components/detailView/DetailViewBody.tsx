@@ -4,7 +4,7 @@ import type { DateRangeValue } from "@/components/crm/DateRangeFilter";
 import { useCampaignDetail, getCampaignMetrics } from "../useCampaignDetail";
 import { CampaignMetricsPanel } from "../CampaignMetricsPanel";
 import { CampaignStageEditor } from "../CampaignStageEditor";
-import { GradientTester, DEFAULT_LAYERS, type GradientLayer } from "@/components/ui/gradient-tester";
+import { GradientTester, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +55,9 @@ interface DetailViewBodyProps {
   resetGradientLayers: () => void;
   gradientDragMode: boolean;
   setGradientDragMode: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSaveGradient: () => void;
   handleApplyGradient: () => void;
+  onTogglePromptPanel?: () => void;
 }
 
 export function DetailViewBody({
@@ -90,13 +92,15 @@ export function DetailViewBody({
   resetGradientLayers,
   gradientDragMode,
   setGradientDragMode,
+  handleSaveGradient,
   handleApplyGradient,
+  onTogglePromptPanel,
 }: DetailViewBodyProps) {
   return (
     <>
       {/* ── Body ── */}
       <div
-        className="relative flex-1 px-[3px] pb-[3px] -mt-[80px] pt-[83px] overflow-y-auto"
+        className="relative flex-1 px-[3px] pb-[3px] -mt-[80px] pt-[83px] overflow-y-auto flex flex-col gap-[3px]"
         style={{
           maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
@@ -136,6 +140,7 @@ export function DetailViewBody({
             compact={compact}
             focusField={detail.focusField}
             onStartEditField={detail.startEditForField}
+            onTogglePromptPanel={onTogglePromptPanel}
           />
         )}
       </div>
@@ -194,6 +199,7 @@ export function DetailViewBody({
           onResetLayers={resetGradientLayers}
           dragMode={gradientDragMode}
           onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+          onSave={handleSaveGradient}
           onApply={handleApplyGradient}
         />
       )}

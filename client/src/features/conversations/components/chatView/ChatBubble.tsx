@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { RotateCcw, Mic, Image as ImageIcon } from "lucide-react";
+import DOMPurify from "dompurify";
+import { RotateCcw, Mic, Image as ImageIcon, Mail } from "lucide-react";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { SessionUser } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import type { Interaction } from "../../hooks/useConversationsData";
 import type { MsgMeta } from "./types";
 import { useBubbleWidth, useHideAvatars, useTimezone } from "./types";
-import { formatBubbleTime, isAiMessage, isHumanAgentMessage } from "./utils";
+import { formatBubbleTime, isAiMessage, isHumanAgentMessage, getAttachmentType } from "./utils";
 import { MessageStatusIcon, AgentAvatar, BotAvatar } from "./atoms";
 import { VoiceMemoPlayer } from "./VoiceMemoPlayer";
 import { AttachmentPreview } from "./AttachmentPreview";
@@ -45,8 +46,9 @@ export function ChatBubble({
   const isSent = statusNorm === "sent";
   const isDelivered = statusNorm === "delivered";
   const isRead = statusNorm === "read";
-  const aiMsg = outbound && isAiMessage(item);
-  const humanAgentMsg = outbound && isHumanAgentMessage(item);
+  const isEmail = (item.type ?? "").toLowerCase() === "email";
+  const aiMsg = outbound && !isEmail && isAiMessage(item);
+  const humanAgentMsg = outbound && !isEmail && isHumanAgentMessage(item);
   const { isFirstInRun, isLastInRun } = meta;
   const rawTs = item.created_at ?? item.createdAt ?? (item as any).Created_At ?? (item as any).CreatedAt ?? null;
   const time = formatBubbleTime(rawTs, timezone);
@@ -95,15 +97,17 @@ export function ChatBubble({
         className={cn(
           "px-3 pt-2 pb-1.5 text-[15px] relative",
           bubbleRadius,
+          // Email: always white/card with border, regardless of direction
+          isEmail && "bg-white dark:bg-card text-gray-900 dark:text-foreground border border-border/50 bubble-shadow",
           // Inbound (lead): neutral gray glow; mobile uses --card bg explicitly
-          inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground bubble-shadow",
+          !isEmail && inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground bubble-shadow",
           // AI outbound: blue (desktop) / brand-indigo (mobile)
           aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground bubble-shadow max-md:bg-brand-indigo max-md:text-white max-md:filter-none",
           // Human agent outbound (desktop: green) / brand-indigo (mobile)
           humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground bubble-shadow max-md:bg-brand-indigo max-md:text-white max-md:filter-none",
           isFailed && "opacity-80",
         )}
-        data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
+        data-message-type={isEmail ? "email" : inbound ? "lead" : aiMsg ? "ai" : "agent"}
         title={aiCostTitle}
       >
         {/* Tail triangle — only on last message in a consecutive run */}
@@ -113,6 +117,7 @@ export function ChatBubble({
         {isLastInRun && !inbound && (
           <span aria-hidden="true" className={cn(
             "absolute bottom-0 -right-[6px] w-0 h-0 border-t-[9px] border-t-transparent border-l-[8px]",
+            isEmail && "border-l-white dark:border-l-card",
             aiMsg && "border-l-[#f2f5ff] dark:border-l-[#1e2340] max-md:border-l-brand-indigo",
             humanAgentMsg && "border-l-[#f1fff5] dark:border-l-[#1a2e1f] max-md:border-l-brand-indigo",
           )} />
@@ -122,12 +127,15 @@ export function ChatBubble({
           const content = item.content ?? item.Content ?? "";
           const attachment = item.attachment ?? item.Attachment;
           const isVoiceMemo = content.startsWith("data:audio/") || item.type === "audio";
-          const isVoiceNote = item.type === "voice_note";
+          const hasAudioAttachment = typeof attachment === "string" && attachment.length > 0 && getAttachmentType(attachment) === "audio";
+          const isVoiceNote = item.type === "voice_note" || hasAudioAttachment;
           // Voice color: human agent → green, AI → amber, inbound lead → pipeline status color, outbound agent → teal
-          const voiceColor = humanAgentMsg ? "#22C55E" : aiMsg ? "#f59e0b" : inbound ? leadAvatarColors.statusColor : "#0ABFA3";
+          const voiceColor = humanAgentMsg ? "#22C55E" : aiMsg ? "#2050ff" : inbound ? leadAvatarColors.statusColor : "#0ABFA3";
+          const emailSubject = isEmail ? ((item.metadata as any)?.subject ?? "") : "";
           // Time + status stamp — WhatsApp-style: inline at bottom-right of bubble
           const timeStamp = (
             <span className="shrink-0 inline-flex items-center gap-0.5 text-[11px] leading-none select-none opacity-50 mb-0.5">
+              {isEmail && <Mail className="h-3 w-3" />}
               {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
               {outbound && (
                 <MessageStatusIcon
@@ -142,16 +150,16 @@ export function ChatBubble({
             </span>
           );
           if (isVoiceMemo) {
-            return <div className="flex items-end gap-1.5"><VoiceMemoPlayer url={content} outbound={outbound} color={voiceColor} />{timeStamp}</div>;
+            return <div className={cn("flex items-end gap-1.5", outbound && "justify-end")}><VoiceMemoPlayer url={content} outbound={outbound} color={voiceColor} />{timeStamp}</div>;
           }
           if (isVoiceNote) {
             const VOICE_PREFIX = "[Voice Note]: ";
             const transcription = content.startsWith(VOICE_PREFIX)
               ? content.slice(VOICE_PREFIX.length).trim()
               : content.trim();
-            const audioUrl = typeof attachment === "string" && attachment.startsWith("data:audio/") ? attachment : null;
+            const audioUrl = typeof attachment === "string" && (attachment.startsWith("data:audio/") || getAttachmentType(attachment) === "audio") ? attachment : null;
             return (
-              <div className="flex flex-col gap-2">
+              <div className={cn("flex flex-col gap-2", outbound && "items-end")}>
                 {audioUrl
                   ? <VoiceMemoPlayer url={audioUrl} outbound={outbound} color={voiceColor} />
                   : <div className="flex items-center gap-1.5 opacity-70">
@@ -196,9 +204,25 @@ export function ChatBubble({
           }
           return (
             <div className="flex flex-col gap-1">
+              {isEmail && emailSubject && (
+                <div className="text-[11px] font-semibold text-foreground/60 pb-0.5 border-b border-border/30 mb-1">{emailSubject}</div>
+              )}
               {attachment && <AttachmentPreview url={attachment as string} outbound={outbound} voiceColor={voiceColor} />}
               <div className="flex items-end gap-1.5">
-                <span className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0">{content}</span>
+                {content.includes("<") ? (
+                  <span
+                    className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0 [&_table]:text-[11px] [&_img]:max-w-[200px]"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(content, {
+                        ALLOWED_TAGS: ["p", "br", "b", "strong", "i", "em", "a", "ul", "ol", "li", "div", "span", "table", "tr", "td", "th", "img", "hr"],
+                        ALLOWED_ATTR: ["href", "target", "style", "src", "alt", "width", "height", "cellpadding", "cellspacing"],
+                        ADD_ATTR: ["target"],
+                      }),
+                    }}
+                  />
+                ) : (
+                  <span className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0">{content}</span>
+                )}
                 {timeStamp}
               </div>
             </div>

@@ -175,149 +175,142 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     setLocalAiSummaryAt(generatedAt);
   }, []);
 
-  // ── Inline editing state ───────────────────────────────────────────────────
-  const [isEditing, setIsEditing] = useState(false);
+  // ── Always-on editing state (auto-save on change) ──────────────────────────
   const [focusField, setFocusField] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [draft, setDraft] = useState<Record<string, unknown>>({});
-  const [originalDraft, setOriginalDraft] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
 
-  const startEdit = useCallback((linkedPromptArg: any) => {
-    const d: Record<string, unknown> = {
-      name: campaign.name || "",
-      status: campaign.status || "",
-      type: campaign.type || "",
-      description: campaign.description || "",
-      start_date: campaign.start_date || "",
-      end_date: campaign.end_date || "",
-      active_hours_start: campaign.active_hours_start || "",
-      active_hours_end: campaign.active_hours_end || "",
-      daily_lead_limit: campaign.daily_lead_limit ?? "",
-      message_interval_minutes: campaign.message_interval_minutes ?? "",
-      stop_on_response: campaign.stop_on_response ?? false,
-      use_ai_bumps: campaign.use_ai_bumps ?? false,
-      first_message_voice_note: campaign.first_message_voice_note ?? false,
-      bump_1_voice_note: campaign.bump_1_voice_note ?? false,
-      bump_2_voice_note: campaign.bump_2_voice_note ?? false,
-      bump_3_voice_note: campaign.bump_3_voice_note ?? false,
-      ai_reply_voice_note: campaign.ai_reply_voice_note ?? false,
-      tts_voice_id: campaign.tts_voice_id || "",
-      max_bumps: campaign.max_bumps ?? "",
-      ai_model: campaign.ai_model || "",
-      ai_temperature: campaign.ai_temperature ?? "",
-      agent_name: campaign.agent_name || "",
-      service_name: campaign.service_name || "",
-      booking_mode_override: campaign.booking_mode_override || "",
-      niche_question: campaign.niche_question || "",
-      what_lead_did: campaign.what_lead_did || "",
-      inquiries_source: campaign.inquiries_source || "",
-      website: campaign.website || "",
-      calendar_link_override: campaign.calendar_link_override || campaign.calendar_link || "",
-      campaign_usp: campaign.campaign_usp || "",
-      prompt_linked_id: linkedPromptArg ? String(linkedPromptArg.id || linkedPromptArg.Id) : "",
-      ai_prompt_template: campaign.ai_prompt_template || "",
-      first_message_template: campaign.first_message_template || campaign.First_Message || "",
-      second_message: campaign.second_message || "",
-      bump_1_template: campaign.bump_1_template || "",
-      bump_1_delay_hours: campaign.bump_1_delay_hours ?? "",
-      bump_1_ai_reference: campaign.bump_1_ai_reference ?? false,
-      bump_2_template: campaign.bump_2_template || "",
-      bump_2_delay_hours: campaign.bump_2_delay_hours ?? "",
-      bump_2_ai_reference: campaign.bump_2_ai_reference ?? false,
-      bump_3_template: campaign.bump_3_template || "",
-      bump_3_delay_hours: campaign.bump_3_delay_hours ?? "",
-      bump_3_ai_reference: campaign.bump_3_ai_reference ?? false,
-      contract_id: String(campaign.contract_id || (campaign as any).contract_id || ""),
-      value_per_booking: campaign.value_per_booking ?? "",
-      channel: campaign.channel || "sms",
-    };
-    setOriginalDraft(d);
-    setDraft(d);
-    setIsEditing(true);
-  }, [campaign]);
+  // Build draft from campaign data
+  const buildDraft = useCallback((c: Campaign, lp: any): Record<string, unknown> => ({
+    name: c.name || "",
+    status: c.status || "",
+    type: c.type || "",
+    description: c.description || "",
+    start_date: c.start_date || "",
+    end_date: c.end_date || "",
+    active_hours_start: c.active_hours_start || "",
+    active_hours_end: c.active_hours_end || "",
+    daily_lead_limit: c.daily_lead_limit ?? "",
+    message_interval_minutes: c.message_interval_minutes ?? "",
+    stop_on_response: c.stop_on_response ?? false,
+    use_ai_bumps: c.use_ai_bumps ?? false,
+    first_message_voice_note: c.first_message_voice_note ?? false,
+    bump_1_voice_note: c.bump_1_voice_note ?? false,
+    bump_2_voice_note: c.bump_2_voice_note ?? false,
+    bump_3_voice_note: c.bump_3_voice_note ?? false,
+    bump_4_voice_note: c.bump_4_voice_note ?? false,
+    ai_reply_voice_note: c.ai_reply_voice_note ?? false,
+    voice_reply_mode: c.voice_reply_mode || "off",
+    tts_voice_id: c.tts_voice_id || "",
+    max_bumps: c.max_bumps ?? "",
+    ai_model: c.ai_model || "",
+    ai_temperature: c.ai_temperature ?? "",
+    agent_name: c.agent_name || "",
+    service_name: c.service_name || "",
+    booking_mode_override: c.booking_mode_override || "",
+    niche_question: c.niche_question || "",
+    what_lead_did: c.what_lead_did || "",
+    inquiries_source: c.inquiries_source || "",
+    website: c.website || "",
+    calendar_link_override: c.calendar_link_override || c.calendar_link || "",
+    campaign_usp: c.campaign_usp || "",
+    kb: c.kb || "",
+    prompt_linked_id: lp ? String(lp.id || lp.Id) : "",
+    First_Message: c.First_Message || c.first_message_template || "",
+    bump_1_template: c.bump_1_template || "",
+    bump_1_delay_hours: c.bump_1_delay_hours ?? "",
+    bump_1_ai_reference: c.bump_1_ai_reference ?? false,
+    bump_1_voice_template: c.bump_1_voice_template || "",
+    bump_2_template: c.bump_2_template || "",
+    bump_2_delay_hours: c.bump_2_delay_hours ?? "",
+    bump_2_ai_reference: c.bump_2_ai_reference ?? false,
+    bump_2_voice_template: c.bump_2_voice_template || "",
+    bump_3_template: c.bump_3_template || "",
+    bump_3_delay_hours: c.bump_3_delay_hours ?? "",
+    bump_3_ai_reference: c.bump_3_ai_reference ?? false,
+    bump_3_voice_template: c.bump_3_voice_template || "",
+    bump_4_template: c.bump_4_template || "",
+    bump_4_delay_hours: c.bump_4_delay_hours ?? "",
+    bump_4_voice_template: c.bump_4_voice_template || "",
+    contract_id: String(c.contract_id || (c as any).contract_id || ""),
+    value_per_booking: c.value_per_booking ?? "",
+    channel: c.channel || "sms",
+  }), []);
 
-  const startEditForField = useCallback((field: string) => {
-    setFocusField(field);
-    // startEdit reads campaign from closure — call it directly
-    const c = campaignRef.current;
-    const lp = conversationPrompts.find((p) => Number(p.campaigns_id || p.campaignsId || p.Campaigns_id) === (c.id || (c as any).Id)) ?? null;
-    const d: Record<string, unknown> = {
-      name: c.name || "",
-      status: c.status || "",
-      type: c.type || "",
-      description: c.description || "",
-      start_date: c.start_date || "",
-      end_date: c.end_date || "",
-      active_hours_start: c.active_hours_start || "",
-      active_hours_end: c.active_hours_end || "",
-      daily_lead_limit: c.daily_lead_limit ?? "",
-      message_interval_minutes: c.message_interval_minutes ?? "",
-      stop_on_response: c.stop_on_response ?? false,
-      use_ai_bumps: c.use_ai_bumps ?? false,
-      first_message_voice_note: c.first_message_voice_note ?? false,
-      bump_1_voice_note: c.bump_1_voice_note ?? false,
-      bump_2_voice_note: c.bump_2_voice_note ?? false,
-      bump_3_voice_note: c.bump_3_voice_note ?? false,
-      ai_reply_voice_note: c.ai_reply_voice_note ?? false,
-      tts_voice_id: c.tts_voice_id || "",
-      max_bumps: c.max_bumps ?? "",
-      ai_model: c.ai_model || "",
-      ai_temperature: c.ai_temperature ?? "",
-      agent_name: c.agent_name || "",
-      service_name: c.service_name || "",
-      booking_mode_override: c.booking_mode_override || "",
-      niche_question: c.niche_question || "",
-      what_lead_did: c.what_lead_did || "",
-      inquiries_source: c.inquiries_source || "",
-      website: c.website || "",
-      calendar_link_override: c.calendar_link_override || c.calendar_link || "",
-      campaign_usp: c.campaign_usp || "",
-      prompt_linked_id: lp ? String(lp.id || lp.Id) : "",
-      ai_prompt_template: c.ai_prompt_template || "",
-      first_message_template: c.first_message_template || c.First_Message || "",
-      second_message: c.second_message || "",
-      bump_1_template: c.bump_1_template || "",
-      bump_1_delay_hours: c.bump_1_delay_hours ?? "",
-      bump_1_ai_reference: c.bump_1_ai_reference ?? false,
-      bump_2_template: c.bump_2_template || "",
-      bump_2_delay_hours: c.bump_2_delay_hours ?? "",
-      bump_2_ai_reference: c.bump_2_ai_reference ?? false,
-      bump_3_template: c.bump_3_template || "",
-      bump_3_delay_hours: c.bump_3_delay_hours ?? "",
-      bump_3_ai_reference: c.bump_3_ai_reference ?? false,
-      contract_id: String(c.contract_id || (c as any).contract_id || ""),
-      value_per_booking: c.value_per_booking ?? "",
-      channel: c.channel || "sms",
-    };
-    setOriginalDraft(d);
-    setDraft(d);
-    setIsEditing(true);
-  }, [conversationPrompts]);
+  const [draft, setDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));
+  const [originalDraft, setOriginalDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));
 
-  const cancelEdit = useCallback(() => {
-    setIsEditing(false);
+  // Track prev campaign ID so we can flush saves with the correct ID on switch
+  const prevCampaignIdRef = useRef(campaignId);
+
+  // Re-sync draft when campaign changes — flush any pending save first
+  useEffect(() => {
+    if (autoSaveTimer.current && prevCampaignIdRef.current !== campaignId) {
+      clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = null;
+      // Flush save for the PREVIOUS campaign using stale draft/original refs
+      const currentDraft = draftRef.current;
+      const currentOriginal = originalDraftRef.current;
+      const prevId = prevCampaignIdRef.current;
+      const changed = Object.keys(currentOriginal).some(k =>
+        JSON.stringify(currentDraft[k]) !== JSON.stringify(currentOriginal[k])
+      );
+      if (changed && prevId) {
+        const { prompt_linked_id: _omit, ...rawPatch } = currentDraft as any;
+        const campaignPatch = Object.fromEntries(
+          Object.entries(rawPatch).map(([k, v]: [string, unknown]) => [k, v === "" ? null : v])
+        );
+        onSaveRef.current(prevId, campaignPatch);
+      }
+    }
+    prevCampaignIdRef.current = campaignId;
+    const d = buildDraft(campaign, linkedPrompt);
+    setDraft(d);
+    setOriginalDraft(d);
     setFocusField(null);
-    setDraft({});
-    setOriginalDraft({});
-  }, []);
+  }, [campaignId, buildDraft]);
+
+  // Stable refs for auto-save
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const originalDraftRef = useRef(originalDraft);
+  originalDraftRef.current = originalDraft;
+
+  // Always in edit mode
+  const isEditing = true;
 
   const hasChanges = useMemo(() => {
-    if (!isEditing || Object.keys(originalDraft).length === 0) return false;
+    if (Object.keys(originalDraft).length === 0) return false;
     return Object.keys(originalDraft).some(k =>
       JSON.stringify(draft[k]) !== JSON.stringify(originalDraft[k])
     );
-  }, [draft, originalDraft, isEditing]);
+  }, [draft, originalDraft]);
 
-  const handleSave = useCallback(async () => {
+  // Auto-save debounced 1.5s after draft changes
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (Object.keys(originalDraftRef.current).length === 0) return;
+    const changed = Object.keys(originalDraftRef.current).some(k =>
+      JSON.stringify(draftRef.current[k]) !== JSON.stringify(originalDraftRef.current[k])
+    );
+    if (!changed) return;
+
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => { doSave(); }, 1500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [draft]);
+
+  const doSave = useCallback(async () => {
+    const currentDraft = draftRef.current;
+    const currentOriginal = originalDraftRef.current;
     const id = campaignRef.current.id || campaignRef.current.Id;
     if (!id) return;
     setSaving(true);
     try {
       // Handle prompt linking changes
-      const prevPromptId = String(originalDraft.prompt_linked_id ?? "");
-      const newPromptId = String(draft.prompt_linked_id ?? "");
+      const prevPromptId = String(currentOriginal.prompt_linked_id ?? "");
+      const newPromptId = String(currentDraft.prompt_linked_id ?? "");
       if (newPromptId !== prevPromptId) {
         if (prevPromptId) {
           await apiFetch(`/api/prompts/${prevPromptId}`, {
@@ -332,35 +325,29 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ campaignsId: id }),
           });
-          // Pull the latest prompts list to get prompt text
-          const promptsRes = await apiFetch("/api/prompts");
-          const promptsData = promptsRes.ok ? await promptsRes.json() : [];
-          const allPrompts = Array.isArray(promptsData) ? promptsData : [];
-          const selectedP = allPrompts.find((p: any) => String(p.id || p.Id) === newPromptId);
-          if (selectedP) {
-            draft.ai_prompt_template = selectedP.prompt_text || selectedP.promptText || "";
-          }
         }
         reloadPrompts();
       }
 
-      const { prompt_linked_id: _omit, ...rawPatch } = draft as any;
+      const { prompt_linked_id: _omit, ...rawPatch } = currentDraft as any;
       const campaignPatch = Object.fromEntries(
         Object.entries(rawPatch).map(([k, v]) => [k, v === "" ? null : v])
       );
       await onSaveRef.current(id, campaignPatch);
-      setIsEditing(false);
-      setFocusField(null);
-      setDraft({});
-      setOriginalDraft({});
-      toast({ title: t("toolbar.save"), description: "Campaign updated." });
+      setOriginalDraft({ ...currentDraft });
     } catch (e) {
-      console.error("Save failed", e);
+      console.error("Auto-save failed", e);
       toast({ title: "Save failed", description: "Could not save changes.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
-  }, [draft, originalDraft, reloadPrompts, toast, t]);
+  }, [reloadPrompts, toast]);
+
+  // Legacy compat stubs (keep API surface stable)
+  const startEdit = useCallback((_linkedPromptArg?: any) => {}, []);
+  const startEditForField = useCallback((field: string) => { setFocusField(field); }, []);
+  const cancelEdit = useCallback(() => { setFocusField(null); }, []);
+  const handleSave = doSave;
 
   return {
     // Prompts
@@ -392,5 +379,6 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     startEdit,
     cancelEdit,
     handleSave,
+    reloadPrompts,
   };
 }

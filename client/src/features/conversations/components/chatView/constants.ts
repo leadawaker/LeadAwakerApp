@@ -30,6 +30,7 @@ export const TAG_HEX: Record<string, string> = {
 
 /** Tag names that represent a conversion status change. These render as status chips instead of tag chips. */
 export const CONVERSION_STATUS_TAGS = new Set([
+  "New",
   "Contacted",
   "Responded",
   "Multiple Responses",

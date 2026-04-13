@@ -77,7 +77,7 @@ const DEFAULT_VISIBLE = TABLE_COL_META_KEYS.filter((c) => c.defaultVisible).map(
 
 /* -- Table sort / group types -- */
 type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "priority";
-type TableGroupByOption = "status" | "outreach_status" | "niche" | "country" | "priority" | "none";
+type TableGroupByOption = "status" | "outreach_status" | "niche" | "country" | "priority" | "date" | "none";
 
 const TABLE_SORT_KEYS: Record<TableSortByOption, string> = {
   recent:    "sort.mostRecent",
@@ -92,8 +92,25 @@ const TABLE_GROUP_KEYS: Record<TableGroupByOption, string> = {
   niche:           "group.niche",
   country:         "group.country",
   priority:        "group.priority",
+  date:            "group.date",
   none:            "group.none",
 };
+
+function getDateBucket(dateStr: string | null | undefined): string {
+  if (!dateStr) return "Unknown";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "Unknown";
+  const diffMs = Date.now() - d.getTime();
+  const diffDays = Math.floor(diffMs / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return "This Week";
+  if (diffDays < 30) return "This Month";
+  if (diffDays < 90) return "Last 3 Months";
+  return "Older";
+}
+
+const DATE_BUCKET_ORDER = ["Today", "Yesterday", "This Week", "This Month", "Last 3 Months", "Older", "Unknown"];
 
 const STATUS_OPTIONS = ["New", "Contacted", "In Progress", "Converted", "Archived"];
 const PROSPECT_STATUS_ORDER = ["New", "Contacted", "In Progress", "Converted", "Archived"];
@@ -276,6 +293,7 @@ export default function ProspectsPage() {
   const setTableFilterPriority = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterPriority: typeof v === "function" ? v(p.filterPriority) : v })), [setTablePrefs]);
   const setTableFilterSource = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterSource: typeof v === "function" ? v(p.filterSource ?? []) : v })), [setTablePrefs]);
   const [tableSelectedIds,  setTableSelectedIds]  = useState<Set<number>>(new Set());
+  const [tableFilterOverdue, setTableFilterOverdue] = useState(false);
 
   /* -- Column visibility (persisted) -- */
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => {
@@ -400,8 +418,9 @@ export default function ProspectsPage() {
     setTableFilterCountry([]);
     setTableFilterPriority([]);
     setTableFilterSource([]);
+    setTableFilterOverdue(false);
   }, []);
-  const isTableFilterActive    = tableFilterStatus.length > 0 || tableFilterNiche.length > 0 || tableFilterCountry.length > 0 || tableFilterPriority.length > 0 || tableFilterSource.length > 0;
+  const isTableFilterActive    = tableFilterStatus.length > 0 || tableFilterNiche.length > 0 || tableFilterCountry.length > 0 || tableFilterPriority.length > 0 || tableFilterSource.length > 0 || tableFilterOverdue;
   const tableActiveFilterCount = tableFilterStatus.length + tableFilterNiche.length + tableFilterCountry.length + tableFilterPriority.length + tableFilterSource.length;
 
   /* -- Table bulk handlers -- */
@@ -620,9 +639,8 @@ export default function ProspectsPage() {
     { id: "list",      label: "List",      icon: List },
     { id: "table",     label: "Table",     icon: Table2 },
     { id: "pipeline",  label: "Pipeline",  icon: Kanban },
-    { id: "followups", label: `Follow-ups${followUpRows.length > 0 ? ` (${followUpRows.length})` : ""}`, icon: Clock },
     { id: "templates", label: "Templates", icon: FileText },
-  ], [followUpRows.length]);
+  ], []);
 
   /* -- Table flat items (filtered, sorted, grouped) -- */
   const tableFlatItems = useMemo((): ProspectTableItem[] => {
@@ -656,6 +674,10 @@ export default function ProspectsPage() {
     // Filter by source
     if (tableFilterSource.length > 0) {
       source = source.filter((p) => tableFilterSource.includes(String(p.source || "")));
+    }
+    if (tableFilterOverdue) {
+      const now = Date.now();
+      source = source.filter((p) => p.next_follow_up_date && new Date(p.next_follow_up_date).getTime() < now);
     }
 
     // Sort
@@ -695,17 +717,22 @@ export default function ProspectsPage() {
         case "niche":    groupKey = String(p.niche || "Unknown"); break;
         case "country":  groupKey = String(p.country || "Unknown"); break;
         case "priority": groupKey = String(p.priority || "Unknown"); break;
+        case "date":     groupKey = getDateBucket(p.updated_at || p.created_at); break;
         default:         groupKey = String(p.status || "Unknown"); break;
       }
       if (!buckets.has(groupKey)) buckets.set(groupKey, []);
       buckets.get(groupKey)!.push(p);
     });
 
-    const orderedKeys =
-      tableGroupBy === "status"
-        ? PROSPECT_STATUS_ORDER.filter((k) => buckets.has(k))
-            .concat(Array.from(buckets.keys()).filter((k) => !PROSPECT_STATUS_ORDER.includes(k)))
-        : Array.from(buckets.keys()).sort();
+    let orderedKeys: string[];
+    if (tableGroupBy === "status") {
+      orderedKeys = PROSPECT_STATUS_ORDER.filter((k) => buckets.has(k))
+        .concat(Array.from(buckets.keys()).filter((k) => !PROSPECT_STATUS_ORDER.includes(k)));
+    } else if (tableGroupBy === "date") {
+      orderedKeys = DATE_BUCKET_ORDER.filter((k) => buckets.has(k));
+    } else {
+      orderedKeys = Array.from(buckets.keys()).sort();
+    }
 
     const result: ProspectTableItem[] = [];
     orderedKeys.forEach((key) => {
@@ -715,7 +742,7 @@ export default function ProspectsPage() {
       group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
     });
     return result;
-  }, [rows, tableSearch, tableFilterStatus, tableFilterNiche, tableFilterCountry, tableFilterPriority, tableFilterSource, tableSortBy, tableGroupBy]);
+  }, [rows, tableSearch, tableFilterStatus, tableFilterNiche, tableFilterCountry, tableFilterPriority, tableFilterSource, tableFilterOverdue, tableSortBy, tableGroupBy]);
 
   /* -- Table toolbar (rendered inline with tab buttons) -- */
   const tableToolbar = (
@@ -844,6 +871,16 @@ export default function ProspectsPage() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Overdue toggle */}
+      <button
+        onClick={() => setTableFilterOverdue((v) => !v)}
+        className={cn(xBase, tableFilterOverdue ? xActive : xDefault, "hover:max-w-[100px]")}
+        title={t("toolbar.overdue")}
+      >
+        <Clock className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>{t("toolbar.overdue")}</span>
+      </button>
 
       {/* Fields (Column Visibility) */}
       <DropdownMenu>
@@ -1157,7 +1194,7 @@ export default function ProspectsPage() {
                 onSelectProspect={handleSelectProspect}
                 onAddProspect={handleAddProspect}
                 onCreate={async (form) => {
-                  const created = await createProspect(form);
+                  const created = await createProspect(form as unknown as Record<string, unknown>);
                   fetchData();
                   return created;
                 }}
@@ -1193,6 +1230,7 @@ export default function ProspectsPage() {
                 isGroupNonDefault={isListGroupNonDefault}
                 isSortNonDefault={isListSortNonDefault}
                 onResetControls={clearListFilters}
+                onRefreshProspect={fetchData}
               />
           ) : (
 

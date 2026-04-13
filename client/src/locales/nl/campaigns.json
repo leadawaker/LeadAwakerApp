@@ -26,7 +26,10 @@
     "save": "Opslaan",
     "saving": "Opslaan\u2026",
     "cancel": "Annuleren",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "openPrompt": "Prompt",
+    "closePrompt": "Prompt Sluiten",
+    "promptPanel": "Prompt Editor"
   },
 
   "columns": {
@@ -214,12 +217,15 @@
     "website": "Website",
     "calendarLink": "Kalenderlink",
     "usp": "USP",
+    "kb": "Kennisbank",
     "promptTemplate": "Promptsjabloon",
     "promptLinked": "Gekoppelde prompt",
     "noPromptLinked": "— Geen prompt gekoppeld",
     "openPromptLibrary": "Openen in promptbibliotheek",
     "firstMessage": "Eerste bericht",
     "noTemplateSet": "Geen sjabloon ingesteld",
+    "voiceScript": "Voicemail script",
+    "noVoiceScriptSet": "Geen voice script — gebruikt tekstsjabloon",
     "delayLabel": "Vertraging: {{value}}",
     "delayHours": "Vertraging (u):",
     "voiceNotes": "Spraakberichten",
@@ -227,7 +233,12 @@
     "bump1VoiceNote": "Bump 1 als spraakbericht",
     "bump2VoiceNote": "Bump 2 als spraakbericht",
     "bump3VoiceNote": "Bump 3 als spraakbericht",
+    "bump4VoiceNote": "Bump 4 als spraakbericht",
     "aiReplyVoiceNote": "AI-antwoorden als spraakberichten",
+    "voiceReplyMode": "AI Voice Mode",
+    "voiceReplyOff": "Uit",
+    "voiceReplySmart": "Smart (AI kiest per bericht)",
+    "voiceReplyVoiceReply": "Voice antwoord op voice",
     "voiceId": "Stem-ID",
     "bump1AiReference": "Gebruiken als AI-referentie",
     "bump2AiReference": "Gebruiken als AI-referentie",
@@ -235,6 +246,7 @@
     "demoClientName": "Bedrijfsnaam klant",
     "aiStyleOverride": "AI-stijloverride",
     "isDemo": "Democampagne",
+    "optOutNotice": "Afmeldoptie in eerste bericht",
     "accountId": "Account",
     "showDemoCampaigns": "Toon democampagnes",
     "language": "Taal"

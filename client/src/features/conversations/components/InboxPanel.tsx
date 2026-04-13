@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, UserSearch, Headphones, Search, X, BotMessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2, Mail, MessageCircle, User } from "lucide-react";
+import { Inbox, BellDot, UserSearch, Headphones, Search, X, BotMessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2, Mail, MessageCircle, User, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush } from "lucide-react";
 import type { ProspectThread } from "../hooks/useProspectConversations";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
@@ -19,6 +19,29 @@ import {
 import { apiFetch } from "@/lib/apiUtils";
 import { getInitials, getProspectAvatarColor } from "@/lib/avatarUtils";
 import { useLocation } from "wouter";
+import { SearchPill } from "@/components/ui/search-pill";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { useChatDoodle, type ChatBgStyle } from "@/hooks/useChatDoodle";
+import { CURATED_PATTERNS } from "@/components/ui/doodle-patterns";
+import { BUBBLE_WIDTH_KEY, DEFAULT_BUBBLE_WIDTH } from "./chatView/constants";
+import {
+  PIPELINE_STATUSES,
+  PIPELINE_HEX,
+} from "../utils/conversationHelpers";
+import { UncontactedProspectPicker } from "./UncontactedProspectPicker";
+
+const PROSPECT_OUTREACH_STATUSES = ["new", "contacted", "responded", "call_booked", "demo_given", "deal_closed", "not_interested"];
 
 function getLeadTagNames(lead: Lead): string[] {
   const raw = lead.tags;
@@ -50,17 +73,23 @@ export const GROUP_LABELS: Record<ChatGroupBy, string> = {
   date:     "Date",
   status:   "Status",
   campaign: "Campaign",
-  ai_human: "AI / Human",
   none:     "None",
 };
 
 export const SORT_LABELS: Record<ChatSortBy, string> = {
-  newest:    "Most Recent",
-  oldest:    "Oldest First",
-  name_asc:  "Name A \u2192 Z",
-  name_desc: "Name Z \u2192 A",
+  newest:     "Most Recent",
+  oldest:     "Oldest First",
+  name_asc:   "Name A \u2192 Z",
+  name_desc:  "Name Z \u2192 A",
+  status_asc: "Status (New \u2192 Done)",
+  status_desc:"Status (Done \u2192 New)",
 };
 
+// ── Toolbar expand-on-hover constants (same pattern as PromptsListView) ──────
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 const STATUS_GROUP_ORDER = ["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Closed", "Lost", "DND"];
 
@@ -86,8 +115,9 @@ type VirtualItem =
   | { type: "thread"; thread: Thread };
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-export type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
-export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
+export type ChatGroupBy = "date" | "status" | "campaign" | "none";
+export type GroupDirection = "asc" | "desc";
+export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc" | "status_asc" | "status_desc";
 export type InboxTab = "all" | "unread" | "support" | "prospects";
 
 // ── Agent inbox row (expandable with recent chats) ──────────────────────────────
@@ -356,6 +386,32 @@ interface InboxPanelProps {
   showFounderInbox?: boolean;
   /** Toggle the founder inbox view (admin only) */
   onToggleFounderInbox?: () => void;
+  /** Toolbar: client accounts list for agency filter */
+  clientAccounts?: { id: number; name: string }[];
+  /** Toolbar: all campaigns list for agency filter */
+  allCampaigns?: { id: number; name: string; account_id?: number; accounts_id?: number }[];
+  /** Toolbar: set group-by */
+  onSetGroupBy?: (v: ChatGroupBy) => void;
+  /** Group sort direction */
+  groupDirection?: GroupDirection;
+  /** Toolbar: set group direction */
+  onSetGroupDirection?: (v: GroupDirection) => void;
+  /** Toolbar: set sort-by */
+  onSetSortBy?: (v: ChatSortBy) => void;
+  /** Toolbar: toggle a status filter */
+  onToggleFilterStatus?: (status: string) => void;
+  /** Toolbar: set account filter (agency) */
+  onSetFilterAccountId?: (id: number | "all") => void;
+  /** Toolbar: set campaign filter */
+  onSetCampaignId?: (id: number | "all") => void;
+  /** Toolbar: search open state */
+  searchOpen?: boolean;
+  /** Toolbar: set search open state */
+  onSearchOpenChange?: (open: boolean) => void;
+  /** Toolbar: filter dropdown open state */
+  filterOpen?: boolean;
+  /** Toolbar: set filter dropdown open state */
+  onFilterOpenChange?: (open: boolean) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -394,10 +450,57 @@ export function InboxPanel({
   onSelectProspect,
   showFounderInbox,
   onToggleFounderInbox,
+  clientAccounts = [],
+  allCampaigns = [],
+  onSetGroupBy,
+  groupDirection = "asc",
+  onSetGroupDirection,
+  onSetSortBy,
+  onToggleFilterStatus,
+  onSetFilterAccountId,
+  onSetCampaignId,
+  searchOpen: searchOpenProp = true,
+  onSearchOpenChange,
+  filterOpen: filterOpenProp = false,
+  onFilterOpenChange,
 }: InboxPanelProps) {
+  const { t } = useTranslation("conversations");
+
+  // Chat customization state (shared with ChatPanelMain via localStorage + custom events)
+  const { config: doodleConfig, setConfig: setDoodleConfig } = useChatDoodle();
+  const [bubbleWidth, setBubbleWidthState] = useState<number>(() => {
+    const stored = localStorage.getItem(BUBBLE_WIDTH_KEY);
+    const parsed = stored !== null ? parseInt(stored, 10) : NaN;
+    return isNaN(parsed) ? DEFAULT_BUBBLE_WIDTH : Math.min(90, Math.max(40, parsed));
+  });
+  useEffect(() => {
+    const readBubbleWidth = () => {
+      const stored = localStorage.getItem(BUBBLE_WIDTH_KEY);
+      const parsed = stored !== null ? parseInt(stored, 10) : NaN;
+      if (!isNaN(parsed)) setBubbleWidthState(Math.min(90, Math.max(40, parsed)));
+    };
+    window.addEventListener("bubble-width-change", readBubbleWidth);
+    return () => window.removeEventListener("bubble-width-change", readBubbleWidth);
+  }, []);
+  const setBubbleWidth = useCallback((val: number) => {
+    const clamped = Math.min(90, Math.max(40, val));
+    localStorage.setItem(BUBBLE_WIDTH_KEY, String(clamped));
+    setBubbleWidthState(clamped);
+    window.dispatchEvent(new Event("bubble-width-change"));
+  }, []);
+
   // Track which agent is expanded in the support tab
   const [expandedAgentId, setExpandedAgentId] = useState<number | null>(null);
   const [founderSelected, setFounderSelected] = useState(false);
+
+  // Toolbar: derived state
+  const isGroupNonDefault = groupBy !== "date";
+  const isSortNonDefault = sortBy !== "newest";
+  const filterActive =
+    filterOpenProp ||
+    filterStatus.length > 0 ||
+    selectedCampaignId !== "all" ||
+    (isAgencyUser && selectedAccountId !== "all");
 
   // Prospects tab state
   const [prospectSearch, setProspectSearch] = useState("");
@@ -405,6 +508,7 @@ export function InboxPanel({
   const [prospectGroupBy, setProspectGroupBy] = useState<"date" | "status" | "none">("date");
   const [prospectSortBy, setProspectSortBy] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest");
   const [prospectFilterStatus, setProspectFilterStatus] = useState<string[]>([]);
+  const [prospectPickerOpen, setProspectPickerOpen] = useState(false);
   const [, navigate] = useLocation();
 
   // Filter prospects by search query + status filter
@@ -505,6 +609,21 @@ export function InboxPanel({
           const bName = b.lead.full_name || `${b.lead.first_name ?? ""} ${b.lead.last_name ?? ""}`;
           return bName.localeCompare(aName);
         }
+        case "status_asc":
+        case "status_desc": {
+          const aStatus = getStatus(a.lead) || "Unknown";
+          const bStatus = getStatus(b.lead) || "Unknown";
+          // Lost and DND always last regardless of direction
+          const aPinned = aStatus === "Lost" || aStatus === "DND";
+          const bPinned = bStatus === "Lost" || bStatus === "DND";
+          if (aPinned && !bPinned) return 1;
+          if (!aPinned && bPinned) return -1;
+          const aIdx = STATUS_GROUP_ORDER.indexOf(aStatus);
+          const bIdx = STATUS_GROUP_ORDER.indexOf(bStatus);
+          const aVal = aIdx === -1 ? 999 : aIdx;
+          const bVal = bIdx === -1 ? 999 : bIdx;
+          return sortBy === "status_asc" ? aVal - bVal : bVal - aVal;
+        }
         default: {
           const aT = a.last?.created_at ?? a.last?.createdAt ?? "";
           const bT = b.last?.created_at ?? b.last?.createdAt ?? "";
@@ -539,9 +658,6 @@ export function InboxPanel({
             ?? "No Campaign";
           break;
         }
-        case "ai_human":
-          key = t.lead.manual_takeover ? "Human" : "AI";
-          break;
         default:
           key = "Unknown";
       }
@@ -561,6 +677,11 @@ export function InboxPanel({
       orderedKeys = Array.from(buckets.keys()).sort();
     }
 
+    // Reverse if descending
+    if (groupDirection === "desc") {
+      orderedKeys = orderedKeys.slice().reverse();
+    }
+
     const items: VirtualItem[] = [];
     for (const key of orderedKeys) {
       const group = buckets.get(key);
@@ -571,7 +692,7 @@ export function InboxPanel({
       }
     }
     return items;
-  }, [sorted, groupBy]);
+  }, [sorted, groupBy, groupDirection]);
 
   const listContainerRef = useRef<HTMLDivElement>(null);
 
@@ -779,6 +900,458 @@ export function InboxPanel({
           />
         </div>
       </div>
+
+      {/* ── List toolbar: search + sort + filter + group ── */}
+      {tab !== "support" && tab !== "prospects" && onSearchChange && onSetGroupBy && onSetSortBy && onToggleFilterStatus && (
+        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+          <SearchPill
+            value={searchQuery}
+            onChange={onSearchChange}
+            open={searchOpenProp}
+            onOpenChange={onSearchOpenChange ?? (() => {})}
+            placeholder="Search conversations…"
+          />
+
+          {/* Filter */}
+          <DropdownMenu open={filterOpenProp} onOpenChange={onFilterOpenChange}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[100px]", filterActive ? xActive : xDefault)}
+                title="Filter"
+                data-testid="button-toggle-filters"
+              >
+                <Filter className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Filter</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {/* Status */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-[12px]">
+                  Status
+                  {filterStatus.length > 0 && (
+                    <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
+                  {PIPELINE_STATUSES.map((s) => (
+                    <DropdownMenuItem
+                      key={s}
+                      onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }}
+                      className="flex items-center gap-2 text-[12px]"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
+                      <span className="flex-1">{s}</span>
+                      {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Account → Campaign drill-down (agency users only) */}
+              {isAgencyUser && clientAccounts.length > 0 && onSetFilterAccountId && onSetCampaignId && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="text-[12px]">
+                    Account
+                    {selectedAccountId !== "all" && (
+                      <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[70px]">
+                        {clientAccounts.find((a) => a.id === selectedAccountId)?.name ?? ""}
+                      </span>
+                    )}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
+                    <DropdownMenuItem
+                      onClick={() => { onSetFilterAccountId("all"); onSetCampaignId("all"); }}
+                      className={cn("text-[12px]", selectedAccountId === "all" && "font-semibold text-brand-indigo")}
+                    >
+                      All Accounts
+                      {selectedAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
+                    </DropdownMenuItem>
+                    {clientAccounts.map((account) => (
+                      <DropdownMenuSub key={account.id}>
+                        <DropdownMenuSubTrigger
+                          className={cn("text-[12px]", selectedAccountId === account.id && "font-semibold text-brand-indigo")}
+                          onClick={() => { onSetFilterAccountId(account.id); onSetCampaignId("all"); }}
+                        >
+                          {account.name}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-44 max-h-48 overflow-y-auto">
+                          <DropdownMenuItem
+                            onClick={() => { onSetFilterAccountId(account.id); onSetCampaignId("all"); }}
+                            className={cn("text-[12px]", selectedAccountId === account.id && selectedCampaignId === "all" && "font-semibold text-brand-indigo")}
+                          >
+                            All Campaigns
+                            {selectedAccountId === account.id && selectedCampaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                          {allCampaigns
+                            .filter((c) => c.account_id === account.id || c.accounts_id === account.id)
+                            .map((c) => (
+                              <DropdownMenuItem
+                                key={c.id}
+                                onClick={() => { onSetFilterAccountId(account.id); onSetCampaignId(c.id); }}
+                                className={cn("text-[12px]", selectedAccountId === account.id && selectedCampaignId === c.id && "font-semibold text-brand-indigo")}
+                              >
+                                {c.name}
+                                {selectedAccountId === account.id && selectedCampaignId === c.id && <Check className="h-3 w-3 ml-auto" />}
+                              </DropdownMenuItem>
+                            ))
+                          }
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Sort */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[80px]", isSortNonDefault ? xActive : xDefault)}
+                title="Sort"
+              >
+                <ArrowUpDown className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Sort</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {([
+                { key: "recent", label: "Most Recent", asc: "oldest" as ChatSortBy, desc: "newest" as ChatSortBy },
+                { key: "name", label: "Name", asc: "name_asc" as ChatSortBy, desc: "name_desc" as ChatSortBy },
+                { key: "status", label: "Status", asc: "status_asc" as ChatSortBy, desc: "status_desc" as ChatSortBy },
+              ]).map((group) => {
+                const isActive = sortBy === group.asc || sortBy === group.desc;
+                const activeDir: "asc" | "desc" = sortBy === group.asc ? "asc" : "desc";
+                return (
+                  <DropdownMenuItem
+                    key={group.key}
+                    onSelect={(e) => { e.preventDefault(); onSetSortBy?.(isActive ? sortBy : group.desc); }}
+                    className="text-[12px] flex items-center gap-2"
+                  >
+                    <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
+                    {isActive && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetSortBy?.(group.asc); }}
+                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                          title="Ascending"
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetSortBy?.(group.desc); }}
+                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                          title="Descending"
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </button>
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Group */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[90px]", isGroupNonDefault ? xActive : xDefault)}
+                title="Group"
+              >
+                <Layers className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Group</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  onSelect={(e) => { e.preventDefault(); onSetGroupBy?.(opt); }}
+                  className="text-[12px] flex items-center gap-2"
+                >
+                  <span className={cn("flex-1", groupBy === opt && "font-semibold !text-brand-indigo")}>{GROUP_LABELS[opt]}</span>
+                  {groupBy === opt && opt !== "none" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetGroupDirection?.("asc"); }}
+                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                        title="Ascending"
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetGroupDirection?.("desc"); }}
+                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                        title="Descending"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </button>
+                    </>
+                  )}
+                  {groupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Customize */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[120px]", xDefault)}
+                title={t("chat.customization.title")}
+              >
+                <MoreVertical className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("chat.customization.title")}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 p-3 space-y-3">
+              <span className="text-[13px] font-semibold">{t("chat.customization.title")}</span>
+
+              {/* Chat bubble width slider */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">{t("chat.customization.bubbleWidth")}</span>
+                  <span className="text-[11px] font-semibold tabular-nums text-foreground/70">{bubbleWidth}%</span>
+                </div>
+                <Slider
+                  value={[bubbleWidth]}
+                  onValueChange={([v]) => setBubbleWidth(v)}
+                  min={40}
+                  max={90}
+                  step={1}
+                />
+              </div>
+
+              {/* Hide avatars toggle */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-semibold">{t("chat.customization.hideAvatars")}</span>
+                <Switch
+                  checked={doodleConfig.hideAvatars}
+                  onCheckedChange={(hideAvatars) => setDoodleConfig({ hideAvatars })}
+                />
+              </div>
+
+              {/* Background style picker */}
+              <div className="space-y-1.5">
+                <span className="text-[12px] font-semibold">{t("chat.background.title")}</span>
+                <div className="grid grid-cols-5 gap-1">
+                  {(["crm", "social1", "social2", "social3", "social4"] as ChatBgStyle[]).map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      onClick={() => setDoodleConfig({ bgStyle: style })}
+                      className={cn(
+                        "h-8 rounded-md border text-[10px] font-medium transition-colors",
+                        doodleConfig.bgStyle === style || (!doodleConfig.bgStyle && style === "social1")
+                          ? "border-brand-indigo text-brand-indigo bg-brand-indigo/5"
+                          : "border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
+                      )}
+                    >
+                      {style === "crm" ? "CRM" : `#${style.replace("social", "")}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Doodle overlay toggle */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-semibold">{t("chat.background.doodleOverlay")}</span>
+                <Switch
+                  checked={doodleConfig.enabled}
+                  onCheckedChange={(enabled) => setDoodleConfig({ enabled })}
+                />
+              </div>
+              {doodleConfig.enabled && (
+                <>
+                  {/* Pattern picker */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">{t("chat.background.pattern")}</span>
+                      <span className="text-[11px] font-semibold tabular-nums text-foreground/70">
+                        #{(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
+                      </span>
+                    </div>
+                    <Slider
+                      value={[(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
+                      onValueChange={([v]) => {
+                        const entry = CURATED_PATTERNS[v - 1];
+                        if (entry) setDoodleConfig({ patternId: entry.id, size: entry.size });
+                      }}
+                      min={1}
+                      max={10}
+                      step={1}
+                    />
+                  </div>
+                  {/* Size slider */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">{t("chat.background.size")}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.size}px</span>
+                    </div>
+                    <Slider
+                      value={[doodleConfig.size]}
+                      onValueChange={([v]) => setDoodleConfig({ size: v })}
+                      min={200}
+                      max={800}
+                      step={25}
+                    />
+                  </div>
+                  {/* Opacity slider */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">{t("chat.background.opacity")}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.color}%</span>
+                    </div>
+                    <Slider
+                      value={[doodleConfig.color]}
+                      onValueChange={([v]) => setDoodleConfig({ color: v })}
+                      min={0}
+                      max={100}
+                      step={1}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Gradient tester button (embedded) */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("toggle-gradient-tester"))}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] font-medium text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors border border-black/[0.08]"
+              >
+                <Paintbrush className="h-3.5 w-3.5" />
+                {t("chat.background.gradientTester")}
+              </button>
+            </PopoverContent>
+          </Popover>
+
+        </div>
+      )}
+
+      {/* ── Prospects toolbar: search + sort + group + filter + customize + "+" ── */}
+      {tab === "prospects" && (
+        <div className="px-2 pb-2 flex items-center gap-1 shrink-0 flex-wrap">
+          <SearchPill
+            value={prospectSearch}
+            onChange={setProspectSearch}
+            open={prospectSearchOpen}
+            onOpenChange={setProspectSearchOpen}
+            placeholder="Search prospects…"
+          />
+
+          {/* Sort */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[80px]", prospectSortBy !== "newest" ? xActive : xDefault)}
+                title="Sort"
+              >
+                <ArrowUpDown className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Sort</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              {(["newest", "oldest", "name_asc", "name_desc"] as const).map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  onClick={() => setProspectSortBy(opt)}
+                  className={cn("text-[12px]", prospectSortBy === opt && "font-semibold text-brand-indigo")}
+                >
+                  {{ newest: "Most Recent", oldest: "Oldest First", name_asc: "Name A → Z", name_desc: "Name Z → A" }[opt]}
+                  {prospectSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Group */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[90px]", prospectGroupBy !== "date" ? xActive : xDefault)}
+                title="Group"
+              >
+                <Layers className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Group</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              {(["date", "status", "none"] as const).map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  onClick={() => setProspectGroupBy(opt)}
+                  className={cn("text-[12px]", prospectGroupBy === opt && "font-semibold text-brand-indigo")}
+                >
+                  {{ date: "Date", status: "Status", none: "None" }[opt]}
+                  {prospectGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Filter by outreach status */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[100px]", prospectFilterStatus.length > 0 ? xActive : xDefault)}
+                title="Filter"
+              >
+                <Filter className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Filter{prospectFilterStatus.length > 0 ? ` (${prospectFilterStatus.length})` : ""}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {PROSPECT_OUTREACH_STATUSES.map((s) => (
+                <DropdownMenuItem
+                  key={s}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setProspectFilterStatus((prev) =>
+                      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+                    );
+                  }}
+                  className="flex items-center gap-2 text-[12px]"
+                >
+                  <span className="flex-1 capitalize">{s.replace(/_/g, " ")}</span>
+                  {prospectFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+              {prospectFilterStatus.length > 0 && (
+                <DropdownMenuItem onClick={() => setProspectFilterStatus([])} className="text-[12px] text-muted-foreground border-t mt-1 pt-1">
+                  Clear filters
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+
+          {/* "+" — new chat with uncontacted prospect */}
+          <button
+            className={cn(xBase, "hover:max-w-[100px] ml-auto", xDefault)}
+            onClick={() => setProspectPickerOpen(true)}
+            title="Start new chat"
+          >
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>New chat</span>
+          </button>
+        </div>
+      )}
+
+      <UncontactedProspectPicker
+        open={prospectPickerOpen}
+        onClose={() => setProspectPickerOpen(false)}
+        onSelect={(prospectId) => { setProspectPickerOpen(false); onSelectProspect?.(prospectId); }}
+        existingProspectIds={prospectThreads.map((p) => p.prospect_id)}
+      />
 
       {/* ── Mobile search bar (hidden on desktop) ── */}
       {tab !== "prospects" && tab !== "support" && onSearchChange && (

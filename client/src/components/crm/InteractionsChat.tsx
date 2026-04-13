@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import DOMPurify from "dompurify";
 import type { Interaction, Lead } from "@/types/models";
 import { useInteractions } from "@/hooks/useApiData";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -98,7 +99,18 @@ function Bubble({ item, interactionTypeKey, timezone }: { item: Interaction; int
         )}
         data-testid={`bubble-interaction-${item.id}`}
       >
-        <div className="whitespace-pre-wrap leading-relaxed">{item.content}</div>
+        <div
+          className="whitespace-pre-wrap leading-relaxed [&_table]:text-[11px] [&_img]:max-w-[200px]"
+          dangerouslySetInnerHTML={{
+            __html: item.content?.includes("<")
+              ? DOMPurify.sanitize(item.content, {
+                  ALLOWED_TAGS: ["p", "br", "b", "strong", "i", "em", "a", "ul", "ol", "li", "div", "span", "table", "tr", "td", "th", "img", "hr"],
+                  ALLOWED_ATTR: ["href", "target", "style", "src", "alt", "width", "height", "cellpadding", "cellspacing"],
+                  ADD_ATTR: ["target"],
+                })
+              : (item.content ?? "").replace(/\n/g, "<br>"),
+          }}
+        />
         <div className={cn("mt-1 text-[11px] opacity-80", outbound ? "text-white/80" : "text-muted-foreground")}>
           {item.created_at ? new Date(item.created_at).toLocaleString([], { timeZone: timezone }) : ""} • {typeLabel}
         </div>

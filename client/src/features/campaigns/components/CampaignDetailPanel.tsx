@@ -283,16 +283,6 @@ export function CampaignDetailPanel({
               />
               <InfoRow label={t("panel.agentName")} value={campaign.agent_name} />
               <InfoRow label={t("panel.serviceName")} value={campaign.service_name} />
-              {campaign.ai_prompt_template && (
-                <div className="pt-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    {t("panel.aiPromptTemplate")}
-                  </p>
-                  <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 rounded-lg p-2 break-words">
-                    {campaign.ai_prompt_template}
-                  </p>
-                </div>
-              )}
             </div>
           </section>
 

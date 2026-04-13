@@ -399,6 +399,37 @@ export function LeadsCardView({
           </div>
         )}
 
+        {/* ── Desktop toolbar: search + create + sort + filter + group ── */}
+        <div className="hidden lg:flex px-2 pb-2 items-center gap-1 shrink-0">
+          <LeadsFiltersBar
+            listSearch={listSearch}
+            groupBy={groupBy}
+            sortBy={sortBy}
+            filterStatus={filterStatus}
+            filterTags={filterTags}
+            filterAccount={filterAccount}
+            filterCampaign={filterCampaign}
+            tagSearchInput={tagSearchInput}
+            isFilterActive={isFilterActive}
+            isGroupNonDefault={isGroupNonDefault}
+            isSortNonDefault={isSortNonDefault}
+            allTags={allTags}
+            availableAccounts={availableAccounts}
+            availableCampaigns={availableCampaigns}
+            onCreateLead={onCreateLead}
+            onSearchChange={onListSearchChange}
+            searchOpen={searchOpen}
+            onSearchOpenChange={onSearchOpenChange}
+            onGroupByChange={onGroupByChange}
+            onSortByChange={onSortByChange}
+            onToggleFilterStatus={onToggleFilterStatus}
+            onToggleFilterTag={onToggleFilterTag}
+            onSetFilterAccount={setFilterAccount}
+            onSetFilterCampaign={setFilterCampaign}
+            onSetTagSearchInput={setTagSearchInput}
+          />
+        </div>
+
         {/* Lead list — card list (pagination inside scroll area, below last card) */}
         <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-[3px] pt-0 pb-[3px]", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")}>
           {/* Pull-to-refresh indicator — mobile only */}
@@ -510,42 +541,6 @@ export function LeadsCardView({
             leadTags={leadTagsInfo.get(getLeadId(selectedLead)) || []}
             onRefresh={onRefresh}
             campaignsById={campaignsById}
-            toolbarPrefix={() => (
-              <LeadsFiltersBar
-                listSearch={listSearch}
-                groupBy={groupBy}
-                sortBy={sortBy}
-                filterStatus={filterStatus}
-                filterTags={filterTags}
-                filterAccount={filterAccount}
-                filterCampaign={filterCampaign}
-                tagSearchInput={tagSearchInput}
-                isFilterActive={isFilterActive}
-                isGroupNonDefault={isGroupNonDefault}
-                isSortNonDefault={isSortNonDefault}
-                showContactAlways={showContactAlways}
-                tagsColorful={tagsColorful}
-                hideTags={hideTags}
-                allTags={allTags}
-                availableAccounts={availableAccounts}
-                availableCampaigns={availableCampaigns}
-                onCreateLead={onCreateLead}
-                onSearchChange={onListSearchChange}
-                searchOpen={searchOpen}
-                onSearchOpenChange={onSearchOpenChange}
-                onGroupByChange={onGroupByChange}
-                onSortByChange={onSortByChange}
-                onToggleFilterStatus={onToggleFilterStatus}
-                onToggleFilterTag={onToggleFilterTag}
-                onSetFilterAccount={setFilterAccount}
-                onSetFilterCampaign={setFilterCampaign}
-                onSetTagSearchInput={setTagSearchInput}
-                onSetShowContactAlways={setShowContactAlways}
-                onSetTagsColorful={setTagsColorful}
-                onSetHideTags={setHideTags}
-                onMobileBack={() => onMobileViewChange?.("list")}
-              />
-            )}
           />
         ) : (
           <EmptyDetailState leadsCount={leads.length} />

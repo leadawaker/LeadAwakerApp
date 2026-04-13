@@ -150,7 +150,7 @@ export function registerConversationsRoutes(app: Express): void {
 
           if (result.success) {
             console.log(`[channel-sender] Delivered to ${result.channel} (msg ${result.messageId}) for lead ${leadId}`);
-            await storage.updateInteraction(interaction.id, {
+            await storage.updateInteraction(interaction.id!, {
               status: "delivered",
               deliveredAt: new Date(),
             } as any);
@@ -163,7 +163,7 @@ export function registerConversationsRoutes(app: Express): void {
             }
           } else {
             console.error(`[channel-sender] Failed for lead ${leadId}: ${result.error}`);
-            await storage.updateInteraction(interaction.id, {
+            await storage.updateInteraction(interaction.id!, {
               status: "failed",
               failedAt: new Date(),
             } as any);
@@ -547,7 +547,7 @@ export function registerConversationsRoutes(app: Express): void {
     if (req.user!.accountsId !== 1 && Number(userId) !== req.user!.id!) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    const sub = await storage.upsertPushSubscription(Number(userId), Number(accountId), subscription, deviceLabel);
+    const sub = await storage.createPushSubscription({ userId: Number(userId), accountId: Number(accountId), subscription: JSON.stringify(subscription), deviceLabel: deviceLabel ?? null } as any);
     res.json(sub);
   }));
 

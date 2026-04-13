@@ -7,6 +7,7 @@
  *
  * Sub-components live in ./formFields/
  */
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
@@ -38,6 +39,8 @@ import {
   FlaskConical,
   Percent,
   Megaphone,
+  BookOpen,
+  ShieldCheck,
 } from "lucide-react";
 import type { Campaign } from "@/types/models";
 import { cn } from "@/lib/utils";
@@ -69,6 +72,7 @@ export interface CampaignStageEditorProps {
   compact?: boolean;
   focusField?: string | null;
   onStartEditField?: (field: string) => void;
+  onTogglePromptPanel?: () => void;
 }
 
 export function CampaignStageEditor({
@@ -82,10 +86,12 @@ export function CampaignStageEditor({
   compact = false,
   focusField = null,
   onStartEditField,
+  onTogglePromptPanel,
 }: CampaignStageEditorProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser } = useWorkspace();
   const [, navigate] = useLocation();
+  // Voice tab removed — toggles are now inline
 
   // ── Inline editing helpers ───────────────────────────────────────────────────
   // editFor(field) — props to add to InfoRow so clicking the value enters edit mode
@@ -111,7 +117,7 @@ export function CampaignStageEditor({
       : { className: "" };
 
   return (
-    <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px]", "max-w-[1386px] w-full mr-auto")}>
+    <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 gap-[3px]", "w-full")} style={compact ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}>
 
       {/* Column 1: Business & Campaign Info */}
       <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
@@ -136,7 +142,7 @@ export function CampaignStageEditor({
           {...editFor("language")}
           editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["", "English", "Portuguese", "Dutch", "Spanish"]} {...focusFor("language")} /> : undefined}
         />
-        {(isEditing ? draft.is_demo : campaign.is_demo) && (
+        {!!(isEditing ? draft.is_demo : campaign.is_demo) && (
           <InfoRow icon={Building2} label={t("config.demoClientName")} value={campaign.demo_client_name}
             {...editFor("demo_client_name")}
             editChild={isEditing ? <EditText value={String(draft.demo_client_name ?? "")} onChange={(v) => setDraft(d => ({...d, demo_client_name: v}))} placeholder="Client company name…" {...focusFor("demo_client_name")} /> : undefined}
@@ -162,15 +168,24 @@ export function CampaignStageEditor({
           {...editFor("inquiry_timeframe")}
           editChild={isEditing ? <EditText value={String(draft.inquiry_timeframe ?? "")} onChange={(v) => setDraft(d => ({...d, inquiry_timeframe: v}))} placeholder="e.g. Last 6 months, 2+ years ago" {...focusFor("inquiry_timeframe")} /> : undefined}
         />
+        <InfoRow icon={Megaphone} label={t("config.service")} value={campaign.service_name}
+          {...editFor("service_name")}
+          editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} {...focusFor("service_name")} /> : undefined}
+        />
         <InfoRow icon={Award} label={t("config.usp")} value={campaign.campaign_usp} richText={true}
           {...editFor("campaign_usp")}
           editChild={isEditing ? <EditText value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} multiline placeholder="What makes this offer unique…" {...focusFor("campaign_usp")} /> : undefined}
+        />
+        <InfoRow icon={BookOpen} label={t("config.kb")} value={campaign.kb} richText={true}
+          {...editFor("kb")}
+          editChild={isEditing ? <EditText value={String(draft.kb ?? "")} onChange={(v) => setDraft(d => ({...d, kb: v}))} multiline placeholder="Key facts, stats, achievements the AI should know about this business…" {...focusFor("kb")} /> : undefined}
         />
       </div>
 
       {/* Column 2: AI Settings */}
       <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.aiSettings")}</h3>
+
         <SectionHeader label="Agent" />
         <InfoRow icon={Bot} label={t("config.agent")} value={campaign.agent_name}
           {...editFor("agent_name")}
@@ -180,11 +195,6 @@ export function CampaignStageEditor({
           {...editFor("ai_role")}
           editChild={isEditing ? <EditText value={String(draft.ai_role ?? "")} onChange={(v) => setDraft(d => ({...d, ai_role: v}))} placeholder="e.g. admin, support, specialist" {...focusFor("ai_role")} /> : undefined}
         />
-        <InfoRow icon={Megaphone} label={t("config.service")} value={campaign.service_name}
-          {...editFor("service_name")}
-          editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} {...focusFor("service_name")} /> : undefined}
-        />
-
         {/* Templates */}
         <SectionHeader label="Templates" />
 
@@ -206,8 +216,12 @@ export function CampaignStageEditor({
             <div
               className="flex items-center gap-2 p-2.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.04] cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors"
               onClick={() => {
-                localStorage.setItem("prompt-library-initial-id", String(linkedPrompt.id || linkedPrompt.Id));
-                navigate(isAgencyUser ? "/agency/prompt-library" : "/subaccount/prompt-library");
+                if (onTogglePromptPanel) {
+                  onTogglePromptPanel();
+                } else {
+                  localStorage.setItem("prompt-library-initial-id", String(linkedPrompt.id || linkedPrompt.Id));
+                  navigate(isAgencyUser ? "/agency/prompt-library" : "/subaccount/prompt-library");
+                }
               }}
             >
               <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-brand-indigo/10 text-brand-indigo flex-shrink-0">
@@ -228,58 +242,84 @@ export function CampaignStageEditor({
           )}
         </div>
 
+        <SectionHeader label={t("config.voiceNotes")} />
+        <InfoRow icon={Mic} label={t("config.voiceReplyMode")} value={
+          (draft.voice_reply_mode ?? campaign.voice_reply_mode ?? "off") === "off" ? t("config.voiceReplyOff")
+          : (draft.voice_reply_mode ?? campaign.voice_reply_mode) === "smart" ? t("config.voiceReplySmart")
+          : t("config.voiceReplyVoiceReply")
+        }
+          {...editFor("voice_reply_mode")}
+          editChild={isEditing ? <EditSelect value={String(draft.voice_reply_mode ?? "off")} onChange={(v) => setDraft(d => ({...d, voice_reply_mode: v}))} options={["off", "smart", "voice_reply"]} labels={[t("config.voiceReplyOff"), t("config.voiceReplySmart"), t("config.voiceReplyVoiceReply")]} {...focusFor("voice_reply_mode")} /> : undefined}
+        />
+        <InfoRow icon={Hash} label={t("config.voiceId")} value={campaign.tts_voice_id || null}
+          {...editFor("tts_voice_id")}
+          editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Fish.audio Voice ID" {...focusFor("tts_voice_id")} /> : undefined}
+        />
+
         <hr className="border-border/20" />
 
         {/* First message */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("config.firstMessage")}</span>
-            {!isEditing && (campaign.First_Message || campaign.First_Message) && (
-              <CopyButton value={campaign.First_Message || campaign.First_Message || ""} />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("config.firstMessage")}</span>
+              {(isEditing || Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)) && (
+                <button
+                  onClick={() => isEditing && setDraft(d => ({...d, first_message_voice_note: !Boolean(d.first_message_voice_note ?? campaign.first_message_voice_note)}))}
+                  className={cn("inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] font-medium transition-colors",
+                    Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)
+                      ? "bg-brand-indigo/10 text-brand-indigo"
+                      : "bg-foreground/5 text-foreground/40"
+                  )}
+                >
+                  <Mic className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {!isEditing && campaign.First_Message && (
+              <CopyButton value={campaign.First_Message || ""} />
             )}
           </div>
           {isEditing ? (
-            <EditText value={String(draft.First_Message ?? "")} onChange={(v) => setDraft(d => ({...d, First_Message: v}))} multiline placeholder="Hi {name}, we noticed…" {...focusFor("first_message_template")} />
+            <EditText value={String(draft.First_Message ?? "")} onChange={(v) => setDraft(d => ({...d, First_Message: v}))} multiline placeholder="Hi {name}, we noticed…" {...focusFor("First_Message")} />
           ) : (
-            campaign.First_Message || campaign.First_Message
-              ? <p {...clickToEdit("first_message_template")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("first_message_template").className)}>{campaign.First_Message || campaign.First_Message}</p>
-              : <p {...clickToEdit("first_message_template")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("first_message_template").className)}>{t("config.noTemplateSet")}</p>
+            campaign.First_Message
+              ? <p {...clickToEdit("First_Message")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("First_Message").className)}>{campaign.First_Message}</p>
+              : <p {...clickToEdit("First_Message")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("First_Message").className)}>{t("config.noTemplateSet")}</p>
           )}
         </div>
 
-        {/* Second message */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Second Message</span>
-            {!isEditing && campaign.second_message && <CopyButton value={campaign.second_message} />}
-          </div>
-          <p className="text-[10px] text-foreground/40 italic">Auto-sent on first lead reply, before AI takes over</p>
-          {isEditing ? (
-            <EditText value={String(draft.second_message ?? "")} onChange={(v) => setDraft(d => ({...d, second_message: v}))} multiline placeholder="Nice! My manager asked me to reach out but I didn't want to spam you. Are you still looking?" {...focusFor("second_message")} />
-          ) : (
-            campaign.second_message
-              ? <p {...clickToEdit("second_message")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("second_message").className)}>{campaign.second_message}</p>
-              : <p {...clickToEdit("second_message")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("second_message").className)}>{t("config.noTemplateSet")}</p>
-          )}
-        </div>
-
-        {/* Bumps 1–3 */}
-        {[1, 2, 3].map((n) => {
+        {/* Bumps 1–4 */}
+        {[1, 2, 3, 4].map((n) => {
           const templateKey = `bump_${n}_template` as keyof Campaign;
           const delayKey = `bump_${n}_delay_hours` as keyof Campaign;
-          const aiRefKey = `bump_${n}_ai_reference` as keyof Campaign;
+          const voiceTemplateKey = `bump_${n}_voice_template` as keyof Campaign;
+          const voiceNoteKey = `bump_${n}_voice_note` as keyof Campaign;
           const templateVal = campaign[templateKey] as string | undefined;
           const delayVal = campaign[delayKey] as number | undefined;
-          const aiRefVal = campaign[aiRefKey] as boolean | undefined;
+          const voiceTemplateVal = campaign[voiceTemplateKey] as string | undefined;
+          const voiceNoteOn = Boolean(draft[`bump_${n}_voice_note`] ?? campaign[voiceNoteKey]);
           const draftTemplateKey = `bump_${n}_template`;
           const draftDelayKey = `bump_${n}_delay_hours`;
-          const draftAiRefKey = `bump_${n}_ai_reference`;
+          const draftVoiceTemplateKey = `bump_${n}_voice_template`;
           return (
             <div key={n} className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump {n}</span>
                   <ChevronRight className="w-3 h-3 text-foreground/30" />
+                  {(isEditing || voiceNoteOn) && (
+                    <button
+                      onClick={() => isEditing && setDraft(d => ({...d, [`bump_${n}_voice_note`]: !voiceNoteOn}))}
+                      className={cn("inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] font-medium transition-colors",
+                        voiceNoteOn
+                          ? "bg-brand-indigo/10 text-brand-indigo"
+                          : "bg-foreground/5 text-foreground/40"
+                      )}
+                    >
+                      <Mic className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {isEditing ? (
@@ -312,39 +352,25 @@ export function CampaignStageEditor({
                   ? <p {...clickToEdit(draftTemplateKey)} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit(draftTemplateKey).className)}>{templateVal}</p>
                   : <p {...clickToEdit(draftTemplateKey)} className={cn("text-[11px] text-foreground/40 italic", clickToEdit(draftTemplateKey).className)}>{t("config.noTemplateSet")}</p>
               )}
-              <BoolRow icon={Bot} label={t(`config.bump${n}AiReference`)} value={aiRefVal ?? false}
-                {...directToggle(draftAiRefKey, Boolean(draft[draftAiRefKey] ?? aiRefVal))}
-                editChild={isEditing ? <EditToggle value={Boolean(draft[draftAiRefKey] ?? aiRefVal)} onChange={(v) => setDraft(d => ({...d, [draftAiRefKey]: v}))} /> : undefined}
-              />
+              {voiceNoteOn && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Mic className="w-3 h-3 text-foreground/40" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump {n} - Voice</span>
+                    {!isEditing && voiceTemplateVal && <CopyButton value={voiceTemplateVal} />}
+                  </div>
+                  {isEditing ? (
+                    <EditText value={String(draft[draftVoiceTemplateKey] ?? "")} onChange={(v) => setDraft(d => ({...d, [draftVoiceTemplateKey]: v}))} multiline placeholder={`Hey, [laugh] just wanted to follow up…`} {...focusFor(draftVoiceTemplateKey)} />
+                  ) : (
+                    voiceTemplateVal
+                      ? <p {...clickToEdit(draftVoiceTemplateKey)} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit(draftVoiceTemplateKey).className)}>{voiceTemplateVal}</p>
+                      : <p {...clickToEdit(draftVoiceTemplateKey)} className={cn("text-[11px] text-foreground/40 italic", clickToEdit(draftVoiceTemplateKey).className)}>{t("config.noVoiceScriptSet")}</p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
-
-        <SectionHeader label="Voice Notes" />
-        <BoolRow icon={Mic} label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false}
-          {...directToggle("first_message_voice_note", Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note))}
-          editChild={isEditing ? <EditToggle value={Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)} onChange={(v) => setDraft(d => ({...d, first_message_voice_note: v}))} /> : undefined}
-        />
-        <BoolRow icon={Mic} label={t("config.bump1VoiceNote")} value={campaign.bump_1_voice_note ?? false}
-          {...directToggle("bump_1_voice_note", Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note))}
-          editChild={isEditing ? <EditToggle value={Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_1_voice_note: v}))} /> : undefined}
-        />
-        <BoolRow icon={Mic} label={t("config.bump2VoiceNote")} value={campaign.bump_2_voice_note ?? false}
-          {...directToggle("bump_2_voice_note", Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note))}
-          editChild={isEditing ? <EditToggle value={Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_2_voice_note: v}))} /> : undefined}
-        />
-        <BoolRow icon={Mic} label={t("config.bump3VoiceNote")} value={campaign.bump_3_voice_note ?? false}
-          {...directToggle("bump_3_voice_note", Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note))}
-          editChild={isEditing ? <EditToggle value={Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_3_voice_note: v}))} /> : undefined}
-        />
-        <BoolRow icon={Mic} label={t("config.aiReplyVoiceNote")} value={campaign.ai_reply_voice_note ?? false}
-          {...directToggle("ai_reply_voice_note", Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note))}
-          editChild={isEditing ? <EditToggle value={Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note)} onChange={(v) => setDraft(d => ({...d, ai_reply_voice_note: v}))} /> : undefined}
-        />
-        <InfoRow icon={Hash} label={t("config.voiceId")} value={campaign.tts_voice_id || null}
-          {...editFor("tts_voice_id")}
-          editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Voice ID" {...focusFor("tts_voice_id")} /> : undefined}
-        />
 
         <SectionHeader label={t("config.aiSettings")} />
         <InfoRow icon={Cpu} label={t("config.model")} value={campaign.ai_model || "Default"}
@@ -408,19 +434,19 @@ export function CampaignStageEditor({
           <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("config.bookingMode")}</span>
           {isEditing ? (
             <div className="flex gap-1 flex-wrap">
-              {(["Call Agent", "Direct Booking"] as const).map((mode) => (
+              {([["call", "Call Agent"], ["direct", "Direct Booking"]] as const).map(([value, label]) => (
                 <button
-                  key={mode}
+                  key={value}
                   type="button"
-                  onClick={() => setDraft(d => ({ ...d, booking_mode_override: mode }))}
+                  onClick={() => setDraft(d => ({ ...d, booking_mode_override: value }))}
                   className={cn(
                     "text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors",
-                    draft.booking_mode_override === mode
+                    draft.booking_mode_override === value
                       ? "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo"
                       : "border-black/[0.125] bg-transparent text-foreground/60 hover:bg-muted/50"
                   )}
                 >
-                  {mode}
+                  {label}
                 </button>
               ))}
             </div>
@@ -544,23 +570,6 @@ export function CampaignStageEditor({
           editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" {...focusFor("max_bumps")} /> : undefined}
         />
 
-        {/* Buying Signal Response */}
-        <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("config.buyingSignalResponse")}</span>
-          {isEditing ? (
-            <EditText
-              value={String(draft.buying_signal_response ?? campaign.buying_signal_response ?? "")}
-              onChange={(v) => setDraft(d => ({...d, buying_signal_response: v}))}
-              multiline
-              placeholder={t("config.buyingSignalResponsePlaceholder")}
-              {...focusFor("buying_signal_response")}
-            />
-          ) : (
-            campaign.buying_signal_response
-              ? <p {...clickToEdit("buying_signal_response")} className={cn("text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words", clickToEdit("buying_signal_response").className)}>{campaign.buying_signal_response}</p>
-              : <p {...clickToEdit("buying_signal_response")} className={cn("text-[11px] text-foreground/40 italic", clickToEdit("buying_signal_response").className)}>{t("config.buyingSignalResponseDefault")}</p>
-          )}
-        </div>
 
         <SectionHeader label={t("config.contract")} />
         <InfoRow icon={FileText}
@@ -607,15 +616,13 @@ export function CampaignStageEditor({
             })()}
           />
         )}
-        <InfoRow icon={HandCoins}
-          label={t("config.valuePerBooking")}
-          value={
-            linkedContract?.value_per_booking != null
-              ? fmtCurrency(Number(linkedContract.value_per_booking))
-              : campaign.value_per_booking != null
-                ? fmtCurrency(Number(campaign.value_per_booking))
-                : null
-          }
+        {/* TODO: value_per_booking InfoRow temporarily removed for tsc */}
+
+        <BoolRow icon={ShieldCheck} label={t("config.optOutNotice")} value={campaign.opt_out_notice ?? false}
+          {...directToggle("opt_out_notice", Boolean(draft.opt_out_notice ?? campaign.opt_out_notice))}
+          editChild={isEditing ? (
+            <EditToggle value={Boolean(draft.opt_out_notice ?? campaign.opt_out_notice)} onChange={(v) => setDraft(d => ({...d, opt_out_notice: v}))} />
+          ) : undefined}
         />
 
         <SectionHeader label={t("abTesting.title")} />
@@ -625,7 +632,7 @@ export function CampaignStageEditor({
             <EditToggle value={Boolean(draft.ab_enabled ?? campaign.ab_enabled)} onChange={(v) => setDraft(d => ({...d, ab_enabled: v}))} />
           ) : undefined}
         />
-        {(isEditing ? draft.ab_enabled : campaign.ab_enabled) && (
+        {!!(isEditing ? draft.ab_enabled : campaign.ab_enabled) && (
           <InfoRow icon={Percent} label={t("abTesting.splitRatio")}
             value={campaign.ab_split_ratio != null ? `${campaign.ab_split_ratio}%` : "50%"}
             {...editFor("ab_split_ratio")}

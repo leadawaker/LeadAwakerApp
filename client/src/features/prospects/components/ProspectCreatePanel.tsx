@@ -10,7 +10,7 @@ const PRIORITY_OPTIONS = ["High", "Medium", "Low"];
 const SOURCE_OPTIONS   = ["Web Research", "Referral", "LinkedIn", "Cold Email", "Conference", "Other"];
 
 interface ProspectCreatePanelProps {
-  onCreate: (data: NewProspectForm) => Promise<void>;
+  onCreate: (data: NewProspectForm) => Promise<any>;
   onClose: () => void;
 }
 
@@ -141,6 +141,17 @@ export function ProspectCreatePanel({ onCreate, onClose }: ProspectCreatePanelPr
                     className={inputCls}
                   />
                 </div>
+              </div>
+              {/* Website */}
+              <div>
+                <label className={labelCls}>{t("fields.website")}</label>
+                <input
+                  type="url"
+                  value={form.website}
+                  onChange={(e) => set("website", e.target.value)}
+                  placeholder={t("fields.websitePlaceholder")}
+                  className={inputCls}
+                />
               </div>
             </div>
           </section>

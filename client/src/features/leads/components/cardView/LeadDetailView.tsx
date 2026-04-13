@@ -4,9 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   FileText,
-  Trash2,
   Pencil,
-  Palette,
   MessageSquare,
   Phone,
   TrendingUp,
@@ -23,10 +21,27 @@ import { renderRichText } from "@/lib/richTextUtils";
 import {
   GradientTester,
   GradientControlPoints,
-  DEFAULT_LAYERS,
   layerToStyle,
   type GradientLayer,
 } from "@/components/ui/gradient-tester";
+
+/** Matches the hardcoded CSS fallback gradients for the leads detail page */
+const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  { id: 1, label: "Orange glow", enabled: true, type: "radial", ellipseW: 79, ellipseH: 101, posX: 42, posY: 91, colorStops: [
+    { color: "#ff6611", opacity: 0.4, position: 0 },
+    { color: "#ff6611", opacity: 0, position: 69 },
+  ]},
+  { id: 2, label: "Lime corner TL", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 2, posY: 2, colorStops: [
+    { color: "#f0ffb5", opacity: 1, position: 5 },
+    { color: "#f0ffb5", opacity: 0, position: 30 },
+  ]},
+  { id: 3, label: "Peach center-right", enabled: true, type: "radial", ellipseW: 73, ellipseH: 92, posX: 69, posY: 50, colorStops: [
+    { color: "#ffbf87", opacity: 0.38, position: 0 },
+    { color: "#ffbf87", opacity: 0, position: 66 },
+  ]},
+];
+
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useScoreBreakdown, TIER_COLORS } from "@/hooks/useScoreBreakdown";
 import { hapticSave, hapticDelete } from "@/lib/haptics";
@@ -48,7 +63,6 @@ export function LeadDetailView({
   lead,
   onClose,
   onRefresh,
-  toolbarPrefix,
   campaignsById,
   leadTags,
 }: {
@@ -56,7 +70,6 @@ export function LeadDetailView({
   onClose: () => void;
   leadTags?: { name: string; color: string }[];
   onRefresh?: () => void;
-  toolbarPrefix?: (opts: { isNarrow: boolean }) => React.ReactNode;
   campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
 }) {
   const { t } = useTranslation("leads");
@@ -235,24 +248,31 @@ export function LeadDetailView({
     try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
   });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(savedGradient ?? PAGE_DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
   const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
     if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
     if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
     setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
   }, []);
-  const handleApplyGradient = useCallback(() => {
+  const handleSaveGradient = useCallback(() => {
     localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
     setSavedGradient(gradientLayers);
-    setGradientTesterOpen(false);
   }, [gradientLayers]);
+  const handleApplyGradient = useCallback(() => {
+    handleSaveGradient();
+    setGradientTesterOpen(false);
+  }, [handleSaveGradient]);
   const toggleGradientTester = useCallback(() => {
-    setGradientTesterOpen(prev => {
-      if (!prev && savedGradient) setGradientLayers(savedGradient);
-      return !prev;
-    });
-  }, [savedGradient]);
+    if (!gradientTesterOpen) {
+      try {
+        const raw = localStorage.getItem(GRADIENT_KEY);
+        if (raw) setGradientLayers(JSON.parse(raw) as GradientLayer[]);
+        else setGradientLayers(PAGE_DEFAULT_LAYERS);
+      } catch { /* keep current layers */ }
+    }
+    setGradientTesterOpen(prev => !prev);
+  }, [gradientTesterOpen]);
 
   // ── Expand-on-hover button helpers ───────────────────────────────────────
   const xBtn = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
@@ -289,51 +309,7 @@ export function LeadDetailView({
       )}
 
       {/* ── Fixed header (stays in place) ── */}
-      <div className="relative shrink-0 z-10 px-4 pt-5 pb-3 space-y-6 max-w-[1386px] w-full mr-auto">
-
-          {/* Toolbar */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {toolbarPrefix?.({ isNarrow })}
-
-            {/* Action buttons removed — available on Chats page only */}
-
-            {/* Right-edge: Gradient + To PDF + Delete */}
-            <div className="ml-auto flex items-center gap-1">
-              {/* Gradient Tester (agency-only) */}
-              {isAgencyUser && (
-                <button
-                  onClick={toggleGradientTester}
-                  className={cn(xBtn, "hover:max-w-[120px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : "border-black/[0.125] text-foreground/60 hover:text-foreground")}
-                  title="Gradient Tester"
-                >
-                  <Palette className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Gradient</span>
-                </button>
-              )}
-              {/* To PDF */}
-              <button onClick={handlePdf} className={cn(xBtn, "hover:max-w-[110px] border-black/[0.125] text-foreground/60 hover:text-foreground")}>
-                <span className="relative inline-flex h-4 w-4 shrink-0">
-                  <FileText className="h-4 w-4" />
-                  <span className="absolute bottom-[1px] left-0 right-0 flex justify-center text-[5px] font-black leading-none">PDF</span>
-                </span>
-                <span className={xSpan}>{t("detailView.toPdf")}</span>
-              </button>
-
-              {/* Delete */}
-              {deleteConfirm ? (
-                <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
-                  <span className="text-[11px] text-red-600 font-medium">{t("detailView.deleteLead")}</span>
-                  <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : t("confirm.yes")}</button>
-                  <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">{t("confirm.no")}</button>
-                </div>
-              ) : (
-                <button onClick={() => setDeleteConfirm(true)} className={cn(xBtn, "hover:max-w-[110px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600")}>
-                  <Trash2 className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("detailView.delete")}</span>
-                </button>
-              )}
-            </div>
-          </div>
+      <div className="relative shrink-0 z-10 px-4 pt-2 lg:pt-9 pb-3 max-w-[1386px] w-full mr-auto">
 
           {/* Avatar + Name + Tags + Info row (merged onto one line) */}
           <div className="relative flex items-start gap-3">
@@ -519,11 +495,25 @@ export function LeadDetailView({
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
         }}
       >
-        <div ref={containerRef} className={cn("p-[3px] max-w-[1386px] w-full mr-auto", isNarrow ? "" : "h-full flex flex-col gap-[3px]")}>
-          <div className={cn("grid gap-[3px]", isNarrow ? "" : "flex-1 min-h-0")} style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
+        <div ref={containerRef} className={cn("p-1.5 max-w-[1386px] w-full mr-auto", isNarrow ? "" : "h-full flex flex-col gap-1.5")}>
+          <div className={cn("grid gap-1.5", isNarrow ? "" : "flex-1 min-h-0")} style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Contact */}
             <div className={cn("overflow-y-auto rounded-xl", isNarrow ? "min-h-[340px]" : "min-h-0")}>
-              <ContactWidget lead={lead} onRefresh={onRefresh} accountLogo={accountLogo} campaignStickerUrl={campaignStickerUrl} campaignsById={campaignsById} />
+              <ContactWidget
+                lead={lead}
+                onRefresh={onRefresh}
+                accountLogo={accountLogo}
+                campaignStickerUrl={campaignStickerUrl}
+                campaignsById={campaignsById}
+                onPdf={handlePdf}
+                onDelete={handleDelete}
+                isDeleting={deleting}
+                deleteConfirm={deleteConfirm}
+                setDeleteConfirm={setDeleteConfirm}
+                onToggleGradient={toggleGradientTester}
+                gradientTesterOpen={gradientTesterOpen}
+                isAgencyUser={isAgencyUser}
+              />
             </div>
             {/* Chat */}
             <div className={cn("overflow-hidden rounded-xl bg-white/60 dark:bg-white/[0.10] flex flex-col", isNarrow ? "min-h-[420px]" : "min-h-0")}>
@@ -544,9 +534,10 @@ export function LeadDetailView({
           onClose={() => setGradientTesterOpen(false)}
           layers={gradientLayers}
           onUpdateLayer={updateGradientLayer}
-          onResetLayers={() => setGradientLayers(DEFAULT_LAYERS)}
+          onResetLayers={() => setGradientLayers(PAGE_DEFAULT_LAYERS)}
           dragMode={gradientDragMode}
           onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+          onSave={handleSaveGradient}
           onApply={handleApplyGradient}
         />
       )}

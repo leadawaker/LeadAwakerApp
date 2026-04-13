@@ -10,7 +10,11 @@ import {
   StickyNote,
   Save,
   CheckCircle2,
+  Palette,
+  FileText,
+  Trash2,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -51,6 +55,14 @@ export function ContactWidget({
   campaignStickerUrl: campaignStickerUrlProp,
   tags,
   campaignsById,
+  onPdf,
+  onDelete,
+  isDeleting,
+  deleteConfirm,
+  setDeleteConfirm,
+  onToggleGradient,
+  gradientTesterOpen,
+  isAgencyUser,
 }: {
   lead: Record<string, any>;
   onRefresh?: () => void;
@@ -61,6 +73,15 @@ export function ContactWidget({
   tags?: { name: string; color: string }[];
   /** Campaigns map (agency view only) for campaign assignment dropdown */
   campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
+  /** Action bar props — only rendered when onPdf is provided */
+  onPdf?: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
+  deleteConfirm?: boolean;
+  setDeleteConfirm?: (v: boolean) => void;
+  onToggleGradient?: () => void;
+  gradientTesterOpen?: boolean;
+  isAgencyUser?: boolean;
 }) {
   const { t } = useTranslation("leads");
   const leadId      = getLeadId(lead);
@@ -396,6 +417,50 @@ export function ContactWidget({
           className="w-full text-[12px] bg-transparent border-none px-0 py-0 resize-none focus:outline-none disabled:opacity-60 placeholder:text-foreground/25"
         />
       </div>
+
+      {/* ── Action buttons (PDF, Delete, Gradient) — only when wired up ── */}
+      {onPdf && (
+        <div className="mt-4 pt-3 border-t border-border/20 flex items-center justify-end gap-1">
+          {isAgencyUser && onToggleGradient && (
+            <button
+              onClick={onToggleGradient}
+              className={cn(
+                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]",
+                gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : "border-black/[0.125] text-foreground/60 hover:text-foreground"
+              )}
+              title="Gradient Tester"
+            >
+              <Palette className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Gradient</span>
+            </button>
+          )}
+          <button
+            onClick={onPdf}
+            className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px] border-black/[0.125] text-foreground/60 hover:text-foreground"
+          >
+            <span className="relative inline-flex h-4 w-4 shrink-0">
+              <FileText className="h-4 w-4" />
+              <span className="absolute bottom-[1px] left-0 right-0 flex justify-center text-[5px] font-black leading-none">PDF</span>
+            </span>
+            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("detailView.toPdf")}</span>
+          </button>
+          {deleteConfirm ? (
+            <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
+              <span className="text-[11px] text-red-600 font-medium">{t("detailView.deleteLead")}</span>
+              <button onClick={onDelete} disabled={isDeleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{isDeleting ? "…" : t("confirm.yes")}</button>
+              <button onClick={() => setDeleteConfirm?.(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">{t("confirm.no")}</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setDeleteConfirm?.(true)}
+              className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("detailView.delete")}</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

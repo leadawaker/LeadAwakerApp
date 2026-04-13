@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { hapticSave } from "@/lib/haptics";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import {
@@ -19,8 +18,10 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  Minus,
 } from "lucide-react";
-import { resolveVariablesHtml, type CampaignForPreview } from "../utils/resolveVariables";
+import { type CampaignForPreview } from "../utils/resolveVariables";
+import { PromptEditorPanel, type PromptEditorPanelHandle } from "./PromptEditorPanel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,7 @@ import {
   type PromptGroupOption,
   type PromptFormData,
   type PromptVersion,
+  MODEL_OPTIONS,
 } from "../types";
 
 /* ── Module-level i18n key maps ─────────────────────────────────────────── */
@@ -102,527 +104,6 @@ function formatRelativeTime(dateStr: string | null | undefined, t: TFn): string 
   } catch {
     return "";
   }
-}
-
-/* ── EditPanel ───────────────────────────────────────────────────────────── */
-
-function EditPanel({
-  prompt,
-  onSaved,
-  onDelete,
-  campaigns = [],
-  versionOverride = null,
-  previewOpen,
-  setPreviewOpen,
-}: {
-  prompt: any;
-  onSaved: (saved: any) => void;
-  onDelete: (prompt: any) => void;
-  campaigns?: CampaignForPreview[];
-  versionOverride?: PromptVersion | null;
-  previewOpen: boolean;
-  setPreviewOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
-}) {
-  const { toast } = useToast();
-  const { t } = useTranslation("prompts");
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<PromptFormData>({
-    name: "",
-    promptText: "",
-    systemMessage: "",
-    model: "gpt-5.1",
-    temperature: "0.7",
-    maxTokens: "1000",
-    status: "active",
-    useCase: "",
-    notes: "",
-    campaignsId: "",
-  });
-  const [errors, setErrors] = useState<Partial<PromptFormData>>({});
-  // highlightTick triggers backdrop + preview re-render on every keystroke
-  const [highlightTick, setHighlightTick] = useState(0);
-  const [sampleLead, setSampleLead] = useState<import("../utils/resolveVariables").LeadForPreview | null>(null);
-  // Uncontrolled refs for the 3 textarea fields — keeps browser undo history intact
-  const promptTextValRef = useRef<string>("");
-  const systemMessageValRef = useRef<string>("");
-  const notesValRef = useRef<string>("");
-  const promptTextRef = useRef<HTMLTextAreaElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
-  const systemMessageTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const previewPaneRef = useRef<HTMLDivElement>(null);
-  const syncingScrollRef = useRef(false);
-  // Stable ref to latest handleSave — avoids stale closure in useImperativeHandle
-  const handleSaveRef = useRef<() => Promise<void>>(async () => {});
-
-  const promptId = getPromptId(prompt);
-  const initialized = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => {
-    const promptText = prompt.promptText || prompt.prompt_text || "";
-    const systemMessage = prompt.systemMessage || prompt.system_message || "";
-    const notes = (prompt.notes || "").replace(/^System prompt\s*[-–—]?\s*auto[- ]created.*$/im, "").trim();
-    promptTextValRef.current = promptText;
-    systemMessageValRef.current = systemMessage;
-    notesValRef.current = notes;
-    if (promptTextRef.current) promptTextRef.current.value = promptText;
-    if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = systemMessage;
-    if (notesTextareaRef.current) notesTextareaRef.current.value = notes;
-    setForm({
-      name: prompt.name || "",
-      promptText,
-      systemMessage,
-      model: prompt.model || "gpt-5.1",
-      temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
-      maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
-      status: (prompt.status || "active").toLowerCase(),
-      useCase: prompt.useCase || prompt.use_case || "",
-      notes,
-      campaignsId:
-        prompt.campaignsId != null
-          ? String(prompt.campaignsId)
-          : prompt.Campaigns_id != null
-          ? String(prompt.Campaigns_id)
-          : "",
-    });
-    setErrors({});
-    setHighlightTick((n) => n + 1); // re-render backdrop/preview with new prompt text
-    initialized.current = false;
-    const t = setTimeout(() => { initialized.current = true; }, 150);
-    return () => clearTimeout(t);
-  }, [promptId]);
-
-  // Sync form.status when header pill changes status externally
-  useEffect(() => {
-    const newStatus = (prompt.status || "active").toLowerCase();
-    setForm((prev) => prev.status === newStatus ? prev : { ...prev, status: newStatus });
-  }, [prompt.status]);
-
-  // Apply a loaded version's content into the uncontrolled textareas
-  useEffect(() => {
-    if (!versionOverride) return;
-    const pt = versionOverride.promptText || "";
-    const sm = versionOverride.systemMessage || "";
-    const nt = versionOverride.notes || "";
-    promptTextValRef.current = pt;
-    systemMessageValRef.current = sm;
-    notesValRef.current = nt;
-    if (promptTextRef.current) { promptTextRef.current.value = pt; autoResize(promptTextRef.current); }
-    if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = sm;
-    if (notesTextareaRef.current) notesTextareaRef.current.value = nt;
-    setHighlightTick((n) => n + 1);
-    scheduleAutoSave();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [versionOverride]);
-
-  // Auto-save for structured fields (textarea fields call scheduleAutoSave directly)
-  useEffect(() => {
-    if (!initialized.current) return;
-    scheduleAutoSave();
-    return () => clearTimeout(autoSaveTimerRef.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.name, form.model, form.temperature, form.maxTokens, form.status, form.useCase, form.campaignsId]);
-
-  // Backdrop content — highlights all {variable} tokens in amber; updates on every keystroke
-  const renderBackdrop = useMemo(() => {
-    const text = promptTextValRef.current ?? "";
-    const parts = text.split(/(\{\w+\})/);
-    return (
-      <>
-        {parts.filter(p => p).map((part, idx) => {
-          if (/^\{\w+\}$/.test(part)) {
-            return <mark key={idx} className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">{part}</mark>;
-          }
-          return <>{part}</>;
-        })}
-      </>
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightTick]);
-
-  // Fetch sample lead when preview opens and a campaign is selected
-  useEffect(() => {
-    if (!previewOpen || !form.campaignsId) { setSampleLead(null); return; }
-    apiFetch(`/api/leads?campaignId=${form.campaignsId}&limit=1`)
-      .then((r) => r.json())
-      .then((data: any[]) => {
-        const lead = Array.isArray(data) ? data[0] : null;
-        setSampleLead(lead ? {
-          firstName: lead.firstName ?? lead.first_name ?? null,
-          lastName: lead.lastName ?? lead.last_name ?? null,
-          phone: lead.phone ?? null,
-          email: lead.email ?? null,
-          whatHasTheLeadDone: lead.whatHasTheLeadDone ?? lead.what_has_the_lead_done ?? null,
-        } : null);
-      })
-      .catch(() => setSampleLead(null));
-  }, [previewOpen, form.campaignsId]);
-
-
-  function scheduleAutoSave() {
-    if (!initialized.current) return;
-    clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => handleSaveRef.current(true), 800);
-  }
-
-  function setField(field: keyof PromptFormData, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-  }
-
-  function validate(): boolean {
-    const e: Partial<PromptFormData> = {};
-    if (!form.name.trim()) e.name = t("form.required");
-    if (!promptTextValRef.current.trim()) e.promptText = t("form.required");
-    const temp = parseFloat(form.temperature);
-    if (isNaN(temp) || temp < 0 || temp > 2) e.temperature = t("form.temperatureError");
-    const tokens = parseInt(form.maxTokens, 10);
-    if (isNaN(tokens) || tokens < 1) e.maxTokens = t("form.maxTokensError");
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
-
-  async function handleSave(silent = false) {
-    if (!validate()) return;
-    setSaving(true);
-    try {
-      const payload = {
-        name: form.name.trim(),
-        promptText: promptTextValRef.current.trim(),
-        systemMessage: systemMessageValRef.current.trim() || null,
-        model: form.model || null,
-        temperature: form.temperature,
-        maxTokens: parseInt(form.maxTokens, 10),
-        status: form.status || "active",
-        useCase: form.useCase.trim() || null,
-        notes: notesValRef.current.trim() || null,
-        campaignsId: form.campaignsId ? parseInt(form.campaignsId, 10) : null,
-      };
-      const res = await apiFetch(`/api/prompts/${promptId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.message || body?.error || `HTTP ${res.status}`);
-      }
-      const saved = await res.json();
-      onSaved(saved);
-      if (!silent) {
-        hapticSave();
-        toast({ title: t("toast.saved"), description: t("toast.savedDescription", { name: form.name }) });
-      }
-    } catch (err: any) {
-      toast({
-        title: t("toast.saveFailed"),
-        description: err.message || "Unknown error",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  // Keep ref in sync with the latest handleSave so useImperativeHandle never goes stale
-  handleSaveRef.current = handleSave;
-
-  // Auto-resize prompt textarea on content change.
-  // Uses an off-screen mirror textarea to measure the required height without
-  // collapsing the real element, which avoids triggering browser cursor-follow
-  // scroll that would snap the viewport when the user presses Enter.
-  const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
-    if (!el) return;
-    const cs = getComputedStyle(el);
-    const mirror = document.createElement("textarea");
-    mirror.style.cssText =
-      `position:fixed;top:-9999px;left:-9999px;visibility:hidden;overflow:hidden;height:0;` +
-      `width:${el.getBoundingClientRect().width}px;` +
-      `padding:${cs.paddingTop} ${cs.paddingRight} ${cs.paddingBottom} ${cs.paddingLeft};` +
-      `border:${cs.border};font-size:${cs.fontSize};font-family:${cs.fontFamily};` +
-      `line-height:${cs.lineHeight};letter-spacing:${cs.letterSpacing};white-space:pre-wrap;`;
-    mirror.value = el.value;
-    document.body.appendChild(mirror);
-    const newHeight = Math.max(mirror.scrollHeight, 200);
-    document.body.removeChild(mirror);
-    el.style.height = newHeight + "px";
-  }, []);
-
-  // Sync backdrop div styles with textarea for perfect alignment
-  useEffect(() => {
-    const ta = promptTextRef.current;
-    const bd = backdropRef.current;
-    if (!ta || !bd) return;
-    const cs = getComputedStyle(ta);
-    bd.style.font = cs.font;
-    bd.style.letterSpacing = cs.letterSpacing;
-    bd.style.lineHeight = cs.lineHeight;
-    bd.style.wordWrap = cs.wordWrap;
-    bd.style.whiteSpace = cs.whiteSpace;
-  }, [promptTextValRef.current?.length]);
-
-  useEffect(() => {
-    autoResize(promptTextRef.current);
-  }, [autoResize]);
-
-  // Sync backdrop transform + synchronized proportional scrolling between textarea and preview pane
-  useEffect(() => {
-    const textarea = promptTextRef.current;
-    const backdrop = backdropRef.current;
-    const preview = previewPaneRef.current;
-
-    if (!textarea || !backdrop) return;
-
-    const handleTextareaScroll = () => {
-      // Sync backdrop with transform (absolute positioned divs respond to transform, not scrollTop)
-      backdrop.style.transform = `translateY(-${textarea.scrollTop}px)`;
-
-      // Sync preview scroll with proportional calculation if preview is open
-      if (!previewOpen || !preview) return;
-      if (syncingScrollRef.current) return;
-      syncingScrollRef.current = true;
-
-      // Proportional scroll: textarea scroll ratio applied to preview
-      const textareaScrollHeight = textarea.scrollHeight - textarea.clientHeight;
-      const previewScrollHeight = preview.scrollHeight - preview.clientHeight;
-
-      if (textareaScrollHeight > 0 && previewScrollHeight > 0) {
-        const scrollRatio = textarea.scrollTop / textareaScrollHeight;
-        preview.scrollTop = scrollRatio * previewScrollHeight;
-      }
-
-      setTimeout(() => { syncingScrollRef.current = false; }, 0);
-    };
-
-    const handlePreviewScroll = () => {
-      if (!preview) return;
-      if (syncingScrollRef.current) return;
-      syncingScrollRef.current = true;
-
-      // Proportional scroll: preview scroll ratio applied to textarea
-      const previewScrollHeight = preview.scrollHeight - preview.clientHeight;
-      const textareaScrollHeight = textarea.scrollHeight - textarea.clientHeight;
-
-      if (previewScrollHeight > 0 && textareaScrollHeight > 0) {
-        const scrollRatio = preview.scrollTop / previewScrollHeight;
-        textarea.scrollTop = scrollRatio * textareaScrollHeight;
-      }
-
-      setTimeout(() => { syncingScrollRef.current = false; }, 0);
-    };
-
-    textarea.addEventListener("scroll", handleTextareaScroll);
-    if (preview) preview.addEventListener("scroll", handlePreviewScroll);
-
-    return () => {
-      textarea.removeEventListener("scroll", handleTextareaScroll);
-      if (preview) preview.removeEventListener("scroll", handlePreviewScroll);
-    };
-  }, [previewOpen]);
-
-  const inputCls =
-    "w-full h-9 rounded-xl bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30";
-  const textareaCls =
-    "w-full rounded-xl bg-popover px-2.5 py-2 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30 resize-y";
-  const selectCls =
-    "w-full h-9 rounded-xl bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30 appearance-none";
-  const labelCls = "text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-0.5 block";
-
-  return (
-    <div className="flex flex-col flex-1 min-h-0">
-      {/* Scrollable content panels */}
-      <div className={cn("flex flex-1 min-h-0", previewOpen ? "flex-row" : "flex-col")}>
-        {/* Left scrollable editor panel */}
-        <div ref={scrollContainerRef} className={cn("min-h-0 overflow-y-auto overscroll-contain px-[3px] pb-[3px] [scrollbar-width:thin]", previewOpen ? "w-1/2" : "flex-1")}>
-          <div className="flex flex-col gap-[3px] max-w-[1386px] w-full mr-auto">
-            {/* ── Prompt Content + System Message ── */}
-            <div className="flex flex-col gap-[3px]">
-              {/* Prompt Content */}
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.promptContent")}
-              </p>
-              <div className="relative">
-                {/* Amber-highlight backdrop — floats over textarea, pointer-events:none */}
-                <div
-                  ref={backdropRef}
-                  aria-hidden="true"
-                  className="absolute inset-0 pointer-events-none z-[1] overflow-hidden rounded-xl px-2.5 py-2 text-[12px] whitespace-pre-wrap break-words text-transparent"
-                >
-                  {renderBackdrop}
-                </div>
-                <textarea
-                  ref={promptTextRef}
-                  className={cn(
-                    textareaCls,
-                    "h-[400px] overflow-y-auto resize-none relative",
-                    errors.promptText ? "ring-2 ring-red-400/40" : "",
-                  )}
-                  defaultValue={promptTextValRef.current}
-                  onChange={(e) => { promptTextValRef.current = e.target.value; scheduleAutoSave(); }}
-                  onInput={() => setHighlightTick((t) => t + 1)}
-                  placeholder={t("form.mainPromptPlaceholder")}
-                />
-              </div>
-              {errors.promptText && (
-                <p className="text-[10px] text-red-500 mt-0.5">{errors.promptText}</p>
-              )}
-            </div>
-
-            {/* System Message */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.systemMessage")}
-              </p>
-              <div>
-                <textarea
-                  ref={systemMessageTextareaRef}
-                  className={cn(textareaCls, "min-h-[80px]")}
-                  defaultValue={systemMessageValRef.current}
-                  onChange={(e) => { systemMessageValRef.current = e.target.value; scheduleAutoSave(); }}
-                  placeholder={t("form.systemMessagePlaceholderAlt")}
-                />
-              </div>
-            </div>
-
-            {/* ── Bottom row: Identity + Configuration + Notes (3 columns) ── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-[3px]">
-              {/* Identity */}
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                  {t("form.identity")}
-                </p>
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <label className={labelCls}>{t("form.name")} *</label>
-                    <input
-                      className={cn(inputCls, errors.name && "ring-2 ring-red-400/40")}
-                      value={form.name}
-                      onChange={(e) => setField("name", e.target.value)}
-                      placeholder={t("form.namePlaceholderAlt")}
-                    />
-                    {errors.name && (
-                      <p className="text-[10px] text-red-500 mt-0.5">{errors.name}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t("form.useCase")}</label>
-                    <input
-                      className={inputCls}
-                      value={form.useCase}
-                      onChange={(e) => setField("useCase", e.target.value)}
-                      placeholder={t("form.useCasePlaceholder")}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Configuration */}
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                  {t("form.configuration")}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <label className={labelCls}>{t("labels.campaign")}</label>
-                    <select
-                      className={selectCls}
-                      value={form.campaignsId}
-                      onChange={(e) => setField("campaignsId", e.target.value)}
-                    >
-                      <option value="">{t("form.noneOption")}</option>
-                      {campaigns.map((c) => (
-                        <option key={c.id} value={String(c.id)}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t("form.temperature")} {t("form.temperatureRange")}</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="2"
-                      className={cn(inputCls, errors.temperature && "ring-2 ring-red-400/40")}
-                      value={form.temperature}
-                      onChange={(e) => setField("temperature", e.target.value)}
-                    />
-                    {errors.temperature && (
-                      <p className="text-[10px] text-red-500 mt-0.5">{errors.temperature}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t("form.maxTokens")}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      className={cn(inputCls, errors.maxTokens && "ring-2 ring-red-400/40")}
-                      value={form.maxTokens}
-                      onChange={(e) => setField("maxTokens", e.target.value)}
-                    />
-                    {errors.maxTokens && (
-                      <p className="text-[10px] text-red-500 mt-0.5">{errors.maxTokens}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
-                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                  {t("form.notes")}
-                </p>
-                <div>
-                  <textarea
-                    ref={notesTextareaRef}
-                    className={cn(textareaCls, "min-h-[118px] h-full")}
-                    defaultValue={notesValRef.current}
-                    onChange={(e) => { notesValRef.current = e.target.value; scheduleAutoSave(); }}
-                    placeholder={t("form.notesPlaceholderAlt")}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Right-side preview pane (split screen when preview is open) */}
-      {previewOpen && (() => {
-        const text = promptTextValRef.current ?? "";
-        void highlightTick;
-        const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
-        const highlighted = resolveVariablesHtml(text, selectedCampaign, sampleLead);
-        const leadLabel = sampleLead?.firstName
-          ? `${sampleLead.firstName}${sampleLead.lastName ? " " + sampleLead.lastName : ""}`
-          : form.campaignsId ? "no leads" : "no campaign";
-        return (
-          <div ref={previewPaneRef} className="w-1/2 min-h-0 overflow-y-auto border-l border-border/30 bg-muted/20 flex flex-col">
-            <div className="px-4 py-3 border-b border-border/30 text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
-              <Eye className="h-3 w-3" />
-              <span>Preview · <span className="italic">{leadLabel}</span></span>
-            </div>
-            <div className="p-4 flex-1">
-              {text.trim() ? (
-                <div
-                  className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground"
-                  dangerouslySetInnerHTML={{ __html: highlighted }}
-                />
-              ) : (
-                <p className="text-muted-foreground italic text-[12px]">Nothing to preview yet.</p>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-    </div>
-    </div>
-  );
 }
 
 /* ── Left panel card ─────────────────────────────────────────────────────── */
@@ -785,6 +266,7 @@ export function PromptsListView({
   campaigns,
 }: PromptsListViewProps) {
   const { t } = useTranslation("prompts");
+  const { toast } = useToast();
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
     try { return localStorage.getItem("prompts-left-panel-collapsed") === "true"; } catch { return false; }
@@ -831,6 +313,13 @@ export function PromptsListView({
 
   // Preview state — lifted to PromptsListView so button lives in sticky toolbar
   const [previewOpen, setPreviewOpen] = useState(false);
+  const editPanelRef = useRef<{ setField: (k: string, v: string) => void; getForm: () => any; getTokenEstimate: () => number }>(null);
+  const [editorFontSize, setEditorFontSize] = useState(() => {
+    try { const v = localStorage.getItem("prompts-editor-font-size"); return v ? Number(v) : 14; } catch { return 14; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prompts-editor-font-size", String(editorFontSize)); } catch {}
+  }, [editorFontSize]);
 
   // Version history state
   const [versions, setVersions] = useState<PromptVersion[]>([]);
@@ -858,6 +347,18 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
       .catch(() => {})
       .finally(() => setVersionsLoading(false));
   }, [selectedId]);
+
+  // Ctrl+P toggles preview
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        if (selectedPrompt) setPreviewOpen((p) => !p);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPrompt]);
 
   async function saveVersion(bumpType: "minor" | "major", label: string) {
     if (!selectedId) return;
@@ -987,6 +488,134 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
           />
         </div>
 
+        {/* ── List toolbar: search + sort + filter + group + create ── */}
+        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+          <SearchPill
+            value={q}
+            onChange={onQChange}
+            open={searchOpen}
+            onOpenChange={setSearchOpen}
+            placeholder={t("toolbar.searchPlaceholder")}
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}
+              >
+                <ArrowUpDown className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("toolbar.sort")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {t("toolbar.sortBy")}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {SORT_OPTIONS.map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  onClick={() => onSortByChange(opt)}
+                  className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
+                >
+                  {t(PROMPT_SORT_TKEYS[opt])}
+                  {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)}
+              >
+                <Filter className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("toolbar.filter")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.status")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {STATUS_OPTIONS.map((opt) => (
+                <DropdownMenuItem key={opt} className="text-[12px] flex items-center justify-between" onClick={(e) => { e.preventDefault(); onStatusFilterChange(opt); }}>
+                  {opt === "all" ? t("toolbar.allStatuses") : t(STATUS_I18N_KEY[opt] ?? "status.unknown")}
+                  {statusFilter === opt && <Check className="h-3 w-3 text-brand-indigo" />}
+                </DropdownMenuItem>
+              ))}
+              {availableModels.length > 0 && (<>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.model")}</DropdownMenuLabel>
+                <DropdownMenuItem className={cn("text-[12px]", modelFilter === "all" && "font-semibold text-brand-indigo")} onClick={(e) => { e.preventDefault(); onModelFilterChange("all"); }}>
+                  {t("toolbar.allModels")}
+                  {modelFilter === "all" && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+                {availableModels.map((m) => (
+                  <DropdownMenuItem key={m} className={cn("text-[12px]", modelFilter === m && "font-semibold text-brand-indigo")} onClick={(e) => { e.preventDefault(); onModelFilterChange(m); }}>
+                    <span className="truncate flex-1">{m}</span>
+                    {modelFilter === m && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </>)}
+              {availableCampaigns.length > 0 && (<>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.campaign")}</DropdownMenuLabel>
+                <DropdownMenuItem className={cn("text-[12px]", !campaignFilter && "font-semibold text-brand-indigo")} onClick={(e) => { e.preventDefault(); onCampaignFilterChange(""); }}>
+                  {t("toolbar.allCampaigns")}
+                  {!campaignFilter && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+                {availableCampaigns.map((c: any) => (
+                  <DropdownMenuItem key={c.id} className={cn("text-[12px]", campaignFilter === String(c.id) && "font-semibold text-brand-indigo")} onClick={(e) => { e.preventDefault(); onCampaignFilterChange(campaignFilter === String(c.id) ? "" : String(c.id)); }}>
+                    <span className="truncate flex-1">{c.name}</span>
+                    {campaignFilter === String(c.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </>)}
+              {availableAccounts.length > 0 && (<>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.account")}</DropdownMenuLabel>
+                <DropdownMenuItem className={cn("text-[12px]", !accountFilter && "font-semibold text-brand-indigo")} onClick={(e) => { e.preventDefault(); onAccountFilterChange(""); }}>
+                  {t("toolbar.allAccounts")}
+                  {!accountFilter && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+                {availableAccounts.map((a) => (
+                  <DropdownMenuItem key={a.id} className={cn("text-[12px]", accountFilter === String(a.id) && "font-semibold text-brand-indigo")} onClick={(e) => { e.preventDefault(); onAccountFilterChange(accountFilter === String(a.id) ? "" : String(a.id)); }}>
+                    <span className="truncate flex-1">{a.name}</span>
+                    {accountFilter === String(a.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </>)}
+              {isFilterActive && (<>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onClearAllFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
+              </>)}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[100px]", groupBy !== "none" ? xActive : xDefault)}
+              >
+                <Layers className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("toolbar.group")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              {GROUP_OPTIONS.map((opt) => (
+                <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
+                  {t(PROMPT_GROUP_TKEYS[opt])}
+                  {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button
+            className={cn(xBase, "hover:max-w-[100px]", xDefault)}
+            onClick={onOpenCreate}
+          >
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.create")}</span>
+          </button>
+        </div>
+
         {/* ── Prompt list ── */}
         <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto [scrollbar-width:thin]">
           {prompts.length === 0 ? (
@@ -1045,187 +674,92 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
                 {leftPanelCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </button>
 
-              {/* Search — always visible */}
-              <SearchPill
-                value={q}
-                onChange={onQChange}
-                open={searchOpen}
-                onOpenChange={setSearchOpen}
-                placeholder={t("toolbar.searchPlaceholder")}
-              />
-
-              {/* List controls — hidden when left panel is collapsed */}
-              {!leftPanelCollapsed && (<>
-              {/* +Create */}
-              <button
-                className={cn(xBase, "hover:max-w-[100px]", xDefault)}
-                onClick={onOpenCreate}
-              >
-                <Plus className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.create")}</span>
-              </button>
-
-              {/* Sort */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}>
-                    <ArrowUpDown className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>{t("toolbar.sort")}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-44">
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {t("toolbar.sortBy")}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {SORT_OPTIONS.map((opt) => (
-                    <DropdownMenuItem
-                      key={opt}
-                      onClick={() => onSortByChange(opt)}
-                      className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
-                    >
-                      {t(PROMPT_SORT_TKEYS[opt])}
-                      {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Filter */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)}>
-                    <Filter className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>{t("toolbar.filter")}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {t("labels.status")}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {STATUS_OPTIONS.map((opt) => (
-                    <DropdownMenuItem
-                      key={opt}
-                      className="text-[12px] flex items-center justify-between"
-                      onClick={(e) => { e.preventDefault(); onStatusFilterChange(opt); }}
-                    >
-                      {opt === "all" ? t("toolbar.allStatuses") : t(STATUS_I18N_KEY[opt] ?? "status.unknown")}
-                      {statusFilter === opt && <Check className="h-3 w-3 text-brand-indigo" />}
-                    </DropdownMenuItem>
-                  ))}
-
-                  {availableModels.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {t("labels.model")}
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem
-                        className={cn("text-[12px]", modelFilter === "all" && "font-semibold text-brand-indigo")}
-                        onClick={(e) => { e.preventDefault(); onModelFilterChange("all"); }}
-                      >
-                        {t("toolbar.allModels")}
-                        {modelFilter === "all" && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                      {availableModels.map((m) => (
-                        <DropdownMenuItem
-                          key={m}
-                          className={cn("text-[12px]", modelFilter === m && "font-semibold text-brand-indigo")}
-                          onClick={(e) => { e.preventDefault(); onModelFilterChange(m); }}
+              {/* Inline prompt metadata — name only shown when left panel is collapsed */}
+              {selectedPrompt && (
+                <div className="flex items-center gap-1.5 min-w-0 shrink">
+                  {leftPanelCollapsed && (() => {
+                    const spAId = selectedPrompt.accountsId || selectedPrompt.Accounts_id;
+                    const ic = getPromptIconColor(spAId ? `account-${spAId}` : "agency-bots");
+                    return (
+                      <>
+                        <div
+                          className="h-6 w-6 rounded-full flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: ic.bg }}
                         >
-                          <span className="truncate flex-1">{m}</span>
-                          {modelFilter === m && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-
-                  {availableCampaigns.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {t("labels.campaign")}
-                      </DropdownMenuLabel>
+                          <Bot className="h-3.5 w-3.5" style={{ color: ic.icon }} />
+                        </div>
+                        <h2 className="text-[15px] font-semibold font-heading text-foreground truncate max-w-[200px]">
+                          {selectedPrompt.name || t("labels.untitledPrompt")}
+                        </h2>
+                      </>
+                    );
+                  })()}
+                  <span className="text-[13px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground/60 font-mono shrink-0">
+                    #{selectedId}
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={cn(
+                        "text-[13px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full transition-opacity hover:opacity-70 cursor-pointer shrink-0",
+                        getStatusBadgeClasses(selectedPrompt.status),
+                      )}>
+                        {t(STATUS_I18N_KEY[selectedPrompt.status?.toLowerCase() ?? ""] ?? "status.unknown")}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-36">
                       <DropdownMenuItem
-                        className={cn("text-[12px]", !campaignFilter && "font-semibold text-brand-indigo")}
-                        onClick={(e) => { e.preventDefault(); onCampaignFilterChange(""); }}
+                        className={cn("text-[12px]", selectedPrompt.status === "active" && "font-semibold text-brand-indigo")}
+                        onClick={() => handleStatusChange("active")}
                       >
-                        {t("toolbar.allCampaigns")}
-                        {!campaignFilter && <Check className="h-3 w-3 ml-auto" />}
+                        {t("status.active")}
+                        {selectedPrompt.status === "active" && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
-                      {availableCampaigns.map((c) => (
-                        <DropdownMenuItem
-                          key={c.id}
-                          className={cn("text-[12px]", campaignFilter === String(c.id) && "font-semibold text-brand-indigo")}
-                          onClick={(e) => { e.preventDefault(); onCampaignFilterChange(campaignFilter === String(c.id) ? "" : String(c.id)); }}
-                        >
-                          <span className="truncate flex-1">{c.name}</span>
-                          {campaignFilter === String(c.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-
-                  {availableAccounts.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {t("labels.account")}
-                      </DropdownMenuLabel>
                       <DropdownMenuItem
-                        className={cn("text-[12px]", !accountFilter && "font-semibold text-brand-indigo")}
-                        onClick={(e) => { e.preventDefault(); onAccountFilterChange(""); }}
+                        className={cn("text-[12px]", selectedPrompt.status === "archived" && "font-semibold text-brand-indigo")}
+                        onClick={() => handleStatusChange("archived")}
                       >
-                        {t("toolbar.allAccounts")}
-                        {!accountFilter && <Check className="h-3 w-3 ml-auto" />}
+                        {t("status.archived")}
+                        {selectedPrompt.status === "archived" && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
-                      {availableAccounts.map((a) => (
-                        <DropdownMenuItem
-                          key={a.id}
-                          className={cn("text-[12px]", accountFilter === String(a.id) && "font-semibold text-brand-indigo")}
-                          onClick={(e) => { e.preventDefault(); onAccountFilterChange(accountFilter === String(a.id) ? "" : String(a.id)); }}
-                        >
-                          <span className="truncate flex-1">{a.name}</span>
-                          {accountFilter === String(a.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-
-                  {isFilterActive && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={onClearAllFilters} className="text-[12px] text-destructive">
-                        {t("toolbar.clearAllFilters")}
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Group */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={cn(xBase, "hover:max-w-[100px]", groupBy !== "none" ? xActive : xDefault)}>
-                    <Layers className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>{t("toolbar.group")}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-44">
-                  {GROUP_OPTIONS.map((opt) => (
-                    <DropdownMenuItem
-                      key={opt}
-                      onClick={() => onGroupByChange(opt)}
-                      className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}
-                    >
-                      {t(PROMPT_GROUP_TKEYS[opt])}
-                      {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              </>)}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <select
+                    className="text-[13px] text-foreground/50 bg-transparent outline-none hover:text-foreground cursor-pointer shrink-0"
+                    value={selectedPrompt.model || "gpt-5.1"}
+                    onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
+                  >
+                    {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select
+                    className="text-[13px] text-foreground/40 bg-transparent outline-none hover:text-foreground cursor-pointer max-w-[150px] truncate shrink-0"
+                    value={String(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id || "")}
+                    onChange={(e) => editPanelRef.current?.setField("campaignsId", e.target.value)}
+                  >
+                    <option value="">No campaign</option>
+                    {campaigns.map((c: any) => (
+                      <option key={c.id} value={String(c.id)}>#{c.id} {c.name}</option>
+                    ))}
+                  </select>
+                  <span className="inline-flex items-center text-[13px] text-foreground/40 shrink-0">
+                    <input
+                      type="number" step="0.1" min="0" max="2"
+                      className="w-9 bg-transparent outline-none tabular-nums text-center text-[13px] hover:text-foreground focus:text-foreground"
+                      defaultValue={String(selectedPrompt.temperature ?? "0.7")}
+                      key={`temp-c-${selectedPrompt.id}`}
+                      onBlur={(e) => editPanelRef.current?.setField("temperature", e.target.value)}
+                    />°
+                  </span>
+                  <span className="inline-flex items-center text-[13px] text-foreground/40 shrink-0">
+                    <input
+                      type="number" min="1"
+                      className="w-14 bg-transparent outline-none tabular-nums text-center text-[13px] hover:text-foreground focus:text-foreground"
+                      defaultValue={String(selectedPrompt.maxTokens ?? "1000")}
+                      key={`tok-c-${selectedPrompt.id}`}
+                      onBlur={(e) => editPanelRef.current?.setField("maxTokens", e.target.value)}
+                    /> tokens
+                  </span>
+                </div>
+              )}
 
               {/* Spacer */}
               <div className="flex-1 min-w-0" />
@@ -1245,6 +779,27 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
                   {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   {previewOpen ? "Hide preview" : "Preview"}
                 </button>
+              )}
+
+              {/* Font size controls */}
+              {selectedPrompt && (
+                <div className="inline-flex items-center gap-0.5 h-8 rounded-lg border border-border bg-white dark:bg-popover px-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setEditorFontSize((s) => Math.max(10, s - 1))}
+                    className="px-1 py-0.5 rounded hover:bg-muted text-foreground/70 hover:text-foreground text-xs font-medium transition-colors"
+                  >
+                    A−
+                  </button>
+                  <span className="text-[11px] tabular-nums w-5 text-center text-muted-foreground">{editorFontSize}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditorFontSize((s) => Math.min(24, s + 1))}
+                    className="px-1 py-0.5 rounded hover:bg-muted text-foreground/70 hover:text-foreground text-xs font-medium transition-colors"
+                  >
+                    A+
+                  </button>
+                </div>
               )}
 
               {/* Version picker + save buttons */}
@@ -1392,70 +947,10 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               </button>
             </div>
 
-            {/* ── Title + status row ──────────────────────────────────────── */}
-            <div className="px-4 pt-3 pb-2 shrink-0">
-              <div className="flex items-center gap-3">
-                {(() => {
-                  const spAId = selectedPrompt.accountsId || selectedPrompt.Accounts_id;
-                  const ic = getPromptIconColor(spAId ? `account-${spAId}` : "agency-bots");
-                  return (
-                    <div
-                      className="h-12 w-12 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: ic.bg }}
-                    >
-                      <Bot className="h-6 w-6" style={{ color: ic.icon }} />
-                    </div>
-                  );
-                })()}
-                <h2 className="text-[22px] font-semibold font-heading text-foreground leading-tight">
-                  {selectedPrompt.name || t("labels.untitledPrompt")}
-                </h2>
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground/60 font-mono">
-                  #{selectedId}
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className={cn(
-                        "text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full transition-opacity hover:opacity-70 cursor-pointer",
-                        getStatusBadgeClasses(selectedPrompt.status),
-                      )}
-                    >
-                      {t(STATUS_I18N_KEY[selectedPrompt.status?.toLowerCase() ?? ""] ?? "status.unknown")}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-36">
-                    <DropdownMenuItem
-                      className={cn("text-[12px]", selectedPrompt.status === "active" && "font-semibold text-brand-indigo")}
-                      onClick={() => handleStatusChange("active")}
-                    >
-                      {t("status.active")}
-                      {selectedPrompt.status === "active" && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className={cn("text-[12px]", selectedPrompt.status === "archived" && "font-semibold text-brand-indigo")}
-                      onClick={() => handleStatusChange("archived")}
-                    >
-                      {t("status.archived")}
-                      {selectedPrompt.status === "archived" && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                {selectedPrompt.model && (
-                  <>
-                    <span className="text-foreground/25 text-[13px]">·</span>
-                    <span className="text-[13px] text-foreground/50">
-                      {selectedPrompt.model}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
 
             {/* Body: always-editable two-column panel */}
-            <EditPanel
+            <PromptEditorPanel
+              ref={editPanelRef}
               prompt={selectedPrompt}
               onSaved={onSaved}
               onDelete={onDelete}
@@ -1463,6 +958,7 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               versionOverride={versionOverride}
               previewOpen={previewOpen}
               setPreviewOpen={setPreviewOpen}
+              editorFontSize={editorFontSize}
             />
           </div>
         ) : (

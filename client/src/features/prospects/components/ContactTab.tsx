@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { User, Copy, Check, Sparkles } from "lucide-react";
+import { User, Copy, Check, Sparkles, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { apiFetch } from "@/lib/apiUtils";
 
 interface ContactTabProps {
   prospect: Record<string, any>;
@@ -51,13 +52,32 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
   const topPost = prospect[`${prefix}top_post`];
   const personBrief = parseJsonArray(prospect[`${prefix}person_brief`]);
 
+  const [enriching, setEnriching] = useState(false);
+
+  async function handleEnrich() {
+    if (enriching) return;
+    setEnriching(true);
+    try {
+      await apiFetch(`/api/prospects/${prospectId}/enrich`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "linkedin", contactSlot: slot }),
+      });
+      onRefresh?.();
+    } catch {
+      // silent
+    } finally {
+      setEnriching(false);
+    }
+  }
+
   // No LinkedIn URL set
   if (!linkedinUrl) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
         <User className="h-6 w-6 text-muted-foreground/20" />
         <p className="text-[11px] text-muted-foreground/40 italic">
-          Set a LinkedIn URL to enrich this contact
+          {t("contact.addLinkedinHint", "Add a LinkedIn URL to enrich this contact")}
         </p>
       </div>
     );
@@ -70,8 +90,16 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
       <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
         <Sparkles className="h-6 w-6 text-muted-foreground/20" />
         <p className="text-[11px] text-muted-foreground/40 italic">
-          Enrich LinkedIn to see contact insights
+          {t("contact.enrichHint", "Enrich LinkedIn to see contact insights")}
         </p>
+        <button
+          onClick={handleEnrich}
+          disabled={enriching}
+          className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium bg-brand-indigo/10 text-brand-indigo hover:bg-brand-indigo/20 transition-colors disabled:opacity-50"
+        >
+          {enriching ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+          {t("contact.enrichLinkedin", "Enrich LinkedIn")}
+        </button>
       </div>
     );
   }
@@ -136,6 +164,18 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
           </ul>
         </>
       )}
+
+      {/* Re-enrich button */}
+      <div className="pt-1">
+        <button
+          onClick={handleEnrich}
+          disabled={enriching}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+        >
+          {enriching ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+          {t("contact.enrichLinkedin", "Enrich LinkedIn")}
+        </button>
+      </div>
     </div>
   );
 }

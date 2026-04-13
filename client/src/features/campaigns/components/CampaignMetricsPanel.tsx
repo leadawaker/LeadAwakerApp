@@ -121,7 +121,7 @@ export function CampaignMetricsPanel({
   const isDemoMode = DEMO_CAMPAIGN_IDS.has(campaignId);
 
   return (
-    <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px]", "max-w-[1386px] w-full mr-auto")}>
+    <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 gap-[3px]", "w-full")} style={compact ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}>
 
       {/* Row 1, Col 1: Pipeline + Donut */}
       <PipelineCardWrapper campaignId={campaignId} mockStages={isDemoMode ? DEMO_PIPELINE_STAGES : undefined} />

@@ -1,4 +1,5 @@
-import type { CampaignSortBy, CampaignGroupBy } from "../pages/CampaignsPage";
+export type CampaignSortBy = "recent" | "name_asc" | "name_desc" | "leads_desc" | "response_desc";
+export type CampaignGroupBy = "status" | "account" | "type" | "none";
 
 /* ── Reactivation tag template (source: campaign_id=1) ────────────────────── */
 export const REACTIVATION_TAG_TEMPLATE: { name: string; color: string; category: string }[] = [

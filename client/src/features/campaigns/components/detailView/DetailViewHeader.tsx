@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Zap, X, Camera, ImageIcon } from "lucide-react";
 import type { Campaign } from "@/types/models";
 import { cn } from "@/lib/utils";
@@ -31,11 +31,12 @@ interface DetailViewHeaderProps {
   saveSticker: (slug: string | null, hue: number, size: number) => Promise<void>;
   setSelectedStickerSlug: (v: string | null) => void;
   setHueValue: (v: number) => void;
-  logoInputRef: React.RefObject<HTMLInputElement>;
+  logoInputRef: React.RefObject<HTMLInputElement | null>;
   handleLogoFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemoveLogo: () => void;
   compact: boolean;
-  t: (key: string, fallback?: string) => string;
+  t: (...args: any[]) => any;
+  onSaveName: (name: string) => Promise<void>;
 }
 
 export function DetailViewHeader({
@@ -67,7 +68,22 @@ export function DetailViewHeader({
   handleRemoveLogo,
   compact,
   t,
+  onSaveName,
 }: DetailViewHeaderProps) {
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(campaign.name);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setNameValue(campaign.name); }, [campaign.name]);
+  useEffect(() => { if (editingName) nameInputRef.current?.select(); }, [editingName]);
+
+  const commitName = async () => {
+    setEditingName(false);
+    const trimmed = nameValue.trim();
+    if (trimmed && trimmed !== campaign.name) await onSaveName(trimmed);
+    else setNameValue(campaign.name);
+  };
+
   return (
     <>
       {/* Row 2: Avatar + Name + Meta chips */}
@@ -195,9 +211,26 @@ export function DetailViewHeader({
         </Dialog>
 
         <div className="flex-1 min-w-0">
-          <h2 className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate" data-testid="campaign-detail-view-name">
-            {campaign.name || t("detail.unnamed")}
-          </h2>
+          {editingName ? (
+            <input
+              ref={nameInputRef}
+              value={nameValue}
+              onChange={e => setNameValue(e.target.value)}
+              onBlur={commitName}
+              onKeyDown={e => { if (e.key === "Enter") { e.currentTarget.blur(); } else if (e.key === "Escape") { setNameValue(campaign.name); setEditingName(false); } }}
+              className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight bg-transparent border-b border-foreground/30 outline-none w-full"
+              data-testid="campaign-detail-view-name-input"
+            />
+          ) : (
+            <h2
+              className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate cursor-text hover:opacity-80 transition-opacity"
+              data-testid="campaign-detail-view-name"
+              onClick={() => setEditingName(true)}
+              title={t("detail.clickToRename", "Click to rename")}
+            >
+              {campaign.name || t("detail.unnamed")}
+            </h2>
+          )}
           <div className="mt-1 flex items-center gap-1.5" data-testid="campaign-detail-view-status">
             {status && (
               <span
@@ -212,7 +245,7 @@ export function DetailViewHeader({
           </div>
         </div>
 
-        {/* Meta chips — desktop, non-compact */}
+        {/* Desktop meta chips */}
         {!compact && (
           <div className="shrink-0 hidden md:flex items-center gap-7 whitespace-nowrap">
             {(campaign as any).channel && (
@@ -249,8 +282,8 @@ export function DetailViewHeader({
                 <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.activeHours")}</div>
                 <div className="text-[11px] font-bold text-foreground leading-none">
                   {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
-                  {" – "}
-                  {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
+                  {" - "}
+                  {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "-"}
                 </div>
               </div>
             )}
@@ -267,6 +300,7 @@ export function DetailViewHeader({
             )}
           </div>
         )}
+
       </div>
 
       {/* Mobile / compact meta chips */}

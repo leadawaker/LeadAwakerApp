@@ -135,6 +135,15 @@ export function useConversationsData(
         setInteractions((prev) =>
           prev.filter((i) => (i.leads_id ?? i.lead_id ?? (i as any).Leads_id) !== leads_id)
         );
+        // Re-fetch the lead to pick up reset fields (Conversion_Status, booked_call_date, etc.)
+        fetch(`${API_BASE}/api/leads/${leads_id}`, { credentials: "include" })
+          .then((r) => r.ok ? r.json() : null)
+          .then((updatedLead) => {
+            if (updatedLead) {
+              setLeads((prev) => prev.map((l) => l.id === leads_id ? { ...l, ...updatedLead } : l));
+            }
+          })
+          .catch(() => {/* silently ignore */});
       } catch (err) {
         console.error("[sse] Failed to parse lead_reset event:", err);
       }

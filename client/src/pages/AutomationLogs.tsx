@@ -127,14 +127,14 @@ export default function AutomationLogsPage() {
 
   // ── Rows from server (already filtered, sorted, paginated) ─────────────
   const rows = useMemo(() => {
-    const data = logsQuery.data?.data ?? [];
+    const data = (logsQuery.data as any)?.data ?? [];
     if (campaignId === "all") return data;
     return data.filter((r: any) =>
       (r.campaignId || r.campaignsId || r.campaign_id || r.campaigns_id || r.Campaigns_id) === campaignId
     );
   }, [logsQuery.data, campaignId]);
 
-  const totalPages = Math.ceil((logsQuery.data?.total ?? 0) / pageSize);
+  const totalPages = Math.ceil(((logsQuery.data as any)?.total ?? 0) / pageSize);
   const paginatedRows = rows;
 
   // ── Execution groups ───────────────────────────────────────────────────
@@ -176,7 +176,7 @@ export default function AutomationLogsPage() {
                   {t("page.title")}
                 </h2>
                 <span className="h-5 px-1.5 rounded-full bg-foreground/10 flex items-center justify-center text-[10px] font-semibold tabular-nums text-muted-foreground shrink-0">
-                  {logsQuery.data?.total ?? 0}
+                  {(logsQuery.data as any)?.total ?? 0}
                 </span>
                 {activeFilterCount > 0 && (
                   <span className="h-5 px-1.5 rounded-full bg-brand-indigo/15 flex items-center justify-center text-[10px] font-semibold text-brand-indigo shrink-0">

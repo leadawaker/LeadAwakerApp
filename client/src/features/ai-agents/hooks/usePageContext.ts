@@ -51,6 +51,7 @@ const ROUTE_MAP: Array<{
   { pattern: /^\/(?:agency|subaccount)\/billing$/, pageName: "Billing", pageType: "billing" },
   { pattern: /^\/(?:agency|subaccount)\/docs$/, pageName: "Documentation", pageType: "docs" },
   { pattern: /^\/(?:agency|subaccount)\/dashboard$/, pageName: "Dashboard", pageType: "dashboard" },
+  { pattern: /^\/(?:agency|subaccount)\/prospects$/, pageName: "Prospects", pageType: "prospects" },
 ];
 
 /**

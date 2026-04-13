@@ -47,7 +47,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   const isProspectsFullWidth = prospectsFullWidth && location.includes("/prospects");
   const isLeadsFullWidth = leadsFullWidth && location.includes("/leads");
-  const isAnyFullWidth = isProspectsFullWidth || isLeadsFullWidth;
+  const isCampaignsFullWidth = location.includes("/campaigns");
+  const isAccountsFullWidth = location.includes("/accounts");
+  const isAnyFullWidth = isProspectsFullWidth || isLeadsFullWidth || isCampaignsFullWidth || isAccountsFullWidth;
   // Use reactive wouter location (not the stale useMemo in useWorkspace) so the
   // agency-mode class updates immediately when navigating between /agency and /subaccount routes.
   const isAgencyView = location.startsWith("/agency");

@@ -4,6 +4,8 @@ import {
   Filter,
   Check,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Layers,
   Eye,
 } from "lucide-react";
@@ -84,6 +86,8 @@ interface PromptsToolbarProps {
   onSortByChange: (s: PromptSortOption) => void;
   groupBy: PromptGroupOption;
   onGroupByChange: (g: PromptGroupOption) => void;
+  groupDirection: "asc" | "desc";
+  onGroupDirectionChange: (d: "asc" | "desc") => void;
   visibleCols: Set<PromptColKey>;
   onVisibleColsChange: React.Dispatch<React.SetStateAction<Set<PromptColKey>>>;
   showTableControls: boolean;
@@ -118,6 +122,8 @@ export function PromptsToolbar({
   onSortByChange,
   groupBy,
   onGroupByChange,
+  groupDirection,
+  onGroupDirectionChange,
   visibleCols,
   onVisibleColsChange,
   showTableControls,
@@ -148,33 +154,7 @@ export function PromptsToolbar({
         <span className={xSpan}>{t("toolbar.create")}</span>
       </button>
 
-      {/* ── 3. Sort dropdown ─────────────────────────────────────────────── */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            {t("toolbar.sortBy")}
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {SORT_OPTIONS.map((opt) => (
-            <DropdownMenuItem
-              key={opt}
-              onClick={() => onSortByChange(opt)}
-              className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
-            >
-              {t(SORT_TKEYS[opt])}
-              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* ── 4. Filter dropdown (status + model + campaign) ───────────────── */}
+      {/* ── 3. Filter dropdown (status + model + campaign) ───────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)}>
@@ -292,6 +272,106 @@ export function PromptsToolbar({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* ── 4. Sort dropdown ─────────────────────────────────────────────── */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.sort")}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            {t("toolbar.sortBy")}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {/* recent — flat row, no paired direction */}
+          {(() => {
+            const isActive = sortBy === "recent";
+            return (
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); onSortByChange("recent"); }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>
+                  {t(SORT_TKEYS["recent"])}
+                </span>
+              </DropdownMenuItem>
+            );
+          })()}
+          {/* name — grouped asc/desc row */}
+          {(() => {
+            const isActive = sortBy === "name_asc" || sortBy === "name_desc";
+            const activeDir: "asc" | "desc" = sortBy === "name_asc" ? "asc" : "desc";
+            return (
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); if (!isActive) onSortByChange("name_desc"); }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>
+                  {t("columns.name")}
+                </span>
+                {isActive && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_asc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Ascending"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_desc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Descending"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                  </>
+                )}
+              </DropdownMenuItem>
+            );
+          })()}
+          {/* score — grouped asc/desc row */}
+          {(() => {
+            const isActive = sortBy === "score_asc" || sortBy === "score_desc";
+            const activeDir: "asc" | "desc" = sortBy === "score_asc" ? "asc" : "desc";
+            return (
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); if (!isActive) onSortByChange("score_desc"); }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>
+                  {t("columns.score")}
+                </span>
+                {isActive && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("score_asc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Ascending"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("score_desc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Descending"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                  </>
+                )}
+              </DropdownMenuItem>
+            );
+          })()}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {/* ── 5. Group dropdown (table view only) ──────────────────────────── */}
       {showTableControls && (
         <DropdownMenu>
@@ -301,15 +381,37 @@ export function PromptsToolbar({
               <span className={xSpan}>{t("toolbar.group")}</span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-44">
+          <DropdownMenuContent align="start" className="w-52">
             {GROUP_OPTIONS.map((opt) => (
               <DropdownMenuItem
                 key={opt}
-                onClick={() => onGroupByChange(opt)}
-                className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}
+                onSelect={(e) => { e.preventDefault(); onGroupByChange(opt); }}
+                className="text-[12px] flex items-center gap-2"
               >
-                {t(GROUP_TKEYS[opt])}
-                {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                <span className={cn("flex-1", groupBy === opt && "font-semibold !text-brand-indigo")}>
+                  {t(GROUP_TKEYS[opt])}
+                </span>
+                {groupBy === opt && opt !== "none" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Ascending"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Descending"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                  </>
+                )}
+                {groupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

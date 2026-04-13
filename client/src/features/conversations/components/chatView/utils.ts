@@ -192,7 +192,7 @@ export function getAttachmentType(url: string): "image" | "video" | "audio" | "d
   if (url.startsWith("data:image/")) return "image";
   const lower = url.toLowerCase().split("?")[0];
   if (/\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)$/.test(lower)) return "image";
-  if (/\.(mp4|mov|avi|webm|mkv|ogg)$/.test(lower)) return "video";
   if (/\.(mp3|ogg|wav|m4a|aac|opus|flac)$/.test(lower)) return "audio";
+  if (/\.(mp4|mov|avi|webm|mkv)$/.test(lower)) return "video";
   return "document";
 }

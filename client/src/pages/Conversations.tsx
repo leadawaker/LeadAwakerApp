@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
@@ -9,9 +10,9 @@ import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCampaigns } from "@/hooks/useApiData";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, Layers, ArrowUpDown, Filter, Check, Plus, Settings, Zap, Cpu } from "lucide-react";
+import { ChevronLeft, Plus, Settings, Zap, Cpu } from "lucide-react";
 import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
-import { InboxPanel, type ChatGroupBy, type ChatSortBy, type InboxTab, GROUP_LABELS, SORT_LABELS } from "@/features/conversations/components/InboxPanel";
+import { InboxPanel, type ChatGroupBy, type ChatSortBy, type InboxTab } from "@/features/conversations/components/InboxPanel";
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ProspectChatPanel } from "@/features/conversations/components/ProspectChatPanel";
 import { useProspectConversations } from "@/features/conversations/hooks/useProspectConversations";
@@ -22,7 +23,6 @@ import { AgentSettingsSheet } from "@/features/ai-agents/components/AgentSetting
 import { ModelSwitcher } from "@/features/ai-agents/components/ModelSwitcher";
 import { ThinkingToggle } from "@/features/ai-agents/components/ThinkingToggle";
 import { useAgentChat } from "@/features/ai-agents/hooks/useAgentChat";
-import { SearchPill } from "@/components/ui/search-pill";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { FounderInbox } from "@/components/crm/FounderInbox";
 import { useSupportChat } from "@/hooks/useSupportChat";
@@ -35,23 +35,11 @@ import { useBgSlotLayers } from "@/hooks/useBgSlots";
 import { layerToStyle } from "@/components/ui/gradient-tester";
 
 type AiAgent = { id: number; name: string; type: string; photoUrl: string | null; enabled: boolean };
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  PIPELINE_STATUSES,
-  PIPELINE_HEX,
-} from "@/features/conversations/utils/conversationHelpers";
 
 export default function ConversationsPage() {
   const { t } = useTranslation("conversations");
   const { currentAccountId, accounts, isAgencyUser } = useWorkspace();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const basePath = isAgencyUser ? "/agency" : "/subaccount";
 
@@ -98,12 +86,30 @@ export default function ConversationsPage() {
   // Prospect selection state (hooks only — effects that depend on `tab` are below its declaration)
   const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null);
   const { data: prospectThreads = [] } = useProspectConversations();
+  // Stores prospect data when selected from the "+" picker (not yet in prospectThreads)
+  const [uncontactedProspect, setUncontactedProspect] = useState<{ id: number; name: string; company: string; phone?: string | null } | null>(null);
 
   const handleSelectProspect = (prospectId: number) => {
     setSelectedProspectId(prospectId);
     setSelectedLeadId(null);
     setSelectedAgentId(null);
     setMobileView("chat");
+    const inThreads = prospectThreads.some((p) => p.prospect_id === prospectId);
+    if (inThreads) {
+      setUncontactedProspect(null);
+    } else {
+      // Prospect has no messages yet — look up their data from the all-prospects cache
+      const cached = queryClient.getQueryData<any[]>(["/api/prospects"]);
+      const found = cached?.find((p: any) => (p.id ?? p.Id) === prospectId);
+      if (found) {
+        setUncontactedProspect({
+          id: prospectId,
+          name: found.contact_name || found.contactName || found.company || found.name || "Unknown",
+          company: found.company || found.name || "",
+          phone: found.contact_phone || found.contactPhone || found.phone || null,
+        });
+      }
+    }
   };
 
   const handleSelectAgent = (agentId: number) => {
@@ -221,11 +227,14 @@ export default function ConversationsPage() {
     groupBy: "date" as ChatGroupBy,
     sortBy: "newest" as ChatSortBy,
     filterStatus: [] as string[],
+    groupDirection: "asc" as "asc" | "desc",
   });
   const groupBy = convoPrefs.groupBy;
   const sortBy = convoPrefs.sortBy;
   const filterStatus = convoPrefs.filterStatus;
+  const groupDirection = convoPrefs.groupDirection ?? "asc";
   const setGroupBy = useCallback((v: ChatGroupBy) => setConvoPrefs(p => ({ ...p, groupBy: v })), [setConvoPrefs]);
+  const setGroupDirection = useCallback((v: "asc" | "desc") => setConvoPrefs(p => ({ ...p, groupDirection: v })), [setConvoPrefs]);
   const setSortBy = useCallback((v: ChatSortBy) => setConvoPrefs(p => ({ ...p, sortBy: v })), [setConvoPrefs]);
   const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setConvoPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setConvoPrefs]);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -336,6 +345,7 @@ export default function ConversationsPage() {
 
   const handleResetControls = () => {
     setGroupBy("date");
+    setGroupDirection("asc");
     setSortBy("newest");
     setFilterStatus([]);
     setCampaignId("all");
@@ -410,14 +420,6 @@ export default function ConversationsPage() {
     () => accounts,
     [accounts],
   );
-
-  const isGroupNonDefault = groupBy !== "date";
-  const isSortNonDefault = sortBy !== "newest";
-  const filterActive =
-    filterOpen ||
-    filterStatus.length > 0 ||
-    campaignId !== "all" ||
-    (isAgencyUser && filterAccountId !== "all");
 
   const isSupport = tab === "support";
   const isProspects = tab === "prospects";
@@ -555,6 +557,19 @@ export default function ConversationsPage() {
                   setSelectedAgentId(null);
                   setMobileView("chat");
                 }}
+                clientAccounts={clientAccounts}
+                allCampaigns={allCampaigns}
+                onSetGroupBy={setGroupBy}
+                groupDirection={groupDirection}
+                onSetGroupDirection={setGroupDirection}
+                onSetSortBy={setSortBy}
+                onToggleFilterStatus={handleToggleFilterStatus}
+                onSetFilterAccountId={handleAccountChange}
+                onSetCampaignId={setCampaignId}
+                searchOpen={searchOpen}
+                onSearchOpenChange={setSearchOpen}
+                filterOpen={filterOpen}
+                onFilterOpenChange={setFilterOpen}
                 className={cn(
                   "w-full lg:w-[340px] lg:flex-shrink-0",
                   mobileView === "chat" ? "hidden lg:flex" : "flex"
@@ -608,13 +623,19 @@ export default function ConversationsPage() {
                 <div className={cn("flex-1 min-h-0 flex flex-col", isProspects && selectedProspectId && !isAgentSelected ? "flex" : "hidden")}>
                   {selectedProspectId && (() => {
                     const pt = prospectThreads.find((p) => p.prospect_id === selectedProspectId);
-                    return pt ? (
+                    const prospectData = pt
+                      ? { name: pt.contact_name || pt.name, company: pt.company, email: pt.contact_email, phone: pt.contact_phone || pt.phone, status: pt.outreach_status }
+                      : uncontactedProspect?.id === selectedProspectId
+                      ? { name: uncontactedProspect.name, company: uncontactedProspect.company, email: "", phone: uncontactedProspect.phone, status: "new" }
+                      : null;
+                    return prospectData ? (
                       <ProspectChatPanel
                         prospectId={selectedProspectId}
-                        prospectName={pt.contact_name || pt.name}
-                        prospectCompany={pt.company}
-                        contactEmail={pt.contact_email}
-                        outreachStatus={pt.outreach_status}
+                        prospectName={prospectData.name}
+                        prospectCompany={prospectData.company}
+                        contactEmail={prospectData.email}
+                        outreachStatus={prospectData.status}
+                        contactPhone={prospectData.phone}
                       />
                     ) : (
                       <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -753,179 +774,6 @@ export default function ConversationsPage() {
                     setLocation(`${basePath}/contacts`);
                   }}
                   className={cn("flex-1 min-w-0", !isSupport && !isProspects && !isAgentSelected ? "flex" : "hidden")}
-                  headerActions={
-                    <>
-                      {/* Search — starts expanded */}
-                      <SearchPill
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        open={searchOpen}
-                        onOpenChange={setSearchOpen}
-                        placeholder={t("page.searchPlaceholder")}
-                      />
-
-                      {/* Group */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className={cn(
-                              "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                              "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]",
-                              isGroupNonDefault
-                                ? "border-brand-indigo text-brand-indigo"
-                                : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-                            )}
-                            title={t("page.groupBy")}
-                          >
-                            <Layers className="h-4 w-4 shrink-0" />
-                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.group")}</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((opt) => (
-                            <DropdownMenuItem
-                              key={opt}
-                              onClick={() => setGroupBy(opt)}
-                              className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}
-                            >
-                              {GROUP_LABELS[opt]}
-                              {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Sort */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className={cn(
-                              "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                              "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px]",
-                              isSortNonDefault
-                                ? "border-brand-indigo text-brand-indigo"
-                                : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-                            )}
-                            title={t("page.sort")}
-                          >
-                            <ArrowUpDown className="h-4 w-4 shrink-0" />
-                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.sort")}</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((opt) => (
-                            <DropdownMenuItem
-                              key={opt}
-                              onClick={() => setSortBy(opt)}
-                              className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
-                            >
-                              {SORT_LABELS[opt]}
-                              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Filter — Status + Account → Campaign */}
-                      <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className={cn(
-                              "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
-                              "transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px]",
-                              filterActive
-                                ? "border-brand-indigo text-brand-indigo"
-                                : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-                            )}
-                            title={t("page.filter")}
-                            data-testid="button-toggle-filters"
-                          >
-                            <Filter className="h-4 w-4 shrink-0" />
-                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.filter")}</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          {/* Status */}
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="text-[12px]">
-                              {t("page.status")}
-                              {filterStatus.length > 0 && (
-                                <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>
-                              )}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
-                              {PIPELINE_STATUSES.map((s) => (
-                                <DropdownMenuItem
-                                  key={s}
-                                  onClick={(e) => { e.preventDefault(); handleToggleFilterStatus(s); }}
-                                  className="flex items-center gap-2 text-[12px]"
-                                >
-                                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                                  <span className="flex-1">{s}</span>
-                                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-
-                          {/* Account → Campaign drill-down (agency users only) */}
-                          {isAgencyUser && clientAccounts.length > 0 && (
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger className="text-[12px]">
-                                {t("page.account")}
-                                {filterAccountId !== "all" && (
-                                  <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[70px]">
-                                    {clientAccounts.find((a) => a.id === filterAccountId)?.name ?? ""}
-                                  </span>
-                                )}
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
-                                <DropdownMenuItem
-                                  onClick={() => handleAccountChange("all")}
-                                  className={cn("text-[12px]", filterAccountId === "all" && "font-semibold text-brand-indigo")}
-                                >
-                                  {t("page.allAccounts")}
-                                  {filterAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
-                                </DropdownMenuItem>
-                                {clientAccounts.map((account) => (
-                                  <DropdownMenuSub key={account.id}>
-                                    <DropdownMenuSubTrigger
-                                      className={cn("text-[12px]", filterAccountId === account.id && "font-semibold text-brand-indigo")}
-                                      onClick={() => handleAccountChange(account.id)}
-                                    >
-                                      {account.name}
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="w-44 max-h-48 overflow-y-auto">
-                                      <DropdownMenuItem
-                                        onClick={() => { handleAccountChange(account.id); setCampaignId("all"); }}
-                                        className={cn("text-[12px]", filterAccountId === account.id && campaignId === "all" && "font-semibold text-brand-indigo")}
-                                      >
-                                        {t("page.allCampaigns")}
-                                        {filterAccountId === account.id && campaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
-                                      </DropdownMenuItem>
-                                      {allCampaigns
-                                        .filter((c) => c.account_id === account.id || (c as any).accounts_id === account.id)
-                                        .map((c) => (
-                                          <DropdownMenuItem
-                                            key={c.id}
-                                            onClick={() => { handleAccountChange(account.id); setCampaignId(c.id); }}
-                                            className={cn("text-[12px]", filterAccountId === account.id && campaignId === c.id && "font-semibold text-brand-indigo")}
-                                          >
-                                            {c.name}
-                                            {filterAccountId === account.id && campaignId === c.id && <Check className="h-3 w-3 ml-auto" />}
-                                          </DropdownMenuItem>
-                                        ))
-                                      }
-                                    </DropdownMenuSubContent>
-                                  </DropdownMenuSub>
-                                ))}
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </>
-                  }
                 />
               </div>
 
@@ -943,6 +791,7 @@ export default function ConversationsPage() {
                     setLocation(`${basePath}/contacts`);
                   }}
                   onRefresh={refresh}
+                  campaignsMap={campaignsMap}
                   className="w-full"
                 />
               </div>

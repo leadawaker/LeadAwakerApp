@@ -2,14 +2,13 @@
  * LeadsFiltersBar.tsx — desktop filter/sort/group toolbar for the leads list.
  * Extracted from LeadsCardView.tsx to reduce file size.
  *
- * Renders: +Add, Search, Group, Sort, Filter (status/account/campaign/tags), Tags display settings.
- * Used as the `toolbarPrefix` prop inside LeadDetailView when rendered from LeadsCardView.
+ * Renders: +Add, Search, Group, Sort, Filter (status/account/campaign).
+ * Used in the left panel of LeadsCardViewMain (desktop toolbar row).
  */
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
-  Check, Layers, ArrowUpDown, Filter, Plus,
-  Phone, Eye, EyeOff, Palette, Tag as TagIcon, X,
+  Check, Layers, ArrowUpDown, Filter, Plus, X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,11 +39,6 @@ export interface LeadsFiltersBarProps {
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
 
-  // Display prefs
-  showContactAlways: boolean;
-  tagsColorful: boolean;
-  hideTags: boolean;
-
   // Available options for dropdowns
   allTags: { name: string; color: string }[];
   availableAccounts: { id: string; name: string }[];
@@ -62,9 +56,6 @@ export interface LeadsFiltersBarProps {
   onSetFilterAccount: (v: string) => void;
   onSetFilterCampaign: (v: string) => void;
   onSetTagSearchInput: (v: string) => void;
-  onSetShowContactAlways: (v: boolean) => void;
-  onSetTagsColorful: (v: boolean) => void;
-  onSetHideTags: (v: boolean) => void;
   onMobileBack?: () => void;
 }
 
@@ -74,8 +65,7 @@ const SORT_OPTIONS: SortByOption[] = ["recent", "name_asc", "name_desc", "score_
 const GROUP_OPTIONS: GroupByOption[] = ["date", "status", "campaign", "tag", "none"];
 
 /**
- * LeadsFiltersBar — renders the desktop filter/sort/group toolbar.
- * Intended for use as the `toolbarPrefix` render-prop in LeadDetailView.
+ * LeadsFiltersBar — renders the desktop filter/sort/group toolbar for the left panel.
  */
 export function LeadsFiltersBar({
   listSearch,
@@ -89,9 +79,6 @@ export function LeadsFiltersBar({
   isFilterActive,
   isGroupNonDefault,
   isSortNonDefault,
-  showContactAlways,
-  tagsColorful,
-  hideTags,
   allTags,
   availableAccounts,
   availableCampaigns,
@@ -106,9 +93,6 @@ export function LeadsFiltersBar({
   onSetFilterAccount,
   onSetFilterCampaign,
   onSetTagSearchInput,
-  onSetShowContactAlways,
-  onSetTagsColorful,
-  onSetHideTags,
   onMobileBack,
 }: LeadsFiltersBarProps) {
   const { t } = useTranslation("leads");
@@ -147,12 +131,6 @@ export function LeadsFiltersBar({
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M15 18l-6-6 6-6"/></svg>
         </button>
       )}
-
-      {/* +Add */}
-      <button onClick={onCreateLead} className={xBtn(false, "hover:max-w-[90px]")} title={t("detailView.newLead")}>
-        <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.add")}</span>
-      </button>
 
       {/* Search */}
       <SearchPill
@@ -340,36 +318,12 @@ export function LeadsFiltersBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Tags display settings */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={xBtn(tagsColorful || hideTags || showContactAlways, "hover:max-w-[100px]")} title={t("toolbar.tags")}>
-            <TagIcon className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.tags")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => onSetTagsColorful(!tagsColorful)} className="flex items-center gap-2 text-[12px]">
-            <Palette className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Tag Color</span>
-            {tagsColorful && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSetHideTags(!hideTags)} className="flex items-center gap-2 text-[12px]">
-            {hideTags
-              ? <EyeOff className="h-3.5 w-3.5 mr-0.5 shrink-0" />
-              : <Eye className="h-3.5 w-3.5 mr-0.5 shrink-0" />
-            }
-            <span className="flex-1">Hide Tags</span>
-            {hideTags && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onSetShowContactAlways(!showContactAlways)} className="flex items-center gap-2 text-[12px]">
-            <Phone className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Show Phone &amp; Email</span>
-            {showContactAlways && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* +Add */}
+      <button onClick={onCreateLead} className={xBtn(false, "hover:max-w-[90px]")} title={t("detailView.newLead")}>
+        <Plus className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>{t("toolbar.add")}</span>
+      </button>
 
-      <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
     </>
   );
 }

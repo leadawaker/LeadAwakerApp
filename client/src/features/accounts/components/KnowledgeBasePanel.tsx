@@ -206,7 +206,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
         </div>
         {!adding && !editingId && (
           <button
-            onClick={() => { setAdding(true); setForm({ category: "faq", title: "", content: "", campaignIds: null }); }}
+            onClick={() => { setAdding(true); setForm({ category: "faq", title: "", content: "", campaignIds: null, minInboundMessages: null }); }}
             className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-brand-indigo hover:bg-brand-indigo/10 rounded-lg transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -427,7 +427,7 @@ export default function KnowledgeBasePanel({ accountId }: Props) {
                   key={cat}
                   onClick={() => {
                     setAdding(true);
-                    setForm({ category: cat, title: "", content: "", campaignIds: null });
+                    setForm({ category: cat, title: "", content: "", campaignIds: null, minInboundMessages: null });
                   }}
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] text-foreground/30 hover:text-foreground/60 border border-dashed border-foreground/10 hover:border-foreground/20 rounded-full transition-colors"
                 >

@@ -51,6 +51,7 @@
   },
   "sort": {
     "mostRecent": "Most Recent",
+    "name": "Name",
     "nameAZ": "Name A -> Z",
     "nameZA": "Name Z -> A",
     "priority": "Priority",
@@ -363,13 +364,23 @@
     "addOffer": "Add manually",
     "addOfferAi": "Generate AI offer"
   },
+  "contact": {
+    "addLinkedinHint": "Add a LinkedIn URL to enrich this contact",
+    "enrichHint": "Enrich LinkedIn to see contact insights",
+    "enrichLinkedin": "Enrich LinkedIn"
+  },
+  "company": {
+    "emptyHint": "Enrich the website to see company insights"
+  },
   "outreach": {
     "title": "Outreach Generator",
     "generate": "Generate",
     "generating": "Generating...",
     "anyOffer": "Any offer",
     "company": "Company",
+    "contactGeneric": "Company only",
     "customInstructions": "Custom instructions for this message...",
+    "customInstructionsPlaceholder": "Custom instructions for this message...",
     "styles": {
       "hormozi": "Hormozi",
       "saraev": "Saraev",

@@ -4547,6 +4547,7 @@ GUARDRAILS
 
       for (const campaign of activeCampaigns) {
         if (!campaign.id || campaignFinishedNotified.has(campaign.id)) continue;
+        if (campaign.isDemo) continue;
 
         // Count leads still pending (New or Queued)
         const [pending] = await db
@@ -4572,7 +4573,7 @@ GUARDRAILS
           for (const user of agencyUsers) {
             await createAndDispatchNotification({
               type: "campaign_finished",
-              title: `Campaign finished: ${campaign.title || "Untitled"}`,
+              title: `Campaign finished: ${(campaign as any).title || campaign.name || "Untitled"}`,
               body: `All ${total.cnt} leads have been contacted`,
               userId: user.id!,
               accountId: campaign.accountsId ?? null,

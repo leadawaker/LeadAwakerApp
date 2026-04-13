@@ -403,6 +403,7 @@ export function GradientTester({
   dragMode,
   onToggleDragMode,
   onSaveToSlot,
+  onSave,
   onApply,
 }: {
   open: boolean;
@@ -413,7 +414,9 @@ export function GradientTester({
   dragMode: boolean;
   onToggleDragMode: () => void;
   onSaveToSlot?: (slot: string) => void;
-  /** Called when user clicks "Apply" — persist the current layers as the page background */
+  /** Called when user clicks "Save" — persist without closing */
+  onSave?: () => void;
+  /** Called when user clicks "Apply & Close" — persist and close */
   onApply?: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"layers" | "export">("layers");
@@ -568,15 +571,25 @@ export function GradientTester({
         )}
       </div>
 
-      {/* Apply button */}
-      {onApply && (
-        <div className="shrink-0 border-t border-gray-200 bg-gray-50 px-2 py-2">
-          <button
-            onClick={onApply}
-            className="w-full py-1.5 rounded text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
-          >
-            Apply as Background
-          </button>
+      {/* Save / Apply buttons */}
+      {(onSave || onApply) && (
+        <div className="shrink-0 border-t border-gray-200 bg-gray-50 px-2 py-2 flex gap-1.5">
+          {onSave && (
+            <button
+              onClick={onSave}
+              className="flex-1 py-1.5 rounded text-[11px] font-bold bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
+            >
+              Save
+            </button>
+          )}
+          {onApply && (
+            <button
+              onClick={onApply}
+              className="flex-1 py-1.5 rounded text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
+            >
+              Apply & Close
+            </button>
+          )}
         </div>
       )}
 

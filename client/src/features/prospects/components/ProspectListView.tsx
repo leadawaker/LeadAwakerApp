@@ -9,6 +9,8 @@ import {
   FileText,
   Layers,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Filter,
   Mail,
   Phone,
@@ -120,7 +122,6 @@ export interface ProspectRow {
   follower_count?: number;
   top_post?: string;
   ai_summary?: string;
-  conversation_starters?: string;
 }
 
 export interface NewProspectForm {
@@ -391,6 +392,9 @@ function ProspectListCard({
                   style={{ backgroundColor: statusHex }}
                 />
                 <span className="text-[11px] text-muted-foreground truncate">{status || "New"}</span>
+                {getProspectId(prospect) > 0 && (
+                  <span className="text-[10px] font-semibold text-foreground/35 shrink-0">#{getProspectId(prospect)}</span>
+                )}
                 {outreachStatus !== "new" && (
                   <>
                     <span className="text-muted-foreground/30 shrink-0">·</span>
@@ -655,6 +659,7 @@ export function ProspectListView({
   );
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
   const [filterOverdue, setFilterOverdue] = useState(false);
+  const [groupDirection, setGroupDirection] = useState<"asc" | "desc">("asc");
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
     try { return localStorage.getItem("prospects-left-panel-collapsed") === "true"; } catch { return false; }
   });
@@ -983,6 +988,10 @@ export function ProspectListView({
       orderedKeys = Array.from(buckets.keys()).sort();
     }
 
+    if (groupDirection === "desc") {
+      orderedKeys = [...orderedKeys].reverse();
+    }
+
     const result: VirtualListItem[] = [];
     orderedKeys.forEach((key) => {
       const group = buckets.get(key);
@@ -991,7 +1000,7 @@ export function ProspectListView({
       group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
     });
     return result;
-  }, [prospects, listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, filterOverdue, sortBy, groupBy]);
+  }, [prospects, listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, filterOverdue, sortBy, groupBy, groupDirection]);
 
   const totalProspects = flatItems.filter((i) => i.kind === "prospect").length;
   const maxPage = Math.max(0, Math.ceil(totalProspects / PAGE_SIZE) - 1);
@@ -1104,26 +1113,6 @@ export function ProspectListView({
   // ── Toolbar prefix for the right panel ──────────────────────────────────────
   const toolbarPrefix = (
     <>
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(Object.keys(SORT_TKEYS) as ProspectSortBy[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-              {t(SORT_TKEYS[opt])}
-              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       {/* Filter (accordion sections: niche, status, country) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1247,6 +1236,62 @@ export function ProspectListView({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Sort */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.sort")}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          {([
+            { key: "recent", label: t("sort.mostRecent"), asc: null, desc: null },
+            { key: "name", label: t("sort.name"), asc: "name_asc" as ProspectSortBy, desc: "name_desc" as ProspectSortBy },
+            { key: "priority", label: t("sort.priority"), asc: null, desc: null },
+          ] as { key: string; label: string; asc: ProspectSortBy | null; desc: ProspectSortBy | null }[]).map((group) => {
+            const isActive = group.asc && group.desc
+              ? sortBy === group.asc || sortBy === group.desc
+              : sortBy === (group.key as ProspectSortBy);
+            const activeDir: "asc" | "desc" = sortBy === group.asc ? "asc" : "desc";
+            return (
+              <DropdownMenuItem
+                key={group.key}
+                onSelect={(e) => {
+                  e.preventDefault();
+                  if (!isActive) {
+                    onSortByChange(group.desc ?? (group.key as ProspectSortBy));
+                  }
+                }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
+                {isActive && group.asc && group.desc && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange(group.asc!); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Ascending"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange(group.desc!); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Descending"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                  </>
+                )}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1255,11 +1300,35 @@ export function ProspectListView({
             <span className={xSpan}>{t("toolbar.group")}</span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
+        <DropdownMenuContent align="start" className="w-52">
           {(Object.keys(GROUP_TKEYS) as ProspectGroupBy[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
-              {t(GROUP_TKEYS[opt])}
-              {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            <DropdownMenuItem
+              key={opt}
+              onSelect={(e) => { e.preventDefault(); onGroupByChange(opt); }}
+              className="text-[12px] flex items-center gap-2"
+            >
+              <span className={cn("flex-1", groupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_TKEYS[opt])}</span>
+              {groupBy === opt && opt !== "none" && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("asc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Ascending"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("desc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Descending"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                </>
+              )}
+              {groupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

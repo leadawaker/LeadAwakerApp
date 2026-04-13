@@ -29,6 +29,7 @@ import {
   Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Pencil,
   FileSpreadsheet, Eye, Check, Upload, Download,
   Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag, Settings, Rows3, Shrink, Expand,
+  ArrowUp, ArrowDown,
 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
@@ -47,7 +48,7 @@ import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import type { VirtualListItem } from "./LeadsCardView";
 
 type ViewMode = "list" | "table" | "pipeline";
-type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
+type TableSortByOption  = "recent" | "oldest" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
 type TableGroupByOption = "status" | "campaign" | "account" | "none";
 
 const VIEW_MODE_KEY    = "leads-view-mode";
@@ -110,6 +111,7 @@ const STATUS_DOT: Record<string, string> = {
 
 const TABLE_SORT_TKEYS: Record<TableSortByOption, string> = {
   recent:     "sort.mostRecent",
+  oldest:     "sort.oldest",
   name_asc:   "sort.nameAZ",
   name_desc:  "sort.nameZA",
   score_desc: "sort.scoreDown",
@@ -293,6 +295,7 @@ export function LeadsTable() {
 
   /* ── Table toolbar state (persisted) ─────────────────────────────────────── */
   const [tableSearch,         setTableSearch]         = useState("");
+  const [tableGroupDirection, setTableGroupDirection] = useState<"asc" | "desc">("asc");
   const [tablePrefs, setTablePrefs] = usePersistedState(TABLE_PREFS_KEY, {
     sortBy: "recent" as TableSortByOption,
     filterStatus: [] as string[],
@@ -607,6 +610,7 @@ export function LeadsTable() {
     if (tableSortBy !== "recent") {
       source = [...source].sort((a, b) => {
         switch (tableSortBy) {
+          case "oldest":     return (Number(a.id || a.Id || 0)) - (Number(b.id || b.Id || 0));
           case "name_asc":   return getFullNameHelper(a).localeCompare(getFullNameHelper(b));
           case "name_desc":  return getFullNameHelper(b).localeCompare(getFullNameHelper(a));
           case "score_desc": return Number(b.lead_score ?? b.leadScore ?? 0) - Number(a.lead_score ?? a.leadScore ?? 0);
@@ -644,11 +648,12 @@ export function LeadsTable() {
       buckets.get(groupKey)!.push(l);
     });
 
-    const orderedKeys =
+    const baseKeys =
       tableGroupBy === "status"
         ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k))
             .concat(Array.from(buckets.keys()).filter((k) => !STATUS_GROUP_ORDER.includes(k)))
         : Array.from(buckets.keys()).sort();
+    const orderedKeys = tableGroupDirection === "desc" ? [...baseKeys].reverse() : baseKeys;
 
     const result: VirtualListItem[] = [];
     orderedKeys.forEach((key) => {
@@ -663,7 +668,7 @@ export function LeadsTable() {
       );
     });
     return result;
-  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, accountsById, campaignsById]);
+  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById]);
 
   const handleViewSwitch = useCallback((mode: ViewMode) => {
     setViewMode(mode);
@@ -841,44 +846,6 @@ export function LeadsTable() {
         placeholder={t("toolbar.searchPlaceholder")}
       />
 
-      {/* Group */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[115px]", tableGroupBy !== "status" ? xActive : xDefault)}>
-            <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {t(TABLE_GROUP_TKEYS[opt])}
-              {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[100px]", tableSortBy !== "recent" ? xActive : xDefault)}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("sort.sortBy")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as TableSortByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-indigo")}>
-              {t(TABLE_SORT_TKEYS[opt])}
-              {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -936,6 +903,97 @@ export function LeadsTable() {
               <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
             </>
           )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Sort */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[100px]", tableSortBy !== "recent" ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.sort")}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          {([
+            { key: "recent", label: t("sort.mostRecent"), asc: "oldest" as TableSortByOption, desc: "recent" as TableSortByOption },
+            { key: "name",   label: t("sort.name"),       asc: "name_asc" as TableSortByOption, desc: "name_desc" as TableSortByOption },
+            { key: "score",  label: t("sort.score"),      asc: "score_asc" as TableSortByOption, desc: "score_desc" as TableSortByOption },
+          ]).map((group) => {
+            const isActive = tableSortBy === group.asc || tableSortBy === group.desc;
+            const activeDir: "asc" | "desc" = tableSortBy === group.asc ? "asc" : "desc";
+            return (
+              <DropdownMenuItem
+                key={group.key}
+                onSelect={(e) => { e.preventDefault(); setTableSortBy(isActive ? tableSortBy : group.desc); }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
+                {isActive && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.asc); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Ascending"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.desc); }}
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                      title="Descending"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                  </>
+                )}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Group */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(xBase, "hover:max-w-[115px]", tableGroupBy !== "status" ? xActive : xDefault)}>
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.group")}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
+            <DropdownMenuItem
+              key={opt}
+              onSelect={(e) => { e.preventDefault(); setTableGroupBy(opt); }}
+              className="text-[12px] flex items-center gap-2"
+            >
+              <span className={cn("flex-1", tableGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(TABLE_GROUP_TKEYS[opt])}</span>
+              {tableGroupBy === opt && opt !== "none" && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("asc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Ascending"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("desc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Descending"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                </>
+              )}
+              {tableGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 

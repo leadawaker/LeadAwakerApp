@@ -23,6 +23,7 @@ export interface CampaignForPreview {
   description?: string | null;
   aiRole?: string | null;
   typoCount?: number | null;
+  kb?: string | null;
 }
 
 export interface LeadForPreview {
@@ -49,6 +50,14 @@ function mapTypoFrequency(typoCount: number | null | undefined): string | undefi
   return labels[typoCount] || "Frequent";
 }
 
+function normalizeBookingMode(raw: string | null | undefined): string | null | undefined {
+  if (!raw) return raw;
+  const lower = raw.toLowerCase().replace(/[\s_]/g, "");
+  if (lower === "callagent" || lower === "call") return "call";
+  if (lower === "directbooking" || lower === "direct" || lower === "booking") return "direct";
+  return raw; // keep as-is for unknown values
+}
+
 function buildMap(
   campaign?: CampaignForPreview | null,
   lead?: LeadForPreview | null,
@@ -64,19 +73,24 @@ function buildMap(
     calendar_link: campaign?.calendarLink,
     campaign_name: campaign?.name,
     usp: campaign?.campaignUsp,
+    kb: campaign?.kb,
     what_lead_did: campaign?.whatLeadDid,
     inquiries_source: campaign?.inquiriesSource,
     inquiry_timeframe: campaign?.inquiryTimeframe,
     niche_question: campaign?.nicheQuestion,
-    booking_mode: campaign?.bookingMode,
+    booking_mode: normalizeBookingMode(campaign?.bookingMode),
     company_name: campaign?.demoClientName,
     niche: campaign?.niche,
     business_description: campaign?.description,
-    ai_style: campaign?.aiStyleOverride,
-    language: campaign?.language,
-    ai_role: campaign?.aiRole,
-    typo_frequency: mapTypoFrequency(campaign?.typoCount),
+    ai_style: campaign?.aiStyleOverride || "Casual, smooth and pro",
+    language: campaign?.language || "English",
+    ai_role: campaign?.aiRole || "sales representative",
+    typo_frequency: mapTypoFrequency(campaign?.typoCount) || "Rare",
     today_date: new Date().toLocaleDateString(),
+    qualification_criteria: "",
+    what_has_the_lead_done: campaign?.whatLeadDid || "",
+    when: "",
+    service: campaign?.serviceName ?? campaign?.campaignService ?? "",
   };
 }
 
@@ -103,7 +117,10 @@ export function resolveVariables(
 
 const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
 
-/** HTML resolution — all {variable} tokens become <mark> chips (resolved or not) */
+// Matches {{#if var == "val"}}content{{/if}} — no special HTML chars inside the tag syntax
+const CONDITIONAL_RE = /\{\{#if\s+(\w+)\s*(==|!=)\s*&quot;([^&]*)&quot;\}\}([\s\S]*?)\{\{\/if\}\}/g;
+
+/** HTML resolution — all {variable} tokens become <mark> chips, conditionals evaluated */
 export function resolveVariablesHtml(
   text: string,
   campaign?: CampaignForPreview | null,
@@ -111,12 +128,25 @@ export function resolveVariablesHtml(
   account?: AccountForPreview | null,
 ): string {
   const map = buildMap(campaign, lead, account);
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const escaped = esc(text);
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-  return escaped.replace(/\{(\w+)\}/g, (match, key) => {
+  // 1. Escape everything first
+  let html = esc(text);
+
+  // 2. Evaluate conditionals — wrap resolved content in amber span so it stays highlighted in preview
+  html = html.replace(CONDITIONAL_RE, (_match, varName, op, compareVal, content) => {
+    const actual = String(map[varName.toLowerCase()] ?? "");
+    const met = op === "==" ? actual === compareVal : actual !== compareVal;
+    if (!met) return "";
+    return `<span class="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">${content.trim()}</span>`;
+  });
+
+  // 3. Resolve {variable} tokens
+  html = html.replace(/\{(\w+)\}/g, (match, key) => {
     const val = map[key.toLowerCase()];
-    const display = val ? esc(val) : match; // use value if resolved, else keep {var}
+    const display = val ? esc(val) : match;
     return `<mark ${MARK}>${display}</mark>`;
   });
+
+  return html;
 }

@@ -547,28 +547,22 @@ export function registerLeadsRoutes(app: Express): void {
     };
 
     const conversionStatus = lead.conversionStatus ?? "";
-    let leadScore: number;
-    if (lead.optedOut || conversionStatus === "DND" || conversionStatus === "Lost") {
-      leadScore = 0;
-    } else {
-      const funnelWeight = FUNNEL_WEIGHTS[conversionStatus] ?? 0;
-      const rawEngagement = latestHistory?.engagementScore ?? lead.engagementScore ?? 0;
-      const rawActivity = latestHistory?.activityScore ?? lead.activityScore ?? 0;
-      leadScore = Math.max(0, Math.min(100, Math.round(
-        WEIGHT_FUNNEL * funnelWeight
-        + WEIGHT_ENGAGEMENT * rawEngagement
-        + WEIGHT_ACTIVITY * rawActivity
-      )));
-    }
 
     const FUNNEL_MAX = 50;
     const ENGAGEMENT_MAX = 30;
     const ACTIVITY_MAX = 20;
-    const funnelWeight = Math.min(FUNNEL_MAX, Math.round(WEIGHT_FUNNEL * (FUNNEL_WEIGHTS[conversionStatus] ?? 0)));
     const rawEngagement = latestHistory?.engagementScore ?? lead.engagementScore ?? 0;
     const rawActivity = latestHistory?.activityScore ?? lead.activityScore ?? 0;
+    const funnelWeight = Math.min(FUNNEL_MAX, Math.round(WEIGHT_FUNNEL * (FUNNEL_WEIGHTS[conversionStatus] ?? 0)));
     const engagementScore = Math.min(ENGAGEMENT_MAX, Math.round((rawEngagement / 100) * ENGAGEMENT_MAX));
     const activityScore = Math.min(ACTIVITY_MAX, Math.round((rawActivity / 100) * ACTIVITY_MAX));
+
+    let leadScore: number;
+    if (lead.optedOut || conversionStatus === "DND" || conversionStatus === "Lost") {
+      leadScore = 0;
+    } else {
+      leadScore = funnelWeight + engagementScore + activityScore;
+    }
 
     let tier: string;
     if (lead.optedOut || conversionStatus === "DND" || conversionStatus === "Lost") tier = "Lost";
@@ -829,8 +823,8 @@ export function startBookingReminders(): void {
         );
 
       for (const lead of upcomingBookings) {
-        if (bookingRemindedLeads.has(lead.id)) continue;
-        bookingRemindedLeads.add(lead.id);
+        if (bookingRemindedLeads.has(lead.id!)) continue;
+        bookingRemindedLeads.add(lead.id!);
 
         const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(" ") || "Lead";
         const callDate = new Date(lead.bookedCallDate!);

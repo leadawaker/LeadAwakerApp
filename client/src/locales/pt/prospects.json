@@ -58,6 +58,7 @@
   },
   "sort": {
     "mostRecent": "Mais Recente",
+    "name": "Nome",
     "nameAZ": "Nome A -> Z",
     "nameZA": "Nome Z -> A",
     "priority": "Prioridade",
@@ -369,13 +370,23 @@
     "addOffer": "Adicionar manualmente",
     "addOfferAi": "Gerar oferta com IA"
   },
+  "contact": {
+    "addLinkedinHint": "Adicione uma URL do LinkedIn para enriquecer este contato",
+    "enrichHint": "Enriquecer LinkedIn para ver insights do contato",
+    "enrichLinkedin": "Enriquecer LinkedIn"
+  },
+  "company": {
+    "emptyHint": "Enriquecer o website para ver insights da empresa"
+  },
   "outreach": {
     "title": "Gerador de Mensagens",
     "generate": "Gerar",
     "generating": "Gerando...",
     "anyOffer": "Qualquer oferta",
     "company": "Empresa",
+    "contactGeneric": "Apenas empresa",
     "customInstructions": "Instrucoes personalizadas para esta mensagem...",
+    "customInstructionsPlaceholder": "Instrucoes personalizadas para esta mensagem...",
     "styles": {
       "hormozi": "Hormozi",
       "saraev": "Saraev",

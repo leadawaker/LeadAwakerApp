@@ -1545,8 +1545,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               )}
 
               {/* Signal chips */}
-              {scoreBreakdown && scoreBreakdown.signals.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
+              {scoreBreakdown && !scoreLoading && scoreBreakdown.signals.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 animate-in fade-in duration-200">
                   {scoreBreakdown.signals.map((s) => (
                     <span key={s} className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
                       {s}
@@ -2116,8 +2116,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     const outbound = String(m.direction || "").toLowerCase() === "outbound";
                     const AI_TB = new Set(["ai_conversation", "campaign_launcher", "bump_scheduler",
                       "manual_bump_trigger", "inbound_handler", "booking_webhook", "booking_confirmation"]);
-                    const isAI = Boolean(m.ai_generated || m.aiGenerated)
-                      || Boolean(m.is_bump || m.isBump)
+                    const isAI = Boolean(m.ai_generated || (m as any).aiGenerated)
+                      || Boolean(m.is_bump || (m as any).isBump)
                       || AI_TB.has(((m as any).triggered_by ?? (m as any).triggeredBy ?? "").toLowerCase());
                     const isHuman = Boolean(m.is_manual_follow_up);
                     const isBump = Boolean(m.is_bump);

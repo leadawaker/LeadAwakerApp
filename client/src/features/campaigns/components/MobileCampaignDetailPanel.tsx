@@ -181,21 +181,6 @@ function ConfigTab({ campaign }: { campaign: Campaign }) {
         ))}
       </div>
 
-      {/* AI Prompt template */}
-      {campaign.ai_prompt_template && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30" data-testid="campaign-config-ai-prompt">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              {t("config.promptTemplate")}
-            </p>
-          </div>
-          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap line-clamp-8">
-            {campaign.ai_prompt_template}
-          </p>
-        </div>
-      )}
-
       {/* First message template preview */}
       {campaign.first_message_template && (
         <div className="bg-card rounded-2xl p-4 border border-border/30" data-testid="campaign-config-first-message">

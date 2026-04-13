@@ -54,6 +54,13 @@ export type Campaign = {
   bump_1_ai_reference?: boolean;
   bump_2_ai_reference?: boolean;
   bump_3_ai_reference?: boolean;
+  bump_1_voice_template?: string;
+  bump_2_voice_template?: string;
+  bump_3_voice_template?: string;
+  bump_4_template?: string;
+  bump_4_delay_hours?: number;
+  bump_4_voice_note?: boolean;
+  bump_4_voice_template?: string;
   daily_lead_limit: number;
   message_interval_minutes: number;
   active_hours_start: string;
@@ -65,6 +72,7 @@ export type Campaign = {
   use_ai_bumps: boolean;
   max_bumps: number;
   stop_on_response: boolean;
+  voice_reply_mode?: string;  // "off" | "smart" | "voice_reply"
   // Qualification criteria (JSON string or plain text)
   qualification_criteria?: string | null;
   // Performance metrics from Campaigns table
@@ -91,6 +99,8 @@ export type Campaign = {
   // Demo campaigns
   is_demo?: boolean;
   demo_client_name?: string | null;
+  // Compliance
+  opt_out_notice?: boolean;
   // Computed/joined fields
   account_name?: string;
   [key: string]: any;

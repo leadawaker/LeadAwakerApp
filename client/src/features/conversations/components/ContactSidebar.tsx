@@ -4,6 +4,7 @@ import {
   X, Phone, Mail, TrendingUp, Calendar, User, ClipboardList, FileText,
   Loader2, Check, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Maximize2,
   CircleDot, Send, Users, Star, Ban, AlertTriangle, RotateCcw, Bot, Zap,
+  Megaphone,
 } from "lucide-react";
 import { useScoreBreakdown, TIER_COLORS, TIER_BAR_COLOR, TrendIcon, type ScoreBreakdown } from "@/hooks/useScoreBreakdown";
 import { cn } from "@/lib/utils";
@@ -200,9 +201,11 @@ interface ContactSidebarProps {
   headerActions?: React.ReactNode;
   /** Called after a successful lead reset so the parent can refresh data */
   onRefresh?: () => void;
+  /** Map of campaign ID → campaign name */
+  campaignsMap?: Map<number, string>;
 }
 
-export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, onNavigateToLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions, onRefresh }: ContactSidebarProps) {
+export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, onNavigateToLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions, onRefresh, campaignsMap }: ContactSidebarProps) {
   const { t } = useTranslation("conversations");
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
   const toggleSection = (id: SectionId) => {
@@ -227,6 +230,16 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
   const score = breakdown?.lead_score ?? 0;
   const status = lead ? getStatus(lead) || "New" : "New";
   const avatarColor = getStatusAvatarColor(status);
+
+  // ── Campaign name ──
+  const campaignName = useMemo(() => {
+    if (!lead) return "";
+    const l = lead as any;
+    const cId = Number(l.campaigns_id ?? l.campaign_id ?? l.Campaigns_id ?? 0);
+    return l.Campaign ?? l.campaign_name ?? l.campaign
+      ?? (cId && campaignsMap?.get(cId))
+      ?? "";
+  }, [lead, campaignsMap]);
 
   // ── Local status state for pipeline dropdown ──
   const [localStatus, setLocalStatus] = useState(status);
@@ -290,57 +303,10 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             {headerActions}
           </div>
 
-          {/* Center: action buttons */}
-          <div className="flex-1 flex items-center justify-center gap-1.5">
-            {lead && (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await apiFetch(`/api/leads/${lead.id}/trigger-bump`, { method: "POST" });
-                    if (!res.ok) throw new Error("Failed");
-                    toast({ title: "Bump triggered!", description: `Bump sent for ${lead.name || lead.Name || "this lead"}` });
-                  } catch {
-                    toast({ title: "Bump failed", description: "Automation service may be offline", variant: "destructive" });
-                  }
-                }}
-                className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[140px]"
-                title="Trigger Bump"
-              >
-                <RotateCcw className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  Bump {lead.current_bump_stage ? `${lead.current_bump_stage}/3` : ""}
-                </span>
-              </button>
-            )}
+          {/* Spacer */}
+          <div className="flex-1" />
 
-            {lead && (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await apiFetch(`/api/leads/${lead.id}/demo-reset-and-send`, { method: "POST" });
-                    if (!res.ok) throw new Error("Failed");
-                    resetScoreToZero();
-                    toast({ title: "Demo started!", description: `Reset + first message sent for ${lead.name || lead.Name || "this lead"}` });
-                    onRefresh?.();
-                    // Delayed refresh to pick up the first automation message after it's written to DB
-                    setTimeout(() => onRefresh?.(), 4000);
-                  } catch {
-                    toast({ title: "Demo reset failed", description: "Automation service may be offline", variant: "destructive" });
-                  }
-                }}
-                className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-amber-400/60 text-amber-600 dark:text-amber-400 hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-300 text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]"
-                title="Demo Reset — wipe history and send first message"
-              >
-                <Zap className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  Demo Reset
-                </span>
-              </button>
-            )}
-
-          </div>
-
-          {/* Right: details / expand */}
+          {/* Right: details */}
           <div className="flex items-center shrink-0">
             {onNavigateToLead && lead && (
               <button
@@ -373,6 +339,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               <div className="px-4 pb-5">
                 <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
+                    campaignName && { icon: <Megaphone className="h-4 w-4" />, label: t("contact.fields.campaign"), value: campaignName },
                     selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: t("contact.fields.phone"), value: selected.lead.phone, mono: true },
                     (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-4 w-4" />, label: t("contact.fields.email"), value: selected.lead.Email ?? selected.lead.email },
                   ].filter(Boolean).map((row: any) => (
@@ -674,6 +641,47 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
           </div>
         )}
       </div>
+
+      {/* ── Footer: action buttons ── */}
+      {lead && (
+        <div className="shrink-0 px-4 py-3 border-t border-border/20 flex items-center gap-2">
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiFetch(`/api/leads/${lead.id}/trigger-bump`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                toast({ title: "Bump triggered!", description: `Bump sent for ${lead.name || lead.Name || "this lead"}` });
+              } catch {
+                toast({ title: "Bump failed", description: "Automation service may be offline", variant: "destructive" });
+              }
+            }}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 rounded-full border border-black/[0.125] text-foreground/70 hover:text-foreground hover:bg-muted/50 text-[12px] font-medium transition-colors"
+            title="Trigger Bump"
+          >
+            <RotateCcw className="h-4 w-4 shrink-0" />
+            <span>Bump {lead.current_bump_stage ? `${lead.current_bump_stage}/3` : ""}</span>
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiFetch(`/api/leads/${lead.id}/demo-reset-and-send`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                resetScoreToZero();
+                toast({ title: "Demo started!", description: `Reset + first message sent for ${lead.name || lead.Name || "this lead"}` });
+                onRefresh?.();
+                setTimeout(() => onRefresh?.(), 4000);
+              } catch {
+                toast({ title: "Demo reset failed", description: "Automation service may be offline", variant: "destructive" });
+              }
+            }}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 rounded-full border border-amber-400/60 text-amber-600 dark:text-amber-400 hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-300 text-[12px] font-medium transition-colors"
+            title="Demo Reset — wipe history and send first message"
+          >
+            <Zap className="h-4 w-4 shrink-0" />
+            <span>Demo Reset</span>
+          </button>
+        </div>
+      )}
       </div>
     </section>
   );

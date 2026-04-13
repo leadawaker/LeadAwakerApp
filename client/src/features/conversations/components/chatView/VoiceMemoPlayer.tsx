@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, Download, Loader2 } from "lucide-react";
 
 export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbound?: boolean; color?: string }) {
   const { t } = useTranslation("conversations");
@@ -9,6 +9,7 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState<1 | 1.5 | 2>(1);
+  const [loading, setLoading] = useState(false);
   const rafRef = useRef<number | null>(null);
 
   // rAF loop — polls audio.currentTime every frame while playing for smooth bar fill
@@ -102,13 +103,14 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
 
   const toggle = () => {
     const a = audioRef.current;
-    if (!a) return;
+    if (!a || loading) return;
     if (playing) {
       a.pause();
       setPlaying(false);
       stopRaf();
     } else {
-      a.play().then(() => { setPlaying(true); startRaf(); }).catch((err) => console.error("[VoiceMemoPlayer] Audio play failed:", err));
+      setLoading(true);
+      a.play().then(() => { setPlaying(true); setLoading(false); startRaf(); }).catch((err) => { setLoading(false); console.error("[VoiceMemoPlayer] Audio play failed:", err); });
     }
   };
 
@@ -129,6 +131,21 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
     const next: 1 | 1.5 | 2 = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1;
     setSpeed(next);
     if (a) a.playbackRate = next;
+  };
+
+  const downloadAudio = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `voice-memo.${url.includes("ogg") ? "ogg" : "webm"}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      console.error("[VoiceMemoPlayer] Download failed:", err);
+    }
   };
 
   // Derive playedCount from live audio element (more accurate than state)
@@ -160,9 +177,11 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
         style={{ backgroundColor: color }}
         aria-label={playing ? t("chat.pause") : t("chat.play")}
       >
-        {playing
-          ? <Pause className="h-4 w-4 fill-white stroke-none" />
-          : <Play  className="h-4 w-4 fill-white stroke-none ml-0.5" />}
+        {loading
+          ? <Loader2 className="h-4 w-4 text-white animate-spin" />
+          : playing
+            ? <Pause className="h-4 w-4 fill-white stroke-none" />
+            : <Play  className="h-4 w-4 fill-white stroke-none ml-0.5" />}
       </button>
 
       {/* Waveform + time column */}
@@ -199,15 +218,25 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
           <span className="text-[10px] tabular-nums leading-none" style={{ color: "#888" }}>
             {playing || currentTime > 0 ? fmt(liveTime) : fmt(liveDur)}
           </span>
-          <button
-            type="button"
-            onClick={cycleSpeed}
-            className="text-[9px] font-bold tabular-nums leading-none"
-            style={{ color: "#999" }}
-            title={t("chat.playbackSpeed")}
-          >
-            {speed}×
-          </button>
+          <div className="flex flex-col items-center gap-0.5">
+            <button
+              type="button"
+              onClick={downloadAudio}
+              className="opacity-40 hover:opacity-80 transition-opacity"
+              title={t("chat.download")}
+            >
+              <Download className="h-3 w-3" />
+            </button>
+            <button
+              type="button"
+              onClick={cycleSpeed}
+              className="text-[9px] font-bold tabular-nums leading-none"
+              style={{ color: "#999" }}
+              title={t("chat.playbackSpeed")}
+            >
+              {speed}×
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -35,10 +35,18 @@ export function usePersistedSelection<T>(
     return () => window.removeEventListener("persisted-selection", handler);
   }, [key]);
 
-  // Derive the selected object synchronously — same render as items arriving
+  // Derive the selected object synchronously — same render as items arriving.
+  // Stabilize the reference: only return a new object when the data actually changed,
+  // not just because the items array was re-fetched with identical content.
+  const prevSelectedRef = useRef<T | null>(null);
   const selected = useMemo(() => {
-    if (!selectedId || items.length === 0) return null;
-    return items.find((i) => String(idRef.current(i)) === selectedId) ?? null;
+    if (!selectedId || items.length === 0) { prevSelectedRef.current = null; return null; }
+    const found = items.find((i) => String(idRef.current(i)) === selectedId) ?? null;
+    if (found && prevSelectedRef.current && JSON.stringify(found) === JSON.stringify(prevSelectedRef.current)) {
+      return prevSelectedRef.current;
+    }
+    prevSelectedRef.current = found;
+    return found;
   }, [selectedId, items]);
 
   const setSelected = useCallback(

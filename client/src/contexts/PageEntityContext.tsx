@@ -6,7 +6,7 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect, ty
  */
 export interface PageEntityData {
   /** Type of entity being viewed */
-  entityType: "lead" | "campaign" | "conversation" | "account" | "task" | "prompt" | "list" | "none";
+  entityType: "lead" | "campaign" | "conversation" | "account" | "task" | "prompt" | "list" | "prospect" | "none";
   /** Entity ID (for detail views) */
   entityId?: number | string;
   /** Human-readable entity name */

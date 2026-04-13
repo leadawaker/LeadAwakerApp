@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from "react";
 import {
   Building2, Phone, Globe, FileText,
   Check, Trash2, FileDown,
@@ -17,6 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import type { ProspectRow } from "./ProspectListView";
 
 // ── Status helpers ─────────────────────────────────────────────────────────────
@@ -329,6 +330,42 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
   const badgeStyle = getStatusBadgeStyle(status);
   const prospectId = prospect.Id ?? prospect.id ?? 0;
 
+  // ── Publish entity data for AI chat context ────────────────────────────────
+  const publishEntity = usePublishEntityData();
+  const entitySummary = useMemo(() => ({
+    id: prospectId,
+    company: prospect.company,
+    name: prospect.name,
+    contactName: prospect.contact_name,
+    contactRole: prospect.contact_role,
+    contactEmail: prospect.contact_email,
+    contactPhone: prospect.contact_phone,
+    email: prospect.email,
+    phone: prospect.phone,
+    website: prospect.website,
+    linkedin: prospect.linkedin,
+    niche: prospect.niche,
+    city: prospect.city,
+    country: prospect.country,
+    status,
+    priority,
+    source: prospect.source,
+    notes: prospect.notes,
+    nextAction: prospect.next_action,
+    aiSummary: prospect.ai_summary,
+    headline: prospect.headline,
+  }), [prospectId, prospect, status, priority]);
+
+  useEffect(() => {
+    publishEntity({
+      entityType: "prospect",
+      entityId: prospectId,
+      entityName: prospect.company || prospect.name || "Unknown Prospect",
+      summary: entitySummary,
+      updatedAt: Date.now(),
+    });
+  }, [publishEntity, prospectId, entitySummary]);
+
   // ── Edit state ──────────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
   const [draft,     setDraft]     = useState<ProspectDraft>({} as ProspectDraft);
@@ -471,7 +508,7 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
 
       {/* ── Header ── */}
       <div className="shrink-0 relative z-10">
-        <div className="relative px-4 pt-6 pb-4 md:pb-10 space-y-3 max-w-[1386px] w-full mr-auto">
+        <div className="relative px-4 pt-2 md:pt-9 pb-4 md:pb-10 space-y-3 max-w-[1386px] w-full mr-auto">
 
           {/* Row 1: Toolbar */}
           <div className="flex items-center gap-1">
@@ -556,7 +593,7 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
           </div>
 
           {/* Row 2: Avatar + Name + badges */}
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 justify-end">
             {/* Photo circle — click to upload */}
             <div className="relative group shrink-0">
               <div
@@ -871,12 +908,6 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
                   </div>
                 )}
 
-                {prospect.conversation_starters && (
-                  <div className="py-2.5">
-                    <div className="text-[11px] text-foreground/40 mb-1">{t("fields.conversationStarters")}</div>
-                    <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap">{prospect.conversation_starters}</p>
-                  </div>
-                )}
               </>
             )}
 

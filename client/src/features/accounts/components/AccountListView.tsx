@@ -3,10 +3,14 @@ import { useTranslation } from "react-i18next";
 import {
   Building2,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Filter,
   Plus,
   Check,
   Layers,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -63,6 +67,8 @@ interface AccountListViewProps {
   onSearchOpenChange: (v: boolean) => void;
   groupBy: AccountGroupBy;
   onGroupByChange: (v: AccountGroupBy) => void;
+  groupDirection: "asc" | "desc";
+  onGroupDirectionChange: (v: "asc" | "desc") => void;
   sortBy: AccountSortBy;
   onSortByChange: (v: AccountSortBy) => void;
   filterStatus: string[];
@@ -93,6 +99,8 @@ export function AccountListView({
   onSearchOpenChange,
   groupBy,
   onGroupByChange,
+  groupDirection,
+  onGroupDirectionChange,
   sortBy,
   onSortByChange,
   filterStatus,
@@ -105,6 +113,9 @@ export function AccountListView({
   const { t } = useTranslation("accounts");
   const isMobile = useIsMobile();
   const [currentPage, setCurrentPage] = useState(0);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
+    try { return localStorage.getItem("accounts-left-panel-collapsed") === "true"; } catch { return false; }
+  });
 
   // Translated view tabs (built inside component where hook is available)
   const viewTabs = useMemo(
@@ -207,11 +218,12 @@ export function AccountListView({
       buckets.get(key)!.push(a);
     });
 
-    const orderedKeys =
+    let orderedKeys =
       groupBy === "status"
         ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k))
             .concat(Array.from(buckets.keys()).filter((k) => !STATUS_GROUP_ORDER.includes(k)))
         : Array.from(buckets.keys()).sort();
+    if (groupDirection === "desc") orderedKeys = orderedKeys.slice().reverse();
 
     const result: VirtualListItem[] = [];
     orderedKeys.forEach((key) => {
@@ -225,7 +237,7 @@ export function AccountListView({
       group.forEach((a) => result.push({ kind: "account", account: a }));
     });
     return result;
-  }, [accounts, listSearch, filterStatus, sortBy, groupBy, t]);
+  }, [accounts, listSearch, filterStatus, sortBy, groupBy, groupDirection, t]);
 
   const totalAccounts = flatItems.filter((i) => i.kind === "account").length;
   const maxPage = Math.max(0, Math.ceil(totalAccounts / PAGE_SIZE) - 1);
@@ -256,7 +268,7 @@ export function AccountListView({
   }, [flatItems, currentPage, totalAccounts]);
 
   // Reset page on filter change
-  useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, groupBy, sortBy]);
+  useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, groupBy, groupDirection, sortBy]);
 
   // Auto-select first account
   useEffect(() => {
@@ -299,111 +311,16 @@ export function AccountListView({
   const xActive  = "border-brand-indigo text-brand-indigo";
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
-  // ── Toolbar prefix for the right panel ──────────────────────────────────────
-  const toolbarPrefix = (
-    <>
-      {/* +Add */}
-      <button
-        className={cn(xBase, xDefault, "hover:max-w-[80px]")}
-        onClick={() => setPanelMode("create")}
-      >
-        <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.add")}</span>
-      </button>
-
-      {/* Search */}
-      <SearchPill
-        value={listSearch}
-        onChange={onListSearchChange}
-        open={searchOpen}
-        onOpenChange={onSearchOpenChange}
-        placeholder={t("page.searchPlaceholder")}
-      />
-
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(Object.keys(SORT_TKEYS) as AccountSortBy[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-              {t(SORT_TKEYS[opt])}
-              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filter.status")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {STATUS_FILTER_OPTIONS.map((s) => (
-            <DropdownMenuItem
-              key={s}
-              onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }}
-              className="flex items-center gap-2 text-[12px]"
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }}
-              />
-              <span className="flex-1">{t(STATUS_I18N_KEY[s] ?? s)}</span>
-              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-            </DropdownMenuItem>
-          ))}
-          {isFilterActive && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-muted-foreground">
-                {t("toolbar.clearAllFilters")}
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Group */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isGroupNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
-            <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          {(Object.keys(GROUP_TKEYS) as AccountGroupBy[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
-              {t(GROUP_TKEYS[opt])}
-              {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
-  );
-
   return (
     <div className="flex flex-col md:flex-row h-full gap-[3px] overflow-y-auto md:overflow-y-hidden" data-testid="account-list-view">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
         "flex-col bg-muted rounded-lg overflow-hidden",
-        "w-full md:w-[340px] md:shrink-0 min-h-[300px] md:min-h-0",
-        isMobile && selectedAccount ? "hidden" : "flex"
+        leftPanelCollapsed
+          ? cn(isMobile ? "flex" : "hidden")
+          : cn("w-full md:w-[340px] md:shrink-0 min-h-[300px] md:min-h-0",
+              isMobile && selectedAccount ? "hidden" : "flex")
       )}>
 
         {/* Header: title + 309px wrapper with ViewTabBar */}
@@ -417,6 +334,157 @@ export function AccountListView({
               variant="segment"
             />
           </div>
+        </div>
+
+        {/* ── List toolbar: search + sort + filter + group + add ── */}
+        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+          {/* Search */}
+          <SearchPill
+            value={listSearch}
+            onChange={onListSearchChange}
+            open={searchOpen}
+            onOpenChange={onSearchOpenChange}
+            placeholder={t("page.searchPlaceholder")}
+          />
+
+          {/* Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={cn(xBase, isFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
+                <Filter className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("toolbar.filter")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filter.status")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {STATUS_FILTER_OPTIONS.map((s) => (
+                <DropdownMenuItem
+                  key={s}
+                  onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }}
+                  className="flex items-center gap-2 text-[12px]"
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }}
+                  />
+                  <span className="flex-1">{t(STATUS_I18N_KEY[s] ?? s)}</span>
+                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+              {isFilterActive && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-muted-foreground">
+                    {t("toolbar.clearAllFilters")}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Sort */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+                <ArrowUpDown className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("toolbar.sort")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {/* Most Recent — flat */}
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); onSortByChange("recent"); }}
+                className="text-[12px] flex items-center gap-2"
+              >
+                <span className={cn("flex-1", sortBy === "recent" && "font-semibold !text-brand-indigo")}>{t("sort.mostRecent")}</span>
+              </DropdownMenuItem>
+              {/* Name — paired asc/desc */}
+              {(() => {
+                const isActive = sortBy === "name_asc" || sortBy === "name_desc";
+                const activeDir: "asc" | "desc" = sortBy === "name_asc" ? "asc" : "desc";
+                return (
+                  <DropdownMenuItem
+                    onSelect={(e) => { e.preventDefault(); onSortByChange(isActive ? sortBy : "name_desc"); }}
+                    className="text-[12px] flex items-center gap-2"
+                  >
+                    <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sort.name", "Name")}</span>
+                    {isActive && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_asc"); }}
+                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                          title="A → Z"
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_desc"); }}
+                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                          title="Z → A"
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </button>
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })()}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Group */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={cn(xBase, isGroupNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+                <Layers className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("toolbar.group")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {(Object.keys(GROUP_TKEYS) as AccountGroupBy[]).map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  onSelect={(e) => { e.preventDefault(); onGroupByChange(opt); }}
+                  className="text-[12px] flex items-center gap-2"
+                >
+                  <span className={cn("flex-1", groupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_TKEYS[opt])}</span>
+                  {groupBy === opt && opt !== "none" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }}
+                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                        title="Ascending"
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }}
+                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                        title="Descending"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </button>
+                    </>
+                  )}
+                  {groupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* +Add */}
+          <button
+            className={cn(xBase, xDefault, "hover:max-w-[80px]")}
+            onClick={() => setPanelMode("create")}
+          >
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>{t("toolbar.add")}</span>
+          </button>
         </div>
 
         {/* Account list */}
@@ -434,9 +502,7 @@ export function AccountListView({
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
                   return (
-                    <div key={`h-${item.label}`}>
-                      <GroupHeader label={item.label} count={item.count} />
-                    </div>
+                    <GroupHeader key={`h-${item.label}`} label={item.label} count={item.count} />
                   );
                 }
                 const aid = getAccountId(item.account);
@@ -500,11 +566,23 @@ export function AccountListView({
             onAddAccount={() => setPanelMode("create")}
             onDelete={onDelete}
             onToggleStatus={onToggleStatus}
-            toolbarPrefix={toolbarPrefix}
             onBack={() => onSelectAccount(null)}
+            toolbarPrefix={
+              <button
+                onClick={() => {
+                  const next = !leftPanelCollapsed;
+                  setLeftPanelCollapsed(next);
+                  try { localStorage.setItem("accounts-left-panel-collapsed", String(next)); } catch {}
+                }}
+                className="hidden md:grid h-9 w-9 rounded-full border border-black/[0.125] place-items-center shrink-0 text-foreground/60 hover:text-foreground transition-colors"
+                title={leftPanelCollapsed ? "Show list" : "Hide list"}
+              >
+                {leftPanelCollapsed ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              </button>
+            }
           />
         ) : (
-          <AccountDetailViewEmpty toolbarPrefix={toolbarPrefix} />
+          <AccountDetailViewEmpty />
         )}
       </div>
     </div>

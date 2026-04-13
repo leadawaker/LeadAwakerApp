@@ -5,8 +5,6 @@ import {
   ChevronLeft,
   Send,
   Calendar,
-  Wallpaper,
-  Paintbrush,
   Paperclip,
   Smile,
   Mic,
@@ -23,8 +21,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import type { Thread, Interaction } from "../../hooks/useConversationsData";
 import { formatRelativeTime, getStatus, PIPELINE_HEX } from "../../utils/conversationHelpers";
 import {
@@ -37,7 +33,7 @@ import {
 import { useChatDoodle, type ChatBgStyle } from "@/hooks/useChatDoodle";
 import { useTheme } from "@/hooks/useTheme";
 import { useBgSlotLayers, saveSlotLayers } from "@/hooks/useBgSlots";
-import { getDoodleStyle, CURATED_PATTERNS } from "@/components/ui/doodle-patterns";
+import { getDoodleStyle } from "@/components/ui/doodle-patterns";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getLeadStatusAvatarColor, getInitials } from "@/lib/avatarUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -217,7 +213,7 @@ export function ChatPanel({
   const { isDark } = useTheme();
   const { config: doodleConfig, setConfig: setDoodleConfig } = useChatDoodle();
 
-  // ── Bubble width (persisted in localStorage) ─────────────────────────────────
+  // ── Bubble width (persisted in localStorage, synced via custom event) ────────
   const [bubbleWidth, setBubbleWidthState] = useState<number>(() => {
     const stored = localStorage.getItem(BUBBLE_WIDTH_KEY);
     const parsed = stored !== null ? parseInt(stored, 10) : NaN;
@@ -225,19 +221,20 @@ export function ChatPanel({
   });
 
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== BUBBLE_WIDTH_KEY) return;
-      const parsed = e.newValue !== null ? parseInt(e.newValue, 10) : NaN;
+    const readBubbleWidth = () => {
+      const stored = localStorage.getItem(BUBBLE_WIDTH_KEY);
+      const parsed = stored !== null ? parseInt(stored, 10) : NaN;
       if (!isNaN(parsed)) setBubbleWidthState(Math.min(90, Math.max(40, parsed)));
     };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === BUBBLE_WIDTH_KEY) readBubbleWidth();
+    };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  const setBubbleWidth = useCallback((val: number) => {
-    const clamped = Math.min(90, Math.max(40, val));
-    localStorage.setItem(BUBBLE_WIDTH_KEY, String(clamped));
-    setBubbleWidthState(clamped);
+    window.addEventListener("bubble-width-change", readBubbleWidth);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("bubble-width-change", readBubbleWidth);
+    };
   }, []);
 
   // ── Active slot layers (re-renders when saved) ───────────────────────────────
@@ -280,6 +277,13 @@ export function ChatPanel({
       return !prev;
     });
   }, [savedGradient]);
+
+  // Listen for gradient tester toggle from external components (e.g. ContactSidebar)
+  useEffect(() => {
+    const handler = () => toggleGradientTester();
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [toggleGradientTester]);
 
   // Compute lead avatar colors
   const leadAvatarColors = useMemo(() => {
@@ -493,7 +497,7 @@ export function ChatPanel({
                   />
                 </button>
               )}
-              {/* Lead name + id pill + status pill */}
+              {/* Lead name + id pill */}
               {selected && (
                 <button
                   type="button"
@@ -507,143 +511,9 @@ export function ChatPanel({
                 </button>
               )}
 
-              {/* Buttons — left cluster (injected actions + tools) */}
+              {/* Buttons — left cluster (injected actions) */}
               <div className="ml-2 md:ml-6 flex items-center gap-1.5">
               {headerActions}
-
-              {/* Doodle overlay popover — next to filter, always gray — hidden on mobile */}
-              <span className="hidden md:contents">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
-                    title={t("chat.background.chatBackgroundDoodle")}
-                  >
-                    <Wallpaper className="h-4 w-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 p-3 space-y-3">
-                  {/* Section title */}
-                  <span className="text-[13px] font-semibold">{t("chat.customization.title")}</span>
-
-                  {/* Chat bubble width slider */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-muted-foreground">{t("chat.customization.bubbleWidth")}</span>
-                      <span className="text-[11px] font-semibold tabular-nums text-foreground/70">{bubbleWidth}%</span>
-                    </div>
-                    <Slider
-                      value={[bubbleWidth]}
-                      onValueChange={([v]) => setBubbleWidth(v)}
-                      min={40}
-                      max={90}
-                      step={1}
-                    />
-                  </div>
-
-                  {/* Hide avatars toggle */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold">{t("chat.customization.hideAvatars")}</span>
-                    <Switch
-                      checked={doodleConfig.hideAvatars}
-                      onCheckedChange={(hideAvatars) => setDoodleConfig({ hideAvatars })}
-                    />
-                  </div>
-
-                  {/* Background style picker */}
-                  <div className="space-y-1.5">
-                    <span className="text-[12px] font-semibold">{t("chat.background.title")}</span>
-                    <div className="grid grid-cols-5 gap-1">
-                      {(["crm", "social1", "social2", "social3", "social4"] as ChatBgStyle[]).map((style) => (
-                        <button
-                          key={style}
-                          type="button"
-                          onClick={() => setDoodleConfig({ bgStyle: style })}
-                          className={cn(
-                            "h-8 rounded-md border text-[10px] font-medium transition-colors",
-                            doodleConfig.bgStyle === style || (!doodleConfig.bgStyle && style === "social1")
-                              ? "border-brand-indigo text-brand-indigo bg-brand-indigo/5"
-                              : "border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
-                          )}
-                        >
-                          {style === "crm" ? "CRM" : `#${style.replace("social", "")}`}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold">{t("chat.background.doodleOverlay")}</span>
-                    <Switch
-                      checked={doodleConfig.enabled}
-                      onCheckedChange={(enabled) => setDoodleConfig({ enabled })}
-                    />
-                  </div>
-                  {doodleConfig.enabled && (
-                    <>
-                      {/* Pattern picker — slider 1–10 */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">{t("chat.background.pattern")}</span>
-                          <span className="text-[11px] font-semibold tabular-nums text-foreground/70">
-                            #{(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
-                          </span>
-                        </div>
-                        <Slider
-                          value={[(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
-                          onValueChange={([v]) => {
-                            const entry = CURATED_PATTERNS[v - 1];
-                            if (entry) setDoodleConfig({ patternId: entry.id, size: entry.size });
-                          }}
-                          min={1}
-                          max={10}
-                          step={1}
-                        />
-                      </div>
-                      {/* Size slider */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">{t("chat.background.size")}</span>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.size}px</span>
-                        </div>
-                        <Slider
-                          value={[doodleConfig.size]}
-                          onValueChange={([v]) => setDoodleConfig({ size: v })}
-                          min={200}
-                          max={800}
-                          step={25}
-                        />
-                      </div>
-                      {/* Opacity slider */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">{t("chat.background.opacity")}</span>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.color}%</span>
-                        </div>
-                        <Slider
-                          value={[doodleConfig.color]}
-                          onValueChange={([v]) => setDoodleConfig({ color: v })}
-                          min={0}
-                          max={100}
-                          step={1}
-                        />
-                      </div>
-                    </>
-                  )}
-                </PopoverContent>
-              </Popover>
-
-              {/* Gradient tester — always gray */}
-              <button
-                type="button"
-                onClick={toggleGradientTester}
-                className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
-                title={t("chat.background.gradientTester")}
-              >
-                <Paintbrush className="h-4 w-4" />
-              </button>
-              </span>{/* end hidden md:contents — wallpaper + gradient tester */}
-
               </div>{/* end left buttons cluster */}
 
               {/* Right cluster: booked-call pill + AI resume + unfold contact panel */}
@@ -799,7 +669,11 @@ export function ChatPanel({
                       }
 
                       if (mi === 0 && isMeaningfulThread && (m.direction || "").toLowerCase() === "outbound") {
-                        tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
+                        // Skip synthetic "Contacted" thread divider if a real Contacted tag exists in DB
+                        const isBumpThread = group.threadId.startsWith("bump-");
+                        if (isBumpThread || !existingTagNames.has("contacted")) {
+                          tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
+                        }
                       }
                       tokens.push({ kind: "msg", msgIdx: flatIdx });
 
@@ -823,14 +697,15 @@ export function ChatPanel({
 
                   // Merge real tag events (DB) into tokens by timestamp — skip "removed" events,
                   // bump-sequence tags (Bump 1/2/3/…) since ThreadDivider already labels those,
-                  // and tags that predate the first message (stale from a demo-reset).
+                  // and non-status tags that predate the first message (stale from a demo-reset).
+                  // Status tags (Qualified, Booked, Lost, DND, etc.) always show regardless of timing.
                   const firstMsgTs = allMsgs.length > 0
                     ? new Date(allMsgs[0].created_at ?? allMsgs[0].createdAt ?? 0).getTime()
                     : 0;
                   const allTagEvents = [...tagEvents]
                     .filter((te: any) => te.event_type !== "removed")
                     .filter((te: any) => !/^bump\s*\d/i.test(te.tag_name ?? ""))
-                    .filter((te: any) => !te.created_at || !firstMsgTs || new Date(te.created_at).getTime() >= firstMsgTs)
+                    .filter((te: any) => canonicalStatus(te.tag_name ?? "") || !te.created_at || !firstMsgTs || new Date(te.created_at).getTime() >= firstMsgTs)
                     .sort((a: any, b: any) => {
                       if (!a.created_at && !b.created_at) return 0;
                       if (!a.created_at) return 1;

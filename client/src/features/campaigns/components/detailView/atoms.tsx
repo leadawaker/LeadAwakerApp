@@ -62,7 +62,7 @@ export function DemoLinkButton({
   const [copied, setCopied] = useState(false);
 
   const campaignId = campaign.id || campaign.Id;
-  const demoLink = `https://t.me/lead_awaker_demo?start=campaign_${campaignId}`;
+  const demoLink = `https://t.me/Demo_Lead_Awaker_bot?start=campaign_${campaignId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(demoLink);

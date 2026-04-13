@@ -125,7 +125,7 @@ function EmailCard({
   onToggleExpand: () => void;
   onToggleSelect: () => void;
   onReply?: () => void;
-  t: (key: string, fallback?: string) => string;
+  t: ReturnType<typeof import("react-i18next").useTranslation>["t"];
 }) {
   const meta = item.metadata as EmailMetadata | undefined;
   const subject = meta?.subject || t("slidePanel.email.noSubject");
@@ -645,7 +645,7 @@ function EmailThread({
   onToggleExpand: (id: number) => void;
   onToggleSelect: (id: number) => void;
   onReply?: (context: { messageId: string; threadId: string; subject: string }) => void;
-  t: (key: string, fallback?: string) => string;
+  t: ReturnType<typeof import("react-i18next").useTranslation>["t"];
 }) {
   const [collapsed, setCollapsed] = useState(true);
   const latest = emails[emails.length - 1];
@@ -755,7 +755,7 @@ function GenericInteractionCard({
   onCancelEditing: () => void;
   onSaveEdit: () => void;
   onEditContentChange: (val: string) => void;
-  t: (key: string, fallback?: string) => string;
+  t: ReturnType<typeof import("react-i18next").useTranslation>["t"];
 }) {
   const Icon = getDirectionIcon(item.type, item.direction);
   const badge = getTypeBadgeStyle(item.type);

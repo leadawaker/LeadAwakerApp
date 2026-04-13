@@ -66,11 +66,14 @@ export default function AccountsPage() {
     groupBy: "status" as AccountGroupBy,
     sortBy: "recent" as AccountSortBy,
     filterStatus: [] as string[],
+    groupDirection: "asc" as "asc" | "desc",
   });
   const groupBy = listPrefs.groupBy;
   const sortBy = listPrefs.sortBy;
   const filterStatus = listPrefs.filterStatus;
+  const groupDirection = listPrefs.groupDirection ?? "asc";
   const setGroupBy = useCallback((v: AccountGroupBy) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
+  const setGroupDirection = useCallback((v: "asc" | "desc") => setListPrefs(p => ({ ...p, groupDirection: v })), [setListPrefs]);
   const setSortBy = useCallback((v: AccountSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
   const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
 
@@ -196,6 +199,7 @@ export default function AccountsPage() {
   const handleResetControls = useCallback(() => {
     setFilterStatus([]);
     setGroupBy("status");
+    setGroupDirection("asc");
     setSortBy("recent");
   }, []);
 
@@ -346,6 +350,8 @@ export default function AccountsPage() {
               onSearchOpenChange={setSearchOpen}
               groupBy={groupBy}
               onGroupByChange={setGroupBy}
+              groupDirection={groupDirection}
+              onGroupDirectionChange={setGroupDirection}
               sortBy={sortBy}
               onSortByChange={setSortBy}
               filterStatus={filterStatus}

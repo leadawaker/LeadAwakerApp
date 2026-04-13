@@ -28,6 +28,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { ProspectRow } from "./ProspectListView";
+import { OUTREACH_HEX } from "./OutreachPipelineView";
 
 // ── Column definitions ────────────────────────────────────────────────────────
 
@@ -88,6 +89,14 @@ const PRIORITY_GROUP_COLORS: Record<string, string> = {
   High: "#EF4444",
   Medium: "#F59E0B",
   Low: "#22C55E",
+};
+
+const STATUS_GROUP_COLORS: Record<string, string> = {
+  New:              "#3B82F6",
+  Contacted:        "#818CF8",
+  "In Progress":    "#6366F1",
+  Converted:        "#10B981",
+  Archived:         "#64748B",
 };
 
 
@@ -793,9 +802,13 @@ export function ProspectsInlineTable({
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
                     const nicheC = getNicheColor(item.label);
-                    // Use priority group color when grouping by priority
+                    // Use contextual group colors
                     const hexColor = groupBy === "priority" && PRIORITY_GROUP_COLORS[item.label]
                       ? PRIORITY_GROUP_COLORS[item.label]
+                      : groupBy === "outreach_status" && OUTREACH_HEX[item.label as keyof typeof OUTREACH_HEX]
+                      ? OUTREACH_HEX[item.label as keyof typeof OUTREACH_HEX]
+                      : groupBy === "status" && STATUS_GROUP_COLORS[item.label]
+                      ? STATUS_GROUP_COLORS[item.label]
                       : nicheC.hex;
                     const opaqueTint = opaqueNicheTint(hexColor);
                     const groupIds = getGroupProspectIds(item.label);

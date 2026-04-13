@@ -542,6 +542,8 @@ export class DatabaseStorage implements IStorage {
         p.niche,
         p.outreach_status,
         p.priority,
+        p.contact_phone,
+        p.phone,
         COUNT(i.id) FILTER (WHERE i.is_read = false AND i.direction = 'inbound') as unread_count,
         COUNT(i.id) as total_messages,
         MAX(i.sent_at) as last_message_at,

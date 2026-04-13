@@ -160,7 +160,8 @@
     "seek": "Zoeken",
     "playbackSpeed": "Afspeelsnelheid",
     "play": "Afspelen",
-    "pause": "Pauzeren"
+    "pause": "Pauzeren",
+    "download": "Downloaden"
   },
   "contact": {
     "fold": "Inklappen",
@@ -176,6 +177,7 @@
       "recentMessages": "Recente Berichten"
     },
     "fields": {
+      "campaign": "Campagne",
       "phone": "Telefoon",
       "email": "E-mail",
       "bookedCall": "Gepland Gesprek"
@@ -208,5 +210,18 @@
       "noMessages": "Nog geen berichten",
       "viewFullConversation": "Volledig gesprek bekijken"
     }
+  },
+  "templatePicker": {
+    "title": "Stuur een template om het gesprek te starten",
+    "subtitle": "WhatsApp vereist een goedgekeurd template om gesprekken te starten of te hervatten.",
+    "loading": "Templates laden...",
+    "noTemplates": "Geen goedgekeurde templates gevonden. Maak er een aan in Meta Business Suite.",
+    "preview": "Voorbeeld",
+    "send": "Template versturen",
+    "sent": "Template verstuurd",
+    "sendFailed": "Template versturen mislukt",
+    "fillAll": "Vul alle templatevariabelen in",
+    "buttonTitle": "Templates",
+    "windowExpiredPlaceholder": "24u-venster verlopen. Gebruik een template om opnieuw contact op te nemen."
   }
 }

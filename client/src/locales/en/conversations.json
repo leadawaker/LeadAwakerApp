@@ -160,7 +160,8 @@
     "seek": "Seek",
     "playbackSpeed": "Playback speed",
     "play": "Play",
-    "pause": "Pause"
+    "pause": "Pause",
+    "download": "Download"
   },
   "contact": {
     "fold": "Fold",
@@ -176,6 +177,7 @@
       "recentMessages": "Recent Messages"
     },
     "fields": {
+      "campaign": "Campaign",
       "phone": "Phone",
       "email": "Email",
       "bookedCall": "Booked Call"
@@ -208,5 +210,18 @@
       "noMessages": "No messages yet",
       "viewFullConversation": "View full conversation"
     }
+  },
+  "templatePicker": {
+    "title": "Send a template to start the chat",
+    "subtitle": "WhatsApp requires a pre-approved template to initiate or re-engage conversations.",
+    "loading": "Loading templates...",
+    "noTemplates": "No approved templates found. Create one in Meta Business Suite.",
+    "preview": "Preview",
+    "send": "Send Template",
+    "sent": "Template sent",
+    "sendFailed": "Failed to send template",
+    "fillAll": "Please fill in all template variables",
+    "buttonTitle": "Templates",
+    "windowExpiredPlaceholder": "24h window expired. Use a template to re-engage."
   }
 }

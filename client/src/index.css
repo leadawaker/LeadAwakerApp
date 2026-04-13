@@ -1493,3 +1493,9 @@
   .h-svh, .h-screen { height: calc(100svh / 0.75) !important; }
   .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.75) !important; }
 }
+
+/* Scroll fade: fades last 24px of scrollable content to transparent */
+.scroll-fade-bottom {
+  mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+}

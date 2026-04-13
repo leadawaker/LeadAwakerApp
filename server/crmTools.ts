@@ -350,7 +350,7 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
   }
 
   if (permissions.read) {
-    prompt += `\nFor the query_database tool: Use this for complex queries that go beyond predefined tools (aggregations, joins, subqueries, date ranges, etc.). Results are limited to 100 rows. ${permissions.write ? "You have write permission so UPDATE/INSERT/DELETE queries are allowed." : "Only SELECT queries are allowed (read-only mode)."} Always use parameterized-style safe queries. Never include user-provided strings directly in SQL without proper quoting.`;
+    prompt += `\nFor the query_database tool: Use this for complex queries that go beyond predefined tools (aggregations, joins, subqueries, date ranges, etc.). Results are limited to 100 rows. ${permissions.write ? "You have write permission so UPDATE/INSERT/DELETE queries are allowed." : "Only SELECT queries are allowed (read-only mode)."} Always use parameterized-style safe queries. Never include user-provided strings directly in SQL without proper quoting.\n\nIMPORTANT — Database schema: All tables are in the NocoDB schema "p2mxx34fvbf3ll6" with PascalCase names. You MUST use the full schema-qualified name in all SQL queries. Examples:\n  SELECT * FROM p2mxx34fvbf3ll6."Leads" WHERE id = 1;\n  SELECT * FROM p2mxx34fvbf3ll6."Prospects" WHERE company ILIKE '%name%';\n  SELECT * FROM p2mxx34fvbf3ll6."Campaigns" WHERE status = 'active';\nNever use bare table names like "leads" or "prospects" — they will fail with "relation does not exist".`;
   }
 
   prompt += `\n`;

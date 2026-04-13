@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export interface ProspectThread {
   prospect_id: number;
@@ -15,12 +16,46 @@ export interface ProspectThread {
   last_message: string;
   last_message_direction: string;
   last_message_type: string;
+  contact_phone: string | null;
+  phone: string | null;
 }
 
 export function useProspectConversations() {
+  const qc = useQueryClient();
+
+  // Wire into the shared SSE stream for real-time updates instead of relying solely on polling
+  useEffect(() => {
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
+
+    es.addEventListener("new_interaction", (e: MessageEvent) => {
+      try {
+        const raw = JSON.parse(e.data);
+        const prospectId = raw.prospect_id ?? raw.prospectId;
+        if (!prospectId) return; // lead message, not a prospect
+        qc.invalidateQueries({ queryKey: ["/api/prospects/conversations"] });
+        qc.invalidateQueries({ queryKey: ["/api/prospects", prospectId, "messages"] });
+      } catch {
+        // ignore parse errors
+      }
+    });
+
+    es.addEventListener("interaction_updated", (e: MessageEvent) => {
+      try {
+        const raw = JSON.parse(e.data);
+        const prospectId = raw.prospect_id ?? raw.prospectId;
+        if (!prospectId) return;
+        qc.invalidateQueries({ queryKey: ["/api/prospects", prospectId, "messages"] });
+      } catch {
+        // ignore parse errors
+      }
+    });
+
+    return () => es.close();
+  }, [qc]);
+
   return useQuery<ProspectThread[]>({
     queryKey: ["/api/prospects/conversations"],
-    refetchInterval: 30_000, // refresh every 30s
+    refetchInterval: 60_000, // slow fallback in case SSE misses an event
   });
 }
 

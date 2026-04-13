@@ -14,6 +14,7 @@ import { useLocation } from "wouter";
 import type { AccountRow } from "./AccountDetailsDialog";
 import KnowledgeBasePanel from "./KnowledgeBasePanel";
 import { useTranslation } from "react-i18next";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import {
   getStatusDotCls,
   getStatusBadgeStyle,
@@ -88,6 +89,29 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
   const accountId  = account.Id ?? account.id ?? 0;
   const [location] = useLocation();
   const routePrefix = location.startsWith("/subaccount") ? "/subaccount" : "/agency";
+
+  // ── Publish entity data for AI chat context ──────────────────────────────
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    publishEntity({
+      entityType: "account",
+      entityId: accountId,
+      entityName: account.name || "Unknown Account",
+      summary: {
+        id: accountId,
+        name: account.name,
+        status: account.status,
+        type: account.type,
+        ownerEmail: account.owner_email,
+        phone: account.phone,
+        website: account.website,
+        businessNiche: account.business_niche,
+        timezone: account.timezone,
+        language: account.language,
+      },
+      updatedAt: Date.now(),
+    });
+  }, [publishEntity, accountId, account]);
 
   // ── Edit state ──────────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
@@ -254,7 +278,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
       {/* ── Header ── */}
       <div className="shrink-0 relative z-10">
-        <div className="relative px-4 pt-6 pb-4 md:pb-10 space-y-3 max-w-[1386px] w-full mr-auto">
+        <div className="relative px-4 pt-2 md:pt-1 pb-4 md:pb-10 space-y-3 w-full">
 
           {/* Row 1: Toolbar */}
           <div className="flex items-center gap-1">
@@ -423,7 +447,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
       {/* ── Body: scrollable with fade ── */}
       <div
-        className="relative flex-1 overflow-y-auto min-h-0 -mt-[80px] pt-[83px] px-[3px] pb-[3px] flex flex-col gap-[3px]"
+        className="relative flex-1 overflow-y-auto min-h-0 -mt-[80px] pt-[83px] px-1.5 pb-1.5 flex flex-col gap-1.5"
         style={{
           maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
@@ -432,7 +456,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
         {/* Top row: Overview | Campaigns & Contracts | Users */}
         <div
-          className={cn("grid gap-[3px]", isMobile ? "grid-cols-1" : "grid-cols-3", "max-w-[1386px] w-full mr-auto")}
+          className={cn("grid gap-1.5", isMobile ? "grid-cols-1" : "grid-cols-3", "w-full")}
           style={isMobile ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}
         >
 
@@ -569,7 +593,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
         {/* Bottom row: Knowledge Base | Integrations | Voice Clone */}
         <div
-          className={cn("grid gap-[3px]", isMobile ? "grid-cols-1" : "grid-cols-3", "max-w-[1386px] w-full mr-auto")}
+          className={cn("grid gap-1.5", isMobile ? "grid-cols-1" : "grid-cols-3", "w-full")}
           style={isMobile ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}
         >
 
@@ -672,6 +696,9 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
           {/* Bottom Col 3: Voice Clone */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
             <VoiceCloneWidget
+              ttsVoiceIdEn={(account as any).tts_voice_id_en ?? null}
+              ttsVoiceIdPt={(account as any).tts_voice_id_pt ?? null}
+              ttsVoiceIdNl={(account as any).tts_voice_id_nl ?? null}
               voiceFileData={(account as any).voice_file_data ?? null}
               voiceFileName={(account as any).voice_file_name ?? null}
               accountId={(account as any).Id ?? (account as any).id ?? 0}

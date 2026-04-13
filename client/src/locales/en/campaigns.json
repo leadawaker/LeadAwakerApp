@@ -26,7 +26,10 @@
     "save": "Save",
     "saving": "Saving\u2026",
     "cancel": "Cancel",
-    "close": "Close"
+    "close": "Close",
+    "openPrompt": "Prompt",
+    "closePrompt": "Close Prompt",
+    "promptPanel": "Prompt Editor"
   },
 
   "columns": {
@@ -214,12 +217,15 @@
     "website": "Website",
     "calendarLink": "Calendar Link",
     "usp": "USP",
+    "kb": "Knowledge Base",
     "promptTemplate": "Prompt Template",
     "promptLinked": "Linked Prompt",
     "noPromptLinked": "— No prompt linked",
     "openPromptLibrary": "Open in Prompt Library",
     "firstMessage": "First Message",
     "noTemplateSet": "No template set",
+    "voiceScript": "Voice script",
+    "noVoiceScriptSet": "No voice script set — will use text template",
     "delayLabel": "Delay: {{value}}",
     "delayHours": "Delay (h):",
     "voiceNotes": "Voice Notes",
@@ -227,7 +233,12 @@
     "bump1VoiceNote": "Bump 1 as voice note",
     "bump2VoiceNote": "Bump 2 as voice note",
     "bump3VoiceNote": "Bump 3 as voice note",
+    "bump4VoiceNote": "Bump 4 as voice note",
     "aiReplyVoiceNote": "AI replies as voice notes",
+    "voiceReplyMode": "AI Voice Mode",
+    "voiceReplyOff": "Off",
+    "voiceReplySmart": "Smart (AI decides per message)",
+    "voiceReplyVoiceReply": "Reply to voice with voice",
     "voiceId": "Voice ID",
     "bump1AiReference": "Use as AI reference",
     "bump2AiReference": "Use as AI reference",
@@ -235,6 +246,7 @@
     "demoClientName": "Client Company Name",
     "aiStyleOverride": "AI Style Override",
     "isDemo": "Demo Campaign",
+    "optOutNotice": "Opt-out Notice in First Message",
     "accountId": "Account",
     "showDemoCampaigns": "Show Demo Campaigns",
     "language": "Language"

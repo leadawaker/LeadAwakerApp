@@ -441,6 +441,11 @@ Project: LeadAwakerApp (React + Vite frontend, Express + Node.js backend, Postgr
 Stack: TypeScript, React 19, Tailwind CSS v4, shadcn/ui, Wouter routing, TanStack Query
 Working directory: /home/gabriel/LeadAwakerApp
 
+Database: PostgreSQL "nocodb". All tables use schema "p2mxx34fvbf3ll6" with PascalCase names.
+Key tables: "Leads", "Prospects", "Campaigns", "Interactions", "Tasks", "Prompt_Library", "AI_Agents", "Accounts", "Users".
+Example: SELECT * FROM p2mxx34fvbf3ll6."Leads" WHERE id = 1;
+Never use bare table names (e.g. "leads") — always use the schema prefix.
+
 You can read files, edit files, run commands, and make any changes needed. Be careful with database migrations (drizzle-kit) and always consider TypeScript types.`,
 };
 

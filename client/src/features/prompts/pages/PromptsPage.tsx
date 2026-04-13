@@ -64,6 +64,7 @@ export default function PromptsPage() {
   /* ── Sort & Group (persisted) ───────────────────────────────────────────── */
   const [sortBy, setSortBy] = usePersistedState<PromptSortOption>("prompts-sort", "recent");
   const [groupBy, setGroupBy] = usePersistedState<PromptGroupOption>("prompts-group", "none");
+  const [groupDirection, setGroupDirection] = usePersistedState<"asc" | "desc">("prompts-group-dir", "asc");
 
   /* ── Column visibility (persisted) ──────────────────────────────────────── */
   const [visibleCols, setVisibleCols] = useState<Set<PromptColKey>>(() => {
@@ -135,6 +136,7 @@ export default function PromptsPage() {
             description: c.description ?? null,
             aiRole: c.aiRole ?? c.ai_role ?? null,
             typoCount: c.typoCount ?? c.typo_count ?? null,
+            kb: c.kb ?? null,
           })),
         );
       }
@@ -286,8 +288,14 @@ export default function PromptsPage() {
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(p);
     }
-    return groups;
-  }, [rows, groupBy, campaignMap, accountMap]);
+
+    // Order group keys alphabetically, reverse if descending
+    const orderedKeys = Array.from(groups.keys()).sort();
+    if (groupDirection === "desc") orderedKeys.reverse();
+    const ordered = new Map<string, any[]>();
+    for (const k of orderedKeys) ordered.set(k, groups.get(k)!);
+    return ordered;
+  }, [rows, groupBy, groupDirection, campaignMap, accountMap]);
 
   /* ── Filter state helpers ───────────────────────────────────────────────── */
   const isFilterActive = statusFilter !== "all" || modelFilter !== "all" || !!campaignFilter || !!accountFilter;
@@ -513,6 +521,8 @@ export default function PromptsPage() {
                   onSortByChange={setSortBy}
                   groupBy={groupBy}
                   onGroupByChange={setGroupBy}
+                  groupDirection={groupDirection}
+                  onGroupDirectionChange={setGroupDirection}
                   visibleCols={visibleCols}
                   onVisibleColsChange={setVisibleCols}
                   showTableControls={true}

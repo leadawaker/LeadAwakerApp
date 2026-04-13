@@ -7,6 +7,7 @@ import {
   Clock,
   Play,
   Pause,
+  Loader2,
   Mic,
   X,
   Tag as TagIcon,
@@ -24,6 +25,7 @@ import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { Interaction } from "@/types/models";
 import { useSession, type SessionUser } from "@/hooks/useSession";
 import { PIPELINE_HEX } from "@/lib/avatarUtils";
+import { getAttachmentType } from "@/features/conversations/components/chatView/utils";
 import {
   AI_TRIGGERED_BY,
   MINI_THREAD_GAP_MS,
@@ -274,6 +276,7 @@ const MINI_VM_BARS = 40;
 export function MiniVoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; color?: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const rafRef = useRef<number | null>(null);
@@ -345,9 +348,9 @@ export function MiniVoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; c
 
   const toggle = () => {
     const a = audioRef.current;
-    if (!a) return;
+    if (!a || loading) return;
     if (playing) { a.pause(); setPlaying(false); stopRaf(); }
-    else { a.play().then(() => { setPlaying(true); startRaf(); }).catch(() => {}); }
+    else { setLoading(true); a.play().then(() => { setPlaying(true); setLoading(false); startRaf(); }).catch(() => setLoading(false)); }
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -374,7 +377,7 @@ export function MiniVoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; c
         className="h-8 w-8 rounded-full text-white flex items-center justify-center shrink-0 shadow-sm"
         style={{ backgroundColor: color }} aria-label={playing ? "Pause" : "Play"}
       >
-        {playing ? <Pause className="h-3.5 w-3.5 fill-white stroke-none" /> : <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" />}
+        {loading ? <Loader2 className="h-3.5 w-3.5 text-white animate-spin" /> : playing ? <Pause className="h-3.5 w-3.5 fill-white stroke-none" /> : <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" />}
       </button>
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
         <div className="flex items-center gap-[1px] cursor-pointer" style={{ height: 20 }} onClick={seek}>
@@ -489,24 +492,26 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
               : "none",
           }}
         />
-        {((item as any).type === "voice_note" || (item as any).Type === "voice_note") ? (() => {
+        {(() => {
           const content = item.content || (item as any).Content || "";
+          const attachRaw = item.attachment ?? (item as any).Attachment;
+          const hasAudioAttachment = typeof attachRaw === "string" && attachRaw.length > 0 && getAttachmentType(attachRaw) === "audio";
+          const isVoiceNote = (item as any).type === "voice_note" || (item as any).Type === "voice_note" || hasAudioAttachment;
+          if (!isVoiceNote) return <div className="whitespace-pre-wrap leading-relaxed break-words">{content}</div>;
           const VOICE_PREFIX = "[Voice Note]: ";
           const transcription = content.startsWith(VOICE_PREFIX) ? content.slice(VOICE_PREFIX.length).trim() : content.trim();
-          const attachRaw = item.attachment ?? (item as any).Attachment;
-          const audioUrl = typeof attachRaw === "string" && attachRaw.startsWith("data:audio/") ? attachRaw : null;
+          const audioUrl = typeof attachRaw === "string" && (attachRaw.startsWith("data:audio/") || getAttachmentType(attachRaw) === "audio") ? attachRaw : null;
+          const voiceColor = aiMsg ? "#2050ff" : humanAgentMsg ? "#22C55E" : "#0ABFA3";
           return (
-            <div className="flex flex-col gap-1.5">
+            <div className={cn("flex flex-col gap-1.5", outbound && "items-end")}>
               {audioUrl
-                ? <MiniVoiceMemoPlayer url={audioUrl} />
+                ? <MiniVoiceMemoPlayer url={audioUrl} color={voiceColor} />
                 : <div className="flex items-center gap-1.5 opacity-70"><Mic className="h-3.5 w-3.5 shrink-0" /><span className="text-[11px] font-medium uppercase tracking-wide">Voice note</span></div>
               }
               {transcription && <div className="whitespace-pre-wrap leading-relaxed break-words text-[12px] italic opacity-80">{transcription}</div>}
             </div>
           );
-        })() : (
-          <div className="whitespace-pre-wrap leading-relaxed break-words">{item.content || (item as any).Content || ""}</div>
-        )}
+        })()}
         <div className="flex items-center justify-end gap-1 mt-0.5">
           <span className="text-[10px] leading-none select-none" style={{ color: "#888" }}>
             {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}

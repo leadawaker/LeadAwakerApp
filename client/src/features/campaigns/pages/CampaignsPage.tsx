@@ -114,6 +114,7 @@ function CampaignsContent() {
   // ── Lifted list-view controls (persisted) ──────────────────────────────────
   const [listSearch, setListSearch]           = useState("");
   const [searchOpen, setSearchOpen]           = useState(false);
+  const [groupDirection, setGroupDirection]   = useState<"asc" | "desc">("asc");
   const [listPrefs, setListPrefs] = usePersistedState(LIST_PREFS_KEY, {
     groupBy: "status" as CampaignGroupBy,
     sortBy: "recent" as CampaignSortBy,
@@ -404,6 +405,8 @@ function CampaignsContent() {
             onSearchOpenChange={setSearchOpen}
             groupBy={groupBy}
             onGroupByChange={setGroupBy}
+            groupDirection={groupDirection}
+            onGroupDirectionChange={setGroupDirection}
             sortBy={sortBy}
             onSortByChange={setSortBy}
             filterStatus={filterStatus}

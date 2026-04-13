@@ -230,8 +230,8 @@ export function MessageGenerator({ prospectId, offerIdeas, contactName, contact2
             <SelectItem value="2">
               {contact2Name ? `Contact 2 (${contact2Name})` : "Contact 2"}
             </SelectItem>
-            <SelectItem value="company">
-              {t("outreach.company", "Company")}
+            <SelectItem value="generic">
+              {t("outreach.contactGeneric", "Company only")}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -247,7 +247,7 @@ export function MessageGenerator({ prospectId, offerIdeas, contactName, contact2
       <Textarea
         value={customInstructions}
         onChange={(e) => setCustomInstructions(e.target.value)}
-        placeholder={t("outreach.customInstructions", "Custom instructions for this message...")}
+        placeholder={t("outreach.customInstructionsPlaceholder", "Custom instructions for this message...")}
         rows={2}
         className="text-xs resize-none"
       />

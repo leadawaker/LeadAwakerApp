@@ -9,7 +9,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, AlertCircle, RefreshCw, X, Filter, Building2, ArrowUpDown, Layers, Check, SlidersHorizontal, Plus, Search, Phone, Mail, Grid3X3, Columns3, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, AlertCircle, RefreshCw, X, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Check, Plus, Phone, Mail, Grid3X3, Columns3, CalendarDays } from "lucide-react";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
@@ -20,16 +20,13 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { SearchPill } from "@/components/ui/search-pill";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { apiFetch } from "@/lib/apiUtils";
 import { formatBubbleTime, getHoursInTimezone, getMinutesInTimezone, toLocaleDateStringTz } from "@/features/leads/components/cardView/formatUtils";
@@ -120,16 +117,16 @@ function getApptDateGroup(dateStr: string): DateGroupKey {
 
 const DATE_GROUP_ORDER: DateGroupKey[] = ["today", "tomorrow", "thisWeek", "later", "past"];
 
-type ApptSortBy = "time" | "name" | "campaign" | "status";
+type ApptSortBy = "time_asc" | "time_desc" | "name_asc" | "name_desc" | "campaign_asc" | "campaign_desc" | "status_asc" | "status_desc";
 type ApptGroupBy = "date" | "campaign" | "status" | "none";
 type ApptFilterStatus = "no_show" | "rescheduled" | "confirmed";
 
-const APPT_SORT_KEYS: Record<ApptSortBy, string> = {
-  time: "sort.time",
-  name: "sort.nameAZ",
-  campaign: "sort.campaign",
-  status: "sort.status",
-};
+const APPT_SORT_GROUPS: { key: string; label: string; asc: ApptSortBy; desc: ApptSortBy }[] = [
+  { key: "time", label: "sort.time", asc: "time_asc", desc: "time_desc" },
+  { key: "name", label: "sort.nameAZ", asc: "name_asc", desc: "name_desc" },
+  { key: "campaign", label: "sort.campaign", asc: "campaign_asc", desc: "campaign_desc" },
+  { key: "status", label: "sort.status", asc: "status_asc", desc: "status_desc" },
+];
 
 const APPT_GROUP_KEYS: Record<ApptGroupBy, string> = {
   date: "group.date",
@@ -242,6 +239,12 @@ function DroppableTimeSlot({
     />
   );
 }
+
+// ── Toolbar expand-on-hover button constants ──────────────────────────────────
+const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive = "border-brand-indigo text-brand-indigo";
+const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 // ── Group header for appointment list ─────────────────────────────────────────
 function ApptGroupHeader({ label, count }: { label: string; count: number }) {
@@ -455,8 +458,9 @@ export default function CalendarPage() {
     (v) => ["month", "week", "day"].includes(v as string),
   );
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [apptSortBy, setApptSortBy] = useState<ApptSortBy>("time");
+  const [apptSortBy, setApptSortBy] = useState<ApptSortBy>("time_desc");
   const [apptGroupBy, setApptGroupBy] = useState<ApptGroupBy>("date");
+  const [apptGroupDirection, setApptGroupDirection] = useState<"asc" | "desc">("asc");
   const [apptFilterStatuses, setApptFilterStatuses] = useState<ApptFilterStatus[]>([]);
 
   // Search state
@@ -664,18 +668,30 @@ export default function CalendarPage() {
     // Apply sort
     const sorted = [...filtered];
     switch (apptSortBy) {
-      case "name":
+      case "name_asc":
         sorted.sort((a, b) => a.lead_name.localeCompare(b.lead_name));
         break;
-      case "campaign":
+      case "name_desc":
+        sorted.sort((a, b) => b.lead_name.localeCompare(a.lead_name));
+        break;
+      case "campaign_asc":
         sorted.sort((a, b) => (a.campaign_name || "").localeCompare(b.campaign_name || ""));
         break;
-      case "status":
+      case "campaign_desc":
+        sorted.sort((a, b) => (b.campaign_name || "").localeCompare(a.campaign_name || ""));
+        break;
+      case "status_asc":
         sorted.sort((a, b) => (a.status || "").localeCompare(b.status || ""));
         break;
-      case "time":
+      case "status_desc":
+        sorted.sort((a, b) => (b.status || "").localeCompare(a.status || ""));
+        break;
+      case "time_asc":
+        sorted.sort((a, b) => new Date(a.raw_booked_call_date).getTime() - new Date(b.raw_booked_call_date).getTime());
+        break;
+      case "time_desc":
       default:
-        break; // already sorted by time
+        break; // already sorted by time desc (default)
     }
     return sorted;
   }, [appts, selectedDate, appointmentsForSelectedDate, apptSortBy, apptFilterStatuses, searchQuery]);
@@ -696,7 +712,8 @@ export default function CalendarPage() {
           if (!buckets.has(key)) buckets.set(key, []);
           buckets.get(key)!.push(a);
         }
-        return Array.from(buckets.entries()).map(([label, items]) => ({ label: label as string | null, items }));
+        const entries = Array.from(buckets.entries()).map(([label, items]) => ({ label: label as string | null, items }));
+        return apptGroupDirection === "desc" ? entries.reverse() : entries;
       }
       case "status": {
         const buckets = new Map<string, Appointment[]>();
@@ -705,7 +722,8 @@ export default function CalendarPage() {
           if (!buckets.has(key)) buckets.set(key, []);
           buckets.get(key)!.push(a);
         }
-        return Array.from(buckets.entries()).map(([label, items]) => ({ label: label as string | null, items }));
+        const entries = Array.from(buckets.entries()).map(([label, items]) => ({ label: label as string | null, items }));
+        return apptGroupDirection === "desc" ? entries.reverse() : entries;
       }
       case "date":
       default: {
@@ -715,15 +733,16 @@ export default function CalendarPage() {
           if (!buckets.has(group)) buckets.set(group, []);
           buckets.get(group)!.push(a);
         }
+        const orderedKeys = apptGroupDirection === "desc" ? [...DATE_GROUP_ORDER].reverse() : DATE_GROUP_ORDER;
         const result: { label: string | null; items: Appointment[] }[] = [];
-        for (const key of DATE_GROUP_ORDER) {
+        for (const key of orderedKeys) {
           const items = buckets.get(key);
           if (items && items.length > 0) result.push({ label: t(`dateGroups.${key}`), items });
         }
         return result;
       }
     }
-  }, [sortedAppts, selectedDate, apptGroupBy]);
+  }, [sortedAppts, selectedDate, apptGroupBy, apptGroupDirection]);
 
   const totalApptCount = useMemo(() => {
     return sortedAppts.length;
@@ -1244,173 +1263,6 @@ export default function CalendarPage() {
                   </PopoverContent>
                 </Popover>
 
-                {/* Search */}
-                <IconBtn className="!h-9 !w-9" title={t("search.searchAppointments")} active={searchOpen} onClick={() => { setSearchOpen((p) => !p); if (searchOpen) setSearchQuery(""); }}>
-                  <Search className="h-4 w-4" />
-                </IconBtn>
-
-                {/* Settings */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <IconBtn className="!h-9 !w-9" active={apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all"} title={t("settings.groupSortFilter")}>
-                      <SlidersHorizontal className="h-4 w-4" />
-                    </IconBtn>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {/* Account filter — agency only */}
-                    {isAgencyUser && (
-                      <>
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="text-[12px]">
-                            <Building2 className="h-3.5 w-3.5 mr-2" />
-                            {t("filter.account")}
-                            {calendarAccountFilter !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedAccountName}</span>}
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
-                            <DropdownMenuItem
-                              className={cn("flex items-center px-3 py-2 text-[12px] font-medium rounded-lg cursor-pointer", calendarAccountFilter === "all" && "font-bold")}
-                              onClick={() => handleAccountFilterChange("all")}
-                              data-testid="account-filter-option-all"
-                            >
-                              {t("filter.allAccounts")}
-                              {calendarAccountFilter === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                            </DropdownMenuItem>
-                            {(accounts || []).length > 0 && (
-                              <DropdownMenuSeparator />
-                            )}
-                            {(accounts || [])
-                              .map((acc: any) => {
-                                const accId = acc.id || acc.Id;
-                                return (
-                                  <DropdownMenuItem
-                                    key={accId}
-                                    className={cn("flex items-center px-3 py-2 text-[12px] rounded-lg cursor-pointer", calendarAccountFilter === accId && "font-bold text-foreground")}
-                                    onClick={() => handleAccountFilterChange(accId)}
-                                    data-testid={`account-filter-option-${accId}`}
-                                  >
-                                    <span className="truncate">{acc.name || acc.Name}</span>
-                                    {calendarAccountFilter === accId && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                                  </DropdownMenuItem>
-                                );
-                              })
-                            }
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-
-                    {/* Campaign filter */}
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="text-[12px]">
-                        <Filter className="h-3.5 w-3.5 mr-2" />
-                        {t("filter.campaign")}
-                        {campaignId !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedCampaignName ?? ""}</span>}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
-                        <DropdownMenuItem
-                          className={cn("flex items-center px-3 py-2 text-[12px] font-medium rounded-lg cursor-pointer", campaignId === "all" && "font-bold")}
-                          onClick={() => setCampaignId("all")}
-                          data-testid="campaign-filter-all"
-                        >
-                          {t("filter.allCampaigns")}
-                          {campaignId === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                        </DropdownMenuItem>
-                        {campaignOptions.length > 0 && <DropdownMenuSeparator />}
-                        {campaignOptions.map((c: any) => (
-                          <DropdownMenuItem
-                            key={c.id}
-                            className={cn("flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg cursor-pointer", campaignId === c.id && "font-bold text-brand-indigo")}
-                            onClick={() => setCampaignId(c.id)}
-                            data-testid={`campaign-filter-option-${c.id}`}
-                          >
-                            <span className="truncate flex-1">{c.name}</span>
-                            {c.status && (
-                              <span className={cn(
-                                "text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shrink-0",
-                                c.status === "Active" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                  : c.status === "Finished" ? "bg-muted/40 text-muted-foreground"
-                                  : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                              )}>
-                                {c.status}
-                              </span>
-                            )}
-                            {campaignId === c.id && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                          </DropdownMenuItem>
-                        ))}
-                        {campaignOptions.length === 0 && (
-                          <div className="px-3 py-2 text-[12px] text-muted-foreground italic">{t("filter.noCampaigns")}</div>
-                        )}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    <DropdownMenuSeparator />
-
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="text-[12px]">
-                        <Layers className="h-3.5 w-3.5 mr-2" />
-                        {t("group.label")}
-                        {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{t(APPT_GROUP_KEYS[apptGroupBy])}</span>}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-40">
-                        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
-                          <DropdownMenuItem key={opt} onClick={() => setApptGroupBy(opt)} className={cn("text-[12px]", apptGroupBy === opt && "font-semibold text-brand-indigo")}>
-                            {t(APPT_GROUP_KEYS[opt])}
-                            {apptGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="text-[12px]">
-                        <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                        {t("sort.label")}
-                        {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{t(APPT_SORT_KEYS[apptSortBy])}</span>}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-44">
-                        {(["time", "name", "campaign", "status"] as ApptSortBy[]).map((opt) => (
-                          <DropdownMenuItem key={opt} onClick={() => setApptSortBy(opt)} className={cn("text-[12px]", apptSortBy === opt && "font-semibold text-brand-indigo")}>
-                            {t(APPT_SORT_KEYS[opt])}
-                            {apptSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    <DropdownMenuSeparator />
-
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="text-[12px]">
-                        <Filter className="h-3.5 w-3.5 mr-2" />
-                        {t("filter.label")}
-                        {apptFilterStatuses.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{apptFilterStatuses.length}</span>}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-48">
-                        {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
-                          <DropdownMenuItem
-                            key={opt}
-                            onClick={(e) => { e.preventDefault(); setApptFilterStatuses((prev) => prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt]); }}
-                            className="flex items-center gap-2 text-[12px]"
-                          >
-                            <span className="flex-1">{t(APPT_FILTER_KEYS[opt])}</span>
-                            {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    {(apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all") && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => { setApptSortBy("time"); setApptGroupBy("date"); setApptFilterStatuses([]); handleAccountFilterChange("all"); setCampaignId("all"); }} className="text-[12px] text-destructive">
-                          {t("settings.resetAll")}
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 {/* Spacer */}
                 <div className="flex-1 min-w-0" />
 
@@ -1790,20 +1642,127 @@ export default function CalendarPage() {
               )}
 
 
-              {/* ── Search bar (collapsible) ── */}
-              {searchOpen && (
-                <div className="px-3 pb-2 shrink-0">
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder={t("search.placeholder")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg border border-border/55 bg-card text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
-                    data-testid="search-appointments-input"
-                  />
-                </div>
-              )}
+              {/* ── List toolbar: search + sort + filter + group + new ── */}
+              <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+                <SearchPill
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  open={searchOpen}
+                  onOpenChange={setSearchOpen}
+                  placeholder={t("search.placeholder")}
+                />
+                {/* Filter */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={cn(xBase, "hover:max-w-[100px]", apptFilterStatuses.length > 0 ? xActive : xDefault)}>
+                      <Filter className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>{t("filter.label")}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
+                      <DropdownMenuItem
+                        key={opt}
+                        onClick={(e) => { e.preventDefault(); setApptFilterStatuses((prev) => prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt]); }}
+                        className="flex items-center gap-2 text-[12px]"
+                      >
+                        <span className="flex-1">{t(APPT_FILTER_KEYS[opt])}</span>
+                        {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* Sort */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={cn(xBase, "hover:max-w-[80px]", apptSortBy !== "time_desc" ? xActive : xDefault)}>
+                      <ArrowUpDown className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>{t("sort.label")}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-44">
+                    {APPT_SORT_GROUPS.map((group) => {
+                      const isActive = apptSortBy === group.asc || apptSortBy === group.desc;
+                      const activeDir: "asc" | "desc" = apptSortBy === group.asc ? "asc" : "desc";
+                      return (
+                        <DropdownMenuItem
+                          key={group.key}
+                          onSelect={(e) => { e.preventDefault(); setApptSortBy(isActive ? apptSortBy : group.desc); }}
+                          className="text-[12px] flex items-center gap-2"
+                        >
+                          <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t(group.label)}</span>
+                          {isActive && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptSortBy(group.asc); }}
+                                className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                                title="Ascending"
+                              >
+                                <ArrowUp className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptSortBy(group.desc); }}
+                                className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                                title="Descending"
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </button>
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* Group */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={cn(xBase, "hover:max-w-[100px]", apptGroupBy !== "date" ? xActive : xDefault)}>
+                      <Layers className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>{t("group.label")}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-44">
+                    {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+                      <DropdownMenuItem
+                        key={opt}
+                        onSelect={(e) => { e.preventDefault(); setApptGroupBy(opt); }}
+                        className="text-[12px] flex items-center gap-2"
+                      >
+                        <span className={cn("flex-1", apptGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(APPT_GROUP_KEYS[opt])}</span>
+                        {apptGroupBy === opt && opt !== "none" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptGroupDirection("asc"); }}
+                              className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", apptGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                              title="Ascending"
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptGroupDirection("desc"); }}
+                              className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", apptGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                              title="Descending"
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </button>
+                          </>
+                        )}
+                        {apptGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* New appointment */}
+                <button className={cn(xBase, "hover:max-w-[100px]", xDefault)} onClick={() => setBookPopoverOpen(true)}>
+                  <Plus className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{t("book.newAppointment")}</span>
+                </button>
+              </div>
 
               {/* ── Appointment list ── */}
               <div ref={apptListRef} className="flex-1 overflow-y-auto p-[3px]">

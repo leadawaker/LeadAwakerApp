@@ -15,7 +15,7 @@ import {
   type DateRangeValue,
 } from "@/components/crm/DateRangeFilter";
 import { getCampaignAvatarColor } from "@/lib/avatarUtils";
-import type { CampaignSortBy, CampaignGroupBy } from "../pages/CampaignsPage";
+import type { CampaignSortBy, CampaignGroupBy } from "./constants";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useCampaignDetail, getCampaignMetrics } from "../useCampaignDetail";
@@ -23,11 +23,35 @@ import type { Tag as TagType } from "@/features/tags/types";
 import type { TagSortOption, TagAutoAppliedFilter, TagGroupOption } from "@/features/tags/types";
 import {
   GradientControlPoints,
-  DEFAULT_LAYERS,
   layerToStyle,
   type GradientLayer,
 } from "@/components/ui/gradient-tester";
+
+/** Matches the hardcoded CSS fallback gradients for the campaigns detail page */
+const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  { id: 1, label: "Yellow corner TL", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 6, posY: 5, colorStops: [
+    { color: "#fff8c6", opacity: 1, position: 0 },
+    { color: "#fff8c6", opacity: 0, position: 30 },
+  ]},
+  { id: 2, label: "Red glow BL", enabled: true, type: "radial", ellipseW: 103, ellipseH: 130, posX: 35, posY: 85, colorStops: [
+    { color: "#ff8686", opacity: 0.4, position: 0 },
+    { color: "#ff8686", opacity: 0, position: 69 },
+  ]},
+  { id: 3, label: "Gold corner TL", enabled: true, type: "radial", ellipseW: 52, ellipseH: 48, posX: 0, posY: 0, colorStops: [
+    { color: "#fff6ba", opacity: 1, position: 5 },
+    { color: "#fff6ba", opacity: 0, position: 30 },
+  ]},
+  { id: 4, label: "Peach center-right", enabled: true, type: "radial", ellipseW: 80, ellipseH: 102, posX: 78, posY: 50, colorStops: [
+    { color: "#ffc2a5", opacity: 0.6, position: 0 },
+    { color: "#ffc2a5", opacity: 0, position: 66 },
+  ]},
+];
+
 import type { SavedTemplate } from "./types";
+import { PromptEditorPanel } from "@/features/prompts/components/PromptEditorPanel";
+import { FileText, X as XIcon, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DetailViewToolbar } from "./DetailViewToolbar";
 import { DetailViewHeader } from "./DetailViewHeader";
 import { DetailViewBody } from "./DetailViewBody";
@@ -186,6 +210,19 @@ export function CampaignDetailView({
     toast({ title: "Template deleted" });
   }, [setSavedTemplates, toast]);
 
+  // ── Prompt panel (agency-only, ultrawide) ─────────────────────────────────
+  const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
+    try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
+  });
+  const togglePromptPanel = useCallback(() => {
+    setPromptPanelOpen(prev => {
+      const next = !prev;
+      try { localStorage.setItem("campaigns-prompt-panel-open", String(next)); } catch {}
+      return next;
+    });
+  }, []);
+  const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
+
   // ── Animation trigger on campaign change ──────────────────────────────────
   const [animTrigger, setAnimTrigger] = useState(0);
   useEffect(() => {
@@ -198,24 +235,31 @@ export function CampaignDetailView({
     try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
   });
   const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(savedGradient ?? PAGE_DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
   const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
     if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
     if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
     setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
   }, []);
-  const handleApplyGradient = useCallback(() => {
+  const handleSaveGradient = useCallback(() => {
     localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
     setSavedGradient(gradientLayers);
-    setGradientTesterOpen(false);
   }, [gradientLayers]);
+  const handleApplyGradient = useCallback(() => {
+    handleSaveGradient();
+    setGradientTesterOpen(false);
+  }, [handleSaveGradient]);
   const toggleGradientTester = useCallback(() => {
-    setGradientTesterOpen(prev => {
-      if (!prev && savedGradient) setGradientLayers(savedGradient);
-      return !prev;
-    });
-  }, [savedGradient]);
+    if (!gradientTesterOpen) {
+      try {
+        const raw = localStorage.getItem(GRADIENT_KEY);
+        if (raw) setGradientLayers(JSON.parse(raw) as GradientLayer[]);
+        else setGradientLayers(PAGE_DEFAULT_LAYERS);
+      } catch { /* keep current layers */ }
+    }
+    setGradientTesterOpen(prev => !prev);
+  }, [gradientTesterOpen]);
 
   // ── Sticker / Profile image state ─────────────────────────────────────────
   const [selectedStickerSlug, setSelectedStickerSlug] = useState<string | null>((campaign as any).campaign_sticker ?? null);
@@ -310,7 +354,9 @@ export function CampaignDetailView({
   const goToConfig = useCallback(() => setActiveTab("configurations"), [setActiveTab]);
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view" data-onboarding="campaign-detail">
+    <div className="relative flex flex-row h-full overflow-hidden" data-testid="campaign-detail-view" data-onboarding="campaign-detail">
+      {/* Main column */}
+      <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
 
       {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
@@ -342,49 +388,12 @@ export function CampaignDetailView({
 
       {/* ── Header outer wrapper ── */}
       <div className="shrink-0 relative z-10">
-        <div className="relative px-4 pt-6 pb-5 space-y-3 max-w-[1386px] w-full mr-auto">
+        <div className="relative px-4 pt-2 md:pt-1 pb-5 space-y-3 w-full">
 
-          {/* Row 1: Toolbar */}
-          <DetailViewToolbar
-            detail={detail}
-            campaign={campaign}
-            activeTab={activeTab}
-            isEditing={detail.isEditing}
-            canToggle={canToggle}
-            isActive={isActive}
-            isAgencyUser={isAgencyUser}
-            gradientTesterOpen={gradientTesterOpen}
-            onToggleGradientTester={toggleGradientTester}
-            onBack={onBack}
-            onToggleStatus={onToggleStatus}
-            onRefresh={onRefresh}
-            onDuplicate={onDuplicate}
-            onDelete={onDelete}
-            onCreateCampaign={onCreateCampaign}
-            listSearch={listSearch}
-            onListSearchChange={onListSearchChange}
-            sortBy={sortBy}
-            onSortByChange={onSortByChange}
-            isSortNonDefault={isSortNonDefault}
-            filterStatus={filterStatus}
-            onToggleFilterStatus={onToggleFilterStatus}
-            filterAccount={filterAccount}
-            onFilterAccountChange={onFilterAccountChange}
-            isFilterActive={isFilterActive}
-            showDemoCampaigns={showDemoCampaigns}
-            onShowDemoCampaignsChange={onShowDemoCampaignsChange}
-            groupBy={groupBy}
-            onGroupByChange={onGroupByChange}
-            isGroupNonDefault={isGroupNonDefault}
-            availableAccounts={availableAccounts}
-            onResetControls={onResetControls}
-            leftPanelCollapsed={leftPanelCollapsed}
-            onToggleLeftPanel={onToggleLeftPanel}
-            t={t}
-          />
-
-          {/* Row 2: Avatar + Name + Meta */}
-          <DetailViewHeader
+          {/* Header row: Avatar + Name on left, toolbar actions on right */}
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <DetailViewHeader
             campaign={campaign}
             isAdmin={isAdmin}
             status={status}
@@ -413,7 +422,35 @@ export function CampaignDetailView({
             handleRemoveLogo={handleRemoveLogo}
             compact={compact}
             t={t}
+            onSaveName={async (name) => { if (campaign.id) await onSave(campaign.id, { name }); }}
           />
+            </div>
+
+            {/* Toolbar actions — right side */}
+            <div className="shrink-0 pt-1">
+              <DetailViewToolbar
+                detail={detail}
+                campaign={campaign}
+                activeTab={activeTab}
+                isEditing={detail.isEditing}
+                canToggle={canToggle}
+                isActive={isActive}
+                isAgencyUser={isAgencyUser}
+                gradientTesterOpen={gradientTesterOpen}
+                onToggleGradientTester={toggleGradientTester}
+                onBack={onBack}
+                onToggleStatus={onToggleStatus}
+                onRefresh={onRefresh}
+                onDuplicate={onDuplicate}
+                onDelete={onDelete}
+                leftPanelCollapsed={leftPanelCollapsed}
+                onToggleLeftPanel={onToggleLeftPanel}
+                promptPanelOpen={promptPanelOpen}
+                onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
+                t={t}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -450,11 +487,86 @@ export function CampaignDetailView({
         setGradientTesterOpen={setGradientTesterOpen}
         gradientLayers={gradientLayers}
         updateGradientLayer={updateGradientLayer}
-        resetGradientLayers={() => setGradientLayers(DEFAULT_LAYERS)}
+        resetGradientLayers={() => setGradientLayers(PAGE_DEFAULT_LAYERS)}
         gradientDragMode={gradientDragMode}
         setGradientDragMode={setGradientDragMode}
+        handleSaveGradient={handleSaveGradient}
         handleApplyGradient={handleApplyGradient}
+        onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
       />
+      </div> {/* end main column */}
+
+      {/* Prompt panel — agency only, visible when open */}
+      {promptPanelOpen && isAgencyUser && (
+        <div className="w-[640px] shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden">
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+            <div className="flex items-center gap-2 text-[13px] font-semibold">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span>{detail.linkedPrompt?.name ?? t("toolbar.promptPanel", "Prompt Editor")}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPromptPreviewOpen(p => !p)}
+                className={cn("h-7 w-7 rounded-full flex items-center justify-center transition-colors", promptPreviewOpen ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                title={promptPreviewOpen ? "Hide preview" : "Preview variables"}
+              >
+                {promptPreviewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                onClick={togglePromptPanel}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <XIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Panel body */}
+          {detail.linkedPrompt ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              <PromptEditorPanel
+                prompt={detail.linkedPrompt}
+                onSaved={(_saved) => { detail.reloadPrompts(); }}
+                onDelete={() => {}}
+                campaigns={[{
+                  id: campaign.id,
+                  name: campaign.name,
+                  aiModel: (campaign as any).aiModel ?? (campaign as any).ai_model ?? "",
+                  agentName: (campaign as any).agentName ?? (campaign as any).agent_name ?? null,
+                  serviceName: (campaign as any).serviceName ?? (campaign as any).service_name ?? null,
+                  campaignService: (campaign as any).campaignService ?? (campaign as any).campaign_service ?? null,
+                  campaignUsp: (campaign as any).campaignUsp ?? (campaign as any).campaign_usp ?? null,
+                  calendarLink: (campaign as any).calendarLink ?? (campaign as any).calendar_link ?? null,
+                  whatLeadDid: (campaign as any).whatLeadDid ?? (campaign as any).what_lead_did ?? null,
+                  inquiriesSource: (campaign as any).inquiriesSource ?? (campaign as any).inquiries_source ?? null,
+                  inquiryTimeframe: (campaign as any).inquiryTimeframe ?? (campaign as any).inquiry_timeframe ?? null,
+                  niche: (campaign as any).niche ?? (campaign as any).campaignNicheOverride ?? null,
+                  nicheQuestion: (campaign as any).nicheQuestion ?? (campaign as any).niche_question ?? null,
+                  bookingMode: (campaign as any).bookingModeOverride ?? (campaign as any).booking_mode_override ?? null,
+                  language: (campaign as any).language ?? null,
+                  demoClientName: (campaign as any).demoClientName ?? (campaign as any).demo_client_name ?? null,
+                  aiStyleOverride: (campaign as any).aiStyleOverride ?? (campaign as any).ai_style_override ?? null,
+                  description: (campaign as any).description ?? null,
+                  aiRole: (campaign as any).aiRole ?? (campaign as any).ai_role ?? null,
+                  typoCount: (campaign as any).typoCount ?? (campaign as any).typo_count ?? null,
+                  kb: (campaign as any).kb ?? null,
+                }]}
+                previewOpen={promptPreviewOpen}
+                setPreviewOpen={setPromptPreviewOpen}
+                editorFontSize={13}
+                splitPreview={false}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-[13px] text-muted-foreground italic">
+                {t("config.noPromptLinked", "No prompt linked to this campaign")}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
