@@ -132,6 +132,7 @@ export default function PromptsPage() {
             bookingMode: c.bookingModeOverride ?? c.booking_mode_override ?? null,
             language: c.language ?? null,
             demoClientName: c.demoClientName ?? c.demo_client_name ?? null,
+            companyName: c.companyName ?? c.company_name ?? null,
             aiStyleOverride: c.aiStyleOverride ?? c.ai_style_override ?? null,
             description: c.description ?? null,
             aiRole: c.aiRole ?? c.ai_role ?? null,

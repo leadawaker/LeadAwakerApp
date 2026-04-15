@@ -12,6 +12,7 @@ import {
   boolean,
   time,
   json,
+  jsonb,
   real,
   index,
 } from "drizzle-orm/pg-core";
@@ -139,6 +140,17 @@ export const prospects = nocodb.table("Prospects", {
   generatedMessages: text("generated_messages"),
   enrichedAt: timestamp("enriched_at", { withTimezone: true }),
   enrichmentStatus: text("enrichment_status"),
+  // Company enrichment (AI-generated, separate from contact enrichment)
+  companySummary: text("company_summary"),
+  companyServices: text("company_services"),
+  companyProducts: text("company_products"),
+  companyHistory: text("company_history"),
+  companyEnrichmentStatus: text("company_enrichment_status"),
+  companyEnrichedAt: timestamp("company_enriched_at", { withTimezone: true }),
+  // Structured top posts for carousel: [{title, date, reactions, url?}]
+  topPostData: jsonb("top_post_data"),
+  contact2TopPostData: jsonb("contact2_top_post_data"),
+  companyTopPostData: jsonb("company_top_post_data"),
   // Outreach tracking
   outreachStatus: text("outreach_status"),
   firstContactedAt: timestamp("first_contacted_at", { withTimezone: true }),
@@ -325,7 +337,10 @@ export const campaigns = nocodb.table("Campaigns", {
   isDemo: boolean("is_demo").default(false),
   optOutNotice: boolean("opt_out_notice").default(false),
   demoClientName: text("demo_client_name"),
+  companyName: text("company_name"),
   aiStyleOverride: text("ai_style_override"),
+  twilioFirstMessageTemplateSid: text("twilio_first_message_template_sid"),
+  twilioBumpTemplateSid: text("twilio_bump_template_sid"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
@@ -395,6 +410,8 @@ export const interactions = nocodb.table("Interactions", {
   isManualFollowUp: boolean("is_manual_follow_up"),
   prospectId: integer("prospect_id"),
   isRead: boolean("is_read").default(true),
+  isTemplate: boolean("is_template").default(false),
+  templateSid: text("template_sid"),
 }, (t) => [
   index("interactions_leads_id_idx").on(t.leadsId),
   index("interactions_accounts_id_idx").on(t.accountsId),
@@ -451,6 +468,7 @@ export const leads = nocodb.table("Leads", {
   aiSummary: text("ai_summary"),
   teamMembers: text("team_members"),
   manualTakeover: boolean("manual_takeover"),
+  handoffReason: text("handoff_reason"),
   dncReason: text("dnc_reason"),
   priority: text("priority"),
   language: text("language"),

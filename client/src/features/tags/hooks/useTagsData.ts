@@ -50,6 +50,25 @@ export function useTagsData() {
     fetchData();
   }, [fetchData]);
 
+  // Refresh when the AI bot mutates CRM data
+  useEffect(() => {
+    const handler = () => { fetchData(); };
+    window.addEventListener("crm-data-changed", handler);
+    return () => window.removeEventListener("crm-data-changed", handler);
+  }, [fetchData]);
+
+  // Auto-refresh on SSE tags_changed events
+  useEffect(() => {
+    const debounceRef = { current: 0 as ReturnType<typeof setTimeout> };
+    const url = `/api/interactions/stream`;
+    const es = new EventSource(url, { withCredentials: true });
+    es.addEventListener("tags_changed", () => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchData(), 400);
+    });
+    return () => { es.close(); clearTimeout(debounceRef.current); };
+  }, [fetchData]);
+
   /* ── Derived: tag lead-counts (Map<tagName, count>) ─────────────────────── */
   const tagCounts = useMemo(() => {
     const map = new Map<string, number>();

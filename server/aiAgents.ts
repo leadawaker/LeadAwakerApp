@@ -4,8 +4,8 @@ import type { Response } from "express";
 
 const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 const SESSIONS_DIR = "/tmp/ai-sessions";
-const STREAM_TIMEOUT_MS = 180_000; // 3 minutes default
-const CODE_RUNNER_TIMEOUT_MS = 600_000; // 10 minutes for code_runner (uses tools, takes longer)
+const STREAM_TIMEOUT_MS = 180_000; // 3 min idle timeout (non-code agents)
+const CODE_RUNNER_TIMEOUT_MS = 600_000; // 10 min idle timeout for code_runner — resets on every stdout chunk, so long skills are fine as long as they keep emitting
 
 /** Create a clean env without Claude Code session vars (prevents nested-session detection) */
 function cleanEnv(): NodeJS.ProcessEnv {
@@ -116,6 +116,10 @@ export function streamClaudeResponse(opts: {
   /** Optional async callback that runs BEFORE the done event and res.end(). Use for CRM tool execution. */
   beforeDone?: (fullText: string, res: Response) => Promise<void>;
   onDone: (fullText: string, subAgentBlocks: SubAgentBlock[], cliSessionId: string | null, usage: { inputTokens: number; outputTokens: number; costUsd: number }) => void;
+  /** If true, skip sending the SSE done event and calling res.end(). Used for intermediate iterations in an agent loop. */
+  suppressDone?: boolean;
+  /** If true, skip calling onDone. Used for intermediate iterations in an agent loop where only the final iteration should persist. */
+  suppressOnDone?: boolean;
 }): void {
   const args: string[] = [];
 
@@ -151,13 +155,19 @@ export function streamClaudeResponse(opts: {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  // Timeout safety — kill if stuck (code_runner gets more time since it uses tools)
-  const timeoutMs = opts.agentType === "code_runner" ? CODE_RUNNER_TIMEOUT_MS : STREAM_TIMEOUT_MS;
-  const timeout = setTimeout(() => {
-    console.error("[StreamClaude] Timeout after", timeoutMs, "ms — killing process");
-    try { child.kill("SIGTERM"); } catch {}
-    setTimeout(() => { try { child.kill("SIGKILL"); } catch {} }, 5000);
-  }, timeoutMs);
+  // Idle timeout — kill only if the process goes silent. Resets on every stdout chunk,
+  // so a long-running skill that keeps streaming tokens/tool events runs indefinitely.
+  const idleMs = opts.agentType === "code_runner" ? CODE_RUNNER_TIMEOUT_MS : STREAM_TIMEOUT_MS;
+  let idleTimer: NodeJS.Timeout;
+  const resetIdleTimer = () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      console.error("[StreamClaude] Idle timeout after", idleMs, "ms of no output — killing process");
+      try { child.kill("SIGTERM"); } catch {}
+      setTimeout(() => { try { child.kill("SIGKILL"); } catch {} }, 5000);
+    }, idleMs);
+  };
+  resetIdleTimer();
 
   let fullText = "";
   let cliSessionId: string | null = opts.cliSessionId || null;
@@ -244,6 +254,7 @@ export function streamClaudeResponse(opts: {
 
   // Read structured NDJSON events from stdout
   child.stdout!.on("data", (data: Buffer) => {
+    resetIdleTimer();
     ndjsonBuffer += data.toString();
     const lines = ndjsonBuffer.split("\n");
     ndjsonBuffer = lines.pop() ?? ""; // Keep incomplete last line in buffer
@@ -259,7 +270,7 @@ export function streamClaudeResponse(opts: {
   });
 
   child.on("close", async (code) => {
-    clearTimeout(timeout);
+    if (idleTimer) clearTimeout(idleTimer);
     console.log("[StreamClaude] Process exited:", code, "| text:", fullText.length, "chars | session:", cliSessionId);
 
     // Process any remaining buffer
@@ -275,24 +286,32 @@ export function streamClaudeResponse(opts: {
     }
 
     // Send done event with real token counts and CLI session ID for --resume
-    sseWrite(`data: ${JSON.stringify({
-      type: "done",
-      cliSessionId,
-      subAgentBlocks: [],
-      usage: resultUsage,
-    })}\n\n`);
-    if (!clientDisconnected) { try { opts.res.end(); } catch {} }
+    if (!opts.suppressDone) {
+      sseWrite(`data: ${JSON.stringify({
+        type: "done",
+        cliSessionId,
+        subAgentBlocks: [],
+        usage: resultUsage,
+      })}\n\n`);
+      if (!clientDisconnected) { try { opts.res.end(); } catch {} }
+    }
 
     // ALWAYS call onDone to save response to DB — even if client disconnected
-    opts.onDone(fullText, [], cliSessionId, resultUsage);
+    if (!opts.suppressOnDone) {
+      opts.onDone(fullText, [], cliSessionId, resultUsage);
+    }
   });
 
   child.on("error", (err) => {
-    clearTimeout(timeout);
+    if (idleTimer) clearTimeout(idleTimer);
     console.error("[StreamClaude] Spawn error:", err.message);
     sseWrite(`data: ${JSON.stringify({ type: "error", message: err.message })}\n\n`);
+    // On hard error, always close the client stream — even if suppressDone was requested by a
+    // caller using an agent loop. Leaving the stream open strands the client on "Thinking...".
     sseWrite(`data: ${JSON.stringify({ type: "done", cliSessionId: null, subAgentBlocks: [], usage: { inputTokens: 0, outputTokens: 0, costUsd: 0 } })}\n\n`);
     if (!clientDisconnected) { try { opts.res.end(); } catch {} }
+    // Always call onDone so agent-loop callers can finalize (save message, etc.).
+    // finalizeTurn is idempotent; callers that don't need it can ignore.
     opts.onDone("", [], null, { inputTokens: 0, outputTokens: 0, costUsd: 0 });
   });
 }
@@ -435,7 +454,29 @@ export function formatConversationHistory(
 
 /** Default system prompts for built-in agent types */
 export const DEFAULT_SYSTEM_PROMPTS: Record<string, string> = {
-  code_runner: `You are Claude Code running on a Raspberry Pi server with full permission to read and modify the LeadAwakerApp project. Changes you make are immediately applied via pm2 (tsx watch auto-reloads).
+  code_runner: `You are Alex, Lead Awaker's senior account manager and trusted assistant. You work directly with {USER_NAME} (your boss) on strategy, execution, and decision-making. You're friendly, direct, and results-oriented. Always use {USER_NAME}'s name in conversation. Reference past decisions and context naturally ("Like we discussed with that Brazilian prospect...").
+
+## Operating Principle: 95% Certainty Before Acting
+
+Before taking ANY action (creating records, updating data, executing tasks), ensure you're 95%+ confident. If you fall below that threshold:
+1. Ask clarifying questions (open-ended or specific, whatever helps you understand better)
+2. Request additional context or confirmation from {USER_NAME}
+3. Only proceed once certainty reaches 95%
+
+This applies to: creating prospects/leads/campaigns, updating statuses, interpreting data, or executing tool calls.
+
+If {USER_NAME} says "just do it" or "you know what to do", you still ask clarifying questions if certainty is below 95%. Your job is to reduce risk through confidence, not speed.
+
+## About You
+
+You have full read, write, and create permissions on the CRM. You can:
+- Query, filter, and analyze leads/prospects/campaigns
+- Create new prospects, leads, campaigns, and tasks
+- Update records and statuses
+- Run database queries
+- Access all CRM tools and data
+
+You're running on {USER_NAME}'s Raspberry Pi server and can modify the LeadAwakerApp codebase if needed.
 
 Project: LeadAwakerApp (React + Vite frontend, Express + Node.js backend, PostgreSQL with Drizzle ORM)
 Stack: TypeScript, React 19, Tailwind CSS v4, shadcn/ui, Wouter routing, TanStack Query
@@ -446,7 +487,58 @@ Key tables: "Leads", "Prospects", "Campaigns", "Interactions", "Tasks", "Prompt_
 Example: SELECT * FROM p2mxx34fvbf3ll6."Leads" WHERE id = 1;
 Never use bare table names (e.g. "leads") — always use the schema prefix.
 
-You can read files, edit files, run commands, and make any changes needed. Be careful with database migrations (drizzle-kit) and always consider TypeScript types.`,
+You can read files, edit files, run commands, and make any changes needed. Be careful with database migrations (drizzle-kit) and always consider TypeScript types.
+
+## Skills (slash commands)
+
+You have access to user-scoped skills in ~/.claude/skills/. You can reference these when suggesting actions:
+
+- /prospect <company or niche> — Research a company/niche, enrich, write to Prospects table
+- /createclient <business> — Create a demo campaign from a business description
+- /telegram-demo <prospect> — Set up a full Telegram demo bot
+- /pitch <prospect> — Tailored sales pitch
+- /cold-call <prospect> — Cold call script prep
+- /outreach-email — Draft personalized cold outreach via email/WhatsApp/LinkedIn
+- /task — Create and manage tasks in NocoDB (for follow-ups, reminders, action items)
+- /daily-review, /morning-briefing — Review and planning tools
+
+When you identify follow-ups or action items during conversations, suggest creating a task via /task. Ask {USER_NAME} for approval before actually invoking the skill. Include task details: title, description, priority, due date (if applicable).
+
+Example: "{USER_NAME}, I think we should create a follow-up task to check on that prospect's response. Should I create a task like 'Follow up with BW on budget discussion' for next week?"
+
+Follow the skill's SKILL.md instructions when invoked.
+
+## Prospects table column map (when /prospect enriches a company)
+
+When you gather data via /prospect, write it to the existing columns on p2mxx34fvbf3ll6."Prospects". No new tables, no JSON blobs. The prospect detail page already renders these fields.
+
+| Data gathered | Column |
+|---|---|
+| Company name | company |
+| Industry/niche | niche |
+| Country / city | country, city |
+| Website URL | website |
+| Company LinkedIn URL | company_linkedin |
+| Company AI summary (what they do, size, positioning) | ai_summary |
+| Products/services + latest news (combined, markdown, dated) | page_summaries |
+| Primary contact | contact_name, contact_role, contact_email, contact_phone, contact_linkedin |
+| Second contact | contact2_name, contact2_role, contact2_email, contact2_phone, contact2_linkedin |
+| Primary contact brief (who they are, experience, style) | person_brief |
+| Primary contact latest post (with date) | top_post |
+| Second contact brief + latest post | contact2_person_brief, contact2_top_post |
+| 5 campaign ideas (newline-separated) | offer_ideas |
+| Icebreaker opener | icebreaker |
+| When enrichment completed | enriched_at = NOW(), enrichment_status = 'complete' |
+
+Use UPDATE SQL via psql when writing. Always set updated_at = NOW() too.
+
+## Prospect → Campaign 1-2 punch
+
+After /prospect completes and writes to the Prospects row, post a compact summary in chat and then ask the user:
+
+"Want me to spin up a demo campaign for this prospect? (/createclient)"
+
+Only run /createclient if the user confirms. When they do, pass prospect_id so /createclient sources fields from the DB row rather than re-asking.`,
 };
 
 // ─── GOG Command Parsing & Execution ─────────────────────────────────────────
@@ -543,14 +635,14 @@ export async function seedDefaultAiAgents(db: any, aiAgentsTable: any): Promise<
     // Update system prompts for existing default agents to keep them current
     await db
       .update(aiAgentsTable)
-      .set({ systemPrompt: DEFAULT_SYSTEM_PROMPTS.code_runner })
+      .set({ name: "Lead Awaker AI", systemPrompt: DEFAULT_SYSTEM_PROMPTS.code_runner })
       .where(eq(aiAgentsTable.type, "code_runner"));
     return;
   }
 
   await db.insert(aiAgentsTable).values([
     {
-      name: "Code Runner",
+      name: "Lead Awaker AI",
       type: "code_runner",
       systemPrompt: DEFAULT_SYSTEM_PROMPTS.code_runner,
       photoUrl: null,
@@ -558,5 +650,5 @@ export async function seedDefaultAiAgents(db: any, aiAgentsTable: any): Promise<
       displayOrder: 1,
     },
   ]);
-  console.log("[AI Agents] Seeded Code Runner");
+  console.log("[AI Agents] Seeded Lead Awaker AI");
 }

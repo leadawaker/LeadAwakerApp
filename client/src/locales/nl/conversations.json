@@ -161,7 +161,16 @@
     "playbackSpeed": "Afspeelsnelheid",
     "play": "Afspelen",
     "pause": "Pauzeren",
-    "download": "Downloaden"
+    "download": "Downloaden",
+    "handoff": {
+      "circular_conversation": "AI detecteerde een circulair gesprek",
+      "knowledge_gap": "AI weet het antwoord niet",
+      "first_human_request": "Lead vroeg om een mens",
+      "repeated_human_request": "Lead vroeg opnieuw om een mens",
+      "unknown": "AI heeft dit gesprek overgedragen",
+      "resumeAi": "Laat AI verdergaan",
+      "resumeHumanHandled": "Ik heb het afgehandeld, hervat AI"
+    }
   },
   "contact": {
     "fold": "Inklappen",

@@ -1551,6 +1551,10 @@ export function registerAiAgentsRoutes(app: Express): void {
     }
 
     try {
+      const user = req.user!;
+      const fullName = (user as any).fullName1 || "";
+      const userName = fullName.split(/\s+/)[0] || (user as any).email?.split("@")[0] || "there";
+
       const session = await storage.getAiSessionBySessionId(sessionId);
       if (!session) return res.status(404).json({ message: "Conversation not found" });
 
@@ -1580,6 +1584,7 @@ export function registerAiAgentsRoutes(app: Express): void {
           systemPrompt = linkedPrompt.promptText;
         }
       }
+      systemPrompt = systemPrompt.replace(/\{USER_NAME\}/g, userName);
 
       const agentPermissions = (agent.permissions || {}) as AgentPermissions;
       const crmToolsPrompt = buildCrmToolsPrompt(agentPermissions);
@@ -1643,93 +1648,182 @@ export function registerAiAgentsRoutes(app: Express): void {
       const cwd = getSessionCwd(sessionId, agent.type);
       const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
 
-      streamClaudeResponse({
-        prompt: fullPrompt,
-        cwd,
-        bypassPermissions: true,
-        model: sessionModel,
-        cliSessionId: session.cliSessionId || undefined,
-        agentType: agent.type,
-        appendSystemPrompt: appendSystemPrompt || undefined,
-        res,
-        beforeDone: async (fullText, sseRes) => {
-          const toolCalls = parseCrmToolCalls(fullText);
-          if (toolCalls.length > 0) {
-            const safeCalls = toolCalls.filter((tc) => !isDestructiveToolCall(tc));
-            const destructiveCalls = toolCalls.filter((tc) => isDestructiveToolCall(tc));
+      // Agent loop: feed tool results back to Claude until it stops emitting tool calls.
+      // Each iteration spawns a fresh Claude CLI with --resume, using the cliSessionId
+      // returned from the previous iteration. Cap prevents runaway loops.
+      const MAX_ITERATIONS = 10;
+      const aggregated = {
+        text: "" as string,
+        cliSessionId: session.cliSessionId || null as string | null,
+        usage: { inputTokens: 0, outputTokens: 0, costUsd: 0 },
+      };
+      let pendingConfirmationFired = false;
 
-            if (safeCalls.length > 0) {
-              const results = await executeCrmToolCalls(safeCalls, agentPermissions);
-              for (const result of results) {
-                sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+      let turnFinalized = false;
+      const runIteration = (iterationPrompt: string, iterationAppendSystemPrompt: string | undefined, iteration: number): void => {
+        // Emit a fresh "thinking" activity at the start of every iteration so the
+        // client pill shows immediately and stays fresh across loop boundaries.
+        // Without this, an old "tool" activity from the previous iteration can
+        // linger until the next token arrives.
+        try { res.write(`data: ${JSON.stringify({ type: "activity", activity: "thinking" })}\n\n`); } catch {}
+        streamClaudeResponse({
+          prompt: iterationPrompt,
+          cwd,
+          bypassPermissions: true,
+          model: sessionModel,
+          cliSessionId: aggregated.cliSessionId || undefined,
+          agentType: agent.type,
+          appendSystemPrompt: iterationAppendSystemPrompt,
+          res,
+          // Suppress only the done event/response end for intermediate iterations.
+          // onDone still fires so the loop controller (runIteration.onDone) can decide next steps.
+          suppressDone: true,
+          beforeDone: async (fullText, sseRes) => {
+            try {
+              // Accumulate text across iterations so the saved assistant message reflects the whole turn.
+              if (fullText.trim()) {
+                aggregated.text = aggregated.text
+                  ? `${aggregated.text}\n\n${fullText.trim()}`
+                  : fullText.trim();
               }
-              await storage.createAiMessage({
-                sessionId, role: "tool",
-                content: results.map((r) => r.success ? `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}` : `[Tool: ${r.tool}] Error: ${r.error}`).join("\n\n"),
-              });
-            }
 
-            if (destructiveCalls.length > 0) {
-              sseRes.write(`data: ${JSON.stringify({
-                type: "pending_confirmation", sessionId, agentId: agent.id,
-                actions: destructiveCalls.map((tc) => ({ toolName: tc.name, args: tc.args, description: describeToolCall(tc) })),
-              })}\n\n`);
-            }
-          }
+              const toolCalls = parseCrmToolCalls(fullText);
+              const gogCommands = parseGogCommands(fullText);
+              const toolFeedbackParts: string[] = [];
 
-          const gogCommands = parseGogCommands(fullText);
-          if (gogCommands.length > 0) {
-            const gogResults = await executeGogCommands(gogCommands);
-            for (const result of gogResults) {
-              sseRes.write(`data: ${JSON.stringify({ type: "tool_result", tool: result.command, success: result.success, data: result.output, error: result.error })}\n\n`);
+              if (toolCalls.length > 0) {
+                const safeCalls = toolCalls.filter((tc) => !isDestructiveToolCall(tc));
+                const destructiveCalls = toolCalls.filter((tc) => isDestructiveToolCall(tc));
+
+                if (safeCalls.length > 0) {
+                  const results = await executeCrmToolCalls(safeCalls, agentPermissions);
+                  for (let i = 0; i < results.length; i++) {
+                    const result = results[i];
+                    const args = safeCalls[i]?.args;
+                    // Include args so the client can map tool-results to cache invalidations
+                    // (e.g. inspect SQL in query_database to decide which entity queries to refetch).
+                    sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result, args })}\n\n`);
+                  }
+                  const formatted = results.map((r) => r.success
+                    ? `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`
+                    : `[Tool: ${r.tool}] Error: ${r.error}`
+                  ).join("\n\n");
+                  await storage.createAiMessage({ sessionId, role: "tool", content: formatted });
+                  toolFeedbackParts.push(formatted);
+                }
+
+                if (destructiveCalls.length > 0) {
+                  pendingConfirmationFired = true;
+                  sseRes.write(`data: ${JSON.stringify({
+                    type: "pending_confirmation", sessionId, agentId: agent.id,
+                    actions: destructiveCalls.map((tc) => ({ toolName: tc.name, args: tc.args, description: describeToolCall(tc) })),
+                  })}\n\n`);
+                }
+              }
+
+              if (gogCommands.length > 0) {
+                const gogResults = await executeGogCommands(gogCommands);
+                for (const result of gogResults) {
+                  sseRes.write(`data: ${JSON.stringify({ type: "tool_result", tool: result.command, success: result.success, data: result.output, error: result.error })}\n\n`);
+                }
+                const formatted = gogResults.map((r) => r.success
+                  ? `[GOG: ${r.command}] Result:\n${r.output}`
+                  : `[GOG: ${r.command}] Error: ${r.error}`
+                ).join("\n\n");
+                await storage.createAiMessage({ sessionId, role: "tool", content: formatted });
+                toolFeedbackParts.push(formatted);
+              }
+
+              // Store feedback on the closure so the close handler (below) can decide whether to loop.
+              (runIteration as any)._feedback = toolFeedbackParts.join("\n\n");
+            } catch (err) {
+              console.error("[beforeDone error]", err);
+              res.write(`data: ${JSON.stringify({ type: "error", error: String(err) })}\n\n`);
+              (runIteration as any)._feedback = "";
             }
-            await storage.createAiMessage({
-              sessionId, role: "tool",
-              content: gogResults.map((r) => r.success ? `[GOG: ${r.command}] Result:\n${r.output}` : `[GOG: ${r.command}] Error: ${r.error}`).join("\n\n"),
-            });
-          }
-        },
-        onDone: async (fullText, _subAgentBlocks, cliSessionId, usage) => {
+          },
+          onDone: (_fullText, _blocks, cliSessionId, usage) => {
+            aggregated.cliSessionId = cliSessionId;
+            aggregated.usage.inputTokens += usage.inputTokens;
+            aggregated.usage.outputTokens += usage.outputTokens;
+            aggregated.usage.costUsd += usage.costUsd;
+
+            const feedback: string = (runIteration as any)._feedback || "";
+            (runIteration as any)._feedback = "";
+
+            const shouldLoop = feedback.length > 0 && !pendingConfirmationFired && iteration < MAX_ITERATIONS;
+
+            if (shouldLoop) {
+              // Feed tool results back as the next user turn. --resume is used via aggregated.cliSessionId.
+              runIteration(feedback, undefined, iteration + 1);
+            } else {
+              if (iteration >= MAX_ITERATIONS && feedback.length > 0) {
+                console.warn(`[Agent Conversations] Hit MAX_ITERATIONS (${MAX_ITERATIONS}) for session ${sessionId} — tool loop stopped with pending feedback`);
+              }
+              finalizeTurn();
+            }
+          },
+        });
+      };
+
+      const finalizeTurn = async () => {
+        if (turnFinalized) return;
+        turnFinalized = true;
+        try {
+          // Send done event to client now that loop is complete.
           try {
-            if (fullText.trim()) {
-              await storage.createAiMessage({
-                sessionId,
-                role: "assistant",
-                content: fullText.trim(),
-                metadata: {
-                  model: sessionModel,
-                  inputTokens: usage.inputTokens,
-                  outputTokens: usage.outputTokens,
-                  costUsd: usage.costUsd,
-                },
-              });
-            }
+            res.write(`data: ${JSON.stringify({
+              type: "done",
+              cliSessionId: aggregated.cliSessionId,
+              subAgentBlocks: [],
+              usage: aggregated.usage,
+            })}\n\n`);
+            res.end();
+          } catch {}
 
-            const sessionUpdate: Record<string, unknown> = {
-              totalInputTokens: (session.totalInputTokens || 0) + usage.inputTokens,
-              totalOutputTokens: (session.totalOutputTokens || 0) + usage.outputTokens,
-            };
-            if (cliSessionId && cliSessionId !== session.cliSessionId) {
-              sessionUpdate.cliSessionId = cliSessionId;
-            }
-            await storage.updateAiSession(session.id, sessionUpdate as any);
-
-            if (!session.title && isFirstMessage && content.trim().length > 0 && fullText.trim().length > 0) {
-              generateConversationTitle(content.trim(), fullText.trim())
-                .then((aiTitle) => {
-                  storage.updateAiSession(session.id, { title: aiTitle });
-                  console.log(`[Agent Conversations] Title: "${aiTitle}" for session ${session.id}`);
-                })
-                .catch(() => {
-                  const fallback = content.trim().slice(0, 60) + (content.trim().length > 60 ? "..." : "");
-                  storage.updateAiSession(session.id, { title: fallback });
-                });
-            }
-          } catch (err) {
-            console.error("[Agent Conversations] onDone error:", err);
+          console.log("[DEBUG] finalizeTurn: aggregated.text length:", aggregated.text.length, "trim:", aggregated.text.trim().length);
+          if (aggregated.text.trim()) {
+            console.log("[DEBUG] Saving assistant message, content length:", aggregated.text.trim().length);
+            const savedMsg = await storage.createAiMessage({
+              sessionId,
+              role: "assistant",
+              content: aggregated.text.trim(),
+              metadata: {
+                model: sessionModel,
+                inputTokens: aggregated.usage.inputTokens,
+                outputTokens: aggregated.usage.outputTokens,
+                costUsd: aggregated.usage.costUsd,
+              },
+            });
+            console.log("[DEBUG] Saved assistant message, id:", savedMsg.id);
           }
-        },
-      });
+
+          const sessionUpdate: Record<string, unknown> = {
+            totalInputTokens: (session.totalInputTokens || 0) + aggregated.usage.inputTokens,
+            totalOutputTokens: (session.totalOutputTokens || 0) + aggregated.usage.outputTokens,
+          };
+          if (aggregated.cliSessionId && aggregated.cliSessionId !== session.cliSessionId) {
+            sessionUpdate.cliSessionId = aggregated.cliSessionId;
+          }
+          await storage.updateAiSession(session.id, sessionUpdate as any);
+
+          if (!session.title && isFirstMessage && content.trim().length > 0 && aggregated.text.trim().length > 0) {
+            generateConversationTitle(content.trim(), aggregated.text.trim())
+              .then((aiTitle) => {
+                storage.updateAiSession(session.id, { title: aiTitle });
+                console.log(`[Agent Conversations] Title: "${aiTitle}" for session ${session.id}`);
+              })
+              .catch(() => {
+                const fallback = content.trim().slice(0, 60) + (content.trim().length > 60 ? "..." : "");
+                storage.updateAiSession(session.id, { title: fallback });
+              });
+          }
+        } catch (err) {
+          console.error("[Agent Conversations] finalizeTurn error:", err);
+        }
+      };
+
+      runIteration(fullPrompt, appendSystemPrompt || undefined, 1);
     } catch (err: any) {
       console.error("[Agent Conversations] send error:", err);
       if (!res.headersSent) {

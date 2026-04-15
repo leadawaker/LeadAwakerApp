@@ -289,7 +289,7 @@ export function MessageGenerator({ prospectId, offerIdeas, contactName, contact2
           {messages.map((msg, i) => {
             if (msg.saved) return null;
             return (
-              <div key={`msg-${i}`} className="bg-muted/40 rounded-lg p-3 text-sm group">
+              <div key={`msg-${i}`} className="bg-white dark:bg-slate-900 border border-border/60 shadow-sm rounded-lg p-3 text-sm group">
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
                     <span className="font-medium text-muted-foreground text-[12px]">{msg.title}</span>

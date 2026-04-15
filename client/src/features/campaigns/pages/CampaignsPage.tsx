@@ -380,8 +380,8 @@ function CampaignsContent() {
 
   return (
     <>
-      <div className="flex flex-col h-full" data-onboarding="campaigns-list">
-        <div className="flex-1 overflow-hidden">
+      <div className="flex flex-col h-full relative" data-onboarding="campaigns-list">
+        <div className="flex-1 overflow-hidden relative">
           <CampaignListView
             campaigns={campaigns}
             metrics={metrics}

@@ -405,7 +405,7 @@ export function useConversationsData(
       // Optimistic update — flip the lead's manual_takeover in local state immediately
       setLeads((prev) =>
         prev.map((l) =>
-          l.id === leadId ? { ...l, manual_takeover: manualTakeover } : l,
+          l.id === leadId ? { ...l, manual_takeover: manualTakeover, ...(manualTakeover ? {} : { handoff_reason: null }) } : l,
         ),
       );
       try {

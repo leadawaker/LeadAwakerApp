@@ -244,6 +244,7 @@
     "bump2AiReference": "Use as AI reference",
     "bump3AiReference": "Use as AI reference",
     "demoClientName": "Client Company Name",
+    "companyName": "Company Name",
     "aiStyleOverride": "AI Style Override",
     "isDemo": "Demo Campaign",
     "optOutNotice": "Opt-out Notice in First Message",

@@ -65,6 +65,8 @@
     "priority": "Priority",
     "outreachStatus": "Outreach Stage",
     "date": "Date",
+    "dateCreated": "Date Created",
+    "dateUpdated": "Date Modified",
     "none": "None"
   },
   "filter": {
@@ -145,11 +147,16 @@
   "sections": {
     "basicInfo": "Basic Information",
     "location": "Location",
+    "companySummary": "Company Summary",
+    "company": "Company",
+    "companyContact": "Company Contact",
+    "contacts": "Contacts",
     "contact": "Contact",
     "contact1": "Contact 1",
     "contact2": "Contact 2",
     "pipeline": "Pipeline",
     "enrichment": "LinkedIn Enrichment",
+    "contactEnrichment": "Contact Enrichment",
     "outreachTimeline": "Outreach Timeline",
     "person": "Person",
     "starters": "Starters",
@@ -353,11 +360,34 @@
     "contact1": "Contact 1",
     "contact2": "Contact 2"
   },
+  "companyTab": {
+    "summary": "Summary",
+    "services": "Services",
+    "products": "Products",
+    "history": "History",
+    "noSummary": "No summary yet. Run enrichment to populate.",
+    "noServices": "No services data yet.",
+    "noProducts": "No products data yet.",
+    "noHistory": "No history data yet.",
+    "loadingCompany": "Enriching company...",
+    "loadingContact": "Enriching contact {{slot}}...",
+    "aboutCompany": "About {{name}}",
+    "aboutContact": "About {{name}}",
+    "topCompanyPosts": "Top Company Posts",
+    "topLinkedInPosts": "Top LinkedIn Posts"
+  },
   "enrich": {
     "website": "Website",
     "contact1": "Contact 1",
     "contact2": "Contact 2",
-    "start": "Start"
+    "start": "Start",
+    "enrich": "Enrich",
+    "enrichProspect": "Enrich prospect",
+    "enriching": "Enriching {{targets}}...",
+    "stopPolling": "Stop enrichment polling",
+    "open": "Open",
+    "previousPost": "Previous post",
+    "nextPost": "Next post"
   },
   "offerActions": {
     "refresh": "Refresh from website",

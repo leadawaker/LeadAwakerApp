@@ -161,7 +161,16 @@
     "playbackSpeed": "Playback speed",
     "play": "Play",
     "pause": "Pause",
-    "download": "Download"
+    "download": "Download",
+    "handoff": {
+      "circular_conversation": "AI detected a circular conversation",
+      "knowledge_gap": "AI doesn't know the answer",
+      "first_human_request": "Lead asked to speak to a human",
+      "repeated_human_request": "Lead asked again for a human",
+      "unknown": "AI handed off this conversation",
+      "resumeAi": "Let AI continue",
+      "resumeHumanHandled": "I've handled it, resume AI"
+    }
   },
   "contact": {
     "fold": "Fold",

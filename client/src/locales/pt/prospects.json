@@ -72,6 +72,8 @@
     "priority": "Prioridade",
     "outreachStatus": "Etapa de Prospecção",
     "date": "Data",
+    "dateCreated": "Data de Criação",
+    "dateUpdated": "Data de Modificação",
     "none": "Nenhum"
   },
   "filter": {
@@ -152,6 +154,7 @@
   "sections": {
     "basicInfo": "Informa\u00e7\u00f5es B\u00e1sicas",
     "location": "Localiza\u00e7\u00e3o",
+    "companyContact": "Contato da Empresa",
     "contact": "Contacto",
     "contact1": "Contato 1",
     "contact2": "Contato 2",
@@ -359,11 +362,34 @@
     "contact1": "Contato 1",
     "contact2": "Contato 2"
   },
+  "companyTab": {
+    "summary": "Resumo",
+    "services": "Serviços",
+    "products": "Produtos",
+    "history": "Histórico",
+    "noSummary": "Nenhum resumo ainda. Execute o enriquecimento para popular.",
+    "noServices": "Nenhum dado de serviços disponível.",
+    "noProducts": "Nenhum dado de produtos disponível.",
+    "noHistory": "Nenhum histórico da empresa disponível.",
+    "loadingCompany": "Enriquecendo empresa...",
+    "loadingContact": "Enriquecendo contato {{slot}}...",
+    "aboutCompany": "Sobre {{name}}",
+    "aboutContact": "Sobre {{name}}",
+    "topCompanyPosts": "Principais Posts da Empresa",
+    "topLinkedInPosts": "Principais Posts do LinkedIn"
+  },
   "enrich": {
     "website": "Website",
     "contact1": "Contato 1",
     "contact2": "Contato 2",
-    "start": "Iniciar"
+    "start": "Iniciar",
+    "enrich": "Enriquecer",
+    "enrichProspect": "Enriquecer prospecto",
+    "enriching": "Enriquecendo {{targets}}...",
+    "stopPolling": "Parar enriquecimento",
+    "open": "Abrir",
+    "previousPost": "Post anterior",
+    "nextPost": "Próximo post"
   },
   "offerActions": {
     "refresh": "Atualizar do website",

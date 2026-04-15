@@ -19,6 +19,7 @@ export interface CampaignForPreview {
   // Campaign-level overrides (no account fallback)
   language?: string | null;
   demoClientName?: string | null;
+  companyName?: string | null;
   aiStyleOverride?: string | null;
   description?: string | null;
   aiRole?: string | null;
@@ -79,7 +80,7 @@ function buildMap(
     inquiry_timeframe: campaign?.inquiryTimeframe,
     niche_question: campaign?.nicheQuestion,
     booking_mode: normalizeBookingMode(campaign?.bookingMode),
-    company_name: campaign?.demoClientName,
+    company_name: campaign?.companyName || campaign?.demoClientName,
     niche: campaign?.niche,
     business_description: campaign?.description,
     ai_style: campaign?.aiStyleOverride || "Casual, smooth and pro",
@@ -117,8 +118,8 @@ export function resolveVariables(
 
 const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
 
-// Matches {{#if var == "val"}}content{{/if}} — no special HTML chars inside the tag syntax
-const CONDITIONAL_RE = /\{\{#if\s+(\w+)\s*(==|!=)\s*&quot;([^&]*)&quot;\}\}([\s\S]*?)\{\{\/if\}\}/g;
+// Matches {{#if var == "val"}}content{{else}}alt{{/if}} — no special HTML chars inside the tag syntax
+const CONDITIONAL_RE = /\{\{#if\s+(\w+)\s*(==|!=)\s*&quot;([^&]*)&quot;\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g;
 
 /** HTML resolution — all {variable} tokens become <mark> chips, conditionals evaluated */
 export function resolveVariablesHtml(
@@ -134,10 +135,11 @@ export function resolveVariablesHtml(
   let html = esc(text);
 
   // 2. Evaluate conditionals — wrap resolved content in amber span so it stays highlighted in preview
-  html = html.replace(CONDITIONAL_RE, (_match, varName, op, compareVal, content) => {
+  html = html.replace(CONDITIONAL_RE, (_match, varName, op, compareVal, ifContent, elseContent) => {
     const actual = String(map[varName.toLowerCase()] ?? "");
     const met = op === "==" ? actual === compareVal : actual !== compareVal;
-    if (!met) return "";
+    const content = met ? ifContent : (elseContent || "");
+    if (!content) return "";
     return `<span class="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">${content.trim()}</span>`;
   });
 

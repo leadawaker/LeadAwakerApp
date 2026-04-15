@@ -1,12 +1,96 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, ChevronRight, Terminal } from "lucide-react";
 import { useState } from "react";
 
 // Import highlight.js github-dark theme
 import "highlight.js/styles/github-dark.min.css";
+
+// ─── CRM Tool Call Block ────────────────────────────────────────────────────
+// Renders <crm_tool_call name="..."> blocks as styled, collapsible command blocks.
+// Collapsed: shows tool name + first 60 chars of args. Expanded: full args JSON.
+
+type CrmToolSegment =
+  | { kind: "text"; content: string }
+  | { kind: "tool"; name: string; args: string };
+
+function splitCrmToolCalls(text: string): CrmToolSegment[] {
+  const segments: CrmToolSegment[] = [];
+  const regex = /<crm_tool_call\s+name="([^"]+)"(?:\s*\/>|>([\s\S]*?)<\/crm_tool_call>)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ kind: "text", content: text.slice(lastIndex, match.index) });
+    }
+    segments.push({ kind: "tool", name: match[1], args: (match[2] ?? "").trim() });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ kind: "text", content: text.slice(lastIndex) });
+  }
+  return segments;
+}
+
+function firstSixtyCharsFromArgs(args: string): string {
+  // Try to pull a meaningful preview from common arg shapes (sql, query, name, etc.)
+  try {
+    const parsed = JSON.parse(args);
+    const preview =
+      (typeof parsed.sql === "string" && parsed.sql) ||
+      (typeof parsed.query === "string" && parsed.query) ||
+      (typeof parsed.name === "string" && parsed.name) ||
+      JSON.stringify(parsed);
+    const flat = String(preview).replace(/\s+/g, " ").trim();
+    return flat.length > 60 ? flat.slice(0, 60) + "…" : flat;
+  } catch {
+    const flat = args.replace(/\s+/g, " ").trim();
+    return flat.length > 60 ? flat.slice(0, 60) + "…" : flat;
+  }
+}
+
+function CrmToolCallBlock({ name, args }: { name: string; args: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const preview = firstSixtyCharsFromArgs(args);
+  const prettyArgs = useMemo(() => {
+    try {
+      return JSON.stringify(JSON.parse(args), null, 2);
+    } catch {
+      return args;
+    }
+  }, [args]);
+
+  return (
+    <div className="my-1.5 rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left hover:bg-blue-100/60 dark:hover:bg-blue-900/40 transition-colors"
+      >
+        <ChevronRight
+          className={`h-3.5 w-3.5 flex-shrink-0 text-blue-700 dark:text-blue-300 transition-transform ${expanded ? "rotate-90" : ""}`}
+        />
+        <Terminal className="h-3.5 w-3.5 flex-shrink-0 text-blue-700 dark:text-blue-300" />
+        <span className="font-mono text-[12px] font-semibold text-blue-800 dark:text-blue-200 flex-shrink-0">
+          {name}
+        </span>
+        {!expanded && preview && (
+          <span className="font-mono text-[11px] text-blue-700/80 dark:text-blue-300/80 truncate">
+            {preview}
+          </span>
+        )}
+      </button>
+      {expanded && (
+        <pre className="bg-blue-100/60 dark:bg-blue-950/60 text-blue-900 dark:text-blue-100 text-[11px] leading-relaxed p-2.5 overflow-x-auto border-t border-blue-200 dark:border-blue-800 font-mono whitespace-pre-wrap">
+          {prettyArgs}
+        </pre>
+      )}
+    </div>
+  );
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -52,7 +136,7 @@ function extractTextFromChildren(children: React.ReactNode): string {
 const remarkPlugins = [remarkGfm];
 const rehypePlugins = [rehypeHighlight];
 
-export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: { content: string }) {
+const MarkdownSegment = memo(function MarkdownSegment({ content }: { content: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={remarkPlugins}
@@ -175,5 +259,26 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: { co
     >
       {content}
     </ReactMarkdown>
+  );
+});
+
+export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: { content: string }) {
+  const segments = useMemo(() => splitCrmToolCalls(content), [content]);
+
+  // Fast path: no tool calls, render markdown directly
+  if (segments.length === 1 && segments[0].kind === "text") {
+    return <MarkdownSegment content={segments[0].content} />;
+  }
+
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.kind === "text"
+          ? seg.content.trim()
+            ? <MarkdownSegment key={i} content={seg.content} />
+            : null
+          : <CrmToolCallBlock key={i} name={seg.name} args={seg.args} />
+      )}
+    </>
   );
 });

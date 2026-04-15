@@ -6,6 +6,7 @@
 import { db } from "./db";
 import { prospects } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { completeText, stripFences } from "./aiTextHelper";
 
 const RAPIDAPI_HOST = "professional-network-data.p.rapidapi.com";
 const ENDPOINT = `https://${RAPIDAPI_HOST}/profile-data-connection-count-posts`;
@@ -39,12 +40,20 @@ export function extractUsername(url: string): string | null {
   return match ? match[1] : null;
 }
 
+interface CarouselPost {
+  title: string;
+  date: string;
+  reactions: number;
+  url?: string;
+}
+
 interface LinkedInResult {
   headline: string | null;
   connectionCount: number | null;
   followerCount: number | null;
   photoUrl: string | null;
   topPost: string | null;
+  topPosts: CarouselPost[];
 }
 
 /**
@@ -77,12 +86,27 @@ export async function fetchLinkedInProfile(username: string): Promise<LinkedInRe
       const json = await res.json() as any;
       const data = json.data || json;
 
-      // Extract top post text (first post with text content)
-      let topPost: string | null = null;
+      // Extract top posts — take top 3 by reactions from the last batch
       const posts = json.posts || data.posts || [];
+      const topPosts: CarouselPost[] = [];
+      let topPost: string | null = null;
       if (Array.isArray(posts) && posts.length > 0) {
-        topPost = posts[0]?.text || posts[0]?.commentary || null;
-        if (topPost && topPost.length > 500) topPost = topPost.slice(0, 497) + "...";
+        const sorted = [...posts].sort((a, b) => (b?.totalReactionCount ?? 0) - (a?.totalReactionCount ?? 0));
+        for (const p of sorted.slice(0, 3)) {
+          const rawText = (p?.text || p?.commentary || "").toString();
+          if (!rawText.trim()) continue;
+          const title = rawText.length > 120 ? rawText.slice(0, 117) + "..." : rawText;
+          const date = (p?.postedDate || "").toString().slice(0, 10);
+          topPosts.push({
+            title,
+            date,
+            reactions: Number(p?.totalReactionCount ?? 0),
+            url: p?.postUrl || undefined,
+          });
+        }
+        // Legacy text field (backwards compat): use the highest-engagement post text
+        const firstText = sorted[0]?.text || sorted[0]?.commentary || null;
+        topPost = firstText ? (firstText.length > 500 ? firstText.slice(0, 497) + "..." : firstText) : null;
       }
 
       // Parse counts as integers
@@ -95,6 +119,7 @@ export async function fetchLinkedInProfile(username: string): Promise<LinkedInRe
         followerCount,
         photoUrl: data.profilePicture || data.photo_url || null,
         topPost,
+        topPosts,
       };
     } catch (err: any) {
       lastError = err;
@@ -147,10 +172,15 @@ export async function enrichLinkedIn(prospectId: number, contactSlot: 1 | 2 = 1)
   const name = contactSlot === 2 ? prospectData?.contact2Name : prospectData?.contactName;
   const role = contactSlot === 2 ? prospectData?.contact2Role : prospectData?.contactRole;
 
-  // Generate person_brief via Claude CLI (best-effort)
+  // Generate structured person_brief (labeled ROLE/BACKGROUND/CONTENT/RAPPORT format)
+  // Tries Claude Haiku first, falls back to Groq on failure. Best-effort.
   let personBrief: string | null = null;
-  if (result.headline || result.topPost) {
-    const briefPrompt = `You are creating a sales intelligence brief about a business contact. Based on their LinkedIn data, create a well-categorized person brief.
+  if (result.headline || result.topPost || result.topPosts.length > 0) {
+    const postsBlock = result.topPosts.length > 0
+      ? result.topPosts.map((p, i) => `Post ${i + 1} (${p.reactions} reactions, ${p.date}): ${p.title}`).join("\n")
+      : (result.topPost || "N/A");
+
+    const briefPrompt = `You are creating a sales intelligence brief about a business contact based on their LinkedIn data.
 
 Name: ${name || "Unknown"}
 Role: ${role || "Unknown"}
@@ -159,49 +189,37 @@ Industry: ${prospectData?.niche || "Unknown"}
 LinkedIn Headline: ${result.headline || "N/A"}
 Connections: ${result.connectionCount || "N/A"}
 Followers: ${result.followerCount || "N/A"}
-Recent LinkedIn Post: ${result.topPost || "N/A"}
+Recent Posts:
+${postsBlock}
 
-Generate 6-10 bullet points organized into these categories:
-- ROLE: Their current position, responsibilities, and seniority level
-- BACKGROUND: Career trajectory, specializations, expertise areas
-- CONTENT: What they post about, their thought leadership topics, tone of their posts (translate any non-English posts to English for the summary)
-- ENGAGEMENT: Their network size, influence level, how active they are
-- RAPPORT: Anything useful for building connection (interests, values, communication style visible from their content)
+Write a categorized brief using EXACTLY this labeled format — one fact per line, multiple lines per category allowed:
+
+ROLE: <one line: current role at company, capacity, availability if mentioned>
+BACKGROUND: <fact 1 about expertise, methodologies, years of experience>
+BACKGROUND: <fact 2>
+BACKGROUND: <fact 3 if relevant>
+CONTENT: <fact 1: what they post about, themes, positioning in their content>
+CONTENT: <fact 2 if relevant>
+RAPPORT: <fact 1: communication style, values, how to approach them>
+RAPPORT: <fact 2 if relevant>
 
 Rules:
-- Each bullet is one concise sentence
-- Be specific, not generic
-- If a post is in another language, translate the key points to English
-- Skip categories where no data is available
-- Format as a flat JSON array of strings: ["ROLE: ...", "BACKGROUND: ...", ...]
+- Output ONLY the labeled lines, no preamble, no markdown, no code fences.
+- Each line starts with an uppercase label followed by a colon and a space.
+- If content is in Dutch/Portuguese/etc., synthesize the meaning in English.
+- Be specific and useful for outreach, not generic.
+- Skip any category that has no data.`;
 
-Return ONLY the JSON array, no markdown fences.`;
-
-    const { execFile } = await import("child_process");
-    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
-
-    try {
-      const briefResult = await new Promise<string>((resolve, reject) => {
-        execFile(
-          CLAUDE_BIN,
-          ["-p", briefPrompt, "--model", "haiku", "--max-turns", "1"],
-          { timeout: 60000, maxBuffer: 1024 * 1024 },
-          (error, stdout) => {
-            if (error) reject(error);
-            else resolve(stdout);
-          }
-        );
-      });
-      let cleaned = briefResult.trim();
-      if (cleaned.startsWith("```")) {
-        cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-      }
-      const parsed = JSON.parse(cleaned);
-      if (Array.isArray(parsed)) personBrief = JSON.stringify(parsed);
-    } catch (err: any) {
-      console.error("[LinkedIn] Person brief generation failed:", err.message);
+    const briefOut = await completeText(briefPrompt);
+    if (briefOut) {
+      const cleaned = stripFences(briefOut);
+      // Keep only lines that start with an uppercase label pattern — drop any stray preamble
+      const lines = cleaned.split(/\r?\n/).filter((l) => /^[A-Z][A-Z0-9 /&-]{1,40}:\s/.test(l.trim()));
+      if (lines.length > 0) personBrief = lines.map((l) => l.trim()).join("\n");
     }
   }
+
+  const topPostDataJson = result.topPosts.length > 0 ? result.topPosts : null;
 
   const linkedinFields = contactSlot === 2
     ? {
@@ -210,6 +228,7 @@ Return ONLY the JSON array, no markdown fences.`;
         contact2FollowerCount: result.followerCount,
         contact2PhotoUrl: result.photoUrl,
         contact2TopPost: result.topPost,
+        contact2TopPostData: topPostDataJson as any,
         contact2PersonBrief: personBrief,
       }
     : {
@@ -218,6 +237,7 @@ Return ONLY the JSON array, no markdown fences.`;
         followerCount: result.followerCount,
         photoUrl: result.photoUrl,
         topPost: result.topPost,
+        topPostData: topPostDataJson as any,
         personBrief: personBrief,
       };
 

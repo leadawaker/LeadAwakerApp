@@ -312,7 +312,7 @@ export function AccountListView({
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
   return (
-    <div className="flex flex-col md:flex-row h-full gap-[3px] overflow-y-auto md:overflow-y-hidden" data-testid="account-list-view">
+    <div className="flex flex-col md:flex-row h-full gap-[3px] overflow-y-auto md:overflow-y-hidden max-w-[1729px] mx-auto w-full" data-testid="account-list-view">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(

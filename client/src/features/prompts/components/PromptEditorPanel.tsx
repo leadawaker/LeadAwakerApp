@@ -179,7 +179,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     backdropLineRefs.current = [];
 
     // Split each line into variable tokens, conditional tags, and plain text
-    const TOKEN_RE = /(\{\{#if\s+\w+\s*(?:==|!=)\s*"[^"]*"\}\}|\{\{\/if\}\}|\{\w+\})/;
+    const TOKEN_RE = /(\{\{#if\s+\w+\s*(?:==|!=)\s*"[^"]*"\}\}|\{\{\/if\}\}|\{\{else\}\}|\{\w+\})/;
     const IF_OPEN_RE = /^\{\{#if\s+/;
     const IF_CLOSE_RE = /^\{\{\/if\}\}$/;
     const INDIGO = "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300";
@@ -205,6 +205,10 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                 // Closing tag: {{/if}}
                 if (IF_CLOSE_RE.test(part)) {
                   insideConditional = false;
+                  return <mark key={idx} className={INDIGO}>{part}</mark>;
+                }
+                // Else tag: {{else}}
+                if (part === "{{else}}") {
                   return <mark key={idx} className={INDIGO}>{part}</mark>;
                 }
                 // Variable tokens: {var_name}

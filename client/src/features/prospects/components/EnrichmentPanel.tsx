@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles } from "lucide-react";
 import { relativeTime, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { EnrichDropdown } from "./EnrichDropdown";
+import { EnrichDropdown, type EnrichTarget } from "./EnrichDropdown";
 import { MessageGenerator } from "./MessageGenerator";
 import { CompanyTab } from "./CompanyTab";
 import { ContactTab } from "./ContactTab";
@@ -49,6 +49,11 @@ export function EnrichmentPanel({ prospect, onRefresh }: EnrichmentPanelProps) {
   const { t } = useTranslation("prospects");
   const prospectId = prospect.Id ?? prospect.id ?? 0;
   const [activeTab, setActiveTab] = useState<"company" | "contact1" | "contact2">("company");
+  const [enriching, setEnriching] = useState<Set<EnrichTarget>>(new Set());
+
+  const handleLoadingChange = useCallback((s: Set<EnrichTarget>) => {
+    setEnriching(new Set(s));
+  }, []);
 
   const offerIdeas = parseOffers(prospect.offer_ideas);
   const savedMessages = parseMessages(prospect.generated_messages);
@@ -79,7 +84,13 @@ export function EnrichmentPanel({ prospect, onRefresh }: EnrichmentPanelProps) {
             </span>
           )}
         </div>
-        <EnrichDropdown prospectId={prospectId} onDone={onRefresh} enrichedAt={prospect.enriched_at} />
+        <EnrichDropdown
+          prospectId={prospectId}
+          onDone={onRefresh}
+          enrichedAt={prospect.enriched_at}
+          companyEnrichedAt={prospect.company_enriched_at}
+          onLoadingChange={handleLoadingChange}
+        />
       </div>
 
       {/* Tab bar */}
@@ -105,12 +116,12 @@ export function EnrichmentPanel({ prospect, onRefresh }: EnrichmentPanelProps) {
 
       {/* Tab content */}
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-6 scroll-fade-bottom">
-        {activeTab === "company" && <CompanyTab prospect={prospect} />}
+        {activeTab === "company" && <CompanyTab prospect={prospect} loading={enriching.has("company")} />}
         {activeTab === "contact1" && (
-          <ContactTab prospect={prospect} slot={1} prospectId={prospectId} onRefresh={onRefresh} />
+          <ContactTab prospect={prospect} slot={1} prospectId={prospectId} onRefresh={onRefresh} loading={enriching.has("contact1")} />
         )}
         {activeTab === "contact2" && (
-          <ContactTab prospect={prospect} slot={2} prospectId={prospectId} onRefresh={onRefresh} />
+          <ContactTab prospect={prospect} slot={2} prospectId={prospectId} onRefresh={onRefresh} loading={enriching.has("contact2")} />
         )}
 
         {/* Message Generator (always visible, below tab content) */}

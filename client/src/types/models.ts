@@ -99,8 +99,12 @@ export type Campaign = {
   // Demo campaigns
   is_demo?: boolean;
   demo_client_name?: string | null;
+  company_name?: string | null;
   // Compliance
   opt_out_notice?: boolean;
+  // Twilio WhatsApp templates (Content API SIDs for 24h-out-of-session sends)
+  twilio_first_message_template_sid?: string | null;
+  twilio_bump_template_sid?: string | null;
   // Computed/joined fields
   account_name?: string;
   [key: string]: any;
@@ -148,6 +152,7 @@ export type Lead = {
   ai_sentiment: "Positive" | "Neutral" | "Negative" | "Unknown";
   priority: "Low" | "Medium" | "High" | "Urgent";
   manual_takeover: boolean;
+  handoff_reason?: string | null;
   dnc_reason: string;
   custom_field_1: string;
   custom_field_2: string;
@@ -179,6 +184,8 @@ export type Interaction = {
   ai_model: string;
   ai_prompt: string;
   ai_response: string;
+  is_template?: boolean | null;
+  template_sid?: string | null;
   [key: string]: any;
 };
 

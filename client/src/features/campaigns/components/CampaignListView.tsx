@@ -218,7 +218,8 @@ function CampaignListCard({
 
         </div>
 
-        {/* Metrics strip: always visible on mobile, hover-only on desktop */}
+        {/* Metrics strip: always visible on mobile, hover-only on desktop. Hidden entirely for demo campaigns. */}
+        {!campaign.is_demo && (
         <div className={cn(
           "opacity-100 max-h-[64px] md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[64px]",
           "transition-[opacity,max-height] duration-200 flex flex-col gap-1"
@@ -258,6 +259,7 @@ function CampaignListCard({
             </div>
           )}
         </div>
+        )}
 
       </div>
     </div>
@@ -675,6 +677,16 @@ export function CampaignListView({
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
     try { return localStorage.getItem("campaigns-left-panel-collapsed") === "true"; } catch { return false; }
   });
+  const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
+    try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
+  });
+  const togglePromptPanel = useCallback(() => {
+    setPromptPanelOpen(prev => {
+      const next = !prev;
+      try { localStorage.setItem("campaigns-prompt-panel-open", String(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   // Active filter state
   const isFilterActive = filterStatus.length > 0 || !!filterAccount;
@@ -855,7 +867,7 @@ export function CampaignListView({
   }, [selectedCampaign]);
 
   return (
-    <div className="flex h-full gap-[3px]" data-testid="campaign-list-view">
+    <div className={cn("flex h-full gap-[3px] mx-auto w-full", promptPanelOpen ? "max-w-[2369px]" : "max-w-[1729px]")} data-testid="campaign-list-view">
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
       <div className={cn(
@@ -1302,6 +1314,8 @@ export function CampaignListView({
                 setLeftPanelCollapsed(next);
                 try { localStorage.setItem("campaigns-left-panel-collapsed", String(next)); } catch {}
               }}
+              promptPanelOpen={promptPanelOpen}
+              onTogglePromptPanel={togglePromptPanel}
             />
           ) : (
             <CampaignDetailViewEmpty />

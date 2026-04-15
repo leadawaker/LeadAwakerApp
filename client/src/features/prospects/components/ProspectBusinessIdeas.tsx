@@ -197,33 +197,28 @@ export function ProspectBusinessIdeas({ offerIdeas, compact, prospectId, onRefre
           return (
             <div
               key={i}
+              onClick={() => prospectId && toggleCheck(i)}
               className={cn(
-                "group relative flex items-start gap-2 w-full p-2 rounded-lg transition-colors",
-                offer.checked
-                  ? "bg-emerald-500/10 border border-emerald-500/20"
-                  : "bg-muted/40 hover:bg-amber-500/10"
+                "group relative flex items-start gap-2 w-full p-2 rounded-lg transition-colors bg-white dark:bg-slate-900 border border-border/60 shadow-sm hover:border-foreground/20",
+                prospectId && "cursor-pointer"
               )}
             >
-              {/* Check button */}
+              {/* Check indicator */}
               {prospectId && (
-                <button
-                  onClick={() => toggleCheck(i)}
+                <span
                   className={cn(
                     "shrink-0 mt-0.5 h-4 w-4 rounded border flex items-center justify-center transition-colors",
                     offer.checked
                       ? "bg-emerald-500 border-emerald-500 text-white"
-                      : "border-border/60 hover:border-foreground/40"
+                      : "border-border/60 group-hover:border-foreground/40"
                   )}
                 >
                   {offer.checked && <Check className="h-2.5 w-2.5" />}
-                </button>
+                </span>
               )}
 
-              {/* Content (click to copy) */}
-              <div
-                className="flex-1 min-w-0 cursor-pointer"
-                onClick={() => navigator.clipboard.writeText(offer.text)}
-              >
+              {/* Content */}
+              <div className="flex-1 min-w-0">
                 {description ? (
                   <>
                     <span className="text-[12px] font-semibold text-foreground block pr-5">
@@ -239,7 +234,7 @@ export function ProspectBusinessIdeas({ offerIdeas, compact, prospectId, onRefre
               {/* Delete */}
               {prospectId && (
                 <button
-                  onClick={() => handleDelete(i)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(i); }}
                   className="shrink-0 opacity-0 group-hover:opacity-100 h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all"
                   title="Remove offer"
                 >

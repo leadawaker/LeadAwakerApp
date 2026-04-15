@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { ProspectDetailView, ProspectDetailViewEmpty } from "./ProspectDetailView";
+import { ProspectDetailViewEmpty } from "./ProspectDetailView";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { OUTREACH_HEX, OUTREACH_LABELS, OUTREACH_STATUSES, type OutreachStatus } from "./OutreachPipelineView";
 import { ProspectCreatePanel } from "./ProspectCreatePanel";
@@ -77,6 +77,7 @@ import { ProspectTasks } from "./ProspectTasks";
 import { EmailComposeModal } from "./EmailComposeModal";
 import { InteractionTimeline } from "./InteractionTimeline";
 import { WhatsAppComposer } from "./WhatsAppComposer";
+import { EmailComposer } from "./EmailComposer";
 import { EnrichmentPanel } from "./EnrichmentPanel";
 import { ProspectBusinessIdeas } from "./ProspectBusinessIdeas";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
@@ -152,7 +153,7 @@ export interface NewProspectForm {
 }
 
 export type ProspectViewMode = "list" | "table" | "pipeline" | "followups" | "templates";
-export type ProspectGroupBy = "status" | "niche" | "country" | "priority" | "date" | "none";
+export type ProspectGroupBy = "status" | "niche" | "country" | "priority" | "date_created" | "date_updated" | "none";
 export type ProspectSortBy = "recent" | "name_asc" | "name_desc" | "priority";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -276,9 +277,10 @@ const GROUP_TKEYS: Record<ProspectGroupBy, string> = {
   status:   "group.status",
   niche:    "group.niche",
   country:  "group.country",
-  priority: "group.priority",
-  date:     "group.date",
-  none:     "group.none",
+  priority:     "group.priority",
+  date_created: "group.dateCreated",
+  date_updated: "group.dateUpdated",
+  none:         "group.none",
 };
 
 const SORT_TKEYS: Record<ProspectSortBy, string> = {
@@ -660,10 +662,31 @@ export function ProspectListView({
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [groupDirection, setGroupDirection] = useState<"asc" | "desc">("asc");
+  const [editingProspectName, setEditingProspectName] = useState(false);
+  const [prospectNameValue, setProspectNameValue] = useState("");
+  const prospectNameInputRef = useRef<HTMLInputElement>(null);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
     try { return localStorage.getItem("prospects-left-panel-collapsed") === "true"; } catch { return false; }
   });
   const PAGE_SIZE = 25;
+
+  useEffect(() => {
+    setProspectNameValue(selectedProspect?.name || selectedProspect?.company || "");
+  }, [selectedProspect?.name, selectedProspect?.company]);
+
+  useEffect(() => {
+    if (editingProspectName) prospectNameInputRef.current?.select();
+  }, [editingProspectName]);
+
+  const commitProspectName = async () => {
+    setEditingProspectName(false);
+    const trimmed = prospectNameValue.trim();
+    if (trimmed && trimmed !== (selectedProspect?.name || selectedProspect?.company)) {
+      await onSave("name", trimmed);
+    } else {
+      setProspectNameValue(selectedProspect?.name || selectedProspect?.company || "");
+    }
+  };
 
   // ── Email compose state ──────────────────────────────────────────────────
   const [emailComposeOpen, setEmailComposeOpen] = useState(false);
@@ -967,7 +990,8 @@ export function ProspectListView({
         case "niche":    key = String(p.niche || "Other"); break;
         case "country":  key = String(p.country || "Unknown"); break;
         case "priority": key = String(p.priority || "Medium"); break;
-        case "date":     key = getDateBucket(p.updated_at || p.created_at); break;
+        case "date_created": key = getDateBucket(p.created_at); break;
+        case "date_updated": key = getDateBucket(p.updated_at || p.created_at); break;
         default:         key = String(p.status || "New"); break;
       }
       if (!buckets.has(key)) buckets.set(key, []);
@@ -981,7 +1005,7 @@ export function ProspectListView({
     } else if (groupBy === "priority") {
       orderedKeys = ["High", "Medium", "Low"].filter((k) => buckets.has(k))
         .concat(Array.from(buckets.keys()).filter((k) => !["High", "Medium", "Low"].includes(k)));
-    } else if (groupBy === "date") {
+    } else if (groupBy === "date_created" || groupBy === "date_updated") {
       orderedKeys = DATE_BUCKET_ORDER.filter((k) => buckets.has(k));
     } else {
       // niche, country — alphabetical
@@ -1033,6 +1057,28 @@ export function ProspectListView({
   // Reset page on filter change
   useEffect(() => { setCurrentPage(0); }, [listSearch, filterNiche, filterStatus, filterCountry, filterPriority, filterSource, groupBy, sortBy]);
 
+  // Auto-paginate to the selected prospect's page, but only when selection changes.
+  // After that, the user is free to paginate away without snapping back.
+  const lastHandledSelectionRef = useRef<string | number | null>(null);
+  useEffect(() => {
+    if (!selectedProspect) { lastHandledSelectionRef.current = null; return; }
+    const selectedId = getProspectId(selectedProspect);
+    if (lastHandledSelectionRef.current === selectedId) return;
+    lastHandledSelectionRef.current = selectedId;
+    if (totalProspects <= PAGE_SIZE) return;
+    let prospectIndex = -1;
+    let idx = 0;
+    for (const item of flatItems) {
+      if (item.kind !== "prospect") continue;
+      if (getProspectId(item.prospect) === selectedId) { prospectIndex = idx; break; }
+      idx++;
+    }
+    if (prospectIndex < 0) return;
+    const targetPage = Math.floor(prospectIndex / PAGE_SIZE);
+    if (targetPage !== currentPage) setCurrentPage(targetPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProspect]);
+
   // Auto-select first prospect
   useEffect(() => {
     if (!selectedProspect && prospects.length > 0) {
@@ -1071,24 +1117,34 @@ export function ProspectListView({
     return Array.from(seen).sort();
   }, [prospects]);
 
-  // ── Smooth scroll to selected card ────────────────────────────────────────
+  // ── Smooth scroll to selected card — only when selection changes ─────────
+  // Intentionally does NOT depend on currentPage/paginatedItems, so pagination
+  // clicks don't drag us back to the selected card.
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrolledSelectionRef = useRef<string | number | null>(null);
   useEffect(() => {
     if (!selectedProspect || !scrollContainerRef.current) return;
+    const id = getProspectId(selectedProspect);
+    if (lastScrolledSelectionRef.current === id) return;
+    lastScrolledSelectionRef.current = id;
     const container = scrollContainerRef.current;
+    let rafId: number | null = null;
+    let attempts = 0;
     const run = () => {
-      const id = getProspectId(selectedProspect);
       const el = container.querySelector(`[data-prospect-id="${id}"]`) as HTMLElement | null;
-      if (!el) return;
-      // Calculate card position relative to scroll container
+      if (!el) {
+        // Card not in DOM yet (e.g. just auto-paginated). Retry up to ~30 frames (~500ms).
+        if (attempts++ < 30) { rafId = requestAnimationFrame(run); }
+        return;
+      }
       const containerTop = container.getBoundingClientRect().top;
       const cardTop = el.getBoundingClientRect().top;
       const relativeTop = cardTop - containerTop + container.scrollTop;
       // 48px buffer accounts for sticky group header height
       container.scrollTo({ top: Math.max(0, relativeTop - 48), behavior: "smooth" });
     };
-    const raf = requestAnimationFrame(run);
-    return () => cancelAnimationFrame(raf);
+    rafId = requestAnimationFrame(run);
+    return () => { if (rafId !== null) cancelAnimationFrame(rafId); };
   }, [selectedProspect]);
 
   // ── Expand-on-hover button constants ────────────────────────────────────────
@@ -1357,11 +1413,8 @@ export function ProspectListView({
           : cn("w-full lg:w-[340px] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
 
-        {/* Scrollable area: header + toolbar + prospect list */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-
-        {/* Header: title + ViewTabBar */}
-        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 flex items-center">
+        {/* Header: title + ViewTabBar (sticky — does not scroll) */}
+        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 flex items-center shrink-0">
           <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
             <ViewTabBar
@@ -1373,14 +1426,14 @@ export function ProspectListView({
           </div>
         </div>
 
-        {/* List toolbar: search + create + sort + filter + group */}
-        <div className="px-2 pb-2 flex items-center gap-1">
+        {/* List toolbar: search + create + sort + filter + group (sticky — does not scroll) */}
+        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
           {searchPill}
           {toolbarPrefix}
         </div>
 
-        {/* Prospect list */}
-        <div className="p-[3px]">
+        {/* Scrollable prospect list */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -1437,7 +1490,6 @@ export function ProspectListView({
               })()}
             </div>
           )}
-        </div>
         </div>
 
         {/* Pagination footer */}
@@ -1591,17 +1643,29 @@ export function ProspectListView({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight truncate">
-                        {selectedProspect.name || selectedProspect.company || ""}
-                      </h2>
-                      {(selectedProspect.email || selectedProspect.contact_email || selectedProspect.contact2_email) && (
-                        <button
-                          onClick={() => setEmailComposeOpen(true)}
-                          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-brand-indigo text-white text-[11px] font-medium hover:bg-brand-indigo/90 transition-colors"
+                      {editingProspectName ? (
+                        <input
+                          ref={prospectNameInputRef}
+                          value={prospectNameValue}
+                          onChange={(e) => setProspectNameValue(e.target.value)}
+                          onBlur={commitProspectName}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                            else if (e.key === "Escape") {
+                              setProspectNameValue(selectedProspect?.name || selectedProspect?.company || "");
+                              setEditingProspectName(false);
+                            }
+                          }}
+                          className="text-2xl font-semibold font-heading text-foreground leading-tight bg-transparent border-b border-foreground/30 outline-none w-full"
+                        />
+                      ) : (
+                        <h2
+                          className="text-2xl font-semibold font-heading text-foreground leading-tight truncate cursor-text hover:opacity-80 transition-opacity"
+                          onClick={() => setEditingProspectName(true)}
+                          title={t("detail.clickToRename", "Click to rename")}
                         >
-                          <Mail className="h-3.5 w-3.5" />
-                          {t("emailCompose.sendEmail")}
-                        </button>
+                          {selectedProspect?.name || selectedProspect?.company || ""}
+                        </h2>
                       )}
                     </div>
                     {/* Outreach / Niche / Priority — all on one row, clickable */}
@@ -1789,12 +1853,13 @@ export function ProspectListView({
                   </CollapsibleSection>
 
                   <CollapsibleSection id="actions-emails" title={t("sections.emails")} icon={Mail} hasData>
-                    <InteractionTimeline
+                    <EmailComposer
                       prospectId={selectedProspect.Id ?? selectedProspect.id ?? 0}
-                      onReply={(ctx) => {
-                        setReplyContext(ctx);
-                        setEmailComposeOpen(true);
-                      }}
+                      prospectEmail={selectedProspect.email}
+                      contactEmail={selectedProspect.contact_email}
+                      contact2Email={selectedProspect.contact2_email}
+                      prospectName={selectedProspect.name || selectedProspect.company || "Unknown"}
+                      onOpenEmailModal={() => setEmailComposeOpen(true)}
                     />
                   </CollapsibleSection>
 

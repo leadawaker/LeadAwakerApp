@@ -221,5 +221,9 @@
     "filterTasks": "Taken",
     "filterBookings": "Boekingen",
     "filterSystem": "Systeem"
+  },
+  "agentWidget": {
+    "dockToSide": "Dokken aan zijkant",
+    "undock": "Losmaken"
   }
 }

@@ -369,15 +369,18 @@ export function registerAccountsRoutes(app: Express): void {
   // ─── Prospect Enrichment ────────────────────────────────────────
   app.post("/api/prospects/:id/enrich", requireAgency, wrapAsync(async (req, res) => {
     const prospectId = Number(req.params.id);
-    const { type, contactSlot } = req.body as { type?: "website" | "linkedin" | "both"; contactSlot?: 1 | 2 };
-    if (!type || !["website", "linkedin", "both"].includes(type)) {
-      return res.status(400).json({ message: "type must be 'website', 'linkedin', or 'both'" });
+    const { type, contactSlot } = req.body as {
+      type?: "website" | "linkedin" | "both" | "company";
+      contactSlot?: 1 | 2;
+    };
+    if (!type || !["website", "linkedin", "both", "company"].includes(type)) {
+      return res.status(400).json({ message: "type must be 'company', 'linkedin', 'website', or 'both'" });
     }
 
     const prospect = await storage.getProspectById(prospectId);
     if (!prospect) return res.status(404).json({ message: "Prospect not found" });
 
-    const results: { website?: string; linkedin?: any } = {};
+    const results: { website?: string; linkedin?: any; company?: string } = {};
     const slot = contactSlot ?? 1;
 
     const spawnWebsiteEnricher = async () => {
@@ -391,8 +394,18 @@ export function registerAccountsRoutes(app: Express): void {
       results.website = "started";
     };
 
-    if (type === "both") {
-      // Run LinkedIn first so Python enricher can read the data from DB
+    if (type === "company") {
+      // New full-company enrichment: spawn Claude Code agent that runs the /prospect skill
+      try {
+        const { startCompanyEnrichment } = await import("../companyEnricher");
+        const r = await startCompanyEnrichment(prospectId);
+        results.company = r.started ? "started" : "failed";
+      } catch (err: any) {
+        console.error("[Enrich] Company enrichment error:", err.message);
+        results.company = `error: ${err.message}`;
+      }
+    } else if (type === "both") {
+      // Legacy path: LinkedIn then Python website enricher
       try {
         const { enrichLinkedIn } = await import("../linkedinEnricher");
         results.linkedin = await enrichLinkedIn(prospectId, slot);
@@ -400,7 +413,6 @@ export function registerAccountsRoutes(app: Express): void {
         console.error("[Enrich] LinkedIn error:", err.message);
         results.linkedin = { error: err.message };
       }
-      // Then spawn website enricher (reads LinkedIn data from DB)
       await spawnWebsiteEnricher();
     } else if (type === "website") {
       await spawnWebsiteEnricher();

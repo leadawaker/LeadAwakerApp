@@ -6,10 +6,11 @@ import {
   AlertCircle,
   Send,
   CircleDot,
+  Hand,
 } from "lucide-react";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { SessionUser } from "@/hooks/useSession";
-import { PIPELINE_HEX } from "../../utils/conversationHelpers";
+import { PIPELINE_HEX, formatRelativeTime } from "../../utils/conversationHelpers";
 import { STAGE_ICON } from "../ContactSidebar";
 import { type ThreadGroup, useTimezone } from "./types";
 import { TAG_HEX, CONVERSION_STATUS_TAGS, _STATUS_LOWER } from "./constants";
@@ -57,6 +58,52 @@ export function StatusEventChip({ statusName, time }: { statusName: string; time
         <StatusIcon className="w-3.5 h-3.5" style={{ color: hex }} />
         {statusName}
         {time && <><span className="opacity-50">&middot;</span><span className="opacity-50">{time}</span></>}
+      </span>
+    </div>
+  );
+}
+
+// ─── Handoff Event Chip (AI handoff reason in timeline) ───────────────────────
+
+const HANDOFF_CTA: Record<string, string> = {
+  circular_conversation: "resumeAi",
+  knowledge_gap: "resumeAi",
+  first_human_request: "resumeHumanHandled",
+  repeated_human_request: "resumeHumanHandled",
+};
+
+export function HandoffEventChip({
+  reason,
+  timestamp,
+  onResume,
+}: {
+  reason: string;
+  timestamp?: string | null;
+  onResume: () => void;
+}) {
+  const { t } = useTranslation("conversations");
+  const ctaKey = HANDOFF_CTA[reason] ?? "resumeAi";
+  const relTime = timestamp ? formatRelativeTime(timestamp) : null;
+
+  return (
+    <div className="flex justify-center py-1.5">
+      <span className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3 py-1 select-none bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 shadow-sm">
+        <Hand className="w-3.5 h-3.5" />
+        {t(`chat.handoff.${reason}`, reason)}
+        {relTime && (
+          <>
+            <span className="opacity-50">&middot;</span>
+            <span className="opacity-50">{relTime}</span>
+          </>
+        )}
+        <span className="opacity-30">|</span>
+        <button
+          type="button"
+          onClick={onResume}
+          className="underline hover:no-underline cursor-pointer"
+        >
+          {t(`chat.handoff.${ctaKey}`)}
+        </button>
       </span>
     </div>
   );

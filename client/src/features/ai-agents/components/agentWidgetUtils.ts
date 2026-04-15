@@ -56,3 +56,36 @@ export function loadWidgetSize(): WidgetSize {
 export function saveWidgetSize(size: WidgetSize) {
   localStorage.setItem(WIDGET_SIZE_KEY, JSON.stringify(size));
 }
+
+// ─── Dock mode (right-side dock) ──────────────────────────────────────────────
+export const WIDGET_DOCK_ENABLED_KEY = "leadawaker_agent_dock_enabled";
+export const WIDGET_DOCK_WIDTH_KEY = "leadawaker_agent_dock_width";
+export const DOCK_DEFAULT_WIDTH = 420;
+export const DOCK_MIN_WIDTH = 320;
+export const DOCK_MAX_WIDTH = 640;
+export const DOCK_BREAKPOINT_PX = 1536;
+
+export function loadDockEnabled(): boolean {
+  try {
+    return localStorage.getItem(WIDGET_DOCK_ENABLED_KEY) === "true";
+  } catch { return false; }
+}
+
+export function saveDockEnabled(enabled: boolean) {
+  try { localStorage.setItem(WIDGET_DOCK_ENABLED_KEY, enabled ? "true" : "false"); } catch {}
+}
+
+export function loadDockWidth(): number {
+  try {
+    const raw = localStorage.getItem(WIDGET_DOCK_WIDTH_KEY);
+    if (raw) {
+      const n = Number(raw);
+      if (Number.isFinite(n)) return Math.max(DOCK_MIN_WIDTH, Math.min(DOCK_MAX_WIDTH, n));
+    }
+  } catch {}
+  return DOCK_DEFAULT_WIDTH;
+}
+
+export function saveDockWidth(width: number) {
+  try { localStorage.setItem(WIDGET_DOCK_WIDTH_KEY, String(width)); } catch {}
+}

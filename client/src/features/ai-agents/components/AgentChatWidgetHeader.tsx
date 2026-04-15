@@ -1,5 +1,6 @@
 import { type PointerEvent as ReactPointerEvent } from "react";
-import { Bot, X, ChevronLeft, Plus, MapPin, MapPinOff, MousePointerClick, Check, MoreVertical } from "lucide-react";
+import { Bot, X, ChevronLeft, Plus, MapPin, MapPinOff, MousePointerClick, Check, MoreVertical, PanelRight, PanelRightClose } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { MODEL_OPTIONS } from "./ModelSwitcher";
 import { THINKING_OPTIONS } from "./ThinkingToggle";
@@ -29,6 +30,8 @@ export interface AgentChatWidgetHeaderProps {
   onDragPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onDragPointerMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onDragPointerUp: (e: ReactPointerEvent<HTMLDivElement>) => void;
+  dockMode: boolean;
+  onToggleDock: () => void;
 }
 
 export function AgentChatWidgetHeader({
@@ -46,7 +49,10 @@ export function AgentChatWidgetHeader({
   onDragPointerDown,
   onDragPointerMove,
   onDragPointerUp,
+  dockMode,
+  onToggleDock,
 }: AgentChatWidgetHeaderProps) {
+  const { t } = useTranslation("crm");
   return (
     <div
       className={cn(
@@ -257,6 +263,17 @@ export function AgentChatWidgetHeader({
             <div className="text-[9px] text-muted-foreground">Your CRM co-pilots</div>
           </div>
         </>
+      )}
+      {!isMobile && (
+        <button
+          onClick={onToggleDock}
+          className="inline-flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+          title={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
+          aria-label={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
+          data-testid="agent-widget-dock-toggle"
+        >
+          {dockMode ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
+        </button>
       )}
       <button
         onClick={closeWidget}

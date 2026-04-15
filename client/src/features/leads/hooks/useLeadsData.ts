@@ -185,6 +185,29 @@ export function useLeadsData(accountId?: number) {
     handleRefresh();
   }, [accountId]);
 
+  // Refresh when the AI bot mutates CRM data
+  useEffect(() => {
+    const handler = () => { handleRefresh(); };
+    window.addEventListener("crm-data-changed", handler);
+    return () => window.removeEventListener("crm-data-changed", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-refresh on SSE leads_changed events
+  useEffect(() => {
+    const debounceRef = { current: undefined as NodeJS.Timeout | undefined };
+    const params = new URLSearchParams();
+    if (accountId && accountId > 0) params.set("accountId", String(accountId));
+    const url = `/api/interactions/stream${params.toString() ? `?${params}` : ""}`;
+    const es = new EventSource(url, { withCredentials: true });
+    es.addEventListener("leads_changed", () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => handleRefresh(), 400);
+    });
+    return () => { es.close(); if (debounceRef.current) clearTimeout(debounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId]);
+
   return {
     leads,
     loading,

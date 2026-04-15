@@ -92,6 +92,8 @@ export interface CampaignDetailViewProps {
   onBack?: () => void;
   leftPanelCollapsed?: boolean;
   onToggleLeftPanel?: () => void;
+  promptPanelOpen?: boolean;
+  onTogglePromptPanel?: () => void;
 }
 
 export function CampaignDetailView({
@@ -101,6 +103,7 @@ export function CampaignDetailView({
   filterAccount, onFilterAccountChange, isFilterActive, showDemoCampaigns, onShowDemoCampaignsChange,
   groupBy, onGroupByChange, isGroupNonDefault, availableAccounts, onResetControls, onBack,
   leftPanelCollapsed, onToggleLeftPanel,
+  promptPanelOpen: promptPanelOpenProp, onTogglePromptPanel: onTogglePromptPanelProp,
 }: CampaignDetailViewProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser, isAdmin } = useWorkspace();
@@ -210,17 +213,9 @@ export function CampaignDetailView({
     toast({ title: "Template deleted" });
   }, [setSavedTemplates, toast]);
 
-  // ── Prompt panel (agency-only, ultrawide) ─────────────────────────────────
-  const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
-    try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
-  });
-  const togglePromptPanel = useCallback(() => {
-    setPromptPanelOpen(prev => {
-      const next = !prev;
-      try { localStorage.setItem("campaigns-prompt-panel-open", String(next)); } catch {}
-      return next;
-    });
-  }, []);
+  // ── Prompt panel (agency-only, ultrawide) — lifted to CampaignListView ────
+  const promptPanelOpen = promptPanelOpenProp ?? false;
+  const togglePromptPanel = onTogglePromptPanelProp ?? (() => {});
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
 
   // ── Animation trigger on campaign change ──────────────────────────────────
@@ -546,6 +541,7 @@ export function CampaignDetailView({
                   bookingMode: (campaign as any).bookingModeOverride ?? (campaign as any).booking_mode_override ?? null,
                   language: (campaign as any).language ?? null,
                   demoClientName: (campaign as any).demoClientName ?? (campaign as any).demo_client_name ?? null,
+                  companyName: (campaign as any).companyName ?? (campaign as any).company_name ?? null,
                   aiStyleOverride: (campaign as any).aiStyleOverride ?? (campaign as any).ai_style_override ?? null,
                   description: (campaign as any).description ?? null,
                   aiRole: (campaign as any).aiRole ?? (campaign as any).ai_role ?? null,

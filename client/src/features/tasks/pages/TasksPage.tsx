@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef, useDeferredValue } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
@@ -148,6 +149,7 @@ export default function TasksPage() {
   const isMobile = useIsMobile(768);
   const { data: categories = [] } = useTaskCategories();
   const ganttToolbarRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   // Persisted state (viewMode first: other states reference it for per-view keys)
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -200,6 +202,15 @@ export default function TasksPage() {
 
   // ── Column widths persistence ─────────────────────────────────────────
   const [columnWidths, setColumnWidths] = usePersistedState<Record<string, number>>("tasks-column-widths", {});
+
+  // Auto-refresh tasks on SSE tasks_changed events
+  useEffect(() => {
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
+    es.addEventListener("tasks_changed", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+    });
+    return () => { es.close(); };
+  }, [queryClient]);
 
   // ── Settings toggles ──────────────────────────────────────────────────
   const [showVerticalLines, setShowVerticalLines] = useState(() => {

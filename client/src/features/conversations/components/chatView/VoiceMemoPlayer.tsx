@@ -2,6 +2,26 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Pause, Play, Download, Loader2 } from "lucide-react";
 
+// Global audio manager: only one player at a time
+let _activeAudio: HTMLAudioElement | null = null;
+let _activePauseCb: (() => void) | null = null;
+
+function claimPlayback(audio: HTMLAudioElement, onPaused: () => void) {
+  if (_activeAudio && _activeAudio !== audio) {
+    _activeAudio.pause();
+    _activePauseCb?.();
+  }
+  _activeAudio = audio;
+  _activePauseCb = onPaused;
+}
+
+function releasePlayback(audio: HTMLAudioElement) {
+  if (_activeAudio === audio) {
+    _activeAudio = null;
+    _activePauseCb = null;
+  }
+}
+
 export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbound?: boolean; color?: string }) {
   const { t } = useTranslation("conversations");
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -12,7 +32,11 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
   const [loading, setLoading] = useState(false);
   const rafRef = useRef<number | null>(null);
 
-  // rAF loop — polls audio.currentTime every frame while playing for smooth bar fill
+  const BAR_COUNT = 60;
+  const [bars, setBars] = useState<number[] | null>(null);
+  const waveformDecoded = useRef(false);
+
+  // rAF loop for smooth progress
   const startRaf = useCallback(() => {
     const tick = () => {
       const a = audioRef.current;
@@ -29,7 +53,7 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
 
   useEffect(() => () => stopRaf(), [stopRaf]);
 
-  // Try to load duration as soon as element mounts
+  // Duration from metadata (fires after first play with preload=none)
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -40,60 +64,52 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
     return () => { a.removeEventListener("loadedmetadata", onMeta); a.removeEventListener("durationchange", onMeta); };
   }, [url]);
 
-  // Real waveform via Web Audio API — decode the audio and sample RMS per bar bucket
-  const BAR_COUNT = 60;
-  const [bars, setBars] = useState<number[] | null>(null);
-
+  // Generate hash-based waveform immediately (fast, no decode)
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(url);
-        const arrayBuffer = await res.arrayBuffer();
-        if (cancelled) return;
-        const ctx = new AudioContext();
-        const decoded = await ctx.decodeAudioData(arrayBuffer);
-        ctx.close();
-        if (cancelled) return;
+    const seed = url.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    setBars(Array.from({ length: BAR_COUNT }, (_, i) => {
+      const h = Math.abs(Math.sin((seed + i * 137.5) * 0.1));
+      return Math.round(2 + h * 18);
+    }));
+  }, [url]);
 
-        // Mix down to mono by averaging all channels
-        const channelData: Float32Array[] = [];
-        for (let c = 0; c < decoded.numberOfChannels; c++) {
-          channelData.push(decoded.getChannelData(c));
-        }
-        const totalSamples = decoded.length;
-        const samplesPerBar = Math.floor(totalSamples / BAR_COUNT);
+  // Decode real waveform lazily (after first play)
+  const decodeWaveform = useCallback(async () => {
+    if (waveformDecoded.current) return;
+    waveformDecoded.current = true;
+    try {
+      const res = await fetch(url);
+      const arrayBuffer = await res.arrayBuffer();
+      const ctx = new AudioContext();
+      const decoded = await ctx.decodeAudioData(arrayBuffer);
+      ctx.close();
 
-        const heights = Array.from({ length: BAR_COUNT }, (_, i) => {
-          const start = i * samplesPerBar;
-          const end   = Math.min(start + samplesPerBar, totalSamples);
-          let sum = 0, count = 0;
-          for (let s = start; s < end; s++) {
-            let val = 0;
-            for (const ch of channelData) val += ch[s];
-            val /= channelData.length;
-            sum += val * val;
-            count++;
-          }
-          return count > 0 ? Math.sqrt(sum / count) : 0;
-        });
-
-        // Normalize: map 0..max → 2..20 (px)
-        const maxRms = Math.max(...heights, 0.001);
-        const normalized = heights.map(v => Math.round(2 + (v / maxRms) * 18));
-        if (!cancelled) setBars(normalized);
-      } catch {
-        // Fallback to hash-based fake waveform if decode fails
-        if (!cancelled) {
-          const seed = url.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-          setBars(Array.from({ length: BAR_COUNT }, (_, i) => {
-            const h = Math.abs(Math.sin((seed + i * 137.5) * 0.1));
-            return Math.round(2 + h * 18);
-          }));
-        }
+      const channelData: Float32Array[] = [];
+      for (let c = 0; c < decoded.numberOfChannels; c++) {
+        channelData.push(decoded.getChannelData(c));
       }
-    })();
-    return () => { cancelled = true; };
+      const totalSamples = decoded.length;
+      const samplesPerBar = Math.floor(totalSamples / BAR_COUNT);
+
+      const heights = Array.from({ length: BAR_COUNT }, (_, i) => {
+        const start = i * samplesPerBar;
+        const end = Math.min(start + samplesPerBar, totalSamples);
+        let sum = 0, count = 0;
+        for (let s = start; s < end; s++) {
+          let val = 0;
+          for (const ch of channelData) val += ch[s];
+          val /= channelData.length;
+          sum += val * val;
+          count++;
+        }
+        return count > 0 ? Math.sqrt(sum / count) : 0;
+      });
+
+      const maxRms = Math.max(...heights, 0.001);
+      setBars(heights.map(v => Math.round(2 + (v / maxRms) * 18)));
+    } catch {
+      // Keep the hash-based waveform
+    }
   }, [url]);
 
   const fmt = (s: number) => {
@@ -108,9 +124,21 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
       a.pause();
       setPlaying(false);
       stopRaf();
+      releasePlayback(a);
     } else {
+      // Pause any other playing audio
+      claimPlayback(a, () => { setPlaying(false); stopRaf(); });
       setLoading(true);
-      a.play().then(() => { setPlaying(true); setLoading(false); startRaf(); }).catch((err) => { setLoading(false); console.error("[VoiceMemoPlayer] Audio play failed:", err); });
+      a.play().then(() => {
+        setPlaying(true);
+        setLoading(false);
+        startRaf();
+        decodeWaveform(); // start real waveform decode in background
+      }).catch((err) => {
+        setLoading(false);
+        releasePlayback(a);
+        console.error("[VoiceMemoPlayer] Audio play failed:", err);
+      });
     }
   };
 
@@ -148,12 +176,11 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
     }
   };
 
-  // Derive playedCount from live audio element (more accurate than state)
   const liveTime = audioRef.current?.currentTime ?? currentTime;
-  const liveDur  = (audioRef.current && isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
+  const liveDur = (audioRef.current && isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
     ? audioRef.current.duration
     : duration;
-  const progress    = liveDur > 0 ? liveTime / liveDur : 0;
+  const progress = liveDur > 0 ? liveTime / liveDur : 0;
   const playedCount = Math.round(progress * BAR_COUNT);
 
   return (
@@ -161,12 +188,17 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
       <audio
         ref={audioRef}
         src={url}
-        preload="auto"
+        preload="none"
         onLoadedMetadata={() => {
           const a = audioRef.current;
           if (a && isFinite(a.duration)) setDuration(a.duration);
         }}
-        onEnded={() => { setPlaying(false); stopRaf(); setCurrentTime(0); }}
+        onEnded={() => {
+          setPlaying(false);
+          stopRaf();
+          setCurrentTime(0);
+          releasePlayback(audioRef.current!);
+        }}
       />
 
       {/* Play/Pause circle */}
@@ -186,7 +218,6 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
 
       {/* Waveform + time column */}
       <div className="flex flex-col gap-1 flex-1 min-w-0">
-        {/* Waveform bars — color = played, transparent gray = unplayed, centered */}
         <div
           className="flex items-center gap-[1px] cursor-pointer"
           style={{ height: 24 }}
@@ -213,7 +244,6 @@ export function VoiceMemoPlayer({ url, color = "#0ABFA3" }: { url: string; outbo
           }
         </div>
 
-        {/* Time + speed row */}
         <div className="flex items-center justify-between">
           <span className="text-[10px] tabular-nums leading-none" style={{ color: "#888" }}>
             {playing || currentTime > 0 ? fmt(liveTime) : fmt(liveDur)}

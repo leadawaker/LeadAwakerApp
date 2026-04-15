@@ -32,6 +32,54 @@ const SLASH_COMMANDS: SlashCommand[] = [
   { name: "/thinking", args: "none | low | medium | high", description: "Set thinking level" },
   { name: "/page", description: "Toggle page awareness on/off" },
   { name: "/help", description: "Show available commands" },
+  // Sales & prospecting
+  { name: "/prospect", args: "<company or niche>", description: "Research a company, enrich prospect, save to CRM" },
+  { name: "/createclient", args: "<business>", description: "Create a demo campaign from a business description" },
+  { name: "/telegram-demo", args: "<prospect>", description: "Set up a complete Telegram demo bot" },
+  { name: "/pitch", args: "<prospect>", description: "Prepare a tailored sales pitch" },
+  { name: "/cold-call", args: "<prospect>", description: "Prep a cold call script with CRM data" },
+  { name: "/outreach-email", args: "<prospect>", description: "Draft cold outreach via email/WhatsApp/LinkedIn" },
+  { name: "/linkedin-jobs", args: "<niche>", description: "Find NL companies hiring sales, add as prospects" },
+  { name: "/demo-prep", description: "Prepare for a prospect demo" },
+  // Tasks & planning
+  { name: "/task", args: "<description>", description: "Create, track, or complete a task" },
+  { name: "/morning-briefing", description: "Run the morning coaching briefing" },
+  { name: "/briefing", description: "Alias for morning briefing" },
+  { name: "/daily-review", description: "End-of-day review + plan tomorrow" },
+  { name: "/weekly-review", description: "Run the weekly review" },
+  { name: "/taskend", description: "Log work done this session as tasks" },
+  // Content & docs
+  { name: "/copywriting", args: "<page>", description: "Write or rewrite marketing copy" },
+  { name: "/dutch-lines", args: "<phrase>", description: "Natural Dutch WhatsApp variations" },
+  { name: "/pdf-docs", args: "<brief>", description: "Generate a branded PDF document" },
+  { name: "/logo-designer", description: "Design or iterate on an SVG logo" },
+  { name: "/video-description", description: "Write a video description" },
+  // Dev & CRM
+  { name: "/leadawaker-dev", description: "LeadAwaker dev guidelines + conventions" },
+  { name: "/i18n-audit", description: "Audit and fix i18n coverage" },
+  { name: "/crm-table", description: "Build an inline-editable data table" },
+  { name: "/crm-page-layout", description: "Scaffold a new CRM page" },
+  { name: "/toolbar-buttons", description: "Build compact toolbar buttons" },
+  { name: "/chat-bubble-ui", description: "Build WhatsApp-style chat bubbles" },
+  { name: "/automation", description: "Create or debug a WAT automation" },
+  { name: "/kenji-dev", description: "Kenji Telegram bot development" },
+  { name: "/agent-builder", description: "Build AI agents via Claude Code" },
+  { name: "/front-end-design", description: "Create production-grade UI" },
+  // Ops & data
+  { name: "/bot-test", args: "<campaign>", description: "Test campaign bot naturalness" },
+  { name: "/invoice-expense", description: "Process invoices/expenses, BTW admin" },
+  { name: "/infra-troubleshoot", description: "Diagnose Pi server issues" },
+  { name: "/watchdog", description: "Check LeadAwaker server health" },
+  { name: "/transcribe", args: "<audio path>", description: "Transcribe audio to text" },
+  { name: "/youtube-transcript", args: "<url>", description: "Extract YouTube video transcript" },
+  { name: "/csv-data-summarizer", args: "<path>", description: "Analyze a CSV with pandas" },
+  { name: "/pdf", args: "<op>", description: "PDF read/merge/split/OCR/etc" },
+  // Reference
+  { name: "/claude-api", description: "Claude API / SDK helper" },
+  { name: "/react-best-practices", description: "React/Next.js performance guidelines" },
+  { name: "/supabase-postgres-best-practices", description: "Postgres optimization" },
+  { name: "/improve", args: "<prompt>", description: "Sharpen a vague prompt" },
+  { name: "/learn", description: "Extract reusable patterns from this chat" },
 ];
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
@@ -265,7 +313,7 @@ function MessageBubble({
 
   return (
     <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
-      <div className="relative" style={{ maxWidth: "80%" }}>
+      <div className="relative w-full" style={{ maxWidth: "100%" }}>
         <div
           className={cn(
             "px-3 pt-2 pb-1.5 text-[15px] relative",
@@ -353,10 +401,11 @@ function MessageBubble({
 
 // ─── Streaming bubble ─────────────────────────────────────────────────────────
 function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
-  if (!text) return <TypingDots />;
+  // No typing dots — the ActivityIndicator ("Thinking..." pill) covers the pre-token phase.
+  if (!text) return null;
   return (
     <div className="flex justify-start">
-      <div className="relative" style={{ maxWidth: "80%" }}>
+      <div className="relative w-full" style={{ maxWidth: "100%" }}>
         <div className="px-3 pt-2 pb-1.5 text-[15px] relative rounded-2xl rounded-bl-none bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
           <div className="agent-markdown-content min-w-0 overflow-hidden">
             <MarkdownRenderer content={text} />
@@ -983,25 +1032,25 @@ export function AgentChatView({
           </div>
         ) : (
           <>
-            {messages.length === 0 && !streaming && (
+            {messages.length === 0 && !streaming && !isCodeRunner && (
               <div className="flex justify-start">
-                <div className="relative" style={{ maxWidth: "80%" }}>
+                <div className="relative" style={{ maxWidth: "100%" }}>
                   <div className="px-3 pt-2 pb-2 text-[15px] relative bg-white dark:bg-card text-gray-900 dark:text-foreground rounded-2xl rounded-bl-none leading-relaxed shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
-                    {isCodeRunner
-                      ? "I'm connected to the Pi. I can read and modify the LeadAwakerApp codebase and changes apply immediately via pm2. What would you like to change?"
-                      : `Hi! I'm the ${agent.name}. I can help craft and improve your campaign messages. Share a campaign name or paste a URL for me to reference.`}
+                    {`Hi! I'm the ${agent.name}. I can help craft and improve your campaign messages. Share a campaign name or paste a URL for me to reference.`}
                     <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
                   </div>
                 </div>
               </div>
             )}
-            {messages.map((msg, i) => {
-              const prevMsg = i > 0 ? messages[i - 1] : null;
-              const nextMsg = i < messages.length - 1 ? messages[i + 1] : null;
+            {(() => {
+              const visibleMsgs = messages.filter((msg) => (msg.role as string) !== "tool");
+              return visibleMsgs.map((msg, i) => {
+              const prevMsg = i > 0 ? visibleMsgs[i - 1] : null;
+              const nextMsg = i < visibleMsgs.length - 1 ? visibleMsgs[i + 1] : null;
               const sameAsPrev = prevMsg?.role === msg.role;
               const isLastInStreak = !nextMsg || nextMsg.role !== msg.role;
               // For the very last message, if streaming follows (always AI), adjust
-              const isLastBeforeStreaming = streaming && i === messages.length - 1 && msg.role === "assistant";
+              const isLastBeforeStreaming = streaming && i === visibleMsgs.length - 1 && msg.role === "assistant";
 
               return (
                 <div
@@ -1016,9 +1065,10 @@ export function AgentChatView({
                   />
                 </div>
               );
-            })}
+            });
+            })()}
             {streaming && (
-              <div style={{ marginTop: messages.length > 0 && messages[messages.length - 1]?.role === "assistant" ? 3 : 8 }}>
+              <div style={{ marginTop: messages.filter((m) => (m.role as string) !== "tool").slice(-1)[0]?.role === "assistant" ? 3 : 8 }}>
                 <StreamingBubble text={streamingText} agent={agent} />
                 {activity && (
                   <div className="mt-1.5 ml-1">
@@ -1190,7 +1240,7 @@ export function AgentChatView({
           </div>
         )}
 
-        <div className="flex items-end gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] shadow-sm px-3 py-2">
+        <div className="flex items-center gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] dark:border-border/30 shadow-sm pl-3 pr-4 py-[3px] min-h-[62px]">
           {/* Hidden file input — file picker (documents, images from gallery) */}
           <input
             ref={fileInputRef}
@@ -1229,8 +1279,8 @@ export function AgentChatView({
             placeholder={recording ? "Recording..." : isCodeRunner ? "Type / for commands..." : "Ask about campaigns..."}
             rows={1}
             disabled={loading || recording}
-            className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5 pl-1"
-            style={{ minHeight: "44px", maxHeight: "120px" }}
+            className="flex-1 text-[17px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 leading-5 pl-1 pr-2"
+            style={{ maxHeight: "120px" }}
           />
 
           {/* Camera capture button — visible on mobile only */}

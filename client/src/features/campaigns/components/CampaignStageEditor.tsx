@@ -124,6 +124,16 @@ export function CampaignStageEditor({
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">Business & Campaign</h3>
 
         <SectionHeader label="Business Info" />
+        <InfoRow icon={Building2} label={t("config.companyName")} value={campaign.company_name}
+          {...editFor("company_name")}
+          editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
+        />
+        {!!(isEditing ? draft.is_demo : campaign.is_demo) && (
+          <InfoRow icon={Building2} label={t("config.demoClientName") || "Demo Client Name"} value={campaign.demo_client_name}
+            {...editFor("demo_client_name")}
+            editChild={isEditing ? <EditText value={String(draft.demo_client_name ?? "")} onChange={(v) => setDraft(d => ({...d, demo_client_name: v}))} placeholder="Demo client name…" {...focusFor("demo_client_name")} /> : undefined}
+          />
+        )}
         <InfoRow icon={Building2} label={t("config.businessDescription")} value={campaign.description} richText={true}
           {...editFor("description")}
           editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline placeholder="Business description…" {...focusFor("description")} /> : undefined}
@@ -142,12 +152,6 @@ export function CampaignStageEditor({
           {...editFor("language")}
           editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["", "English", "Portuguese", "Dutch", "Spanish"]} {...focusFor("language")} /> : undefined}
         />
-        {!!(isEditing ? draft.is_demo : campaign.is_demo) && (
-          <InfoRow icon={Building2} label={t("config.demoClientName")} value={campaign.demo_client_name}
-            {...editFor("demo_client_name")}
-            editChild={isEditing ? <EditText value={String(draft.demo_client_name ?? "")} onChange={(v) => setDraft(d => ({...d, demo_client_name: v}))} placeholder="Client company name…" {...focusFor("demo_client_name")} /> : undefined}
-          />
-        )}
         <InfoRow icon={HelpCircle} label={t("config.nicheQuestion")} value={campaign.niche_question}
           {...editFor("niche_question")}
           editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder="e.g. Are you still looking for…?" {...focusFor("niche_question")} /> : undefined}

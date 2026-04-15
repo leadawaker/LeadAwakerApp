@@ -207,6 +207,27 @@ export function useAccountsData(currentAccountId?: number) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentAccountId]);
 
+  // Refresh when the AI bot mutates CRM data
+  useEffect(() => {
+    const handler = () => { fetchData(); };
+    window.addEventListener("crm-data-changed", handler);
+    return () => window.removeEventListener("crm-data-changed", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-refresh on SSE accounts_changed events
+  useEffect(() => {
+    const debounceRef = { current: undefined as NodeJS.Timeout | undefined };
+    const url = `/api/interactions/stream`;
+    const es = new EventSource(url, { withCredentials: true });
+    es.addEventListener("accounts_changed", () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchData(), 400);
+    });
+    return () => { es.close(); if (debounceRef.current) clearTimeout(debounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const setColWidthsPersist = (next: Record<string, number>) => {
     setColWidths(next);
     localStorage.setItem("accounts_col_widths", JSON.stringify(next));

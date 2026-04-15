@@ -2,12 +2,15 @@ import { useState } from "react";
 import { User, Copy, Check, Sparkles, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiUtils";
+import { StructuredBrief } from "./StructuredBrief";
+import { PostsCarousel } from "./PostsCarousel";
 
 interface ContactTabProps {
   prospect: Record<string, any>;
   slot: 1 | 2;
   prospectId: number;
   onRefresh?: () => void;
+  loading?: boolean;
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -39,7 +42,7 @@ function parseJsonArray(raw: string | null | undefined): string[] {
   }
 }
 
-export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTabProps) {
+export function ContactTab({ prospect, slot, prospectId, onRefresh, loading: parentLoading }: ContactTabProps) {
   const { t } = useTranslation("prospects");
 
   const prefix = slot === 1 ? "" : "contact2_";
@@ -50,7 +53,11 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
   const connectionCount = prospect[`${prefix}connection_count`];
   const followerCount = prospect[`${prefix}follower_count`];
   const topPost = prospect[`${prefix}top_post`];
-  const personBrief = parseJsonArray(prospect[`${prefix}person_brief`]);
+  const topPostData = prospect[`${prefix}top_post_data`];
+  const personBriefRaw = prospect[`${prefix}person_brief`] as string | null | undefined;
+  const personBriefBullets = parseJsonArray(personBriefRaw);
+  // New structured format uses labeled lines like "ROLE:" / "BACKGROUND:" — detect with a quick regex
+  const isStructuredBrief = !!personBriefRaw && /^[A-Z][A-Z0-9 /&-]{1,40}:/m.test(personBriefRaw);
 
   const [enriching, setEnriching] = useState(false);
 
@@ -71,23 +78,28 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
     }
   }
 
+  const showSpinner = parentLoading || enriching;
+  const spinnerLabel = t("companyTab.loadingContact", "Enriching contact {{slot}}...", { slot });
+
   // No LinkedIn URL set
   if (!linkedinUrl) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+      <div className="relative flex flex-col items-center justify-center py-8 text-center gap-2">
         <User className="h-6 w-6 text-muted-foreground/20" />
         <p className="text-[11px] text-muted-foreground/40 italic">
           {t("contact.addLinkedinHint", "Add a LinkedIn URL to enrich this contact")}
         </p>
+        {showSpinner && <LoadingOverlay label={spinnerLabel} />}
       </div>
     );
   }
 
   // LinkedIn URL exists but no data enriched yet
-  const hasData = !!(headline || photoUrl || personBrief.length > 0);
+  const hasData = !!(headline || photoUrl || personBriefRaw || topPostData);
   if (!hasData) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+      <div className="relative flex flex-col items-center justify-center py-8 text-center gap-2">
+        {showSpinner && <LoadingOverlay label={spinnerLabel} />}
         <Sparkles className="h-6 w-6 text-muted-foreground/20" />
         <p className="text-[11px] text-muted-foreground/40 italic">
           {t("contact.enrichHint", "Enrich LinkedIn to see contact insights")}
@@ -105,7 +117,8 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="relative flex flex-col gap-2.5">
+      {showSpinner && <LoadingOverlay label={spinnerLabel} />}
       {/* Photo + headline */}
       <div className="flex items-start gap-2.5">
         {photoUrl && (
@@ -136,8 +149,13 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
         </div>
       </div>
 
-      {/* Top post */}
-      {topPost && (
+      {/* Top posts carousel (structured JSON) with legacy text fallback */}
+      {topPostData ? (
+        <>
+          <div className="h-px bg-border/30" />
+          <PostsCarousel posts={topPostData} label={t("companyTab.topLinkedInPosts", "Top LinkedIn Posts")} />
+        </>
+      ) : topPost ? (
         <>
           <div className="h-px bg-border/30" />
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
@@ -148,20 +166,26 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
             <CopyButton text={topPost} />
           </div>
         </>
-      )}
+      ) : null}
 
-      {/* Person brief bullets */}
-      {personBrief.length > 0 && (
+      {/* Person brief: categorized structured view for new format, legacy bullets otherwise */}
+      {personBriefRaw && (
         <>
           <div className="h-px bg-border/30" />
-          <ul className="flex flex-col gap-1">
-            {personBrief.map((bullet, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[11px] text-foreground/80 leading-snug">
-                <span className="mt-1 w-1 h-1 rounded-full bg-brand-indigo/40 shrink-0" />
-                {bullet}
-              </li>
-            ))}
-          </ul>
+          {isStructuredBrief ? (
+            <StructuredBrief text={personBriefRaw} title={contactName ? t("companyTab.aboutContact", "About {{name}}", { name: contactName }) : undefined} />
+          ) : personBriefBullets.length > 0 ? (
+            <ul className="flex flex-col gap-1">
+              {personBriefBullets.map((bullet, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px] text-foreground/80 leading-snug">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-brand-indigo/40 shrink-0" />
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[11px] text-foreground/70 leading-relaxed whitespace-pre-wrap">{personBriefRaw}</p>
+          )}
         </>
       )}
 
@@ -175,6 +199,17 @@ export function ContactTab({ prospect, slot, prospectId, onRefresh }: ContactTab
           {enriching ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
           {t("contact.enrichLinkedin", "Enrich LinkedIn")}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function LoadingOverlay({ label }: { label: string }) {
+  return (
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-[1px] rounded-md">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-border/60 shadow-sm">
+        <Loader2 className="h-3 w-3 animate-spin text-brand-indigo" />
+        <span className="text-[11px] font-medium text-foreground/70">{label}</span>
       </div>
     </div>
   );

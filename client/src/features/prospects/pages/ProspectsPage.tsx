@@ -5,7 +5,7 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check, Pencil, X, Search, Settings,
   List, Table2, Kanban, Clock, FileText, SlidersHorizontal, Phone, Mail, Columns3, Rows3,
-  ChevronDown, ChevronRight, MapPin,
+  ChevronDown, ChevronRight, MapPin, ArrowUp, ArrowDown,
 } from "lucide-react";
 import OutreachPipelineView from "../components/OutreachPipelineView";
 import OutreachTemplatesView from "../components/OutreachTemplatesView";
@@ -77,7 +77,7 @@ const DEFAULT_VISIBLE = TABLE_COL_META_KEYS.filter((c) => c.defaultVisible).map(
 
 /* -- Table sort / group types -- */
 type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "priority";
-type TableGroupByOption = "status" | "outreach_status" | "niche" | "country" | "priority" | "date" | "none";
+type TableGroupByOption = "status" | "outreach_status" | "niche" | "country" | "priority" | "date_created" | "date_updated" | "none";
 
 const TABLE_SORT_KEYS: Record<TableSortByOption, string> = {
   recent:    "sort.mostRecent",
@@ -92,7 +92,8 @@ const TABLE_GROUP_KEYS: Record<TableGroupByOption, string> = {
   niche:           "group.niche",
   country:         "group.country",
   priority:        "group.priority",
-  date:            "group.date",
+  date_created:    "group.dateCreated",
+  date_updated:    "group.dateUpdated",
   none:            "group.none",
 };
 
@@ -279,7 +280,8 @@ export default function ProspectsPage() {
     filterSource: [] as string[],
   });
   const tableSortBy = tablePrefs.sortBy;
-  const tableGroupBy = tablePrefs.groupBy;
+  // Backward-compat: old persisted "date" maps to date_updated
+  const tableGroupBy: TableGroupByOption = (tablePrefs.groupBy as string) === "date" ? "date_updated" : tablePrefs.groupBy;
   const tableFilterStatus = tablePrefs.filterStatus;
   const tableFilterNiche = tablePrefs.filterNiche;
   const tableFilterCountry = tablePrefs.filterCountry;
@@ -294,6 +296,7 @@ export default function ProspectsPage() {
   const setTableFilterSource = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterSource: typeof v === "function" ? v(p.filterSource ?? []) : v })), [setTablePrefs]);
   const [tableSelectedIds,  setTableSelectedIds]  = useState<Set<number>>(new Set());
   const [tableFilterOverdue, setTableFilterOverdue] = useState(false);
+  const [tableGroupDirection, setTableGroupDirection] = useState<"asc" | "desc">("asc");
 
   /* -- Column visibility (persisted) -- */
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => {
@@ -551,34 +554,50 @@ export default function ProspectsPage() {
     setPipelineFilterCountry([]);
   }, []);
 
-  /* -- List view toolbar state -- */
-  const [listGroupBy, setListGroupBy] = useState<import("../components/ProspectListView").ProspectGroupBy>("niche");
-  const [listSortBy, setListSortBy] = useState<import("../components/ProspectListView").ProspectSortBy>("recent");
-  const [listFilterNiche, setListFilterNiche] = useState<string[]>([]);
-  const [listFilterStatus, setListFilterStatus] = useState<string[]>([]);
-  const [listFilterCountry, setListFilterCountry] = useState<string[]>([]);
-  const [listFilterPriority, setListFilterPriority] = useState<string[]>([]);
-  const [listFilterSource, setListFilterSource] = useState<string[]>([]);
+  /* -- List view toolbar state (persisted) -- */
+  type ListGroupBy = import("../components/ProspectListView").ProspectGroupBy;
+  type ListSortBy = import("../components/ProspectListView").ProspectSortBy;
+  const [listPrefs, setListPrefs] = usePersistedState("prospects-list-prefs", {
+    groupBy: "niche" as ListGroupBy,
+    sortBy: "recent" as ListSortBy,
+    filterNiche: [] as string[],
+    filterStatus: [] as string[],
+    filterCountry: [] as string[],
+    filterPriority: [] as string[],
+    filterSource: [] as string[],
+  });
+  const listGroupBy = listPrefs.groupBy;
+  const listSortBy = listPrefs.sortBy;
+  const listFilterNiche = listPrefs.filterNiche;
+  const listFilterStatus = listPrefs.filterStatus;
+  const listFilterCountry = listPrefs.filterCountry;
+  const listFilterPriority = listPrefs.filterPriority;
+  const listFilterSource = listPrefs.filterSource ?? [];
+  const setListGroupBy = useCallback((v: ListGroupBy) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
+  const setListSortBy = useCallback((v: ListSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
   const isListGroupNonDefault = listGroupBy !== "niche";
   const isListSortNonDefault = listSortBy !== "recent";
   const isListFilterActive = listFilterNiche.length > 0 || listFilterStatus.length > 0 || listFilterCountry.length > 0 || listFilterPriority.length > 0 || listFilterSource.length > 0;
   const hasListNonDefaultControls = isListGroupNonDefault || isListSortNonDefault || isListFilterActive;
+  const toggleInArray = (arr: string[], s: string) => arr.includes(s) ? arr.filter(x => x !== s) : [...arr, s];
   const toggleListFilterNiche = useCallback((s: string) => {
-    setListFilterNiche((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
-  }, []);
+    setListPrefs(p => ({ ...p, filterNiche: toggleInArray(p.filterNiche, s) }));
+  }, [setListPrefs]);
   const toggleListFilterStatus = useCallback((s: string) => {
-    setListFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
-  }, []);
+    setListPrefs(p => ({ ...p, filterStatus: toggleInArray(p.filterStatus, s) }));
+  }, [setListPrefs]);
   const toggleListFilterCountry = useCallback((s: string) => {
-    setListFilterCountry((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
-  }, []);
+    setListPrefs(p => ({ ...p, filterCountry: toggleInArray(p.filterCountry, s) }));
+  }, [setListPrefs]);
   const toggleListFilterPriority = useCallback((s: string) => {
-    setListFilterPriority((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
-  }, []);
+    setListPrefs(p => ({ ...p, filterPriority: toggleInArray(p.filterPriority, s) }));
+  }, [setListPrefs]);
   const toggleListFilterSource = useCallback((s: string) => {
-    setListFilterSource((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
-  }, []);
-  const clearListFilters = useCallback(() => { setListFilterNiche([]); setListFilterStatus([]); setListFilterCountry([]); setListFilterPriority([]); setListFilterSource([]); }, []);
+    setListPrefs(p => ({ ...p, filterSource: toggleInArray(p.filterSource ?? [], s) }));
+  }, [setListPrefs]);
+  const clearListFilters = useCallback(() => {
+    setListPrefs(p => ({ ...p, filterNiche: [], filterStatus: [], filterCountry: [], filterPriority: [], filterSource: [] }));
+  }, [setListPrefs]);
 
   /* -- Follow-ups state -- */
   type FollowUpGroupBy = "none" | "niche" | "country" | "priority" | "contact_method";
@@ -717,7 +736,8 @@ export default function ProspectsPage() {
         case "niche":    groupKey = String(p.niche || "Unknown"); break;
         case "country":  groupKey = String(p.country || "Unknown"); break;
         case "priority": groupKey = String(p.priority || "Unknown"); break;
-        case "date":     groupKey = getDateBucket(p.updated_at || p.created_at); break;
+        case "date_created": groupKey = getDateBucket(p.created_at); break;
+        case "date_updated": groupKey = getDateBucket(p.updated_at || p.created_at); break;
         default:         groupKey = String(p.status || "Unknown"); break;
       }
       if (!buckets.has(groupKey)) buckets.set(groupKey, []);
@@ -728,10 +748,14 @@ export default function ProspectsPage() {
     if (tableGroupBy === "status") {
       orderedKeys = PROSPECT_STATUS_ORDER.filter((k) => buckets.has(k))
         .concat(Array.from(buckets.keys()).filter((k) => !PROSPECT_STATUS_ORDER.includes(k)));
-    } else if (tableGroupBy === "date") {
+    } else if (tableGroupBy === "date_created" || tableGroupBy === "date_updated") {
       orderedKeys = DATE_BUCKET_ORDER.filter((k) => buckets.has(k));
     } else {
       orderedKeys = Array.from(buckets.keys()).sort();
+    }
+
+    if (tableGroupDirection === "desc") {
+      orderedKeys = [...orderedKeys].reverse();
     }
 
     const result: ProspectTableItem[] = [];
@@ -742,7 +766,7 @@ export default function ProspectsPage() {
       group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
     });
     return result;
-  }, [rows, tableSearch, tableFilterStatus, tableFilterNiche, tableFilterCountry, tableFilterPriority, tableFilterSource, tableFilterOverdue, tableSortBy, tableGroupBy]);
+  }, [rows, tableSearch, tableFilterStatus, tableFilterNiche, tableFilterCountry, tableFilterPriority, tableFilterSource, tableFilterOverdue, tableSortBy, tableGroupBy, tableGroupDirection]);
 
   /* -- Table toolbar (rendered inline with tab buttons) -- */
   const tableToolbar = (
@@ -864,9 +888,33 @@ export default function ProspectsPage() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(TABLE_GROUP_KEYS) as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {t(TABLE_GROUP_KEYS[opt])}
-              {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            <DropdownMenuItem
+              key={opt}
+              onSelect={(e) => { e.preventDefault(); setTableGroupBy(opt); }}
+              className="text-[12px] flex items-center gap-2"
+            >
+              <span className={cn("flex-1", tableGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(TABLE_GROUP_KEYS[opt])}</span>
+              {tableGroupBy === opt && opt !== "none" && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("asc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Ascending"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("desc"); }}
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                    title="Descending"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                </>
+              )}
+              {tableGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

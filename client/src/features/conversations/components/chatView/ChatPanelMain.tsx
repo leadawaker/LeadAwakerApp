@@ -50,7 +50,7 @@ import {
   isAiMessage,
   canonicalStatus,
 } from "./utils";
-import { DateSeparator, TagEventChip, StatusEventChip, ThreadDivider } from "./atoms";
+import { DateSeparator, TagEventChip, StatusEventChip, HandoffEventChip, ThreadDivider } from "./atoms";
 import { AgentRunWrapper, LeadRunWrapper, BotRunWrapper } from "./runWrappers";
 import { ChatBubble } from "./ChatBubble";
 import { getUtcOffsetLabel } from "@/features/leads/components/cardView/formatUtils";
@@ -905,6 +905,15 @@ export function ChatPanel({
                 })()
               )}
             </div>
+
+            {/* Handoff reason banner — shown when AI handed off to human */}
+            {isHuman && selected?.lead.handoff_reason && (
+              <HandoffEventChip
+                reason={selected.lead.handoff_reason}
+                timestamp={selected.lead.last_message_sent_at}
+                onResume={() => setShowAiResumeConfirm(true)}
+              />
+            )}
 
             {/* Scroll-to-bottom floating button — standard 34px circle */}
             {showScrollButton && (

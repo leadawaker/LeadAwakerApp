@@ -1,7 +1,56 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { apiFetch } from "@/lib/apiUtils";
+import { queryClient } from "@/lib/queryClient";
 import type { PageContext } from "./usePageContext";
 import { subscribeSyncBus, broadcastSync, listenerCount } from "./chatSyncBus";
+
+// ─── CRM tool → TanStack Query invalidation map ─────────────────────────────
+// When the bot mutates data server-side, the page-level queries have no way to
+// know. After a successful tool_result SSE event, invalidate the matching
+// queries so visible lists refetch automatically (no page reload needed).
+
+// Tools with a deterministic entity mapping (direct named tools).
+const TOOL_INVALIDATION_MAP: Record<string, string[]> = {
+  create_lead: ["/api/leads"],
+  update_lead: ["/api/leads"],
+  delete_lead: ["/api/leads"],
+  create_campaign: ["/api/campaigns"],
+  update_campaign: ["/api/campaigns"],
+  delete_campaign: ["/api/campaigns"],
+  create_tag: ["/api/tags", "/api/leads"],
+  update_tag: ["/api/tags", "/api/leads"],
+  delete_tag: ["/api/tags", "/api/leads"],
+  add_lead_tag: ["/api/leads"],
+  delete_lead_tag: ["/api/leads"],
+};
+
+// For raw SQL (query_database), sniff the statement for mutating keywords + table names.
+const SQL_TABLE_TO_QUERY_KEY: Record<string, string[]> = {
+  prospects: ["/api/prospects"],
+  leads: ["/api/leads"],
+  campaigns: ["/api/campaigns"],
+  tags: ["/api/tags", "/api/leads"],
+  accounts: ["/api/accounts"],
+  tasks: ["/api/tasks"],
+};
+
+function queryKeysForTool(tool: string, args: Record<string, unknown> | undefined): string[] {
+  if (TOOL_INVALIDATION_MAP[tool]) return TOOL_INVALIDATION_MAP[tool];
+
+  if (tool === "query_database") {
+    const sql = (args?.sql as string | undefined) || "";
+    if (!/\b(INSERT|UPDATE|DELETE)\b/i.test(sql)) return []; // read-only query
+    const keys = new Set<string>();
+    for (const [table, qk] of Object.entries(SQL_TABLE_TO_QUERY_KEY)) {
+      // Match "Prospects", "prospects", schema-qualified etc. Case-insensitive.
+      const re = new RegExp(`"?${table}"?`, "i");
+      if (re.test(sql)) qk.forEach((k) => keys.add(k));
+    }
+    return [...keys];
+  }
+
+  return [];
+}
 
 export interface AgentMessage {
   id?: number;
@@ -295,6 +344,8 @@ export function useAgentChat() {
               activity?: string;
               tool?: string;
               label?: string;
+              success?: boolean;
+              args?: Record<string, unknown>;
             };
 
             if (evt.type === "message_id") {
@@ -323,6 +374,17 @@ export function useAgentChat() {
                 label: evt.label as string | undefined,
                 timestamp: Date.now(),
               });
+            } else if (evt.type === "tool_result") {
+              // When the bot mutates data, invalidate matching page queries so lists
+              // refetch without a manual page reload.
+              if (evt.success && evt.tool) {
+                const keys = queryKeysForTool(evt.tool, evt.args);
+                for (const key of keys) {
+                  queryClient.invalidateQueries({ queryKey: [key] });
+                }
+                // Also notify custom useState/useEffect hooks that don't use TanStack Query
+                window.dispatchEvent(new CustomEvent("crm-data-changed", { detail: { entity: evt.tool } }));
+              }
             } else if (evt.type === "pending_confirmation") {
               // Destructive action requires user confirmation before execution
               setPendingConfirmation({

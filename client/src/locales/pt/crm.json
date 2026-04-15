@@ -221,5 +221,9 @@
     "filterTasks": "Tarefas",
     "filterBookings": "Agendamentos",
     "filterSystem": "Sistema"
+  },
+  "agentWidget": {
+    "dockToSide": "Fixar ao lado",
+    "undock": "Desfixar"
   }
 }

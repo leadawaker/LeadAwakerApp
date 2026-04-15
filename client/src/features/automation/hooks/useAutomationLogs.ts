@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
+import { useEffect } from "react";
 
 export interface AutomationLogsFilters {
   page: number;
@@ -29,7 +30,8 @@ export interface AutomationSummary {
 }
 
 export function useAutomationLogs(filters: AutomationLogsFilters) {
-  return useQuery<PaginatedLogsResponse>({
+  const queryClient = useQueryClient();
+  const query = useQuery<PaginatedLogsResponse>({
     queryKey: ["/api/automation-logs", filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -46,6 +48,17 @@ export function useAutomationLogs(filters: AutomationLogsFilters) {
     },
     placeholderData: (prev: any) => prev,
   });
+
+  // Auto-refresh automation logs on SSE automation_logs_changed events
+  useEffect(() => {
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
+    es.addEventListener("automation_logs_changed", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/automation-logs"] });
+    });
+    return () => { es.close(); };
+  }, [queryClient]);
+
+  return query;
 }
 
 export function useAutomationSummary(accountId?: number) {

@@ -18,10 +18,20 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { PAGE_ACCENTS, PAGE_ACCENTS_DARK } from "@/lib/pageAccents";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
+import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { currentAccount, currentAccountId } = useWorkspace();
+  const { dockMode, dockWidth, isWideViewport, isOpen: agentOpen } = useAgentWidget();
+  const dockActive = dockMode && isWideViewport && agentOpen;
+
+  const [viewportW, setViewportW] = useState(() => document.documentElement.clientWidth);
+  useEffect(() => {
+    const onResize = () => setViewportW(document.documentElement.clientWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const [prospectsFullWidth, setProspectsFullWidth] = useState(() => {
     try { return localStorage.getItem("prospects-full-width") === "true"; } catch { return false; }
@@ -232,7 +242,21 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           "h-svh flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
           collapsed ? "md:pl-[56px]" : "md:pl-[225px]"
         )}
-        style={{ paddingTop: "var(--topbar-h)", paddingBottom: "var(--bottombar-h)" }}
+        style={{
+          paddingTop: "var(--topbar-h)",
+          paddingBottom: "var(--bottombar-h)",
+          paddingRight: (() => {
+            if (!dockActive) return undefined;
+            if (isAnyFullWidth) return `${dockWidth}px`;
+            const sidebar = collapsed ? 56 : 225;
+            const mainArea = viewportW - sidebar;
+            const contentMax = 1729;
+            const rightPad = 20;
+            const freeRight = Math.max(0, (mainArea - contentMax) / 2) + rightPad;
+            return dockWidth > freeRight ? `${dockWidth - freeRight}px` : undefined;
+          })(),
+          transition: "padding-right 150ms ease-out",
+        }}
         data-testid="main-crm"
       >
         <ConnectionBanner />

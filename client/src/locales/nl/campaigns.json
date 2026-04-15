@@ -244,6 +244,7 @@
     "bump2AiReference": "Gebruiken als AI-referentie",
     "bump3AiReference": "Gebruiken als AI-referentie",
     "demoClientName": "Bedrijfsnaam klant",
+    "companyName": "Bedrijfsnaam",
     "aiStyleOverride": "AI-stijloverride",
     "isDemo": "Democampagne",
     "optOutNotice": "Afmeldoptie in eerste bericht",

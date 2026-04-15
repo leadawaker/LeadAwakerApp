@@ -142,6 +142,36 @@ export function useProspectsData(currentAccountId?: number) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentAccountId]);
 
+  // Refresh when the AI bot mutates CRM data
+  useEffect(() => {
+    const handler = () => { fetchData(); };
+    window.addEventListener("crm-data-changed", handler);
+    return () => window.removeEventListener("crm-data-changed", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-refresh when any external process mutates the Prospects table
+  useEffect(() => {
+    const debounceRef = { current: 0 as ReturnType<typeof setTimeout> };
+    const params = new URLSearchParams();
+    if (currentAccountId && currentAccountId > 0) {
+      params.set("accountId", String(currentAccountId));
+    }
+    const url = `/api/interactions/stream${params.toString() ? `?${params}` : ""}`;
+    const es = new EventSource(url, { withCredentials: true });
+
+    es.addEventListener("prospect_changed", () => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchData(), 400);
+    });
+
+    return () => {
+      es.close();
+      clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAccountId]);
+
   const setColWidthsPersist = (next: Record<string, number>) => {
     setColWidths(next);
     localStorage.setItem("prospects_col_widths", JSON.stringify(next));

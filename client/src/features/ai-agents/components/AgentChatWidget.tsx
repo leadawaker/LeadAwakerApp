@@ -30,13 +30,26 @@ import {
   MIN_HEIGHT,
   MAX_WIDTH,
   MAX_HEIGHT,
+  DOCK_MIN_WIDTH,
+  DOCK_MAX_WIDTH,
 } from "./agentWidgetUtils";
 import type { WidgetPos, WidgetSize } from "./agentWidgetUtils";
 
 // ─── Main Widget Component ───────────────────────────────────────────────────
 
 export function AgentChatWidget() {
-  const { isOpen, activeAgentId, closeWidget, selectAgent, clearAgent } = useAgentWidget();
+  const {
+    isOpen,
+    activeAgentId,
+    closeWidget,
+    selectAgent,
+    clearAgent,
+    dockMode,
+    dockWidth,
+    setDockWidth,
+    toggleDockMode,
+    isWideViewport,
+  } = useAgentWidget();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
@@ -62,7 +75,34 @@ export function AgentChatWidget() {
   const draggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number; right: number; bottom: number } | null>(null);
 
+  const isDocked = dockMode && isWideViewport && !isMobile;
+
+  const dockResizeRef = useRef(false);
+  const dockResizeStartRef = useRef<{ x: number; width: number } | null>(null);
+
+  const onDockResizePointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dockResizeRef.current = true;
+    dockResizeStartRef.current = { x: e.clientX, width: dockWidth };
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  }, [dockWidth]);
+
+  const onDockResizePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dockResizeRef.current || !dockResizeStartRef.current) return;
+    const { x, width } = dockResizeStartRef.current;
+    const newWidth = Math.max(DOCK_MIN_WIDTH, Math.min(DOCK_MAX_WIDTH, width - (e.clientX - x)));
+    setDockWidth(newWidth);
+  }, [setDockWidth]);
+
+  const onDockResizePointerUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dockResizeRef.current) return;
+    dockResizeRef.current = false;
+    (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+  }, []);
+
   const onDragPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (isDocked) return;
     if (window.innerWidth < 768) return;
     // Don't start drag when clicking buttons inside the header
     if ((e.target as HTMLElement).closest("button")) return;
@@ -70,7 +110,7 @@ export function AgentChatWidget() {
     draggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY, right: widgetPos.right, bottom: widgetPos.bottom };
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-  }, [widgetPos]);
+  }, [widgetPos, isDocked]);
 
   const onDragPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current || !dragStartRef.current) return;
@@ -341,29 +381,50 @@ export function AgentChatWidget() {
                   ? "translate-y-0 opacity-100 pointer-events-auto"
                   : "translate-y-full opacity-0 invisible pointer-events-none",
               )
-            : cn(
-                "border border-border/60 shadow-2xl rounded-2xl transition-[opacity,transform] duration-200 ease-out",
-                isOpen
-                  ? "opacity-100 scale-100 pointer-events-auto"
-                  : "opacity-0 scale-95 invisible pointer-events-none",
-              ),
+            : isDocked
+              ? cn(
+                  "border border-border/60 rounded-3xl transition-[opacity] duration-150",
+                  isOpen
+                    ? "opacity-100 pointer-events-auto"
+                    : "opacity-0 invisible pointer-events-none",
+                )
+              : cn(
+                  "border border-border/60 shadow-2xl rounded-2xl transition-[opacity,transform] duration-200 ease-out",
+                  isOpen
+                    ? "opacity-100 scale-100 pointer-events-auto"
+                    : "opacity-0 scale-95 invisible pointer-events-none",
+                ),
         )}
-        style={!isMobile ? {
-          right: widgetPos.right,
-          bottom: widgetPos.bottom,
-          width: widgetSize.width,
-          height: widgetSize.height,
-        } : undefined}
+        style={
+          isMobile
+            ? undefined
+            : isDocked
+              ? { position: "fixed", right: 3, top: "calc(var(--topbar-h) + 5px)", bottom: 0, width: dockWidth - 6 }
+              : {
+                  right: widgetPos.right,
+                  bottom: widgetPos.bottom,
+                  width: widgetSize.width,
+                  height: widgetSize.height,
+                }
+        }
         data-testid="agent-widget-panel"
       >
         {/* ── Resize handles (desktop only) ── */}
-        {!isMobile && (
+        {!isMobile && !isDocked && (
           <>
             <div data-corner="tl" className="absolute top-0 left-4 right-4 h-1.5 cursor-n-resize z-10" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
             <div data-corner="tl" className="absolute top-4 left-0 bottom-4 w-1.5 cursor-w-resize z-10" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
             <div data-corner="tl" className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-20" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
             <div data-corner="tr" className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-20" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
           </>
+        )}
+        {!isMobile && isDocked && (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize z-20 hover:bg-brand-indigo/20"
+            onPointerDown={onDockResizePointerDown}
+            onPointerMove={onDockResizePointerMove}
+            onPointerUp={onDockResizePointerUp}
+          />
         )}
 
         {/* ── Widget Header ── */}
@@ -382,6 +443,8 @@ export function AgentChatWidget() {
           onDragPointerDown={onDragPointerDown}
           onDragPointerMove={onDragPointerMove}
           onDragPointerUp={onDragPointerUp}
+          dockMode={isDocked}
+          onToggleDock={toggleDockMode}
         />
 
         {/* ── Conversation Tabs (when 2+ open) ── */}

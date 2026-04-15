@@ -72,6 +72,8 @@
     "priority": "Prioriteit",
     "outreachStatus": "Outreach Fase",
     "date": "Datum",
+    "dateCreated": "Aangemaakt op",
+    "dateUpdated": "Gewijzigd op",
     "none": "Geen"
   },
   "filter": {
@@ -152,6 +154,7 @@
   "sections": {
     "basicInfo": "Basisinformatie",
     "location": "Locatie",
+    "companyContact": "Bedrijfscontact",
     "contact": "Contact",
     "contact1": "Contact 1",
     "contact2": "Contact 2",
@@ -359,11 +362,34 @@
     "contact1": "Contact 1",
     "contact2": "Contact 2"
   },
+  "companyTab": {
+    "summary": "Samenvatting",
+    "services": "Diensten",
+    "products": "Producten",
+    "history": "Geschiedenis",
+    "noSummary": "Nog geen samenvatting. Voer verrijking uit om data op te halen.",
+    "noServices": "Nog geen dienstendata beschikbaar.",
+    "noProducts": "Nog geen productendata beschikbaar.",
+    "noHistory": "Nog geen bedrijfsgeschiedenis beschikbaar.",
+    "loadingCompany": "Bedrijf wordt verrijkt...",
+    "loadingContact": "Contact {{slot}} wordt verrijkt...",
+    "aboutCompany": "Over {{name}}",
+    "aboutContact": "Over {{name}}",
+    "topCompanyPosts": "Beste Bedrijfsberichten",
+    "topLinkedInPosts": "Beste LinkedIn-berichten"
+  },
   "enrich": {
     "website": "Website",
     "contact1": "Contact 1",
     "contact2": "Contact 2",
-    "start": "Start"
+    "start": "Start",
+    "enrich": "Verrijken",
+    "enrichProspect": "Prospect verrijken",
+    "enriching": "{{targets}} wordt verrijkt...",
+    "stopPolling": "Verrijking stoppen",
+    "open": "Openen",
+    "previousPost": "Vorig bericht",
+    "nextPost": "Volgend bericht"
   },
   "offerActions": {
     "refresh": "Vernieuwen van website",

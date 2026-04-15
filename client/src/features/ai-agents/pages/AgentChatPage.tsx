@@ -47,7 +47,7 @@ export function AgentChatPage() {
     <CrmShell>
     <div className="flex flex-col h-full bg-background" data-testid="agent-chat-fullpage">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 lg:px-6 py-3 border-b border-border/50 bg-background shrink-0">
+      <div className="flex items-center gap-3 px-4 lg:px-6 h-14 border-b border-border/50 bg-background shrink-0">
         <button
           onClick={() => setLocation(`${prefix}/ai-agents`)}
           className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"

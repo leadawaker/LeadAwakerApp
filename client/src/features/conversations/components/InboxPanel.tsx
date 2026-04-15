@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, UserSearch, Headphones, Search, X, BotMessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2, Mail, MessageCircle, User, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush } from "lucide-react";
+import { Inbox, BellDot, UserSearch, Headphones, Search, X, BotMessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2, Mail, MessageCircle, User, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush, Hand } from "lucide-react";
 import type { ProspectThread } from "../hooks/useProspectConversations";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
@@ -1831,6 +1831,9 @@ export function InboxPanel({
                                 `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
                                 "Unknown"}
                             </p>
+                            {lead.manual_takeover && (
+                              <Hand className="w-3 h-3 text-amber-500 shrink-0" />
+                            )}
                             {lastTs && (
                               <span className="text-[10px] text-muted-foreground/70 shrink-0 tabular-nums">
                                 {formatRelativeTime(lastTs)}
