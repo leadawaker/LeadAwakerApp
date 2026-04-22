@@ -57,6 +57,7 @@
     }
   },
   "calculator": {
+    "eyebrow": "Revenue Recovery Calculator",
     "title": "You bought these leads. Let's make them pay.",
     "subtitle": "A quick diagnosis of how much revenue is trapped in leads that never closed.",
     "leadsLabel": "Leads You Already Paid For",
@@ -97,7 +98,7 @@
       "cacSubtitle": "Cost per acquired customer at each scenario",
       "cacFootnote": "* CAC = your original ad spend ÷ customers closed in this scenario. Lower response rates mean each closed customer costs more.",
       "breakevenNarrative": "You break even at deal #{{deal}}. The remaining {{profitDeals}} deals are pure profit.",
-      "breakevenNarrativeWeeks": "You break even at deal #{{deal}} (~week {{week}}). The remaining {{profitDeals}} deals land by week {{totalWeeks}}, pure profit.",
+      "breakevenNarrativeWeeks": "Break even: deal #{{deal}} · week {{week}}, {{profitDeals}} profit deals by week {{totalWeeks}}.",
       "breakevenMiss": "Not reached within {{total}} deals.",
       "breakevenAtDeal": "Deal #{{deal}}",
       "breakevenAtDealWeek": "Deal #{{deal}} · W{{week}}",
@@ -159,7 +160,7 @@
     "mockChat": {
       "customer1": "honestly the price last time was too steep for us",
       "ai1": "Totally fair, a decision like this deserves to feel right. What made it feel too steep, the monthly or the total?",
-      "customer2": "well that's actually interesting"
+      "customer2": "the total, I wasn't expecting that number"
     }
   },
   "founderBackground": {

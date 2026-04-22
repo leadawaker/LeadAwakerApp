@@ -58,6 +58,7 @@
   },
 
   "calculator": {
+    "eyebrow": "Calculadora de Recuperação de Receita",
     "title": "Você comprou esses leads. Hora de fazê-los render.",
     "subtitle": "Um diagnóstico rápido de quanta receita está parada em leads que nunca fecharam.",
     "leadsLabel": "Leads Que Você Já Pagou",
@@ -98,7 +99,7 @@
       "cacSubtitle": "Custo por cliente adquirido em cada cenário",
       "cacFootnote": "* CAC = seu gasto original em ads ÷ clientes fechados nesse cenário. Taxas de resposta menores fazem cada cliente fechado custar mais.",
       "breakevenNarrative": "Você se paga no negócio #{{deal}}. Os {{profitDeals}} restantes são puro lucro.",
-      "breakevenNarrativeWeeks": "Você se paga no negócio #{{deal}} (~semana {{week}}). Os {{profitDeals}} restantes chegam até a semana {{totalWeeks}}, puro lucro.",
+      "breakevenNarrativeWeeks": "Break-even: negócio #{{deal}} · semana {{week}}, {{profitDeals}} negócios lucrativos até semana {{totalWeeks}}.",
       "breakevenMiss": "Não alcançado em {{total}} negócios.",
       "breakevenAtDeal": "Negócio #{{deal}}",
       "breakevenAtDealWeek": "Negócio #{{deal}} · Sem {{week}}",
@@ -160,7 +161,7 @@
     "mockChat": {
       "customer1": "sinceramente o preço da outra vez ficou caro pra gente",
       "ai1": "Faz total sentido, uma decisão dessas precisa te deixar tranquilo. O que pesou mais, a parcela ou o total?",
-      "customer2": "olha isso é interessante"
+      "customer2": "o total, não esperava esse número"
     }
   },
   "founderBackground": {

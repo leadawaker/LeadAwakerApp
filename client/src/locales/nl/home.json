@@ -57,6 +57,7 @@
     }
   },
   "calculator": {
+    "eyebrow": "Omzetherstel Calculator",
     "title": "Je hebt deze leads gekocht. Laat ze nu opleveren.",
     "subtitle": "Een snelle diagnose van hoeveel omzet vastzit in leads die nooit hebben getekend.",
     "leadsLabel": "Leads Waar Je Al Voor Betaald Hebt",
@@ -97,7 +98,7 @@
       "cacSubtitle": "Kosten per binnengehaalde klant per scenario",
       "cacFootnote": "* CAC = je oorspronkelijke ad-spend ÷ gesloten klanten in dit scenario. Lagere response rates betekenen dat elke gesloten klant meer kost.",
       "breakevenNarrative": "Je bent break-even bij deal #{{deal}}. De overige {{profitDeals}} deals zijn pure winst.",
-      "breakevenNarrativeWeeks": "Je bent break-even bij deal #{{deal}} (~week {{week}}). De overige {{profitDeals}} deals vallen binnen week {{totalWeeks}}, pure winst.",
+      "breakevenNarrativeWeeks": "Break-even: deal #{{deal}} · week {{week}}, {{profitDeals}} winstdeals t/m week {{totalWeeks}}.",
       "breakevenMiss": "Niet bereikt binnen {{total}} deals.",
       "breakevenAtDeal": "Deal #{{deal}}",
       "breakevenAtDealWeek": "Deal #{{deal}} · W{{week}}",
@@ -159,7 +160,7 @@
     "mockChat": {
       "customer1": "eerlijk gezegd was de prijs vorige keer te hoog voor ons",
       "ai1": "Helemaal begrijpelijk, zo'n beslissing moet gewoon goed voelen. Wat voelde te hoog, de maandlasten of het totaal?",
-      "customer2": "nou dat is wel interessant"
+      "customer2": "het totaal, dat had ik niet verwacht"
     }
   },
   "founderBackground": {

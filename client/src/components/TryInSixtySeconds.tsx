@@ -113,6 +113,7 @@ export default function TryInSixtySeconds() {
                   src="/6.%20Favicon.svg"
                   alt="LeadAwaker"
                   className="w-12 h-12 object-contain"
+                  style={{ marginTop: "-3px" }}
                 />
               </div>
               <div>
