@@ -23,6 +23,7 @@ import {
   startCampaignFinishedNotifier,
 } from "./ai-agents";
 import { registerGmailRoutes } from "./gmail";
+import { registerDemoRoutes } from "./demo";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -52,6 +53,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerBillingRoutes(app);
   registerAiAgentsRoutes(app);
   registerGmailRoutes(app);
+  registerDemoRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)

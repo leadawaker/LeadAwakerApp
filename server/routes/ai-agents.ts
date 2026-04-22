@@ -1105,6 +1105,26 @@ export function registerAiAgentsRoutes(app: Express): void {
     }
   });
 
+  // POST /api/agents/sessions/:sessionId/regenerate-title — regenerate session title from recent messages
+  app.post("/api/agents/sessions/:sessionId/regenerate-title", requireAgency, async (req, res) => {
+    try {
+      const session = await storage.getAiSessionBySessionId(req.params.sessionId);
+      if (!session) return res.status(404).json({ message: "Session not found" });
+      const messages = await storage.getAiMessagesBySessionId(req.params.sessionId);
+      const relevant = messages.filter((m: any) => m.role === "user" || m.role === "assistant");
+      if (relevant.length < 2) return res.status(400).json({ message: "Not enough messages to generate a title" });
+      const lastUser = [...relevant].reverse().find((m: any) => m.role === "user");
+      const lastAssistant = [...relevant].reverse().find((m: any) => m.role === "assistant");
+      if (!lastUser || !lastAssistant) return res.status(400).json({ message: "Need at least one user and one assistant message" });
+      const title = await generateConversationTitle(lastUser.content, lastAssistant.content);
+      await storage.updateAiSession(session.id, { title });
+      res.json({ title });
+    } catch (err: any) {
+      console.error("[AI Sessions] regenerate-title error:", err);
+      res.status(500).json({ message: "Failed to regenerate title" });
+    }
+  });
+
   // DELETE /api/agents/sessions/:sessionId — close/delete session
   app.delete("/api/agents/sessions/:sessionId", requireAgency, async (req, res) => {
     try {
@@ -1742,11 +1762,20 @@ export function registerAiAgentsRoutes(app: Express): void {
               (runIteration as any)._feedback = "";
             }
           },
-          onDone: (_fullText, _blocks, cliSessionId, usage) => {
+          onDone: (_fullText, _blocks, cliSessionId, usage, isError) => {
             aggregated.cliSessionId = cliSessionId;
             aggregated.usage.inputTokens += usage.inputTokens;
             aggregated.usage.outputTokens += usage.outputTokens;
             aggregated.usage.costUsd += usage.costUsd;
+
+            // Retry once on transient API errors (e.g. Anthropic 500s)
+            if (isError && !(runIteration as any)._retried) {
+              console.warn(`[Agent Conversations] Transient error on iteration ${iteration} — retrying once`);
+              (runIteration as any)._retried = true;
+              try { res.write(`data: ${JSON.stringify({ type: "activity", activity: "thinking" })}\n\n`); } catch {}
+              setTimeout(() => runIteration(iterationPrompt, iterationAppendSystemPrompt, iteration), 2000);
+              return;
+            }
 
             const feedback: string = (runIteration as any)._feedback || "";
             (runIteration as any)._feedback = "";

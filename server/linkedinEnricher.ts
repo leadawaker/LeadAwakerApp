@@ -1,17 +1,25 @@
 /**
  * LinkedIn profile enrichment via RapidAPI (professional-network-data).
- * Rotates through all available API keys to stay within rate limits.
+ *
+ * Three paths:
+ *  A) Manual slot + has LinkedIn URL -> scrape profile; write ONLY output fields (no name/role/email/phone overwrite)
+ *  B) Manual slot + name only (no URL) -> Google+Haiku name-match to find URL, then scrape; preserve typed name/role
+ *  C) Non-manual slot + has LinkedIn URL -> scrape profile; write all fields (overwrite OK)
+ *
+ * Discovery-by-role (finding decision makers from scratch) now lives in contactDiscovery.ts
+ * and runs automatically as part of company enrichment. Contact enrichment no longer
+ * does role-based Google searches.
  */
 
 import { db } from "./db";
 import { prospects } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { completeText, stripFences } from "./aiTextHelper";
+import { discoverContactByName } from "./contactDiscovery";
 
 const RAPIDAPI_HOST = "professional-network-data.p.rapidapi.com";
 const ENDPOINT = `https://${RAPIDAPI_HOST}/profile-data-connection-count-posts`;
 
-// Load all RAPIDAPI_KEY_N from env
 const API_KEYS: string[] = [];
 for (let i = 1; i <= 12; i++) {
   const key = process.env[`RAPIDAPI_KEY_${i}`];
@@ -26,16 +34,10 @@ function nextKey(): string {
   return key;
 }
 
-/**
- * Extract LinkedIn username from a profile URL.
- * Handles: linkedin.com/in/username, linkedin.com/in/username/, full URLs with query params.
- */
 export function extractUsername(url: string): string | null {
   if (!url) return null;
   url = url.trim();
-  // Direct username (no slashes or dots)
   if (!url.includes("/") && !url.includes(".")) return url;
-  // URL pattern
   const match = url.match(/linkedin\.com\/in\/([^/?#]+)/i);
   return match ? match[1] : null;
 }
@@ -56,10 +58,6 @@ interface LinkedInResult {
   topPosts: CarouselPost[];
 }
 
-/**
- * Fetch a LinkedIn profile from RapidAPI.
- * Rotates through all available keys on 429/403 errors.
- */
 export async function fetchLinkedInProfile(username: string): Promise<LinkedInResult> {
   let lastError: Error | null = null;
 
@@ -86,7 +84,6 @@ export async function fetchLinkedInProfile(username: string): Promise<LinkedInRe
       const json = await res.json() as any;
       const data = json.data || json;
 
-      // Extract top posts — take top 3 by reactions from the last batch
       const posts = json.posts || data.posts || [];
       const topPosts: CarouselPost[] = [];
       let topPost: string | null = null;
@@ -104,12 +101,10 @@ export async function fetchLinkedInProfile(username: string): Promise<LinkedInRe
             url: p?.postUrl || undefined,
           });
         }
-        // Legacy text field (backwards compat): use the highest-engagement post text
         const firstText = sorted[0]?.text || sorted[0]?.commentary || null;
         topPost = firstText ? (firstText.length > 500 ? firstText.slice(0, 497) + "..." : firstText) : null;
       }
 
-      // Parse counts as integers
       const connectionCount = parseInt(String(data.connection ?? data.connectionCount ?? ""), 10) || null;
       const followerCount = parseInt(String(data.follower ?? data.followerCount ?? ""), 10) || null;
 
@@ -130,62 +125,27 @@ export async function fetchLinkedInProfile(username: string): Promise<LinkedInRe
   throw lastError || new Error("All LinkedIn API attempts failed");
 }
 
-/**
- * Enrich a prospect's LinkedIn data and store results in the database.
- * contactSlot: 1 = contact_linkedin, 2 = contact2_linkedin
- */
-export async function enrichLinkedIn(prospectId: number, contactSlot: 1 | 2 = 1): Promise<LinkedInResult> {
-  const [prospect] = await db
-    .select({ contactLinkedin: prospects.contactLinkedin, contact2Linkedin: prospects.contact2Linkedin })
-    .from(prospects)
-    .where(eq(prospects.id, prospectId))
-    .limit(1);
-
-  const linkedinUrl = contactSlot === 2 ? prospect?.contact2Linkedin : prospect?.contactLinkedin;
-
-  if (!linkedinUrl) {
-    const field = contactSlot === 2 ? "contact2_linkedin" : "contact_linkedin";
-    throw new Error(`Prospect has no LinkedIn URL in ${field}`);
+async function generatePersonBrief(
+  name: string | null,
+  role: string | null,
+  company: string | null,
+  niche: string | null,
+  result: LinkedInResult,
+): Promise<string | null> {
+  if (!result.headline && !result.topPost && result.topPosts.length === 0) {
+    return null;
   }
 
-  const username = extractUsername(linkedinUrl);
-  if (!username) {
-    throw new Error(`Could not extract username from: ${linkedinUrl}`);
-  }
+  const postsBlock = result.topPosts.length > 0
+    ? result.topPosts.map((p, i) => `Post ${i + 1} (${p.reactions} reactions, ${p.date}): ${p.title}`).join("\n")
+    : (result.topPost || "N/A");
 
-  const result = await fetchLinkedInProfile(username);
-
-  // Fetch prospect context for person_brief generation
-  const [prospectData] = await db
-    .select({
-      company: prospects.company,
-      niche: prospects.niche,
-      contactName: prospects.contactName,
-      contactRole: prospects.contactRole,
-      contact2Name: prospects.contact2Name,
-      contact2Role: prospects.contact2Role,
-    })
-    .from(prospects)
-    .where(eq(prospects.id, prospectId))
-    .limit(1);
-
-  const name = contactSlot === 2 ? prospectData?.contact2Name : prospectData?.contactName;
-  const role = contactSlot === 2 ? prospectData?.contact2Role : prospectData?.contactRole;
-
-  // Generate structured person_brief (labeled ROLE/BACKGROUND/CONTENT/RAPPORT format)
-  // Tries Claude Haiku first, falls back to Groq on failure. Best-effort.
-  let personBrief: string | null = null;
-  if (result.headline || result.topPost || result.topPosts.length > 0) {
-    const postsBlock = result.topPosts.length > 0
-      ? result.topPosts.map((p, i) => `Post ${i + 1} (${p.reactions} reactions, ${p.date}): ${p.title}`).join("\n")
-      : (result.topPost || "N/A");
-
-    const briefPrompt = `You are creating a sales intelligence brief about a business contact based on their LinkedIn data.
+  const briefPrompt = `You are creating a sales intelligence brief about a business contact based on their LinkedIn data.
 
 Name: ${name || "Unknown"}
 Role: ${role || "Unknown"}
-Company: ${prospectData?.company || "Unknown"}
-Industry: ${prospectData?.niche || "Unknown"}
+Company: ${company || "Unknown"}
+Industry: ${niche || "Unknown"}
 LinkedIn Headline: ${result.headline || "N/A"}
 Connections: ${result.connectionCount || "N/A"}
 Followers: ${result.followerCount || "N/A"}
@@ -210,41 +170,131 @@ Rules:
 - Be specific and useful for outreach, not generic.
 - Skip any category that has no data.`;
 
-    const briefOut = await completeText(briefPrompt);
-    if (briefOut) {
-      const cleaned = stripFences(briefOut);
-      // Keep only lines that start with an uppercase label pattern — drop any stray preamble
-      const lines = cleaned.split(/\r?\n/).filter((l) => /^[A-Z][A-Z0-9 /&-]{1,40}:\s/.test(l.trim()));
-      if (lines.length > 0) personBrief = lines.map((l) => l.trim()).join("\n");
-    }
+  const briefOut = await completeText(briefPrompt);
+  if (briefOut) {
+    const cleaned = stripFences(briefOut);
+    const lines = cleaned.split(/\r?\n/).filter((l) => /^[A-Z][A-Z0-9 /&-]{1,40}:\s/.test(l.trim()));
+    if (lines.length > 0) return lines.map((l) => l.trim()).join("\n");
   }
+  return null;
+}
 
-  const topPostDataJson = result.topPosts.length > 0 ? result.topPosts : null;
+interface OutputFields {
+  headline: string | null;
+  connectionCount: number | null;
+  followerCount: number | null;
+  photoUrl: string | null;
+  topPost: string | null;
+  topPostData: CarouselPost[] | null;
+  personBrief: string | null;
+}
 
-  const linkedinFields = contactSlot === 2
+function buildOutputFields(slot: 1 | 2, r: LinkedInResult, personBrief: string | null): Record<string, unknown> {
+  const topPostDataJson = r.topPosts.length > 0 ? r.topPosts : null;
+  return slot === 2
     ? {
-        contact2Headline: result.headline,
-        contact2ConnectionCount: result.connectionCount,
-        contact2FollowerCount: result.followerCount,
-        contact2PhotoUrl: result.photoUrl,
-        contact2TopPost: result.topPost,
-        contact2TopPostData: topPostDataJson as any,
+        contact2Headline: r.headline,
+        contact2ConnectionCount: r.connectionCount,
+        contact2FollowerCount: r.followerCount,
+        contact2PhotoUrl: r.photoUrl,
+        contact2TopPost: r.topPost,
+        contact2TopPostData: topPostDataJson,
         contact2PersonBrief: personBrief,
       }
     : {
-        headline: result.headline,
-        connectionCount: result.connectionCount,
-        followerCount: result.followerCount,
-        photoUrl: result.photoUrl,
-        topPost: result.topPost,
-        topPostData: topPostDataJson as any,
-        personBrief: personBrief,
+        headline: r.headline,
+        connectionCount: r.connectionCount,
+        followerCount: r.followerCount,
+        photoUrl: r.photoUrl,
+        topPost: r.topPost,
+        topPostData: topPostDataJson,
+        personBrief,
       };
+}
+
+export async function enrichLinkedIn(prospectId: number, contactSlot: 1 | 2 = 1): Promise<LinkedInResult> {
+  const [prospect] = await db
+    .select({
+      contactLinkedin: prospects.contactLinkedin,
+      contact2Linkedin: prospects.contact2Linkedin,
+      contactName: prospects.contactName,
+      contactRole: prospects.contactRole,
+      contact2Name: prospects.contact2Name,
+      contact2Role: prospects.contact2Role,
+      contactManual: prospects.contactManual,
+      contact2Manual: prospects.contact2Manual,
+      company: prospects.company,
+      niche: prospects.niche,
+      companySummary: prospects.companySummary,
+    })
+    .from(prospects)
+    .where(eq(prospects.id, prospectId))
+    .limit(1);
+
+  if (!prospect) {
+    throw new Error(`Prospect ${prospectId} not found`);
+  }
+
+  const linkedinUrl = contactSlot === 2 ? prospect.contact2Linkedin : prospect.contactLinkedin;
+  const isManual = contactSlot === 2 ? prospect.contact2Manual : prospect.contactManual;
+  const name = contactSlot === 2 ? prospect.contact2Name : prospect.contactName;
+  const role = contactSlot === 2 ? prospect.contact2Role : prospect.contactRole;
+
+  // Path B: manual + name only -> discover URL by name, then scrape
+  let effectiveUrl = linkedinUrl;
+  if (isManual && !linkedinUrl) {
+    if (!name) {
+      console.warn(`[LinkedIn] Manual contact ${contactSlot} on prospect ${prospectId} has neither URL nor name, marking not_found`);
+      await db
+        .update(prospects)
+        .set({ enrichmentStatus: "not_found", enrichedAt: new Date() })
+        .where(eq(prospects.id, prospectId));
+      throw new Error(`Manual contact slot ${contactSlot} has no name to search by`);
+    }
+    console.log(`[LinkedIn] Manual contact ${contactSlot} has name "${name}" but no URL, searching by name...`);
+    const match = await discoverContactByName(name, prospect.company, prospect.niche, prospect.companySummary);
+    if (!match) {
+      await db
+        .update(prospects)
+        .set({ enrichmentStatus: "not_found", enrichedAt: new Date() })
+        .where(eq(prospects.id, prospectId));
+      throw new Error(`No LinkedIn profile matched name "${name}" at ${prospect.company}`);
+    }
+    // Save the discovered URL only (preserve typed name/role)
+    const urlField = contactSlot === 2 ? { contact2Linkedin: match.linkedinUrl } : { contactLinkedin: match.linkedinUrl };
+    await db.update(prospects).set(urlField).where(eq(prospects.id, prospectId));
+    effectiveUrl = match.linkedinUrl;
+  }
+
+  // Path A or C and fall-through from B: require URL
+  if (!effectiveUrl) {
+    // Non-manual slot with no URL: discovery now lives in company enrichment, not here.
+    await db
+      .update(prospects)
+      .set({ enrichmentStatus: "not_found", enrichedAt: new Date() })
+      .where(eq(prospects.id, prospectId));
+    throw new Error(
+      `Contact ${contactSlot} has no LinkedIn URL. Run Enrich Company to auto-discover contacts first.`,
+    );
+  }
+
+  const username = extractUsername(effectiveUrl);
+  if (!username) {
+    throw new Error(`Could not extract username from: ${effectiveUrl}`);
+  }
+
+  const result = await fetchLinkedInProfile(username);
+  const personBrief = await generatePersonBrief(name, role, prospect.company, prospect.niche, result);
+  const outputFields = buildOutputFields(contactSlot, result, personBrief);
+
+  if (isManual) {
+    console.log(`[LinkedIn] Manual contact ${contactSlot}, writing output fields only for prospect ${prospectId}`);
+  }
 
   await db
     .update(prospects)
     .set({
-      ...linkedinFields,
+      ...outputFields,
       enrichmentStatus: "enriched",
       enrichedAt: new Date(),
     })

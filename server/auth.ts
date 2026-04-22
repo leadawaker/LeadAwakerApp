@@ -123,12 +123,20 @@ export function setupAuth(app: Express) {
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "";
 
+function isValidInternalKey(key: string | undefined): boolean {
+  if (!INTERNAL_API_KEY || !key) return false;
+  const a = Buffer.from(key);
+  const b = Buffer.from(INTERNAL_API_KEY);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
 /** Check session auth OR internal API key (for Python automations on same host). */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) return next();
   // Internal API key bypass (automations running on same Pi)
   const key = req.headers["x-internal-key"] as string | undefined;
-  if (INTERNAL_API_KEY && key === INTERNAL_API_KEY) return next();
+  if (isValidInternalKey(key)) return next();
   res.status(401).json({ message: "Unauthorized" });
 }
 
@@ -136,7 +144,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 export function requireAgency(req: Request, res: Response, next: NextFunction) {
   // Internal API key = agency-level access
   const key = req.headers["x-internal-key"] as string | undefined;
-  if (INTERNAL_API_KEY && key === INTERNAL_API_KEY) return next();
+  if (isValidInternalKey(key)) return next();
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
   const user = req.user!;
   if (user.accountsId !== 1 && user.role !== "Admin") {

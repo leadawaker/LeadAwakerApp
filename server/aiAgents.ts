@@ -115,7 +115,7 @@ export function streamClaudeResponse(opts: {
   appendSystemPrompt?: string;
   /** Optional async callback that runs BEFORE the done event and res.end(). Use for CRM tool execution. */
   beforeDone?: (fullText: string, res: Response) => Promise<void>;
-  onDone: (fullText: string, subAgentBlocks: SubAgentBlock[], cliSessionId: string | null, usage: { inputTokens: number; outputTokens: number; costUsd: number }) => void;
+  onDone: (fullText: string, subAgentBlocks: SubAgentBlock[], cliSessionId: string | null, usage: { inputTokens: number; outputTokens: number; costUsd: number }, isError?: boolean) => void;
   /** If true, skip sending the SSE done event and calling res.end(). Used for intermediate iterations in an agent loop. */
   suppressDone?: boolean;
   /** If true, skip calling onDone. Used for intermediate iterations in an agent loop where only the final iteration should persist. */
@@ -175,6 +175,7 @@ export function streamClaudeResponse(opts: {
   let resultUsage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
   let ndjsonBuffer = "";
   let clientDisconnected = false;
+  let resultIsError = false;
 
   // Track client disconnection (HMR, page reload, network drop)
   opts.res.on("close", () => { clientDisconnected = true; });
@@ -241,6 +242,7 @@ export function streamClaudeResponse(opts: {
           sseWrite(`data: ${JSON.stringify({ type: "token", text: rEvt.result })}\n\n`);
         }
         if (rEvt.is_error) {
+          resultIsError = true;
           sseWrite(`data: ${JSON.stringify({ type: "error", message: rEvt.result || "Claude CLI error" })}\n\n`);
         }
         break;
@@ -298,7 +300,7 @@ export function streamClaudeResponse(opts: {
 
     // ALWAYS call onDone to save response to DB — even if client disconnected
     if (!opts.suppressOnDone) {
-      opts.onDone(fullText, [], cliSessionId, resultUsage);
+      opts.onDone(fullText, [], cliSessionId, resultUsage, resultIsError);
     }
   });
 
@@ -349,7 +351,7 @@ export function generateConversationTitle(
       const prompt = "Generate a very short title (3-6 words) for a conversation that starts with this exchange. Return ONLY the title text, nothing else. No quotes, no punctuation at the end, no explanation.\n\nUser: " + truncatedUser + "\n\nAssistant: " + truncatedAssistant;
 
       const child = spawn(CLAUDE_BIN, [
-        "--model", "claude-haiku-235-20241022",
+        "--model", "claude-haiku-4-5-20251001",
         "--dangerously-skip-permissions",
         "-p", prompt,
       ], {

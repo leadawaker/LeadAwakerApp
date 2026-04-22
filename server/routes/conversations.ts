@@ -92,6 +92,10 @@ export function registerConversationsRoutes(app: Express): void {
     const id = Number(req.params.id);
     const row = await storage.getInteractionById(id);
     if (!row) return res.status(404).json({ error: "Not found" });
+    const user = (req as any).user;
+    if (user.accountsId !== 1 && (row as any).accountsId !== user.accountsId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     res.json(toDbKeys(row as any, interactions));
   }));
 
@@ -222,8 +226,14 @@ export function registerConversationsRoutes(app: Express): void {
   }));
 
   app.delete("/api/interactions/:id", requireAuth, wrapAsync(async (req, res) => {
-    const ok = await storage.deleteInteraction(Number(req.params.id));
-    if (!ok) return res.status(404).json({ message: "Interaction not found" });
+    const id = Number(req.params.id);
+    const row = await storage.getInteractionById(id);
+    if (!row) return res.status(404).json({ message: "Interaction not found" });
+    const user = (req as any).user;
+    if (user.accountsId !== 1 && (row as any).accountsId !== user.accountsId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    await storage.deleteInteraction(id);
     res.status(204).end();
   }));
 
@@ -232,7 +242,11 @@ export function registerConversationsRoutes(app: Express): void {
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ message: "ids must be a non-empty array" });
     }
-    const deleted = await storage.bulkDeleteInteractions(ids.map(Number));
+    const user = (req as any).user;
+    const numericIds = ids.map(Number);
+    const deleted = user.accountsId === 1
+      ? await storage.bulkDeleteInteractions(numericIds)
+      : await storage.bulkDeleteInteractionsScoped(numericIds, user.accountsId);
     res.json({ deleted });
   }));
 

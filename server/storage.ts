@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, sum, SQL, inArray, and, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
+import { eq, desc, asc, count, sum, SQL, inArray, and, or, ilike, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db, pool } from "./db";
 import {
@@ -103,6 +103,22 @@ export interface NotificationItem {
   leadId?: number;
 }
 
+export interface ProspectsListParams {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  niche?: string[];
+  status?: string[];
+  country?: string[];
+  priority?: string[];
+  source?: string[];
+  overdue?: boolean;
+  sortBy?: string; // "recent" | "name_asc" | "name_desc" | "priority"
+  groupBy?: string;
+  groupDirection?: "asc" | "desc";
+  all?: boolean;
+}
+
 export interface IStorage {
   // Accounts
   getAccounts(): Promise<Accounts[]>;
@@ -113,6 +129,9 @@ export interface IStorage {
 
   // Prospects
   getProspects(): Promise<Prospects[]>;
+  getProspectsPaginated(params: ProspectsListParams): Promise<{ items: Prospects[]; total: number; hasMore: boolean }>;
+  getProspectsByIds(ids: number[]): Promise<Prospects[]>;
+  getProspectsFilterOptions(): Promise<{ niches: string[]; countries: string[]; sources: string[] }>;
   getProspectById(id: number): Promise<Prospects | undefined>;
   createProspect(data: InsertProspects): Promise<Prospects>;
   updateProspect(id: number, data: Partial<InsertProspects>): Promise<Prospects | undefined>;
@@ -154,6 +173,7 @@ export interface IStorage {
   updateInteraction(id: number, data: Partial<InsertInteractions>): Promise<Interactions | undefined>;
   deleteInteraction(id: number): Promise<boolean>;
   bulkDeleteInteractions(ids: number[]): Promise<number>;
+  bulkDeleteInteractionsScoped(ids: number[], accountId: number): Promise<number>;
   deleteInteractionsByLeadId(leadId: number): Promise<void>;
 
   // Tags
@@ -357,6 +377,94 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(prospects).orderBy(desc(prospects.createdAt));
   }
 
+  async getProspectsPaginated(params: ProspectsListParams): Promise<{ items: Prospects[]; total: number; hasMore: boolean }> {
+    const conditions: SQL[] = [];
+
+    // Filters (IN clauses for array filters, skip empty arrays)
+    if (params.niche && params.niche.length > 0) conditions.push(inArray(prospects.niche, params.niche));
+    if (params.status && params.status.length > 0) conditions.push(inArray(prospects.status, params.status));
+    if (params.country && params.country.length > 0) conditions.push(inArray(prospects.country, params.country));
+    if (params.priority && params.priority.length > 0) conditions.push(inArray(prospects.priority, params.priority));
+    if (params.source && params.source.length > 0) conditions.push(inArray(prospects.source, params.source));
+
+    // Search: ILIKE across name, company, email, contact_name
+    if (params.search && params.search.trim()) {
+      const s = `%${params.search.trim()}%`;
+      const searchCond = or(
+        ilike(prospects.name, s),
+        ilike(prospects.company, s),
+        ilike(prospects.email, s),
+        ilike(prospects.contactName, s),
+      );
+      if (searchCond) conditions.push(searchCond);
+    }
+
+    // Overdue: next_follow_up_date < now()
+    if (params.overdue) {
+      conditions.push(lt(prospects.nextFollowUpDate, new Date()));
+    }
+
+    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+    // Sort column whitelist
+    const dir = params.groupDirection === "desc" ? desc : asc;
+    const orderBy: SQL[] = [];
+
+    // Group-by column leads the sort
+    switch (params.groupBy) {
+      case "status": orderBy.push(dir(prospects.status)); break;
+      case "niche": orderBy.push(dir(prospects.niche)); break;
+      case "country": orderBy.push(dir(prospects.country)); break;
+      case "priority": orderBy.push(dir(prospects.priority)); break;
+      case "outreach_status": orderBy.push(dir(prospects.outreachStatus)); break;
+      default: break;
+    }
+
+    // Then the user-selected sort
+    switch (params.sortBy) {
+      case "name_asc": orderBy.push(asc(prospects.name)); break;
+      case "name_desc": orderBy.push(desc(prospects.name)); break;
+      case "priority": orderBy.push(desc(prospects.priority)); break;
+      case "recent":
+      default:
+        orderBy.push(desc(prospects.updatedAt), desc(prospects.createdAt));
+        break;
+    }
+
+    // Count
+    const countQuery = db
+      .select({ c: count() })
+      .from(prospects)
+      .where(whereClause as any);
+    const [{ c: total }] = await countQuery;
+
+    // Items
+    const baseQuery = db.select().from(prospects).where(whereClause as any).orderBy(...orderBy);
+
+    if (params.all) {
+      const items = await baseQuery;
+      return { items, total, hasMore: false };
+    }
+
+    const limit = Math.min(Math.max(1, params.limit ?? 100), 200);
+    const offset = Math.max(0, params.offset ?? 0);
+    const items = await baseQuery.limit(limit).offset(offset);
+    return { items, total, hasMore: offset + items.length < total };
+  }
+
+  async getProspectsByIds(ids: number[]): Promise<Prospects[]> {
+    if (ids.length === 0) return [];
+    return db.select().from(prospects).where(inArray(prospects.id, ids));
+  }
+
+  async getProspectsFilterOptions(): Promise<{ niches: string[]; countries: string[]; sources: string[] }> {
+    const niches = await db.selectDistinct({ v: prospects.niche }).from(prospects).where(isNotNull(prospects.niche));
+    const countries = await db.selectDistinct({ v: prospects.country }).from(prospects).where(isNotNull(prospects.country));
+    const sources = await db.selectDistinct({ v: prospects.source }).from(prospects).where(isNotNull(prospects.source));
+    const clean = (rows: { v: string | null }[]) => rows.map(r => r.v).filter((v): v is string => !!v && v.trim() !== "").sort();
+    return { niches: clean(niches), countries: clean(countries), sources: clean(sources) };
+  }
+
   async getProspectById(id: number): Promise<Prospects | undefined> {
     const [row] = await db.select().from(prospects).where(eq(prospects.id, id));
     return row;
@@ -552,7 +660,9 @@ export class DatabaseStorage implements IStorage {
         (SELECT i2.direction FROM p2mxx34fvbf3ll6."Interactions" i2
          WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_direction,
         (SELECT i2.type FROM p2mxx34fvbf3ll6."Interactions" i2
-         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_type
+         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_type,
+        ARRAY(SELECT DISTINCT LOWER(i3.type) FROM p2mxx34fvbf3ll6."Interactions" i3
+         WHERE i3.prospect_id = p.id AND i3.type IS NOT NULL) as channels
       FROM p2mxx34fvbf3ll6."Prospects" p
       INNER JOIN p2mxx34fvbf3ll6."Interactions" i ON i.prospect_id = p.id
       GROUP BY p.id
@@ -605,6 +715,14 @@ export class DatabaseStorage implements IStorage {
   async bulkDeleteInteractions(ids: number[]): Promise<number> {
     if (ids.length === 0) return 0;
     const rows = await db.delete(interactions).where(inArray(interactions.id, ids)).returning();
+    return rows.length;
+  }
+
+  async bulkDeleteInteractionsScoped(ids: number[], accountId: number): Promise<number> {
+    if (ids.length === 0) return 0;
+    const rows = await db.delete(interactions)
+      .where(and(inArray(interactions.id, ids), eq(interactions.accountsId, accountId)))
+      .returning();
     return rows.length;
   }
 

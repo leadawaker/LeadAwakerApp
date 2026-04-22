@@ -51,8 +51,9 @@ export function registerAccountsRoutes(app: Express): void {
   app.get("/api/accounts/:id", requireAuth, wrapAsync(async (req, res) => {
     const requestedId = Number(req.params.id);
     const user = req.user!;
-    // Sub-account users can only fetch their own account
-    if (user.role !== "Agency" && user.accountsId !== requestedId) {
+    // Sub-account users can only fetch their own account (agency = accountsId 1 or Admin role)
+    const isAgency = user.accountsId === 1 || user.role === "Admin";
+    if (!isAgency && user.accountsId !== requestedId) {
       return res.status(403).json({ message: "Access denied" });
     }
     const account = await storage.getAccountById(requestedId);
@@ -232,13 +233,47 @@ export function registerAccountsRoutes(app: Express): void {
   // ─── Prospects ───────────────────────────────────────────────────────
 
   app.get("/api/prospects", requireAgency, wrapAsync(async (req, res) => {
-    const pagination = getPagination(req);
-    if (pagination) {
-      const result = await paginatedQuery(prospects, pagination);
-      return res.json({ ...result, data: toDbKeysArray(result.data as any, prospects) });
-    }
-    const data = await storage.getProspects();
-    res.json(toDbKeysArray(data as any, prospects));
+    const parseArr = (v: unknown): string[] | undefined => {
+      if (typeof v !== "string" || !v.trim()) return undefined;
+      return v.split(",").map(s => s.trim()).filter(Boolean);
+    };
+    const q = req.query;
+    const all = q.all === "true" || q.all === "1";
+    const params = {
+      limit: q.limit ? parseInt(String(q.limit), 10) : undefined,
+      offset: q.offset ? parseInt(String(q.offset), 10) : undefined,
+      search: typeof q.search === "string" ? q.search : undefined,
+      niche: parseArr(q.niche),
+      status: parseArr(q.status),
+      country: parseArr(q.country),
+      priority: parseArr(q.priority),
+      source: parseArr(q.source),
+      overdue: q.overdue === "true",
+      sortBy: typeof q.sortBy === "string" ? q.sortBy : undefined,
+      groupBy: typeof q.groupBy === "string" ? q.groupBy : undefined,
+      groupDirection: q.groupDirection === "desc" ? "desc" as const : q.groupDirection === "asc" ? "asc" as const : undefined,
+      all,
+    };
+    const result = await storage.getProspectsPaginated(params);
+    res.json({
+      items: toDbKeysArray(result.items as any, prospects),
+      total: result.total,
+      hasMore: result.hasMore,
+    });
+  }));
+
+  // Filter options (distinct niches / countries / sources) — must be before :id route
+  app.get("/api/prospects/filter-options", requireAgency, wrapAsync(async (_req, res) => {
+    const opts = await storage.getProspectsFilterOptions();
+    res.json(opts);
+  }));
+
+  // Lookup prospects by ids — must be before :id route
+  app.get("/api/prospects/by-ids", requireAgency, wrapAsync(async (req, res) => {
+    const raw = typeof req.query.ids === "string" ? req.query.ids : "";
+    const ids = raw.split(",").map(s => parseInt(s.trim(), 10)).filter(n => Number.isFinite(n) && n > 0);
+    const items = await storage.getProspectsByIds(ids);
+    res.json({ items: toDbKeysArray(items as any, prospects) });
   }));
 
   // Prospect conversations (must be before :id route)
@@ -432,7 +467,7 @@ export function registerAccountsRoutes(app: Express): void {
   // ─── Outreach Message Generation ─────────────────────────────────
   app.post("/api/prospects/:id/generate-messages", requireAgency, wrapAsync(async (req, res) => {
     const prospectId = Number(req.params.id);
-    const { style, format, language = "en", offer, contact, customInstructions } = req.body;
+    const { style, format, language = "en", offer, contact, customInstructions, templateBody } = req.body;
 
     if (!style || !format) {
       return res.status(400).json({ message: "style and format are required" });
@@ -448,7 +483,7 @@ export function registerAccountsRoutes(app: Express): void {
       content: i.content || "",
       direction: i.direction || "outbound",
       sentAt: i.sentAt,
-    })), { selectedOffer: offer, selectedContact: contact, customInstructions });
+    })), { selectedOffer: offer, selectedContact: contact, customInstructions, templateBody });
 
     const { execFile } = await import("child_process");
     const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
@@ -484,6 +519,29 @@ export function registerAccountsRoutes(app: Express): void {
     res.json({ messages: merged });
   }));
 
+  // ─── Edit Single Message with AI instruction ─────────────────────
+  app.post("/api/prospects/:id/edit-message", requireAgency, wrapAsync(async (req, res) => {
+    const prospectId = Number(req.params.id);
+    const { messageText, instruction } = req.body;
+    if (!messageText || !instruction) {
+      return res.status(400).json({ message: "messageText and instruction are required" });
+    }
+
+    const prompt = `You are editing an outreach message based on a user instruction. Return ONLY the revised message text, no explanation, no quotes, no JSON wrapper. Do not use em dashes (—) or en dashes (–) anywhere in the output.\n\nOriginal message:\n${messageText}\n\nInstruction: ${instruction}`;
+
+    const { execFile } = await import("child_process");
+    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
+
+    const result = await new Promise<string>((resolve, reject) => {
+      execFile(CLAUDE_BIN, ["-p", prompt, "--model", "haiku", "--max-turns", "1"],
+        { timeout: 60000, maxBuffer: 1024 * 1024 },
+        (error, stdout) => { if (error) reject(error); else resolve(stdout); }
+      );
+    });
+
+    res.json({ text: result.trim() });
+  }));
+
   // ─── Append Offer Idea (AI-generated) ────────────────────────────
   app.post("/api/prospects/:id/append-offer", requireAgency, wrapAsync(async (req, res) => {
     const prospectId = Number(req.params.id);
@@ -509,27 +567,45 @@ export function registerAccountsRoutes(app: Express): void {
     const existingTexts = existingOffers.map(o => o.text);
     const companyName = prospect.company || prospect.name || "this company";
     const niche = prospect.niche ? ` in the ${prospect.niche} industry` : "";
-    const summary = prospect.aiSummary ? `\nCompany summary: ${prospect.aiSummary}` : "";
-    const pageSummaries = prospect.pageSummaries ? `\nWebsite research: ${String(prospect.pageSummaries).slice(0, 1500)}` : "";
+    const summary = prospect.aiSummary ? `\nCompany website brief: ${prospect.aiSummary}` : "";
+    const pageSummaries = prospect.pageSummaries ? `\nWebsite research: ${String(prospect.pageSummaries).slice(0, 1200)}` : "";
+    const companySummary = prospect.companySummary ? `\nLinkedIn company summary: ${prospect.companySummary}` : "";
+    const companyServices = prospect.companyServices ? `\nCompany services/products: ${prospect.companyServices}` : "";
+    const personBrief = prospect.personBrief ? `\nPrimary contact: ${prospect.personBrief}` : "";
+    const contact2Brief = prospect.contact2PersonBrief ? `\nSecondary contact: ${prospect.contact2PersonBrief}` : "";
     const numToGenerate = count ?? (existingOffers.length === 0 ? 5 : 1);
     const existingBlock = existingTexts.length > 0
-      ? `\nExisting offers (do NOT repeat these): ${existingTexts.join("; ")}`
+      ? `\n\nALREADY EXISTING OFFERS — do NOT generate anything similar to these, they are already saved:\n${existingTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
       : "";
 
-    const prompt = `You are generating offer ideas for Lead Awaker, an AI lead reactivation agency. Lead Awaker uses AI to reactivate dead/old leads via WhatsApp conversations, automate intake/booking, and handle after-hours inquiries.
+    const prompt = `You are generating sales offer ideas for Lead Awaker, an AI lead reactivation agency run by Gabriel.
 
-Company: ${companyName}${niche}${summary}${pageSummaries}${existingBlock}
+How Lead Awaker works:
+- Takes a company's old/dead lead database (people who enquired but never bought)
+- Runs AI-powered WhatsApp conversations to re-engage those leads, qualify them, and book appointments
+- Also handles after-hours enquiries, automates intake, and sends personalized follow-up sequences
+- Performance-based model: the client pays nothing upfront — Lead Awaker earns only when it generates booked calls or closed deals
+- Best fit: businesses selling products/services over €1,000 that have a sales team and an existing lead database gathering dust
 
-Generate exactly ${numToGenerate} unique offer idea${numToGenerate > 1 ? "s" : ""} for how Lead Awaker could help ${companyName}. Each offer should reference something specific about their business.
-Format: one offer per line, each as "Title: description". No numbering, no quotes, no extra text.
-Return ONLY the offer lines, nothing else.`;
+Ideal prospect signals: high-ticket sales (solar, insurance, mortgages, real estate, legal, dental, home services, automotive), existing sales team, old lead lists from past advertising, and a clear offer that closes in a phone call or meeting.
+
+Company being researched: ${companyName}${niche}${summary}${pageSummaries}${companySummary}${companyServices}${personBrief}${contact2Brief}${existingBlock}
+
+Generate exactly ${numToGenerate} NEW and DISTINCT offer idea${numToGenerate > 1 ? "s" : ""} for how Lead Awaker could partner with ${companyName}. Each idea should:
+- Name a specific problem or opportunity at this company (dead leads, missed follow-ups, after-hours drop-off, slow response times, etc.)
+- Connect it to something concrete about their business, niche, services, or contacts above
+- Be written as a sharp one-liner pitch Gabriel could say in a casual conversation — direct, specific, no fluff
+
+Format: one offer per line as "Title: description". No numbering, no quotes, no extra text. Return ONLY the offer lines.
+
+IMPORTANT: Always write the offers in English, regardless of the company's country or language.`;
 
     const { execFile } = await import("child_process");
     const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 
     const result = await new Promise<string>((resolve, reject) => {
-      execFile(CLAUDE_BIN, ["-p", prompt, "--model", "haiku", "--max-turns", "1"],
-        { timeout: 60000, maxBuffer: 1024 * 1024 },
+      execFile(CLAUDE_BIN, ["-p", prompt, "--model", "sonnet", "--max-turns", "1"],
+        { timeout: 120000, maxBuffer: 1024 * 1024 },
         (error, stdout, stderr) => {
           if (error) reject(error);
           else resolve(stdout);

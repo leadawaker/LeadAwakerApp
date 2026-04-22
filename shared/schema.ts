@@ -112,12 +112,14 @@ export const prospects = nocodb.table("Prospects", {
   contactEmail: varchar("contact_email"),
   contactPhone: varchar("contact_phone"),
   contactLinkedin: text("contact_linkedin"),
+  contactManual: boolean("contact_manual").default(false).notNull(),
   // Contact 2
   contact2Name: text("contact2_name"),
   contact2Role: text("contact2_role"),
   contact2Email: varchar("contact2_email"),
   contact2Phone: varchar("contact2_phone"),
   contact2Linkedin: text("contact2_linkedin"),
+  contact2Manual: boolean("contact2_manual").default(false).notNull(),
   // Contact 2 enrichment fields
   contact2Headline: text("contact2_headline"),
   contact2PhotoUrl: text("contact2_photo_url"),
@@ -143,8 +145,8 @@ export const prospects = nocodb.table("Prospects", {
   // Company enrichment (AI-generated, separate from contact enrichment)
   companySummary: text("company_summary"),
   companyServices: text("company_services"),
-  companyProducts: text("company_products"),
   companyHistory: text("company_history"),
+  auditInsights: jsonb("audit_insights"),
   companyEnrichmentStatus: text("company_enrichment_status"),
   companyEnrichedAt: timestamp("company_enriched_at", { withTimezone: true }),
   // Structured top posts for carousel: [{title, date, reactions, url?}]
@@ -159,6 +161,7 @@ export const prospects = nocodb.table("Prospects", {
   nextFollowUpDate: timestamp("next_follow_up_date", { withTimezone: true }),
   contactMethod: text("contact_method"),
   photoUrl: text("photo_url"),
+  companyLogoUrl: text("company_logo_url"),
 });
 
 export const insertProspectsSchema = createInsertSchema(prospects).omit({

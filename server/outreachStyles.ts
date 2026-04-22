@@ -76,7 +76,7 @@ export function buildOutreachPrompt(
   formatKey: string,
   language: string = "en",
   interactions?: Array<{ content: string; direction: string; sentAt: string | Date | null }>,
-  options?: { selectedOffer?: string; selectedContact?: "1" | "2" | "generic" | "company"; customInstructions?: string }
+  options?: { selectedOffer?: string; selectedContact?: "1" | "2" | "generic" | "company"; customInstructions?: string; templateBody?: string }
 ): string {
   const style = STYLE_PRESETS.find((s) => s.key === styleKey);
   const format = FORMAT_PRESETS.find((f) => f.key === formatKey);
@@ -175,6 +175,11 @@ Return ONLY valid JSON, no markdown fences, no explanation. Format:
   }
 
   outputBlock += `\nIMPORTANT: Never use em dashes or en dashes in the output. Use commas, colons, or short sentences instead.`;
+
+  // Template block (structural skeleton the AI should follow)
+  if (options?.templateBody) {
+    outputBlock = `Use the following template as the STRUCTURAL SKELETON for your messages. Follow its exact structure, tone, and flow, but replace all bracketed placeholders (like [Name], [Company reference], [Day], [Time], etc.) with real, personalized content based on the prospect context above. Do not copy the template literally; adapt and personalize every section while keeping the same overall shape and progression.\n\nTEMPLATE:\n${options.templateBody}\n\n` + outputBlock;
+  }
 
   // Custom instructions block
   const blocks = [contextBlock, styleBlock, formatBlock, outputBlock];

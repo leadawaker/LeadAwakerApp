@@ -14,7 +14,7 @@ import { handleZodError, wrapAsync, coerceDates } from "./_helpers";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 
 export function registerBillingRoutes(app: Express): void {
   // ─── Invoices ────────────────────────────────────────────────────────
@@ -331,13 +331,13 @@ Rules:
 - notes: helpful tax notes, e.g. "US company - no EU VAT charged" or "Pre-start expense - claim in Q1 2026 BTW return" or "NL supplier, 21% BTW reclaimable"
 - If a field cannot be determined, use null`;
 
-    const tmpPdf = `/tmp/invoice_parse_${Date.now()}.pdf`;
+    const tmpPdf = `/tmp/invoice_parse_${crypto.randomBytes(16).toString("hex")}.pdf`;
     try {
       // Write PDF to disk, extract text with pdftotext
       fs.writeFileSync(tmpPdf, Buffer.from(base64, "base64"));
       let pdfText = "";
       try {
-        pdfText = execSync(`pdftotext "${tmpPdf}" -`, { maxBuffer: 1024 * 1024 }).toString().trim();
+        pdfText = execFileSync("pdftotext", [tmpPdf, "-"], { maxBuffer: 1024 * 1024 }).toString().trim();
       } catch {
         return res.status(500).json({ error: "Could not extract text from PDF" });
       }

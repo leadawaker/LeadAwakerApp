@@ -373,13 +373,47 @@ export async function registerRoutes(
   // ─── Prospects ───────────────────────────────────────────────────────
 
   app.get("/api/prospects", requireAgency, wrapAsync(async (req, res) => {
-    const pagination = getPagination(req);
-    if (pagination) {
-      const result = await paginatedQuery(prospects, pagination);
-      return res.json({ ...result, data: toDbKeysArray(result.data as any, prospects) });
-    }
-    const data = await storage.getProspects();
-    res.json(toDbKeysArray(data as any, prospects));
+    const parseArr = (v: unknown): string[] | undefined => {
+      if (typeof v !== "string" || !v.trim()) return undefined;
+      return v.split(",").map(s => s.trim()).filter(Boolean);
+    };
+    const q = req.query;
+    const all = q.all === "true" || q.all === "1";
+    const params = {
+      limit: q.limit ? parseInt(String(q.limit), 10) : undefined,
+      offset: q.offset ? parseInt(String(q.offset), 10) : undefined,
+      search: typeof q.search === "string" ? q.search : undefined,
+      niche: parseArr(q.niche),
+      status: parseArr(q.status),
+      country: parseArr(q.country),
+      priority: parseArr(q.priority),
+      source: parseArr(q.source),
+      overdue: q.overdue === "true",
+      sortBy: typeof q.sortBy === "string" ? q.sortBy : undefined,
+      groupBy: typeof q.groupBy === "string" ? q.groupBy : undefined,
+      groupDirection: q.groupDirection === "desc" ? "desc" as const : q.groupDirection === "asc" ? "asc" as const : undefined,
+      all,
+    };
+    const result = await storage.getProspectsPaginated(params);
+    res.json({
+      items: toDbKeysArray(result.items as any, prospects),
+      total: result.total,
+      hasMore: result.hasMore,
+    });
+  }));
+
+  // Lookup prospects by ids (lightweight, for cross-feature name/company resolution)
+  app.get("/api/prospects/by-ids", requireAgency, wrapAsync(async (req, res) => {
+    const raw = typeof req.query.ids === "string" ? req.query.ids : "";
+    const ids = raw.split(",").map(s => parseInt(s.trim(), 10)).filter(n => Number.isFinite(n) && n > 0);
+    const items = await storage.getProspectsByIds(ids);
+    res.json({ items: toDbKeysArray(items as any, prospects) });
+  }));
+
+  // Filter options (distinct niches / countries / sources)
+  app.get("/api/prospects/filter-options", requireAgency, wrapAsync(async (_req, res) => {
+    const opts = await storage.getProspectsFilterOptions();
+    res.json(opts);
   }));
 
   // Prospect conversations (must be before :id route)
@@ -1420,6 +1454,10 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const id = Number(req.params.id);
     const row = await storage.getInteractionById(id);
     if (!row) return res.status(404).json({ error: "Not found" });
+    const user = (req as any).user;
+    if (user.accountsId !== 1 && (row as any).accountsId !== user.accountsId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     res.json(toDbKeys(row as any, interactions));
   }));
 
@@ -1459,8 +1497,14 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
   }));
 
   app.delete("/api/interactions/:id", requireAuth, wrapAsync(async (req, res) => {
-    const ok = await storage.deleteInteraction(Number(req.params.id));
-    if (!ok) return res.status(404).json({ message: "Interaction not found" });
+    const id = Number(req.params.id);
+    const row = await storage.getInteractionById(id);
+    if (!row) return res.status(404).json({ message: "Interaction not found" });
+    const user = (req as any).user;
+    if (user.accountsId !== 1 && (row as any).accountsId !== user.accountsId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    await storage.deleteInteraction(id);
     res.status(204).end();
   }));
 
@@ -1469,7 +1513,11 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ message: "ids must be a non-empty array" });
     }
-    const deleted = await storage.bulkDeleteInteractions(ids.map(Number));
+    const user = (req as any).user;
+    const numericIds = ids.map(Number);
+    const deleted = user.accountsId === 1
+      ? await storage.bulkDeleteInteractions(numericIds)
+      : await storage.bulkDeleteInteractionsScoped(numericIds, user.accountsId);
     res.json({ deleted });
   }));
 
