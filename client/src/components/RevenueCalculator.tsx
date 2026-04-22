@@ -58,6 +58,13 @@ export default function RevenueCalculator() {
   const [decayOn, setDecayOn] = useState(false);
   const [decayPct, setDecayPct] = useState(10);
   const [dealsPerWeek, setDealsPerWeek] = useState(3);
+  const [hoveredDot, setHoveredDot] = useState<{ deal: number; week: number; revenue: number; profit: number; x: number; y: number } | null>(null);
+  const [editingLeads, setEditingLeads] = useState(false);
+  const [editingDeal, setEditingDeal] = useState(false);
+  const [editingCost, setEditingCost] = useState(false);
+  const [leadsInput, setLeadsInput] = useState("");
+  const [dealInput, setDealInput] = useState("");
+  const [costInput, setCostInput] = useState("");
   const didHydrateFromUrl = useRef(false);
 
   const handleShare = async () => {
@@ -256,6 +263,9 @@ export default function RevenueCalculator() {
               <Share2 className="w-4 h-4" />
             )}
           </button>
+          <p className="text-sm font-heading font-semibold uppercase tracking-widest text-[#4F46E5] mb-3">
+            {t("calculator.eyebrow")}
+          </p>
           <h2 className="text-4xl md:text-[47px] lg:text-[59px] font-bold tracking-tight font-heading">
             {t("calculator.title")}
           </h2>
@@ -283,19 +293,41 @@ export default function RevenueCalculator() {
                   {t("calculator.leadsLabel")}
                 </label>
               </div>
-              <div className="text-4xl font-bold font-heading text-[#4F46E5] mb-4">
-                {leads.toLocaleString()}
-              </div>
+              {editingLeads ? (
+                <input
+                  type="number"
+                  autoFocus
+                  value={leadsInput}
+                  onChange={(e) => setLeadsInput(e.target.value)}
+                  onBlur={() => {
+                    const n = parseInt(leadsInput, 10);
+                    if (!isNaN(n) && n > 0) setLeads(n);
+                    setEditingLeads(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur();
+                  }}
+                  className="text-4xl font-bold font-heading text-[#4F46E5] mb-4 w-full bg-transparent outline-none"
+                />
+              ) : (
+                <div
+                  className="text-4xl font-bold font-heading text-[#4F46E5] mb-4 cursor-text hover:opacity-70 transition-opacity"
+                  onClick={() => { setLeadsInput(String(leads)); setEditingLeads(true); }}
+                  title="Click to type"
+                >
+                  {leads.toLocaleString()}
+                </div>
+              )}
               <input
                 type="range"
                 min={500}
                 max={50000}
                 step={500}
-                value={leads}
+                value={Math.min(Math.max(leads, 500), 50000)}
                 onChange={(e) => setLeads(Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #4F46E5 ${sliderPct(leads, 500, 50000)}%, #d1d5db ${sliderPct(leads, 500, 50000)}%)`,
+                  background: `linear-gradient(to right, #4F46E5 ${sliderPct(Math.min(Math.max(leads, 500), 50000), 500, 50000)}%, #d1d5db ${sliderPct(Math.min(Math.max(leads, 500), 50000), 500, 50000)}%)`,
                 }}
               />
               <div className="flex justify-between text-sm text-muted-foreground mt-2">
@@ -314,19 +346,41 @@ export default function RevenueCalculator() {
                   {t("calculator.dealLabel")}
                 </label>
               </div>
-              <div className="text-4xl font-bold font-heading text-[#FEB800] mb-4">
-                {currencySymbol}{dealValue.toLocaleString()}
-              </div>
+              {editingDeal ? (
+                <input
+                  type="number"
+                  autoFocus
+                  value={dealInput}
+                  onChange={(e) => setDealInput(e.target.value)}
+                  onBlur={() => {
+                    const n = parseFloat(dealInput);
+                    if (!isNaN(n) && n > 0) setDealValue(n);
+                    setEditingDeal(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur();
+                  }}
+                  className="text-4xl font-bold font-heading text-[#FEB800] mb-4 w-full bg-transparent outline-none"
+                />
+              ) : (
+                <div
+                  className="text-4xl font-bold font-heading text-[#FEB800] mb-4 cursor-text hover:opacity-70 transition-opacity"
+                  onClick={() => { setDealInput(String(dealValue)); setEditingDeal(true); }}
+                  title="Click to type"
+                >
+                  {currencySymbol}{dealValue.toLocaleString()}
+                </div>
+              )}
               <input
                 type="range"
                 min={dealConfig.min}
                 max={dealConfig.max}
                 step={dealConfig.step}
-                value={dealValue}
+                value={Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max)}
                 onChange={(e) => setDealValue(Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #FEB800 ${sliderPct(dealValue, dealConfig.min, dealConfig.max)}%, #d1d5db ${sliderPct(dealValue, dealConfig.min, dealConfig.max)}%)`,
+                  background: `linear-gradient(to right, #FEB800 ${sliderPct(Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max), dealConfig.min, dealConfig.max)}%, #d1d5db ${sliderPct(Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max), dealConfig.min, dealConfig.max)}%)`,
                 }}
               />
               <div className="flex justify-between text-sm text-muted-foreground mt-2">
@@ -345,19 +399,41 @@ export default function RevenueCalculator() {
                   {t("calculator.costLabel")}
                 </label>
               </div>
-              <div className="text-4xl font-bold font-heading text-[#ef4444] mb-4">
-                {currencySymbol}{costPerLead.toLocaleString()}
-              </div>
+              {editingCost ? (
+                <input
+                  type="number"
+                  autoFocus
+                  value={costInput}
+                  onChange={(e) => setCostInput(e.target.value)}
+                  onBlur={() => {
+                    const n = parseFloat(costInput);
+                    if (!isNaN(n) && n > 0) setCostPerLead(n);
+                    setEditingCost(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur();
+                  }}
+                  className="text-4xl font-bold font-heading text-[#ef4444] mb-4 w-full bg-transparent outline-none"
+                />
+              ) : (
+                <div
+                  className="text-4xl font-bold font-heading text-[#ef4444] mb-4 cursor-text hover:opacity-70 transition-opacity"
+                  onClick={() => { setCostInput(String(costPerLead)); setEditingCost(true); }}
+                  title="Click to type"
+                >
+                  {currencySymbol}{costPerLead.toLocaleString()}
+                </div>
+              )}
               <input
                 type="range"
                 min={costConfig.min}
                 max={costConfig.max}
                 step={costConfig.step}
-                value={costPerLead}
+                value={Math.min(Math.max(costPerLead, costConfig.min), costConfig.max)}
                 onChange={(e) => setCostPerLead(Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #ef4444 ${sliderPct(costPerLead, costConfig.min, costConfig.max)}%, #d1d5db ${sliderPct(costPerLead, costConfig.min, costConfig.max)}%)`,
+                  background: `linear-gradient(to right, #ef4444 ${sliderPct(Math.min(Math.max(costPerLead, costConfig.min), costConfig.max), costConfig.min, costConfig.max)}%, #d1d5db ${sliderPct(Math.min(Math.max(costPerLead, costConfig.min), costConfig.max), costConfig.min, costConfig.max)}%)`,
                 }}
               />
               <div className="flex justify-between text-sm text-muted-foreground mt-2">
@@ -367,11 +443,11 @@ export default function RevenueCalculator() {
             </div>
           </motion.div>
 
-          <div className="mb-10 pt-6 border-t border-[#e5e7eb]">
+          <div className="mb-16 pt-6 pb-6 border-t border-b border-[#e5e7eb]">
             <div>
                 <div className="grid md:grid-cols-3 gap-8">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="flex items-center gap-2 flex-wrap justify-center">
                       <label className="font-heading font-bold text-sm">
                         {t("calculator.advanced.showAs")}
                       </label>
@@ -402,7 +478,7 @@ export default function RevenueCalculator() {
                       </div>
                     </div>
                     {profitMode && (
-                      <div className="mt-5">
+                      <div className="mt-5 w-full">
                         <div className="flex items-baseline justify-between mb-2">
                           <label className="font-heading font-bold text-sm">
                             {t("calculator.advanced.grossMargin")}
@@ -426,8 +502,8 @@ export default function RevenueCalculator() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="flex items-center gap-2 flex-wrap justify-center">
                       <label className="font-heading font-bold text-sm">
                         {t("calculator.advanced.dealType")}
                       </label>
@@ -447,7 +523,7 @@ export default function RevenueCalculator() {
                               onClick={() => setRecurring(key)}
                               className="px-4 py-1.5 rounded-full text-sm font-heading font-bold transition-all"
                               style={{
-                                backgroundColor: active ? "#4F46E5" : "transparent",
+                                backgroundColor: active ? "#FEB800" : "transparent",
                                 color: active ? "#fff" : "#64748b",
                               }}
                             >
@@ -458,12 +534,12 @@ export default function RevenueCalculator() {
                       </div>
                     </div>
                     {recurring && (
-                      <div className="mt-5">
+                      <div className="mt-5 w-full">
                         <div className="flex items-baseline justify-between mb-2">
                           <label className="font-heading font-bold text-sm">
                             {t("calculator.advanced.monthsRetained")}
                           </label>
-                          <span className="font-heading font-bold text-sm text-[#4F46E5]">
+                          <span className="font-heading font-bold text-sm text-[#FEB800]">
                             {monthsRetained}
                           </span>
                         </div>
@@ -476,14 +552,14 @@ export default function RevenueCalculator() {
                           onChange={(e) => setMonthsRetained(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer"
                           style={{
-                            background: `linear-gradient(to right, #4F46E5 ${sliderPct(monthsRetained, 1, 60)}%, #d1d5db ${sliderPct(monthsRetained, 1, 60)}%)`,
+                            background: `linear-gradient(to right, #FEB800 ${sliderPct(monthsRetained, 1, 60)}%, #d1d5db ${sliderPct(monthsRetained, 1, 60)}%)`,
                           }}
                         />
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="flex items-center gap-2 flex-wrap justify-center">
                       <label className="font-heading font-bold text-sm">
                         {t("calculator.advanced.decay")}
                       </label>
@@ -503,7 +579,7 @@ export default function RevenueCalculator() {
                               onClick={() => setDecayOn(key)}
                               className="px-4 py-1.5 rounded-full text-sm font-heading font-bold transition-all"
                               style={{
-                                backgroundColor: active ? "#4F46E5" : "transparent",
+                                backgroundColor: active ? "#ef4444" : "transparent",
                                 color: active ? "#fff" : "#64748b",
                               }}
                             >
@@ -514,12 +590,12 @@ export default function RevenueCalculator() {
                       </div>
                     </div>
                     {decayOn && (
-                      <div className="mt-5">
+                      <div className="mt-5 w-full">
                         <div className="flex items-baseline justify-between mb-2">
                           <label className="font-heading font-bold text-sm">
                             {t("calculator.advanced.decayLabel")}
                           </label>
-                          <span className="font-heading font-bold text-sm text-[#4F46E5]">
+                          <span className="font-heading font-bold text-sm text-[#ef4444]">
                             {decayPct}%
                           </span>
                         </div>
@@ -532,7 +608,7 @@ export default function RevenueCalculator() {
                           onChange={(e) => setDecayPct(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer"
                           style={{
-                            background: `linear-gradient(to right, #4F46E5 ${sliderPct(decayPct, 0, 30)}%, #d1d5db ${sliderPct(decayPct, 0, 30)}%)`,
+                            background: `linear-gradient(to right, #ef4444 ${sliderPct(decayPct, 0, 30)}%, #d1d5db ${sliderPct(decayPct, 0, 30)}%)`,
                           }}
                         />
                       </div>
@@ -608,7 +684,7 @@ export default function RevenueCalculator() {
 
                   <div className="space-y-3">
                     {[
-                      { label: t("calculator.results.total"), value: effectiveLeads, pct: 100, muted: true },
+                      { label: t("calculator.results.total"), value: effectiveLeads, pct: 100, muted: false },
                       { label: t("calculator.results.responded"), value: r.responded, pct: r.respondedPct, muted: false },
                       { label: t("calculator.results.qualified"), value: r.qualified, pct: r.qualifiedPct, muted: false },
                       { label: t("calculator.results.closed"), value: r.closed, pct: r.closedPct, muted: false },
@@ -753,8 +829,8 @@ export default function RevenueCalculator() {
                     cumulative: i * effectiveDealValue,
                   }));
                   // Add left+right padding inside the viewBox for axis labels.
-                  const padL = 48;
-                  const padR = 12;
+                  const padL = 13;
+                  const padR = -20;
                   const padT = 14;
                   const padB = 20;
                   const viewBoxW = 440;
@@ -777,9 +853,9 @@ export default function RevenueCalculator() {
                           : t("calculator.charts.breakevenMiss", { total: closed })}
                       </p>
                       <div className="mb-4 pb-3 border-b border-white/10">
-                        <div className="flex items-baseline justify-between mb-2 gap-2">
-                          <div className="flex items-center gap-2">
-                            <label className="text-xs font-heading font-bold text-white/80">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <label className="text-xs font-heading font-bold text-white/80 whitespace-nowrap">
                               {t("calculator.charts.paceLabel")}
                             </label>
                             <span className="relative inline-flex items-center group">
@@ -788,25 +864,25 @@ export default function RevenueCalculator() {
                                 {t("calculator.advanced.paceHint")}
                               </span>
                             </span>
+                            <span className="text-xs font-heading font-bold text-[#FEB800] ml-1">
+                              {t("calculator.charts.paceValue", { count: dealsPerWeek })}
+                            </span>
                           </div>
-                          <span className="text-xs font-heading font-bold text-[#FEB800]">
-                            {t("calculator.charts.paceValue", { count: dealsPerWeek })}
-                          </span>
+                          <input
+                            type="range"
+                            min={1}
+                            max={10}
+                            step={1}
+                            value={dealsPerWeek}
+                            onChange={(e) => setDealsPerWeek(Number(e.target.value))}
+                            className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                            style={{
+                              background: `linear-gradient(to right, #FEB800 ${sliderPct(dealsPerWeek, 1, 10)}%, rgba(255,255,255,0.1) ${sliderPct(dealsPerWeek, 1, 10)}%)`,
+                            }}
+                          />
                         </div>
-                        <input
-                          type="range"
-                          min={1}
-                          max={10}
-                          step={1}
-                          value={dealsPerWeek}
-                          onChange={(e) => setDealsPerWeek(Number(e.target.value))}
-                          className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                          style={{
-                            background: `linear-gradient(to right, #FEB800 ${sliderPct(dealsPerWeek, 1, 10)}%, rgba(255,255,255,0.1) ${sliderPct(dealsPerWeek, 1, 10)}%)`,
-                          }}
-                        />
                       </div>
-                      <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-44">
+                      <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-44" onMouseLeave={() => setHoveredDot(null)}>
                         {/* Y axis */}
                         <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
                         <text x={padL - 6} y={padT + 4} fontSize="10" fill="rgba(255,255,255,0.5)" textAnchor="end">{formatCurrency(Math.round(maxRevenue))}</text>
@@ -841,6 +917,40 @@ export default function RevenueCalculator() {
                             </text>
                           </g>
                         )}
+                        {/* Hover dots — 4 evenly spaced points on the revenue line */}
+                        {closed > 0 && [0.25, 0.5, 0.75, 1].map((frac) => {
+                          const deal = Math.round(frac * closed);
+                          const rev = deal * effectiveDealValue;
+                          const profit = rev - totalAdSpend;
+                          const week = Math.max(1, Math.ceil(deal / dealsPerWeek));
+                          const cx = xFor(deal);
+                          const cy = yFor(rev);
+                          const isHovered = hoveredDot?.deal === deal;
+                          const tipW = 110;
+                          const tipH = 52;
+                          const tipX = Math.min(Math.max(cx - tipW / 2, 2), viewBoxW - tipW - 2);
+                          const tipAbove = cy - tipH - 10;
+                          const tipY = tipAbove < padT ? cy + 10 : tipAbove;
+                          return (
+                            <g key={frac}>
+                              <circle
+                                cx={cx} cy={cy} r="10"
+                                fill="transparent"
+                                className="cursor-pointer"
+                                onMouseEnter={() => setHoveredDot({ deal, week, revenue: rev, profit, x: cx, y: cy })}
+                              />
+                              <circle cx={cx} cy={cy} r={isHovered ? 5 : 3.5} fill="#ffffff" opacity={isHovered ? 1 : 0.6} style={{ transition: "r 0.15s, opacity 0.15s" }} />
+                              {isHovered && (
+                                <g>
+                                  <rect x={tipX} y={tipY} width={tipW} height={tipH} rx="6" fill="#131B49" opacity="0.97" />
+                                  <text x={tipX + 8} y={tipY + 14} fontSize="9.5" fill="rgba(255,255,255,0.55)" fontFamily="inherit">Deal #{deal} · Wk {week}</text>
+                                  <text x={tipX + 8} y={tipY + 28} fontSize="10.5" fill="#ffffff" fontWeight="bold" fontFamily="inherit">Rev: {formatCurrency(Math.round(rev))}</text>
+                                  <text x={tipX + 8} y={tipY + 43} fontSize="10.5" fill={profit >= 0 ? "#22c55e" : "#ef4444"} fontWeight="bold" fontFamily="inherit">P&amp;L: {profit >= 0 ? "+" : ""}{formatCurrency(Math.round(profit))}</text>
+                                </g>
+                              )}
+                            </g>
+                          );
+                        })}
                       </svg>
                     </div>
                   );
@@ -863,7 +973,7 @@ export default function RevenueCalculator() {
                             <span className="text-sm font-heading text-white">
                               {b.label}
                             </span>
-                            <span className="text-base md:text-lg font-bold font-heading" style={{ color: b.color }}>
+                            <span className="text-base md:text-lg font-bold font-heading" style={{ color: i === 0 ? "#cbd5e1" : i === 1 ? "#818cf8" : b.color }}>
                               {formatCurrency(Math.round(b.value))}
                             </span>
                           </div>
