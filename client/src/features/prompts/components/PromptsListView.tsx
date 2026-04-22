@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import {
   getStatusBadgeClasses,
   getScoreColorClasses,
@@ -447,6 +448,13 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
     return () => cancelAnimationFrame(raf);
   }, [selectedId]);
 
+  // F shortcut: scroll selected prompt into view.
+  useFKeyScrollToSelected({
+    containerRef: scrollContainerRef,
+    selectedId: selectedId ?? null,
+    getSelector: (id) => `[data-prompt-id="${id}"]`,
+  });
+
   // Build flat list: headers + cards interleaved
   const listItems = useMemo<Array<
     | { kind: "header"; label: string; count: number }
@@ -476,21 +484,24 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
           : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
       )}>
         {/* Header: title + view tabs (§16 standard) */}
-        <div className="px-3.5 pt-5 pb-3 shrink-0 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-            {t("page.title")}
-          </h2>
-          <ViewTabBar
-            tabs={VIEW_TABS}
-            activeId={viewMode}
-            onTabChange={(id) => onViewModeChange(id as PromptViewMode)}
-            variant="segment"
-          />
+        <div className="pl-[17px] pr-[17px] pt-5 pb-3 shrink-0 flex items-center justify-between">
+          <div className="flex items-center justify-between w-full md:w-[306px]">
+            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+              {t("page.title")}
+            </h2>
+            <ViewTabBar
+              tabs={VIEW_TABS}
+              activeId={viewMode}
+              onTabChange={(id) => onViewModeChange(id as PromptViewMode)}
+              variant="segment"
+            />
+          </div>
         </div>
 
         {/* ── List toolbar: search + sort + filter + group + create ── */}
-        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+        <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
           <SearchPill
+            className="ml-[9px] max-w-[149px]"
             value={q}
             onChange={onQChange}
             open={searchOpen}

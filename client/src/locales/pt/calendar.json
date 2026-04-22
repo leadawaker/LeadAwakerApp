@@ -52,6 +52,15 @@
     "today": "Hoje",
     "goToToday": "Ir para hoje"
   },
+  "a11y": {
+    "sortAscending": "Ordenar crescente",
+    "sortDescending": "Ordenar decrescente"
+  },
+  "errors": {
+    "failedToLoad": "Nao foi possivel carregar os compromissos.",
+    "retry": "Tentar novamente",
+    "rescheduleFailed": "Falha ao reagendar."
+  },
   "dateGroups": {
     "past": "Passado",
     "today": "Hoje",

@@ -4,6 +4,7 @@ import type { SelectedElementInfo } from "../hooks/useElementPicker";
 interface ElementPickerOverlayProps {
   hoveredInfo: SelectedElementInfo | null;
   selectedInfo: SelectedElementInfo | null;
+  confirmedInfo?: SelectedElementInfo | null;
 }
 
 function HighlightBox({
@@ -75,20 +76,21 @@ function HighlightBox({
   );
 }
 
-export function ElementPickerOverlay({ hoveredInfo, selectedInfo }: ElementPickerOverlayProps) {
+export function ElementPickerOverlay({ hoveredInfo, selectedInfo, confirmedInfo }: ElementPickerOverlayProps) {
+  const locked = selectedInfo || confirmedInfo;
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 9998, pointerEvents: "none" }}>
-      {hoveredInfo && (!selectedInfo || hoveredInfo.element !== selectedInfo.element) && (
+      {hoveredInfo && (!locked || hoveredInfo.element !== locked.element) && (
         <HighlightBox rect={hoveredInfo.rect} color="blue" dashed />
       )}
-      {selectedInfo && (
+      {locked && (
         <HighlightBox
-          rect={selectedInfo.rect}
+          rect={locked.rect}
           color="violet"
           label={
-            selectedInfo.componentName
-              ? `${selectedInfo.componentName} <${selectedInfo.tagName}>`
-              : `<${selectedInfo.tagName}>`
+            locked.componentName
+              ? `${locked.componentName} <${locked.tagName}>`
+              : `<${locked.tagName}>`
           }
         />
       )}

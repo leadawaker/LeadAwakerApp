@@ -1,7 +1,8 @@
-import { type PointerEvent as ReactPointerEvent } from "react";
-import { Bot, X, ChevronLeft, Plus, MapPin, MapPinOff, MousePointerClick, Check, MoreVertical, PanelRight, PanelRightClose } from "lucide-react";
+import { type PointerEvent as ReactPointerEvent, useState, useCallback } from "react";
+import { Bot, X, ChevronLeft, Plus, MapPin, MapPinOff, MousePointerClick, MoreVertical, PanelRight, PanelRightClose, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/apiUtils";
 import { MODEL_OPTIONS } from "./ModelSwitcher";
 import { THINKING_OPTIONS } from "./ThinkingToggle";
 import {
@@ -32,6 +33,7 @@ export interface AgentChatWidgetHeaderProps {
   onDragPointerUp: (e: ReactPointerEvent<HTMLDivElement>) => void;
   dockMode: boolean;
   onToggleDock: () => void;
+  onTitleRegenerated?: (title: string) => void;
 }
 
 export function AgentChatWidgetHeader({
@@ -51,12 +53,32 @@ export function AgentChatWidgetHeader({
   onDragPointerUp,
   dockMode,
   onToggleDock,
+  onTitleRegenerated,
 }: AgentChatWidgetHeaderProps) {
   const { t } = useTranslation("crm");
+  const [titleHovered, setTitleHovered] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
+  const handleRegenerateTitle = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!activeSession || regenerating) return;
+    setRegenerating(true);
+    try {
+      const res = await apiFetch(`/api/agents/sessions/${activeSession.sessionId}/regenerate-title`, { method: "POST" });
+      if (res.ok) {
+        const { title } = await res.json();
+        onTitleRegenerated?.(title);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRegenerating(false);
+    }
+  }, [activeSession, regenerating, onTitleRegenerated]);
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-white dark:bg-card shrink-0",
+        "flex items-center gap-2 px-4 pt-4 pb-3 min-h-[81px] border-b border-border/50 bg-white dark:bg-card shrink-0",
         !isMobile && "cursor-grab active:cursor-grabbing select-none",
       )}
       onPointerDown={!isMobile ? onDragPointerDown : undefined}
@@ -76,9 +98,25 @@ export function AgentChatWidgetHeader({
           <div className={cn("h-7 w-7 rounded-full flex items-center justify-center shrink-0", getAgentColor(activeAgent.id).bg)}>
             <AgentIcon agent={activeAgent} className="h-3.5 w-3.5" />
           </div>
-          <div className="flex-1 min-w-0 cursor-default" title={activeSession?.title ? `${activeAgent.name} \u2014 ${activeSession.title}` : activeAgent.name}>
-            <div className="font-semibold text-xs truncate">
-              {activeSession?.title || activeAgent.name}
+          <div
+            className="flex-1 min-w-0 cursor-default"
+            onMouseEnter={() => setTitleHovered(true)}
+            onMouseLeave={() => setTitleHovered(false)}
+          >
+            <div className="flex items-center gap-1 min-w-0">
+              <div className="font-semibold text-xs truncate" title={activeSession?.title ? `${activeAgent.name} — ${activeSession.title}` : activeAgent.name}>
+                {activeSession?.title || activeAgent.name}
+              </div>
+              {activeSession?.title && (titleHovered || regenerating) && (
+                <button
+                  onClick={handleRegenerateTitle}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="shrink-0 h-4 w-4 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+                  title="Regenerate title from conversation"
+                >
+                  <RefreshCw className={cn("h-3 w-3", regenerating && "animate-spin")} />
+                </button>
+              )}
             </div>
             {activeSession?.title ? (
               <div className="text-[9px] text-muted-foreground truncate">
@@ -92,15 +130,16 @@ export function AgentChatWidgetHeader({
             ) : null}
           </div>
           {/* Context usage % indicator in header */}
-          {activeSession && ((activeSession.totalInputTokens || 0) + (activeSession.totalOutputTokens || 0)) > 0 && (() => {
-            const total = (activeSession.totalInputTokens || 0) + (activeSession.totalOutputTokens || 0);
-            const maxTokens = 200_000;
+          {activeSession && (activeSession.totalInputTokens || 0) > 0 && (() => {
+            const model = activeSession.model || "";
+            const maxTokens = model.includes("opus") ? 1_000_000 : 200_000;
+            const total = activeSession.totalInputTokens || 0;
             const pct = Math.min(100, Math.round((total / maxTokens) * 100));
             const color = pct > 80 ? "text-red-500" : pct > 50 ? "text-amber-500" : "text-muted-foreground";
             return (
               <div
                 className={cn("flex items-center gap-1 shrink-0 cursor-default", color)}
-                title={`Context: ${total.toLocaleString()} / ${maxTokens.toLocaleString()} tokens (${pct}%)`}
+                title={`Context: ~${total.toLocaleString()} / ${maxTokens.toLocaleString()} tokens (~${pct}%)`}
               >
                 <div className="w-8 h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
@@ -115,41 +154,6 @@ export function AgentChatWidgetHeader({
               </div>
             );
           })()}
-          {/* Element picker toggle (desktop only) */}
-          <div className="hidden md:flex items-center gap-0.5 shrink-0">
-            <button
-              onClick={() => elementPicker.pickerActive ? elementPicker.deactivate() : elementPicker.activate()}
-              className={cn(
-                "h-7 w-7 rounded-full flex items-center justify-center transition-colors shrink-0",
-                elementPicker.pickerActive
-                  ? "bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
-                  : elementPicker.confirmedInfo
-                    ? "text-violet-500 hover:bg-muted"
-                    : "text-muted-foreground hover:bg-muted",
-              )}
-              title={elementPicker.pickerActive ? "Cancel element picker" : elementPicker.confirmedInfo ? "Re-select element" : "Select a page element"}
-            >
-              <MousePointerClick className="h-3.5 w-3.5" />
-            </button>
-            {elementPicker.pickerActive && elementPicker.selectedInfo && (
-              <button
-                onClick={() => elementPicker.confirm()}
-                className="h-7 w-7 rounded-full flex items-center justify-center text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors shrink-0"
-                title="Confirm selection"
-              >
-                <Check className="h-3.5 w-3.5" />
-              </button>
-            )}
-            {elementPicker.pickerActive && (
-              <button
-                onClick={() => elementPicker.deactivate()}
-                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-                title="Cancel"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
           {/* "..." overflow menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -235,6 +239,25 @@ export function AgentChatWidgetHeader({
                         <MapPinOff className="h-3.5 w-3.5" />
                       )}
                     </button>
+                    {/* Element picker */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        elementPicker.pickerActive ? elementPicker.deactivate() : elementPicker.activate();
+                      }}
+                      className={cn(
+                        "flex items-center justify-center rounded-lg border px-2 py-2 max-md:py-2.5 transition-colors",
+                        elementPicker.pickerActive
+                          ? "border-violet-300 dark:border-violet-700 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
+                          : elementPicker.confirmedInfo
+                            ? "border-violet-300/60 text-violet-500 hover:bg-muted/50"
+                            : "border-border/50 text-muted-foreground hover:bg-muted/50",
+                      )}
+                      title={elementPicker.pickerActive ? "Click any page element to select it" : elementPicker.confirmedInfo ? "Pick a different element" : "Select a page element"}
+                    >
+                      <MousePointerClick className="h-3.5 w-3.5" />
+                    </button>
                     {/* New conversation */}
                     <button
                       onClick={(e) => {
@@ -264,17 +287,15 @@ export function AgentChatWidgetHeader({
           </div>
         </>
       )}
-      {!isMobile && (
-        <button
-          onClick={onToggleDock}
-          className="inline-flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-          title={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
-          aria-label={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
-          data-testid="agent-widget-dock-toggle"
-        >
-          {dockMode ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
-        </button>
-      )}
+      <button
+        onClick={onToggleDock}
+        className="inline-flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+        title={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
+        aria-label={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
+        data-testid="agent-widget-dock-toggle"
+      >
+        {dockMode ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
+      </button>
       <button
         onClick={closeWidget}
         className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"

@@ -7,14 +7,8 @@
   "cases": {
     "solarPanel": {
       "title": "Zonnepanelen",
-      "heading": "Case {{caseNumber}} - <colored>Installatie Zonnepanelen</colored>",
-      "description": "Deze flow laat zien hoe Lead Awaker oude offerteaanvragen weer activeert en \"misschien later\" omzet in een concrete vervolgstap. De AI begint met een eenvoudige identiteitscheck, stuurt het gesprek vervolgens naar gerichte ontdekking (geen makkelijke uitweg) en kwantificeert het huidige pijnpunt. Het brengt de technische beperking (dak op het noorden) naar voren en positioneert het gesprek als de snelste manier om tot een realistische terugverdientijd en ontwerpopties te komen.",
-      "metricsTitle": "Belangrijkste indicatoren:",
-      "metrics": [
-        "<strong>12,5% afspraakpercentage</strong> uit oude offertegeschiedenis",
-        "<strong>Geen handmatige tussenkomst</strong> tot het gesprek met de specialist",
-        "<strong>Geïntegreerde agendasynchronisatie</strong> voor direct boeken"
-      ],
+      "heading": "Voorbeeld -<colored>Installatie Zonnepanelen</colored>",
+      "description": "De meeste zonne-offertes lopen dood omdat de klant twijfelt over terugverdientijd en dakligging. Lead Awaker pakt de draad op, maakt de pijn concreet in euro's, en boekt een dak-specifiek gesprek waar het verschil gemaakt wordt.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Fotoverzameling van dak en meterkast, controle subsidiemogelijkheden, geautomatiseerde vooronderzoeksvragenlijsten, herinneringen om no-show te verminderen en follow-ups na het gesprek met gepersonaliseerde vervolgstappen.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Rustige technische adviseur. Direct, enthousiast en houdt vaart richting een geboekte beoordeling.",
       "messages": [
@@ -104,13 +98,8 @@
     },
     "gym": {
       "title": "Sportschool",
-      "heading": "Case {{caseNumber}} - <colored>Sportschoollidmaatschap</colored>",
-      "description": "Deze reactiveringsflow is gebouwd als een echt verkoopgesprek, geen generiek \"kom terug\" bericht. De AI begint met een eenvoudige identiteitscheck, gebruikt een natuurlijk excuus om het gesprek te heropenen en voert vervolgens SPIN-achtige ontdekking uit om de churn te diagnosticeren en een plan op te stellen. Het behandelt een tweede lifestyle-bezwaar (pasgeboren baby) en converteert intentie naar een afspraak voor een personal trainer plan.",
-      "metricsTitle": "Belangrijkste cijfers:",
-      "metrics": [
-        "<strong>15% Herinschrijvingspercentage</strong> binnen 48 uur",
-        "<strong>Geautomatiseerde boeking</strong> voor PT-plansessies"
-      ],
+      "heading": "Voorbeeld -<colored>Sportschoollidmaatschap</colored>",
+      "description": "Sportschool-leads vallen meestal stil omdat de motivatie wegzakt, niet omdat de sportschool niet paste. Lead Awaker opent het gesprek opnieuw, achterhaalt waarom iemand stopte, en plant een gesprek met een personal trainer in dat past bij het leven nu.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Geautomatiseerde \"gemiste training\" follow-ups, opzegreductiesequenties, reactiveringsaanbiedingen getriggerd door tijd weg, PT lead nurturing en herinneringen voor lidmaatschapverlenging.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Motiverende coach. Veel empathie, veel energie en houdt momentum richting een vervolgstap.",
       "messages": [
@@ -189,279 +178,91 @@
         { "type": "system", "content": "Afgesloten", "id": "gym-6" }
       ]
     },
-    "restaurant": {
-      "title": "Restaurantreservering",
-      "heading": "Case {{caseNumber}} - <colored>Restaurantreservering</colored>",
-      "description": "Deze flow laat zien hoe je in een snelle markt aanvragen opnieuw activeert en omzet in boekingen. De AI neemt contact op bij een onafgemaakte reservering, verzamelt de juiste gegevens, checkt speciale wensen en past afspraken meteen aan als plannen veranderen. Dat houdt het contact met gasten prettig, en voorkomt tegelijkertijd onnodige belasting voor het team en gemiste reserveringen.",
-      "metricsTitle": "Belangrijkste cijfers:",
-      "metrics": [
-        "<strong>28% Conversiepercentage</strong> op verlaten aanvragen",
-        "<strong>100% Geautomatiseerde</strong> afhandeling van verzetten en speciale verzoeken"
-      ],
-      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Vastleggen van dieetvoorkeuren, aanbetalingslinks voor drukte-avonden, no-show reductiesequenties, wachtlijstautomatisering, verzoeken voor beoordeling na bezoek en \"VIP-gast\" tagging.",
-      "agentProfile": "<strong>Spreekprofiel agent:</strong> Warme gastheer. Beleefd, snel, detailgericht en service-first.",
+    "dental": {
+      "title": "Tandartspraktijk",
+      "heading": "Voorbeeld -<colored>Tandartspraktijk</colored>",
+      "description": "Tandartspraktijken verliezen patiënten aan gemiste halfjaarlijkse controles en onafgemaakte behandelplannen. Lead Awaker opent het gesprek opnieuw, bespreekt prijszorgen, boekt de mondhygiëne slot, en verzet afspraken in natuurlijke taal wanneer het leven verandert.",
+      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Herinneringen voor achterstallige controles, follow-ups op open behandelofferte (implantaten, Invisalign, whitening), reminders bij verzekering-reset in januari, beoordelingsverzoeken na het bezoek en verjaardags-whitening aanbiedingen.",
+      "agentProfile": "<strong>Spreekprofiel agent:</strong> Warme baliemedewerker. Geruststellend, laagdrempelig, en gericht op de patiënt terug in de agenda krijgen.",
       "messages": [
         {
           "type": "agent",
-          "sender": "Jennifer",
-          "content": "Goedemorgen, Sanne van Dragon Wok Kitchen hier.\n\nJe hebt ons onlangs gemaild over het reserveren van een tafel. Kan ik die nu voor je in orde maken?",
-          "time": "11:00 AM"
-        },
-        { "type": "system", "content": "Lead geëngageerd", "id": "rb-1" },
-        { "type": "user", "sender": "Thomas", "content": "Ja dat was ik", "time": "11:05 AM" },
-        { "type": "user", "sender": "Thomas", "content": "dat was ongeveer 2 weken geleden denk ik", "time": "11:05 AM" },
-        { "type": "system", "content": "Lead heeft gereageerd", "id": "rb-2" },
-        {
-          "type": "agent",
-          "sender": "Sanne",
-          "content": "Mooi, is het voor een speciale gelegenheid?",
-          "time": "11:06 AM"
-        },
-        { "type": "user", "sender": "Thomas", "content": "ja, de verjaardag van mijn vrouw komt eraan", "time": "11:15 AM" },
-        { "type": "user", "sender": "Thomas", "content": "ik dacht dat jullie locatie leuk zou zijn", "time": "11:15 AM" },
-        { "type": "agent", "sender": "Sanne", "content": "Wat leuk 🙂\n\nWelke dag had je in gedachten, en met hoeveel personen?", "time": "11:16 AM" },
-        { "type": "user", "sender": "Thomas", "content": "donderdag", "time": "11:25 AM" },
-        { "type": "user", "sender": "Thomas", "content": "met z'n tweeën", "time": "11:25 AM" },
-        {
-          "type": "agent",
-          "sender": "Sanne",
-          "content": "Perfect.\n\nWe kunnen een kleine verjaardagsverrassing maken, zoals een toetje met een kaarsje. Zou je dat willen?",
-          "time": "11:26 AM"
-        },
-        { "type": "user", "sender": "Thomas", "content": "ja graag", "time": "11:35 AM" },
-        { "type": "system", "content": "Lead gekwalificeerd", "id": "rb-3" },
-        {
-          "type": "agent",
-          "sender": "Sanne",
-          "content": "Geregeld.\n\nHier is de boekingslink om je tijd te kiezen: https://calendar.app.google",
-          "time": "11:36 AM"
-        },
-        { "type": "system", "content": "Afspraak ingepland 📅", "id": "rb-4" },
-        {
-          "type": "agent",
-          "sender": "Sanne",
-          "content": "Top, het is bevestigd.\n\nNog iets dat we moeten weten, zoals allergieën of een rustiger tafeltje?",
-          "time": "11:46 AM"
-        },
-        { "type": "user", "sender": "Thomas", "content": "nee dat is alles, bedankt", "time": "12:00 PM" },
-        { "type": "user", "sender": "Thomas", "content": "oh trouwens", "time": "12:10 PM" },
-        {
-          "type": "user",
-          "sender": "Thomas",
-          "content": "ik herinner me dat ik mijn zoon op dat tijdstip moet ophalen van tennis. kan ik een andere tijd boeken?",
-          "time": "12:10 PM"
-        },
-        { "type": "system", "content": "Behandelen verzetten", "id": "rb-5" },
-        {
-          "type": "agent",
-          "sender": "Sanne",
-          "content": "Natuurlijk, geen probleem.\n\nWelk tijdstip op donderdag komt beter uit?",
-          "time": "12:11 PM"
-        },
-        { "type": "user", "sender": "Thomas", "content": "17:00 werkt", "time": "12:20 PM" },
-        {
-          "type": "agent",
-          "sender": "Sanne",
-          "content": "Perfect, ik heb het verzet naar 17:00.\n\nAls er weer iets verandert, stuur me dan hier een bericht.",
-          "time": "12:21 PM"
-        },
-        { "type": "system", "content": "Afspraak verzet 📅", "id": "rb-6" },
-        { "type": "user", "sender": "Thomas", "content": "bedankt voor de flexibiliteit", "time": "12:30 PM" },
-        { "type": "agent", "sender": "Sanne", "content": "Graag gedaan Thomas. Tot snel!", "time": "12:31 PM" },
-        { "type": "system", "content": "Afgesloten", "id": "rb-7" }
-      ]
-    },
-    "realEstate": {
-      "title": "Vastgoed",
-      "heading": "Case {{caseNumber}} - <colored>Vastgoed</colored>",
-      "description": "Leads in vastgoed vallen vaak stil omdat kopers moeilijk kunnen inschatten wat een realistische prijs is en wanneer iets juist een slechte deal is.\nDeze AI-flow brengt het gesprek opnieuw op gang met een korte verificatie, pakt de draad weer op met een logisch en natuurlijk haakje, en kwalificeert daarna gericht de planning, woonwensen en het budget van de koper. Vervolgens deelt de flow meteen woningen die passen bij die criteria en schakelt hij door naar een echte makelaar zodra de koper actief opties gaat vergelijken.",
-      "metricsTitle": "Belangrijkste cijfers:",
-      "metrics": [
-        "<strong>22% meer betrokkenheid</strong> voor 12+ maanden oude leads",
-        "<strong>Geautomatiseerde taxatie-afspraken</strong> gesynchroniseerd met makelaar-apps"
-      ],
-      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Geautomatiseerde bezichtigingsplanning, Automatisch delen van contracten en documenten, Alerts bij nieuwe woningen zodra er een match is, prijsdaling-notificaties en follow-ups die zich aanpassen aan tijdlijnwijzigingen.",
-      "agentProfile": "<strong>Spreekprofiel agent:</strong> Geduldig marktgids. Kalm, direct en gericht op het verplaatsen van de koper van browsen naar een beslissing.",
-      "messages": [
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Hoi, Mia van HomeHaven Makelaardij hier. Even checken: ben jij de Liam die een tijdje terug vroeg naar woningen in de strandbuurt? 🙂",
-          "time": "10:00 AM"
-        },
-        { "type": "system", "content": "Lead geëngageerd", "id": "re-1" },
-        { "type": "user", "sender": "Liam", "content": "ja dat ben ik", "time": "10:10 AM" },
-        { "type": "system", "content": "Lead heeft gereageerd", "id": "re-2" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Ik kom even bij je terug omdat ik niet wil dat je aanvraag tussen wal en schip raakt. Ben je nog steeds op zoek naar een koopwoning in de strandbuurt?",
-          "time": "10:11 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "Ik ben nog steeds rustig nond aan het kijken", "time": "10:20 AM" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Begrepen.\n\nOm jouw gewenste tijdslijn scherp te krijgen: Zou je binnen 6 maanden willen kopen, of is het meer flexibel?",
-          "time": "10:21 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "binnen 6 maanden bij voorkeur", "time": "10:30 AM" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Top.\n\nWat zijn je top 3 must-haves? Bijvoorbeeld: afstand tot strand, slaapkamers en grootte van de tuin.",
-          "time": "10:31 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "maximaal 200 meter van het strand", "time": "10:40 AM" },
-        { "type": "user", "sender": "Liam", "content": "2 slaapkamers", "time": "10:40 AM" },
-        { "type": "user", "sender": "Liam", "content": "Minimaal 50m2 aan tuin", "time": "10:40 AM" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Perfect.\n\nWelke budgetrange heb je in gedachten? Dan kan ik meteen alleen woningen delen die echt binnen jouw mogelijkheden passen en voorkomen we dat we tijd steken in opties die toch afvallen.",
-          "time": "10:41 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "mijn budget is rond de €200.000", "time": "10:50 AM" },
-        { "type": "user", "sender": "Liam", "content": "maar dat is echt het maximum", "time": "10:50 AM" },
-        { "type": "system", "content": "Gekwalificeerd voor woninglijst", "id": "re-3" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Begrepen, we houden het onder €200.000.\n\nIk zal huidige opties voor je ophalen die aan je criteria voldoen: maximaal 200m van het strand, 2 slaapkamers, minimaal 50 m2 aan tuin en binnen het budget.",
-          "time": "10:51 AM"
-        },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Hier is je shortlist: homehaven.com/listings",
-          "time": "10:52 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "oké ik zie ze", "time": "11:00 AM" },
-        {
-          "type": "user",
-          "sender": "Liam",
-          "content": "De Marina View en Strandhof Residences zien er interessant uit",
-          "time": "11:02 AM"
-        },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Goed gezien, dat zijn beide mooie opties. Ze hebben allebei een goede ligging, maar het verschil zit vaak in de cijfers: de vraagprijs, de VvE-kosten en recente verkopen van vergelijkbare woningen laten meestal zien welke uiteindelijk de betere deal voor jou is. Zullen we even kort bellen met onze makelaar om ze naast elkaar te leggen en te kijken hoeveel onderhandelingsruimte er realistisch is?",
-          "time": "11:04 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "ja graag", "time": "11:10 AM" },
-        { "type": "system", "content": "Gekwalificeerd voor gesprek", "id": "re-4" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Perfect. Boek een slot hier: https://calendar.app.google",
-          "time": "11:11 AM"
-        },
-        { "type": "system", "content": "Afspraak ingepland 📅", "id": "re-5" },
-        {
-          "type": "agent",
-          "sender": "Mia",
-          "content": "Perfect Liam, je staat ingepland voor morgen om 16:00 ✅\n\nOnze makelaar John belt je. Hij is uitstekend in onderhandelingsstrategie en het opmerken van kosten die de meeste kopers missen.",
-          "time": "11:20 AM"
-        },
-        { "type": "user", "sender": "Liam", "content": "top bedankt", "time": "11:25 AM" },
-        { "type": "user", "sender": "Liam", "content": "ik ben benieuwd", "time": "11:25 AM" },
-        { "type": "agent", "sender": "Mia", "content": "Tot snel! 🙂", "time": "11:26 AM" },
-        { "type": "system", "content": "Afgesloten", "id": "re-6" }
-      ]
-    },
-    "healthClinic": {
-      "title": "Gezondheidskliniek",
-      "heading": "Case {{caseNumber}} - <colored>Gezondheidskliniek</colored>",
-      "description": "Leads in de holistische zorg of privéklinieken haken vaak af omdat de stap groot voelt en het onderwerp heel persoonlijk is. Deze AI-flow neemt die drempel weg door het contact rustig en respectvol te heropenen, alleen de noodzakelijke context uit te vragen om de juiste route te kiezen, eventuele laatste vragen over het aanbod helder te beantwoorden en daarna direct het consult in te plannen. Daarbij zet de flow meteen de juiste verwachtingen: de specialist start met een brede intake (waaronder voeding) en kijkt ook of aanvullende integratieve zorg passend kan zijn.",
-      "metricsTitle": "Belangrijkste cijfers:",
-      "metrics": [
-        "<strong>31% afspraakpercentage bij leads met chronische klachten",
-        "<strong>100% geautomatiseerde klachtenkwalificatie en urgentie-inschatting"
-      ],
-      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Intakeformulieren, afspraakherinneringen, instructies vóór consult, follow-ups na het consult, zorgplan check-ins en het doorsturen van cliënten met urgente klachten naar snellere zorg.",
-      "agentProfile": "<strong>Spreekprofiel agent:</strong> Rustige klinische coördinator. Warm, to-the-point en gericht op het in contact brengen van de patiënt met de juiste professional.",
-      "messages": [
-        {
-          "type": "agent",
-          "sender": "Monique",
-          "content": "Hallo Daan, Monique van Holistica Balance Centrum hier 🙂\n\nBen je nog steeds op zoek naar hulp met de consult waar je via onze Instagram-pagina naar vroeg?",
+          "sender": "Sophie",
+          "content": "Hoi, Sophie van BrightSmile Tandartspraktijk hier. Ben jij de Laura die ongeveer 8 maanden geleden een cosmetisch consult had bij ons? 🙂",
           "time": "02:00 PM"
         },
-        { "type": "system", "content": "Lead geëngageerd", "id": "hc-1" },
-        { "type": "user", "sender": "Daan", "content": "ja inderdaad", "time": "02:05 PM" },
-        { "type": "system", "content": "Lead heeft gereageerd", "id": "hc-2" },
-        { "type": "agent", "sender": "Monique", "content": "Bedankt.\n\nWat is het belangrijkste probleem waarbij je hulpt nodig hebt?", "time": "02:06 PM" },
-        { "type": "user", "sender": "Daan", "content": "ernstig brandend maagzuur", "time": "02:15 PM" },
-        { "type": "user", "sender": "Daan", "content": "ik ben er klaar mee", "time": "02:15 PM" },
+        { "type": "system", "content": "Lead geëngageerd", "id": "dent-1" },
+        { "type": "user", "sender": "Laura", "content": "ja dat was ik", "time": "02:08 PM" },
+        { "type": "system", "content": "Lead heeft gereageerd", "id": "dent-2" },
         {
           "type": "agent",
-          "sender": "Monique",
-          "content": "Ik begrijp het, chronisch maagzuur is vermoeiend.\n\nHoe lang speelt dit al, en heb je ook moeite met slikken of last van overgeven?",
-          "time": "02:16 PM"
+          "sender": "Sophie",
+          "content": "Bedankt Laura. Mijn collega vroeg me om contact op te nemen, we hebben deze maand een paar mondhygiëne-slots vrijgehouden voor bestaande patiënten.\n\nBen je toe aan een controle, of denk je nog na over het whitening-plan waarover we spraken?",
+          "time": "02:09 PM"
         },
-        { "type": "user", "sender": "Daan", "content": "lange tijd", "time": "02:25 PM" },
-        { "type": "user", "sender": "Daan", "content": "geen overgeven of moeite met slikken", "time": "02:25 PM" },
+        { "type": "user", "sender": "Laura", "content": "eerlijk gezegd allebei", "time": "02:18 PM" },
+        { "type": "user", "sender": "Laura", "content": "ik weet dat het tijd is voor een controle maar de whitening-offerte schrok me wel af", "time": "02:19 PM" },
+        { "type": "system", "content": "Behandelen bezwaar", "id": "dent-3" },
         {
           "type": "agent",
-          "sender": "Monique",
-          "content": "Oké.\n\nHeb je voedingstriggers gemerkt, en heb je dingen geprobeerd die hielpen?",
-          "time": "02:26 PM"
+          "sender": "Sophie",
+          "content": "Helemaal logisch. De meeste mensen hebben die reactie bij de eerste offerte.\n\nGoed nieuws: je basisverzekering dekt de controle volledig. Voor de whitening bieden we een renteloos plan tot 24 maanden, dus per maand valt het heel mee.",
+          "time": "02:20 PM"
         },
-        { "type": "user", "sender": "Daan", "content": "ik denk dat het FODMAPs zijn", "time": "02:35 PM" },
-        { "type": "user", "sender": "Daan", "content": "vermijden helpt maar het gebeurt nog steeds", "time": "02:35 PM" },
+        { "type": "user", "sender": "Laura", "content": "oh dat plan kende ik niet", "time": "02:31 PM" },
         {
           "type": "agent",
-          "sender": "Monique",
-          "content": "Slim dat je triggers hebt bijgehouden.\n\nLaten we je inplannen bij onze diëtist zodat zij dieper kan kijken naar je patronen en een goed plan kunnen opstellen. Zij kan ook checken of testen zou helpen. Klinkt dat goed?",
-          "time": "02:36 PM"
+          "sender": "Sophie",
+          "content": "Komt vaker voor. Zou het helpen als we eerst de mondhygiëne inplannen, en de tandarts je er 10 minuten in dezelfde afspraak doorheen loopt? Zonder extra kosten.",
+          "time": "02:32 PM"
         },
-        { "type": "user", "sender": "Daan", "content": "ja dat zou helpen", "time": "02:45 PM" },
-        { "type": "system", "content": "Lead gekwalificeerd", "id": "hc-3" },
+        { "type": "user", "sender": "Laura", "content": "ja dat zou werken", "time": "02:40 PM" },
+        { "type": "system", "content": "Lead gekwalificeerd", "id": "dent-4" },
         {
           "type": "agent",
-          "sender": "Monique",
-          "content": "Perfect.\n\nHier is de boekingslink: https://calendar.app.google",
-          "time": "02:46 PM"
+          "sender": "Sophie",
+          "content": "Perfect. Hier is de boekingslink: https://calendar.app.google",
+          "time": "02:41 PM"
         },
-        { "type": "system", "content": "Follow-up gesprek", "id": "hc-followup-1" },
-        { "type": "agent", "sender": "Monique", "content": "Even checken Daan, heb je kunnen boeken?", "time": "03:46 PM" },
-        { "type": "user", "sender": "Daan", "content": "sorry was druk, boek nu", "time": "03:50 PM" },
-        { "type": "system", "content": "Afspraak ingepland 📅", "id": "hc-4" },
+        { "type": "system", "content": "Afspraak ingepland 📅", "id": "dent-5" },
         {
           "type": "agent",
-          "sender": "Monique",
-          "content": "Alles is geregeld Daan, je staat ingepland voor maandag om 16:00 ✅\n\nJe Diëtist zal je symptomen met je doornemen en een persoonlijk plan maken. Als je darvoor vragen hebt, reageer dan hier.",
-          "time": "03:55 PM"
+          "sender": "Sophie",
+          "content": "Alles geregeld Laura, je staat ingepland voor donderdag 15:00 ✅\n\nDr. Ven doet de controle en bespreekt het whitening-plan met je.",
+          "time": "02:55 PM"
         },
+        { "type": "user", "sender": "Laura", "content": "bedankt!", "time": "03:00 PM" },
+        { "type": "user", "sender": "Laura", "content": "oh wacht eigenlijk", "time": "05:40 PM" },
         {
           "type": "user",
-          "sender": "Daan",
-          "content": "korte vraag, bieden jullie voedseltolerantietesten aan of alleen voedingsadvies?",
-          "time": "04:00 PM"
+          "sender": "Laura",
+          "content": "ik realiseer me net dat ik donderdagmiddag iets voor werk heb. Kan ik naar vrijdagochtend?",
+          "time": "05:41 PM"
         },
+        { "type": "system", "content": "Behandelen verzetten", "id": "dent-6" },
         {
           "type": "agent",
-          "sender": "Monique",
-          "content": "Ja, we bieden ook testen aan.\n\nDe diëtist zal beoordelen of testen zinvol zijn voor jouw situatie en legt de opties uit tijdens je consult.",
-          "time": "04:01 PM"
+          "sender": "Sophie",
+          "content": "Natuurlijk. Vrijdag hebben we 09:30 of 11:00 vrij, wat werkt beter?",
+          "time": "05:42 PM"
         },
-        { "type": "user", "sender": "Daan", "content": "perfect bedankt", "time": "04:05 PM" },
-        { "type": "agent", "sender": "Monique", "content": "Graag gedaan en fijne dag 🙂", "time": "04:06 PM" },
-        { "type": "system", "content": "Afgesloten", "id": "hc-5" }
+        { "type": "user", "sender": "Laura", "content": "9:30 is perfect", "time": "05:50 PM" },
+        {
+          "type": "agent",
+          "sender": "Sophie",
+          "content": "Gedaan, verzet naar vrijdag 09:30 ✅\n\nAls er weer iets verandert, stuur me hier gewoon een bericht.",
+          "time": "05:51 PM"
+        },
+        { "type": "system", "content": "Afspraak verzet 📅", "id": "dent-7" },
+        { "type": "user", "sender": "Laura", "content": "bedankt voor de flexibiliteit", "time": "06:00 PM" },
+        { "type": "agent", "sender": "Sophie", "content": "Graag gedaan. Tot vrijdag! 🙂", "time": "06:01 PM" },
+        { "type": "system", "content": "Afgesloten", "id": "dent-8" }
       ]
     },
     "lawFirm": {
       "title": "Advocatenkantoor",
-      "heading": "Case {{caseNumber}} - <colored>Advocatenkantoor</colored>",
-      "description": "Onze <strong>Lead Awaker AI</strong> reactiveert koude leads voor autofinancieringsrestituties en brengt ze snel naar de enige stap die ertoe doet: de overeenkomstdocumenten verkrijgen. Het kwalificeert geschiktheid, behandelt het \"ik heb de papieren niet\" bezwaar en begeleidt de lead door een AVG-verzoek zodat je team alleen zaken aanraakt die klaar zijn.",
-      "descriptionExtra": "<strong>Wat gebeurt er daarna:</strong> Het AVG-verzoek dwingt autofinancieringsmaatschappijen om de overeenkomstdocumenten te sturen. Een <strong>juridisch medewerker</strong> controleert ze op verkeerd verkochte commissie verborgen in betalingen, en indien gevonden kan de klant restitutie claimen (vaak €1.000-€3.000).",
-      "metricsTitle": "Echte resultaten van 935 leads:",
-      "metrics": [
-        "<strong>42% reactiepercentage</strong> (vs branche 20%)",
-        "<strong>20,4% AVG-voltooiingspercentage</strong>",
-        "<strong>Kosten per AVG-verzoek: €21</strong> (volledig geautomatiseerd, geen telefoontjes, geen verkopers)"
-      ],
+      "heading": "Voorbeeld -<colored>Advocatenkantoor</colored>",
+      "description": "Leads voor autofinancieringsrestituties lopen vast als ze hun papieren niet kunnen vinden. Lead Awaker reactiveert de lead, legt het AVG-verzoek uit in gewone taal, en geeft een zaak door aan een medewerker die direct beoordeeld kan worden.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Herinneringen voor AVG-voltooiing, \"30 werkdagen\" statusupdates, auto-escalatie naar een medewerker wanneer documenten arriveren en reactivatiecampagnes voor leads die zijn begonnen maar niet zijn afgerond.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Compliance-first administratie. Helder, procesgestuurd en zonder druk.",
       "messages": [
@@ -515,6 +316,76 @@
         { "type": "user", "sender": "Oliver", "content": "Nee, dat is alles van mijn kant", "time": "15:40" },
         { "type": "system", "content": "Afgesloten", "id": "lf-5" },
         { "type": "agent", "sender": "Sophie", "content": "Oké Oliver, fijne dag :)", "time": "15:41" }
+      ]
+    },
+    "coaching": {
+      "title": "Coaching",
+      "heading": "Voorbeeld -<colored>Loopbaan Coaching</colored>",
+      "description": "Loopbaancoaches verliezen leads op het moment van \"ben ik er klaar voor om in mezelf te investeren\". Lead Awaker opent het gesprek maanden later opnieuw, brengt naar boven wat echt vastzit, en zet koude aanmeldingen voor een oriëntatiegesprek om in betaalde kennismakings-calls.",
+      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Nurturing van wachtlijsten voor cohorten of programma's, referral-verzoeken aan oud-studenten, no-show follow-ups na kennismakings-calls, re-engagement van leads die midden in de aanmelding afhaakten, en upsell-sequenties na het programma.",
+      "agentProfile": "<strong>Spreekprofiel agent:</strong> Geaarde, niet-pusherige mentor. Nieuwsgierig, reflectief, en behandelt twijfels van de lead als informatie, niet als bezwaren.",
+      "messages": [
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Hoi, Maya van Threshold Coaching hier. Ben jij de Ellen die in februari een gratis oriëntatiegesprek bij ons boekte? 🙂",
+          "time": "11:00 AM"
+        },
+        { "type": "system", "content": "Lead geëngageerd", "id": "co-1" },
+        { "type": "user", "sender": "Ellen", "content": "ja dat was ik", "time": "11:08 AM" },
+        { "type": "user", "sender": "Ellen", "content": "sorry ik ben nooit komen opdagen, werk was waanzin", "time": "11:08 AM" },
+        { "type": "system", "content": "Lead heeft gereageerd", "id": "co-2" },
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Geen excuses nodig, daarom bel ik juist. Mijn coach vroeg me om contact op te nemen omdat de mensen die een oriëntatiegesprek afzeggen vaak juist degenen zijn die het het meest nodig hebben.\n\nZit je nog vast op hetzelfde punt, of is er iets verschoven?",
+          "time": "11:09 AM"
+        },
+        { "type": "user", "sender": "Ellen", "content": "eerlijk gezegd erger", "time": "11:20 AM" },
+        { "type": "user", "sender": "Ellen", "content": "zit nog bij HR en ik ben opgebrand", "time": "11:20 AM" },
+        { "type": "user", "sender": "Ellen", "content": "ik blijf dromen over iets met meer betekenis doen", "time": "11:21 AM" },
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Dat is een heel herkenbare plek om te zitten, Ellen. Als je \"iets met meer betekenis\" voor je ziet, wat komt dan als eerste op?",
+          "time": "11:22 AM"
+        },
+        { "type": "user", "sender": "Ellen", "content": "ik denk eigenlijk coaching", "time": "11:35 AM" },
+        { "type": "user", "sender": "Ellen", "content": "direct met mensen werken", "time": "11:35 AM" },
+        { "type": "user", "sender": "Ellen", "content": "misschien bouwvakkers of uitvoerend personeel? Vanuit HR zag ik hoe weinig echte support zij krijgen", "time": "11:36 AM" },
+        { "type": "system", "content": "Echt doel boven water", "id": "co-3" },
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Dat is een heel specifieke niche, en eerlijk gezegd een hard-nodige. De meeste coaches richten zich op leidinggevenden, dus jij zou in een veel minder vol veld stappen.\n\nWat heeft je tot nu toe tegengehouden om te beginnen?",
+          "time": "11:37 AM"
+        },
+        { "type": "user", "sender": "Ellen", "content": "angst denk ik", "time": "11:48 AM" },
+        { "type": "user", "sender": "Ellen", "content": "en geld. Ik wil niet stoppen bij HR tot ik weet dat het echt kan werken", "time": "11:48 AM" },
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Precies het juiste gevoel. Onze aanpak met mensen in transitie is daar omheen gebouwd: je blijft aan het werk terwijl we de coachingpraktijk naast het dagwerk opbouwen, en je maakt de overstap pas als de cijfers werken.\n\nZou het helpen om 30 minuten met onze hoofdcoach in kaart te brengen hoe de eerste 6 maanden er voor jou uit kunnen zien?",
+          "time": "11:49 AM"
+        },
+        { "type": "user", "sender": "Ellen", "content": "ja, ik denk dat ik er nu klaar voor ben", "time": "12:05 PM" },
+        { "type": "system", "content": "Lead gekwalificeerd", "id": "co-4" },
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Top. Hier is de boekingslink voor een betaald kennismakingsgesprek van 30 min: https://calendar.app.google",
+          "time": "12:06 PM"
+        },
+        { "type": "system", "content": "Afspraak ingepland 📅", "id": "co-5" },
+        {
+          "type": "agent",
+          "sender": "Maya",
+          "content": "Je staat ingepland voor donderdag om 10:00 ✅\n\nJames loopt de transitie-aanpak met je door en hoe coaching voor bouwvakkers in de markt past.",
+          "time": "12:20 PM"
+        },
+        { "type": "user", "sender": "Ellen", "content": "bedankt Maya, dit is het zetje dat ik nodig had", "time": "12:30 PM" },
+        { "type": "agent", "sender": "Maya", "content": "Daarom bellen we 🙂 Tot donderdag.", "time": "12:31 PM" },
+        { "type": "system", "content": "Afgesloten", "id": "co-6" }
       ]
     }
   }

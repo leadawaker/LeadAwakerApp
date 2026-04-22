@@ -191,8 +191,8 @@ export function Topbar({
       apiFetch('/api/users').then(async (res) => {
         if (res.ok) { const data = await res.json(); setAllUsers(Array.isArray(data) ? data : []); }
       }).catch(() => {});
-      apiFetch('/api/prospects').then(async (res) => {
-        if (res.ok) { const data = await res.json(); setAllProspects(Array.isArray(data) ? data : data?.list || data?.data || []); }
+      apiFetch('/api/prospects?all=true').then(async (res) => {
+        if (res.ok) { const data = await res.json(); setAllProspects(Array.isArray(data) ? data : data?.items || data?.list || data?.data || []); }
       }).catch(() => {});
     }
   }, [searchOpen, currentAccountId, isAgencyUser]);

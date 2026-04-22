@@ -116,7 +116,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="absolute top-2 right-2 p-1.5 rounded-md bg-white/10 hover:bg-white/20 text-gray-400 hover:text-gray-200 transition-colors"
+      className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground border border-border/40 transition-colors"
       title={copied ? "Copied!" : "Copy code"}
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -147,7 +147,7 @@ const MarkdownSegment = memo(function MarkdownSegment({ content }: { content: st
           const codeText = extractTextFromChildren(children).replace(/\n$/, "");
           return (
             <div className="relative group my-2 -mx-1">
-              <pre className="bg-[#0d1117] text-gray-200 rounded-md p-3 text-[12px] leading-relaxed overflow-x-auto">
+              <pre className="bg-muted/60 dark:bg-muted/30 text-foreground rounded-md p-3 text-[12px] leading-relaxed overflow-x-auto border border-border/40 whitespace-pre-wrap break-words">
                 {children}
               </pre>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity">

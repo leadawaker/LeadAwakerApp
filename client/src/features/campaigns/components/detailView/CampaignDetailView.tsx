@@ -90,8 +90,6 @@ export interface CampaignDetailViewProps {
   availableAccounts?: string[];
   onResetControls?: () => void;
   onBack?: () => void;
-  leftPanelCollapsed?: boolean;
-  onToggleLeftPanel?: () => void;
   promptPanelOpen?: boolean;
   onTogglePromptPanel?: () => void;
 }
@@ -102,7 +100,6 @@ export function CampaignDetailView({
   sortBy, onSortByChange, isSortNonDefault, filterStatus, onToggleFilterStatus,
   filterAccount, onFilterAccountChange, isFilterActive, showDemoCampaigns, onShowDemoCampaignsChange,
   groupBy, onGroupByChange, isGroupNonDefault, availableAccounts, onResetControls, onBack,
-  leftPanelCollapsed, onToggleLeftPanel,
   promptPanelOpen: promptPanelOpenProp, onTogglePromptPanel: onTogglePromptPanelProp,
 }: CampaignDetailViewProps) {
   const { t } = useTranslation("campaigns");
@@ -438,8 +435,6 @@ export function CampaignDetailView({
                 onRefresh={onRefresh}
                 onDuplicate={onDuplicate}
                 onDelete={onDelete}
-                leftPanelCollapsed={leftPanelCollapsed}
-                onToggleLeftPanel={onToggleLeftPanel}
                 promptPanelOpen={promptPanelOpen}
                 onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
                 t={t}
@@ -493,7 +488,7 @@ export function CampaignDetailView({
 
       {/* Prompt panel — agency only, visible when open */}
       {promptPanelOpen && isAgencyUser && (
-        <div className="w-[640px] shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden">
+        <div className="w-[420px] lg:w-[520px] xl:w-[640px] shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden">
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-2 text-[13px] font-semibold">

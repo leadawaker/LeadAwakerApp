@@ -13,6 +13,7 @@ import type { VirtualListItem } from "./LeadsCardView";
 import { PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
 import { getLeadStatusAvatarColor, getInitials } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -591,6 +592,22 @@ export function LeadsInlineTable({
     return () => cancelAnimationFrame(raf);
   }, [selectedLeadId]);
 
+  // F shortcut: scroll selected row into view, jumping pages if needed.
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  useFKeyScrollToSelected({
+    containerRef: tableScrollRef,
+    selectedId: selectedLeadId,
+    disabled: selectedIds.size > 1,
+    getSelector: (id) => `tr[data-lead-id="${id}"]`,
+    ensureLoaded: async (id) => {
+      const idx = leadOnlyItems.findIndex((i) => getLeadId(i.lead) === id);
+      if (idx >= 0 && leadCount > TABLE_PAGE_SIZE) {
+        const page = Math.floor(idx / TABLE_PAGE_SIZE);
+        if (page !== tablePage) setTablePage(page);
+      }
+    },
+  });
+
   const totalPages = Math.ceil(leadCount / TABLE_PAGE_SIZE);
   const paginatedItems = useMemo(() => {
     if (leadCount <= TABLE_PAGE_SIZE) return displayItems;
@@ -622,7 +639,7 @@ export function LeadsInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div ref={tableScrollRef} className="flex-1 min-h-0 overflow-auto">
           <table
             className={cn("min-w-full w-full", showVerticalLines && "[&_td]:border-r [&_td]:border-border/10 [&_th]:border-r [&_th]:border-border/10")}
             style={{ borderCollapse: "separate", borderSpacing: "0 2px", tableLayout: "fixed" }}

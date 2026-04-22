@@ -62,8 +62,8 @@ export const WIDGET_DOCK_ENABLED_KEY = "leadawaker_agent_dock_enabled";
 export const WIDGET_DOCK_WIDTH_KEY = "leadawaker_agent_dock_width";
 export const DOCK_DEFAULT_WIDTH = 420;
 export const DOCK_MIN_WIDTH = 320;
-export const DOCK_MAX_WIDTH = 640;
-export const DOCK_BREAKPOINT_PX = 1536;
+export const DOCK_MAX_WIDTH = 1280;
+export const DOCK_BREAKPOINT_PX = 768;
 
 export function loadDockEnabled(): boolean {
   try {

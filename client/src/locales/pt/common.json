@@ -1,11 +1,11 @@
 {
   "nav": {
     "home": "Início",
-    "services": "Casos de Uso",
+    "try": "Testar",
     "about": "Sobre",
     "login": "Entrar",
     "openApp": "Abrir App",
-    "bookDemo": "Agendar Demo"
+    "bookDemo": "Agendar Call"
   },
   "footer": {
     "company": "Empresa",
@@ -16,7 +16,7 @@
     "terms": "Termos de Serviço"
   },
   "cta": {
-    "bookDemo": "Agendar Demo",
+    "bookDemo": "Agendar Call",
     "learnMore": "Saiba Mais",
     "getStarted": "Começar",
     "contactUs": "Fale Conosco"
@@ -29,5 +29,12 @@
   
   "animation": {
     "yourBrand": "Sua Marca"
+  },
+  "bubble": {
+    "tryDemo": "Experimentar a demo de IA",
+    "chatFounder": "Falar com o fundador",
+    "founderPrefill": "Oi Gabriel, gostaria de saber mais sobre a Lead Awaker.",
+    "ariaOpen": "Abrir menu de contato WhatsApp",
+    "ariaClose": "Fechar menu de contato WhatsApp"
   }
 }

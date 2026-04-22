@@ -10,6 +10,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import { ChevronLeft, ChevronRight, AlertCircle, RefreshCw, X, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Check, Plus, Phone, Mail, Grid3X3, Columns3, CalendarDays } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
@@ -17,7 +18,7 @@ import type { Lead as ConversationLead, Interaction } from "@/features/conversat
 import { LeadDetailPanel } from "@/features/leads/components/LeadDetailPanel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { SearchPill } from "@/components/ui/search-pill";
@@ -423,7 +424,7 @@ export default function CalendarPage() {
   const MOBILE_CALENDAR_TABS = MOBILE_CALENDAR_TAB_DEFS.map((d) => ({ id: d.id, label: t(d.labelKey), icon: d.icon }));
 
   const { currentAccountId, isAgencyUser, accounts } = useWorkspace();
-  const { leads, loading: leadsLoading, refresh: refetchLeads } = useLeads(currentAccountId > 0 ? currentAccountId : undefined);
+  const { leads, loading: leadsLoading, error: leadsError, refresh: refetchLeads } = useLeads(currentAccountId > 0 ? currentAccountId : undefined);
   const { campaigns } = useCampaigns();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [calendarAccountFilter, setCalendarAccountFilter] = useState<number | "all">(
@@ -452,6 +453,14 @@ export default function CalendarPage() {
     const raf = requestAnimationFrame(run);
     return () => cancelAnimationFrame(raf);
   }, [selectedBooking]);
+
+  // F shortcut: scroll selected appointment into view.
+  useFKeyScrollToSelected({
+    containerRef: apptListRef,
+    selectedId: selectedBooking?.id ?? null,
+    getSelector: (id) => `[data-appt-id="${id}"]`,
+  });
+
   const [viewMode, setViewMode] = usePersistedState<ViewMode>(
     "calendar-view-mode",
     "month",
@@ -513,6 +522,15 @@ export default function CalendarPage() {
   const [activeAppt, setActiveAppt] = useState<Appointment | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragToast, setDragToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [dragError, setDragError] = useState<{
+    apptId: number | string;
+    leadName: string;
+    newBookedCallDate: string;
+    newRescheduledCount: number;
+    previousBookedCallDate: string | null | undefined;
+    message: string;
+  } | null>(null);
+  const [dragRetrying, setDragRetrying] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
@@ -1008,6 +1026,8 @@ export default function CalendarPage() {
         refetchLeads();
       }
 
+      setDragError((prev) => (prev && prev.apptId === appt.id ? null : prev));
+
       if (isTimeSlotDrop) {
         const timeStr = newDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(appt.timezone ? { timeZone: appt.timezone } : {}) });
         setDragToast({ message: t("toast.rescheduledToWithTime", { name: appt.lead_name, date: formatDate(newDate, t), time: timeStr }), type: "success" });
@@ -1016,15 +1036,77 @@ export default function CalendarPage() {
       }
       setTimeout(() => setDragToast(null), 4000);
     } catch (err: any) {
+      setDragError({
+        apptId: appt.id,
+        leadName: appt.lead_name,
+        newBookedCallDate,
+        newRescheduledCount,
+        previousBookedCallDate: appt.raw_booked_call_date,
+        message: err.message,
+      });
       setDragToast({ message: t("toast.failedToReschedule", { error: err.message }), type: "error" });
       setTimeout(() => setDragToast(null), 5000);
     }
   }, [refetchLeads, t]);
 
+  const retryDragReschedule = useCallback(async () => {
+    if (!dragError || dragRetrying) return;
+    setDragRetrying(true);
+    try {
+      const resp = await apiFetch(`/api/leads/${dragError.apptId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          previous_booked_call_date: dragError.previousBookedCallDate,
+          booked_call_date: dragError.newBookedCallDate,
+          re_scheduled_count: dragError.newRescheduledCount,
+        }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error((err as any).message || `HTTP ${resp.status}`);
+      }
+      if (typeof refetchLeads === "function") refetchLeads();
+      setDragError(null);
+      setDragToast({ message: t("toast.rescheduledTo", { name: dragError.leadName, date: formatDate(new Date(dragError.newBookedCallDate), t) }), type: "success" });
+      setTimeout(() => setDragToast(null), 4000);
+    } catch (err: any) {
+      setDragError((prev) => prev ? { ...prev, message: err.message } : prev);
+    } finally {
+      setDragRetrying(false);
+    }
+  }, [dragError, dragRetrying, refetchLeads, t]);
+
   const handleDragCancel = useCallback(() => {
     setActiveAppt(null);
     setIsDragging(false);
   }, []);
+
+  // ── Error fallback (initial fetch failure) ─────────────────────────────────
+  if (leadsError && !leadsLoading && leads.length === 0) {
+    return (
+      <CrmShell>
+        <div className="flex-1 min-h-0 flex items-center justify-center p-8" data-testid="page-calendar-error">
+          <div className="max-w-md w-full rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-foreground">{t("errors.failedToLoad")}</div>
+              <div className="text-xs text-muted-foreground mt-0.5 break-words">{leadsError.message}</div>
+              <button
+                type="button"
+                onClick={() => refetchLeads()}
+                className="mt-3 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-brand-indigo text-white text-xs font-semibold hover:brightness-110"
+                data-testid="button-retry-leads"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {t("errors.retry")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </CrmShell>
+    );
+  }
 
   // ── Loading skeleton ────────────────────────────────────────────────────────
   if (leadsLoading) {
@@ -1151,6 +1233,7 @@ export default function CalendarPage() {
                     className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => navigate(-1)}
                     title={t("navigation.previous")}
+                    aria-label={t("navigation.previous")}
                     data-testid="button-prev"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -1162,6 +1245,7 @@ export default function CalendarPage() {
                     className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => navigate(1)}
                     title={t("navigation.next")}
+                    aria-label={t("navigation.next")}
                     data-testid="button-next"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -1609,7 +1693,7 @@ export default function CalendarPage() {
             )} data-testid="calendar-list">
 
               {/* ── Panel header ── */}
-              <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+              <div className="pl-[17px] pr-[3px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
                 <div className="flex items-center justify-between w-full md:w-[309px] shrink-0">
                   <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
                     {t("title")}
@@ -1697,7 +1781,8 @@ export default function CalendarPage() {
                                 type="button"
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptSortBy(group.asc); }}
                                 className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                                title="Ascending"
+                                title={t("a11y.sortAscending")}
+                                aria-label={t("a11y.sortAscending")}
                               >
                                 <ArrowUp className="h-3 w-3" />
                               </button>
@@ -1705,7 +1790,8 @@ export default function CalendarPage() {
                                 type="button"
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptSortBy(group.desc); }}
                                 className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                                title="Descending"
+                                title={t("a11y.sortDescending")}
+                                aria-label={t("a11y.sortDescending")}
                               >
                                 <ArrowDown className="h-3 w-3" />
                               </button>
@@ -1738,7 +1824,8 @@ export default function CalendarPage() {
                               type="button"
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptGroupDirection("asc"); }}
                               className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", apptGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                              title="Ascending"
+                              title={t("a11y.sortAscending")}
+                              aria-label={t("a11y.sortAscending")}
                             >
                               <ArrowUp className="h-3 w-3" />
                             </button>
@@ -1746,7 +1833,8 @@ export default function CalendarPage() {
                               type="button"
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setApptGroupDirection("desc"); }}
                               className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", apptGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                              title="Descending"
+                              title={t("a11y.sortDescending")}
+                              aria-label={t("a11y.sortDescending")}
                             >
                               <ArrowDown className="h-3 w-3" />
                             </button>
@@ -1825,6 +1913,43 @@ export default function CalendarPage() {
               </div>
             ) : null}
           </DragOverlay>
+
+          {/* Persistent inline reschedule error (with Retry) */}
+          {dragError && (
+            <div
+              className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[299] max-w-md w-[calc(100%-2rem)] rounded-lg border border-destructive/30 bg-destructive/5 backdrop-blur px-4 py-3 flex items-start gap-3 shadow-lg"
+              data-testid="drag-error-banner"
+              role="alert"
+            >
+              <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-foreground">
+                  {t("errors.rescheduleFailed")} {dragError.leadName ? `(${dragError.leadName})` : ""}
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-0.5 break-words">{dragError.message}</div>
+              </div>
+              <button
+                type="button"
+                onClick={retryDragReschedule}
+                disabled={dragRetrying}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-brand-indigo text-white text-[11px] font-semibold hover:brightness-110 disabled:opacity-60 shrink-0"
+                data-testid="button-retry-reschedule"
+                aria-label={t("errors.retry")}
+              >
+                <RefreshCw className={cn("h-3 w-3", dragRetrying && "animate-spin")} />
+                {t("errors.retry")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDragError(null)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                aria-label={t("common.close", "Close")}
+                data-testid="button-dismiss-drag-error"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Toast */}
           {dragToast && (

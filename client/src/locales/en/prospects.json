@@ -155,7 +155,7 @@
     "contact1": "Contact 1",
     "contact2": "Contact 2",
     "pipeline": "Pipeline",
-    "enrichment": "LinkedIn Enrichment",
+    "enrichment": "Enrichment",
     "contactEnrichment": "Contact Enrichment",
     "outreachTimeline": "Outreach Timeline",
     "person": "Person",
@@ -169,6 +169,7 @@
     "whatsApp": "WhatsApp",
     "interactions": "Interactions",
     "tasks": "Tasks",
+    "nextActions": "Next Actions",
     "offerIdeas": "Offer Ideas"
   },
   "fields": {
@@ -325,6 +326,16 @@
       "reply": "Reply"
     }
   },
+  "emailComposer": {
+    "label": "Email",
+    "noEmail": "No email address on file",
+    "compose": "Compose email",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message",
+    "cancel": "Cancel",
+    "sending": "Sending..."
+  },
   "emailCompose": {
     "title": "Compose Email",
     "replyTitle": "Reply to Email",
@@ -349,28 +360,57 @@
   },
   "whatsappComposer": {
     "title": "WhatsApp",
+    "label": "WhatsApp Message",
     "placeholder": "Type a WhatsApp message...",
     "send": "Send",
     "sending": "Sending...",
     "noPhone": "No phone number on file",
-    "sendFailed": "Failed to send. Please try again."
+    "sendFailed": "Failed to send. Please try again.",
+    "chars": "chars",
+    "compose": "Send WhatsApp",
+    "cancel": "Cancel"
   },
   "tabs": {
     "company": "Company",
     "contact1": "Contact 1",
     "contact2": "Contact 2"
   },
+  "audit": {
+    "empty": "Audit not yet generated. Re-run enrichment.",
+    "strengths": "Strengths",
+    "opportunities": "Opportunities",
+    "gaps": "Gaps",
+    "leadAwakerFit": "Lead Awaker Fit",
+    "angle": "Angle",
+    "pitchHook": "Pitch hook"
+  },
   "companyTab": {
     "summary": "Summary",
+    "audit": "Audit",
     "services": "Services",
-    "products": "Products",
     "history": "History",
     "noSummary": "No summary yet. Run enrichment to populate.",
     "noServices": "No services data yet.",
-    "noProducts": "No products data yet.",
     "noHistory": "No history data yet.",
     "loadingCompany": "Enriching company...",
     "loadingContact": "Enriching contact {{slot}}...",
+    "loadingCompanySteps": [
+      "Fetching LinkedIn company page...",
+      "Reading company description...",
+      "Scraping website...",
+      "Analyzing services and products...",
+      "Building company history...",
+      "Fetching recent posts...",
+      "Generating campaign ideas...",
+      "Almost done..."
+    ],
+    "loadingContactSteps": [
+      "Searching Google for candidates...",
+      "Assessing decision makers...",
+      "Fetching LinkedIn profile...",
+      "Analyzing recent posts...",
+      "Writing person brief..."
+    ],
     "aboutCompany": "About {{name}}",
     "aboutContact": "About {{name}}",
     "topCompanyPosts": "Top Company Posts",
@@ -428,5 +468,16 @@
     "stylePlaceholder": "Style",
     "formatPlaceholder": "Format",
     "languagePlaceholder": "Lang"
+  },
+  "outreachTimeline": {
+    "title": "Outreach History",
+    "empty": "No outreach logged yet"
+  },
+  "tasks": {
+    "addTask": "Add task",
+    "newTaskPlaceholder": "Task title..."
+  },
+  "interactions": {
+    "openConversations": "Open in conversations"
   }
 }

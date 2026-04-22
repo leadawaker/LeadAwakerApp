@@ -11,6 +11,7 @@ import {
 } from "@/features/ai-agents/components/agentWidgetUtils";
 
 const LAST_AGENT_KEY = "leadawaker_last_agent_id";
+const WIDGET_OPEN_KEY = "leadawaker_agent_widget_open";
 
 export interface AgentWidgetState {
   /** Whether the widget panel is open */
@@ -44,9 +45,20 @@ export interface AgentWidgetState {
 const AgentWidgetContext = createContext<AgentWidgetState | null>(null);
 
 export function AgentWidgetProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeAgentId, setActiveAgentId] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(() => {
+    try { return localStorage.getItem(WIDGET_OPEN_KEY) === "true"; } catch { return false; }
+  });
+  const [activeAgentId, setActiveAgentId] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem(LAST_AGENT_KEY);
+      return stored ? Number(stored) : null;
+    } catch { return null; }
+  });
   const pageContext = usePageContext();
+
+  useEffect(() => {
+    try { localStorage.setItem(WIDGET_OPEN_KEY, isOpen ? "true" : "false"); } catch {}
+  }, [isOpen]);
 
   const [dockMode, setDockMode] = useState<boolean>(() => loadDockEnabled());
   const [dockWidth, setDockWidthState] = useState<number>(() => loadDockWidth());

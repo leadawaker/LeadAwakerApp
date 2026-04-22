@@ -48,6 +48,16 @@ import { getInitials, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { SearchPill } from "@/components/ui/search-pill";
+import { Search } from "lucide-react";
+import {
+  useCompactPanelState,
+  useCompactHoverCard,
+  CompactTabPopover,
+  CompactHoverCardPortal,
+} from "@/components/crm/CompactEntityRail";
+import { CompactCampaignCard } from "./CompactCampaignCard";
+import { useListPanelState } from "@/hooks/useListPanelState";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import {
   xBase,
   xDefault,
@@ -664,6 +674,7 @@ export function CampaignListView({
 }: CampaignListViewProps) {
   const { t } = useTranslation("campaigns");
   const isMobile768 = useIsMobile(768);
+  const isNarrow = useIsMobile(1024);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const DETAIL_TABS: TabDef[] = useMemo(() =>
@@ -674,9 +685,7 @@ export function CampaignListView({
   const PAGE_SIZE = 20;
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
-    try { return localStorage.getItem("campaigns-left-panel-collapsed") === "true"; } catch { return false; }
-  });
+  const { state: leftPanelState } = useListPanelState();
   const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
     try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
   });
@@ -830,12 +839,37 @@ export function CampaignListView({
     return () => ro.disconnect();
   }, []);
 
+  // Compact list rail: auto-squeeze when right panel is narrow, or user override.
+  const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow);
+  const isListCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
+  const isListHidden = !isNarrow && leftPanelState === "hidden";
+  // Combine refs: rightPanelRef stays for the existing 500px detail logic; compactObserverRef watches same element.
+  const combinedRightPanelRef = useCallback((el: HTMLDivElement | null) => {
+    (rightPanelRef as any).current = el;
+    (compactObserverRef as any).current = el;
+  }, [compactObserverRef]);
+
   // Auto-select: handled by CampaignsPage — do NOT auto-select here (causes override)
 
   // ── Smooth scroll to selected card (§29) ────────────────────────────────────
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Track which campaign IDs have been rendered before — only animate genuinely new cards
   const seenCardIds = useRef<Set<number>>(new Set());
+
+  // Compact hover card state.
+  const findCampaignEl = useCallback(
+    (id: string | number) =>
+      scrollContainerRef.current?.querySelector(`[data-campaign-id="${id}"]`) as HTMLElement | null,
+    [],
+  );
+  const {
+    hovered: hoveredCampaign,
+    rect: hoveredRect,
+    onHover: handleCompactHover,
+    onHoverEnd: handleCompactHoverEnd,
+    cancelHoverEnd: cancelHoveredEnd,
+    close: closeHoveredCampaign,
+  } = useCompactHoverCard<Campaign>((c) => getCampaignId(c), findCampaignEl);
 
   // ── Pull-to-refresh (mobile) ─────────────────────────────────────────────
   const { pullDistance, isRefreshing } = usePullToRefresh({
@@ -866,20 +900,224 @@ export function CampaignListView({
     return () => cancelAnimationFrame(raf);
   }, [selectedCampaign]);
 
+  // F shortcut: scroll selected campaign into view, jumping pages if needed.
+  useFKeyScrollToSelected({
+    containerRef: scrollContainerRef,
+    selectedId: selectedCampaign ? getCampaignId(selectedCampaign) : null,
+    getSelector: (id) => `[data-campaign-id="${id}"]`,
+    ensureLoaded: async (id) => {
+      const campaignItems = flatItems.filter((i) => i.kind === "campaign");
+      const idx = campaignItems.findIndex((i: any) => getCampaignId(i.campaign) === id);
+      if (idx >= 0 && totalCampaigns > PAGE_SIZE) {
+        const page = Math.floor(idx / PAGE_SIZE);
+        if (page !== currentPage) setCurrentPage(page);
+      }
+    },
+  });
+
   return (
     <div className={cn("flex h-full gap-[3px] mx-auto w-full", promptPanelOpen ? "max-w-[2369px]" : "max-w-[1729px]")} data-testid="campaign-list-view">
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
       <div className={cn(
         "flex-col bg-muted rounded-lg overflow-hidden",
-        leftPanelCollapsed
+        isListHidden
           ? cn(mobileView === "detail" ? "hidden" : "flex", "md:hidden")
-          : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
+          : isListCompact
+            ? cn("w-[65px] shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
+            : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
+        {isListCompact && (
+          <>
+            <CompactTabPopover
+              tabs={DETAIL_TABS.map((tab) => ({ id: tab.id, label: tab.label, icon: tab.icon }))}
+              activeId={detailTab}
+              onChange={(id) => onDetailTabChange(id as CampaignDetailTab)}
+            />
+            <div className="flex flex-col items-center gap-1 px-1.5 pb-2 shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "h-9 w-9 rounded-full flex items-center justify-center transition-colors",
+                      (isFilterActive || isSortNonDefault || isGroupNonDefault || listSearch)
+                        ? "bg-brand-indigo/10 text-brand-indigo"
+                        : "text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
+                    )}
+                    title={t("toolbar.more", "More")}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-56 max-h-[500px] overflow-y-auto">
+                  {/* Inline search */}
+                  <div className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className={cn(
+                      "flex items-center h-8 px-2.5 gap-1.5 rounded-full border",
+                      listSearch ? "border-brand-indigo/40 bg-brand-indigo/5" : "border-black/[0.08] bg-muted/40"
+                    )}>
+                      <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <input
+                        value={listSearch}
+                        onChange={(e) => onListSearchChange(e.target.value)}
+                        placeholder={t("toolbar.searchPlaceholder", "Search campaigns...")}
+                        onKeyDown={(e) => { if (e.key === "Escape") onListSearchChange(""); }}
+                        className="flex-1 min-w-0 bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60"
+                      />
+                      {listSearch && (
+                        <button type="button" onClick={() => onListSearchChange("")} className="shrink-0 text-muted-foreground hover:text-foreground">
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+
+                  {/* Filter submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <Filter className="h-3.5 w-3.5 shrink-0" />
+                      <span className="flex-1">{t("toolbar.filter")}</span>
+                      {isFilterActive && (
+                        <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                          {filterStatus.length + (filterAccount ? 1 : 0) + (showDemoCampaigns ? 1 : 0)}
+                        </span>
+                      )}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-48 max-h-[400px] overflow-y-auto">
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="text-[12px]">
+                          <span className="flex-1">{t("filter.status")}</span>
+                          {filterStatus.length > 0 && (
+                            <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>
+                          )}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-44">
+                          {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+                            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }} />
+                              <span className="flex-1">{t(`statusLabels.${s}`, s)}</span>
+                              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                      {availableAccounts.length > 0 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="text-[12px]">
+                            <span className="flex-1">{t("filter.account", "Account")}</span>
+                            {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-48 max-h-64 overflow-y-auto">
+                            <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}>
+                              <span className="flex-1">{t("filter.allAccounts", "All accounts")}</span>
+                              {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableAccounts.map((a) => (
+                              <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("text-[12px]", filterAccount === a && "font-semibold text-brand-indigo")}>
+                                <span className="flex-1 truncate">{a}</span>
+                                {filterAccount === a && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+                      {onShowDemoCampaignsChange && (
+                        <DropdownMenuItem onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="flex-1">{t("config.showDemoCampaigns")}</span>
+                          {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      )}
+                      {isFilterActive && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">{t("filter.clearAllFilters", "Clear all filters")}</DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  {/* Sort submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
+                      <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.sort")}</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-52">
+                      {(["recent", "name_asc", "name_desc", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
+                        <DropdownMenuItem key={s} onClick={() => onSortByChange(s)} className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}>
+                          {t(DETAIL_SORT_LABEL_KEYS[s])}
+                          {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  {/* Group submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <Layers className="h-3.5 w-3.5 shrink-0" />
+                      <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.group", "Group")}</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44">
+                      {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
+                        <DropdownMenuItem key={g} onClick={() => onGroupByChange(g)} className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}>
+                          {t(DETAIL_GROUP_LABEL_KEYS[g])}
+                          {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* +Add */}
+                  <DropdownMenuItem onClick={onCreateCampaign} className="flex items-center gap-2 text-[12px]">
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("toolbar.add", "New campaign")}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+              {loading ? (
+                <div className="flex items-center justify-center py-6"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
+              ) : flatItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-2">
+                  <Megaphone className="h-5 w-5 text-muted-foreground/40" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-0">
+                  {flatItems.map((item) => {
+                    if (item.kind === "header") return null;
+                    const cid = getCampaignId(item.campaign);
+                    const isSelected = selectedCampaign ? getCampaignId(selectedCampaign) === cid : false;
+                    return (
+                      <div key={cid} data-campaign-id={cid}>
+                        <CompactCampaignCard
+                          campaign={item.campaign}
+                          isActive={isSelected}
+                          onClick={() => onSelectCampaign(item.campaign)}
+                          onHover={handleCompactHover as (c: Record<string, any>, r: DOMRect) => void}
+                          onHoverEnd={handleCompactHoverEnd}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {!isListCompact && <>
+
         {/* Header: title + Detail Tab Bar */}
-        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
-          <div className="flex items-center justify-between w-full md:w-[309px]">
+        <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
+          <div className="flex items-center justify-between w-full md:w-[306px]">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h2>
             <span className="hidden md:block">
               <ViewTabBar tabs={DETAIL_TABS} activeId={detailTab} onTabChange={(id) => onDetailTabChange(id as CampaignDetailTab)} variant="segment" />
@@ -914,14 +1152,14 @@ export function CampaignListView({
         </div>
 
         {/* ── Desktop list toolbar: search + sort + filter + group + add ── */}
-        <div className="hidden md:flex px-2 pb-2 items-center gap-1 shrink-0">
+        <div className="hidden md:flex pl-2 pr-[17px] pb-2 items-center gap-1 shrink-0">
           <SearchPill
             value={listSearch}
             onChange={onListSearchChange}
             open={searchOpen}
             onOpenChange={onSearchOpenChange}
             placeholder={t("toolbar.searchPlaceholder", "Search campaigns...")}
-            className="max-w-[180px]"
+            className="ml-[9px] max-w-[171px]"
           />
 
           {/* Filter */}
@@ -1236,6 +1474,7 @@ export function CampaignListView({
             </button>
           </div>
         )}
+        </>}
       </div>
 
       {/* ── MOBILE FULL-SCREEN DETAIL PANEL (< 768px) ──────────────── */}
@@ -1265,7 +1504,7 @@ export function CampaignListView({
       />
 
       {/* ── RIGHT PANEL: toolbar + detail view (desktop only) ───────── */}
-      <div ref={rightPanelRef} className={cn(
+      <div ref={combinedRightPanelRef} className={cn(
         "flex-1 flex-col overflow-hidden rounded-lg",
         mobileView === "list" ? "hidden md:flex" : "flex mobile-panel-enter"
       )}>
@@ -1308,12 +1547,6 @@ export function CampaignListView({
               availableAccounts={availableAccounts}
               onResetControls={onResetControls}
               onBack={() => setMobileView("list")}
-              leftPanelCollapsed={leftPanelCollapsed}
-              onToggleLeftPanel={() => {
-                const next = !leftPanelCollapsed;
-                setLeftPanelCollapsed(next);
-                try { localStorage.setItem("campaigns-left-panel-collapsed", String(next)); } catch {}
-              }}
               promptPanelOpen={promptPanelOpen}
               onTogglePromptPanel={togglePromptPanel}
             />
@@ -1322,6 +1555,22 @@ export function CampaignListView({
           )}
         </div>
       </div>
+
+      {/* ── Compact mode hover card overlay ─────────────────────────── */}
+      {isListCompact && hoveredCampaign && (
+        <CompactHoverCardPortal
+          rect={hoveredRect}
+          onMouseEnter={cancelHoveredEnd}
+          onMouseLeave={handleCompactHoverEnd}
+        >
+          <CampaignListCard
+            campaign={hoveredCampaign}
+            isActive={selectedCampaign ? getCampaignId(selectedCampaign) === getCampaignId(hoveredCampaign) : false}
+            onClick={() => { onSelectCampaign(hoveredCampaign); closeHoveredCampaign(); }}
+          />
+        </CompactHoverCardPortal>
+      )}
     </div>
   );
 }
+

@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronRight, MapPin, ArrowUp, ArrowDown,
 } from "lucide-react";
 import OutreachPipelineView from "../components/OutreachPipelineView";
-import OutreachTemplatesView from "../components/OutreachTemplatesView";
+import OutreachTemplatesView, { TemplatesToolbar, type TemplatesViewHandle } from "../components/OutreachTemplatesView";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { IconBtn } from "@/components/ui/icon-btn";
@@ -568,10 +568,10 @@ export default function ProspectsPage() {
   });
   const listGroupBy = listPrefs.groupBy;
   const listSortBy = listPrefs.sortBy;
-  const listFilterNiche = listPrefs.filterNiche;
-  const listFilterStatus = listPrefs.filterStatus;
-  const listFilterCountry = listPrefs.filterCountry;
-  const listFilterPriority = listPrefs.filterPriority;
+  const listFilterNiche = listPrefs.filterNiche ?? [];
+  const listFilterStatus = listPrefs.filterStatus ?? [];
+  const listFilterCountry = listPrefs.filterCountry ?? [];
+  const listFilterPriority = listPrefs.filterPriority ?? [];
   const listFilterSource = listPrefs.filterSource ?? [];
   const setListGroupBy = useCallback((v: ListGroupBy) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
   const setListSortBy = useCallback((v: ListSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
@@ -581,16 +581,16 @@ export default function ProspectsPage() {
   const hasListNonDefaultControls = isListGroupNonDefault || isListSortNonDefault || isListFilterActive;
   const toggleInArray = (arr: string[], s: string) => arr.includes(s) ? arr.filter(x => x !== s) : [...arr, s];
   const toggleListFilterNiche = useCallback((s: string) => {
-    setListPrefs(p => ({ ...p, filterNiche: toggleInArray(p.filterNiche, s) }));
+    setListPrefs(p => ({ ...p, filterNiche: toggleInArray(p.filterNiche ?? [], s) }));
   }, [setListPrefs]);
   const toggleListFilterStatus = useCallback((s: string) => {
-    setListPrefs(p => ({ ...p, filterStatus: toggleInArray(p.filterStatus, s) }));
+    setListPrefs(p => ({ ...p, filterStatus: toggleInArray(p.filterStatus ?? [], s) }));
   }, [setListPrefs]);
   const toggleListFilterCountry = useCallback((s: string) => {
-    setListPrefs(p => ({ ...p, filterCountry: toggleInArray(p.filterCountry, s) }));
+    setListPrefs(p => ({ ...p, filterCountry: toggleInArray(p.filterCountry ?? [], s) }));
   }, [setListPrefs]);
   const toggleListFilterPriority = useCallback((s: string) => {
-    setListPrefs(p => ({ ...p, filterPriority: toggleInArray(p.filterPriority, s) }));
+    setListPrefs(p => ({ ...p, filterPriority: toggleInArray(p.filterPriority ?? [], s) }));
   }, [setListPrefs]);
   const toggleListFilterSource = useCallback((s: string) => {
     setListPrefs(p => ({ ...p, filterSource: toggleInArray(p.filterSource ?? [], s) }));
@@ -611,6 +611,11 @@ export default function ProspectsPage() {
   const [followUpFilterContactMethod, setFollowUpFilterContactMethod] = useState<string[]>([]);
   const [followUpGroupBy, setFollowUpGroupBy] = useState<FollowUpGroupBy>("none");
   const isFollowUpFilterActive = followUpFilterNiche.length > 0 || followUpFilterCountry.length > 0 || followUpFilterPriority.length > 0 || followUpFilterContactMethod.length > 0;
+
+  // Templates toolbar state
+  const [tplSearch, setTplSearch] = useState("");
+  const [tplFilterType, setTplFilterType] = useState("all");
+  const tplViewRef = useRef<TemplatesViewHandle>(null);
   const followUpActiveFilterCount = followUpFilterNiche.length + followUpFilterCountry.length + followUpFilterPriority.length + followUpFilterContactMethod.length;
   const toggleFollowUpFilterNiche = useCallback((s: string) => setFollowUpFilterNiche((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
   const toggleFollowUpFilterCountry = useCallback((s: string) => setFollowUpFilterCountry((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
@@ -1239,7 +1244,7 @@ export default function ProspectsPage() {
                 prospects={rows as ProspectRow[]}
                 loading={loading}
                 selectedProspect={selectedProspect}
-                onSelectProspect={handleSelectProspect}
+                onSelectProspect={(p) => { if (p) handleSelectProspect(p); }}
                 onAddProspect={handleAddProspect}
                 onCreate={async (form) => {
                   const created = await createProspect(form as unknown as Record<string, unknown>);
@@ -1468,6 +1473,18 @@ export default function ProspectsPage() {
                       </DropdownMenu>
                     </div>
                   )}
+                  {viewMode === "templates" && (
+                    <TemplatesToolbar
+                      search={tplSearch}
+                      onSearchChange={setTplSearch}
+                      filterType={tplFilterType}
+                      onFilterTypeChange={setTplFilterType}
+                      templateTypes={tplViewRef.current?.templateTypes ?? []}
+                      count={tplViewRef.current?.filteredCount ?? 0}
+                      total={tplViewRef.current?.totalCount ?? 0}
+                      onNew={() => tplViewRef.current?.createNew()}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1550,7 +1567,7 @@ export default function ProspectsPage() {
                     </div>
                   )}
                   {viewMode === "templates" && (
-                    <OutreachTemplatesView />
+                    <OutreachTemplatesView ref={tplViewRef} search={tplSearch} filterType={tplFilterType} />
                   )}
                 </div>
             </div>

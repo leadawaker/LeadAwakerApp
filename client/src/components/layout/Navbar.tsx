@@ -2,12 +2,6 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect, useMemo } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 
 const languages = [
@@ -23,9 +17,25 @@ const SUPPORTED_LANGS: LangCode[] = ["en", "pt", "nl"];
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [langMenuOpenMobile, setLangMenuOpenMobile] = useState(false);
   const [location, setLocation] = useLocation();
   const { t, i18n } = useTranslation("common");
   const isLoggedIn = Boolean(localStorage.getItem("leadawaker_auth"));
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!langMenuOpen && !langMenuOpenMobile) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-lang-menu]")) {
+        setLangMenuOpen(false);
+        setLangMenuOpenMobile(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [langMenuOpen, langMenuOpenMobile]);
 
   /**
    * Detect language from URL
@@ -99,14 +109,14 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: t("nav.home") },
-    { href: "/services", label: t("nav.services") },
+    { href: "/try", label: t("nav.try") },
     { href: "/about", label: t("nav.about") },
   ];
 
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
           scrolled
             ? "bg-[#F9FAFC]/85 dark:bg-background/80 backdrop-blur-md border-b border-slate-200 dark:border-white/[0.08] shadow-sm py-4"
             : "bg-transparent py-6"
@@ -119,37 +129,45 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none">
-                  <img
-                    src={currentLangConfig.flag}
-                    alt={currentLangConfig.display}
-                    className="h-4 w-[1.35rem] object-cover shadow-sm"
-                  />
-                  <span className="text-[15px] font-bold tracking-wide text-muted-foreground uppercase">
-                    {currentLangConfig.display}
-                  </span>
-                  <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 p-1">
-                {languages.map((lang) => (
-                  <DropdownMenuItem
-                    key={lang.code}
-                    onClick={() => changeLanguage(lang.code)}
-                    className="cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md"
-                  >
-                    <img
-                      src={lang.flag}
-                      alt={lang.label}
-                      className="h-4 w-[1.35rem] object-cover shadow-sm"
-                    />
-                    {lang.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="relative" data-lang-menu>
+              <button
+                type="button"
+                onClick={() => setLangMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none"
+              >
+                <img
+                  src={currentLangConfig.flag}
+                  alt={currentLangConfig.display}
+                  className="h-4 w-[1.35rem] object-cover shadow-sm"
+                />
+                <span className="text-[15px] font-bold tracking-wide text-muted-foreground uppercase">
+                  {currentLangConfig.display}
+                </span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
+              </button>
+              {langMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-40 rounded-md bg-white border border-border/60 shadow-lg p-1 z-[100]">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => {
+                        changeLanguage(lang.code);
+                        setLangMenuOpen(false);
+                      }}
+                      className="w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md text-foreground hover:bg-muted transition-colors"
+                    >
+                      <img
+                        src={lang.flag}
+                        alt={lang.label}
+                        className="h-4 w-[1.35rem] object-cover shadow-sm"
+                      />
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {navLinks.map((link) => {
               const href = withLang(link.href);
@@ -211,35 +229,43 @@ export function Navbar() {
         >
           {/* Language Picker in Mobile Menu */}
           <div className="flex justify-end px-2 py-2 mb-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 transition-all hover:bg-muted">
-                  <img
-                    src={currentLangConfig.flag}
-                    alt={currentLangConfig.display}
-                    className="h-4 w-6 object-cover shadow-sm rounded-sm"
-                  />
-                  <span className="text-sm font-bold uppercase text-foreground">{currentLangConfig.display}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 p-1">
-                {languages.map((lang) => (
-                  <DropdownMenuItem
-                    key={lang.code}
-                    onClick={() => changeLanguage(lang.code)}
-                    className="cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md"
-                  >
-                    <img
-                      src={lang.flag}
-                      alt={lang.label}
-                      className="h-4 w-[1.35rem] object-cover shadow-sm"
-                    />
-                    {lang.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="relative" data-lang-menu>
+              <button
+                type="button"
+                onClick={() => setLangMenuOpenMobile((v) => !v)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 transition-all hover:bg-muted"
+              >
+                <img
+                  src={currentLangConfig.flag}
+                  alt={currentLangConfig.display}
+                  className="h-4 w-6 object-cover shadow-sm rounded-sm"
+                />
+                <span className="text-sm font-bold uppercase text-foreground">{currentLangConfig.display}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+              {langMenuOpenMobile && (
+                <div className="absolute right-0 top-full mt-2 w-40 rounded-md bg-white border border-border/60 shadow-lg p-1 z-50">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => {
+                        changeLanguage(lang.code);
+                        setLangMenuOpenMobile(false);
+                      }}
+                      className="w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md text-foreground hover:bg-muted transition-colors"
+                    >
+                      <img
+                        src={lang.flag}
+                        alt={lang.label}
+                        className="h-4 w-[1.35rem] object-cover shadow-sm"
+                      />
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {[...navLinks, ...(isLoggedIn

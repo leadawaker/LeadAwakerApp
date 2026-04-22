@@ -62,6 +62,7 @@ function isInsideWidget(el: EventTarget | null): boolean {
 
 export function useElementPicker() {
   const [pickerActive, setPickerActive] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [hoveredInfo, setHoveredInfo] = useState<SelectedElementInfo | null>(null);
   const [selectedInfo, setSelectedInfo] = useState<SelectedElementInfo | null>(null);
   const [confirmedInfo, setConfirmedInfo] = useState<SelectedElementInfo | null>(null);
@@ -69,9 +70,12 @@ export function useElementPicker() {
   const rafRef = useRef(0);
   const selectedRef = useRef<SelectedElementInfo | null>(null);
   selectedRef.current = selectedInfo;
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
 
   const activate = useCallback(() => {
     setPickerActive(true);
+    setLocked(false);
     setHoveredInfo(null);
     setSelectedInfo(null);
   }, []);
@@ -84,18 +88,23 @@ export function useElementPicker() {
 
   const confirm = useCallback(() => {
     setConfirmedInfo(selectedRef.current);
-    setPickerActive(false);
     setHoveredInfo(null);
     setSelectedInfo(null);
   }, []);
 
   const clear = useCallback(() => {
     setConfirmedInfo(null);
+    setLocked(false);
+    setPickerActive(false);
   }, []);
 
-  // Attach/detach document listeners when pickerActive changes
+  const toggleLock = useCallback(() => {
+    setLocked((prev) => !prev);
+  }, []);
+
+  // Attach/detach document listeners when pickerActive changes (but skip while locked)
   useEffect(() => {
-    if (!pickerActive) return;
+    if (!pickerActive || locked) return;
 
     const onMouseMove = (e: MouseEvent) => {
       if (rafRef.current) return;
@@ -115,7 +124,10 @@ export function useElementPicker() {
       if (!target || isInsideWidget(target)) return; // let widget clicks pass through
       e.preventDefault();
       e.stopPropagation();
-      setSelectedInfo(extractElementInfo(target));
+      const info = extractElementInfo(target);
+      setConfirmedInfo(info);
+      setHoveredInfo(null);
+      setSelectedInfo(null);
     };
 
     const onScroll = () => {
@@ -132,7 +144,6 @@ export function useElementPicker() {
     document.addEventListener("scroll", onScroll, { capture: true, passive: true });
     window.addEventListener("resize", onResize, { passive: true });
 
-    // Set cursor style
     document.body.style.cursor = "crosshair";
 
     return () => {
@@ -146,9 +157,9 @@ export function useElementPicker() {
         rafRef.current = 0;
       }
     };
-  }, [pickerActive]);
+  }, [pickerActive, locked]);
 
-  // Auto-clear confirmed element if it leaves the DOM
+  // Auto-clear confirmed element if it leaves the DOM, and keep its rect fresh on scroll/resize
   useEffect(() => {
     if (!confirmedInfo) return;
     const interval = setInterval(() => {
@@ -156,11 +167,22 @@ export function useElementPicker() {
         setConfirmedInfo(null);
       }
     }, 2000);
-    return () => clearInterval(interval);
+    const refreshRect = () => {
+      if (!document.contains(confirmedInfo.element)) return;
+      setConfirmedInfo((cur) => cur ? { ...cur, rect: cur.element.getBoundingClientRect() } : cur);
+    };
+    document.addEventListener("scroll", refreshRect, { capture: true, passive: true });
+    window.addEventListener("resize", refreshRect, { passive: true });
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("scroll", refreshRect, { capture: true } as EventListenerOptions);
+      window.removeEventListener("resize", refreshRect);
+    };
   }, [confirmedInfo]);
 
   return {
     pickerActive,
+    locked,
     hoveredInfo,
     selectedInfo,
     confirmedInfo,
@@ -168,5 +190,6 @@ export function useElementPicker() {
     deactivate,
     confirm,
     clear,
+    toggleLock,
   };
 }

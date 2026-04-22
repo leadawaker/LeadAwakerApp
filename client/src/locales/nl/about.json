@@ -10,30 +10,40 @@
     "name": "Gabriel B. Fronza",
     "title": "Oprichter",
     "quote": "\"Bij de kliniek van mijn ouders zag ik steeds hetzelfde patroon: oprechte interesse, geboekte consultaties en dan... stilte. Ze gaven duizenden uit om een emmer te vullen die van onderen lekte. Toen leerde ik: je hebt niet meer leads nodig. Je moet stoppen met de leads verliezen die je al hebt.\"",
-    "description": "Ik heb tien jaar onder onmogelijke deadlines geleverd bij Warner Bros. en Sega. Daarna bouwde ik samen met mijn vrouw Danique een echt bedrijf, waar elke lead ertoe deed omdat het ons eigen geld was. Lead Awaker bestaat omdat ik het probleem zelf heb meegemaakt."
+    "description": "12 jaar digital art geshipped voor producten die samen meer dan $3.3B omzet deden: Warner Bros-films, Sega-titels, Insurgency: Sandstorm. Daarna bouwde ik samen met mijn vrouw Danique een echt bedrijf, waar elke lead ertoe deed omdat het ons eigen geld was. Lead Awaker bestaat omdat ik het probleem zelf heb meegemaakt."
   },
   "credentials": {
     "title": "Het is geen leadprobleem. Het is een lekprobleem.",
-    "subtitle": "Van Hollywood-studio's tot een bedrijf opbouwen vanuit nul. Dezelfde discipline, toegepast op jouw leads.",
+    "subtitle": "Van Oscar-winnende studio's tot AAA-games shippen. Dezelfde discipline, toegepast op jouw leads.",
     "resultsNode": "Echte resultaten.",
     "items": [
       {
-        "metric": "Warner Bros.",
-        "label": "Deadlinebestendige levering",
-        "description": "Productie-assets geleverd voor een Warner Bros. bioscoopfilm op een wereldwijd releaseschema. Als ik zeg dat het klaar is, dan is het klaar."
+        "metric": "Framestore",
+        "label": "Oscar-winnende VFX-studio",
+        "description": "Digital art gemaakt voor Tom & Jerry (Warner Bros, 2021). De film deed $136M wereldwijd. Framestore heeft de Academy Award voor Best Visual Effects gewonnen. Assets komen niet door hun pipeline tenzij ze klaar zijn voor het grote scherm."
       },
       {
         "metric": "Sega",
-        "label": "3 games in 12 maanden",
-        "description": "Digitale assets geleverd voor drie Sega-titels samen met Creative Assembly. Ik bouw systemen die schalen, niet systemen die vastlopen als het druk wordt."
+        "label": "3 AAA-games in 12 maanden",
+        "description": "Digitale assets geleverd voor drie titels bij Creative Assembly, een Sega-studio met een moeder van $3.1B. Drie releases in twaalf maanden is een tempo dat de meesten breekt. Ik bouw systemen die schalen, niet systemen die instorten als het druk wordt."
+      },
+      {
+        "metric": "Embracer Group",
+        "label": "Team geleid, 2 titels geshipped",
+        "description": "Een team geleid bij New World Interactive (nu een studio van Embracer Group) en twee titels geshipped, waaronder Insurgency: Sandstorm. De game heeft meer dan $52M omzet gedaan en heeft zeven jaar na launch nog steeds actieve spelers. Embracer is beursgenoteerd in Stockholm met meer dan 100 studio's in portefeuille. Een team aansturen om op tijd, op niveau en zonder verlies te shippen: dezelfde discipline die ik aan jouw outbound geef."
+      },
+      {
+        "metric": "Valve",
+        "label": "Invite-only VR game jam",
+        "description": "Geselecteerd voor Valve's besloten VR game jam in Londen. Samen gejamd met devs die nu bij Valve, Epic en Ubisoft shippen. Als een team je vertrouwt om iets in 48 uur vanaf nul te bouwen, testen ze niet je output maar je oordeel onder druk."
       },
       {
         "metric": "TA Monks",
         "label": "Een bedrijf vanaf nul gebouwd",
-        "description": "Samen met mijn vrouw Danique een geautomatiseerde trading operatie opgericht. 4 jaar systemen bouwen die zonder toezicht presteren. Lead Awaker draait op hetzelfde principe."
+        "description": "Samen met mijn vrouw Danique een geautomatiseerde trading operatie opgericht. 4 jaar systemen bouwen die zonder toezicht presteren. Lead Awaker draait op hetzelfde principe: als het elke dag mijn hand nodig heeft, is het niet waard om te shippen."
       }
     ],
-    "recognition": "Workshop presentator op Design Week, Universiteit van Rio de Janeiro. Uitgelicht op ZBrush Central en ArtStation."
+    "recognition": "Uitgelicht werk op ZBrush Central (Pixologic) en ArtStation. Workshopspreker op Design Week, Federale Universiteit van Rio de Janeiro. Gepubliceerd profiel in een online design-magazine."
   },
   "cta": {
     "title": "Zie het werken op jouw leads",

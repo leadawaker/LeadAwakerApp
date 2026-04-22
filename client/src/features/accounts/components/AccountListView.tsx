@@ -26,6 +26,7 @@ import { SearchPill } from "@/components/ui/search-pill";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { AccountCreatePanel } from "./AccountCreatePanel";
 import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import type { NewAccountForm } from "./AccountCreateDialog";
@@ -305,6 +306,13 @@ export function AccountListView({
     return () => cancelAnimationFrame(raf);
   }, [selectedAccount]);
 
+  // F shortcut: scroll selected account into view.
+  useFKeyScrollToSelected({
+    containerRef: scrollContainerRef,
+    selectedId: selectedAccount ? getAccountId(selectedAccount) : null,
+    getSelector: (id) => `[data-account-id="${id}"]`,
+  });
+
   // ── Expand-on-hover button constants ────────────────────────────────────────
   const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
   const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
@@ -324,8 +332,8 @@ export function AccountListView({
       )}>
 
         {/* Header: title + 309px wrapper with ViewTabBar */}
-        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
-          <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
+        <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+          <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
             <ViewTabBar
               tabs={viewTabs}
@@ -337,9 +345,10 @@ export function AccountListView({
         </div>
 
         {/* ── List toolbar: search + sort + filter + group + add ── */}
-        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+        <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
           {/* Search */}
           <SearchPill
+            className="ml-[9px] max-w-[149px]"
             value={listSearch}
             onChange={onListSearchChange}
             open={searchOpen}

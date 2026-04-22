@@ -136,7 +136,7 @@ function EmailCard({
   return (
     <div
       className={cn(
-        "group rounded-xl border bg-card transition-shadow duration-150 overflow-hidden",
+        "group rounded-xl border border-border/60 bg-white dark:bg-slate-900 shadow-sm transition-shadow duration-150 overflow-hidden",
         isSelected && "ring-1 ring-brand-indigo/30 bg-highlight-selected",
       )}
     >
@@ -453,7 +453,7 @@ export function InteractionTimeline({ prospectId, onReply }: InteractionTimeline
   return (
     <div className="flex flex-col h-full">
       {/* Top action bar */}
-      <div className="shrink-0 flex items-center gap-2 px-5 py-3 border-b border-border/20">
+      <div className="shrink-0 flex items-center gap-2 px-5 py-3 border-b border-border/20 bg-white dark:bg-slate-900">
         <button
           onClick={() => setShowAddForm((v) => !v)}
           className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-brand-indigo text-brand-indigo text-[12px] font-medium transition-colors duration-150 hover:bg-brand-indigo/5"
@@ -475,12 +475,12 @@ export function InteractionTimeline({ prospectId, onReply }: InteractionTimeline
 
       {/* Add form */}
       {showAddForm && (
-        <div className="shrink-0 border-b border-border/20 px-5 py-4 bg-muted/30">
+        <div className="shrink-0 border-b border-border/20 px-5 py-4 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-2 mb-3">
             <select
               value={formType}
               onChange={(e) => setFormType(e.target.value as typeof INTERACTION_TYPES[number])}
-              className="h-9 rounded-lg border border-border bg-card px-2.5 text-[12px] font-medium"
+              className="h-9 rounded-lg border border-border/60 bg-white dark:bg-slate-900 px-2.5 text-[12px] font-medium"
             >
               {INTERACTION_TYPES.map((typ) => (
                 <option key={typ} value={typ}>
@@ -492,7 +492,7 @@ export function InteractionTimeline({ prospectId, onReply }: InteractionTimeline
             <select
               value={formDirection}
               onChange={(e) => setFormDirection(e.target.value as typeof DIRECTIONS[number])}
-              className="h-9 rounded-lg border border-border bg-card px-2.5 text-[12px] font-medium"
+              className="h-9 rounded-lg border border-border/60 bg-white dark:bg-slate-900 px-2.5 text-[12px] font-medium"
             >
               {DIRECTIONS.map((dir) => (
                 <option key={dir} value={dir}>
@@ -507,7 +507,7 @@ export function InteractionTimeline({ prospectId, onReply }: InteractionTimeline
             onChange={(e) => setFormContent(e.target.value)}
             placeholder={t("slidePanel.interactionContentPlaceholder")}
             rows={3}
-            className="w-full text-[12px] bg-card border border-border rounded-lg px-3 py-2 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/25 leading-relaxed"
+            className="w-full text-[12px] bg-white dark:bg-slate-900 border border-border/60 rounded-lg px-3 py-2 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/25 leading-relaxed"
           />
 
           <div className="flex items-center gap-2 mt-2">
@@ -656,7 +656,7 @@ function EmailThread({
   if (collapsed) {
     return (
       <div
-        className="group rounded-xl border bg-card p-3 cursor-pointer transition-shadow duration-150 hover:shadow-sm"
+        className="group rounded-xl border border-border/60 bg-white dark:bg-slate-900 shadow-sm p-3 cursor-pointer transition-shadow duration-150 hover:shadow-md"
         onClick={() => setCollapsed(false)}
       >
         <div className="flex items-center gap-3">
@@ -761,10 +761,19 @@ function GenericInteractionCard({
   const badge = getTypeBadgeStyle(item.type);
   const typeLabel = t(`slidePanel.interactionType.${item.type}`, item.type);
 
+  const iconColors: Record<string, { bg: string; icon: string }> = {
+    email: { bg: "bg-blue-100 dark:bg-blue-900/30", icon: "text-blue-600 dark:text-blue-400" },
+    whatsapp: { bg: "bg-green-100 dark:bg-green-900/30", icon: "text-green-600 dark:text-green-400" },
+    call: { bg: "bg-purple-100 dark:bg-purple-900/30", icon: "text-purple-600 dark:text-purple-400" },
+    sms: { bg: "bg-emerald-100 dark:bg-emerald-900/30", icon: "text-emerald-600 dark:text-emerald-400" },
+    note: { bg: "bg-amber-100 dark:bg-amber-900/30", icon: "text-amber-600 dark:text-amber-400" },
+  };
+  const iconColor = iconColors[item.type] ?? { bg: "bg-muted", icon: "text-foreground/50" };
+
   return (
     <div
       className={cn(
-        "group flex items-start gap-3 rounded-xl border bg-card p-3 transition-shadow duration-150",
+        "group flex items-start gap-3 rounded-xl border border-border/60 bg-white dark:bg-slate-900 shadow-sm p-3 transition-shadow duration-150",
         isSelected && "ring-1 ring-brand-indigo/30 bg-highlight-selected",
       )}
     >
@@ -779,8 +788,8 @@ function GenericInteractionCard({
       </label>
 
       {/* Direction icon */}
-      <div className="shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center mt-0.5">
-        <Icon className="h-4 w-4 text-foreground/50" />
+      <div className={cn("shrink-0 h-8 w-8 rounded-full flex items-center justify-center mt-0.5", iconColor.bg)}>
+        <Icon className={cn("h-4 w-4", iconColor.icon)} />
       </div>
 
       {/* Content */}
@@ -811,7 +820,7 @@ function GenericInteractionCard({
               value={editContent}
               onChange={(e) => onEditContentChange(e.target.value)}
               rows={3}
-              className="w-full text-[12px] bg-card border border-border rounded-lg px-3 py-2 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/25 leading-relaxed"
+              className="w-full text-[12px] bg-white dark:bg-slate-900 border border-border/60 rounded-lg px-3 py-2 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/25 leading-relaxed"
             />
             <div className="flex items-center gap-2 mt-2">
               <button

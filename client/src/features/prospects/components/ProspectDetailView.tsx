@@ -11,7 +11,6 @@ import { EmailComposeModal } from "./EmailComposeModal";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { useTranslation } from "react-i18next";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -682,6 +681,10 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
                     </span>
                   );
                 })()}
+                {/* Prospect ID */}
+                {prospectId > 0 && (
+                  <span className="text-[11px] text-muted-foreground font-medium">#{prospectId}</span>
+                )}
                 {/* Convert to Account / Linked Account badge */}
                 {!isEditing && (
                   prospect.status !== "Converted" && !prospect.Accounts_id ? (
@@ -707,7 +710,6 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
                     {isEditing ? draft.company : prospect.company}
                   </span>
                 )}
-                <span className="text-[11px] text-foreground/40">#{prospectId}</span>
               </div>
             </div>
           </div>

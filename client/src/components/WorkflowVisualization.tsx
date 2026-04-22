@@ -218,33 +218,33 @@ export default function WorkflowVisualization() {
         }
       `}</style>
 
-      <div className="relative w-[calc(100vw-4rem)] md:w-[1200px] h-auto md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-900 border border-gray-300/50 dark:border-zinc-700/50 rounded-3xl overflow-visible shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-12 py-12 md:py-0 space-y-24 md:space-y-0 -mx-4 md:mx-0">
+      <div className="relative w-full max-w-7xl h-auto md:h-[380px] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-900 border border-gray-300/50 dark:border-zinc-700/50 rounded-3xl overflow-visible shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-12 py-12 md:py-0 space-y-24 md:space-y-0">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <line x1="50%" y1="calc(12.5% + 64px)" x2="50%" y2="calc(50% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
           <line x1="50%" y1="calc(50% + 64px)" x2="50%" y2="calc(87.5% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
-          <line 
-            x1="calc(50% - 160px - 32px)" 
-            y1="50%" 
-            x2="calc(50% - 160px + 32px)" 
-            y2="50%" 
-            stroke="#d1d5db" 
-            strokeWidth="2" 
-            className={`hidden md:block ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} 
+          <line
+            x1="calc(50% - 224px)"
+            y1="50%"
+            x2="calc(50% - 160px)"
+            y2="50%"
+            stroke="#d1d5db"
+            strokeWidth="2"
+            className={`hidden md:block ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`}
           />
-          <line 
-            x1="calc(50% + 160px - 32px)" 
-            y1="50%" 
-            x2="calc(50% + 160px + 32px)" 
-            y2="50%" 
-            stroke="#d1d5db" 
-            strokeWidth="2" 
-            className={`hidden md:block ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} 
+          <line
+            x1="calc(50% + 160px)"
+            y1="50%"
+            x2="calc(50% + 224px)"
+            y2="50%"
+            stroke="#d1d5db"
+            strokeWidth="2"
+            className={`hidden md:block ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`}
           />
         </svg>
 
         <div className="connector-wrapper relative z-10">
           <div className={`connector-dot right-side ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
-          <div className={`relative bg-white dark:bg-zinc-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 card-active-amber', 'border-gray-200 dark:border-zinc-700', 'border-gray-200 dark:border-zinc-700')} shadow-[0_8px_30px_rgba(0,0,0,0.2)]`}>
+          <div className={`relative bg-white dark:bg-zinc-900 border-2 rounded-xl p-6 w-80 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 card-active-amber', 'border-gray-200 dark:border-zinc-700', 'border-gray-200 dark:border-zinc-700')} shadow-[0_8px_30px_rgba(0,0,0,0.2)]`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -254,11 +254,11 @@ export default function WorkflowVisualization() {
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'contact' ? 'bg-amber-100' : 'bg-amber-50/50'}`}>
-                <User className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`} />
+                <User className={`w-6 h-6 transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`} />
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}>{t('contact.title')}</h3><p className="text-[10px] text-gray-400 dark:text-zinc-500 text-left font-semibold uppercase tracking-wider">{t('contact.name')}</p></div>
+              <div><h3 className={`font-bold text-base transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}>{t('contact.title')}</h3><p className="text-xs text-gray-400 dark:text-zinc-500 text-left font-semibold uppercase tracking-wider">{t('contact.name')}</p></div>
             </div>
-            <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-2 border border-gray-300 dark:border-zinc-600 text-[10px] font-mono flex items-center justify-between">
+            <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-2 border border-gray-300 dark:border-zinc-600 text-sm font-mono flex items-center justify-between">
               <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>{t('contact.statusLabel')}</span>
               <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700 dark:text-zinc-300' : 'text-gray-400 dark:text-zinc-500'}`}>{getContactStatus()}</span>
             </div>
@@ -268,7 +268,7 @@ export default function WorkflowVisualization() {
         <div className="connector-wrapper relative z-10">
           <div className={`connector-dot left-side ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'visited-purple' : ''}`} />
           <div className={`connector-dot right-side ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'visited-purple' : ''}`} />
-          <div className={`relative bg-white dark:bg-zinc-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 card-active-purple', 'border-gray-200 dark:border-zinc-700', 'border-gray-200 dark:border-zinc-700')} shadow-[0_8px_30px_rgba(0,0,0,0.2)]`}>
+          <div className={`relative bg-white dark:bg-zinc-900 border-2 rounded-xl p-6 w-80 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 card-active-purple', 'border-gray-200 dark:border-zinc-700', 'border-gray-200 dark:border-zinc-700')} shadow-[0_8px_30px_rgba(0,0,0,0.2)]`}>
             <div className="node-glow-layer" />
             {activeNode === 'agent' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -278,11 +278,11 @@ export default function WorkflowVisualization() {
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'agent' ? 'bg-purple-100' : (visitedNodes.has('agent') ? 'bg-purple-50/50' : 'bg-gray-50/50')}`}>
-                <Bot className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`} />
+                <Bot className={`w-6 h-6 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`} />
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}>{t('agent.title')}</h3><p className="text-[10px] text-gray-400 dark:text-zinc-500 text-left font-semibold uppercase tracking-wider">{t('agent.model')}</p></div>
+              <div><h3 className={`font-bold text-base transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}>{t('agent.title')}</h3><p className="text-xs text-gray-400 dark:text-zinc-500 text-left font-semibold uppercase tracking-wider">{t('agent.model')}</p></div>
             </div>
-            <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-2 border border-gray-300 dark:border-zinc-600 text-[10px] h-[34px] flex items-center overflow-hidden justify-between">
+            <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-2 border border-gray-300 dark:border-zinc-600 text-sm h-[40px] flex items-center overflow-hidden justify-between">
               <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`}>{t('agent.outputLabel')}</span>
               <span className={`truncate font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-700 dark:text-zinc-300' : 'text-gray-400 dark:text-zinc-500'}`}>
                 {getAgentOutput()}
@@ -293,7 +293,7 @@ export default function WorkflowVisualization() {
 
         <div className="connector-wrapper relative z-10">
           <div className={`connector-dot left-side ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-blue') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-blue' : ''))}`} />
-          <div className={`relative bg-white dark:bg-zinc-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.2)] ${isApproved ? 'border-emerald-500 card-active-emerald' : getStatusColor('guardrails', 'border-[#526fff] card-active-blue', 'border-gray-200 dark:border-zinc-700', 'border-gray-200 dark:border-zinc-700')}`}>
+          <div className={`relative bg-white dark:bg-zinc-900 border-2 rounded-xl p-6 w-80 transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.2)] ${isApproved ? 'border-emerald-500 card-active-emerald' : getStatusColor('guardrails', 'border-[#526fff] card-active-blue', 'border-gray-200 dark:border-zinc-700', 'border-gray-200 dark:border-zinc-700')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -304,13 +304,13 @@ export default function WorkflowVisualization() {
             <div className="flex items-center gap-3 mb-4">
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'guardrails' ? (isApproved ? 'bg-emerald-100' : 'bg-blue-50') : 'bg-gray-50/50'}`}>
                 {isApproved ? 
-                  <CheckCircle2 className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' || isApproved ? 'text-emerald-600' : 'text-gray-400/60'}`} /> : 
-                  <Shield className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-[#526fff]' : 'text-gray-400/60'}`} />
+                  <CheckCircle2 className={`w-6 h-6 transition-colors duration-300 ${activeNode === 'guardrails' || isApproved ? 'text-emerald-600' : 'text-gray-400/60'}`} /> : 
+                  <Shield className={`w-6 h-6 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-[#526fff]' : 'text-gray-400/60'}`} />
                 }
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}>{t('guardrails.title')}</h3><p className="text-[10px] text-gray-400 dark:text-zinc-500 text-left font-semibold uppercase tracking-wider">{t('guardrails.subtitle')}</p></div>
+              <div><h3 className={`font-bold text-base transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}>{t('guardrails.title')}</h3><p className="text-xs text-gray-400 dark:text-zinc-500 text-left font-semibold uppercase tracking-wider">{t('guardrails.subtitle')}</p></div>
             </div>
-            <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-2 border border-gray-300 dark:border-zinc-600 text-[10px] h-[34px] flex items-center justify-between">
+            <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-2 border border-gray-300 dark:border-zinc-600 text-sm h-[40px] flex items-center justify-between">
               <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-[#526fff]') : 'text-gray-400/60'}`}>{t('guardrails.statusLabel')}</span>
               <span className={`truncate font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700 dark:text-zinc-300' : 'text-gray-400 dark:text-zinc-500'}`}>{guardrailsStatus}</span>
             </div>

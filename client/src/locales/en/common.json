@@ -1,11 +1,11 @@
 {
   "nav": {
     "home": "Home",
-    "services": "Use Cases",
+    "try": "Try",
     "about": "About",
     "login": "Login",
     "openApp": "Open App",
-    "bookDemo": "Book a Demo"
+    "bookDemo": "Book a Call"
   },
   "footer": {
     "company": "Company",
@@ -16,7 +16,7 @@
     "terms": "Terms of Service"
   },
   "cta": {
-    "bookDemo": "Book a Demo",
+    "bookDemo": "Book a Call",
     "learnMore": "Learn More",
     "getStarted": "Get Started",
     "contactUs": "Contact Us"
@@ -27,5 +27,12 @@
   },
   "animation": {
     "yourBrand": "Your Brand"
+  },
+  "bubble": {
+    "tryDemo": "Try the AI demo",
+    "chatFounder": "Chat with the founder",
+    "founderPrefill": "Hey Gabriel, I'd like to know more about Lead Awaker.",
+    "ariaOpen": "Open WhatsApp contact menu",
+    "ariaClose": "Close WhatsApp contact menu"
   }
 }

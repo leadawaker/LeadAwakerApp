@@ -128,6 +128,216 @@ export function DemoLinkButton({
   );
 }
 
+// ── WhatsApp Demo Link Button ─────────────────────────────────────────────────
+// Generates a pre-filled WhatsApp demo link for a demo campaign. Opens a small
+// form for the prospect's name + language, calls the admin endpoint which
+// pre-creates a pending Lead, then displays + copies the wa.me link.
+
+export function WhatsAppDemoLinkButton({
+  campaign,
+}: {
+  campaign: Campaign;
+}) {
+  const [open, setOpen] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [language, setLanguage] = useState<"en" | "nl" | "pt">("en");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const campaignId = (campaign.id || (campaign as any).Id) as number;
+  const isDemo = (campaign as any).is_demo || (campaign as any).isDemo;
+  if (!isDemo) return null;
+
+  const reset = () => {
+    setFirstName("");
+    setLanguage("en");
+    setLink(null);
+    setError(null);
+    setCopied(false);
+  };
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName.trim()) {
+      setError("Fill in the prospect's first name.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/demo/create-link", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          language,
+          campaignId,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Could not create link.");
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
+      setLink(data.whatsappUrl);
+      try {
+        await navigator.clipboard.writeText(data.whatsappUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // Clipboard may be blocked; user can still copy manually.
+      }
+    } catch {
+      setError("Network error. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => { reset(); setOpen(true); }}
+        className={cn(xBase, "hover:max-w-[180px]", xDefault)}
+        title="Generate a pre-filled WhatsApp demo link for this campaign"
+      >
+        <LinkIcon className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>WhatsApp Link</span>
+      </button>
+
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>WhatsApp Demo Link</DialogTitle>
+          </DialogHeader>
+
+          {!link ? (
+            <form onSubmit={handleGenerate} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Personalize the demo for a specific prospect. They get a one-tap WhatsApp link with their session already primed.
+              </p>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Prospect first name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="João"
+                  className="w-full px-3 py-2 text-sm rounded-md border border-black/[0.125] bg-white text-gray-900"
+                  maxLength={80}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Language</label>
+                <div className="flex gap-2">
+                  {(["en", "nl", "pt"] as const).map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => setLanguage(l)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-md border text-sm font-medium transition",
+                        language === l
+                          ? "border-brand-indigo bg-brand-indigo text-white"
+                          : "border-black/[0.125] bg-white text-gray-900 hover:bg-muted/50",
+                      )}
+                    >
+                      {l.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="h-9 px-4 rounded-full text-muted-foreground text-sm hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="h-9 px-4 rounded-full bg-brand-indigo text-white font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
+                  {loading ? "Generating…" : "Generate link"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Share this link with <span className="font-semibold text-foreground">{firstName}</span>. It auto-copied to your clipboard.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={link}
+                  readOnly
+                  className="flex-1 px-3 py-2 text-sm border border-black/[0.125] rounded-md bg-muted/50 font-mono"
+                />
+                <button
+                  onClick={handleCopy}
+                  className="h-9 px-4 rounded-full bg-brand-indigo text-white font-medium text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Link expires in 2 hours if the prospect doesn't click. Campaign ID: <span className="font-mono font-semibold">{campaignId}</span>
+              </p>
+              <div className="flex justify-between pt-2">
+                <button
+                  onClick={reset}
+                  className="h-9 px-4 rounded-full text-muted-foreground text-sm hover:text-foreground transition-colors"
+                >
+                  Generate another
+                </button>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="h-9 px-4 rounded-full bg-muted text-foreground text-sm hover:bg-muted/80 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 // ── Empty state ───────────────────────────────────────────────────────────────
 
 export function CampaignDetailViewEmpty({ compact = false }: { compact?: boolean }) {

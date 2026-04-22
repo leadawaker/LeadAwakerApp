@@ -6,12 +6,16 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
+import { useListPanelState } from "@/hooks/useListPanelState";
+import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCampaigns } from "@/hooks/useApiData";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Plus, Settings, Zap, Cpu } from "lucide-react";
 import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
+import { fetchProspectsByIds } from "@/features/prospects/api/prospectsApi";
 import { InboxPanel, type ChatGroupBy, type ChatSortBy, type InboxTab } from "@/features/conversations/components/InboxPanel";
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ProspectChatPanel } from "@/features/conversations/components/ProspectChatPanel";
@@ -23,10 +27,6 @@ import { AgentSettingsSheet } from "@/features/ai-agents/components/AgentSetting
 import { ModelSwitcher } from "@/features/ai-agents/components/ModelSwitcher";
 import { ThinkingToggle } from "@/features/ai-agents/components/ThinkingToggle";
 import { useAgentChat } from "@/features/ai-agents/hooks/useAgentChat";
-import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
-import { FounderInbox } from "@/components/crm/FounderInbox";
-import { useSupportChat } from "@/hooks/useSupportChat";
-import { useFounderChat } from "@/hooks/useFounderChat";
 import { apiFetch } from "@/lib/apiUtils";
 import { useChatDoodle } from "@/hooks/useChatDoodle";
 import { useTheme } from "@/hooks/useTheme";
@@ -98,17 +98,20 @@ export default function ConversationsPage() {
     if (inThreads) {
       setUncontactedProspect(null);
     } else {
-      // Prospect has no messages yet — look up their data from the all-prospects cache
-      const cached = queryClient.getQueryData<any[]>(["/api/prospects"]);
-      const found = cached?.find((p: any) => (p.id ?? p.Id) === prospectId);
-      if (found) {
-        setUncontactedProspect({
-          id: prospectId,
-          name: found.contact_name || found.contactName || found.company || found.name || "Unknown",
-          company: found.company || found.name || "",
-          phone: found.contact_phone || found.contactPhone || found.phone || null,
-        });
-      }
+      // Prospect has no messages yet — fetch their data on demand
+      fetchProspectsByIds([prospectId])
+        .then((items) => {
+          const found = items[0];
+          if (found) {
+            setUncontactedProspect({
+              id: prospectId,
+              name: found.contact_name || found.contactName || found.company || found.name || "Unknown",
+              company: found.company || found.name || "",
+              phone: found.contact_phone || found.contactPhone || found.phone || null,
+            });
+          }
+        })
+        .catch(() => { /* Swallow: uncontacted banner stays empty */ });
     }
   };
 
@@ -268,7 +271,19 @@ export default function ConversationsPage() {
     });
   }, []);
 
-  const [showContactPanel, setShowContactPanel] = useState(true);
+  const [showContactPanel, setShowContactPanel] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem("conversations-show-contact-panel");
+      return v === null ? false : v === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("conversations-show-contact-panel", showContactPanel ? "1" : "0");
+    } catch {}
+  }, [showContactPanel]);
 
   const effectiveAccountId = useMemo(() => {
     if (!isAgencyUser) return currentAccountId;
@@ -279,7 +294,7 @@ export default function ConversationsPage() {
   const { threads, loading, error, sending, handleSend, handleToggleTakeover, handleUpdateLead, handleRetry, refresh } = useConversationsData(
     effectiveAccountId,
     campaignId,
-    tab === "support" || tab === "prospects" ? "all" : tab,
+    tab === "prospects" ? "all" : tab,
     searchQuery,
     "all",
     "newest",
@@ -306,31 +321,7 @@ export default function ConversationsPage() {
     staleTime: 60_000,
   });
 
-  // ── Support chat (inline mode) ─────────────────────────────────────────────
   const isAdmin = localStorage.getItem("leadawaker_user_role") === "Admin";
-  const {
-    messages: supportMessages,
-    sending: supportSending,
-    loading: supportLoading,
-    escalated: supportEscalated,
-    botConfig: supportBotConfig,
-    initialize: supportInitialize,
-    sendMessage: supportSendMessage,
-    closeSession: supportCloseSession,
-    updateBotConfig: supportUpdateBotConfig,
-    clearContext: supportClearContext,
-    notifyOpen: supportNotifyOpen,
-  } = useSupportChat();
-  const founderChat = useFounderChat();
-  const [showFounderInbox, setShowFounderInbox] = useState(false);
-
-  // Auto-open founder chat when navigated from sidebar "Message Gabriel" button
-  // (temporarily disabled for debugging)
-
-  // Mark support chat as "open" when the support tab is visible
-  useEffect(() => {
-    supportNotifyOpen(tab === "support");
-  }, [tab, supportNotifyOpen]);
 
   const handleAccountChange = (id: number | "all") => {
     setFilterAccountId(id);
@@ -421,8 +412,15 @@ export default function ConversationsPage() {
     [accounts],
   );
 
-  const isSupport = tab === "support";
+  const isSupport = false;
   const isProspects = tab === "prospects";
+
+  // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
+  // Chat panel tolerates narrower widths than detail panels, so auto-compact kicks in later.
+  const { ref: chatPanelAreaRef, narrow: chatPanelNarrow } = useCompactPanelState(false, { activateBelow: 720, deactivateAbove: 960 });
+  const { state: chatsListPanelState } = useListPanelState();
+  const isChatsListCompact = chatsListPanelState === "compact" || (chatsListPanelState === "full" && chatPanelNarrow);
+  const isChatsListHidden = chatsListPanelState === "hidden";
 
   return (
     <CrmShell>
@@ -460,11 +458,9 @@ export default function ConversationsPage() {
               ? (chatAgent?.name ?? aiAgents.find(a => a.id === selectedAgentId)?.name ?? "AI Agent")
               : mobileView === "chat" && isProspects && selectedProspectId
               ? (prospectThreads.find(p => p.prospect_id === selectedProspectId)?.company || "Prospect")
-              : mobileView === "chat" && selected && !isSupport && !isProspects
+              : mobileView === "chat" && selected && !isProspects
               ? selected.lead.full_name ||
                 `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
-              : isSupport
-              ? supportBotConfig.name
               : isProspects
               ? "Prospects"
               : t("page.title")}
@@ -533,12 +529,6 @@ export default function ConversationsPage() {
                 isAgencyUser={isAgencyUser}
                 onClearAll={handleClearFilters}
                 onRefresh={refresh}
-                supportBotConfig={supportBotConfig}
-                onSelectSupport={() => {
-                  setSelectedAgentId(null);
-                  setShowFounderInbox(false);
-                  setMobileView("chat");
-                }}
                 onSearchChange={setSearchQuery}
                 aiAgents={isAgencyUser ? aiAgents : []}
                 selectedAgentId={selectedAgentId}
@@ -551,12 +541,6 @@ export default function ConversationsPage() {
                 prospectThreads={prospectThreads}
                 selectedProspectId={selectedProspectId}
                 onSelectProspect={handleSelectProspect}
-                showFounderInbox={showFounderInbox}
-                onToggleFounderInbox={() => {
-                  setShowFounderInbox(true);
-                  setSelectedAgentId(null);
-                  setMobileView("chat");
-                }}
                 clientAccounts={clientAccounts}
                 allCampaigns={allCampaigns}
                 onSetGroupBy={setGroupBy}
@@ -570,9 +554,13 @@ export default function ConversationsPage() {
                 onSearchOpenChange={setSearchOpen}
                 filterOpen={filterOpen}
                 onFilterOpenChange={setFilterOpen}
+                listPanelState={isChatsListHidden ? "hidden" : isChatsListCompact ? "compact" : "full"}
                 className={cn(
-                  "w-full lg:w-[340px] lg:flex-shrink-0",
-                  mobileView === "chat" ? "hidden lg:flex" : "flex"
+                  isChatsListHidden
+                    ? cn(mobileView === "chat" ? "hidden" : "flex", "lg:hidden")
+                    : isChatsListCompact
+                      ? cn("w-[65px] lg:flex-shrink-0", mobileView === "chat" ? "hidden lg:flex" : "flex")
+                      : cn("w-full lg:w-[340px] lg:flex-shrink-0", mobileView === "chat" ? "hidden lg:flex" : "flex")
                 )}
                 data-testid="mobile-inbox-panel"
               />
@@ -580,45 +568,14 @@ export default function ConversationsPage() {
 
             {/* Right panel — single persistent container, all views toggled via CSS to prevent layout reflow */}
               <div
+                ref={chatPanelAreaRef}
                 className={cn(
-                  "flex-1 min-w-0 flex flex-col overflow-hidden",
+                  "relative flex-1 min-w-0 flex flex-col overflow-hidden",
                   mobileView === "inbox" ? "hidden lg:flex" : "flex"
                 )}
                 data-testid="mobile-chat-panel"
                 data-onboarding="conversations-chat"
               >
-                {/* Support chat or Founder inbox — visible on support tab when no agent selected */}
-                <div className={cn("flex-1 min-h-0 flex flex-col", isSupport && !isAgentSelected ? "flex" : "hidden")}>
-                  {isAdmin && showFounderInbox ? (
-                    <FounderInbox />
-                  ) : (
-                    <SupportChatWidget
-                      mode="inline"
-                      messages={supportMessages}
-                      sending={supportSending}
-                      loading={supportLoading}
-                      escalated={supportEscalated}
-                      botConfig={supportBotConfig}
-                      initialize={supportInitialize}
-                      sendMessage={supportSendMessage}
-                      closeSession={supportCloseSession}
-                      updateBotConfig={supportUpdateBotConfig}
-                      clearContext={supportClearContext}
-                      isAdmin={isAdmin}
-                      onClose={() => setTab("all")}
-                      founderChat={{
-                        messages: founderChat.messages as any,
-                        sending: founderChat.sending,
-                        loading: founderChat.loading,
-                        initialize: founderChat.initialize,
-                        sendMessage: founderChat.sendMessage,
-                        closeSession: founderChat.closeSession,
-                        clearContext: founderChat.clearContext,
-                      }}
-                    />
-                  )}
-                </div>
-
                 {/* Prospect chat panel — visible on prospects tab when a prospect is selected */}
                 <div className={cn("flex-1 min-h-0 flex flex-col", isProspects && selectedProspectId && !isAgentSelected ? "flex" : "hidden")}>
                   {selectedProspectId && (() => {
@@ -773,6 +730,7 @@ export default function ConversationsPage() {
                     localStorage.setItem("leads-view-mode", "list");
                     setLocation(`${basePath}/contacts`);
                   }}
+                  headerActions={<ListPanelToggleButton />}
                   className={cn("flex-1 min-w-0", !isSupport && !isProspects && !isAgentSelected ? "flex" : "hidden")}
                 />
               </div>
@@ -802,3 +760,4 @@ export default function ConversationsPage() {
     </CrmShell>
   );
 }
+

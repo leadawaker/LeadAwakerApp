@@ -1221,7 +1221,7 @@ export default function PromptLibraryPage() {
           <div className="w-full md:w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
 
             {/* Title + controls (single row) */}
-            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+            <div className="pl-[17px] pr-[3px] pt-10 pb-3 shrink-0 flex items-center">
               <div className="flex items-center justify-between w-[309px] shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
                   {t("page.library")}

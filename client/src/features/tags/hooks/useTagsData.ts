@@ -59,7 +59,7 @@ export function useTagsData() {
 
   // Auto-refresh on SSE tags_changed events
   useEffect(() => {
-    const debounceRef = { current: 0 as ReturnType<typeof setTimeout> };
+    const debounceRef = { current: 0 as unknown as ReturnType<typeof setTimeout> };
     const url = `/api/interactions/stream`;
     const es = new EventSource(url, { withCredentials: true });
     es.addEventListener("tags_changed", () => {

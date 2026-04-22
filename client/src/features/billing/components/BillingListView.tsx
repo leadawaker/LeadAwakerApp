@@ -66,6 +66,7 @@ import { ContractsInlineTable, CONTRACT_FIELD_DEFS, ALL_CONTRACT_COLS, DEFAULT_C
 import { ExpensesListView, useExpensesData } from "./ExpensesListView";
 import { ExpenseDetailView, ExpenseDetailViewEmpty } from "./ExpenseDetailView";
 import { ExpenseCreatePanel } from "./ExpenseCreatePanel";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -379,7 +380,25 @@ export function BillingListView({
 
   // Responsive toolbar state
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const billingScrollRef = useRef<HTMLDivElement>(null);
   const [isNarrow, setIsNarrow] = useState(false);
+
+  // F shortcut: scroll selected invoice/contract/expense into view (depends on active tab).
+  const billingSelectedId = activeTab === "invoices"
+    ? (selectedInvoice?.id ?? null)
+    : activeTab === "contracts"
+      ? (selectedContract?.id ?? null)
+      : (selectedExpenseId ?? null);
+  const billingSelector = activeTab === "invoices"
+    ? "data-invoice-id"
+    : activeTab === "contracts"
+      ? "data-contract-id"
+      : "data-expense-id";
+  useFKeyScrollToSelected({
+    containerRef: billingScrollRef,
+    selectedId: billingSelectedId,
+    getSelector: (id) => `[${billingSelector}="${id}"]`,
+  });
 
   // ── Gradient tester state ──────────────────────────────────────────────────
   const GRADIENT_KEY = "la:gradient:billing";
@@ -828,8 +847,8 @@ export function BillingListView({
   // ── Left panel header (list mode) — 309px wrapper ─────────────────────────
 
   const leftPanelHeader = (
-    <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
-      <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
+    <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+      <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
         <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
         <div className="flex items-center gap-2">
           {billingTabButtons}
@@ -892,9 +911,10 @@ export function BillingListView({
   // ── Left panel list-mode toolbar (Search + Sort + Filter + Date + Group + Create) ──
 
   const leftPanelToolbar = (
-    <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+    <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
       {/* Search */}
       <SearchPill
+        className="ml-[9px] max-w-[149px]"
         value={isExpensesTab ? expenseSearch : listSearch}
         onChange={(v) => isExpensesTab ? setExpenseSearch(v) : setListSearch(v)}
         open={isExpensesTab ? expenseSearchOpen : searchOpen}
@@ -1136,7 +1156,7 @@ export function BillingListView({
   const cardList = (
     <>
       {/* Card list */}
-      <div className="flex-1 overflow-y-auto p-[3px]">
+      <div ref={billingScrollRef} className="flex-1 overflow-y-auto p-[3px]">
         {isLoading ? (
           <ListSkeleton />
         ) : flatItems.length === 0 ? (
@@ -1166,7 +1186,7 @@ export function BillingListView({
               if (item.kind === "invoice") {
                 const isSelected = effectiveSelectedInvoice?.id === item.invoice.id && rightPanelMode === "view";
                 return (
-                  <div key={item.invoice.id || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
+                  <div key={item.invoice.id || idx} data-invoice-id={item.invoice.id} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                     <InvoiceCard
                       invoice={item.invoice}
                       isSelected={isSelected}
@@ -1177,7 +1197,7 @@ export function BillingListView({
               }
               const isSelected = selectedContract?.id === item.contract.id;
               return (
-                <div key={item.contract.id || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
+                <div key={item.contract.id || idx} data-contract-id={item.contract.id} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                   <ContractCard
                     contract={item.contract}
                     isSelected={isSelected}
@@ -1873,8 +1893,8 @@ export function BillingListView({
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-muted">
 
             {/* Title + billing tabs (same 309px wrapper as list mode) + table toolbar */}
-            <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-              <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
+            <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
                 {billingTabButtons}
               </div>

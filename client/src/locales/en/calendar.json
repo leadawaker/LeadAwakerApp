@@ -52,6 +52,15 @@
     "today": "Today",
     "goToToday": "Go to today"
   },
+  "a11y": {
+    "sortAscending": "Sort ascending",
+    "sortDescending": "Sort descending"
+  },
+  "errors": {
+    "failedToLoad": "Could not load appointments.",
+    "retry": "Retry",
+    "rescheduleFailed": "Reschedule failed."
+  },
   "dateGroups": {
     "past": "Past",
     "today": "Today",

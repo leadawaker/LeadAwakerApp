@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, CircleStop, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Camera, Brain, Terminal, Search, FileCode, Globe, MousePointerClick } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Brain, Terminal, Search, FileCode, Globe, MousePointerClick, Lock, LockOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -347,12 +347,31 @@ function MessageBubble({
           )}
           <div className="flex flex-col gap-1">
             {isUser ? (
-              <div className="flex items-end gap-1.5">
-                <span className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0">{displayContent}</span>
-                {time && (
-                  <span className="shrink-0 text-[11px] leading-none select-none opacity-50 mb-0.5">{time}</span>
-                )}
-              </div>
+              (() => {
+                const selMatch = displayContent.match(/\n\n> 📍 \*\*(.+?)\*\*(?:\s"(.*?)")?(?:\n<sub>(.*?)<\/sub>)?\s*$/);
+                const userText = selMatch ? displayContent.slice(0, selMatch.index).trimEnd() : displayContent;
+                const selLabel = selMatch?.[1];
+                const selSnippet = selMatch?.[2];
+                return (
+                  <div className="flex flex-col gap-1.5">
+                    {selMatch && (
+                      <div className="inline-flex items-center gap-1.5 self-start px-2 py-1 bg-violet-100/80 dark:bg-violet-900/30 border border-violet-300/60 dark:border-violet-700/60 rounded-md text-violet-900 dark:text-violet-200 max-w-full">
+                        <MousePointerClick className="h-3 w-3 shrink-0" />
+                        <span className="font-mono text-[10px] font-semibold shrink-0">{selLabel}</span>
+                        {selSnippet && (
+                          <span className="truncate text-[10px] opacity-75">"{selSnippet}"</span>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-end gap-1.5">
+                      <span className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0">{userText}</span>
+                      {time && (
+                        <span className="shrink-0 text-[11px] leading-none select-none opacity-50 mb-0.5">{time}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               <div className="agent-markdown-content min-w-0 overflow-hidden">
                 <MarkdownRenderer content={displayContent} />
@@ -436,6 +455,8 @@ export function AgentChatView({
   fullPage,
   selectedElement,
   onClearElement,
+  selectionLocked,
+  onToggleSelectionLock,
 }: {
   agent: AiAgent;
   messages: AgentMessage[];
@@ -452,9 +473,12 @@ export function AgentChatView({
   onAbort?: () => void;
   fullPage?: boolean;
   selectedElement?: SelectedElementInfo | null;
+  selectionLocked?: boolean;
+  onToggleSelectionLock?: () => void;
   onClearElement?: () => void;
 }) {
   const [input, setInput] = useState("");
+  const [isMultiline, setIsMultiline] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [transcribing, setTranscribing] = useState(false);
@@ -481,6 +505,28 @@ export function AgentChatView({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingText]);
+
+  // Auto-resize textarea + step font down as input grows. Runs whenever `input` changes
+  // (keystrokes, voice transcription, slash command insertions, clears).
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const maxH = Math.round(window.innerHeight * 0.5);
+    // First reset font to base, then measure with that font, then pick the right size and re-measure.
+    ta.style.fontSize = "17px";
+    ta.style.lineHeight = "21px";
+    ta.style.height = "auto";
+    const lh = parseFloat(getComputedStyle(ta).lineHeight) || 21;
+    const lines = Math.max(1, Math.round(ta.scrollHeight / lh));
+    const fontPx = lines <= 2 ? 17 : lines <= 4 ? 15 : lines <= 6 ? 13 : 11;
+    ta.style.fontSize = `${fontPx}px`;
+    ta.style.lineHeight = `${fontPx + 4}px`;
+    ta.style.height = "auto";
+    const newH = Math.min(ta.scrollHeight, maxH);
+    ta.style.height = `${newH}px`;
+    // Multi-line = textarea taller than a single line at base font (21px line-height + small slack)
+    setIsMultiline(newH > 26);
+  }, [input]);
 
   // Auto-dismiss command feedback
   useEffect(() => {
@@ -573,7 +619,6 @@ export function AgentChatView({
       if (handled) {
         setInput("");
         setSlashMenuOpen(false);
-        if (textareaRef.current) textareaRef.current.style.height = "auto";
         return;
       }
     }
@@ -581,7 +626,13 @@ export function AgentChatView({
     let messageText = input.trim();
     if (selectedElement) {
       const el = selectedElement;
-      messageText += `\n\n[Selected Element: <${el.tagName}> component="${el.componentName || "unknown"}" testId="${el.testId || ""}" text="${el.textContent.slice(0, 120)}" classes="${el.classes.join(" ")}"]`;
+      const label = el.componentName || `<${el.tagName}>`;
+      const snippet = el.textContent ? ` "${el.textContent.slice(0, 80)}"` : "";
+      const meta: string[] = [];
+      if (el.testId) meta.push(`testId=${el.testId}`);
+      if (el.classes.length) meta.push(`classes=${el.classes.join(" ")}`);
+      const metaLine = meta.length ? `\n<sub>${meta.join(" · ")}</sub>` : "";
+      messageText += `\n\n> 📍 **${label}**${snippet}${metaLine}`;
     }
     const fileId = pendingFile?.id ?? pendingVoiceFile?.id;
     onSend(messageText, undefined, fileId);
@@ -589,9 +640,6 @@ export function AgentChatView({
     setPendingFile(null);
     setPendingVoiceFile(null);
     setSlashMenuOpen(false);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
   };
 
   // File upload handler — supports PDF, images, spreadsheets, camera capture
@@ -941,11 +989,7 @@ export function AgentChatView({
 
                 if (data.transcription) {
                   setInput(data.transcription);
-                  if (textareaRef.current) {
-                    textareaRef.current.style.height = "auto";
-                    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
-                    textareaRef.current.focus();
-                  }
+                  textareaRef.current?.focus();
                 }
                 // Store voice file reference — use correct extension for platform
                 const defaultExt = actualMime.includes("mp4") ? "voice-memo.mp4" : "voice-memo.webm";
@@ -1134,6 +1178,20 @@ export function AgentChatView({
             <span className="font-mono text-[11px] text-violet-700 dark:text-violet-300 shrink-0">
               {selectedElement.componentName || `<${selectedElement.tagName}>`}
             </span>
+            {onToggleSelectionLock && (
+              <button
+                onClick={onToggleSelectionLock}
+                className={cn(
+                  "shrink-0 h-5 w-5 rounded flex items-center justify-center transition-colors",
+                  selectionLocked
+                    ? "text-violet-700 dark:text-violet-300 bg-violet-200/60 dark:bg-violet-800/40"
+                    : "text-violet-500/70 hover:text-violet-700 hover:bg-violet-100 dark:hover:bg-violet-900/30",
+                )}
+                title={selectionLocked ? "Selection locked — click to unlock and pick another" : "Live picking — click to lock this selection"}
+              >
+                {selectionLocked ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
+              </button>
+            )}
             {(selectedElement.textContent || selectedElement.testId) && (
               <span className="truncate text-foreground/60 text-[10px]">
                 {selectedElement.textContent || selectedElement.testId}
@@ -1160,43 +1218,6 @@ export function AgentChatView({
                 className="h-full bg-brand-indigo rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${uploadProgress}%` }}
               />
-            </div>
-          </div>
-        )}
-
-        {/* Recording indicator with duration timer */}
-        {recording && (
-          <div className="flex items-center gap-3 mb-2 px-3 py-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-xl" data-testid="recording-indicator">
-            {/* Pulsing red dot */}
-            <span className="relative flex h-3 w-3 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
-            </span>
-            <span className="text-[13px] font-medium text-red-600 dark:text-red-400">Recording</span>
-            <span className="text-[13px] font-mono text-red-500/80 tabular-nums" data-testid="recording-duration">
-              {formatDuration(recordingDuration)}
-            </span>
-            <div className="ml-auto flex items-center gap-2">
-              {/* Cancel button */}
-              <button
-                onClick={cancelRecording}
-                className="h-7 max-md:h-11 px-2.5 max-md:px-4 rounded-full text-[11px] max-md:text-sm font-medium text-muted-foreground hover:text-foreground bg-white/80 dark:bg-background/80 border border-border/50 hover:border-border transition-colors flex items-center gap-1"
-                data-testid="recording-cancel"
-                title="Cancel recording"
-              >
-                <X className="h-3 w-3 max-md:h-4 max-md:w-4" />
-                Cancel
-              </button>
-              {/* Stop button */}
-              <button
-                onClick={stopRecording}
-                className="h-7 max-md:h-11 px-2.5 max-md:px-4 rounded-full text-[11px] max-md:text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors flex items-center gap-1"
-                data-testid="recording-stop"
-                title="Stop recording"
-              >
-                <Square className="h-2.5 w-2.5 max-md:h-3.5 max-md:w-3.5 fill-white" />
-                Stop
-              </button>
             </div>
           </div>
         )}
@@ -1240,7 +1261,10 @@ export function AgentChatView({
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] dark:border-border/30 shadow-sm pl-3 pr-4 py-[3px] min-h-[62px]">
+        <div className={cn(
+          "bg-white dark:bg-card rounded-lg border border-black/[0.1] dark:border-border/30 shadow-sm px-3 min-h-[62px]",
+          isMultiline ? "flex flex-col pt-2 pb-1.5" : "flex items-center gap-1.5 py-1.5",
+        )}>
           {/* Hidden file input — file picker (documents, images from gallery) */}
           <input
             ref={fileInputRef}
@@ -1265,9 +1289,6 @@ export function AgentChatView({
             onChange={(e) => {
               const val = e.target.value;
               setInput(val);
-              e.target.style.height = "auto";
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-              // Open slash menu when typing "/" at start of input
               if (val.startsWith("/") && !val.includes("\n")) {
                 setSlashMenuOpen(true);
                 setSlashMenuIndex(0);
@@ -1279,90 +1300,102 @@ export function AgentChatView({
             placeholder={recording ? "Recording..." : isCodeRunner ? "Type / for commands..." : "Ask about campaigns..."}
             rows={1}
             disabled={loading || recording}
-            className="flex-1 text-[17px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 leading-5 pl-1 pr-2"
-            style={{ maxHeight: "120px" }}
+            className="w-full bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 px-0.5"
+            style={{ maxHeight: "50vh", fontSize: "17px", lineHeight: "21px" }}
           />
 
-          {/* Camera capture button — visible on mobile only */}
-          {isMobile && (
-            <button
-              type="button"
-              onClick={() => cameraInputRef.current?.click()}
-              disabled={streaming || loading || uploading || recording}
-              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
-              title="Take photo"
-              data-testid="camera-capture-btn"
-            >
-              <Camera className="h-4 w-4 max-md:h-5 max-md:w-5" />
-            </button>
-          )}
+          <div className={cn(
+            "flex items-center gap-1.5 shrink-0",
+            isMultiline && "justify-end mt-1 self-end",
+          )}>
+            {/* Attach file button (hidden during recording to keep the bar clean) */}
+            {!recording && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={streaming || loading || uploading}
+                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
+                title={isMobile ? "Attach file or photo" : "Attach file (PDF, image, or spreadsheet)"}
+                data-testid="attach-file-btn"
+              >
+                <Paperclip className="h-4 w-4 max-md:h-5 max-md:w-5" />
+              </button>
+            )}
 
-          {/* Attach file button (file picker / photo library / documents) */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={streaming || loading || uploading || recording}
-            className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
-            title={isMobile ? "Attach file or photo" : "Attach file (PDF, image, or spreadsheet)"}
-            data-testid="attach-file-btn"
-          >
-            <Paperclip className="h-4 w-4 max-md:h-5 max-md:w-5" />
-          </button>
+            {/* Stop button — visible during streaming when no text input */}
+            {streaming && !input.trim() && !recording && onAbort && (
+              <button
+                onClick={onAbort}
+                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
+                title="Stop response"
+                data-testid="stop-button"
+              >
+                <Square className="h-3 w-3 max-md:h-4 max-md:w-4 fill-white" />
+              </button>
+            )}
 
-          {/* Stop button — visible during streaming when no text input */}
-          {streaming && !input.trim() && onAbort && (
-            <button
-              onClick={onAbort}
-              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
-              title="Stop response"
-              data-testid="stop-button"
-            >
-              <Square className="h-3 w-3 max-md:h-4 max-md:w-4 fill-white" />
-            </button>
-          )}
-
-          {/* Send / Mic button */}
-          {input.trim() ? (
-            <button
-              onClick={handleSend}
-              disabled={loading}
-              className={cn(
-                "h-8 w-8 max-md:h-11 max-md:w-11 rounded-full text-white flex items-center justify-center shrink-0 transition-colors",
-                streaming ? "bg-orange-500 hover:bg-orange-600" : "bg-brand-indigo hover:bg-brand-indigo/90",
-                loading && "opacity-40",
-              )}
-              data-testid="send-button"
-              title={streaming ? "Interrupt & send" : "Send message"}
-            >
-              <Send className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-            </button>
-          ) : transcribing ? (
-            <button
-              disabled
-              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo/40 text-white flex items-center justify-center shrink-0"
-            >
-              <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            </button>
-          ) : recording ? (
-            <button
-              onClick={stopRecording}
-              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
-              style={{ animation: "micPulseAgent 1s ease-in-out infinite" }}
-              data-testid="mic-stop-button"
-            >
-              <CircleStop className="h-4 w-4 max-md:h-5 max-md:w-5" />
-              <style>{`@keyframes micPulseAgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
-            </button>
-          ) : (
-            <button
-              onClick={startRecording}
-              disabled={loading}
-              className="h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
-              data-testid="mic-button"
-            >
-              <Mic className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-            </button>
-          )}
+            {/* Send / Mic / Recording group */}
+            {input.trim() ? (
+              <button
+                onClick={handleSend}
+                disabled={loading}
+                className={cn(
+                  "h-8 w-8 max-md:h-10 max-md:w-10 rounded-full text-white flex items-center justify-center shrink-0 transition-colors",
+                  streaming ? "bg-orange-500 hover:bg-orange-600" : "bg-brand-indigo hover:bg-brand-indigo/90",
+                  loading && "opacity-40",
+                )}
+                data-testid="send-button"
+                title={streaming ? "Interrupt & send" : "Send message"}
+              >
+                <Send className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+              </button>
+            ) : transcribing ? (
+              <button
+                disabled
+                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full bg-brand-indigo/40 text-white flex items-center justify-center shrink-0"
+              >
+                <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              </button>
+            ) : recording ? (
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Discard recording */}
+                <button
+                  onClick={cancelRecording}
+                  className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 shrink-0 transition-colors"
+                  data-testid="recording-cancel"
+                  title="Discard recording"
+                >
+                  <Trash2 className="h-4 w-4 max-md:h-5 max-md:w-5" />
+                </button>
+                {/* Expanded mic pill: timer + send-on-click */}
+                <button
+                  onClick={stopRecording}
+                  className="h-8 max-md:h-10 px-3 rounded-full bg-red-500 text-white flex items-center gap-2 hover:bg-red-600 shrink-0 transition-colors"
+                  style={{ animation: "micPulseAgent 1s ease-in-out infinite" }}
+                  data-testid="mic-stop-button"
+                  title="Stop recording and transcribe"
+                >
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                  </span>
+                  <span className="text-[12px] font-mono tabular-nums" data-testid="recording-duration">
+                    {formatDuration(recordingDuration)}
+                  </span>
+                  <style>{`@keyframes micPulseAgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={startRecording}
+                disabled={loading}
+                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                data-testid="mic-button"
+              >
+                <Mic className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+              </button>
+            )}
+          </div>
         </div>
         </div>
       </div>

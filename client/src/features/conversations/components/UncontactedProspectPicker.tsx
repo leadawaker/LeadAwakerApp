@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getProspectAvatarColor } from "@/lib/avatarUtils";
 import { Search, X, PhoneOff } from "lucide-react";
+import { fetchProspects } from "@/features/prospects/api/prospectsApi";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,8 @@ export function UncontactedProspectPicker({ open, onClose, onSelect, existingPro
   const [search, setSearch] = useState("");
 
   const { data: allProspects = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/prospects"],
+    queryKey: ["/api/prospects", "all"],
+    queryFn: fetchProspects,
     enabled: open,
   });
 

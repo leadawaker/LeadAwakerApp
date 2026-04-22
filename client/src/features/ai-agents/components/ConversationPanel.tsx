@@ -18,9 +18,11 @@ export interface ConversationPanelProps {
   onMessageCountUpdate: (agentId: number, count: number) => void;
   selectedElement?: import("../hooks/useElementPicker").SelectedElementInfo | null;
   onClearElement?: () => void;
+  selectionLocked?: boolean;
+  onToggleSelectionLock?: () => void;
 }
 
-export function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate, selectedElement, onClearElement }: ConversationPanelProps) {
+export function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionUpdate, selectedElement, onClearElement, selectionLocked, onToggleSelectionLock }: ConversationPanelProps) {
   const {
     agent,
     session,
@@ -113,6 +115,8 @@ export function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionU
         onAbort={abortStream}
         selectedElement={selectedElement}
         onClearElement={onClearElement}
+        selectionLocked={selectionLocked}
+        onToggleSelectionLock={onToggleSelectionLock}
       />
     </div>
   );
@@ -129,6 +133,8 @@ export function ConversationPanelWithEvents({
   onMessageCountUpdate,
   selectedElement,
   onClearElement,
+  selectionLocked,
+  onToggleSelectionLock,
 }: ConversationPanelProps) {
   const {
     agent,
@@ -292,6 +298,8 @@ export function ConversationPanelWithEvents({
         onAbort={abortStream}
         selectedElement={selectedElement}
         onClearElement={onClearElement}
+        selectionLocked={selectionLocked}
+        onToggleSelectionLock={onToggleSelectionLock}
       />
     </div>
   );

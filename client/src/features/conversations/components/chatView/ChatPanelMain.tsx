@@ -10,6 +10,8 @@ import {
   Mic,
   Square,
   X,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { STAGE_ICON } from "../ContactSidebar";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Thread, Interaction } from "../../hooks/useConversationsData";
 import { formatRelativeTime, getStatus, PIPELINE_HEX } from "../../utils/conversationHelpers";
 import {
@@ -78,6 +85,7 @@ export function ChatPanel({
     return (acct?.timezone as string) || undefined;
   }, [selected, accounts]);
   const [draft, setDraft] = useState("");
+  const [composeError, setComposeError] = useState<null | { message: string; retry: () => void | Promise<void> }>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevLeadId = useRef<number | null>(null);
   const prevMsgCount = useRef(0);
@@ -364,26 +372,56 @@ export function ChatPanel({
 
     const text = draft;
     setDraft("");
-    await onSend(selected.lead.id, text);
+    setComposeError(null);
+    try {
+      await onSend(selected.lead.id, text);
+    } catch (err) {
+      setDraft(text);
+      setComposeError({
+        message: t("chat.compose.sendFailed") || "Failed to send message",
+        retry: async () => {
+          setComposeError(null);
+          await handleSubmit();
+        },
+      });
+    }
   };
 
   const handleTakeoverConfirm = async () => {
     if (!selected) return;
     setHasConfirmedTakeover(true);
     setShowTakeoverConfirm(false);
+    setComposeError(null);
+    const leadId = selected.lead.id;
+    const textToSend = pendingDraft;
     if (onToggleTakeover) {
       try {
-        await onToggleTakeover(selected.lead.id, true);
+        await onToggleTakeover(leadId, true);
       } catch {
-        // Takeover API failed — restore draft so user doesn't lose it
-        setDraft(pendingDraft);
+        setDraft(textToSend);
         setPendingDraft("");
         setHasConfirmedTakeover(false);
+        setComposeError({
+          message: t("chat.compose.takeoverFailed") || "Failed to take over. Message not sent.",
+          retry: handleTakeoverConfirm,
+        });
         return;
       }
     }
-    await onSend(selected.lead.id, pendingDraft);
-    setPendingDraft("");
+    try {
+      await onSend(leadId, textToSend);
+      setPendingDraft("");
+    } catch {
+      setDraft(textToSend);
+      setPendingDraft("");
+      setComposeError({
+        message: t("chat.compose.sendFailed") || "Failed to send message",
+        retry: async () => {
+          setComposeError(null);
+          await handleSubmit();
+        },
+      });
+    }
   };
 
   const handleTakeoverCancel = () => {
@@ -585,15 +623,20 @@ export function ChatPanel({
 
                 {/* Unfold contact panel — right edge */}
                 {!showContactPanel && onShowContactPanel && (
-                  <button
-                    type="button"
-                    onClick={onShowContactPanel}
-                    className="h-9 w-9 rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0"
-                    title={t("chat.showContactPanel")}
-                    data-testid="btn-show-contact-panel"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={onShowContactPanel}
+                        className="h-9 w-9 rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0"
+                        aria-label={t("chat.showContactPanel")}
+                        data-testid="btn-show-contact-panel"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">{t("chat.showContactPanel")}</TooltipContent>
+                  </Tooltip>
                 )}
 
               </div>{/* end right cluster */}
@@ -917,22 +960,53 @@ export function ChatPanel({
 
             {/* Scroll-to-bottom floating button — standard 34px circle */}
             {showScrollButton && (
-              <button
-                type="button"
-                onClick={() => scrollToBottom("smooth")}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 h-10 w-10 rounded-full border border-black/[0.125] bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-[background-color,transform] duration-150"
-                data-testid="button-scroll-to-bottom"
-                title={t("chat.scrollToLatest")}
-                aria-label={t("chat.scrollToLatest")}
-              >
-                <ChevronDown className="h-4 w-4" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => scrollToBottom("smooth")}
+                    className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 h-10 w-10 rounded-full border border-black/[0.125] bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-[background-color,transform] duration-150"
+                    data-testid="button-scroll-to-bottom"
+                    aria-label={t("chat.scrollToLatest")}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{t("chat.scrollToLatest")}</TooltipContent>
+              </Tooltip>
             )}
 
           </div>
 
           {/* Compose area */}
           <div className="px-3 pb-3 shrink-0 relative" data-testid="chat-compose">
+            {composeError && (
+              <div
+                className="mb-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 dark:border-red-900/40 dark:bg-red-950/30 px-3 py-2 text-[12px] text-red-700 dark:text-red-300"
+                role="alert"
+                data-testid="compose-error-banner"
+              >
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 leading-tight">{composeError.message}</span>
+                <button
+                  type="button"
+                  onClick={() => composeError.retry()}
+                  className="inline-flex items-center gap-1 rounded-md border border-red-300 bg-white/70 dark:bg-red-900/20 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-200 hover:bg-white dark:hover:bg-red-900/40 transition-colors"
+                  data-testid="compose-error-retry"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {t("chat.compose.retry") || "Retry"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setComposeError(null)}
+                  className="text-red-400 hover:text-red-600 transition-colors"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
             {isRecording ? (
               /* ── Recording indicator bar ── */
               <div className="flex items-center gap-3 bg-white dark:bg-card rounded-lg border border-red-200 shadow-sm px-3 py-2 h-[52px]">
@@ -998,48 +1072,71 @@ export function ChatPanel({
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file || !selected) return;
+                        if (fileInputRef.current) fileInputRef.current.value = "";
 
-                        try {
-                          // Upload or convert to data URL (small images)
-                          if (file.size < 5 * 1024 * 1024) {
-                            const reader = new FileReader();
-                            reader.onload = async (evt) => {
-                              const dataUrl = evt.target?.result as string;
-                              // Send as interaction with attachment metadata
-                              await apiFetch("/api/interactions", {
-                                method: "POST",
-                                body: JSON.stringify({
-                                  type: "text",
-                                  direction: "outbound",
-                                  content: "",
-                                  leads_id: selected.lead.id,
-                                  attachment: {
-                                    imageUrl: dataUrl,
-                                    caption: ""
-                                  }
-                                }),
-                              });
-                              toast({ title: t("chat.compose.imageSent") || "Image sent" });
-                            };
-                            reader.readAsDataURL(file);
-                          } else {
-                            toast({ title: "Image too large", description: "Max 5MB", variant: "destructive" });
-                          }
-                        } catch (err) {
-                          toast({ title: "Failed to send image", variant: "destructive" });
+                        if (file.size >= 5 * 1024 * 1024) {
+                          toast({ title: "Image too large", description: "Max 5MB", variant: "destructive" });
+                          return;
                         }
 
-                        if (fileInputRef.current) fileInputRef.current.value = "";
+                        const leadId = selected.lead.id;
+                        const sendImage = () =>
+                          new Promise<void>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = async (evt) => {
+                              try {
+                                const dataUrl = evt.target?.result as string;
+                                const res = await apiFetch("/api/interactions", {
+                                  method: "POST",
+                                  body: JSON.stringify({
+                                    type: "text",
+                                    direction: "outbound",
+                                    content: "",
+                                    leads_id: leadId,
+                                    attachment: { imageUrl: dataUrl, caption: "" },
+                                  }),
+                                });
+                                if (!res.ok) return reject(new Error(`HTTP ${res.status}`));
+                                resolve();
+                              } catch (err) {
+                                reject(err);
+                              }
+                            };
+                            reader.onerror = () => reject(reader.error || new Error("Read failed"));
+                            reader.readAsDataURL(file);
+                          });
+
+                        setComposeError(null);
+                        const trySend = async () => {
+                          try {
+                            await sendImage();
+                            toast({ title: t("chat.compose.imageSent") || "Image sent" });
+                          } catch {
+                            setComposeError({
+                              message: t("chat.compose.imageSendFailed") || "Failed to send image",
+                              retry: async () => {
+                                setComposeError(null);
+                                await trySend();
+                              },
+                            });
+                          }
+                        };
+                        await trySend();
                       }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-                      title={t("chat.compose.attachImage") || "Send image"}
-                    >
-                      <Paperclip className="h-6 w-6" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
+                          aria-label={t("chat.compose.attachImage") || "Send image"}
+                        >
+                          <Paperclip className="h-6 w-6" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{t("chat.compose.attachImage") || "Send image"}</TooltipContent>
+                    </Tooltip>
                   </>
                 )}
 
@@ -1047,32 +1144,42 @@ export function ChatPanel({
                 <div className="shrink-0">
                   {draft.trim() ? (
                     /* Send button — shown when there's text */
-                    <button
-                      type="button"
-                      className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors"
-                      disabled={!selected || sending}
-                      onClick={handleSubmit}
-                      data-testid="button-compose-send"
-                      title={t("chat.compose.sendMessage")}
-                    >
-                      {sending ? (
-                        <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4 text-white" />
-                      )}
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors"
+                          disabled={!selected || sending}
+                          onClick={handleSubmit}
+                          data-testid="button-compose-send"
+                          aria-label={t("chat.compose.sendMessage")}
+                        >
+                          {sending ? (
+                            <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4 text-white" />
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{t("chat.compose.sendMessage")}</TooltipContent>
+                    </Tooltip>
                   ) : (
                     /* Mic button — shown when input is empty */
-                    <button
-                      type="button"
-                      className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors"
-                      disabled={!selected || sending}
-                      onClick={startRecording}
-                      data-testid="button-compose-mic"
-                      title={t("chat.compose.recordVoice")}
-                    >
-                      <Mic className="h-5 w-5 text-white" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors"
+                          disabled={!selected || sending}
+                          onClick={startRecording}
+                          data-testid="button-compose-mic"
+                          aria-label={t("chat.compose.recordVoice")}
+                        >
+                          <Mic className="h-5 w-5 text-white" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{t("chat.compose.recordVoice")}</TooltipContent>
+                    </Tooltip>
                   )}
                   {/* Takeover confirmation tooltip */}
                   {showTakeoverConfirm && (

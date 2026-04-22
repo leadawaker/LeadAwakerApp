@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/core";
 import { getEventCoordinates } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { ProspectAvatar } from "./ProspectAvatar";
 import { getInitials } from "@/lib/avatarUtils";
 import {
   Phone,
@@ -34,10 +34,11 @@ import {
   Handshake,
   Trophy,
   XCircle,
+  Pause,
   type LucideIcon,
 } from "lucide-react";
 import { updateProspect } from "../api/prospectsApi";
-import type { ProspectRow } from "../components/ProspectListView";
+import type { ProspectRow } from "./prospectTypes";
 
 /** Snaps the ghost card's center to the cursor so it tracks right under the pointer */
 const snapCenterToCursor: Modifier = ({ activatorEvent, draggingNodeRect, transform }) => {
@@ -63,6 +64,7 @@ export const OUTREACH_STATUSES = [
   "proposal_sent",
   "negotiating",
   "deal_closed",
+  "paused",
   "lost",
 ] as const;
 
@@ -77,6 +79,7 @@ export const OUTREACH_LABELS: Record<OutreachStatus, string> = {
   proposal_sent: "Proposal Sent",
   negotiating: "Negotiating",
   deal_closed: "Deal Closed",
+  paused: "Paused",
   lost: "Lost",
 };
 
@@ -90,12 +93,13 @@ export const OUTREACH_HEX: Record<OutreachStatus, string> = {
   proposal_sent:  "#F7BF0E",
   negotiating:    "#F97316",
   deal_closed:            "#FFFFFF",
+  paused:         "#94A3B8",
   lost:           "#DC2626",
 };
 
 // ── Avatar colors per stage (light mode) ────────────────────────────
 const PROSPECT_AVATAR_BG: Record<OutreachStatus, string> = {
-  new:            "#DDD6FE",
+  new:            "#E5E7EB",
   contacted:      "#C7D2FE",
   responded:      "#B9E7EF",
   call_booked:    "#AFE3BB",
@@ -103,11 +107,12 @@ const PROSPECT_AVATAR_BG: Record<OutreachStatus, string> = {
   proposal_sent:  "#FFDB74",
   negotiating:    "#FDDCB5",
   deal_closed:            "#F0F0F0",
+  paused:         "#E2E8F0",
   lost:           "#F5BFBF",
 };
 
 const PROSPECT_AVATAR_TEXT: Record<OutreachStatus, string> = {
-  new:            "#5B21B6",
+  new:            "#6B7280",
   contacted:      "#3730A3",
   responded:      "#0F5F5A",
   call_booked:    "#166534",
@@ -115,12 +120,13 @@ const PROSPECT_AVATAR_TEXT: Record<OutreachStatus, string> = {
   proposal_sent:  "#78350F",
   negotiating:    "#7C2D12",
   deal_closed:            "#374151",
+  paused:         "#475569",
   lost:           "#991B1B",
 };
 
 // ── Avatar colors per stage (dark mode) ─────────────────────────────
 const PROSPECT_AVATAR_BG_DARK: Record<OutreachStatus, string> = {
-  new:            "#2E1065",
+  new:            "#1F2937",
   contacted:      "#1E1B4B",
   responded:      "#1A3338",
   call_booked:    "#1A3325",
@@ -128,11 +134,12 @@ const PROSPECT_AVATAR_BG_DARK: Record<OutreachStatus, string> = {
   proposal_sent:  "#33290A",
   negotiating:    "#33200A",
   deal_closed:            "#2A2D33",
+  paused:         "#1E293B",
   lost:           "#3D1A1A",
 };
 
 const PROSPECT_AVATAR_TEXT_DARK: Record<OutreachStatus, string> = {
-  new:            "#C4B5FD",
+  new:            "#9CA3AF",
   contacted:      "#A5B4FC",
   responded:      "#7CDCE8",
   call_booked:    "#6AE87C",
@@ -140,6 +147,7 @@ const PROSPECT_AVATAR_TEXT_DARK: Record<OutreachStatus, string> = {
   proposal_sent:  "#FFD54F",
   negotiating:    "#FDBA74",
   deal_closed:            "#E0E0E0",
+  paused:         "#94A3B8",
   lost:           "#F48A8A",
 };
 
@@ -147,7 +155,7 @@ function isDarkMode(): boolean {
   return typeof document !== "undefined" && document.documentElement.classList.contains("dark");
 }
 
-function getProspectAvatarColor(stage: OutreachStatus): { bg: string; text: string } {
+export function getProspectAvatarColor(stage: OutreachStatus): { bg: string; text: string } {
   if (isDarkMode()) {
     return { bg: PROSPECT_AVATAR_BG_DARK[stage] ?? "#2A2D33", text: PROSPECT_AVATAR_TEXT_DARK[stage] ?? "#9CA3AF" };
   }
@@ -164,6 +172,7 @@ const STAGE_ICONS: Record<OutreachStatus, LucideIcon> = {
   proposal_sent:  FileText,
   negotiating:    Handshake,
   deal_closed:            Trophy,
+  paused:         Pause,
   lost:           XCircle,
 };
 
@@ -177,6 +186,7 @@ const STAGE_ICON_BG: Record<OutreachStatus, string> = {
   proposal_sent:  "#F7BF0E",
   negotiating:    "#F97316",
   deal_closed:            "#1a1a1a",
+  paused:         "#94A3B8",
   lost:           "#DC2626",
 };
 const STAGE_ICON_TEXT: Record<string, string> = {
@@ -248,12 +258,10 @@ function ProspectCardContent({
   isDragging?: boolean;
 }) {
   const stage = (prospect.outreach_status || "new") as OutreachStatus;
-  const avatarColor = getProspectAvatarColor(stage);
   const companyName = prospect.company || prospect.name || "Unnamed";
   const nicheColor = NICHE_COLORS[prospect.niche || ""] || "#6B7280";
   const hasFollowUp = prospect.next_follow_up_date;
   const isOverdue = hasFollowUp && new Date(prospect.next_follow_up_date) < new Date();
-  const isDealClosed = stage === "deal_closed";
 
   return (
     <div
@@ -267,11 +275,11 @@ function ProspectCardContent({
 
         {/* Row 1: Avatar + Company name + priority */}
         <div className="flex items-center gap-2">
-          <EntityAvatar
+          <ProspectAvatar
             name={companyName}
-            photoUrl={prospect.photo_url}
-            bgColor={isDealClosed ? "#1a1a1a" : avatarColor.bg}
-            textColor={isDealClosed ? "#ffffff" : avatarColor.text}
+            website={prospect.website}
+            companyLogoUrl={prospect.company_logo_url}
+            outreachStatus={stage}
             className="shrink-0"
           />
 
@@ -791,6 +799,7 @@ export default function OutreachPipelineView({
       proposal_sent: [],
       negotiating: [],
       deal_closed: [],
+      paused: [],
       lost: [],
     };
 

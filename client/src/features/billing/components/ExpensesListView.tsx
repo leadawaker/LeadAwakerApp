@@ -115,6 +115,7 @@ function ExpenseListRow({
     <button
       type="button"
       onClick={onClick}
+      data-expense-id={row.id}
       className={cn(
         "w-full text-left rounded-xl px-2.5 pt-2.5 pb-2 transition-colors cursor-pointer",
         isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"

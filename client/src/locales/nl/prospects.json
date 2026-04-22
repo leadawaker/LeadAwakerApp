@@ -172,6 +172,7 @@
     "whatsApp": "WhatsApp",
     "interactions": "Interacties",
     "tasks": "Taken",
+    "nextActions": "Volgende Acties",
     "offerIdeas": "Aanbiedingsideeën"
   },
   "fields": {
@@ -327,6 +328,16 @@
       "reply": "Beantwoorden"
     }
   },
+  "emailComposer": {
+    "label": "E-mail",
+    "noEmail": "Geen e-mailadres beschikbaar",
+    "compose": "E-mail opstellen",
+    "to": "Aan",
+    "subject": "Onderwerp",
+    "body": "Bericht",
+    "cancel": "Annuleren",
+    "sending": "Verzenden..."
+  },
   "emailCompose": {
     "title": "E-mail opstellen",
     "replyTitle": "E-mail beantwoorden",
@@ -351,28 +362,57 @@
   },
   "whatsappComposer": {
     "title": "WhatsApp",
+    "label": "WhatsApp Bericht",
     "placeholder": "Typ een WhatsApp-bericht...",
     "send": "Verzenden",
     "sending": "Verzenden...",
     "noPhone": "Geen telefoonnummer beschikbaar",
-    "sendFailed": "Verzenden mislukt. Probeer het opnieuw."
+    "sendFailed": "Verzenden mislukt. Probeer het opnieuw.",
+    "chars": "tekens",
+    "compose": "WhatsApp versturen",
+    "cancel": "Annuleren"
   },
   "tabs": {
     "company": "Bedrijf",
     "contact1": "Contact 1",
     "contact2": "Contact 2"
   },
+  "audit": {
+    "empty": "Audit nog niet gegenereerd. Voer verrijking opnieuw uit.",
+    "strengths": "Sterke punten",
+    "opportunities": "Kansen",
+    "gaps": "Hiaten",
+    "leadAwakerFit": "Lead Awaker fit",
+    "angle": "Invalshoek",
+    "pitchHook": "Pitch hook"
+  },
   "companyTab": {
     "summary": "Samenvatting",
+    "audit": "Audit",
     "services": "Diensten",
-    "products": "Producten",
     "history": "Geschiedenis",
     "noSummary": "Nog geen samenvatting. Voer verrijking uit om data op te halen.",
     "noServices": "Nog geen dienstendata beschikbaar.",
-    "noProducts": "Nog geen productendata beschikbaar.",
     "noHistory": "Nog geen bedrijfsgeschiedenis beschikbaar.",
     "loadingCompany": "Bedrijf wordt verrijkt...",
     "loadingContact": "Contact {{slot}} wordt verrijkt...",
+    "loadingCompanySteps": [
+      "LinkedIn-bedrijfspagina ophalen...",
+      "Bedrijfsomschrijving lezen...",
+      "Website scrapen...",
+      "Diensten en producten analyseren...",
+      "Bedrijfsgeschiedenis opbouwen...",
+      "Recente posts ophalen...",
+      "Campagne-ideeën genereren...",
+      "Bijna klaar..."
+    ],
+    "loadingContactSteps": [
+      "Google doorzoeken naar kandidaten...",
+      "Beslissers beoordelen...",
+      "LinkedIn-profiel ophalen...",
+      "Recente posts analyseren...",
+      "Profielbrief schrijven..."
+    ],
     "aboutCompany": "Over {{name}}",
     "aboutContact": "Over {{name}}",
     "topCompanyPosts": "Beste Bedrijfsberichten",
@@ -430,5 +470,16 @@
     "stylePlaceholder": "Stijl",
     "formatPlaceholder": "Formaat",
     "languagePlaceholder": "Taal"
+  },
+  "outreachTimeline": {
+    "title": "Outreach Geschiedenis",
+    "empty": "Nog geen outreach geregistreerd"
+  },
+  "tasks": {
+    "addTask": "Taak toevoegen",
+    "newTaskPlaceholder": "Taaknaam..."
+  },
+  "interactions": {
+    "openConversations": "Open in gesprekken"
   }
 }

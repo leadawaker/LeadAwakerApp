@@ -1655,7 +1655,7 @@ function SettingsContent() {
           data-testid="settings-nav"
         >
           {!isMobile && (
-            <div className="pl-[17px] pr-3.5 pt-10 pb-3">
+            <div className="pl-[17px] pr-[3px] pt-10 pb-3">
               <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h1>
             </div>
           )}
@@ -1703,7 +1703,7 @@ function SettingsContent() {
           (activeSection === "team" || activeSection === "account") ? "overflow-hidden flex flex-col" : "overflow-y-auto pb-8",
         )} data-testid="settings-content">
           {activeSection !== "team" && activeSection !== "account" && (
-            <div className="pl-[17px] pr-3.5 pt-10 pb-3">
+            <div className="pl-[17px] pr-[3px] pt-10 pb-3">
               <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
                 {t(SECTIONS.find(s => s.id === activeSection)?.labelKey ?? "")}
               </h1>

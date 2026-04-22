@@ -8,6 +8,8 @@ import enHome from "./locales/en/home.json";
 import enServices from "./locales/en/services.json";
 import enAbout from "./locales/en/about.json";
 import enBookDemo from "./locales/en/bookDemo.json";
+import enTryDemo from "./locales/en/tryDemo.json";
+import enIntakeDemo from "./locales/en/intakeDemo.json";
 import enChat3d from "./locales/en/chat3d.json";
 import enSalesRepSteps from "./locales/en/salesRepSteps.json";
 import enPipelineChart from "./locales/en/pipelineChart.json";
@@ -42,6 +44,8 @@ import ptHome from "./locales/pt/home.json";
 import ptServices from "./locales/pt/services.json";
 import ptAbout from "./locales/pt/about.json";
 import ptBookDemo from "./locales/pt/bookDemo.json";
+import ptTryDemo from "./locales/pt/tryDemo.json";
+import ptIntakeDemo from "./locales/pt/intakeDemo.json";
 import ptChat3d from "./locales/pt/chat3d.json";
 import ptSalesRepSteps from "./locales/pt/salesRepSteps.json";
 import ptPipelineChart from "./locales/pt/pipelineChart.json";
@@ -73,6 +77,8 @@ import nlHome from "./locales/nl/home.json";
 import nlServices from "./locales/nl/services.json";
 import nlAbout from "./locales/nl/about.json";
 import nlBookDemo from "./locales/nl/bookDemo.json";
+import nlTryDemo from "./locales/nl/tryDemo.json";
+import nlIntakeDemo from "./locales/nl/intakeDemo.json";
 import nlChat3d from "./locales/nl/chat3d.json";
 import nlSalesRepSteps from "./locales/nl/salesRepSteps.json";
 import nlPipelineChart from "./locales/nl/pipelineChart.json";
@@ -106,6 +112,8 @@ const resources = {
     services: enServices,
     about: enAbout,
     bookDemo: enBookDemo,
+    tryDemo: enTryDemo,
+    intakeDemo: enIntakeDemo,
     chat3d: enChat3d,
     salesRepSteps: enSalesRepSteps,
     pipelineChart: enPipelineChart,
@@ -137,6 +145,8 @@ const resources = {
     services: ptServices,
     about: ptAbout,
     bookDemo: ptBookDemo,
+    tryDemo: ptTryDemo,
+    intakeDemo: ptIntakeDemo,
     chat3d: ptChat3d,
     salesRepSteps: ptSalesRepSteps,
     pipelineChart: ptPipelineChart,
@@ -168,6 +178,8 @@ const resources = {
     services: nlServices,
     about: nlAbout,
     bookDemo: nlBookDemo,
+    tryDemo: nlTryDemo,
+    intakeDemo: nlIntakeDemo,
     chat3d: nlChat3d,
     salesRepSteps: nlSalesRepSteps,
     pipelineChart: nlPipelineChart,
@@ -210,6 +222,8 @@ i18n
       "services",
       "about",
       "bookDemo",
+      "tryDemo",
+      "intakeDemo",
       "chat3d",
       "salesRepSteps",
       "pipelineChart",

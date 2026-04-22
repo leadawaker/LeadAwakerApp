@@ -233,7 +233,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                   initial={false}
                   animate={{
                     scale: isActive ? 1 : 0.85,
-                    x: isActive ? 0 : isNext ? 150 : -150,
+                    x: isActive ? 0 : isNext ? 200 : -200,
                     opacity: isActive ? 1 : 0.4,
                     zIndex: isActive ? 20 : 10,
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
@@ -244,7 +244,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                     scale: { type: 'spring', stiffness: 300, damping: 30 },
                     opacity: { duration: 0.3 }
                   }}
-                  className="absolute w-full max-w-5xl left-1/2 -translate-x-1/2"
+                  className="absolute w-full max-w-7xl left-1/2 -translate-x-1/2"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
   <CardContent className="p-8">
@@ -353,8 +353,8 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                   data-testid={`dot-step-card-${i}`}
                   className={`rounded-full transition-all duration-300 ${
                     i === currentStep
-                      ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
-                      : 'bg-blue-300 hover:bg-blue-400 w-3 h-3 md:w-4 md:h-4'
+                      ? 'bg-white w-8 h-3 md:w-10 md:h-4'
+                      : 'bg-white/50 hover:bg-white/70 w-3 h-3 md:w-4 md:h-4'
                   }`}
                   aria-label={t('common.goToStep', { number: i + 1 })}
                 />
@@ -397,8 +397,8 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                   data-testid={`dot-step-card-${i}`}
                   className={`rounded-full transition-all duration-300 ${
                     i === currentStep
-                      ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
-                      : 'bg-blue-300 hover:bg-blue-400 w-3 h-3 md:w-4 md:h-4'
+                      ? 'bg-white w-8 h-3 md:w-10 md:h-4'
+                      : 'bg-white/50 hover:bg-white/70 w-3 h-3 md:w-4 md:h-4'
                   }`}
                   aria-label={t('common.goToStep', { number: i + 1 })}
                 />
@@ -439,8 +439,8 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
               data-testid={`dot-step-card-mobile-${i}`}
               className={`rounded-full transition-all duration-300 ${
                 i === currentStep
-                  ? 'bg-blue-500 w-8 h-3'
-                  : 'bg-blue-300 hover:bg-blue-400 w-3 h-3'
+                  ? 'bg-white w-8 h-3'
+                  : 'bg-white/50 hover:bg-white/70 w-3 h-3'
               }`}
               aria-label={t('common.goToStep', { number: i + 1 })}
             />
@@ -771,7 +771,7 @@ export const SalesRepSteps = () => {
             <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-2 md:mb-4 text-white drop-shadow-lg leading-tight">
               {t('intro.title')}
             </h1>
-            <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed -mt-3">
               {t('intro.subtitle') || "Reativação completa e humanizada em 3 etapas simples."}
             </p>
           </motion.div>

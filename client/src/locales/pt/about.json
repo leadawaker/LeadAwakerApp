@@ -10,31 +10,41 @@
     "name": "Gabriel B. Fronza",
     "title": "Fundador",
     "quote": "\"Na clínica dos meus pais, vi o mesmo padrão repetidas vezes: interesse genuíno, consultas agendadas e depois... silêncio. Gastavam milhares enchendo um balde que vazava por baixo. Foi quando aprendi: você não precisa de mais leads. Precisa parar de perder os que já tem.\"",
-    "description": "Passei uma década entregando sob deadlines impossíveis na Warner Bros. e na Sega. Depois construí um negócio real com minha esposa Danique, onde cada lead importava porque era o nosso dinheiro em jogo. O Lead Awaker existe porque eu vivi o problema."
+    "description": "12 anos entregando digital art para produtos que juntos faturaram mais de US$ 3.3B: filmes da Warner Bros, títulos da Sega, Insurgency: Sandstorm. Depois construí um negócio real com minha esposa Danique, onde cada lead importava porque era o nosso dinheiro em jogo. O Lead Awaker existe porque eu vivi o problema."
   },
 
   "credentials": {
     "title": "Não é um problema de leads. É um problema de vazamento.",
-    "subtitle": "De estúdios de Hollywood a construir um negócio do zero. A mesma disciplina, aplicada aos seus leads.",
+    "subtitle": "De estúdios vencedores do Oscar a lançar games AAA. A mesma disciplina, aplicada aos seus leads.",
     "resultsNode": "Resultados reais.",
     "items": [
       {
-        "metric": "Warner Bros.",
-        "label": "Entrega à prova de prazo",
-        "description": "Entreguei assets de produção para um filme da Warner Bros. com calendário de lançamento global. Quando eu digo que vai estar pronto, vai estar pronto."
+        "metric": "Framestore",
+        "label": "Estúdio VFX vencedor do Oscar",
+        "description": "Contribuí com digital art para Tom & Jerry (Warner Bros, 2021). O filme fez US$ 136M de bilheteria mundial. A Framestore ganhou o Oscar de Melhores Efeitos Visuais. Asset não passa pela pipeline deles se não estiver pronto para tela de cinema."
       },
       {
         "metric": "Sega",
-        "label": "3 jogos em 12 meses",
-        "description": "Entreguei assets digitais para três títulos da Sega junto com a Creative Assembly. Eu construo sistemas que escalam, não sistemas que quebram quando a demanda aumenta."
+        "label": "3 games AAA em 12 meses",
+        "description": "Entreguei assets digitais para três títulos na Creative Assembly, um estúdio da Sega (matriz de US$ 3.1B). Três releases em doze meses é o tipo de ritmo que quebra a maioria. Construo sistemas que escalam, não sistemas que desmoronam quando a demanda aperta."
+      },
+      {
+        "metric": "Embracer Group",
+        "label": "Liderei um time, lancei 2 títulos",
+        "description": "Liderei um time na New World Interactive (hoje um estúdio do Embracer Group) e lancei dois títulos, incluindo Insurgency: Sandstorm. O jogo fez mais de US$ 52M de receita e ainda tem base ativa de jogadores sete anos depois do lançamento. A Embracer é listada em bolsa em Estocolmo e tem mais de 100 estúdios no portfólio. Liderar um time pra entregar no prazo, no padrão e sem deixar nada cair é a mesma disciplina que eu levo pro seu outbound."
+      },
+      {
+        "metric": "Valve",
+        "label": "VR game jam por convite",
+        "description": "Selecionado pro VR game jam fechado da Valve em Londres. Jammei ao lado de devs que hoje lançam games na Valve, Epic e Ubisoft. Quando um time te confia pra construir algo do zero em 48 horas, não tá testando seu output, tá testando seu julgamento sob pressão."
       },
       {
         "metric": "TA Monks",
         "label": "Construí um negócio do zero",
-        "description": "Co-fundei uma operação de trading automatizada com minha esposa Danique. 4 anos construindo sistemas que funcionam sem supervisão. O Lead Awaker roda no mesmo princípio."
+        "description": "Co-fundei uma operação de trading automatizada com minha esposa Danique. 4 anos construindo sistemas que funcionam sem supervisão. O Lead Awaker roda no mesmo princípio: se precisa da minha mão todo dia, não vale a pena lançar."
       }
     ],
-    "recognition": "Apresentador de workshop no Design Week, Universidade do Rio de Janeiro. Em destaque no ZBrush Central e ArtStation."
+    "recognition": "Arte em destaque no ZBrush Central (Pixologic) e no ArtStation. Palestrante no Design Week da Universidade Federal do Rio de Janeiro. Perfil publicado em revista de design online."
   },
   "cta": {
     "title": "Veja funcionando nos seus leads",

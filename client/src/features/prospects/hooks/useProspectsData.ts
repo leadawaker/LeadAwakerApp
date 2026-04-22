@@ -152,7 +152,7 @@ export function useProspectsData(currentAccountId?: number) {
 
   // Auto-refresh when any external process mutates the Prospects table
   useEffect(() => {
-    const debounceRef = { current: 0 as ReturnType<typeof setTimeout> };
+    const debounceRef = { current: 0 as unknown as ReturnType<typeof setTimeout> };
     const params = new URLSearchParams();
     if (currentAccountId && currentAccountId > 0) {
       params.set("accountId", String(currentAccountId));
@@ -162,7 +162,11 @@ export function useProspectsData(currentAccountId?: number) {
 
     es.addEventListener("prospect_changed", () => {
       clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => fetchData(), 400);
+      debounceRef.current = setTimeout(() => {
+        fetchData();
+        // Notify other prospect consumers (paginated list view etc.) to re-fetch
+        window.dispatchEvent(new CustomEvent("crm-data-changed", { detail: { entity: "prospects" } }));
+      }, 400);
     });
 
     return () => {

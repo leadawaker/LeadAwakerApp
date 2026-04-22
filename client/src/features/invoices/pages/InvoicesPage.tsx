@@ -3,7 +3,7 @@ import { Receipt } from "lucide-react";
 export function InvoicesPage() {
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3.5 pt-5 pb-1 shrink-0">
+      <div className="pl-3.5 pr-[3px] pt-5 pb-1 shrink-0">
         <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Invoices</h2>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center gap-4">

@@ -18,6 +18,7 @@ export interface ProspectThread {
   last_message_type: string;
   contact_phone: string | null;
   phone: string | null;
+  channels: string[];
 }
 
 export function useProspectConversations() {

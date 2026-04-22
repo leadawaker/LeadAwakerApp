@@ -1,0 +1,5 @@
+export const COMPACT_RAIL_WIDTH = 65;
+export const COMPACT_AVATAR_SIZE = 40;
+
+export const COMPACT_ACTIVATE_BELOW = 1000;
+export const COMPACT_DEACTIVATE_ABOVE = 1300;

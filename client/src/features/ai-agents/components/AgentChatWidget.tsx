@@ -75,7 +75,7 @@ export function AgentChatWidget() {
   const draggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number; right: number; bottom: number } | null>(null);
 
-  const isDocked = dockMode && isWideViewport && !isMobile;
+  const isDocked = dockMode && isWideViewport;
 
   const dockResizeRef = useRef(false);
   const dockResizeStartRef = useRef<{ x: number; width: number } | null>(null);
@@ -412,10 +412,16 @@ export function AgentChatWidget() {
         {/* ── Resize handles (desktop only) ── */}
         {!isMobile && !isDocked && (
           <>
+            {/* Edges */}
             <div data-corner="tl" className="absolute top-0 left-4 right-4 h-1.5 cursor-n-resize z-10" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
             <div data-corner="tl" className="absolute top-4 left-0 bottom-4 w-1.5 cursor-w-resize z-10" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
+            <div data-corner="br" className="absolute bottom-0 left-4 right-4 h-1.5 cursor-s-resize z-10" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
+            <div data-corner="tr" className="absolute top-4 right-0 bottom-4 w-1.5 cursor-e-resize z-10" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
+            {/* Corners */}
             <div data-corner="tl" className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-20" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
             <div data-corner="tr" className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-20" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
+            <div data-corner="bl" className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-20" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
+            <div data-corner="br" className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-20" onPointerDown={onResizePointerDown} onPointerMove={onResizePointerMove} onPointerUp={onResizePointerUp} />
           </>
         )}
         {!isMobile && isDocked && (
@@ -445,6 +451,15 @@ export function AgentChatWidget() {
           onDragPointerUp={onDragPointerUp}
           dockMode={isDocked}
           onToggleDock={toggleDockMode}
+          onTitleRegenerated={(title) => {
+            if (!activeAgentId) return;
+            const meta = conversationsRef.current.get(activeAgentId);
+            if (meta?.session) {
+              meta.session = { ...meta.session, title };
+              conversationsRef.current.set(activeAgentId, { ...meta });
+              setConversationsMeta(new Map(conversationsRef.current));
+            }
+          }}
         />
 
         {/* ── Conversation Tabs (when 2+ open) ── */}
@@ -473,6 +488,8 @@ export function AgentChatWidget() {
               onMessageCountUpdate={handleMessageCountUpdate}
               selectedElement={agentId === activeAgentId ? elementPicker.confirmedInfo : undefined}
               onClearElement={elementPicker.clear}
+              selectionLocked={elementPicker.locked}
+              onToggleSelectionLock={elementPicker.toggleLock}
             />
           ))}
         </div>
@@ -527,11 +544,12 @@ export function AgentChatWidget() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Element picker overlay (rendered above app, below widget) */}
-      {elementPicker.pickerActive && (
+      {/* Element picker overlay (rendered above app, below widget). Stays visible after confirmation. */}
+      {(elementPicker.pickerActive || elementPicker.confirmedInfo) && (
         <ElementPickerOverlay
           hoveredInfo={elementPicker.hoveredInfo}
           selectedInfo={elementPicker.selectedInfo}
+          confirmedInfo={elementPicker.confirmedInfo}
         />
       )}
     </>

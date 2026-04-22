@@ -6,9 +6,13 @@ interface CollapsibleSectionProps {
   id: string;
   title: string;
   icon?: React.ElementType;
+  activeIconClass?: string;
   defaultOpen?: boolean;
   trailing?: React.ReactNode;
   hasData?: boolean;
+  hideDivider?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: React.ReactNode;
 }
 
@@ -28,45 +32,48 @@ export function CollapsibleSection({
   id,
   title,
   icon: Icon,
+  activeIconClass,
   defaultOpen = true,
   trailing,
   hasData,
+  hideDivider = false,
+  open: openProp,
+  onOpenChange,
   children,
 }: CollapsibleSectionProps) {
-  const [open, setOpen] = useState(() => readOpen(id, defaultOpen));
+  const [openLocal, setOpenLocal] = useState(() => readOpen(id, defaultOpen));
+  const open = openProp !== undefined ? openProp : openLocal;
 
   function toggle() {
-    setOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(getStorageKey(id), String(next));
-      } catch {}
-      return next;
-    });
+    const next = !open;
+    setOpenLocal(next);
+    try { localStorage.setItem(getStorageKey(id), String(next)); } catch {}
+    onOpenChange?.(next);
   }
 
   const accentActive = open && hasData;
 
   return (
-    <div className={cn(accentActive && "border-l-2 border-brand-indigo/20 pl-1.5 -ml-1.5")}>
-      <div className="h-px bg-border/40" />
+    <div>
+      {!hideDivider && <div className="h-px bg-border/40" />}
       <button
         type="button"
         onClick={toggle}
         className="flex w-full items-center gap-2 py-2 px-1 select-none"
       >
+        {Icon && <Icon className={cn("h-4 w-4", open ? (activeIconClass ?? "text-brand-indigo/60") : "text-foreground/50")} />}
+        <span className={cn("text-sm font-medium", open ? "text-foreground/80" : "text-foreground/60")}>
+          {title}
+        </span>
+        {trailing && <span className="ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>{trailing}</span>}
         <ChevronDown
           className={cn(
             "h-3.5 w-3.5 transition-transform duration-200",
+            !trailing && "ml-auto",
             !open && "-rotate-90",
-            hasData ? "text-foreground/70" : "text-muted-foreground/60",
+            hasData ? "text-foreground/40" : "text-muted-foreground/40",
           )}
         />
-        {Icon && <Icon className={cn("h-3.5 w-3.5", accentActive ? "text-brand-indigo/50" : hasData ? "text-foreground/70" : "text-muted-foreground/60")} />}
-        <span className={cn("text-[11px] font-bold uppercase tracking-widest", hasData ? "text-foreground/70" : "text-muted-foreground/60")}>
-          {title}
-        </span>
-        {trailing && <span className="ml-auto">{trailing}</span>}
       </button>
       <div
         className={cn(

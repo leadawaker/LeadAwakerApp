@@ -22,7 +22,7 @@ export const MODEL_OPTIONS = [
     description: "Most intelligent",
   },
   {
-    id: "claude-haiku-235-20241022",
+    id: "claude-haiku-4-5-20251001",
     label: "Haiku",
     shortLabel: "Haiku",
     icon: Rabbit,

@@ -428,6 +428,21 @@ export function useAgentChat() {
               }, 5000);
             } else if (evt.type === "error") {
               console.error("[AgentChat] Stream error:", evt.message);
+              // Show the error inline if it's a hard failure (no text accumulated yet)
+              if (!streamingTextRef.current) {
+                const errMsg: AgentMessage = {
+                  sessionId: session.sessionId,
+                  role: "assistant",
+                  content: "I ran into an error with the AI service. Please try again in a moment.",
+                  subAgentBlocks: [],
+                  createdAt: new Date().toISOString(),
+                };
+                setMessages((prev) => [...prev, errMsg]);
+                setStreaming(false);
+                setStreamingText("");
+                streamingTextRef.current = "";
+                setActivity(null);
+              }
             }
           } catch {
             // ignore parse errors for incomplete JSON
@@ -444,7 +459,7 @@ export function useAgentChat() {
       const errMsg: AgentMessage = {
         sessionId: session.sessionId,
         role: "assistant",
-        content: "Something went wrong. Please try again.",
+        content: "I ran into an error connecting to the AI service. Please try sending your message again.",
         subAgentBlocks: [],
         createdAt: new Date().toISOString(),
       };

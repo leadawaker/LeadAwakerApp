@@ -127,10 +127,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={withLang("/services")}
+                  href={withLang("/try")}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {t("nav.services")}
+                  {t("nav.try")}
                 </Link>
               </li>
             </ul>

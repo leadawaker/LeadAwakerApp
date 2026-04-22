@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { RefreshCw, X } from "lucide-react";
+import { RefreshCw, X, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,6 +16,8 @@ interface EnrichDropdownProps {
   companyEnrichedAt?: string | null;
   /** Called whenever the set of actively-enriching targets changes. */
   onLoadingChange?: (loading: Set<EnrichTarget>) => void;
+  /** When true, the trigger button is shown in blue (not yet enriched). */
+  highlight?: boolean;
 }
 
 const STORAGE_KEY = "enriching-v2";
@@ -54,12 +56,16 @@ export function EnrichDropdown({
   enrichedAt,
   companyEnrichedAt,
   onLoadingChange,
+  highlight,
 }: EnrichDropdownProps) {
   const [open, setOpen] = useState(false);
   const [checkCompany, setCheckCompany] = useState(false);
   const [checkContact1, setCheckContact1] = useState(false);
   const [checkContact2, setCheckContact2] = useState(false);
   const [active, setActive] = useState<Set<EnrichTarget>>(new Set());
+  const [timedOut, setTimedOut] = useState(false);
+  const [timedOutTargets, setTimedOutTargets] = useState<EnrichTarget[]>([]);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeRef = useRef<Set<EnrichTarget>>(active);
@@ -129,7 +135,10 @@ export function EnrichDropdown({
 
       timeoutRef.current = setTimeout(() => {
         stopPolling();
+        setTimedOutTargets(Array.from(activeRef.current));
         setActive(new Set());
+        setTimedOut(true);
+        setErrorMsg(`Enrichment took longer than ${Math.round(POLL_TIMEOUT / 60000)} min with no update. The server may still finish in the background.`);
         onDone?.();
       }, POLL_TIMEOUT);
     },
@@ -157,6 +166,9 @@ export function EnrichDropdown({
     if (targets.length === 0) return;
 
     setOpen(false);
+    setTimedOut(false);
+    setErrorMsg(null);
+    setTimedOutTargets([]);
     setActive(new Set(targets));
 
     try {
@@ -186,8 +198,11 @@ export function EnrichDropdown({
         enrichedAt: enrichedAt ?? null,
         companyEnrichedAt: companyEnrichedAt ?? null,
       });
-    } catch {
+    } catch (e: any) {
       setActive(new Set());
+      setTimedOut(true);
+      setTimedOutTargets(targets);
+      setErrorMsg(e?.message || "Failed to start enrichment. Check connection and try again.");
     }
 
     setCheckCompany(false);
@@ -218,11 +233,72 @@ export function EnrichDropdown({
     );
   }
 
+  if (timedOut) {
+    const retry = async () => {
+      if (timedOutTargets.length === 0) {
+        setTimedOut(false);
+        setErrorMsg(null);
+        return;
+      }
+      setTimedOut(false);
+      setErrorMsg(null);
+      setActive(new Set(timedOutTargets));
+      try {
+        for (const tgt of timedOutTargets) {
+          const body = tgt === "company"
+            ? { type: "company" }
+            : { type: "linkedin", contactSlot: tgt === "contact1" ? 1 : 2 };
+          await apiFetch(`/api/prospects/${prospectId}/enrich`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        }
+        startPolling(timedOutTargets, {
+          enrichedAt: enrichedAt ?? null,
+          companyEnrichedAt: companyEnrichedAt ?? null,
+        });
+      } catch (e: any) {
+        setActive(new Set());
+        setTimedOut(true);
+        setErrorMsg(e?.message || "Retry failed. Please try again.");
+      }
+    };
+    return (
+      <div className="inline-flex items-center gap-1">
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 max-w-[220px]"
+          title={errorMsg || ""}
+        >
+          <AlertTriangle className="h-3 w-3 shrink-0" />
+          <span className="truncate">{errorMsg || t("enrich.timedOut", "Enrichment timed out")}</span>
+        </span>
+        <button
+          onClick={retry}
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-brand-indigo/10 text-brand-indigo hover:bg-brand-indigo/20 transition-colors"
+          title={t("enrich.retry", "Retry enrichment")}
+        >
+          <RefreshCw className="h-3 w-3" />
+          {t("enrich.retryShort", "Retry")}
+        </button>
+        <button
+          onClick={() => { setTimedOut(false); setErrorMsg(null); setTimedOutTargets([]); }}
+          className="inline-flex items-center justify-center h-4 w-4 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          title={t("enrich.dismiss", "Dismiss")}
+        >
+          <X className="h-2.5 w-2.5" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className={highlight
+            ? "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-brand-indigo/10 text-brand-indigo hover:bg-brand-indigo/20 transition-colors"
+            : "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"}
           title={t("enrich.enrichProspect", "Enrich prospect")}
         >
           <RefreshCw className="h-3 w-3" />

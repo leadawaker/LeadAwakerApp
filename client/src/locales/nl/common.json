@@ -1,11 +1,11 @@
 {
   "nav": {
     "home": "Home",
-    "services": "Use Cases",
+    "try": "Probeer",
     "about": "Over Ons",
     "login": "Inloggen",
     "openApp": "Open App",
-    "bookDemo": "Demo Boeken"
+    "bookDemo": "Gesprek Boeken"
   },
   "footer": {
     "company": "Bedrijf",
@@ -16,7 +16,7 @@
     "terms": "Servicevoorwaarden"
   },
   "cta": {
-    "bookDemo": "Demo Boeken",
+    "bookDemo": "Gesprek Boeken",
     "learnMore": "Meer Weten",
     "getStarted": "Aan de slag",
     "contactUs": "Neem Contact Op"
@@ -27,5 +27,12 @@
     },
     "animation": {
     "yourBrand": "Jouw Merk"
+  },
+  "bubble": {
+    "tryDemo": "Probeer de AI-demo",
+    "chatFounder": "Chat met de oprichter",
+    "founderPrefill": "Hoi Gabriel, ik wil graag meer weten over Lead Awaker.",
+    "ariaOpen": "WhatsApp-contactmenu openen",
+    "ariaClose": "WhatsApp-contactmenu sluiten"
   }
 }

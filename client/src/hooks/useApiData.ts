@@ -79,9 +79,11 @@ export function useCampaigns(accountId?: number) {
 export function useLeads(accountId?: number, campaignId?: number) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (accountId) params.set("accountId", String(accountId));
@@ -120,6 +122,7 @@ export function useLeads(accountId?: number, campaignId?: number) {
       setLeads(normalized);
     } catch (err) {
       console.error("Failed to fetch leads", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
@@ -129,7 +132,7 @@ export function useLeads(accountId?: number, campaignId?: number) {
     refresh();
   }, [refresh]);
 
-  return { leads, loading, refresh };
+  return { leads, loading, error, refresh };
 }
 
 /* ─── Interactions ────────────────────────────────────────────── */

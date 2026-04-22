@@ -52,6 +52,15 @@
     "today": "Vandaag",
     "goToToday": "Ga naar vandaag"
   },
+  "a11y": {
+    "sortAscending": "Oplopend sorteren",
+    "sortDescending": "Aflopend sorteren"
+  },
+  "errors": {
+    "failedToLoad": "Afspraken kunnen niet worden geladen.",
+    "retry": "Opnieuw proberen",
+    "rescheduleFailed": "Opnieuw plannen mislukt."
+  },
   "dateGroups": {
     "past": "Verleden",
     "today": "Vandaag",

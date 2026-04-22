@@ -1,7 +1,5 @@
 import {
   ChevronLeft,
-  Maximize2,
-  Minimize2,
   RefreshCw,
   FileText,
   MoreVertical,
@@ -12,9 +10,11 @@ import {
   PlayCircle,
   Link as LinkIcon,
 } from "lucide-react";
+import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import type { Campaign } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { useCampaignDetail } from "../useCampaignDetail";
+import { WhatsAppDemoLinkButton } from "./atoms";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,8 +38,6 @@ interface DetailViewToolbarProps {
   onRefresh?: () => void;
   onDuplicate?: (campaign: Campaign) => Promise<void>;
   onDelete?: (id: number) => Promise<void>;
-  leftPanelCollapsed?: boolean;
-  onToggleLeftPanel?: () => void;
   promptPanelOpen?: boolean;
   onTogglePromptPanel?: () => void;
   t: any;
@@ -60,8 +58,6 @@ export function DetailViewToolbar({
   onRefresh,
   onDuplicate,
   onDelete,
-  leftPanelCollapsed,
-  onToggleLeftPanel,
   promptPanelOpen,
   onTogglePromptPanel,
   t,
@@ -74,15 +70,7 @@ export function DetailViewToolbar({
         </button>
       )}
       <>
-          {onToggleLeftPanel && (
-            <button
-              onClick={onToggleLeftPanel}
-              className="hidden md:grid h-9 w-9 rounded-full border border-black/[0.125] place-items-center shrink-0 text-foreground/60 hover:text-foreground transition-colors"
-              title={leftPanelCollapsed ? "Show list" : "Hide list"}
-            >
-              {leftPanelCollapsed ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-            </button>
-          )}
+          <ListPanelToggleButton />
 
           {onTogglePromptPanel && (
             <button
@@ -100,6 +88,9 @@ export function DetailViewToolbar({
               {t("toolbar.saving")}
             </span>
           )}
+
+          {/* WhatsApp demo link (visible only for is_demo campaigns) */}
+          <WhatsAppDemoLinkButton campaign={campaign} />
 
           {/* ··· More actions */}
           <DropdownMenu>

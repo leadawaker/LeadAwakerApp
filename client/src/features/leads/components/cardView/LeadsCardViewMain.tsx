@@ -19,7 +19,32 @@ import {
   X,
   Calendar,
   Kanban,
+  MoreVertical,
+  Filter,
+  ArrowUpDown,
+  Layers,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import {
+  useCompactPanelState,
+  useCompactHoverCard,
+  CompactTabPopover,
+  CompactHoverCardPortal,
+} from "@/components/crm/CompactEntityRail";
+import { CompactLeadCard } from "./CompactLeadCard";
+import { useListPanelState } from "@/hooks/useListPanelState";
+import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useLocation } from "wouter";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -107,6 +132,13 @@ export function LeadsCardView({
   const { t } = useTranslation("leads");
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
+  const isNarrow = useIsMobile(1024);
+
+  // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
+  const { ref: rightPanelRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow);
+  const { state: leftPanelState } = useListPanelState();
+  const isCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
+  const isHidden = !isNarrow && leftPanelState === "hidden";
 
   // ── Mobile kanban toggle (Feature #39): persisted preference ─────────────────
   const [mobileListMode, setMobileListMode] = usePersistedState<"list" | "kanban">(
@@ -151,6 +183,21 @@ export function LeadsCardView({
   const [cardAnimKey, setCardAnimKey] = useState(0);
   const PAGE_SIZE = 50;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Compact hover card state (shared hook).
+  const findLeadEl = useCallback(
+    (id: string | number) =>
+      scrollContainerRef.current?.querySelector(`[data-lead-id="${id}"]`) as HTMLElement | null,
+    [],
+  );
+  const {
+    hovered: hoveredLead,
+    rect: hoveredRect,
+    onHover: handleCompactHover,
+    onHoverEnd: handleCompactHoverEnd,
+    cancelHoverEnd: cancelHoveredEnd,
+    close: closeHoveredLead,
+  } = useCompactHoverCard<Record<string, any>>((l) => getLeadId(l), findLeadEl);
 
   // ── Pull-to-refresh (mobile) ─────────────────────────────────────────────
   const { pullDistance: leadsPullDistance, isRefreshing: leadsIsRefreshing } = usePullToRefresh({
@@ -270,17 +317,298 @@ export function LeadsCardView({
   // Reset to page 0 whenever the filtered/sorted list changes + bump anim key to re-trigger entrance
   useEffect(() => { setCurrentPage(0); setCardAnimKey((k) => k + 1); }, [flatItems]);
 
+  // F shortcut: scroll selected lead into view, jumping to its page if paginated.
+  useFKeyScrollToSelected({
+    containerRef: scrollContainerRef,
+    selectedId: selectedLead ? getLeadId(selectedLead) : null,
+    getSelector: (id) => `[data-lead-id="${id}"]`,
+    ensureLoaded: async (id) => {
+      const items = flatItems.filter((i: any) => i.kind === "lead");
+      const idx = items.findIndex((i: any) => getLeadId(i.lead) === id);
+      if (idx >= 0) {
+        const page = Math.floor(idx / PAGE_SIZE);
+        if (page !== currentPage) setCurrentPage(page);
+      }
+    },
+  });
+
   return (
     /* Outer shell: transparent — gaps between panels reveal stone-gray page background */
     <div className="relative flex h-full min-h-[600px] gap-[3px] max-w-[1729px] mx-auto w-full">
 
       {/* ── LEFT: Lead List ── muted panel (#E3E3E3) */}
       {/* On mobile: always visible (MobileLeadDetailPanel is a fixed overlay on top) */}
-      <div className="flex flex-col bg-muted rounded-lg overflow-hidden w-full lg:w-[340px] lg:shrink-0">
+      <div className={cn(
+        "flex flex-col bg-muted rounded-lg overflow-hidden",
+        isHidden
+          ? "hidden"
+          : isCompact
+            ? "w-[65px] shrink-0"
+            : "w-full lg:w-[340px] lg:shrink-0"
+      )}>
+
+        {isCompact && (
+          <>
+            <CompactTabPopover
+              tabs={viewTabs.map((tab) => ({ id: tab.id, label: tab.label, icon: tab.icon }))}
+              activeId={viewMode}
+              onChange={(id) => onViewModeChange(id as ViewMode)}
+            />
+            <div className="flex flex-col items-center gap-1 px-1.5 pb-2 shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "h-9 w-9 rounded-full flex items-center justify-center transition-colors",
+                      (isFilterActive || isSortNonDefault || isGroupNonDefault)
+                        ? "bg-brand-indigo/10 text-brand-indigo"
+                        : "text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
+                    )}
+                    title={t("toolbar.more", "More")}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-56 max-h-[500px] overflow-y-auto">
+                  {/* Inline search */}
+                  <div className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className={cn(
+                      "flex items-center h-8 px-2.5 gap-1.5 rounded-full border",
+                      listSearch ? "border-brand-indigo/40 bg-brand-indigo/5" : "border-black/[0.08] bg-muted/40"
+                    )}>
+                      <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <input
+                        value={listSearch}
+                        onChange={(e) => onListSearchChange(e.target.value)}
+                        placeholder={t("toolbar.searchPlaceholder")}
+                        onKeyDown={(e) => { if (e.key === "Escape") onListSearchChange(""); }}
+                        className="flex-1 min-w-0 bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60"
+                      />
+                      {listSearch && (
+                        <button type="button" onClick={() => onListSearchChange("")} className="shrink-0 text-muted-foreground hover:text-foreground">
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {/* Filter submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <Filter className="h-3.5 w-3.5 shrink-0" />
+                      <span className="flex-1">{t("toolbar.filter")}</span>
+                      {isFilterActive && (
+                        <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                          {filterStatus.length + filterTags.length + (filterAccount ? 1 : 0) + (filterCampaign ? 1 : 0)}
+                        </span>
+                      )}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-52 max-h-[400px] overflow-y-auto">
+                      {/* Status */}
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                          <span className="flex-1">{t("group.status")}</span>
+                          {filterStatus.length > 0 && (
+                            <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>
+                          )}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-48">
+                          {["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"].map((s) => (
+                            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
+                              <span className="flex-1">{s}</span>
+                              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                      {/* Account */}
+                      {availableAccounts.length > 0 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                            <span className="flex-1">{t("detail.fields.account")}</span>
+                            {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-48 max-h-64 overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={(e) => { e.preventDefault(); setFilterAccount(""); setFilterCampaign(""); }}
+                              className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}
+                            >
+                              {t("filters.allAccounts")}
+                              {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableAccounts.map((a) => (
+                              <DropdownMenuItem
+                                key={a.id}
+                                onClick={(e) => { e.preventDefault(); if (filterAccount === a.id) { setFilterAccount(""); } else { setFilterAccount(a.id); setFilterCampaign(""); } }}
+                                className={cn("text-[12px]", filterAccount === a.id && "font-semibold text-brand-indigo")}
+                              >
+                                <span className="flex-1 truncate">{a.name}</span>
+                                {filterAccount === a.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+                      {/* Campaign */}
+                      {availableCampaigns.length > 0 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                            <span className="flex-1">{t("detailView.campaign")}</span>
+                            {filterCampaign && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={(e) => { e.preventDefault(); setFilterCampaign(""); }}
+                              className={cn("text-[12px]", !filterCampaign && "font-semibold text-brand-indigo")}
+                            >
+                              {t("filters.allCampaigns")}
+                              {!filterCampaign && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableCampaigns.map((c) => (
+                              <DropdownMenuItem
+                                key={c.id}
+                                onClick={(e) => { e.preventDefault(); if (filterCampaign === c.id) { setFilterCampaign(""); } else { setFilterCampaign(c.id); } }}
+                                className={cn("text-[12px]", filterCampaign === c.id && "font-semibold text-brand-indigo")}
+                              >
+                                <span className="flex-1 truncate">{c.name}</span>
+                                {filterCampaign === c.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+                      {/* Tags */}
+                      {allTags.length > 0 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                            <span className="flex-1">{t("detail.sections.tags")}</span>
+                            {filterTags.length > 0 && (
+                              <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterTags.length}</span>
+                            )}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-48 max-h-64 overflow-y-auto">
+                            {allTags.map((tag) => (
+                              <DropdownMenuItem key={tag.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(tag.name); }} className="flex items-center gap-2 text-[12px]">
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                                <span className="flex-1 truncate">{tag.name}</span>
+                                {filterTags.includes(tag.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+                      {isFilterActive && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => { onResetControls(); setFilterAccount(""); setFilterCampaign(""); }} className="text-[12px] text-muted-foreground">
+                            {t("toolbar.clearAllFilters", "Clear filters")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  {/* Sort submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
+                      <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.sort")}</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44">
+                      {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as const).map((value) => {
+                        const label = {
+                          recent:     t("sort.mostRecent"),
+                          name_asc:   t("sort.nameAZ"),
+                          name_desc:  t("sort.nameZA"),
+                          score_desc: t("sort.scoreDown"),
+                          score_asc:  t("sort.scoreUp"),
+                        }[value];
+                        return (
+                          <DropdownMenuItem key={value} onClick={() => onSortByChange(value)} className={cn("text-[12px]", sortBy === value && "font-semibold text-brand-indigo")}>
+                            {label}
+                            {sortBy === value && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  {/* Group submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <Layers className="h-3.5 w-3.5 shrink-0" />
+                      <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.group")}</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44">
+                      {(["date", "status", "campaign", "tag", "none"] as const).map((value) => {
+                        const label = {
+                          date:     t("sort.mostRecent"),
+                          status:   t("group.status"),
+                          campaign: t("group.campaign"),
+                          tag:      t("detail.sections.tags"),
+                          none:     t("group.none"),
+                        }[value];
+                        return (
+                          <DropdownMenuItem key={value} onClick={() => onGroupByChange(value)} className={cn("text-[12px]", groupBy === value && "font-semibold text-brand-indigo")}>
+                            {label}
+                            {groupBy === value && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* +Add */}
+                  {onCreateLead && (
+                    <DropdownMenuItem onClick={onCreateLead} className="flex items-center gap-2 text-[12px]">
+                      <Plus className="h-3.5 w-3.5 shrink-0" />
+                      <span>{t("toolbar.add", "Add Lead")}</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+              {loading ? (
+                <ListSkeleton />
+              ) : flatItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-2">
+                  <Users className="h-5 w-5 text-muted-foreground/40" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-0">
+                  {flatItems.map((item, i) => {
+                    if (item.kind === "header") return null;
+                    const lid = getLeadId(item.lead);
+                    const selectedId = selectedLead ? getLeadId(selectedLead) : null;
+                    return (
+                      <div key={lid} data-lead-id={lid}>
+                        <CompactLeadCard
+                          lead={item.lead}
+                          isActive={selectedId === lid}
+                          onClick={() => { onSelectLead(item.lead); onMobileViewChange?.("detail"); }}
+                          onHover={handleCompactHover}
+                          onHoverEnd={handleCompactHoverEnd}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {!isCompact && <>
 
         {/* ── Panel header: title + ViewTabBar ── */}
-        <div className="pl-[17px] pr-3.5 pt-3 lg:pt-10 pb-1 lg:pb-3 shrink-0 flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-0">
-          <div className="flex items-center justify-between w-full lg:w-[309px] lg:shrink-0">
+        <div className="pl-[17px] pr-[17px] pt-3 lg:pt-10 pb-1 lg:pb-3 shrink-0 flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-0">
+          <div className="flex items-center justify-between w-full lg:w-[306px] lg:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
             <span className="hidden lg:block">
               <ViewTabBar tabs={viewTabs} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
@@ -400,7 +728,7 @@ export function LeadsCardView({
         )}
 
         {/* ── Desktop toolbar: search + create + sort + filter + group ── */}
-        <div className="hidden lg:flex px-2 pb-2 items-center gap-1 shrink-0">
+        <div className="hidden lg:flex pl-2 pr-[17px] pb-2 items-center gap-1 shrink-0">
           <LeadsFiltersBar
             listSearch={listSearch}
             groupBy={groupBy}
@@ -505,6 +833,7 @@ export function LeadsCardView({
             </>
           )}
         </div>
+        </>}
       </div>
 
       {/* ── RIGHT: Detail panel ── */}
@@ -529,9 +858,15 @@ export function LeadsCardView({
       </AnimatePresence>
 
       {/* Desktop detail panel — always hidden on mobile (mobile uses MobileLeadDetailPanel overlay) */}
-      <div className={cn(
-        "flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg hidden lg:flex max-w-[1386px]"
+      <div ref={rightPanelRef} className={cn(
+        "relative flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg hidden lg:flex max-w-[1386px]"
       )}>
+        {/* List panel toggle — shared pill style, floating top-right */}
+        {!isNarrow && (
+          <div className="absolute top-3 right-3 z-20">
+            <ListPanelToggleButton />
+          </div>
+        )}
         {loading && !selectedLead ? (
           <SkeletonLeadPanel />
         ) : selectedLead ? (
@@ -711,6 +1046,26 @@ export function LeadsCardView({
           }
         }}
       />
+
+      {/* ── Compact mode hover card overlay ───────────────────────────────── */}
+      {isCompact && hoveredLead && (
+        <CompactHoverCardPortal
+          rect={hoveredRect}
+          onMouseEnter={cancelHoveredEnd}
+          onMouseLeave={handleCompactHoverEnd}
+        >
+          <LeadListCard
+            lead={hoveredLead}
+            isActive={selectedLead ? getLeadId(selectedLead) === getLeadId(hoveredLead) : false}
+            onClick={() => { onSelectLead(hoveredLead); closeHoveredLead(); }}
+            leadTags={leadTagsInfo.get(getLeadId(hoveredLead)) || []}
+            showContactAlways={showContactAlways}
+            tagsColorful={tagsColorful}
+            hideTags={hideTags}
+            campaignsById={campaignsById}
+          />
+        </CompactHoverCardPortal>
+      )}
     </div>
   );
 }

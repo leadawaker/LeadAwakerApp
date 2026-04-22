@@ -18,6 +18,8 @@ import {
   Briefcase,
   StickyNote,
   ArrowRight,
+  Inbox,
+  SearchX,
   User,
   BadgeCheck,
 } from "lucide-react";
@@ -26,7 +28,7 @@ import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useS
 import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { ProspectAvatar } from "./ProspectAvatar";
 import type { ProspectRow } from "./ProspectListView";
 import { OUTREACH_HEX } from "./OutreachPipelineView";
 
@@ -313,6 +315,9 @@ function EditableCell({
             ta.style.height = "auto";
             ta.style.height = Math.max(32, ta.scrollHeight) + "px";
             ta.selectionStart = ta.selectionEnd = ta.value.length;
+            try {
+              ta.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+            } catch {}
           }}
           className="absolute top-0 left-0 w-full min-h-[32px] max-h-[300px] text-[12px] leading-relaxed bg-white dark:bg-card px-2.5 py-1.5 ring-2 ring-brand-indigo/50 shadow-[0_4px_24px_rgba(0,0,0,0.12)] outline-none resize-none rounded-none"
           style={{ zIndex: 9999, minWidth: 240, borderRadius: 0 }}
@@ -371,7 +376,7 @@ function SortableHeaderCell({ col, isFirst, t, onResizeStart }: { col: ColumnDef
       </div>
       {/* Resize handle — isolated from DnD listeners */}
       <div
-        className="absolute right-0 top-0 bottom-0 w-[6px] cursor-col-resize hover:bg-brand-indigo/30"
+        className="absolute right-0 top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-brand-indigo/30"
         onMouseDown={(e) => { e.stopPropagation(); onResizeStart(col.key, e); }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -727,6 +732,28 @@ export function ProspectsInlineTable({
       {/* ── Table ── */}
       {loading ? (
         <TableSkeleton />
+      ) : displayItems.filter(i => i.kind === "prospect").length === 0 ? (
+        <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center p-8">
+          <div className="flex flex-col items-center text-center max-w-sm gap-2">
+            {tableSearch.trim() ? (
+              <>
+                <SearchX className="h-10 w-10 text-muted-foreground/30" />
+                <p className="text-[14px] font-medium text-foreground/70">{t("table.emptySearchTitle", "No matches")}</p>
+                <p className="text-[12px] text-muted-foreground/60">
+                  {t("table.emptySearchHint", "No prospects match your search or filters. Try clearing them.")}
+                </p>
+              </>
+            ) : (
+              <>
+                <Inbox className="h-10 w-10 text-muted-foreground/30" />
+                <p className="text-[14px] font-medium text-foreground/70">{t("table.emptyTitle", "No prospects yet")}</p>
+                <p className="text-[12px] text-muted-foreground/60">
+                  {t("table.emptyHint", "Add a prospect or import a list to get started.")}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-auto">
           <table className={cn("min-w-full w-full", showVerticalLines && "[&_td]:border-r [&_td]:border-border/10 [&_th]:border-r [&_th]:border-border/10")} style={{ borderCollapse: "separate", borderSpacing: "0 2px", tableLayout: "fixed" }}>
@@ -866,8 +893,6 @@ export function ProspectsInlineTable({
                   const isMultiSelected = selectedIds.has(pid);
                   const isHighlighted = isMultiSelected || isDetailSelected;
                   const company = String(prospect.company || t("detail.unnamedProspect"));
-                  const niche = String(prospect.niche || "");
-                  const nicheColor = getNicheColor(niche);
                   const bgClass = isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover";
 
                   const isRowEditing = editingCell?.pid === pid;
@@ -919,12 +944,13 @@ export function ProspectsInlineTable({
                           return (
                             <td key="company" className={cn("px-2.5", tdClass)}>
                               <div className="flex items-center gap-2 min-w-0">
-                                <EntityAvatar
+                                <ProspectAvatar
                                   name={company}
-                                  photoUrl={prospect.photo_url}
-                                  bgColor={nicheColor.hex}
-                                  textColor="#fff"
+                                  website={prospect.website}
+                                  companyLogoUrl={prospect.company_logo_url}
+                                  outreachStatus={prospect.outreach_status}
                                   size={32}
+                                  zoomOnClick
                                   className="font-normal"
                                 />
                                 <span className="text-[12px] font-medium truncate text-foreground">{company}</span>

@@ -172,6 +172,7 @@
     "whatsApp": "WhatsApp",
     "interactions": "Interações",
     "tasks": "Tarefas",
+    "nextActions": "Próximas Ações",
     "offerIdeas": "Ideias de Oferta"
   },
   "fields": {
@@ -327,6 +328,16 @@
       "reply": "Responder"
     }
   },
+  "emailComposer": {
+    "label": "E-mail",
+    "noEmail": "Nenhum endereço de e-mail cadastrado",
+    "compose": "Escrever e-mail",
+    "to": "Para",
+    "subject": "Assunto",
+    "body": "Mensagem",
+    "cancel": "Cancelar",
+    "sending": "Enviando..."
+  },
   "emailCompose": {
     "title": "Escrever E-mail",
     "replyTitle": "Responder E-mail",
@@ -351,28 +362,57 @@
   },
   "whatsappComposer": {
     "title": "WhatsApp",
+    "label": "Mensagem WhatsApp",
     "placeholder": "Digite uma mensagem no WhatsApp...",
     "send": "Enviar",
     "sending": "Enviando...",
     "noPhone": "Nenhum numero de telefone cadastrado",
-    "sendFailed": "Falha ao enviar. Tente novamente."
+    "sendFailed": "Falha ao enviar. Tente novamente.",
+    "chars": "caracteres",
+    "compose": "Enviar WhatsApp",
+    "cancel": "Cancelar"
   },
   "tabs": {
     "company": "Empresa",
     "contact1": "Contato 1",
     "contact2": "Contato 2"
   },
+  "audit": {
+    "empty": "Auditoria ainda não gerada. Execute o enriquecimento novamente.",
+    "strengths": "Pontos fortes",
+    "opportunities": "Oportunidades",
+    "gaps": "Lacunas",
+    "leadAwakerFit": "Fit com Lead Awaker",
+    "angle": "Ângulo",
+    "pitchHook": "Gancho de pitch"
+  },
   "companyTab": {
     "summary": "Resumo",
+    "audit": "Auditoria",
     "services": "Serviços",
-    "products": "Produtos",
     "history": "Histórico",
     "noSummary": "Nenhum resumo ainda. Execute o enriquecimento para popular.",
     "noServices": "Nenhum dado de serviços disponível.",
-    "noProducts": "Nenhum dado de produtos disponível.",
     "noHistory": "Nenhum histórico da empresa disponível.",
     "loadingCompany": "Enriquecendo empresa...",
     "loadingContact": "Enriquecendo contato {{slot}}...",
+    "loadingCompanySteps": [
+      "Buscando página da empresa no LinkedIn...",
+      "Lendo descrição da empresa...",
+      "Raspando o site...",
+      "Analisando serviços e produtos...",
+      "Construindo histórico da empresa...",
+      "Buscando postagens recentes...",
+      "Gerando ideias de campanha...",
+      "Quase pronto..."
+    ],
+    "loadingContactSteps": [
+      "Buscando candidatos no Google...",
+      "Avaliando tomadores de decisão...",
+      "Buscando perfil do LinkedIn...",
+      "Analisando postagens recentes...",
+      "Escrevendo brief de contato..."
+    ],
     "aboutCompany": "Sobre {{name}}",
     "aboutContact": "Sobre {{name}}",
     "topCompanyPosts": "Principais Posts da Empresa",
@@ -430,5 +470,16 @@
     "stylePlaceholder": "Estilo",
     "formatPlaceholder": "Formato",
     "languagePlaceholder": "Idioma"
+  },
+  "outreachTimeline": {
+    "title": "Historico de Outreach",
+    "empty": "Nenhum outreach registrado ainda"
+  },
+  "tasks": {
+    "addTask": "Adicionar tarefa",
+    "newTaskPlaceholder": "Título da tarefa..."
+  },
+  "interactions": {
+    "openConversations": "Abrir em conversas"
   }
 }

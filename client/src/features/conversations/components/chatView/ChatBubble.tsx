@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
-import { RotateCcw, Mic, Image as ImageIcon, Mail } from "lucide-react";
+import { RotateCcw, Mic, Image as ImageIcon, Mail, MessageSquare, Linkedin } from "lucide-react";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { SessionUser } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
@@ -46,9 +46,12 @@ export function ChatBubble({
   const isSent = statusNorm === "sent";
   const isDelivered = statusNorm === "delivered";
   const isRead = statusNorm === "read";
-  const isEmail = (item.type ?? "").toLowerCase() === "email";
-  const aiMsg = outbound && !isEmail && isAiMessage(item);
-  const humanAgentMsg = outbound && !isEmail && isHumanAgentMessage(item);
+  const typeNorm = (item.type ?? "").toLowerCase();
+  const isEmail = typeNorm === "email";
+  const isLinkedIn = typeNorm === "linkedin";
+  const isWhatsApp = typeNorm === "whatsapp" || typeNorm === "whatsapp_cloud";
+  const aiMsg = outbound && !isEmail && !isLinkedIn && isAiMessage(item);
+  const humanAgentMsg = outbound && !isEmail && !isLinkedIn && isHumanAgentMessage(item);
   const { isFirstInRun, isLastInRun } = meta;
   const rawTs = item.created_at ?? item.createdAt ?? (item as any).Created_At ?? (item as any).CreatedAt ?? null;
   const time = formatBubbleTime(rawTs, timezone);
@@ -99,6 +102,8 @@ export function ChatBubble({
           bubbleRadius,
           // Email: always white/card with border, regardless of direction
           isEmail && "bg-white dark:bg-card text-gray-900 dark:text-foreground border border-border/50 bubble-shadow",
+          // LinkedIn: subtle blue tint with border
+          isLinkedIn && "bg-[#f4f8ff] dark:bg-[#1a2540] text-gray-900 dark:text-foreground border border-[#0A66C2]/20 bubble-shadow",
           // Inbound (lead): neutral gray glow; mobile uses --card bg explicitly
           !isEmail && inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground bubble-shadow",
           // AI outbound: blue (desktop) / brand-indigo (mobile)
@@ -107,7 +112,7 @@ export function ChatBubble({
           humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground bubble-shadow max-md:bg-brand-indigo max-md:text-white max-md:filter-none",
           isFailed && "opacity-80",
         )}
-        data-message-type={isEmail ? "email" : inbound ? "lead" : aiMsg ? "ai" : "agent"}
+        data-message-type={isEmail ? "email" : isLinkedIn ? "linkedin" : inbound ? "lead" : aiMsg ? "ai" : "agent"}
         title={aiCostTitle}
       >
         {/* Tail triangle — only on last message in a consecutive run */}
@@ -118,6 +123,7 @@ export function ChatBubble({
           <span aria-hidden="true" className={cn(
             "absolute bottom-0 -right-[6px] w-0 h-0 border-t-[9px] border-t-transparent border-l-[8px]",
             isEmail && "border-l-white dark:border-l-card",
+            isLinkedIn && "border-l-[#f4f8ff] dark:border-l-[#1a2540]",
             aiMsg && "border-l-[#f2f5ff] dark:border-l-[#1e2340] max-md:border-l-brand-indigo",
             humanAgentMsg && "border-l-[#f1fff5] dark:border-l-[#1a2e1f] max-md:border-l-brand-indigo",
           )} />
@@ -136,6 +142,8 @@ export function ChatBubble({
           const timeStamp = (
             <span className="shrink-0 inline-flex items-center gap-0.5 text-[11px] leading-none select-none opacity-50 mb-0.5">
               {isEmail && <Mail className="h-3 w-3" />}
+              {isLinkedIn && <Linkedin className="h-3 w-3" />}
+              {isWhatsApp && <MessageSquare className="h-3 w-3" />}
               {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
               {outbound && (
                 <MessageStatusIcon

@@ -29,6 +29,7 @@ const DEFAULT_FORM: NewProspectForm = {
   contact_email: "",
   contact_phone: "",
   contact_linkedin: "",
+  company_linkedin: "",
   contact2_name: "",
   contact2_role: "",
   contact2_email: "",

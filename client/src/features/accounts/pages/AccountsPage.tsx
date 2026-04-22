@@ -369,7 +369,7 @@ export default function AccountsPage() {
               <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
                 {/* Title + 309px wrapper with ViewTabBar + toolbar */}
-                <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+                <div className="pl-[17px] pr-[3px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
                   <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
                     <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
                     <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as AccountViewMode)} variant="segment" />

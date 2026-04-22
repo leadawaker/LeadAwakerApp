@@ -247,12 +247,10 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           paddingBottom: "var(--bottombar-h)",
           paddingRight: (() => {
             if (!dockActive) return undefined;
-            if (isAnyFullWidth) return `${dockWidth}px`;
+            if (isAnyFullWidth) return `${dockWidth - 1.5}px`;
             const sidebar = collapsed ? 56 : 225;
             const mainArea = viewportW - sidebar;
-            const contentMax = 1729;
-            const rightPad = 20;
-            const freeRight = Math.max(0, (mainArea - contentMax) / 2) + rightPad;
+            const freeRight = Math.max(0, (mainArea - 1729) / 2) + 20;
             return dockWidth > freeRight ? `${dockWidth - freeRight}px` : undefined;
           })(),
           transition: "padding-right 150ms ease-out",

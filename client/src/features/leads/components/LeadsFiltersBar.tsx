@@ -139,6 +139,7 @@ export function LeadsFiltersBar({
         open={searchOpen}
         onOpenChange={onSearchOpenChange}
         placeholder={t("toolbar.searchPlaceholder")}
+        className="ml-[9px] max-w-[149px]"
       />
 
       {/* Group */}

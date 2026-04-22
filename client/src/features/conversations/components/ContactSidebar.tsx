@@ -207,7 +207,22 @@ interface ContactSidebarProps {
 
 export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, onNavigateToLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions, onRefresh, campaignsMap }: ContactSidebarProps) {
   const { t } = useTranslation("conversations");
-  const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
+  const COLLAPSED_STORAGE_KEY = "conversations-contact-collapsed-sections";
+  const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSED_STORAGE_KEY);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw) as SectionId[];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch {
+      return new Set();
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify(Array.from(collapsedSections)));
+    } catch {}
+  }, [collapsedSections]);
   const toggleSection = (id: SectionId) => {
     setCollapsedSections((prev) => {
       const next = new Set(prev);

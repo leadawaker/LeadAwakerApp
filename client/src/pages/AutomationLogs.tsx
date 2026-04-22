@@ -170,7 +170,7 @@ export default function AutomationLogsPage() {
           <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
             {/* ── Title + Toolbar (single row) ── */}
-            <div ref={toolbarRef} className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+            <div ref={toolbarRef} className="pl-[17px] pr-[3px] pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
               <div className="flex items-center gap-2 shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
                   {t("page.title")}

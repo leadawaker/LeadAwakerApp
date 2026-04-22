@@ -7,10 +7,29 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, UserSearch, Headphones, Search, X, BotMessageSquare, Zap, Bot, Settings, ChevronDown, Plus, Loader2, Mail, MessageCircle, User, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush, Hand } from "lucide-react";
-import type { ProspectThread } from "../hooks/useProspectConversations";
-import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
+import { Inbox, BellDot, UserSearch, Search, X, Plus, Mail, MessageCircle, MessageSquare, Linkedin, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush, Radio } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
+import type {
+  ChatGroupBy, ChatSortBy, GroupDirection, InboxTab,
+  VirtualItem, InboxPanelProps, Thread, Lead, Interaction, ProspectThread,
+} from "./inboxPanel/types";
+import {
+  PROSPECT_OUTREACH_STATUSES, STATUS_GROUP_ORDER, DATE_GROUP_ORDER,
+  xBase, xDefault, xActive, xSpan, GROUP_LABELS, SORT_LABELS,
+} from "./inboxPanel/constants";
+import { getLeadTagNames, getLastMessageDisplay, getDateGroupLabel } from "./inboxPanel/helpers";
+import { AgentInboxRow } from "./inboxPanel/AgentInboxRow";
+import { ThreadList } from "./inboxPanel/ThreadList";
+import {
+  CompactTabPopover,
+  CompactHoverCardPortal,
+  useCompactHoverCard,
+} from "@/components/crm/CompactEntityRail";
+import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
+
+// Re-exports for backwards compat with Conversations.tsx and other consumers.
+export type { ChatGroupBy, ChatSortBy, GroupDirection, InboxTab };
+export { GROUP_LABELS, SORT_LABELS };
 import {
   getStatus,
   getStatusAvatarColor,
@@ -24,6 +43,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -41,378 +61,6 @@ import {
 } from "../utils/conversationHelpers";
 import { UncontactedProspectPicker } from "./UncontactedProspectPicker";
 
-const PROSPECT_OUTREACH_STATUSES = ["new", "contacted", "responded", "call_booked", "demo_given", "deal_closed", "not_interested"];
-
-function getLeadTagNames(lead: Lead): string[] {
-  const raw = lead.tags;
-  if (!raw) return [];
-  if (typeof raw === "string") {
-    try { return JSON.parse(raw); } catch { return []; }
-  }
-  if (Array.isArray(raw)) {
-    return raw.map((t: any) => typeof t === "string" ? t : t?.name ?? "").filter(Boolean);
-  }
-  return [];
-}
-
-function getLastMessageDisplay(last: Interaction | undefined): string {
-  if (!last) return "";
-  const content = last.content ?? last.Content ?? "";
-  const attachment = last.attachment ?? last.Attachment;
-  if (attachment && !content) {
-    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)/i.test(attachment)) return "Image";
-    if (/\.(mp4|mov|avi|webm)/i.test(attachment)) return "Video";
-    if (/\.(mp3|wav|ogg|aac)/i.test(attachment)) return "🎵 Voice message";
-    return "File";
-  }
-  return content;
-}
-
-// Group / Sort label maps are exported for use by the settings dropdown in Conversations.tsx
-export const GROUP_LABELS: Record<ChatGroupBy, string> = {
-  date:     "Date",
-  status:   "Status",
-  campaign: "Campaign",
-  none:     "None",
-};
-
-export const SORT_LABELS: Record<ChatSortBy, string> = {
-  newest:     "Most Recent",
-  oldest:     "Oldest First",
-  name_asc:   "Name A \u2192 Z",
-  name_desc:  "Name Z \u2192 A",
-  status_asc: "Status (New \u2192 Done)",
-  status_desc:"Status (Done \u2192 New)",
-};
-
-// ── Toolbar expand-on-hover constants (same pattern as PromptsListView) ──────
-const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
-
-const STATUS_GROUP_ORDER = ["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Closed", "Lost", "DND"];
-
-// ── Date group helpers ─────────────────────────────────────────────────────────
-function getDateGroupLabel(dateStr: string | null | undefined): string {
-  if (!dateStr) return "No Activity";
-  try {
-    const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
-    if (diff <= 0)  return "Today";
-    if (diff === 1) return "Yesterday";
-    if (diff < 7)   return "This Week";
-    if (diff < 30)  return "This Month";
-    if (diff < 90)  return "Last 3 Months";
-    return "Older";
-  } catch { return "No Activity"; }
-}
-
-const DATE_GROUP_ORDER = ["Today", "Yesterday", "This Week", "This Month", "Last 3 Months", "Older", "No Activity"];
-
-// ── Virtual list item type ─────────────────────────────────────────────────────
-type VirtualItem =
-  | { type: "header"; label: string; count: number }
-  | { type: "thread"; thread: Thread };
-
-// ── Types ──────────────────────────────────────────────────────────────────────
-export type ChatGroupBy = "date" | "status" | "campaign" | "none";
-export type GroupDirection = "asc" | "desc";
-export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc" | "status_asc" | "status_desc";
-export type InboxTab = "all" | "unread" | "support" | "prospects";
-
-// ── Agent inbox row (expandable with recent chats) ──────────────────────────────
-interface AgentRecentChat {
-  id: number;
-  sessionId: string;
-  title: string | null;
-  messageCount: number;
-  updatedAt: string;
-  lastMessage: { content: string; role: string } | null;
-}
-
-type AgentRowProps = {
-  agent: { id: number; name: string; type: string; photoUrl: string | null; enabled?: boolean };
-  isSelected: boolean;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
-  onSelectChat: (agentId: number, sessionId?: string) => void;
-  activeSessionId?: string | null;
-  onSettingsClick?: (agentId: number) => void;
-};
-
-function AgentInboxRow({ agent, isSelected, isExpanded, onToggleExpand, onSelectChat, activeSessionId, onSettingsClick }: AgentRowProps) {
-  const typeChip: Record<string, string> = {
-    code_runner: "Code Runner",
-    custom: "Custom",
-  };
-  const chipLabel = typeChip[agent.type] ?? agent.type;
-  const isEnabled = agent.enabled !== false;
-
-  const [recentChats, setRecentChats] = useState<AgentRecentChat[]>([]);
-  const [loadingChats, setLoadingChats] = useState(false);
-  const fetchedRef = useRef(false);
-
-  // Fetch recent chats when expanded
-  useEffect(() => {
-    if (!isExpanded) return;
-    // Re-fetch each time expanded (in case new chats were created)
-    setLoadingChats(true);
-    let cancelled = false;
-    apiFetch(`/api/agents/${agent.id}/conversations`)
-      .then(async (res) => {
-        if (cancelled || !res.ok) return;
-        const data = await res.json();
-        // Take only the 5 most recent
-        setRecentChats(data.slice(0, 5));
-        fetchedRef.current = true;
-      })
-      .catch((err) => console.error("[InboxPanel] Failed to fetch agent conversations:", err))
-      .finally(() => { if (!cancelled) setLoadingChats(false); });
-    return () => { cancelled = true; };
-  }, [isExpanded, agent.id, activeSessionId]);
-
-  const AgentIcon = () => {
-    if (agent.photoUrl) {
-      return (
-        <div className="relative">
-          <img
-            src={agent.photoUrl}
-            alt={agent.name}
-            className="h-9 w-9 rounded-full object-cover"
-          />
-          <span
-            className={cn(
-              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
-              isSelected ? "border-highlight-selected" : "border-card",
-              isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
-            )}
-          />
-        </div>
-      );
-    }
-    if (agent.type === "code_runner") {
-      return (
-        <div className="relative">
-          <div className="h-9 w-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
-            <Zap className="h-4 w-4 text-green-600" />
-          </div>
-          <span
-            className={cn(
-              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
-              isSelected ? "border-highlight-selected" : "border-card",
-              isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
-            )}
-          />
-        </div>
-      );
-    }
-    return (
-      <div className="relative">
-        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-          <Bot className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <span
-          className={cn(
-            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
-            isSelected ? "border-highlight-selected" : "border-card",
-            isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
-          )}
-        />
-      </div>
-    );
-  };
-
-  const formatTime = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "now";
-    if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d`;
-    return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  };
-
-  return (
-    <div data-testid={`agent-expandable-${agent.id}`}>
-      {/* Agent header row */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onToggleExpand}
-        onKeyDown={(e) => e.key === "Enter" && onToggleExpand()}
-        className={cn(
-          "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors group",
-          isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-        )}
-        data-testid={`button-agent-${agent.id}`}
-      >
-        <div className="shrink-0">
-          <AgentIcon />
-        </div>
-        <div className="flex-1 min-w-0 pt-0.5">
-          <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
-            {agent.name}
-          </p>
-          <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
-            {chipLabel}
-          </p>
-        </div>
-        <ChevronDown
-          className={cn(
-            "h-3.5 w-3.5 text-muted-foreground/60 transition-transform shrink-0",
-            isExpanded && "rotate-180"
-          )}
-        />
-        {onSettingsClick && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onSettingsClick(agent.id); }}
-            className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-all shrink-0"
-            title="Agent settings"
-            data-testid={`agent-settings-${agent.id}`}
-          >
-            <Settings className="h-3 w-3" />
-          </button>
-        )}
-      </div>
-
-      {/* Expanded: recent chats + new chat button */}
-      {isExpanded && (
-        <div className="ml-5 mt-0.5 mb-1 border-l-2 border-border/40 pl-2.5 space-y-0.5">
-          {/* New chat button */}
-          <button
-            onClick={() => onSelectChat(agent.id)}
-            className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-brand-indigo hover:bg-brand-indigo/5 transition-colors"
-            data-testid={`agent-new-chat-${agent.id}`}
-          >
-            <Plus className="h-3 w-3" />
-            New conversation
-          </button>
-
-          {loadingChats ? (
-            <div className="flex items-center justify-center py-3">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-            </div>
-          ) : recentChats.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground/60 px-2.5 py-2">No conversations yet</p>
-          ) : (
-            recentChats.map((chat) => (
-              <button
-                key={chat.sessionId}
-                onClick={() => onSelectChat(agent.id, chat.sessionId)}
-                className={cn(
-                  "flex flex-col w-full px-2.5 py-1.5 rounded-lg text-left transition-colors",
-                  activeSessionId === chat.sessionId
-                    ? "bg-highlight-selected"
-                    : "hover:bg-card-hover"
-                )}
-                data-testid={`agent-chat-${chat.sessionId}`}
-              >
-                <div className="flex items-center gap-1.5 w-full min-w-0">
-                  <span className="text-[12px] font-medium text-foreground truncate flex-1 min-w-0">
-                    {chat.title || "Untitled"}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/60 shrink-0">
-                    {formatTime(chat.updatedAt)}
-                  </span>
-                </div>
-                {chat.lastMessage && (
-                  <p className="text-[11px] text-muted-foreground truncate mt-0.5 w-full">
-                    {chat.lastMessage.content.slice(0, 60)}
-                  </p>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface InboxPanelProps {
-  threads: Thread[];
-  loading: boolean;
-  selectedLeadId: number | null;
-  /** The explicitly stored/requested lead ID to scroll to on load — distinct from the
-   *  auto-fallback selectedLeadId which may resolve to threads[0]. */
-  scrollToLeadId?: number | null;
-  onSelectLead: (id: number) => void;
-  tab: InboxTab;
-  onTabChange: (tab: InboxTab) => void;
-  searchQuery: string;
-  groupBy: ChatGroupBy;
-  sortBy: ChatSortBy;
-  filterStatus: string[];
-  selectedCampaignId: number | "all";
-  selectedAccountId?: number | "all";
-  isAgencyUser?: boolean;
-  onClearAll?: () => void;
-  className?: string;
-  /** Bot config for the support tab card — name & photo */
-  supportBotConfig?: { name: string; photoUrl: string | null };
-  /** Unread count badge for the support tab */
-  supportUnreadCount?: number;
-  /** Optional refresh callback for pull-to-refresh */
-  onRefresh?: () => Promise<void> | void;
-  /** Mobile: called when user taps the support bot card to open the support chat */
-  onSelectSupport?: () => void;
-  /** Mobile: called when user types in the inline search input */
-  onSearchChange?: (q: string) => void;
-  /** AI agents to show as pinned rows above the thread list (agency users only) */
-  aiAgents?: { id: number; name: string; type: string; photoUrl: string | null; enabled?: boolean }[];
-  /** Currently selected agent id */
-  selectedAgentId?: number | null;
-  /** Called when user clicks an agent row (old: navigates away) */
-  onSelectAgent?: (id: number) => void;
-  /** Called when user selects a specific agent chat or clicks "New conversation" */
-  onSelectAgentChat?: (agentId: number, sessionId?: string) => void;
-  /** Currently active agent session ID (to highlight in expanded list) */
-  activeAgentSessionId?: string | null;
-  /** Called when user clicks the settings icon on an agent row */
-  onAgentSettings?: (agentId: number) => void;
-  /** Called to deselect the active agent (e.g. when clicking Bob) */
-  onDeselectAgent?: () => void;
-  /** Map of campaign ID → campaign name, used when grouping by campaign */
-  campaignsMap?: Map<number, string>;
-  /** Prospect conversation threads (agency only, prospects tab) */
-  prospectThreads?: ProspectThread[];
-  /** Currently selected prospect ID */
-  selectedProspectId?: number | null;
-  /** Called when user selects a prospect from the list */
-  onSelectProspect?: (prospectId: number) => void;
-  /** Whether the founder inbox is currently shown (admin only) */
-  showFounderInbox?: boolean;
-  /** Toggle the founder inbox view (admin only) */
-  onToggleFounderInbox?: () => void;
-  /** Toolbar: client accounts list for agency filter */
-  clientAccounts?: { id: number; name: string }[];
-  /** Toolbar: all campaigns list for agency filter */
-  allCampaigns?: { id: number; name: string; account_id?: number; accounts_id?: number }[];
-  /** Toolbar: set group-by */
-  onSetGroupBy?: (v: ChatGroupBy) => void;
-  /** Group sort direction */
-  groupDirection?: GroupDirection;
-  /** Toolbar: set group direction */
-  onSetGroupDirection?: (v: GroupDirection) => void;
-  /** Toolbar: set sort-by */
-  onSetSortBy?: (v: ChatSortBy) => void;
-  /** Toolbar: toggle a status filter */
-  onToggleFilterStatus?: (status: string) => void;
-  /** Toolbar: set account filter (agency) */
-  onSetFilterAccountId?: (id: number | "all") => void;
-  /** Toolbar: set campaign filter */
-  onSetCampaignId?: (id: number | "all") => void;
-  /** Toolbar: search open state */
-  searchOpen?: boolean;
-  /** Toolbar: set search open state */
-  onSearchOpenChange?: (open: boolean) => void;
-  /** Toolbar: filter dropdown open state */
-  filterOpen?: boolean;
-  /** Toolbar: set filter dropdown open state */
-  onFilterOpenChange?: (open: boolean) => void;
-}
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export function InboxPanel({
@@ -432,10 +80,7 @@ export function InboxPanel({
   isAgencyUser = false,
   onClearAll,
   className,
-  supportBotConfig,
-  supportUnreadCount = 0,
   onRefresh,
-  onSelectSupport,
   onSearchChange,
   aiAgents = [],
   selectedAgentId,
@@ -448,8 +93,6 @@ export function InboxPanel({
   prospectThreads = [],
   selectedProspectId,
   onSelectProspect,
-  showFounderInbox,
-  onToggleFounderInbox,
   clientAccounts = [],
   allCampaigns = [],
   onSetGroupBy,
@@ -463,6 +106,7 @@ export function InboxPanel({
   onSearchOpenChange,
   filterOpen: filterOpenProp = false,
   onFilterOpenChange,
+  listPanelState = "full",
 }: InboxPanelProps) {
   const { t } = useTranslation("conversations");
 
@@ -489,9 +133,23 @@ export function InboxPanel({
     window.dispatchEvent(new Event("bubble-width-change"));
   }, []);
 
-  // Track which agent is expanded in the support tab
-  const [expandedAgentId, setExpandedAgentId] = useState<number | null>(null);
-  const [founderSelected, setFounderSelected] = useState(false);
+  const isCompact = listPanelState === "compact";
+
+  // Compact hover card state (for both Inbox and Prospects tabs).
+  const compactListRef = useRef<HTMLDivElement>(null);
+  const findCompactEl = useCallback(
+    (id: string | number) =>
+      compactListRef.current?.querySelector(`[data-compact-id="${id}"]`) as HTMLElement | null,
+    [],
+  );
+  const {
+    hovered: hoveredItem,
+    rect: hoveredRect,
+    onHover: handleCompactHover,
+    onHoverEnd: handleCompactHoverEnd,
+    cancelHoverEnd: cancelHoveredEnd,
+    close: closeHovered,
+  } = useCompactHoverCard<{ kind: "thread" | "prospect"; data: any; id: number }>((i) => i.id, findCompactEl);
 
   // Toolbar: derived state
   const isGroupNonDefault = groupBy !== "date";
@@ -508,6 +166,7 @@ export function InboxPanel({
   const [prospectGroupBy, setProspectGroupBy] = useState<"date" | "status" | "none">("date");
   const [prospectSortBy, setProspectSortBy] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest");
   const [prospectFilterStatus, setProspectFilterStatus] = useState<string[]>([]);
+  const [prospectFilterChannels, setProspectFilterChannels] = useState<string[]>([]);
   const [prospectPickerOpen, setProspectPickerOpen] = useState(false);
   const [, navigate] = useLocation();
 
@@ -516,6 +175,15 @@ export function InboxPanel({
     let result = prospectThreads;
     if (prospectFilterStatus.length > 0) {
       result = result.filter((pt) => prospectFilterStatus.includes(pt.outreach_status || "new"));
+    }
+    if (prospectFilterChannels.length > 0) {
+      result = result.filter((pt) => {
+        const ptChannels = (pt.channels || []).map((c) => c.toLowerCase());
+        return prospectFilterChannels.some((fc) => {
+          if (fc === "whatsapp") return ptChannels.some((c) => c === "whatsapp" || c === "whatsapp_cloud");
+          return ptChannels.includes(fc);
+        });
+      });
     }
     if (prospectSearch.trim()) {
       const q = prospectSearch.trim().toLowerCase();
@@ -535,7 +203,7 @@ export function InboxPanel({
       return (b.company || b.name || "").localeCompare(a.company || a.name || "");
     });
     return result;
-  }, [prospectThreads, prospectSearch, prospectFilterStatus, prospectSortBy]);
+  }, [prospectThreads, prospectSearch, prospectFilterStatus, prospectFilterChannels, prospectSortBy]);
 
   // Group prospects by date or status
   const groupedProspects = useMemo(() => {
@@ -784,6 +452,27 @@ export function InboxPanel({
     }, 0);
   }, [selectedLeadId, virtualItems, getScrollTopForIdx]);
 
+  // F shortcut: scroll selected thread into view (virtualizer-aware).
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "f" && e.key !== "F") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const active = document.activeElement;
+      const tag = active?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (active as HTMLElement | null)?.isContentEditable) return;
+      if (selectedLeadId == null) return;
+      const idx = virtualItems.findIndex((i) => i.type === "thread" && i.thread.lead.id === selectedLeadId);
+      if (idx === -1) return;
+      const container = listContainerRef.current;
+      if (!container) return;
+      e.preventDefault();
+      if (active instanceof HTMLElement && active !== document.body) active.blur();
+      container.scrollTo({ top: getScrollTopForIdx(idx), behavior: "smooth" });
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selectedLeadId, virtualItems, getScrollTopForIdx]);
+
   // Sticky group header — tracks the active group label as the user scrolls
   const [activeGroupLabel, setActiveGroupLabel] = useState<{ label: string; count: number } | null>(null);
 
@@ -857,16 +546,6 @@ export function InboxPanel({
         </span>
       ) : undefined,
     },
-    {
-      id: "support" as const,
-      label: "Support",
-      icon: Headphones,
-      badge: supportUnreadCount > 0 ? (
-        <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
-          {supportUnreadCount > 9 ? "9+" : supportUnreadCount}
-        </span>
-      ) : undefined,
-    },
     ...(isAgencyUser ? [{
       id: "prospects" as const,
       label: "Prospects",
@@ -888,9 +567,307 @@ export function InboxPanel({
       data-testid="panel-inbox"
       data-onboarding="conversations-inbox"
     >
+      {isCompact && (
+        <>
+          <CompactTabPopover
+            tabs={INBOX_TABS.map((t) => ({ id: t.id, label: t.label, icon: t.icon }))}
+            activeId={tab}
+            onChange={(id) => onTabChange(id as InboxTab)}
+          />
+          <div className="flex flex-col items-center gap-1 px-1.5 pb-2 shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "h-9 w-9 rounded-full flex items-center justify-center transition-colors",
+                    (filterActive || isSortNonDefault || isGroupNonDefault || searchQuery)
+                      ? "bg-brand-indigo/10 text-brand-indigo"
+                      : "text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
+                  )}
+                  title="More"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" className="w-56 max-h-[500px] overflow-y-auto">
+                {/* Inline search */}
+                {onSearchChange && (
+                  <>
+                    <div className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+                      <div className={cn(
+                        "flex items-center h-8 px-2.5 gap-1.5 rounded-full border",
+                        searchQuery ? "border-brand-indigo/40 bg-brand-indigo/5" : "border-black/[0.08] bg-muted/40"
+                      )}>
+                        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <input
+                          value={tab === "prospects" ? prospectSearch : searchQuery}
+                          onChange={(e) => {
+                            if (tab === "prospects") setProspectSearch(e.target.value);
+                            else onSearchChange(e.target.value);
+                          }}
+                          placeholder="Search…"
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                              if (tab === "prospects") setProspectSearch("");
+                              else onSearchChange("");
+                            }
+                          }}
+                          className="flex-1 min-w-0 bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60"
+                        />
+                        {((tab === "prospects" ? prospectSearch : searchQuery)) && (
+                          <button type="button" onClick={() => {
+                            if (tab === "prospects") setProspectSearch("");
+                            else onSearchChange("");
+                          }} className="shrink-0 text-muted-foreground hover:text-foreground">
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+
+                {/* Filter: status */}
+                {tab !== "prospects" && onToggleFilterStatus && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <Filter className="h-3.5 w-3.5 shrink-0" />
+                      <span className="flex-1">Filter</span>
+                      {filterActive && (
+                        <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                          {filterStatus.length}
+                        </span>
+                      )}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-48 max-h-[400px] overflow-y-auto">
+                      {PIPELINE_STATUSES.map((s) => (
+                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
+                          <span className="flex-1">{s}</span>
+                          {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
+
+                {/* Sort */}
+                {tab !== "prospects" && onSetSortBy && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
+                      <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>Sort</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44">
+                      {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((s) => (
+                        <DropdownMenuItem key={s} onClick={() => onSetSortBy(s)} className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}>
+                          {SORT_LABELS[s]}
+                          {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
+
+                {/* Group */}
+                {tab !== "prospects" && onSetGroupBy && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                      <Layers className="h-3.5 w-3.5 shrink-0" />
+                      <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>Group</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44">
+                      {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((g) => (
+                        <DropdownMenuItem key={g} onClick={() => onSetGroupBy(g)} className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}>
+                          {GROUP_LABELS[g]}
+                          {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
+
+                {/* Prospects: + New chat */}
+                {tab === "prospects" && (
+                  <DropdownMenuItem onClick={() => setProspectPickerOpen(true)} className="flex items-center gap-2 text-[12px]">
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <span>New chat</span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div ref={compactListRef} className="flex-1 overflow-y-auto p-[3px]">
+            {tab !== "prospects" ? (
+              // Inbox / Unread: show thread avatars
+              loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" />
+                </div>
+              ) : sorted.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-2">
+                  <Inbox className="h-5 w-5 text-muted-foreground/40" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-0">
+                  {sorted.map((thread) => {
+                    const { lead } = thread;
+                    const active = selectedLeadId === lead.id;
+                    const status = getStatus(lead);
+                    const avatarColor = getStatusAvatarColor(status);
+                    const name = `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "?";
+                    return (
+                      <div
+                        key={lead.id}
+                        data-compact-id={lead.id}
+                        className="flex items-center justify-center py-1 mx-1 cursor-pointer"
+                        onClick={() => onSelectLead(lead.id)}
+                        onMouseEnter={(e) => handleCompactHover(
+                          { kind: "thread", data: thread, id: lead.id },
+                          (e.currentTarget as HTMLElement).getBoundingClientRect(),
+                        )}
+                        onMouseLeave={handleCompactHoverEnd}
+                      >
+                        <div
+                          className="relative rounded-full"
+                          style={active ? { boxShadow: "0 0 0 3px #ffffff, 0 0 0 4px rgba(0,0,0,0.9)" } : undefined}
+                        >
+                          <EntityAvatar
+                            name={name}
+                            bgColor={avatarColor.bg}
+                            textColor={avatarColor.text}
+                            size={40}
+                          />
+                          {thread.unread && (
+                            <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5 shadow-[0_0_0_2px_var(--color-muted)]">
+                              {thread.unreadCount > 9 ? "9+" : thread.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              // Prospects tab: show prospect avatars
+              filteredProspects.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-2">
+                  <UserSearch className="h-5 w-5 text-muted-foreground/40" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-0">
+                  {filteredProspects.map((pt) => {
+                    const active = selectedProspectId === pt.prospect_id;
+                    const displayName = pt.company || pt.name || "Unknown";
+                    const avatarColor = getProspectAvatarColor(pt.outreach_status);
+                    const isDealClosed = pt.outreach_status === "deal_closed";
+                    return (
+                      <div
+                        key={pt.prospect_id}
+                        data-compact-id={pt.prospect_id}
+                        className="flex items-center justify-center py-1 mx-1 cursor-pointer"
+                        onClick={() => onSelectProspect?.(pt.prospect_id)}
+                        onMouseEnter={(e) => handleCompactHover(
+                          { kind: "prospect", data: pt, id: pt.prospect_id },
+                          (e.currentTarget as HTMLElement).getBoundingClientRect(),
+                        )}
+                        onMouseLeave={handleCompactHoverEnd}
+                      >
+                        <div
+                          className="relative rounded-full"
+                          style={active ? { boxShadow: "0 0 0 3px #ffffff, 0 0 0 4px rgba(0,0,0,0.9)" } : undefined}
+                        >
+                          <EntityAvatar
+                            name={displayName}
+                            bgColor={isDealClosed ? "#1a1a1a" : avatarColor.bg}
+                            textColor={isDealClosed ? "#ffffff" : avatarColor.text}
+                            size={40}
+                          />
+                          {pt.unread_count > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5 shadow-[0_0_0_2px_var(--color-muted)]">
+                              {pt.unread_count > 9 ? "9+" : pt.unread_count}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )}
+          </div>
+
+          {/* Hover card overlay */}
+          {hoveredItem && (
+            <CompactHoverCardPortal
+              rect={hoveredRect}
+              onMouseEnter={cancelHoveredEnd}
+              onMouseLeave={handleCompactHoverEnd}
+            >
+              {hoveredItem.kind === "thread" ? (() => {
+                const thread = hoveredItem.data;
+                const { lead, last } = thread;
+                const status = getStatus(lead);
+                const avatarColor = getStatusAvatarColor(status);
+                const lastContent = getLastMessageDisplay(last);
+                const displayName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Unknown";
+                return (
+                  <div
+                    onClick={() => { onSelectLead(lead.id); closeHovered(); }}
+                    className="p-3 cursor-pointer bg-card hover:bg-card-hover min-w-[280px]"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <EntityAvatar name={displayName} bgColor={avatarColor.bg} textColor={avatarColor.text} size={40} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-semibold text-foreground truncate">{displayName}</p>
+                        {status && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: avatarColor.bg }} />
+                            {status}
+                          </p>
+                        )}
+                        {lastContent && (
+                          <p className="text-[12px] text-muted-foreground mt-1 line-clamp-2">{lastContent}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })() : (() => {
+                const pt = hoveredItem.data;
+                const displayName = pt.company || pt.name || "Unknown";
+                const avatarColor = getProspectAvatarColor(pt.outreach_status);
+                return (
+                  <div
+                    onClick={() => { onSelectProspect?.(pt.prospect_id); closeHovered(); }}
+                    className="p-3 cursor-pointer bg-card hover:bg-card-hover min-w-[280px]"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <EntityAvatar name={displayName} bgColor={avatarColor.bg} textColor={avatarColor.text} size={40} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-semibold text-foreground truncate">{displayName}</p>
+                        {pt.contact_name && (
+                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">{pt.contact_name}</p>
+                        )}
+                        {pt.last_message && (
+                          <p className="text-[12px] text-muted-foreground mt-1 line-clamp-2">{pt.last_message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CompactHoverCardPortal>
+          )}
+        </>
+      )}
+
+      {!isCompact && <>
       {/* ── Header: title + Inbox/Unread tabs on same row ── */}
-      <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
-        <div className="flex items-center justify-between w-full md:w-[309px] shrink-0">
+      <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
+        <div className="flex items-center justify-between w-full md:w-[306px] shrink-0">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Chats</h2>
           <ViewTabBar
             tabs={INBOX_TABS}
@@ -902,14 +879,15 @@ export function InboxPanel({
       </div>
 
       {/* ── List toolbar: search + sort + filter + group ── */}
-      {tab !== "support" && tab !== "prospects" && onSearchChange && onSetGroupBy && onSetSortBy && onToggleFilterStatus && (
-        <div className="px-2 pb-2 flex items-center gap-1 shrink-0">
+      {tab !== "prospects" && onSearchChange && onSetGroupBy && onSetSortBy && onToggleFilterStatus && (
+        <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
           <SearchPill
             value={searchQuery}
             onChange={onSearchChange}
             open={searchOpenProp}
             onOpenChange={onSearchOpenChange ?? (() => {})}
             placeholder="Search conversations…"
+            className="ml-[9px] max-w-[149px]"
           />
 
           {/* Filter */}
@@ -917,7 +895,7 @@ export function InboxPanel({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(xBase, "hover:max-w-[100px]", filterActive ? xActive : xDefault)}
-                title="Filter"
+                aria-label="Filter"
                 data-testid="button-toggle-filters"
               >
                 <Filter className="h-4 w-4 shrink-0" />
@@ -1010,7 +988,7 @@ export function InboxPanel({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(xBase, "hover:max-w-[80px]", isSortNonDefault ? xActive : xDefault)}
-                title="Sort"
+                aria-label="Sort"
               >
                 <ArrowUpDown className="h-4 w-4 shrink-0" />
                 <span className={xSpan}>Sort</span>
@@ -1062,7 +1040,7 @@ export function InboxPanel({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(xBase, "hover:max-w-[90px]", isGroupNonDefault ? xActive : xDefault)}
-                title="Group"
+                aria-label="Group"
               >
                 <Layers className="h-4 w-4 shrink-0" />
                 <span className={xSpan}>Group</span>
@@ -1239,13 +1217,14 @@ export function InboxPanel({
 
       {/* ── Prospects toolbar: search + sort + group + filter + customize + "+" ── */}
       {tab === "prospects" && (
-        <div className="px-2 pb-2 flex items-center gap-1 shrink-0 flex-wrap">
+        <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0 flex-wrap">
           <SearchPill
             value={prospectSearch}
             onChange={setProspectSearch}
             open={prospectSearchOpen}
             onOpenChange={setProspectSearchOpen}
             placeholder="Search prospects…"
+            className="ml-[9px] max-w-[149px]"
           />
 
           {/* Sort */}
@@ -1334,11 +1313,51 @@ export function InboxPanel({
           </DropdownMenu>
 
 
+          {/* Channel filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(xBase, "hover:max-w-[110px]", prospectFilterChannels.length > 0 ? xActive : xDefault)}
+                title="Channel"
+              >
+                <Radio className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Channel{prospectFilterChannels.length > 0 ? ` (${prospectFilterChannels.length})` : ""}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              {([
+                { key: "email", label: "Email", Icon: Mail },
+                { key: "whatsapp", label: "WhatsApp", Icon: MessageSquare },
+                { key: "linkedin", label: "LinkedIn", Icon: Linkedin },
+              ] as const).map(({ key, label, Icon }) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setProspectFilterChannels((prev) =>
+                      prev.includes(key) ? prev.filter((x) => x !== key) : [...prev, key]
+                    );
+                  }}
+                  className="flex items-center gap-2 text-[12px]"
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="flex-1">{label}</span>
+                  {prospectFilterChannels.includes(key) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+              {prospectFilterChannels.length > 0 && (
+                <DropdownMenuItem onClick={() => setProspectFilterChannels([])} className="text-[12px] text-muted-foreground border-t mt-1 pt-1">
+                  Clear channels
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* "+" — new chat with uncontacted prospect */}
           <button
-            className={cn(xBase, "hover:max-w-[100px] ml-auto", xDefault)}
+            className={cn(xBase, "hover:max-w-[100px]", xDefault)}
             onClick={() => setProspectPickerOpen(true)}
-            title="Start new chat"
+            aria-label="Start new chat"
           >
             <Plus className="h-4 w-4 shrink-0" />
             <span className={xSpan}>New chat</span>
@@ -1354,7 +1373,7 @@ export function InboxPanel({
       />
 
       {/* ── Mobile search bar (hidden on desktop) ── */}
-      {tab !== "prospects" && tab !== "support" && onSearchChange && (
+      {tab !== "prospects" && onSearchChange && (
         <div
           className="md:hidden px-3 pb-2 shrink-0"
           data-testid="mobile-inbox-search"
@@ -1387,169 +1406,6 @@ export function InboxPanel({
               </button>
             )}
           </div>
-        </div>
-      )}
-
-      {/* ── Support tab: Assistants list (Bob + AI agents) ── */}
-      {tab === "support" && (
-        <div className="flex-1 overflow-y-auto p-[3px]">
-          <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            <BotMessageSquare className="h-3 w-3" />
-            Assistants
-          </div>
-          <div className="flex flex-col gap-[3px]">
-            {/* Bob — support assistant (non-expandable) */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                onDeselectAgent?.();
-                onSelectSupport?.();
-                setFounderSelected(false);
-                window.dispatchEvent(new Event("switch-to-bot-channel"));
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onDeselectAgent?.();
-                  onSelectSupport?.();
-                  setFounderSelected(false);
-                  window.dispatchEvent(new Event("switch-to-bot-channel"));
-                }
-              }}
-              className={cn(
-                "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
-                !selectedAgentId && !founderSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-              )}
-              data-testid="button-support-tab-open"
-            >
-              <div className="shrink-0">
-                <div className="relative">
-                  <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0 overflow-hidden">
-                    {supportBotConfig?.photoUrl ? (
-                      <img
-                        src={supportBotConfig.photoUrl}
-                        alt={supportBotConfig?.name || "Support"}
-                        className="h-9 w-9 rounded-full object-cover"
-                      />
-                    ) : (
-                      <Headphones className="h-4 w-4 text-brand-indigo" />
-                    )}
-                  </div>
-                  <span
-                    className={cn(
-                      "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 bg-green-500",
-                      !selectedAgentId ? "border-highlight-selected" : "border-card"
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0 pt-0.5">
-                <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
-                  {supportBotConfig?.name || "Support"}
-                </p>
-                <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
-                  Support Assistant
-                </p>
-              </div>
-            </div>
-
-            {aiAgents.map((agent) => (
-              <AgentInboxRow
-                key={agent.id}
-                agent={agent}
-                isSelected={selectedAgentId === agent.id}
-                isExpanded={expandedAgentId === agent.id}
-                onToggleExpand={() =>
-                  setExpandedAgentId(expandedAgentId === agent.id ? null : agent.id)
-                }
-                onSelectChat={onSelectAgentChat ?? ((id) => onSelectAgent?.(id))}
-                activeSessionId={selectedAgentId === agent.id ? activeAgentSessionId : null}
-                onSettingsClick={onAgentSettings}
-              />
-            ))}
-          </div>
-
-          {/* Founder section (non-agency users — direct chat with Gabriel) */}
-          {!isAgencyUser && (
-            <>
-              <div className="px-3 py-1.5 mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <User className="h-3 w-3" />
-                Founder
-              </div>
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  onDeselectAgent?.();
-                  onSelectSupport?.();
-                  setFounderSelected(true);
-                  window.dispatchEvent(new Event("switch-to-founder-channel"));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    onDeselectAgent?.();
-                    onSelectSupport?.();
-                    setFounderSelected(true);
-                    window.dispatchEvent(new Event("switch-to-founder-channel"));
-                  }
-                }}
-                className={cn(
-                  "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
-                  founderSelected && !selectedAgentId ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-                )}
-              >
-                <img src="/founder-photo.webp" alt="Gabriel" className="h-9 w-9 rounded-full object-cover shrink-0" />
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
-                    Gabriel Barbosa Fronza
-                  </p>
-                  <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
-                    Founder, Lead Awaker
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Founder DMs section (admin only) */}
-          {isAgencyUser && onToggleFounderInbox && (
-            <>
-              <div className="px-3 py-1.5 mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <User className="h-3 w-3" />
-                Direct Messages
-              </div>
-              <div className="px-[3px]">
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    onDeselectAgent?.();
-                    onToggleFounderInbox();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      onDeselectAgent?.();
-                      onToggleFounderInbox();
-                    }
-                  }}
-                  className={cn(
-                    "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
-                    showFounderInbox ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-                  )}
-                >
-                  <img src="/founder-photo.webp" alt="Gabriel" className="h-9 w-9 rounded-full object-cover shrink-0" />
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
-                      Founder Inbox
-                    </p>
-                    <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
-                      Direct messages from users
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       )}
 
@@ -1672,223 +1528,26 @@ export function InboxPanel({
       )}
 
       {/* ── Thread list (all / unread tabs) ── */}
-      {/* Outer wrapper: relative so absolute overlay can pin to top */}
-      <div className={cn("flex-1 min-h-0 relative", (tab === "support" || tab === "prospects") && "hidden")}>
-        {/* Sticky group header overlay — absolute so it doesn't push content down */}
-        {groupBy !== "none" && !loading && sorted.length > 0 && activeGroupLabel && (
-          <div className="absolute top-0 left-0 right-0 z-20 bg-muted px-3 pt-3 pb-3 pointer-events-none">
-            <div className="flex items-center gap-[10px]">
-              <div className="flex-1 h-px bg-foreground/15" />
-              <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">
-                {activeGroupLabel.label}
-              </span>
-              <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
-              <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">
-                {activeGroupLabel.count}
-              </span>
-              <div className="flex-1 h-px bg-foreground/15" />
-            </div>
-          </div>
-        )}
-        <div ref={listContainerRef} className="h-full overflow-y-auto" data-testid="list-inbox">
-        {/* Pull-to-refresh indicator — mobile only */}
-        <PullToRefreshIndicator pullDistance={convoPullDistance} isRefreshing={convoIsRefreshing} />
-        <div className="p-[3px]">
-        {loading ? (
-          <SkeletonList count={6} />
-        ) : sorted.length === 0 ? (
-          searchQuery ? (
-            <DataEmptyState
-              variant="search"
-              title="No conversations found"
-              description={`No conversations match "${searchQuery}".`}
-              compact
-              data-testid="empty-state-search"
-            />
-          ) : hasNonDefaultControls || tab === "unread" ? (
-            <DataEmptyState
-              variant="search"
-              title={tab === "unread" ? "All caught up!" : "No matches"}
-              description={
-                tab === "unread"
-                  ? "You have no unread conversations right now."
-                  : "No conversations match the selected filters."
-              }
-              actionLabel={hasNonDefaultControls ? "Clear filters" : undefined}
-              onAction={hasNonDefaultControls && onClearAll ? onClearAll : undefined}
-              compact
-              data-testid="empty-state-filtered"
-            />
-          ) : (
-            <DataEmptyState
-              variant="conversations"
-              compact
-              data-testid="empty-state-no-conversations"
-            />
-          )
-        ) : (
-          <div style={{ height: `${threadVirtualizer.getTotalSize()}px`, position: "relative" }}>
-            {threadVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = virtualItems[virtualRow.index];
-              if (!item) return null;
-
-              // ── Group header — visible in the virtualizer; the absolute overlay floats on top ──
-              if (item.type === "header") {
-                return (
-                  <div
-                    key={`header-${item.label}`}
-                    data-index={virtualRow.index}
-                    data-group-label={item.label}
-                    data-group-count={item.count}
-                    ref={threadVirtualizer.measureElement}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      paddingBottom: 3,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    <div className="px-3 pt-3 pb-3">
-                      <div className="flex items-center gap-[10px]">
-                        <div className="flex-1 h-px bg-foreground/15" />
-                        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{item.label}</span>
-                        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
-                        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{item.count}</span>
-                        <div className="flex-1 h-px bg-foreground/15" />
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // ── Thread card ──
-              const { lead, last, unread, unreadCount } = item.thread;
-              const active = selectedLeadId === lead.id;
-              const showUnreadBadge = unread;
-              const status = getStatus(lead);
-              const avatarColor = getStatusAvatarColor(status);
-              const lastContent = getLastMessageDisplay(last);
-              const lastTs = last?.created_at ?? last?.createdAt;
-              const tags = getLeadTagNames(lead);
-
-              return (
-                <div
-                  key={lead.id}
-                  data-index={virtualRow.index}
-                  ref={threadVirtualizer.measureElement}
-                  className="animate-fade-in"
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    paddingBottom: 3,
-                    transform: `translateY(${virtualRow.start}px)`,
-                    animationDelay: `${Math.min(virtualRow.index, 12) * 25}ms`,
-                  }}
-                >
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => onSelectLead(lead.id)}
-                    onKeyDown={(e) => e.key === "Enter" && onSelectLead(lead.id)}
-                    className={cn(
-                      "relative rounded-xl cursor-pointer transition-colors min-h-[64px]",
-                      active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-                    )}
-                    data-testid={`button-thread-${lead.id}`}
-                  >
-                    <div className="px-2.5 pt-2.5 pb-2 flex flex-col gap-1">
-
-                      {/* Row 1: Avatar (+ unread badge) + Name + Status + Time */}
-                      <div className="flex items-start gap-2">
-                        {/* Avatar with unread badge overlay */}
-                        <div className="relative shrink-0">
-                          <EntityAvatar
-                            name={`${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "?"}
-                            bgColor={avatarColor.bg}
-                            textColor={avatarColor.text}
-                          />
-                          {showUnreadBadge && (
-                            <span
-                              className={cn(
-                                "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5",
-                                active ? "shadow-[0_0_0_2px_var(--color-highlight-selected)]" : "shadow-[0_0_0_2px_var(--color-card)]"
-                              )}
-                            >
-                              {unreadCount > 99 ? "99+" : unreadCount}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Name + conversion status */}
-                        <div className="flex-1 min-w-0 pt-0.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
-                              {lead.full_name ||
-                                `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
-                                "Unknown"}
-                            </p>
-                            {lead.manual_takeover && (
-                              <Hand className="w-3 h-3 text-amber-500 shrink-0" />
-                            )}
-                            {lastTs && (
-                              <span className="text-[10px] text-muted-foreground/70 shrink-0 tabular-nums">
-                                {formatRelativeTime(lastTs)}
-                              </span>
-                            )}
-                          </div>
-                          {/* Conversion status — hide when grouped by status */}
-                          {status && groupBy !== "status" && (
-                            <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5 flex items-center gap-1">
-                              <span
-                                className="w-1.5 h-1.5 rounded-full shrink-0"
-                                style={{ backgroundColor: avatarColor.bg }}
-                              />
-                              {status}
-                            </p>
-                          )}
-
-                          {/* Last message — aligned with name */}
-                          {lastContent && (
-                            <p className="text-[13px] text-muted-foreground truncate leading-snug mt-1">
-                              {lastContent}
-                            </p>
-                          )}
-
-                          {/* Tags — inside name column so they align with name */}
-                          {tags.length > 0 && (
-                            <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                              {tags.slice(0, 3).map((t) => (
-                                <span
-                                  key={t}
-                                  className="inline-flex items-center px-1.5 py-px rounded-full text-[10px] font-medium"
-                                  style={{
-                                    backgroundColor: active ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
-                                    color: "rgba(0,0,0,0.45)",
-                                  }}
-                                >
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        </div>
-        </div>{/* end listContainerRef */}
-      </div>{/* end outer relative wrapper */}
+      <ThreadList
+        tab={tab}
+        loading={loading}
+        sorted={sorted}
+        searchQuery={searchQuery}
+        hasNonDefaultControls={hasNonDefaultControls}
+        onClearAll={onClearAll}
+        groupBy={groupBy}
+        activeGroupLabel={activeGroupLabel}
+        listContainerRef={listContainerRef}
+        convoPullDistance={convoPullDistance}
+        convoIsRefreshing={convoIsRefreshing}
+        threadVirtualizer={threadVirtualizer}
+        virtualItems={virtualItems}
+        selectedLeadId={selectedLeadId}
+        onSelectLead={onSelectLead}
+      />
+      </>}
     </section>
   );
 }
+
 
