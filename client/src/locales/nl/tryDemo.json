@@ -1,0 +1,37 @@
+{
+  "badge": "Live AI-demo",
+  "title": "Chat met een AI-verkoper in 10 seconden.",
+  "subtitle": "Stuur onze AI een bericht op WhatsApp en zie hoe hij met jouw slapende leads om zou gaan.",
+  "form": {
+    "firstNameLabel": "Je voornaam",
+    "firstNamePlaceholder": "Jan",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "jij@bedrijf.nl",
+    "languageLabel": "Taal",
+    "demoLabel": "Kies een demo",
+    "loadingDemos": "Demo's laden...",
+    "submit": "Start demo op WhatsApp",
+    "submitting": "Bezig...",
+    "fineprint": "Door te starten ga je akkoord met contact over Lead Awaker."
+  },
+  "demos": {
+    "solar": "Zonnepanelen follow-up",
+    "coaching": "Coaching inschrijving",
+    "gym": "Sportschool lidmaatschap heractiveren",
+    "dental": "Tandartscontrole heractiveren",
+    "legal": "Letselschadeclaim heractiveren"
+  },
+  "bookCallCta": "Liever live bellen? Boek 20 min",
+  "errors": {
+    "loadFailed": "Kon de demo's niet laden. Ververs de pagina.",
+    "missingFields": "Vul je voornaam in en kies een demo.",
+    "rateLimited": "Te veel demo-starts vanaf dit IP. Probeer het over een uur opnieuw.",
+    "generic": "Er ging iets mis. Probeer het nog eens.",
+    "network": "Netwerkfout. Controleer je verbinding."
+  },
+  "confirm": {
+    "title": "WhatsApp wordt geopend...",
+    "body": "Als WhatsApp niet automatisch opent, tik op de knop hieronder. Je bericht staat al klaar.",
+    "cta": "Open WhatsApp"
+  }
+}

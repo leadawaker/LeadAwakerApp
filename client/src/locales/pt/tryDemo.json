@@ -1,0 +1,37 @@
+{
+  "badge": "Demo ao vivo com IA",
+  "title": "Converse com uma IA de vendas em 10 segundos.",
+  "subtitle": "Mande uma mensagem pra nossa IA no WhatsApp e veja como ela lidaria com seus leads parados.",
+  "form": {
+    "firstNameLabel": "Seu primeiro nome",
+    "firstNamePlaceholder": "Marcos",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "voce@empresa.com",
+    "languageLabel": "Idioma",
+    "demoLabel": "Escolha uma demo",
+    "loadingDemos": "Carregando demos...",
+    "submit": "Começar demo no WhatsApp",
+    "submitting": "Abrindo...",
+    "fineprint": "Ao começar, você aceita ser contatado sobre o Lead Awaker."
+  },
+  "demos": {
+    "solar": "Follow-up de instalador solar",
+    "coaching": "Inscrição em coaching",
+    "gym": "Reativação de matrícula de academia",
+    "dental": "Reativação de check-up odontológico",
+    "legal": "Reativação de processo de acidente"
+  },
+  "bookCallCta": "Prefere uma ligação? Agende 20 min",
+  "errors": {
+    "loadFailed": "Não consegui carregar as demos. Atualiza a página.",
+    "missingFields": "Preencha seu primeiro nome e escolha uma demo.",
+    "rateLimited": "Muitas demos deste IP. Tenta de novo em uma hora.",
+    "generic": "Algo deu errado. Tenta de novo.",
+    "network": "Erro de rede. Verifica sua conexão."
+  },
+  "confirm": {
+    "title": "Abrindo WhatsApp...",
+    "body": "Se o WhatsApp não abrir sozinho, toca no botão abaixo. Sua mensagem já está pronta.",
+    "cta": "Abrir WhatsApp"
+  }
+}

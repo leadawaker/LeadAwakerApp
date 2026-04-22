@@ -9,12 +9,14 @@ import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { WhatsAppBubbleProvider } from "@/components/layout/WhatsAppBubble";
 import Seo from "./Seo";
 
 import Home from "@/pages/home";
 import About from "@/pages/about";
-import Services from "@/pages/services";
 import BookDemo from "@/pages/book-demo";
+import TryDemo from "@/pages/try-demo";
+import IntakeDemo from "@/pages/intake-demo";
 import Login from "@/pages/login";
 import AcceptInvite from "@/pages/AcceptInvite";
 
@@ -94,8 +96,10 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
-      <Route path="/services" component={Services} />
+      <Route path="/services" component={() => <Redirect to="/try" />} />
       <Route path="/book-demo" component={BookDemo} />
+      <Route path="/try" component={TryDemo} />
+      <Route path="/intake/:token" component={IntakeDemo} />
       <Route path="/login" component={Login} />
       <Route path="/accept-invite" component={AcceptInvite} />
       <Route path="/agency" component={AppArea} />
@@ -123,8 +127,9 @@ function LanguageRouter({ lang }: { lang: Lang }) {
   return (
     <Switch>
       <Route path={`/${lang}/about`} component={About} />
-      <Route path={`/${lang}/services`} component={Services} />
+      <Route path={`/${lang}/services`} component={() => <Redirect to={`/${lang}/try`} />} />
       <Route path={`/${lang}/book-demo`} component={BookDemo} />
+      <Route path={`/${lang}/try`} component={TryDemo} />
       <Route path={`/${lang}/login`} component={Login} />
       <Route path={`/${lang}/accept-invite`} component={AcceptInvite} />
       <Route path={`/${lang}/canvas`} component={Canvas} />
@@ -183,7 +188,10 @@ function Router() {
     }
   }, [location, setLocation]);
 
-  const isAppArea = location.startsWith("/agency") || location.startsWith("/subaccount");
+  const isAppArea =
+    location.startsWith("/agency") ||
+    location.startsWith("/subaccount") ||
+    location.startsWith("/intake/");
 
   /* Public pages follow system preference; CRM follows the manual toggle */
   useEffect(() => {
@@ -200,15 +208,17 @@ function Router() {
           {!lang && <AppRoutes />}
         </main>
       ) : (
-        /* Public pages — theme follows system preference */
-        <>
+        /* Public pages — theme follows system preference. The provider wraps
+           everything so pages can call useWhatsAppBubble() to hide the bubble
+           (e.g. the /try success view where a stacked WA icon would be ugly). */
+        <WhatsAppBubbleProvider>
           <Navbar />
           <main className="flex-grow">
             {!lang && <AppRoutes />}
             {lang && <LanguageRouter lang={lang} />}
           </main>
           <Footer />
-        </>
+        </WhatsAppBubbleProvider>
       )}
     </div>
   );

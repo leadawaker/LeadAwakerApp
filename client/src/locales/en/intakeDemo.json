@@ -1,0 +1,48 @@
+{
+  "loading": "Loading your intake form...",
+  "error": "This link is no longer active. Please contact your paralegal.",
+  "header": {
+    "tagline": "No fee unless we win. Free case evaluation."
+  },
+  "modal": {
+    "title": "Complete your case intake",
+    "subtitle": "We've pre-filled what you told us on WhatsApp. Take 30 seconds to review and submit."
+  },
+  "fields": {
+    "first_name": "First name",
+    "last_name": "Last name",
+    "phone": "Phone",
+    "incident_type": "Type of incident",
+    "incident_date": "Date of incident",
+    "injury_status": "Current status",
+    "jurisdiction": "Where did this happen?"
+  },
+  "incidentTypes": {
+    "car accident": "Car accident",
+    "slip and fall": "Slip and fall",
+    "workplace": "Workplace injury",
+    "medical malpractice": "Medical malpractice",
+    "other": "Other"
+  },
+  "injuryStatus": {
+    "in treatment": "Still in treatment",
+    "recovered": "Recovered",
+    "just starting": "Just starting treatment"
+  },
+  "consent": "I understand this is a free case evaluation and that no attorney-client relationship is created until a retainer agreement is signed.",
+  "submit": "Submit intake",
+  "submitting": "Submitting...",
+  "success": {
+    "title": "Intake received",
+    "body": "{{paralegal}} will call you within 30 minutes.",
+    "back": "Return to WhatsApp"
+  },
+  "alreadySubmitted": {
+    "title": "Already submitted",
+    "body": "Your intake is already with {{paralegal}}. He'll call you within 30 minutes.",
+    "back": "Return to WhatsApp"
+  },
+  "footer": {
+    "disclaimer": "Attorney advertising. Prior results do not guarantee a similar outcome."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "badge": "Live AI demo",
+  "title": "Chat with an AI sales agent in 10 seconds.",
+  "subtitle": "Message our AI on WhatsApp and see how it'd handle your dead leads.",
+  "form": {
+    "firstNameLabel": "Your first name",
+    "firstNamePlaceholder": "John",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@company.com",
+    "languageLabel": "Language",
+    "demoLabel": "Pick a demo",
+    "loadingDemos": "Loading demos...",
+    "submit": "Start demo on WhatsApp",
+    "submitting": "Starting...",
+    "fineprint": "By starting you agree to be contacted about Lead Awaker."
+  },
+  "demos": {
+    "solar": "Solar installer follow-up",
+    "coaching": "Coaching enrollment",
+    "gym": "Gym membership reactivation",
+    "dental": "Dental checkup reactivation",
+    "legal": "Accident claim reactivation"
+  },
+  "bookCallCta": "Prefer a live call? Book 20 min",
+  "errors": {
+    "loadFailed": "Could not load demo campaigns. Refresh the page.",
+    "missingFields": "Enter your first name and pick a demo.",
+    "rateLimited": "Too many demo starts from this IP. Try again in an hour.",
+    "generic": "Something went wrong. Try again.",
+    "network": "Network error. Check your connection."
+  },
+  "confirm": {
+    "title": "Opening WhatsApp...",
+    "body": "If WhatsApp didn't open automatically, tap the button below. Your message is already written.",
+    "cta": "Open WhatsApp"
+  }
+}
