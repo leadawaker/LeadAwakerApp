@@ -33,10 +33,11 @@
       }
     },
     "upfrontCost": {
-      "title": "No Upfront Cost",
-      "partnership": "We earn when you earn",
-      "mission": "We only win when you close",
-      "guarantee": "30-Day guarantee"
+      "title": "Upfront Cost",
+      "titleActive": "No Upfront Cost",
+      "partnership": "No setup fees",
+      "mission": "Pay only from revenue we generate",
+      "guarantee": "30-day performance guarantee, cancel anytime"
     },
     "absoluteZero": {
       "absolute": "Absolute",
@@ -57,26 +58,87 @@
   },
   "calculator": {
     "title": "You bought these leads. Let's make them pay.",
-    "subtitle": "See how much revenue you're leaving behind and decide if it's worth a conversation.",
+    "subtitle": "A quick diagnosis of how much revenue is trapped in leads that never closed.",
     "leadsLabel": "Leads You Already Paid For",
     "dealLabel": "What Each Deal Is Worth",
     "costLabel": "What You Paid Per Lead",
+    "closeRateLabel": "Close rate (adjustable)",
     "scenarios": {
-      "conservative": "If We're Cautious",
-      "expected": "What We Typically See",
-      "optimistic": "If Your Leads Are Warm",
-      "recommended": "Most Likely"
+      "conservative": "Really cold leads",
+      "expected": "Standard cold leads",
+      "optimistic": "Lukewarm leads",
+      "tablistLabel": "Pick a scenario"
     },
     "results": {
-      "responded": "Start a Conversation",
-      "qualified": "Ready to Buy",
-      "closed": "Deals You Close",
-      "revenue": "New Revenue"
+      "total": "Your lead amount",
+      "responded": "How many re-engage",
+      "qualified": "How many book a call with you",
+      "closed": "How many deals you close",
+      "revenue": "New Revenue with AI reactivation",
+      "profit": "New Profit with AI reactivation",
+      "revenueLtv": "New Lifetime Revenue with AI reactivation",
+      "profitLtv": "New Lifetime Profit with AI reactivation"
     },
     "investment": {
-      "spent": "Total Ad Spend Sitting Idle",
+      "spent": "What You Paid To Get These Leads",
       "return": "Revenue We Unlock",
-      "roi": "Your ROI"
+      "returnProfit": "Profit We Unlock",
+      "returnLtv": "Lifetime Revenue We Unlock",
+      "returnProfitLtv": "Lifetime Profit We Unlock",
+      "roi": "ROI For This Scenario",
+      "freshAdsSentence1": "Fresh ads would cost {{amount}} to reach the same result.",
+      "freshAdsSentence2": "You already paid {{amount}} for these leads."
+    },
+    "charts": {
+      "tablistLabel": "Pick a chart",
+      "breakeven": "Break even",
+      "funnels": "Funnels",
+      "cac": "CAC",
+      "cacSubtitle": "Cost per acquired customer at each scenario",
+      "cacFootnote": "* CAC = your original ad spend ÷ customers closed in this scenario. Lower response rates mean each closed customer costs more.",
+      "breakevenNarrative": "You break even at deal #{{deal}}. The remaining {{profitDeals}} deals are pure profit.",
+      "breakevenNarrativeWeeks": "You break even at deal #{{deal}} (~week {{week}}). The remaining {{profitDeals}} deals land by week {{totalWeeks}}, pure profit.",
+      "breakevenMiss": "Not reached within {{total}} deals.",
+      "breakevenAtDeal": "Deal #{{deal}}",
+      "breakevenAtDealWeek": "Deal #{{deal}} · W{{week}}",
+      "weekLabel": "Week {{week}}",
+      "paceLabel": "Sales pace",
+      "paceValue": "{{count}} deals/week",
+      "dealsLabel": "deals",
+      "spendLine": "Ad spend {{amount}}",
+      "cumRevenueLine": "Cumulative revenue",
+      "funnelPaid": "Paid ads",
+      "funnelManual": "Manual follow-up",
+      "funnelAI": "AI reactivation",
+      "funnelsFootnote": "* Manual follow-up typically closes 2-4% of dead leads since humans drop follow-ups. AI reactivation depends on your data and offer."
+    },
+    "advanced": {
+      "toggle": "Advanced",
+      "on": "On",
+      "off": "Off",
+      "showAs": "Show numbers as",
+      "revenueMode": "Revenue",
+      "profitMode": "Profit",
+      "showAsHint": "Switch to Profit to see contribution profit instead of gross revenue. Gross margin is the share of each deal left after hard costs (product, fulfillment, delivery).",
+      "grossMargin": "Gross margin per deal",
+      "dealType": "Deal type",
+      "oneShot": "One-shot",
+      "recurring": "Recurring",
+      "dealTypeHint": "Switch to Recurring for subscription or retainer models. Months retained is the average number of months a customer stays before churning. Deal value is multiplied by this to estimate lifetime value.",
+      "monthsRetained": "Avg months retained",
+      "decay": "Database decay",
+      "decayHint": "Some of your dead leads are unreachable (bounced, opted-out, duplicates). Adjust for a more honest reachable pool.",
+      "decayLabel": "Unreachable share",
+      "decayTooltip": "Typical ranges: 3-8% for fresh databases (under 6 months old), 8-12% for mixed dead databases (6-18 months, the common case), 20-30% for very old ones (2+ years). WhatsApp reach tends toward the lower end since phone numbers change less than emails.",
+      "paceHint": "How many reactivated deals your team can close per week. Sets the timeline on the break-even chart."
+    },
+    "cta": {
+      "subtitle": "Want to walk through your real numbers together?",
+      "label": "Book a 15-min chat"
+    },
+    "share": {
+      "label": "Share",
+      "copied": "Link copied"
     }
   },
   "demo": {
@@ -89,5 +151,27 @@
     "quote": "See our AI live handling conversations like an agent for your business, so your team can focus on what matters.",
     "meta": "Duration: 10 to 30 minutes\nNo commitment",
     "button": "Book a Demo"
+  },
+  "trySixty": {
+    "title": "Let the AI pitch you.",
+    "subtitle": "60 seconds on WhatsApp. Push back, ghost it, whatever a real lead would do.",
+    "cta": "Test the AI",
+    "mockChat": {
+      "customer1": "honestly the price last time was too steep for us",
+      "ai1": "Totally fair, a decision like this deserves to feel right. What made it feel too steep, the monthly or the total?",
+      "customer2": "well that's actually interesting"
+    }
+  },
+  "founderBackground": {
+    "slimLabel": "Founder previously worked with",
+    "eyebrow": "Who's behind Lead Awaker",
+    "label": "12 years building for products that did over $3.3B in revenue",
+    "cta": "Read the full story",
+    "tooltips": {
+      "warnerbros": "Warner Bros' Tom & Jerry (2021): contributed digital art during post-production at Framestore, the Oscar-winning VFX studio behind the film. $136M global box office.",
+      "sega": "Creative Assembly (Sega, $3.1B parent): shipped 3 titles in 12 months. Same pace, same standards I bring to Lead Awaker.",
+      "embracer": "New World Interactive (now an Embracer Group studio): led a team and shipped 2 titles, including Insurgency: Sandstorm ($52M revenue, still has a live community 7 years in). Embracer is publicly traded in Stockholm with 100+ studios in its portfolio.",
+      "valve": "Selected for Valve's invite-only VR game jam in London. Jammed with devs who now ship at Valve, Epic, and Ubisoft."
+    }
   }
 }

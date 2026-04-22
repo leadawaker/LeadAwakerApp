@@ -51,7 +51,21 @@ claude-progress.txt
 # Use WebP (converted) or reference from attached_assets/ instead
 Generated_Image_*.png
 Generated_Image_*.jpg
+
+# Session artifacts — scratch PNGs and dev notes
+wave*.png
+calc-scroll-fixed.png
+funnel-chart.png
+leads.md
+client.log
+
+# Dev utility scripts (throwaway)
+reset-pw-temp.ts
+get-users.mjs
+probe-ports.mjs
+check-db.mjs
 .autoforge/
 core.*
+cookies.txt
 uploads/
 n8n automations/

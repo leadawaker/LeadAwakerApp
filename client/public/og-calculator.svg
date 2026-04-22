@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#131B49"/>
+      <stop offset="50%" stop-color="#1e2a6e"/>
+      <stop offset="100%" stop-color="#2a3680"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="150" font-family="Outfit, Inter, sans-serif" font-size="28" font-weight="600" fill="rgba(255,255,255,0.55)" letter-spacing="4">LEAD AWAKER</text>
+  <text x="80" y="260" font-family="Outfit, Inter, sans-serif" font-size="78" font-weight="800" fill="#ffffff">Revenue Calculator</text>
+  <text x="80" y="340" font-family="Outfit, Inter, sans-serif" font-size="78" font-weight="800" fill="#FEB800">for Dead Leads</text>
+  <text x="80" y="440" font-family="Inter, sans-serif" font-size="30" font-weight="400" fill="rgba(255,255,255,0.75)">See how much revenue is trapped in the leads</text>
+  <text x="80" y="482" font-family="Inter, sans-serif" font-size="30" font-weight="400" fill="rgba(255,255,255,0.75)">you already paid for. 60-second diagnosis.</text>
+  <text x="80" y="560" font-family="Outfit, Inter, sans-serif" font-size="22" font-weight="700" fill="#FEB800">leadawaker.com</text>
+</svg>

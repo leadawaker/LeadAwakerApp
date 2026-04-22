@@ -33,10 +33,11 @@
       }
     },
     "upfrontCost": {
-      "title": "Sem Custo Inicial",
-      "partnership": "A gente ganha quando você ganha",
-      "mission": "Só vencemos quando você fecha",
-      "guarantee": "Garantia de 30 dias"
+      "title": "Custo Inicial",
+      "titleActive": "Sem Custo Inicial",
+      "partnership": "Sem taxa de setup",
+      "mission": "Pague apenas da receita que geramos",
+      "guarantee": "Garantia de performance de 30 dias, cancele quando quiser"
     },
     "absoluteZero": {
       "absolute": "Absolutamente",
@@ -58,26 +59,87 @@
 
   "calculator": {
     "title": "Você comprou esses leads. Hora de fazê-los render.",
-    "subtitle": "Veja quanta receita está deixando para trás e decida se vale uma conversa.",
+    "subtitle": "Um diagnóstico rápido de quanta receita está parada em leads que nunca fecharam.",
     "leadsLabel": "Leads Que Você Já Pagou",
     "dealLabel": "Quanto Vale Cada Negócio",
     "costLabel": "Quanto Pagou Por Lead",
+    "closeRateLabel": "Taxa de fechamento (ajustável)",
     "scenarios": {
-      "conservative": "Se Formos Cautelosos",
-      "expected": "O Que Normalmente Vemos",
-      "optimistic": "Se Seus Leads Estão Quentes",
-      "recommended": "Mais Provável"
+      "conservative": "Leads muito frios",
+      "expected": "Leads frios padrão",
+      "optimistic": "Leads mornos",
+      "tablistLabel": "Escolha um cenário"
     },
     "results": {
-      "responded": "Iniciam Conversa",
-      "qualified": "Prontos Para Comprar",
-      "closed": "Negócios Que Você Fecha",
-      "revenue": "Nova Receita"
+      "total": "Seu número de leads",
+      "responded": "Quantos voltam a engajar",
+      "qualified": "Quantos marcam uma call com você",
+      "closed": "Quantos negócios você fecha",
+      "revenue": "Nova Receita com reativação por IA",
+      "profit": "Novo Lucro com reativação por IA",
+      "revenueLtv": "Nova Receita Lifetime com reativação por IA",
+      "profitLtv": "Novo Lucro Lifetime com reativação por IA"
     },
     "investment": {
-      "spent": "Investimento em Ads Parado",
+      "spent": "Quanto Você Pagou Por Esses Leads",
       "return": "Receita Que Desbloqueamos",
-      "roi": "Seu ROI"
+      "returnProfit": "Lucro Que Desbloqueamos",
+      "returnLtv": "Receita Lifetime Que Desbloqueamos",
+      "returnProfitLtv": "Lucro Lifetime Que Desbloqueamos",
+      "roi": "ROI Neste Cenário",
+      "freshAdsSentence1": "Ads novos custariam {{amount}} para chegar ao mesmo resultado.",
+      "freshAdsSentence2": "Você já pagou {{amount}} por esses leads."
+    },
+    "charts": {
+      "tablistLabel": "Escolha um gráfico",
+      "breakeven": "Break-even",
+      "funnels": "Funis",
+      "cac": "CAC",
+      "cacSubtitle": "Custo por cliente adquirido em cada cenário",
+      "cacFootnote": "* CAC = seu gasto original em ads ÷ clientes fechados nesse cenário. Taxas de resposta menores fazem cada cliente fechado custar mais.",
+      "breakevenNarrative": "Você se paga no negócio #{{deal}}. Os {{profitDeals}} restantes são puro lucro.",
+      "breakevenNarrativeWeeks": "Você se paga no negócio #{{deal}} (~semana {{week}}). Os {{profitDeals}} restantes chegam até a semana {{totalWeeks}}, puro lucro.",
+      "breakevenMiss": "Não alcançado em {{total}} negócios.",
+      "breakevenAtDeal": "Negócio #{{deal}}",
+      "breakevenAtDealWeek": "Negócio #{{deal}} · Sem {{week}}",
+      "weekLabel": "Semana {{week}}",
+      "paceLabel": "Velocidade de vendas",
+      "paceValue": "{{count}} negócios/sem",
+      "dealsLabel": "deals",
+      "spendLine": "Custo em ads {{amount}}",
+      "cumRevenueLine": "Receita acumulada",
+      "funnelPaid": "Ads pagos",
+      "funnelManual": "Follow-up manual",
+      "funnelAI": "Reativação com IA",
+      "funnelsFootnote": "* Follow-up manual geralmente fecha 2-4% de leads mortos porque humanos abandonam follow-ups. Reativação com IA depende dos seus dados e oferta."
+    },
+    "advanced": {
+      "toggle": "Avançado",
+      "on": "Ligado",
+      "off": "Desligado",
+      "showAs": "Mostrar números como",
+      "revenueMode": "Receita",
+      "profitMode": "Lucro",
+      "showAsHint": "Mude para Lucro para ver lucro de contribuição em vez de receita bruta. Margem bruta é a parte de cada negócio que sobra depois de custos diretos (produto, entrega, frete).",
+      "grossMargin": "Margem bruta por negócio",
+      "dealType": "Tipo de negócio",
+      "oneShot": "Pontual",
+      "recurring": "Recorrente",
+      "dealTypeHint": "Mude para Recorrente para modelos de assinatura ou retainer. Média de meses retidos é o número médio de meses que um cliente fica antes de cancelar. O valor do negócio é multiplicado por este para estimar o lifetime value.",
+      "monthsRetained": "Média de meses retidos",
+      "decay": "Erosão da base",
+      "decayHint": "Parte dos seus leads mortos está inalcançável (bounces, opt-outs, duplicados). Ajuste para uma base realmente contatável.",
+      "decayLabel": "Parcela inalcançável",
+      "decayTooltip": "Faixas típicas: 3-8% para bases novas (<6 meses), 8-12% para bases mistas de leads mortos (6-18 meses, o caso mais comum), 20-30% para bases bem antigas (2+ anos). WhatsApp tende ao limite menor, já que números de telefone mudam menos que e-mails.",
+      "paceHint": "Quantos negócios reativados seu time fecha por semana. Define a linha do tempo no gráfico de break-even."
+    },
+    "cta": {
+      "subtitle": "Quer passar pelos seus números reais comigo?",
+      "label": "Agende um papo de 15 min"
+    },
+    "share": {
+      "label": "Compartilhar",
+      "copied": "Link copiado"
     }
   },
   "demo": {
@@ -90,6 +152,28 @@
     "quote": "Veja ao vivo a nossa IA atendendo como um agente do seu negócio, para que seu time foque no que importa.",
     "meta": "Duração: de 10 a 30 minutos\nSem compromisso",
     "button": "Agendar uma Demo"
+  },
+  "trySixty": {
+    "title": "Deixe a IA te vender.",
+    "subtitle": "60 segundos no WhatsApp. Resista, suma, faça o que um lead de verdade faria.",
+    "cta": "Testar a IA",
+    "mockChat": {
+      "customer1": "sinceramente o preço da outra vez ficou caro pra gente",
+      "ai1": "Faz total sentido, uma decisão dessas precisa te deixar tranquilo. O que pesou mais, a parcela ou o total?",
+      "customer2": "olha isso é interessante"
+    }
+  },
+  "founderBackground": {
+    "slimLabel": "Fundador já trabalhou com",
+    "eyebrow": "Quem está por trás da Lead Awaker",
+    "label": "12 anos construindo produtos que juntos faturaram mais de US$ 3.3B",
+    "cta": "Ler a história completa",
+    "tooltips": {
+      "warnerbros": "Tom & Jerry da Warner Bros (2021): contribuí com digital art durante a pós-produção na Framestore, o estúdio VFX vencedor do Oscar por trás do filme. US$ 136M de bilheteria global.",
+      "sega": "Creative Assembly (Sega, matriz de US$ 3.1B): 3 títulos entregues em 12 meses. O mesmo ritmo e a mesma exigência que levo para a Lead Awaker.",
+      "embracer": "New World Interactive (hoje um estúdio do Embracer Group): liderei um time e lancei 2 títulos, incluindo Insurgency: Sandstorm (US$ 52M de receita, 7 anos depois ainda com comunidade ativa). A Embracer é listada em bolsa em Estocolmo e tem mais de 100 estúdios no portfólio.",
+      "valve": "Selecionado pro VR game jam fechado da Valve em Londres. Jammei com devs que hoje fazem jogo na Valve, Epic e Ubisoft."
+    }
   }
 }
 

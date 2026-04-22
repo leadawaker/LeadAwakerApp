@@ -24,6 +24,7 @@ import AnimatedCounter from "@/components/AnimatedCounter";
 import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
 import SalesRepSteps from "@/components/SalesRepSteps";
 import RevenueCalculator from "@/components/RevenueCalculator";
+import TryInSixtySeconds from "@/components/TryInSixtySeconds";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
@@ -34,6 +35,7 @@ export default function Home() {
   const isDefaultLang = lang === "en";
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
+  const [openLogo, setOpenLogo] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen pt-32 overflow-x-clip md:overflow-visible bg-[#F9FAFC] dark:bg-background">
@@ -144,7 +146,7 @@ export default function Home() {
                   </Button>
                 </Link>
 
-                <Link href={isDefaultLang ? "/services" : `/${lang}/services`}>
+                <Link href={isDefaultLang ? "/try" : `/${lang}/try`}>
                   <Button
                     size="lg"
                     variant="outline"
@@ -169,6 +171,50 @@ export default function Home() {
              </div>
             </div>
           </section>
+
+      {/* Slim "Trusted by" logo strip — compressed credibility under the hero */}
+      <section className="py-10 md:py-12 bg-[#F9FAFC] dark:bg-background border-y border-border/30">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+            <p className="text-xs text-muted-foreground tracking-[0.2em] uppercase whitespace-nowrap">
+              {t("founderBackground.slimLabel")}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:gap-x-10">
+              {[
+                { key: "warnerbros", src: "/logos/credibility/warnerbros.svg", alt: "Warner Bros", height: "h-7 md:h-8" },
+                { key: "sega", src: "/logos/credibility/sega.svg", alt: "Sega", height: "h-5 md:h-6" },
+                { key: "embracer", src: "/logos/credibility/embracer.svg", alt: "Embracer Group", height: "h-5 md:h-6" },
+                { key: "valve", src: "/logos/credibility/valve.svg", alt: "Valve", height: "h-5 md:h-6" },
+              ].map((logo) => (
+                <div
+                  key={`slim-${logo.key}`}
+                  className="relative group"
+                  onClick={() => setOpenLogo(openLogo === `slim-${logo.key}` ? null : `slim-${logo.key}`)}
+                >
+                  <button
+                    type="button"
+                    aria-label={logo.alt}
+                    className="inline-block opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
+                  >
+                    <img
+                      src={logo.src}
+                      alt={logo.alt}
+                      className={`${logo.height} w-auto block`}
+                    />
+                  </button>
+                  <div
+                    className={`absolute left-1/2 -translate-x-1/2 top-full mt-4 w-[260px] rounded-md bg-white border border-border/60 shadow-lg p-3 text-xs text-foreground leading-relaxed z-50 pointer-events-none transition-opacity duration-200 ${
+                      openLogo === `slim-${logo.key}` ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    {t(`founderBackground.tooltips.${logo.key}`)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
@@ -204,9 +250,9 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-4xl mx-auto">
-            {/* Stacked Side Cards */}
-            <div className="flex flex-col gap-4 flex-1">
+          <div className="flex flex-col gap-6 mb-12 max-w-7xl mx-auto">
+            {/* Metric Cards Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 {
                   isRange: true,
@@ -243,7 +289,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * i }}
-                  className="bg-white dark:bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
+                  className="bg-white dark:bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center"
                 >
                   <div className={`font-bold text-primary mb-1 font-heading ${result.isRange ? 'text-4xl' : 'text-[48px]'}`}>
                     {result.isRange ? (
@@ -281,7 +327,7 @@ export default function Home() {
                 color: isFinished ? "#ffffff" : "#3c50d6"
               }}
               transition={{ duration: 0.5 }}
-              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973]"
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center min-h-[420px] relative overflow-hidden bg-[#1c2973]"
             >
               <AnimatePresence>
                 {isFinished && (
@@ -315,7 +361,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className={`mb-2 font-heading mt-8 md:mt-12 transition-colors duration-500 text-[28px] md:text-[39px] font-bold ${isFinished ? 'text-white' : 'text-black'}`}
                 >
-                  {t("results.upfrontCost.title")}
+                  {isFinished ? t("results.upfrontCost.titleActive") : t("results.upfrontCost.title")}
                 </motion.h3>
                 <div className={`text-lg font-medium flex flex-col items-center text-center pt-8 ${isFinished ? '' : 'pointer-events-none'}`}>
                   <motion.span 
@@ -349,6 +395,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Try in 60 Seconds */}
+      <TryInSixtySeconds />
+
       {/* Revenue Calculator */}
       <RevenueCalculator />
 
@@ -359,7 +408,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-6xl mx-auto mb-16"
+            className="text-center max-w-7xl mx-auto mb-16"
           >
             <h2 className="font-bold mt-[3px] mb-[3px] text-[42px] md:text-[50px] lg:text-[57px]">
               {t("compliance.title")}
@@ -376,7 +425,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="max-w-4xl mx-auto"
+            className="max-w-7xl mx-auto"
           >
             <div className="grid md:grid-cols-2 gap-8 text-left mt-12 p-8">
               <div className="space-y-3">
@@ -403,7 +452,7 @@ export default function Home() {
       </section>
 
       {/* Bottom Demo CTA Section */}
-      <section className="py-32 bg-primary dark:bg-[#1a3060] text-primary-foreground relative overflow-hidden">
+      <section id="book-demo" className="py-32 bg-primary dark:bg-[#1a3060] text-primary-foreground relative overflow-hidden scroll-mt-24">
         {/* Dotted surface animation (white dots on dark bg) */}
         <DottedSurface className="opacity-60" />
         <div className="container mx-auto px-4 md:px-6 relative z-10">

@@ -33,10 +33,11 @@
       }
     },
     "upfrontCost": {
-      "title": "Geen Voorafkosten",
-      "partnership": "Wij verdienen als jij verdient",
-      "mission": "Wij winnen alleen als jij sluit",
-      "guarantee": "30-dagen garantie"
+      "title": "Voorafkosten",
+      "titleActive": "Geen Voorafkosten",
+      "partnership": "Geen setup-kosten",
+      "mission": "Betaal alleen uit omzet die wij genereren",
+      "guarantee": "30-dagen prestatiegarantie, altijd opzegbaar"
     },
     "absoluteZero": {
       "absolute": "Absoluut",
@@ -57,26 +58,87 @@
   },
   "calculator": {
     "title": "Je hebt deze leads gekocht. Laat ze nu opleveren.",
-    "subtitle": "Ontdek hoeveel omzet je laat liggen en beslis of het een gesprek waard is.",
+    "subtitle": "Een snelle diagnose van hoeveel omzet vastzit in leads die nooit hebben getekend.",
     "leadsLabel": "Leads Waar Je Al Voor Betaald Hebt",
     "dealLabel": "Wat Elke Deal Waard Is",
     "costLabel": "Wat Je Betaalde Per Lead",
+    "closeRateLabel": "Sluitpercentage (aanpasbaar)",
     "scenarios": {
-      "conservative": "Als We Voorzichtig Zijn",
-      "expected": "Wat We Normaal Zien",
-      "optimistic": "Als Je Leads Warm Zijn",
-      "recommended": "Meest Waarschijnlijk"
+      "conservative": "Hele koude leads",
+      "expected": "Standaard koude leads",
+      "optimistic": "Lauwe leads",
+      "tablistLabel": "Kies een scenario"
     },
     "results": {
-      "responded": "Starten een Gesprek",
-      "qualified": "Klaar om te Kopen",
-      "closed": "Deals Die Jij Sluit",
-      "revenue": "Nieuwe Omzet"
+      "total": "Je aantal leads",
+      "responded": "Hoeveel er reageren",
+      "qualified": "Hoeveel een call met je boeken",
+      "closed": "Hoeveel deals je sluit",
+      "revenue": "Nieuwe Omzet met AI-reactivatie",
+      "profit": "Nieuwe Winst met AI-reactivatie",
+      "revenueLtv": "Nieuwe Lifetime-omzet met AI-reactivatie",
+      "profitLtv": "Nieuwe Lifetime-winst met AI-reactivatie"
     },
     "investment": {
-      "spent": "Advertentiekosten Die Stilliggen",
+      "spent": "Wat Je Betaalde Voor Deze Leads",
       "return": "Omzet Die Wij Ontgrendelen",
-      "roi": "Jouw ROI"
+      "returnProfit": "Winst Die Wij Ontgrendelen",
+      "returnLtv": "Lifetime-omzet Die Wij Ontgrendelen",
+      "returnProfitLtv": "Lifetime-winst Die Wij Ontgrendelen",
+      "roi": "ROI Voor Dit Scenario",
+      "freshAdsSentence1": "Nieuwe ads zouden {{amount}} kosten om hetzelfde resultaat te bereiken.",
+      "freshAdsSentence2": "Jij hebt al {{amount}} betaald voor deze leads."
+    },
+    "charts": {
+      "tablistLabel": "Kies een grafiek",
+      "breakeven": "Break-even",
+      "funnels": "Funnels",
+      "cac": "CAC",
+      "cacSubtitle": "Kosten per binnengehaalde klant per scenario",
+      "cacFootnote": "* CAC = je oorspronkelijke ad-spend ÷ gesloten klanten in dit scenario. Lagere response rates betekenen dat elke gesloten klant meer kost.",
+      "breakevenNarrative": "Je bent break-even bij deal #{{deal}}. De overige {{profitDeals}} deals zijn pure winst.",
+      "breakevenNarrativeWeeks": "Je bent break-even bij deal #{{deal}} (~week {{week}}). De overige {{profitDeals}} deals vallen binnen week {{totalWeeks}}, pure winst.",
+      "breakevenMiss": "Niet bereikt binnen {{total}} deals.",
+      "breakevenAtDeal": "Deal #{{deal}}",
+      "breakevenAtDealWeek": "Deal #{{deal}} · W{{week}}",
+      "weekLabel": "Week {{week}}",
+      "paceLabel": "Verkoopsnelheid",
+      "paceValue": "{{count}} deals/week",
+      "dealsLabel": "deals",
+      "spendLine": "Advertentiekosten {{amount}}",
+      "cumRevenueLine": "Cumulatieve omzet",
+      "funnelPaid": "Betaalde ads",
+      "funnelManual": "Handmatige follow-up",
+      "funnelAI": "AI-reactivatie",
+      "funnelsFootnote": "* Handmatige follow-up sluit meestal 2-4% van dode leads omdat mensen follow-ups laten vallen. AI-reactivatie hangt af van je data en aanbod."
+    },
+    "advanced": {
+      "toggle": "Geavanceerd",
+      "on": "Aan",
+      "off": "Uit",
+      "showAs": "Toon cijfers als",
+      "revenueMode": "Omzet",
+      "profitMode": "Winst",
+      "showAsHint": "Zet op Winst om contributiemarge te zien in plaats van bruto-omzet. Brutomarge is het deel van elke deal dat overblijft na harde kosten (product, fulfillment, bezorging).",
+      "grossMargin": "Brutomarge per deal",
+      "dealType": "Dealtype",
+      "oneShot": "Eenmalig",
+      "recurring": "Terugkerend",
+      "dealTypeHint": "Zet op Terugkerend voor abonnementen of retainers. Gem. maanden behouden is het gemiddeld aantal maanden dat een klant blijft voor opzegging. De dealwaarde wordt hiermee vermenigvuldigd voor lifetime value.",
+      "monthsRetained": "Gem. maanden behouden",
+      "decay": "Database-erosie",
+      "decayHint": "Een deel van je dode leads is onbereikbaar (gebounced, opt-outs, duplicaten). Stel bij voor een eerlijker bereikbare pool.",
+      "decayLabel": "Aandeel onbereikbaar",
+      "decayTooltip": "Typische marges: 3-8% voor verse databases (<6 maanden), 8-12% voor gemengd-dode databases (6-18 maanden, de meest voorkomende), 20-30% voor hele oude (2+ jaar). WhatsApp ligt vaak aan de lagere kant omdat telefoonnummers minder vaak wisselen dan e-mails.",
+      "paceHint": "Hoeveel gereactiveerde deals je team per week kan sluiten. Bepaalt de tijdlijn in de break-even grafiek."
+    },
+    "cta": {
+      "subtitle": "Zin om samen jouw echte cijfers door te nemen?",
+      "label": "Plan een gesprek van 15 min"
+    },
+    "share": {
+      "label": "Delen",
+      "copied": "Link gekopieerd"
     }
   },
   "demo": {
@@ -89,5 +151,27 @@
     "quote": "Bekijk live hoe onze AI gesprekken afhandelt als een agent voor jouw bedrijf, zodat je team kan focussen op wat echt telt.",
     "meta": "Duur: 10 tot 30 minuten\nGeen verplichtingen",
     "button": "Boek een Demo"
+  },
+  "trySixty": {
+    "title": "Laat de AI jou pitchen (let the AI pitch you).",
+    "subtitle": "60 seconden via WhatsApp. Duw terug, ghost 'm, doe wat een echte lead zou doen.",
+    "cta": "Test de AI",
+    "mockChat": {
+      "customer1": "eerlijk gezegd was de prijs vorige keer te hoog voor ons",
+      "ai1": "Helemaal begrijpelijk, zo'n beslissing moet gewoon goed voelen. Wat voelde te hoog, de maandlasten of het totaal?",
+      "customer2": "nou dat is wel interessant"
+    }
+  },
+  "founderBackground": {
+    "slimLabel": "Oprichter eerder gewerkt met",
+    "eyebrow": "Wie zit er achter Lead Awaker",
+    "label": "12 jaar bouwen aan producten die samen meer dan $3.3B omzet deden",
+    "cta": "Lees het hele verhaal",
+    "tooltips": {
+      "warnerbros": "Warner Bros' Tom & Jerry (2021): digital art bijgedragen tijdens de post-productie bij Framestore, de Oscar-winnende VFX-studio achter de film. $136M wereldwijde box office.",
+      "sega": "Creative Assembly (Sega, $3.1B moeder): 3 titels geleverd in 12 maanden. Hetzelfde tempo en dezelfde standaard die ik meeneem naar Lead Awaker.",
+      "embracer": "New World Interactive (nu een studio van Embracer Group): een team geleid en 2 titels geshipped, waaronder Insurgency: Sandstorm ($52M omzet, 7 jaar later nog een actieve community). Embracer is beursgenoteerd in Stockholm met 100+ studio's in portefeuille.",
+      "valve": "Geselecteerd voor Valve's invite-only VR game jam in Londen. Gejamd met devs die nu shippen bij Valve, Epic en Ubisoft."
+    }
   }
 }
