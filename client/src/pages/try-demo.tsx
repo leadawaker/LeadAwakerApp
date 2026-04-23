@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Sparkles, Sun, Dumbbell, Smile, Briefcase, GraduationCap, ArrowRight } from "lucide-react";
 import { useTranslation, Trans } from "react-i18next";
@@ -17,12 +17,14 @@ type MessageItem = {
   id?: string;
 };
 
-/**
- * Maps the public DEMO_CAMPAIGNS key (from /api/demo/campaigns) to the
- * matching case-study key in the `services` i18n namespace. The /try page
- * absorbed the old Use Cases page; this map lets the form's demo picker
- * drive the case-study block below without duplicating backend state.
- */
+const DEMO_CAMPAIGNS: Campaign[] = [
+  { id: 47, key: "solar", niche: "Solar installer follow-up", emoji: "☀️" },
+  { id: 50, key: "coaching", niche: "Coaching enrollment", emoji: "🎓" },
+  { id: 57, key: "gym", niche: "Gym membership reactivation", emoji: "🏋️" },
+  { id: 58, key: "dental", niche: "Dental checkup reactivation", emoji: "🦷" },
+  { id: 59, key: "legal", niche: "Accident claim reactivation", emoji: "⚖️" },
+];
+
 const CAMPAIGN_TO_CASE_KEY: Record<string, string> = {
   solar: "solarPanel",
   coaching: "coaching",
@@ -46,9 +48,8 @@ export default function TryDemo() {
   const lang = i18n.language;
   const isDefaultLang = lang === "en";
 
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [firstName, setFirstName] = useState("");
-  const [campaignId, setCampaignId] = useState<number | null>(null);
+  const [campaignId, setCampaignId] = useState<number>(DEMO_CAMPAIGNS[0].id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,19 +59,9 @@ export default function TryDemo() {
     ? currentLang
     : "en";
 
-  useEffect(() => {
-    fetch("/api/demo/campaigns")
-      .then((r) => r.json())
-      .then((data: { campaigns: Campaign[] }) => {
-        setCampaigns(data.campaigns);
-        if (data.campaigns.length > 0) setCampaignId(data.campaigns[0].id);
-      })
-      .catch(() => setError(t("errors.loadFailed")));
-  }, [t]);
-
   const activeCampaign = useMemo(
-    () => campaigns.find((c) => c.id === campaignId) ?? null,
-    [campaigns, campaignId],
+    () => DEMO_CAMPAIGNS.find((c) => c.id === campaignId) ?? null,
+    [campaignId],
   );
 
   const activeCaseKey = activeCampaign ? CAMPAIGN_TO_CASE_KEY[activeCampaign.key] : null;
@@ -158,7 +149,7 @@ export default function TryDemo() {
           <div>
             <label className="block text-sm font-medium mb-2">{t("form.demoLabel")}</label>
           <div className="flex flex-col gap-2">
-            {campaigns.map((c) => {
+            {DEMO_CAMPAIGNS.map((c) => {
               const caseKey = CAMPAIGN_TO_CASE_KEY[c.key];
               const visual = caseKey ? CASE_VISUALS[caseKey] : null;
               const isActive = campaignId === c.id;
@@ -203,9 +194,6 @@ export default function TryDemo() {
                 </button>
               );
             })}
-            {campaigns.length === 0 && (
-              <div className="text-sm text-muted-foreground">{t("form.loadingDemos")}</div>
-            )}
           </div>
           </div>
 
@@ -218,7 +206,7 @@ export default function TryDemo() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading || campaigns.length === 0}
+            disabled={loading}
             className="w-full bg-[#25D366] hover:bg-[#20BC5A] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-full transition inline-flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-5 h-5" />

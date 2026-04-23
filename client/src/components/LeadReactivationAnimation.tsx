@@ -55,7 +55,7 @@
               const observer = new IntersectionObserver(
                 ([entry]) => {
                   if (entry.isIntersecting) {
-                    setTimeout(() => setHasStarted(true), 2000);
+                    setTimeout(() => setHasStarted(true), 1500);
                     observer.disconnect();
                   }
                 },

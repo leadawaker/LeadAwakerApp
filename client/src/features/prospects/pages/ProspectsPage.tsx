@@ -1248,7 +1248,8 @@ export default function ProspectsPage() {
                 onAddProspect={handleAddProspect}
                 onCreate={async (form) => {
                   const created = await createProspect(form as unknown as Record<string, unknown>);
-                  fetchData();
+                  await fetchData();
+                  if (created) setSelectedProspect(created as ProspectRow);
                   return created;
                 }}
                 onSave={handleFieldSave}

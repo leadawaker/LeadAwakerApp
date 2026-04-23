@@ -28,9 +28,12 @@ import TryInSixtySeconds from "@/components/TryInSixtySeconds";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
+import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
+import profileImg from "@/assets/profile.webp";
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
+  const { t: tAbout } = useTranslation("about");
   const lang = i18n.language;
   const isDefaultLang = lang === "en";
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -446,6 +449,66 @@ export default function Home() {
                   {t("compliance.brand.description")}
                 </p>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Mission */}
+      <section className="py-24 bg-gray-200 dark:bg-card/80 border-y border-border relative overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+        <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-7xl mx-auto"
+          >
+            <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-10 overflow-hidden">
+
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground text-center md:whitespace-nowrap">
+                {tAbout("intro.title")}{" "}
+                <span className="text-indigo-500">{tAbout("intro.titleHighlight")}</span>
+              </h2>
+              <p className="text-xl text-muted-foreground leading-relaxed text-center max-w-6xl mx-auto">
+                {tAbout("intro.paragraph2")}
+              </p>
+              <div className="w-full max-w-5xl mx-auto -mb-4">
+                <LeadReactivationAnimation />
+              </div>
+
+              <motion.div
+                className="flex flex-col md:flex-row items-start gap-8"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+              >
+                <img
+                  src={profileImg}
+                  alt={tAbout("founder.name")}
+                  className="w-50 h-43 shrink-0 rounded-2xl object-cover shadow-md"
+                />
+                <div className="flex-grow space-y-4 text-left">
+                  <div className="flex items-baseline gap-3">
+                    <h3 className="text-lg md:text-2xl font-bold text-foreground">
+                      {tAbout("founder.name")}
+                    </h3>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+                      {tAbout("founder.title")}
+                    </p>
+                  </div>
+                  <p className="italic border-l-4 border-primary/30 pl-6 text-[17px] md:text-[19px] text-foreground/80">
+                    {tAbout("founder.quote")}
+                  </p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>

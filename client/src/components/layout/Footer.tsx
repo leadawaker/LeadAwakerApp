@@ -119,7 +119,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={withLang("/about")}
+                  href={withLang("/faq")}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.about")}

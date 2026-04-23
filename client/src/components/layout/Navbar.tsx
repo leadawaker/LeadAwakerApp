@@ -110,7 +110,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: t("nav.home") },
     { href: "/try", label: t("nav.try") },
-    { href: "/about", label: t("nav.about") },
+    { href: "/faq", label: t("nav.about") },
   ];
 
   return (

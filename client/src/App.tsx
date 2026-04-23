@@ -13,7 +13,7 @@ import { WhatsAppBubbleProvider } from "@/components/layout/WhatsAppBubble";
 import Seo from "./Seo";
 
 import Home from "@/pages/home";
-import About from "@/pages/about";
+import FAQ from "@/pages/faq";
 import BookDemo from "@/pages/book-demo";
 import TryDemo from "@/pages/try-demo";
 import IntakeDemo from "@/pages/intake-demo";
@@ -95,7 +95,8 @@ function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/about" component={About} />
+      <Route path="/faq" component={FAQ} />
+      <Route path="/about" component={() => <Redirect to="/faq" />} />
       <Route path="/services" component={() => <Redirect to="/try" />} />
       <Route path="/book-demo" component={BookDemo} />
       <Route path="/try" component={TryDemo} />
@@ -126,7 +127,8 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 
   return (
     <Switch>
-      <Route path={`/${lang}/about`} component={About} />
+      <Route path={`/${lang}/faq`} component={FAQ} />
+      <Route path={`/${lang}/about`} component={() => <Redirect to={`/${lang}/faq`} />} />
       <Route path={`/${lang}/services`} component={() => <Redirect to={`/${lang}/try`} />} />
       <Route path={`/${lang}/book-demo`} component={BookDemo} />
       <Route path={`/${lang}/try`} component={TryDemo} />

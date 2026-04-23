@@ -926,7 +926,10 @@ export function ProspectListView({
             onCreate={async (data) => {
               const created = await onCreate(data);
               setPanelMode("view");
-              if (created) onSelectProspect(created);
+              if (created) {
+                await paginated.refetch();
+                onSelectProspect(created);
+              }
             }}
             onClose={() => setPanelMode("view")}
           />
