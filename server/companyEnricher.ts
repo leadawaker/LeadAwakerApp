@@ -168,7 +168,7 @@ Read the skill at /home/gabriel/.claude/skills/prospect/SKILL.md and follow the 
    - /get-company-details for structured facts (industry, staffCount, founded, specialities, phone, description)
    - /get-company-posts for top 3 posts by totalReactionCount
 
-3. Always run the deep website scrape (the audit step below depends on rich page content). Do not skip it based on LinkedIn completeness.
+3. DO NOT run the website scrape. Only use LinkedIn data (and Google Custom Search if gaps remain). Website scrape is a separate on-demand step.
 
 4. Populate with a single UPDATE SQL:
    - company_summary (structured INDUSTRY/SIZE/MARKET/POSITIONING/SIGNALS/ACTIVITY labels, one fact per line)

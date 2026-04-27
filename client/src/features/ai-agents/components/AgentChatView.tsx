@@ -419,7 +419,7 @@ function MessageBubble({
 }
 
 // ─── Streaming bubble ─────────────────────────────────────────────────────────
-function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
+function StreamingBubble({ text, agent, sealed }: { text: string; agent: AiAgent; sealed?: boolean }) {
   // No typing dots — the ActivityIndicator ("Thinking..." pill) covers the pre-token phase.
   if (!text) return null;
   return (
@@ -429,7 +429,7 @@ function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
           <div className="agent-markdown-content min-w-0 overflow-hidden">
             <MarkdownRenderer content={text} />
           </div>
-          <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />
+          {!sealed && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />}
           <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
         </div>
       </div>
@@ -443,6 +443,7 @@ export function AgentChatView({
   messages,
   streaming,
   streamingText,
+  streamingBubbles = [],
   loading,
   onSend,
   onNewSession,
@@ -462,6 +463,7 @@ export function AgentChatView({
   messages: AgentMessage[];
   streaming: boolean;
   streamingText: string;
+  streamingBubbles?: string[];
   loading: boolean;
   onSend: (text: string, attachment?: string, fileId?: number) => void;
   onNewSession: () => void;
@@ -1113,7 +1115,16 @@ export function AgentChatView({
             })()}
             {streaming && (
               <div style={{ marginTop: messages.filter((m) => (m.role as string) !== "tool").slice(-1)[0]?.role === "assistant" ? 3 : 8 }}>
-                <StreamingBubble text={streamingText} agent={agent} />
+                {streamingBubbles.map((text, i) => (
+                  <div key={i} className={i > 0 ? "mt-[3px]" : ""}>
+                    <StreamingBubble text={text} agent={agent} sealed />
+                  </div>
+                ))}
+                {(streamingText || !streamingBubbles.length) && (
+                  <div className={streamingBubbles.length > 0 ? "mt-[3px]" : ""}>
+                    <StreamingBubble text={streamingText} agent={agent} />
+                  </div>
+                )}
                 {activity && (
                   <div className="mt-1.5 ml-1">
                     <ActivityIndicator activity={activity} />

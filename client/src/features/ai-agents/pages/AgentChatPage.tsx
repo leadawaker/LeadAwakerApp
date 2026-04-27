@@ -23,6 +23,7 @@ export function AgentChatPage() {
     messages,
     streaming,
     streamingText,
+    streamingBubbles,
     loading,
     initialize,
     sendMessage,
@@ -121,6 +122,7 @@ export function AgentChatPage() {
             messages={messages}
             streaming={streaming}
             streamingText={streamingText}
+            streamingBubbles={streamingBubbles}
             loading={loading}
             onSend={sendMessage}
             onNewSession={newSession}

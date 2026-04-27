@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
-import { RotateCcw, Mic, Image as ImageIcon, Mail, MessageSquare, Linkedin } from "lucide-react";
+import { RotateCcw, Mic, Image as ImageIcon, Mail, MessageSquare, Linkedin, Phone } from "lucide-react";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { SessionUser } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,7 @@ export function ChatBubble({
   const isEmail = typeNorm === "email";
   const isLinkedIn = typeNorm === "linkedin";
   const isWhatsApp = typeNorm === "whatsapp" || typeNorm === "whatsapp_cloud";
+  const isCall = typeNorm === "call";
   const aiMsg = outbound && !isEmail && !isLinkedIn && isAiMessage(item);
   const humanAgentMsg = outbound && !isEmail && !isLinkedIn && isHumanAgentMessage(item);
   const { isFirstInRun, isLastInRun } = meta;
@@ -104,6 +105,8 @@ export function ChatBubble({
           isEmail && "bg-white dark:bg-card text-gray-900 dark:text-foreground border border-border/50 bubble-shadow",
           // LinkedIn: subtle blue tint with border
           isLinkedIn && "bg-[#f4f8ff] dark:bg-[#1a2540] text-gray-900 dark:text-foreground border border-[#0A66C2]/20 bubble-shadow",
+          // Call: green tint
+          isCall && "bg-[#f0fff4] dark:bg-[#0d2318] text-gray-900 dark:text-foreground border border-emerald-200/60 dark:border-emerald-900/60 bubble-shadow",
           // Inbound (lead): neutral gray glow; mobile uses --card bg explicitly
           !isEmail && inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground bubble-shadow",
           // AI outbound: blue (desktop) / brand-indigo (mobile)
@@ -126,6 +129,7 @@ export function ChatBubble({
             isLinkedIn && "border-l-[#f4f8ff] dark:border-l-[#1a2540]",
             aiMsg && "border-l-[#f2f5ff] dark:border-l-[#1e2340] max-md:border-l-brand-indigo",
             humanAgentMsg && "border-l-[#f1fff5] dark:border-l-[#1a2e1f] max-md:border-l-brand-indigo",
+            isCall && "border-l-[#f0fff4] dark:border-l-[#0d2318]",
           )} />
         )}
         {/* Content: voice memo data URL → render player inline; otherwise plain text */}
@@ -144,6 +148,7 @@ export function ChatBubble({
               {isEmail && <Mail className="h-3 w-3" />}
               {isLinkedIn && <Linkedin className="h-3 w-3" />}
               {isWhatsApp && <MessageSquare className="h-3 w-3" />}
+              {isCall && <Phone className="h-3 w-3" />}
               {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
               {outbound && (
                 <MessageStatusIcon
@@ -182,6 +187,22 @@ export function ChatBubble({
                   }
                   {timeStamp}
                 </div>
+              </div>
+            );
+          }
+          if (isCall) {
+            const metadata = (item.metadata ?? item.Metadata ?? {}) as any;
+            const transcript = metadata?.transcript ?? null;
+            return (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-[13px] font-medium flex-1 min-w-0">{content || "Call"}</span>
+                  {timeStamp}
+                </div>
+                {transcript && (
+                  <span className="text-[12px] italic opacity-70 leading-relaxed">{transcript}</span>
+                )}
               </div>
             );
           }

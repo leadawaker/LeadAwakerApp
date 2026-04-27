@@ -147,10 +147,12 @@ export function useAgentChat() {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [streamingBubbles, setStreamingBubbles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const [activity, setActivity] = useState<AgentActivity | null>(null);
   const streamingTextRef = useRef("");
+  const streamingBubblesRef = useRef<string[]>([]);
   const messagesRef = useRef<AgentMessage[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -289,6 +291,8 @@ export function useAgentChat() {
     setStreaming(true);
     setStreamingText("");
     streamingTextRef.current = "";
+    setStreamingBubbles([]);
+    streamingBubblesRef.current = [];
     // Sync: broadcast the optimistic user message to peer views
     maybeBroadcast(newMsgs, true, "");
     // Throttle token broadcasts (~100ms)
@@ -355,6 +359,15 @@ export function useAgentChat() {
                   m === optimistic ? { ...m, id: evt.id } : m
                 )
               );
+            } else if (evt.type === "message_break") {
+              // Seal current bubble and start a new one
+              if (streamingTextRef.current) {
+                const sealed = streamingTextRef.current;
+                streamingBubblesRef.current = [...streamingBubblesRef.current, sealed];
+                setStreamingBubbles([...streamingBubblesRef.current]);
+                streamingTextRef.current = "";
+                setStreamingText("");
+              }
             } else if (evt.type === "token") {
               // Append token text incrementally for real-time rendering
               const newText = streamingTextRef.current + (evt.text ?? "");
@@ -393,24 +406,36 @@ export function useAgentChat() {
                 actions: evt.actions || [],
               });
             } else if (evt.type === "done") {
-              // Final event — add the complete assistant message
-              const finalText = streamingTextRef.current;
+              // Final event — add all bubbles as separate assistant messages
+              const allBubbles = streamingTextRef.current
+                ? [...streamingBubblesRef.current, streamingTextRef.current]
+                : streamingBubblesRef.current;
               const subAgentBlocks: SubAgentBlock[] = evt.subAgentBlocks || [];
-              const assistantMsg: AgentMessage = {
-                sessionId: session.sessionId,
-                role: "assistant",
-                content: finalText,
-                subAgentBlocks,
-                createdAt: new Date().toISOString(),
-              };
+              const newMsgs: AgentMessage[] = allBubbles.length > 0
+                ? allBubbles.map((text, i) => ({
+                    sessionId: session.sessionId,
+                    role: "assistant" as const,
+                    content: text,
+                    subAgentBlocks: i === allBubbles.length - 1 ? subAgentBlocks : [],
+                    createdAt: new Date().toISOString(),
+                  }))
+                : [{
+                    sessionId: session.sessionId,
+                    role: "assistant" as const,
+                    content: streamingTextRef.current,
+                    subAgentBlocks,
+                    createdAt: new Date().toISOString(),
+                  }];
               setMessages((prev) => {
-                const updated = [...prev, assistantMsg];
+                const updated = [...prev, ...newMsgs];
                 // Sync: broadcast final messages to peer views
                 maybeBroadcast(updated, false, "");
                 return updated;
               });
               setStreamingText("");
               streamingTextRef.current = "";
+              setStreamingBubbles([]);
+              streamingBubblesRef.current = [];
               setStreaming(false);
               setActivity(null);
 
@@ -852,6 +877,7 @@ export function useAgentChat() {
     messages,
     streaming,
     streamingText,
+    streamingBubbles,
     loading,
     pendingConfirmation,
     activity,

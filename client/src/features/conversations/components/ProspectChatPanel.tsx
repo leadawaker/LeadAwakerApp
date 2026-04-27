@@ -7,8 +7,11 @@ import { SearchPill } from "@/components/ui/search-pill";
 import { getProspectAvatarColor } from "@/lib/avatarUtils";
 import {
   Search, X, Mail, MessageCircle, ArrowUpDown, Layers, Check, Globe,
-  Wallpaper, Send, Mic, Paperclip, AlertCircle, Smile, FileText,
+  Wallpaper, Send, Mic, Paperclip, AlertCircle, Smile, FileText, Phone, ChevronLeft,
 } from "lucide-react";
+import { PhoneDialer } from "@/features/prospects/components/PhoneDialer";
+import type { ProspectRow } from "@/features/prospects/components/ProspectListView";
+import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
@@ -35,6 +38,10 @@ interface ProspectChatPanelProps {
   contactEmail: string;
   outreachStatus?: string;
   contactPhone?: string | null;
+  dialerOpen?: boolean;
+  onDialerClose?: () => void;
+  onToggleRightPanel?: () => void;
+  rightPanelVisible?: boolean;
 }
 
 type ChannelFilter = "all" | "email" | "whatsapp";
@@ -49,6 +56,10 @@ export function ProspectChatPanel({
   contactEmail,
   outreachStatus = "new",
   contactPhone,
+  dialerOpen: dialerOpenProp = false,
+  onDialerClose,
+  onToggleRightPanel,
+  rightPanelVisible = false,
 }: ProspectChatPanelProps) {
   const { t } = useTranslation("conversations");
   const { toast } = useToast();
@@ -69,6 +80,10 @@ export function ProspectChatPanel({
     return s ? Number(s) : DEFAULT_BUBBLE_WIDTH;
   });
   useEffect(() => { localStorage.setItem(BUBBLE_WIDTH_KEY, String(bubbleWidth)); }, [bubbleWidth]);
+
+  // Dialer
+  const [dialerOpen, setDialerOpen] = useState(dialerOpenProp);
+  useEffect(() => { if (dialerOpenProp) setDialerOpen(true); }, [dialerOpenProp]);
 
   // Inbox filters
   const [search, setSearch] = useState("");
@@ -359,6 +374,20 @@ export function ProspectChatPanel({
                     </DropdownMenuContent>
                   </DropdownMenu>
 
+                  {/* Phone dialer toggle */}
+                  {contactPhone && (
+                    <button
+                      onClick={() => setDialerOpen((v) => !v)}
+                      className={cn(
+                        "h-9 w-9 rounded-full border flex items-center justify-center transition-colors",
+                        dialerOpen ? "border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" : "border-black/[0.125] text-foreground/60 hover:text-emerald-600",
+                      )}
+                      title="Call"
+                    >
+                      <Phone className="h-4 w-4" />
+                    </button>
+                  )}
+
                   {/* Channel filter */}
                   <button
                     onClick={cycleChannel}
@@ -424,6 +453,17 @@ export function ProspectChatPanel({
                       </div>
                     </PopoverContent>
                   </Popover>
+
+                  {onToggleRightPanel && !rightPanelVisible && (
+                    <button
+                      onClick={onToggleRightPanel}
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+                      title="Show prospect panel"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ListPanelToggleButton />
                 </div>
               </div>
             </div>
@@ -488,6 +528,17 @@ export function ProspectChatPanel({
               <button type="button" onClick={() => setWindowExpired(false)} className="text-amber-500 hover:text-amber-700 shrink-0">
                 <X className="h-3.5 w-3.5" />
               </button>
+            </div>
+          )}
+
+          {/* Phone dialer panel (above composer) */}
+          {dialerOpen && contactPhone && (
+            <div className="border-t border-border/40 px-4 py-3 bg-card/50">
+              <PhoneDialer
+                prospectId={prospectId}
+                prospect={{ contact_name: prospectName || prospectCompany, contact_phone: contactPhone, phone: contactPhone } as unknown as ProspectRow}
+                onCallEnded={() => { onDialerClose?.(); }}
+              />
             </div>
           )}
 

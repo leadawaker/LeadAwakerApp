@@ -1,5 +1,6 @@
 import { getInitials } from "@/lib/avatarUtils";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface EntityAvatarProps {
   /** Display name for initials fallback */
@@ -36,11 +37,12 @@ export function EntityAvatar({
   size = 40,
   className,
 }: EntityAvatarProps) {
+  const [imgError, setImgError] = useState(false);
   const isNamed = typeof size === "string";
   const sizeClass = isNamed ? (NAMED_SIZE_MAP[size] ?? "h-10 w-10 text-[13px]") : (SIZE_MAP[size] ?? `text-[13px]`);
   const sizeStyle = isNamed ? undefined : (SIZE_MAP[size as number] ? undefined : { width: size, height: size });
 
-  if (photoUrl) {
+  if (photoUrl && !imgError) {
     return (
       <div
         className={cn("rounded-full overflow-hidden shrink-0", isNamed ? sizeClass.split(" ").slice(0, 2).join(" ") : (SIZE_MAP[size as number] ? sizeClass.split(" ").slice(0, 2).join(" ") : undefined), className)}
@@ -50,6 +52,7 @@ export function EntityAvatar({
           src={photoUrl}
           alt={name}
           className="h-full w-full object-cover"
+          onError={() => setImgError(true)}
         />
       </div>
     );

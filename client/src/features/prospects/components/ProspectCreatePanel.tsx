@@ -8,6 +8,7 @@ import type { NewProspectForm } from "./ProspectListView";
 const STATUS_OPTIONS   = ["New", "Contacted", "In Progress", "Converted", "Archived"];
 const PRIORITY_OPTIONS = ["High", "Medium", "Low"];
 const SOURCE_OPTIONS   = ["Web Research", "Referral", "LinkedIn", "Cold Email", "Conference", "Other"];
+export const PROSPECT_COUNTRIES = ["Brazil", "USA", "United Kingdom", "Netherlands", "Portugal", "Spain", "Germany", "Sweden", "Norway", "Denmark", "Estonia"];
 
 interface ProspectCreatePanelProps {
   onCreate: (data: NewProspectForm) => Promise<any>;
@@ -163,13 +164,14 @@ export function ProspectCreatePanel({ onCreate, onClose }: ProspectCreatePanelPr
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>{t("fields.country")}</label>
-                <input
-                  type="text"
+                <select
                   value={form.country}
                   onChange={(e) => set("country", e.target.value)}
-                  placeholder={t("fields.countryPlaceholder")}
-                  className={inputCls}
-                />
+                  className={selectCls}
+                >
+                  <option value="">{t("fields.countryPlaceholder")}</option>
+                  {PROSPECT_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
               <div>
                 <label className={labelCls}>{t("fields.city")}</label>

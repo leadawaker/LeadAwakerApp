@@ -170,6 +170,7 @@
     "nextAction": "Próxima Ação",
     "emails": "E-mails",
     "whatsApp": "WhatsApp",
+    "phone": "Telefone",
     "interactions": "Interações",
     "tasks": "Tarefas",
     "nextActions": "Próximas Ações",
@@ -359,6 +360,17 @@
     "sendFailed": "Falha no envio",
     "sendFailedDescription": "Nao foi possivel enviar o e-mail. Tente novamente.",
     "reply": "Responder"
+  },
+  "phoneDialer": {
+    "noPhone": "Nenhum número de telefone cadastrado",
+    "call": "Ligar",
+    "calling": "Ligando...",
+    "inCall": "Em ligação",
+    "mute": "Mudo",
+    "unmute": "Reativar som",
+    "hangUp": "Desligar",
+    "recording": "Gravando",
+    "callEnded": "Ligação encerrada"
   },
   "whatsappComposer": {
     "title": "WhatsApp",

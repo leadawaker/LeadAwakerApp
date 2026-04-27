@@ -503,6 +503,32 @@ export function getProspectAvatarColor(outreachStatus: string): { bg: string; te
   };
 }
 
+/** Extracts a hostname from a URL, stripping www. prefix */
+function extractHostname(url: string): string | null {
+  try {
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    return u.hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns the best available logo URL for a prospect.
+ * Priority: stored company_logo_url → Google favicon service derived from website → null.
+ */
+export function getProspectLogoUrl(
+  companyLogoUrl: string | null | undefined,
+  website: string | null | undefined,
+): string | null {
+  if (companyLogoUrl) return companyLogoUrl;
+  if (website) {
+    const host = extractHostname(website);
+    if (host) return `https://www.google.com/s2/favicons?sz=64&domain=${host}`;
+  }
+  return null;
+}
+
 /** Returns a deterministic icon color + circle bg for a prompt, based on its name. */
 export function getPromptIconColor(name: string): { icon: string; bg: string } {
   const idx = hashString(name || "P") % PROMPT_ICON_PALETTE.length;

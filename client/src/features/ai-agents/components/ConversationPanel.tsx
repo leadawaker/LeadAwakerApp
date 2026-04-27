@@ -29,6 +29,7 @@ export function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionU
     messages,
     streaming,
     streamingText,
+    streamingBubbles,
     loading,
     pendingConfirmation,
     activity,
@@ -104,6 +105,7 @@ export function ConversationPanel({ agentId, isActive, onAgentLoaded, onSessionU
         messages={messages}
         streaming={streaming}
         streamingText={streamingText}
+        streamingBubbles={streamingBubbles}
         loading={loading}
         onSend={sendMessageWithContext}
         onNewSession={newSession}
@@ -287,6 +289,7 @@ export function ConversationPanelWithEvents({
         messages={messages}
         streaming={streaming}
         streamingText={streamingText}
+        streamingBubbles={streamingBubbles}
         loading={loading}
         onSend={sendMessageWithContext}
         onNewSession={newSession}

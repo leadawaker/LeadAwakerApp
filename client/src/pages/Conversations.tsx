@@ -21,6 +21,7 @@ import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ProspectChatPanel } from "@/features/conversations/components/ProspectChatPanel";
 import { useProspectConversations } from "@/features/conversations/hooks/useProspectConversations";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
+import { ProspectDetailSidebar } from "@/features/conversations/components/ProspectDetailSidebar";
 import { AgentChatView } from "@/features/ai-agents/components/AgentChatView";
 import { AgentConversationList } from "@/features/ai-agents/components/AgentConversationList";
 import { AgentSettingsSheet } from "@/features/ai-agents/components/AgentSettingsSheet";
@@ -85,6 +86,7 @@ export default function ConversationsPage() {
 
   // Prospect selection state (hooks only — effects that depend on `tab` are below its declaration)
   const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null);
+  const [dialOpenProspectId, setDialOpenProspectId] = useState<number | null>(null);
   const { data: prospectThreads = [] } = useProspectConversations();
   // Stores prospect data when selected from the "+" picker (not yet in prospectThreads)
   const [uncontactedProspect, setUncontactedProspect] = useState<{ id: number; name: string; company: string; phone?: string | null } | null>(null);
@@ -113,6 +115,11 @@ export default function ConversationsPage() {
         })
         .catch(() => { /* Swallow: uncontacted banner stays empty */ });
     }
+  };
+
+  const handleDialProspect = (prospectId: number) => {
+    handleSelectProspect(prospectId);
+    setDialOpenProspectId(prospectId);
   };
 
   const handleSelectAgent = (agentId: number) => {
@@ -284,6 +291,20 @@ export default function ConversationsPage() {
       localStorage.setItem("conversations-show-contact-panel", showContactPanel ? "1" : "0");
     } catch {}
   }, [showContactPanel]);
+
+  const [showProspectPanel, setShowProspectPanel] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem("la:prospect-panel-state");
+      return v === null ? true : v === "1";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("la:prospect-panel-state", showProspectPanel ? "1" : "0");
+    } catch {}
+  }, [showProspectPanel]);
 
   const effectiveAccountId = useMemo(() => {
     if (!isAgencyUser) return currentAccountId;
@@ -541,6 +562,7 @@ export default function ConversationsPage() {
                 prospectThreads={prospectThreads}
                 selectedProspectId={selectedProspectId}
                 onSelectProspect={handleSelectProspect}
+                onDialProspect={handleDialProspect}
                 clientAccounts={clientAccounts}
                 allCampaigns={allCampaigns}
                 onSetGroupBy={setGroupBy}
@@ -593,6 +615,10 @@ export default function ConversationsPage() {
                         contactEmail={prospectData.email}
                         outreachStatus={prospectData.status}
                         contactPhone={prospectData.phone}
+                        dialerOpen={dialOpenProspectId === selectedProspectId}
+                        onDialerClose={() => setDialOpenProspectId(null)}
+                        onToggleRightPanel={() => setShowProspectPanel((v) => !v)}
+                        rightPanelVisible={showProspectPanel}
                       />
                     ) : (
                       <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -754,6 +780,21 @@ export default function ConversationsPage() {
                 />
               </div>
             )}
+
+            {/* Prospect detail sidebar */}
+            {isProspects && selectedProspectId && showProspectPanel && (() => {
+              const pt = prospectThreads.find((p) => p.prospect_id === selectedProspectId);
+              return pt ? (
+                <div className="hidden lg:flex w-[340px] flex-shrink-0 overflow-hidden">
+                  <ProspectDetailSidebar
+                    prospectId={selectedProspectId}
+                    thread={pt}
+                    onClose={() => setShowProspectPanel(false)}
+                    className="w-full"
+                  />
+                </div>
+              ) : null;
+            })()}
           </div>
         )}
       </div>

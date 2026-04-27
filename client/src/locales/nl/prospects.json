@@ -170,6 +170,7 @@
     "nextAction": "Volgende Actie",
     "emails": "E-mails",
     "whatsApp": "WhatsApp",
+    "phone": "Telefoon",
     "interactions": "Interacties",
     "tasks": "Taken",
     "nextActions": "Volgende Acties",
@@ -359,6 +360,17 @@
     "sendFailed": "Verzenden mislukt",
     "sendFailedDescription": "Kon de e-mail niet verzenden. Probeer het opnieuw.",
     "reply": "Beantwoorden"
+  },
+  "phoneDialer": {
+    "noPhone": "Geen telefoonnummer beschikbaar",
+    "call": "Bellen",
+    "calling": "Verbinden...",
+    "inCall": "In gesprek",
+    "mute": "Dempen",
+    "unmute": "Dempen opheffen",
+    "hangUp": "Ophangen",
+    "recording": "Opname",
+    "callEnded": "Gesprek beëindigd"
   },
   "whatsappComposer": {
     "title": "WhatsApp",

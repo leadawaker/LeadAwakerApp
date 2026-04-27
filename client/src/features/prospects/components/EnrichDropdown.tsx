@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/apiUtils";
 
-export type EnrichTarget = "company" | "contact1" | "contact2";
+export type EnrichTarget = "company" | "contact1" | "contact2" | "website";
 
 interface EnrichDropdownProps {
   prospectId: number;
@@ -62,6 +62,8 @@ export function EnrichDropdown({
   const [checkCompany, setCheckCompany] = useState(false);
   const [checkContact1, setCheckContact1] = useState(false);
   const [checkContact2, setCheckContact2] = useState(false);
+  const [checkWebsite, setCheckWebsite] = useState(false);
+  const [websiteStarted, setWebsiteStarted] = useState(false);
   const [active, setActive] = useState<Set<EnrichTarget>>(new Set());
   const [timedOut, setTimedOut] = useState(false);
   const [timedOutTargets, setTimedOutTargets] = useState<EnrichTarget[]>([]);
@@ -163,41 +165,51 @@ export function EnrichDropdown({
     if (checkCompany) targets.push("company");
     if (checkContact1) targets.push("contact1");
     if (checkContact2) targets.push("contact2");
-    if (targets.length === 0) return;
 
     setOpen(false);
     setTimedOut(false);
     setErrorMsg(null);
     setTimedOutTargets([]);
-    setActive(new Set(targets));
 
     try {
-      if (checkCompany) {
+      if (checkWebsite) {
         await apiFetch(`/api/prospects/${prospectId}/enrich`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "company" }),
+          body: JSON.stringify({ type: "website" }),
         });
-      }
-      if (checkContact1) {
-        await apiFetch(`/api/prospects/${prospectId}/enrich`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "linkedin", contactSlot: 1 }),
-        });
-      }
-      if (checkContact2) {
-        await apiFetch(`/api/prospects/${prospectId}/enrich`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "linkedin", contactSlot: 2 }),
-        });
+        setWebsiteStarted(true);
+        setTimeout(() => setWebsiteStarted(false), 5000);
       }
 
-      startPolling(targets, {
-        enrichedAt: enrichedAt ?? null,
-        companyEnrichedAt: companyEnrichedAt ?? null,
-      });
+      if (targets.length > 0) {
+        setActive(new Set(targets));
+        if (checkCompany) {
+          await apiFetch(`/api/prospects/${prospectId}/enrich`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "company" }),
+          });
+        }
+        if (checkContact1) {
+          await apiFetch(`/api/prospects/${prospectId}/enrich`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "linkedin", contactSlot: 1 }),
+          });
+        }
+        if (checkContact2) {
+          await apiFetch(`/api/prospects/${prospectId}/enrich`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "linkedin", contactSlot: 2 }),
+          });
+        }
+        startPolling(targets, {
+          enrichedAt: enrichedAt ?? null,
+          companyEnrichedAt: companyEnrichedAt ?? null,
+        });
+      }
     } catch (e: any) {
       setActive(new Set());
       setTimedOut(true);
@@ -208,11 +220,21 @@ export function EnrichDropdown({
     setCheckCompany(false);
     setCheckContact1(false);
     setCheckContact2(false);
+    setCheckWebsite(false);
   }
 
   const { t } = useTranslation("prospects");
-  const noneChecked = !checkCompany && !checkContact1 && !checkContact2;
+  const noneChecked = !checkCompany && !checkContact1 && !checkContact2 && !checkWebsite;
   const loading = active.size > 0;
+
+  if (websiteStarted && !loading) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-600 dark:text-sky-400">
+        <RefreshCw className="h-3 w-3 animate-spin" />
+        {t("enrich.websiteStarted", "Website scrape started...")}
+      </span>
+    );
+  }
 
   if (loading) {
     const targetLabels = Array.from(active).map((tgt) => labelFor(tgt, t)).join(", ");
@@ -319,6 +341,12 @@ export function EnrichDropdown({
             <Checkbox checked={checkContact2} onCheckedChange={(v) => setCheckContact2(!!v)} />
             <span className="text-[12px]">{t("tabs.contact2", "Contact 2")}</span>
           </label>
+          <div className="border-t border-border/50 pt-2 mt-0.5">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={checkWebsite} onCheckedChange={(v) => setCheckWebsite(!!v)} />
+              <span className="text-[12px] text-muted-foreground">{t("enrich.websiteScrape", "Website scrape")}</span>
+            </label>
+          </div>
           <Button size="sm" className="h-7 text-[12px] mt-1" onClick={handleStart} disabled={noneChecked}>
             {t("enrich.start", "Start")}
           </Button>
@@ -331,5 +359,6 @@ export function EnrichDropdown({
 function labelFor(tgt: EnrichTarget, t: ReturnType<typeof import("react-i18next").useTranslation>["t"]): string {
   if (tgt === "company") return t("tabs.company", "Company");
   if (tgt === "contact1") return t("tabs.contact1", "Contact 1");
-  return t("tabs.contact2", "Contact 2");
+  if (tgt === "contact2") return t("tabs.contact2", "Contact 2");
+  return t("enrich.websiteScrape", "Website scrape");
 }

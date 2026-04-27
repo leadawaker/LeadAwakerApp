@@ -103,12 +103,20 @@ export default async function middleware(request: Request): Promise<Response> {
       `<meta property="og:description" content="${escDesc}" />`
     )
     .replace(
+      /<meta property="og:image"[^>]*>/,
+      `<meta property="og:image" content="/og-calculator.png" />`
+    )
+    .replace(
       /<meta name="twitter:title"[^>]*>/,
       `<meta name="twitter:title" content="${escTitle}" />`
     )
     .replace(
       /<meta name="twitter:description"[^>]*>/,
       `<meta name="twitter:description" content="${escDesc}" />`
+    )
+    .replace(
+      /<meta name="twitter:image"[^>]*>/,
+      `<meta name="twitter:image" content="/og-calculator.png" />`
     );
 
   return new Response(updated, {

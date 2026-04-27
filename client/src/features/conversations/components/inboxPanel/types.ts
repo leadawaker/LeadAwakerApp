@@ -76,6 +76,7 @@ export interface InboxPanelProps {
   onFilterOpenChange?: (open: boolean) => void;
   /** Compact rail state (from parent). "hidden" fully hides the panel; "compact" renders 65px rail; "full" renders standard panel. */
   listPanelState?: "full" | "compact" | "hidden";
+  onDialProspect?: (prospectId: number) => void;
 }
 
 export type { Thread, Lead, Interaction, ProspectThread };

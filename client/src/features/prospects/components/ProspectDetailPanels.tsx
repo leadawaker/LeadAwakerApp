@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from "react";
-import { Building2, Globe, MapPin, FileText, Lightbulb, CheckSquare, Mail, MessageSquare, Clock, Plus, Layers, ChevronLeft, Linkedin, RefreshCw, Loader2 } from "lucide-react";
+import { Building2, Globe, MapPin, FileText, Lightbulb, CheckSquare, Mail, MessageSquare, Clock, Plus, Layers, ChevronLeft, Linkedin, RefreshCw, Loader2, Phone } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
@@ -10,6 +10,7 @@ import { ProspectTasks } from "./ProspectTasks";
 import { EmailComposer } from "./EmailComposer";
 import { WhatsAppComposer } from "./WhatsAppComposer";
 import { LinkedInComposer } from "./LinkedInComposer";
+import { PhoneDialer } from "./PhoneDialer";
 import { OutreachTimeline } from "./OutreachTimeline";
 import { ProspectRow, getProspectId } from "./prospectTypes";
 import { OUTREACH_HEX as OUTREACH_HEX_PIPELINE, type OutreachStatus } from "./OutreachPipelineView";
@@ -278,6 +279,14 @@ export function ProspectDetailPanels({
               prospectId={pid}
               prospect={selectedProspect}
               onSent={handleSent}
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection id="actions-phone" title={t("sections.phone", "Phone")} icon={Phone} activeIconClass="text-emerald-600" hasData>
+            <PhoneDialer
+              prospectId={pid}
+              prospect={selectedProspect}
+              onCallEnded={handleSent}
             />
           </CollapsibleSection>
 

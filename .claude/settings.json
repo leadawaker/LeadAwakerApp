@@ -19,7 +19,8 @@
       "Bash(npm run dev:*)",
       "Bash(git:*)",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(sudo -u postgres psql:*)"
     ],
     "additionalDirectories": [
       "/config/workspace/LeadAwakerApp"

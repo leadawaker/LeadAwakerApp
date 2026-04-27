@@ -172,6 +172,7 @@ export function streamClaudeResponse(opts: {
   let fullText = "";
   let cliSessionId: string | null = opts.cliSessionId || null;
   let lastTextContent = ""; // Track text we've already sent to avoid duplicates
+  let assistantMessageCount = 0; // Track how many assistant messages have started
   let resultUsage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
   let ndjsonBuffer = "";
   let clientDisconnected = false;
@@ -207,13 +208,21 @@ export function streamClaudeResponse(opts: {
         const aEvt = evt as StreamJsonAssistantEvent;
         if (!aEvt.message?.content) break;
 
+        // Each new assistant event is a separate output message (between tool calls).
+        // Signal the client to start a new bubble when this isn't the first one.
+        if (assistantMessageCount > 0 && lastTextContent) {
+          sseWrite(`data: ${JSON.stringify({ type: "message_break" })}\n\n`);
+          lastTextContent = "";
+        }
+        assistantMessageCount++;
+
         for (const block of aEvt.message.content) {
           if (block.type === "text") {
             // Send only the NEW text (events are cumulative snapshots)
             const newText = block.text.slice(lastTextContent.length);
             if (newText) {
               lastTextContent = block.text;
-              fullText = block.text; // Update full text to latest snapshot
+              fullText = lastTextContent; // Keep full snapshot of latest assistant message
               sseWrite(`data: ${JSON.stringify({ type: "token", text: newText })}\n\n`);
             }
           } else if (block.type === "thinking") {

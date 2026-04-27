@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import type { ProspectRow } from "./ProspectListView";
+import { PROSPECT_COUNTRIES } from "./ProspectCreatePanel";
 
 // ── Status helpers ─────────────────────────────────────────────────────────────
 
@@ -753,7 +754,7 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
             <InfoRow
               label={t("fields.country")}
               value={val("country") || undefined}
-              editChild={isEditing ? <EditText value={val("country")} onChange={(v) => set("country", v)} placeholder={t("fields.countryPlaceholder")} /> : undefined}
+              editChild={isEditing ? <EditSelect value={val("country")} onChange={(v) => set("country", v)} options={["", ...PROSPECT_COUNTRIES]} /> : undefined}
             />
             <InfoRow
               label={t("fields.city")}

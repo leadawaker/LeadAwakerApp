@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, UserSearch, Search, X, Plus, Mail, MessageCircle, MessageSquare, Linkedin, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush, Radio } from "lucide-react";
+import { Inbox, BellDot, UserSearch, Search, X, Plus, Mail, MessageCircle, MessageSquare, Linkedin, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush, Phone } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import type {
   ChatGroupBy, ChatSortBy, GroupDirection, InboxTab,
@@ -36,7 +36,7 @@ import {
   formatRelativeTime,
 } from "../utils/conversationHelpers";
 import { apiFetch } from "@/lib/apiUtils";
-import { getInitials, getProspectAvatarColor } from "@/lib/avatarUtils";
+import { getInitials, getProspectAvatarColor, getProspectLogoUrl } from "@/lib/avatarUtils";
 import { useLocation } from "wouter";
 import { SearchPill } from "@/components/ui/search-pill";
 import {
@@ -93,6 +93,7 @@ export function InboxPanel({
   prospectThreads = [],
   selectedProspectId,
   onSelectProspect,
+  onDialProspect,
   clientAccounts = [],
   allCampaigns = [],
   onSetGroupBy,
@@ -181,6 +182,7 @@ export function InboxPanel({
         const ptChannels = (pt.channels || []).map((c) => c.toLowerCase());
         return prospectFilterChannels.some((fc) => {
           if (fc === "whatsapp") return ptChannels.some((c) => c === "whatsapp" || c === "whatsapp_cloud");
+          if (fc === "call") return ptChannels.includes("call");
           return ptChannels.includes(fc);
         });
       });
@@ -781,6 +783,7 @@ export function InboxPanel({
                         >
                           <EntityAvatar
                             name={displayName}
+                            photoUrl={getProspectLogoUrl(pt.company_logo_url, pt.website) ?? undefined}
                             bgColor={isDealClosed ? "#1a1a1a" : avatarColor.bg}
                             textColor={isDealClosed ? "#ffffff" : avatarColor.text}
                             size={40}
@@ -1277,18 +1280,19 @@ export function InboxPanel({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Filter by outreach status */}
+          {/* Filter by outreach status + channel */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className={cn(xBase, "hover:max-w-[100px]", prospectFilterStatus.length > 0 ? xActive : xDefault)}
+                className={cn(xBase, "hover:max-w-[100px]", (prospectFilterStatus.length > 0 || prospectFilterChannels.length > 0) ? xActive : xDefault)}
                 title="Filter"
               >
                 <Filter className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>Filter{prospectFilterStatus.length > 0 ? ` (${prospectFilterStatus.length})` : ""}</span>
+                <span className={xSpan}>Filter{(prospectFilterStatus.length + prospectFilterChannels.length) > 0 ? ` (${prospectFilterStatus.length + prospectFilterChannels.length})` : ""}</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuContent align="start" className="w-52">
+              <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</div>
               {PROSPECT_OUTREACH_STATUSES.map((s) => (
                 <DropdownMenuItem
                   key={s}
@@ -1304,31 +1308,12 @@ export function InboxPanel({
                   {prospectFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               ))}
-              {prospectFilterStatus.length > 0 && (
-                <DropdownMenuItem onClick={() => setProspectFilterStatus([])} className="text-[12px] text-muted-foreground border-t mt-1 pt-1">
-                  Clear filters
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-
-          {/* Channel filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(xBase, "hover:max-w-[110px]", prospectFilterChannels.length > 0 ? xActive : xDefault)}
-                title="Channel"
-              >
-                <Radio className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>Channel{prospectFilterChannels.length > 0 ? ` (${prospectFilterChannels.length})` : ""}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
+              <div className="px-2 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-t mt-1">Channel</div>
               {([
                 { key: "email", label: "Email", Icon: Mail },
                 { key: "whatsapp", label: "WhatsApp", Icon: MessageSquare },
                 { key: "linkedin", label: "LinkedIn", Icon: Linkedin },
+                { key: "call", label: "Call", Icon: Phone },
               ] as const).map(({ key, label, Icon }) => (
                 <DropdownMenuItem
                   key={key}
@@ -1345,9 +1330,9 @@ export function InboxPanel({
                   {prospectFilterChannels.includes(key) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               ))}
-              {prospectFilterChannels.length > 0 && (
-                <DropdownMenuItem onClick={() => setProspectFilterChannels([])} className="text-[12px] text-muted-foreground border-t mt-1 pt-1">
-                  Clear channels
+              {(prospectFilterStatus.length > 0 || prospectFilterChannels.length > 0) && (
+                <DropdownMenuItem onClick={() => { setProspectFilterStatus([]); setProspectFilterChannels([]); }} className="text-[12px] text-muted-foreground border-t mt-1 pt-1">
+                  Clear all filters
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -1464,6 +1449,7 @@ export function InboxPanel({
                               <div className="relative shrink-0">
                                 <EntityAvatar
                                   name={displayName}
+                                  photoUrl={getProspectLogoUrl(pt.company_logo_url, pt.website) ?? undefined}
                                   bgColor={isDealClosed ? "#1a1a1a" : avatarColor.bg}
                                   textColor={isDealClosed ? "#ffffff" : avatarColor.text}
                                   size={36}
@@ -1493,6 +1479,16 @@ export function InboxPanel({
                                     ) : pt.last_message_type === "whatsapp" ? (
                                       <MessageCircle className="h-3 w-3 text-muted-foreground/50" />
                                     ) : null}
+                                    {(pt.contact_phone || pt.phone) && onDialProspect && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); onDialProspect(pt.prospect_id); }}
+                                        className="text-muted-foreground/40 hover:text-emerald-600 transition-colors"
+                                        title="Call"
+                                      >
+                                        <Phone className="h-3 w-3" />
+                                      </button>
+                                    )}
                                     {timeAgo && (
                                       <span className="text-[10px] text-muted-foreground/70 tabular-nums">
                                         {timeAgo}

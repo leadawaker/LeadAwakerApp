@@ -19,6 +19,8 @@ export interface ProspectThread {
   contact_phone: string | null;
   phone: string | null;
   channels: string[];
+  company_logo_url: string | null;
+  website: string | null;
 }
 
 export function useProspectConversations() {

@@ -167,6 +167,7 @@
     "nextAction": "Next Action",
     "emails": "Emails",
     "whatsApp": "WhatsApp",
+    "phone": "Phone",
     "interactions": "Interactions",
     "tasks": "Tasks",
     "nextActions": "Next Actions",
@@ -357,6 +358,17 @@
     "sendFailed": "Send failed",
     "sendFailedDescription": "Could not send the email. Please try again.",
     "reply": "Reply"
+  },
+  "phoneDialer": {
+    "noPhone": "No phone number on file",
+    "call": "Call",
+    "calling": "Calling...",
+    "inCall": "In call",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "hangUp": "Hang Up",
+    "recording": "Recording",
+    "callEnded": "Call ended"
   },
   "whatsappComposer": {
     "title": "WhatsApp",

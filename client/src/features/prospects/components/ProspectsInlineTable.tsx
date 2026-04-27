@@ -30,6 +30,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { ProspectAvatar } from "./ProspectAvatar";
 import type { ProspectRow } from "./ProspectListView";
+import { PROSPECT_COUNTRIES } from "./ProspectCreatePanel";
 import { OUTREACH_HEX } from "./OutreachPipelineView";
 
 // ── Column definitions ────────────────────────────────────────────────────────
@@ -55,7 +56,7 @@ const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "status",      tKey: "columns.status",       width: 110, editable: true,  type: "select", icon: Target      },
   { key: "priority",    tKey: "columns.priority",     width: 120, editable: true,  type: "select", icon: BarChart3    },
   { key: "niche",       tKey: "columns.niche",        width: 140, editable: true,  type: "text",   icon: Briefcase   },
-  { key: "country",     tKey: "columns.country",      width: 120, editable: true,  type: "text",   icon: Globe       },
+  { key: "country",     tKey: "columns.country",      width: 120, editable: true,  type: "select", icon: Globe       },
   { key: "city",        tKey: "columns.city",         width: 120, editable: true,  type: "text",   icon: MapPin      },
   { key: "website",     tKey: "columns.website",      width: 160, editable: true,  type: "text",   icon: Link        },
   { key: "notes",            tKey: "columns.notes",           width: 400, editable: true, type: "text", icon: StickyNote },
@@ -143,6 +144,7 @@ const SELECT_OPTIONS_MAP: Record<string, string[]> = {
   priority: PRIORITY_OPTIONS,
   source:   SOURCE_OPTIONS,
   action:   ACTION_OPTIONS,
+  country:  PROSPECT_COUNTRIES,
 };
 
 const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
@@ -1013,7 +1015,7 @@ export function ProspectsInlineTable({
                           );
                         }
 
-                        // ── Country (with flag) ──
+                        // ── Country (with flag, select) ──
                         if (col.key === "country") {
                           const cellVal = getCellValue(prospect, "country");
                           const isEdit = editingCell?.pid === pid && editingCell?.field === "country";
@@ -1024,7 +1026,8 @@ export function ProspectsInlineTable({
                                 {!isEdit && flag && <span className="text-sm shrink-0">{flag}</span>}
                                 <EditableCell
                                   value={cellVal}
-                                  type="text"
+                                  type="select"
+                                  selectOptions={PROSPECT_COUNTRIES}
                                   isEditing={isEdit}
                                   editValue={isEdit ? editValue : ""}
                                   isSaving={savingCell?.pid === pid && savingCell?.field === "country"}
