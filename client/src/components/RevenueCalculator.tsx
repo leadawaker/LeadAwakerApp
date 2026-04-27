@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { DollarSign, Users, Receipt, Share2, Check, Info } from "lucide-react";
+import { DollarSign, Users, Receipt, Share2, Check, Info, ChevronDown } from "lucide-react";
+import { useCurrency, CURRENCIES } from "@/hooks/useCurrency";
 
 interface Scenario {
   label: string;
@@ -33,16 +34,8 @@ function InfoTooltip({ text }: { text: string }) {
 
 export default function RevenueCalculator() {
   const { t, i18n } = useTranslation("home");
-  const isBRL = i18n.language === "pt";
-  const currencySymbol = isBRL ? "R$" : "€";
-
-  const dealConfig = isBRL
-    ? { default: 5000, min: 250, max: 150000, step: 50 }
-    : { default: 3000, min: 50, max: 30000, step: 50 };
-
-  const costConfig = isBRL
-    ? { default: 25, min: 1, max: 500, step: 1 }
-    : { default: 5, min: 0.25, max: 100, step: 0.25 };
+  const { symbol: currencySymbol, dealConfig, costConfig, currencyCode, override: overrideCurrency } = useCurrency(i18n.language === "pt");
+  const [currencyOpen, setCurrencyOpen] = useState(false);
 
   const [leads, setLeads] = useState(5000);
   const [dealValue, setDealValue] = useState(dealConfig.default);
@@ -232,9 +225,9 @@ export default function RevenueCalculator() {
   };
 
   const tierColors = [
-    { border: "#94a3b8", accent: "#64748b", bg: "#F4F5F9" },
-    { border: "#4F46E5", accent: "#4F46E5", bg: "#F4F5F9" },
-    { border: "#FEB800", accent: "#FEB800", bg: "#F4F5F9" },
+    { border: "#94a3b8", accent: "#64748b" },
+    { border: "#4F46E5", accent: "#4F46E5" },
+    { border: "#FEB800", accent: "#FEB800" },
   ];
 
   const sliderPct = (val: number, min: number, max: number) =>
@@ -272,6 +265,32 @@ export default function RevenueCalculator() {
           <p className="text-lg md:text-xl mt-4 text-muted-foreground">
             {t("calculator.subtitle")}
           </p>
+
+          {/* Currency selector */}
+          <div className="relative inline-block mt-5">
+            <button
+              type="button"
+              onClick={() => setCurrencyOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-white dark:bg-background text-sm font-medium text-muted-foreground hover:text-foreground hover:border-[#4F46E5] transition-colors"
+            >
+              {currencySymbol} {currencyCode}
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            {currencyOpen && (
+              <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-36 rounded-xl border border-border bg-white dark:bg-background shadow-lg z-30 py-1">
+                {Object.values(CURRENCIES).map((c) => (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={() => { overrideCurrency(c.code); setCurrencyOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-[#4F46E5]/10 ${c.code === currencyCode ? "text-[#4F46E5] font-semibold" : "text-foreground"}`}
+                  >
+                    {c.symbol} {c.code}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </motion.div>
 
         <div className="max-w-7xl mx-auto">
@@ -284,7 +303,7 @@ export default function RevenueCalculator() {
             className="grid md:grid-cols-3 gap-8 mb-16"
           >
             {/* Dead Leads Slider */}
-            <div className="bg-[#F4F5F9] rounded-2xl p-8">
+            <div className="bg-[#F4F5F9] dark:bg-[#1e2535] rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-[#4F46E5]/10 flex items-center justify-center">
                   <Users className="w-5 h-5 text-[#4F46E5]" />
@@ -327,7 +346,7 @@ export default function RevenueCalculator() {
                 onChange={(e) => setLeads(Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #4F46E5 ${sliderPct(Math.min(Math.max(leads, 500), 50000), 500, 50000)}%, #d1d5db ${sliderPct(Math.min(Math.max(leads, 500), 50000), 500, 50000)}%)`,
+                  background: `linear-gradient(to right, #4F46E5 ${sliderPct(Math.min(Math.max(leads, 500), 50000), 500, 50000)}%, rgba(100,116,139,0.3) ${sliderPct(Math.min(Math.max(leads, 500), 50000), 500, 50000)}%)`,
                 }}
               />
               <div className="flex justify-between text-sm text-muted-foreground mt-2">
@@ -337,7 +356,7 @@ export default function RevenueCalculator() {
             </div>
 
             {/* Deal Value Slider */}
-            <div className="bg-[#F4F5F9] rounded-2xl p-8">
+            <div className="bg-[#F4F5F9] dark:bg-[#1e2535] rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-[#FEB800]/10 flex items-center justify-center">
                   <DollarSign className="w-5 h-5 text-[#FEB800]" />
@@ -380,7 +399,7 @@ export default function RevenueCalculator() {
                 onChange={(e) => setDealValue(Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #FEB800 ${sliderPct(Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max), dealConfig.min, dealConfig.max)}%, #d1d5db ${sliderPct(Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max), dealConfig.min, dealConfig.max)}%)`,
+                  background: `linear-gradient(to right, #FEB800 ${sliderPct(Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max), dealConfig.min, dealConfig.max)}%, rgba(100,116,139,0.3) ${sliderPct(Math.min(Math.max(dealValue, dealConfig.min), dealConfig.max), dealConfig.min, dealConfig.max)}%)`,
                 }}
               />
               <div className="flex justify-between text-sm text-muted-foreground mt-2">
@@ -390,7 +409,7 @@ export default function RevenueCalculator() {
             </div>
 
             {/* Cost Per Lead Slider */}
-            <div className="bg-[#F4F5F9] rounded-2xl p-8">
+            <div className="bg-[#F4F5F9] dark:bg-[#1e2535] rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-[#ef4444]/10 flex items-center justify-center">
                   <Receipt className="w-5 h-5 text-[#ef4444]" />
@@ -433,7 +452,7 @@ export default function RevenueCalculator() {
                 onChange={(e) => setCostPerLead(Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #ef4444 ${sliderPct(Math.min(Math.max(costPerLead, costConfig.min), costConfig.max), costConfig.min, costConfig.max)}%, #d1d5db ${sliderPct(Math.min(Math.max(costPerLead, costConfig.min), costConfig.max), costConfig.min, costConfig.max)}%)`,
+                  background: `linear-gradient(to right, #ef4444 ${sliderPct(Math.min(Math.max(costPerLead, costConfig.min), costConfig.max), costConfig.min, costConfig.max)}%, rgba(100,116,139,0.3) ${sliderPct(Math.min(Math.max(costPerLead, costConfig.min), costConfig.max), costConfig.min, costConfig.max)}%)`,
                 }}
               />
               <div className="flex justify-between text-sm text-muted-foreground mt-2">
@@ -443,7 +462,7 @@ export default function RevenueCalculator() {
             </div>
           </motion.div>
 
-          <div className="mb-16 pt-6 pb-6 border-t border-b border-[#e5e7eb]">
+          <div className="mb-16 pt-6 pb-6 border-t border-b border-[#e5e7eb] dark:border-white/10">
             <div>
                 <div className="grid md:grid-cols-3 gap-8">
                   <div className="flex flex-col items-center text-center">
@@ -452,7 +471,7 @@ export default function RevenueCalculator() {
                         {t("calculator.advanced.showAs")}
                       </label>
                       <InfoTooltip text={t("calculator.advanced.showAsHint")} />
-                      <div role="tablist" className="inline-flex bg-white border border-[#e5e7eb] rounded-full p-1 ml-1">
+                      <div role="tablist" className="inline-flex bg-white dark:bg-[#1e2535] border border-[#e5e7eb] dark:border-white/10 rounded-full p-1 ml-1">
                         {([
                           { key: false, label: t("calculator.advanced.revenueMode") },
                           { key: true, label: t("calculator.advanced.profitMode") },
@@ -496,7 +515,7 @@ export default function RevenueCalculator() {
                           onChange={(e) => setGrossMargin(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer"
                           style={{
-                            background: `linear-gradient(to right, #4F46E5 ${sliderPct(grossMargin, 10, 100)}%, #d1d5db ${sliderPct(grossMargin, 10, 100)}%)`,
+                            background: `linear-gradient(to right, #4F46E5 ${sliderPct(grossMargin, 10, 100)}%, rgba(100,116,139,0.3) ${sliderPct(grossMargin, 10, 100)}%)`,
                           }}
                         />
                       </div>
@@ -508,7 +527,7 @@ export default function RevenueCalculator() {
                         {t("calculator.advanced.dealType")}
                       </label>
                       <InfoTooltip text={t("calculator.advanced.dealTypeHint")} />
-                      <div role="tablist" className="inline-flex bg-white border border-[#e5e7eb] rounded-full p-1 ml-1">
+                      <div role="tablist" className="inline-flex bg-white dark:bg-[#1e2535] border border-[#e5e7eb] dark:border-white/10 rounded-full p-1 ml-1">
                         {([
                           { key: false, label: t("calculator.advanced.oneShot") },
                           { key: true, label: t("calculator.advanced.recurring") },
@@ -552,7 +571,7 @@ export default function RevenueCalculator() {
                           onChange={(e) => setMonthsRetained(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer"
                           style={{
-                            background: `linear-gradient(to right, #FEB800 ${sliderPct(monthsRetained, 1, 60)}%, #d1d5db ${sliderPct(monthsRetained, 1, 60)}%)`,
+                            background: `linear-gradient(to right, #FEB800 ${sliderPct(monthsRetained, 1, 60)}%, rgba(100,116,139,0.3) ${sliderPct(monthsRetained, 1, 60)}%)`,
                           }}
                         />
                       </div>
@@ -564,7 +583,7 @@ export default function RevenueCalculator() {
                         {t("calculator.advanced.decay")}
                       </label>
                       <InfoTooltip text={t("calculator.advanced.decayTooltip")} />
-                      <div role="tablist" className="inline-flex bg-white border border-[#e5e7eb] rounded-full p-1 ml-1">
+                      <div role="tablist" className="inline-flex bg-white dark:bg-[#1e2535] border border-[#e5e7eb] dark:border-white/10 rounded-full p-1 ml-1">
                         {([
                           { key: false, label: t("calculator.advanced.off") },
                           { key: true, label: t("calculator.advanced.on") },
@@ -608,7 +627,7 @@ export default function RevenueCalculator() {
                           onChange={(e) => setDecayPct(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer"
                           style={{
-                            background: `linear-gradient(to right, #ef4444 ${sliderPct(decayPct, 0, 30)}%, #d1d5db ${sliderPct(decayPct, 0, 30)}%)`,
+                            background: `linear-gradient(to right, #ef4444 ${sliderPct(decayPct, 0, 30)}%, rgba(100,116,139,0.3) ${sliderPct(decayPct, 0, 30)}%)`,
                           }}
                         />
                       </div>
@@ -633,9 +652,8 @@ export default function RevenueCalculator() {
               const closePct = Math.round(currentCloseRate * 100);
               return (
                 <div
-                  className="rounded-2xl p-8 flex flex-col"
+                  className="rounded-2xl p-8 flex flex-col bg-[#F4F5F9] dark:bg-[#1e2535]"
                   style={{
-                    backgroundColor: color.bg,
                     border: `2px solid ${color.border}`,
                     boxShadow: `0 8px 32px ${color.accent}30`,
                   }}
@@ -643,7 +661,7 @@ export default function RevenueCalculator() {
                   <div
                     role="tablist"
                     aria-label={t("calculator.scenarios.tablistLabel")}
-                    className="flex w-full mb-6 bg-white/70 rounded-full p-1"
+                    className="flex w-full mb-6 bg-white/70 dark:bg-white/10 rounded-full p-1"
                   >
                     {scenarios.map((sc, i) => {
                       const c = tierColors[i];
@@ -705,7 +723,7 @@ export default function RevenueCalculator() {
                               </span>
                             </div>
                           </div>
-                          <div className="h-3 w-full rounded-full bg-black/5 overflow-hidden">
+                          <div className="h-3 w-full rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
                             <motion.div
                               className="h-full rounded-full"
                               style={{
@@ -721,7 +739,7 @@ export default function RevenueCalculator() {
                     })}
                   </div>
 
-                  <div className="pt-6 mt-6 border-t border-black/5">
+                  <div className="pt-6 mt-6 border-t border-black/5 dark:border-white/10">
                     <div className="flex items-baseline justify-between mb-2">
                       <label className="text-sm font-heading font-bold">
                         {t("calculator.closeRateLabel")}
@@ -739,7 +757,7 @@ export default function RevenueCalculator() {
                       onChange={(e) => updateCloseRate(Number(e.target.value) / 100)}
                       className="w-full h-2 rounded-full appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, ${color.accent} ${sliderPct(currentCloseRate, 0.05, 0.70)}%, #d1d5db ${sliderPct(currentCloseRate, 0.05, 0.70)}%)`,
+                        background: `linear-gradient(to right, ${color.accent} ${sliderPct(currentCloseRate, 0.05, 0.70)}%, rgba(100,116,139,0.3) ${sliderPct(currentCloseRate, 0.05, 0.70)}%)`,
                       }}
                     />
                   </div>

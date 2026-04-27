@@ -3,12 +3,20 @@ import { useState, useEffect, useMemo } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { useCountry } from "@/hooks/useCountry";
 
 const languages = [
   { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png", display: "EN" },
   { code: "pt", label: "Português", flag: "https://flagcdn.com/w40/br.png", display: "PT" },
   { code: "nl", label: "Nederlands", flag: "https://flagcdn.com/w40/nl.png", display: "NL" },
 ] as const;
+
+const EN_COUNTRY_FLAGS: Record<string, string> = {
+  US: "https://flagcdn.com/w40/us.png",
+  CA: "https://flagcdn.com/w40/ca.png",
+  AU: "https://flagcdn.com/w40/au.png",
+  NZ: "https://flagcdn.com/w40/nz.png",
+};
 
 type LangCode = typeof languages[number]["code"];
 
@@ -22,6 +30,7 @@ export function Navbar() {
   const [location, setLocation] = useLocation();
   const { t, i18n } = useTranslation("common");
   const isLoggedIn = Boolean(localStorage.getItem("leadawaker_auth"));
+  const { code: countryCode } = useCountry();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -68,8 +77,10 @@ export function Navbar() {
     }
   }, [currentLang, i18n]);
 
-  const currentLangConfig =
-    languages.find((l) => l.code === currentLang) || languages[0];
+  const baseLangConfig = languages.find((l) => l.code === currentLang) || languages[0];
+  const currentLangConfig = currentLang === "en" && EN_COUNTRY_FLAGS[countryCode]
+    ? { ...baseLangConfig, flag: EN_COUNTRY_FLAGS[countryCode] }
+    : baseLangConfig;
 
   /**
    * Build language-aware links
@@ -147,24 +158,29 @@ export function Navbar() {
               </button>
               {langMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-40 rounded-md bg-white border border-border/60 shadow-lg p-1 z-[100]">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => {
-                        changeLanguage(lang.code);
-                        setLangMenuOpen(false);
-                      }}
-                      className="w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md text-foreground hover:bg-muted transition-colors"
-                    >
-                      <img
-                        src={lang.flag}
-                        alt={lang.label}
-                        className="h-4 w-[1.35rem] object-cover shadow-sm"
-                      />
-                      {lang.label}
-                    </button>
-                  ))}
+                  {languages.map((lang) => {
+                    const flag = lang.code === "en" && EN_COUNTRY_FLAGS[countryCode]
+                      ? EN_COUNTRY_FLAGS[countryCode]
+                      : lang.flag;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          changeLanguage(lang.code);
+                          setLangMenuOpen(false);
+                        }}
+                        className="w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md text-foreground hover:bg-muted transition-colors"
+                      >
+                        <img
+                          src={flag}
+                          alt={lang.label}
+                          className="h-4 w-[1.35rem] object-cover shadow-sm"
+                        />
+                        {lang.label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -245,24 +261,29 @@ export function Navbar() {
               </button>
               {langMenuOpenMobile && (
                 <div className="absolute right-0 top-full mt-2 w-40 rounded-md bg-white border border-border/60 shadow-lg p-1 z-50">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => {
-                        changeLanguage(lang.code);
-                        setLangMenuOpenMobile(false);
-                      }}
-                      className="w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md text-foreground hover:bg-muted transition-colors"
-                    >
-                      <img
-                        src={lang.flag}
-                        alt={lang.label}
-                        className="h-4 w-[1.35rem] object-cover shadow-sm"
-                      />
-                      {lang.label}
-                    </button>
-                  ))}
+                  {languages.map((lang) => {
+                    const flag = lang.code === "en" && EN_COUNTRY_FLAGS[countryCode]
+                      ? EN_COUNTRY_FLAGS[countryCode]
+                      : lang.flag;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          changeLanguage(lang.code);
+                          setLangMenuOpenMobile(false);
+                        }}
+                        className="w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md text-foreground hover:bg-muted transition-colors"
+                      >
+                        <img
+                          src={flag}
+                          alt={lang.label}
+                          className="h-4 w-[1.35rem] object-cover shadow-sm"
+                        />
+                        {lang.label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
