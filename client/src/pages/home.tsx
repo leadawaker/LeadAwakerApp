@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   ArrowRight,
   ChevronDown,
@@ -28,6 +29,7 @@ import TryInSixtySeconds from "@/components/TryInSixtySeconds";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
+import { FallingPattern } from "@/components/ui/falling-pattern";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 import profileImg from "@/assets/profile.webp";
 
@@ -102,6 +104,25 @@ export default function Home() {
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 1.2, duration: 0.3 }}
                   />
+                  <div
+                    className="absolute z-[1] overflow-hidden pointer-events-none"
+                    style={{
+                      left: "calc(50% - 200vw)",
+                      width: "400vw",
+                      top: "-200px",
+                      bottom: "-200px",
+                      clipPath: "inset(200px 0px)",
+                    }}
+                  >
+                    <FallingPattern
+                      color="rgba(255,255,255,2)"
+                      backgroundColor="transparent"
+                      maskColor="#FEB800"
+                      duration={120}
+                      blurIntensity="0.3em"
+                      density={1}
+                    />
+                  </div>
                   <motion.span
                     className="relative inline-block font-bold uppercase py-2 md:py-3 z-10"
                     initial={{ color: "#000" }}

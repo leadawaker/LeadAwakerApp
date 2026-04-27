@@ -1502,3 +1502,19 @@
   mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
 }
+
+/* Falling pattern animation — smooth vertical descent */
+@keyframes fall {
+  0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 0 600px, 0 700px, 0 800px, 0 650px, 0 750px; }
+}
+
+/* Aurora background animation */
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}

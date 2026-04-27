@@ -13,7 +13,10 @@ function fetchCountry(): Promise<string> {
   if (!inFlight) {
     inFlight = fetch("https://ipapi.co/json/")
       .then((r) => r.json())
-      .then((d: { country_code?: string }) => d.country_code ?? "")
+      .then((d: { country_code?: string }) => {
+        const code = d.country_code ?? "";
+        return code;
+      })
       .catch(() => "");
   }
   return inFlight;
