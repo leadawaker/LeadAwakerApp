@@ -112,6 +112,8 @@ export default function Home() {
                       top: "-200px",
                       bottom: "-200px",
                       clipPath: "inset(200px 0px)",
+                      maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 85%)",
+                      WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 85%)",
                     }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

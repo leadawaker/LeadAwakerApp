@@ -144,6 +144,7 @@ export function ConversationPanelWithEvents({
     messages,
     streaming,
     streamingText,
+    streamingBubbles,
     loading,
     pendingConfirmation,
     activity,
