@@ -2,9 +2,10 @@
 // a visitor lands on a shared calculator URL with query params.
 // Static scrapers (LinkedIn, WhatsApp, Twitter, iMessage) will see a
 // preview tailored to the prospect's own numbers.
+// Also handles language-specific OG tags for /pt and /nl paths.
 
 export const config = {
-  matcher: "/",
+  matcher: ["/", "/:lang(pt|nl)"],
 };
 
 // Mirror of the 3 scenarios baked into RevenueCalculator.tsx. We use the
@@ -29,9 +30,36 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;");
 }
 
+interface OgTags {
+  title: string;
+  description: string;
+  image: string;
+}
+
+const translations: Record<string, OgTags> = {
+  en: {
+    title: "Lead Awaker — Reactivate Your Leads",
+    description: "Turn cold leads into booked calls with AI-powered WhatsApp reactivation. No new ad spend needed.",
+    image: "/opengraph.jpg",
+  },
+  pt: {
+    title: "Lead Awaker — Reative Seus Leads",
+    description: "Transforme leads frios em reuniões marcadas com reativação WhatsApp com IA. Sem novo gasto em anúncios.",
+    image: "/opengraph.jpg",
+  },
+  nl: {
+    title: "Lead Awaker — Activeer Uw Leads",
+    description: "Transformeer koude leads in geboekte gesprekken met AI-aangedreven WhatsApp reactivatie. Geen extra advertentiebudget nodig.",
+    image: "/opengraph.jpg",
+  },
+};
+
 export default async function middleware(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const params = url.searchParams;
+  const pathSegments = url.pathname.split("/").filter(Boolean);
+  const langPrefix = pathSegments[0] as keyof typeof translations;
+  const lang = (langPrefix === "pt" || langPrefix === "nl") ? langPrefix : "en";
 
   // Only rewrite when the visitor is landing on a shared calculator state.
   // Presence of any one of these means someone shared a prospect-specific link.
@@ -39,7 +67,43 @@ export default async function middleware(request: Request): Promise<Response> {
     params.has("leads") || params.has("deal") || params.has("cost");
 
   if (!hasCalcParams) {
-    return fetch(new URL("/index.html", url.origin), request);
+    const baseOg = translations[lang];
+    const res = await fetch(new URL("/index.html", url.origin), request);
+    const html = await res.text();
+
+    const updated = html
+      .replace(
+        /<meta property="og:title"[^>]*>/,
+        `<meta property="og:title" content="${baseOg.title}" />`
+      )
+      .replace(
+        /<meta property="og:description"[^>]*>/,
+        `<meta property="og:description" content="${baseOg.description}" />`
+      )
+      .replace(
+        /<meta property="og:image"[^>]*>/,
+        `<meta property="og:image" content="${baseOg.image}" />`
+      )
+      .replace(
+        /<meta name="twitter:title"[^>]*>/,
+        `<meta name="twitter:title" content="${baseOg.title}" />`
+      )
+      .replace(
+        /<meta name="twitter:description"[^>]*>/,
+        `<meta name="twitter:description" content="${baseOg.description}" />`
+      )
+      .replace(
+        /<meta name="twitter:image"[^>]*>/,
+        `<meta name="twitter:image" content="${baseOg.image}" />`
+      );
+
+    return new Response(updated, {
+      status: res.status,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=60, s-maxage=300",
+      },
+    });
   }
 
   const leads = Number(params.get("leads")) || 5000;
@@ -84,8 +148,19 @@ export default async function middleware(request: Request): Promise<Response> {
     ? recurring ? "lifetime profit" : "profit"
     : recurring ? "lifetime revenue" : "revenue";
 
-  const title = `Lead Awaker · ${formatCurrency(revenue, symbol)} in ${noun} from ${leads.toLocaleString()} dead leads`;
-  const description = `At a ${Math.round(closeRate * 100)}% close rate on responders, ${leads.toLocaleString()} dead leads become ${closedDeals} closed deals. ROI: ${roi > 0 ? "+" : ""}${roi}%. Run your own numbers.`;
+  let title: string;
+  let description: string;
+
+  if (lang === "pt") {
+    title = `Lead Awaker · ${formatCurrency(revenue, symbol)} em ${noun === "profit" ? "lucro" : noun === "lifetime profit" ? "lucro vitalício" : noun === "lifetime revenue" ? "receita vitalícia" : "receita"} de ${leads.toLocaleString()} leads frios`;
+    description = `Com uma taxa de fechamento de ${Math.round(closeRate * 100)}% entre os respondentes, ${leads.toLocaleString()} leads frios se tornam ${closedDeals} negócios fechados. ROI: ${roi > 0 ? "+" : ""}${roi}%. Execute seus próprios números.`;
+  } else if (lang === "nl") {
+    title = `Lead Awaker · ${formatCurrency(revenue, symbol)} in ${noun === "profit" ? "winst" : noun === "lifetime profit" ? "levenslange winst" : noun === "lifetime revenue" ? "levenslange opbrengst" : "opbrengst"} van ${leads.toLocaleString()} koude leads`;
+    description = `Met een sluitingspercentage van ${Math.round(closeRate * 100)}% onder respondenten, ${leads.toLocaleString()} koude leads worden ${closedDeals} gesloten deals. ROI: ${roi > 0 ? "+" : ""}${roi}%. Voer uw eigen berekeningen uit.`;
+  } else {
+    title = `Lead Awaker · ${formatCurrency(revenue, symbol)} in ${noun} from ${leads.toLocaleString()} dead leads`;
+    description = `At a ${Math.round(closeRate * 100)}% close rate on responders, ${leads.toLocaleString()} dead leads become ${closedDeals} closed deals. ROI: ${roi > 0 ? "+" : ""}${roi}%. Run your own numbers.`;
+  }
 
   const res = await fetch(new URL("/index.html", url.origin), request);
   const html = await res.text();
