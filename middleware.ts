@@ -5,7 +5,7 @@
 // Also handles language-specific OG tags for /pt and /nl paths.
 
 export const config = {
-  matcher: ["/", "/:lang(pt|nl)"],
+  matcher: ["/", "/pt", "/nl"],
 };
 
 // Mirror of the 3 scenarios baked into RevenueCalculator.tsx. We use the
