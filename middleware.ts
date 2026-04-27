@@ -38,17 +38,17 @@ interface OgTags {
 
 const translations: Record<string, OgTags> = {
   en: {
-    title: "Lead Awaker — Reactivate Your Leads",
+    title: "Lead Awaker: Reactivate Your Leads",
     description: "Turn cold leads into booked calls with AI-powered WhatsApp reactivation. No new ad spend needed.",
     image: "/opengraph.jpg",
   },
   pt: {
-    title: "Lead Awaker — Reative Seus Leads",
+    title: "Lead Awaker: Reative Seus Leads",
     description: "Transforme leads frios em reuniões marcadas com reativação WhatsApp com IA. Sem novo gasto em anúncios.",
     image: "/opengraph.jpg",
   },
   nl: {
-    title: "Lead Awaker — Activeer Uw Leads",
+    title: "Lead Awaker: Activeer Uw Leads",
     description: "Transformeer koude leads in geboekte gesprekken met AI-aangedreven WhatsApp reactivatie. Geen extra advertentiebudget nodig.",
     image: "/opengraph.jpg",
   },
