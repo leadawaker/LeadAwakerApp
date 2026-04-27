@@ -353,8 +353,8 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                   data-testid={`dot-step-card-${i}`}
                   className={`rounded-full transition-all duration-300 ${
                     i === currentStep
-                      ? 'bg-white w-8 h-3 md:w-10 md:h-4'
-                      : 'bg-white/50 hover:bg-white/70 w-3 h-3 md:w-4 md:h-4'
+                      ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
+                      : 'bg-blue-500/50 hover:bg-blue-500/70 w-3 h-3 md:w-4 md:h-4'
                   }`}
                   aria-label={t('common.goToStep', { number: i + 1 })}
                 />
@@ -397,8 +397,8 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                   data-testid={`dot-step-card-${i}`}
                   className={`rounded-full transition-all duration-300 ${
                     i === currentStep
-                      ? 'bg-white w-8 h-3 md:w-10 md:h-4'
-                      : 'bg-white/50 hover:bg-white/70 w-3 h-3 md:w-4 md:h-4'
+                      ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
+                      : 'bg-blue-500/50 hover:bg-blue-500/70 w-3 h-3 md:w-4 md:h-4'
                   }`}
                   aria-label={t('common.goToStep', { number: i + 1 })}
                 />
@@ -439,8 +439,8 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
               data-testid={`dot-step-card-mobile-${i}`}
               className={`rounded-full transition-all duration-300 ${
                 i === currentStep
-                  ? 'bg-white w-8 h-3'
-                  : 'bg-white/50 hover:bg-white/70 w-3 h-3'
+                  ? 'bg-blue-500 w-8 h-3'
+                  : 'bg-blue-500/50 hover:bg-blue-500/70 w-3 h-3'
               }`}
               aria-label={t('common.goToStep', { number: i + 1 })}
             />

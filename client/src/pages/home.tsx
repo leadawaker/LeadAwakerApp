@@ -104,7 +104,7 @@ export default function Home() {
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 1.2, duration: 0.3 }}
                   />
-                  <div
+                  <motion.div
                     className="absolute z-[1] overflow-hidden pointer-events-none"
                     style={{
                       left: "calc(50% - 200vw)",
@@ -113,16 +113,19 @@ export default function Home() {
                       bottom: "-200px",
                       clipPath: "inset(200px 0px)",
                     }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.5, duration: 0.4 }}
                   >
                     <FallingPattern
-                      color="rgba(255,255,255,2)"
+                      color="rgba(255,255,255,1)"
                       backgroundColor="transparent"
                       maskColor="#FEB800"
                       duration={120}
-                      blurIntensity="0.3em"
+                      blurIntensity="0.15em"
                       density={1}
                     />
-                  </div>
+                  </motion.div>
                   <motion.span
                     className="relative inline-block font-bold uppercase py-2 md:py-3 z-10"
                     initial={{ color: "#000" }}
@@ -514,10 +517,10 @@ export default function Home() {
                 <img
                   src={profileImg}
                   alt={tAbout("founder.name")}
-                  className="w-50 h-43 shrink-0 rounded-2xl object-cover shadow-md"
+                  className="w-50 h-43 shrink-0 rounded-2xl object-cover shadow-md mx-auto md:mx-0"
                 />
-                <div className="flex-grow space-y-4 text-left">
-                  <div className="flex items-baseline gap-3">
+                <div className="flex-grow space-y-4 text-center md:text-left">
+                  <div className="flex items-baseline gap-3 justify-center md:justify-start">
                     <h3 className="text-lg md:text-2xl font-bold text-foreground">
                       {tAbout("founder.name")}
                     </h3>

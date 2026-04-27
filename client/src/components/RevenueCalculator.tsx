@@ -465,12 +465,14 @@ export default function RevenueCalculator() {
           <div className="mb-16 pt-6 pb-6 border-t border-b border-[#e5e7eb] dark:border-white/10">
             <div>
                 <div className="grid md:grid-cols-3 gap-8">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="flex items-center gap-2 flex-wrap justify-center">
-                      <label className="font-heading font-bold text-sm">
-                        {t("calculator.advanced.showAs")}
-                      </label>
-                      <InfoTooltip text={t("calculator.advanced.showAsHint")} />
+                  <div className="flex flex-col items-start md:items-center md:text-center">
+                    <div className="flex items-center gap-2 flex-wrap justify-between md:justify-center w-full">
+                      <span className="flex items-center gap-1">
+                        <label className="font-heading font-bold text-sm">
+                          {t("calculator.advanced.showAs")}
+                        </label>
+                        <InfoTooltip text={t("calculator.advanced.showAsHint")} />
+                      </span>
                       <div role="tablist" className="inline-flex bg-white dark:bg-[#1e2535] border border-[#e5e7eb] dark:border-white/10 rounded-full p-1 ml-1">
                         {([
                           { key: false, label: t("calculator.advanced.revenueMode") },
@@ -521,12 +523,14 @@ export default function RevenueCalculator() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="flex items-center gap-2 flex-wrap justify-center">
-                      <label className="font-heading font-bold text-sm">
-                        {t("calculator.advanced.dealType")}
-                      </label>
-                      <InfoTooltip text={t("calculator.advanced.dealTypeHint")} />
+                  <div className="flex flex-col items-start md:items-center md:text-center">
+                    <div className="flex items-center gap-2 flex-wrap justify-between md:justify-center w-full">
+                      <span className="flex items-center gap-1">
+                        <label className="font-heading font-bold text-sm">
+                          {t("calculator.advanced.dealType")}
+                        </label>
+                        <InfoTooltip text={t("calculator.advanced.dealTypeHint")} />
+                      </span>
                       <div role="tablist" className="inline-flex bg-white dark:bg-[#1e2535] border border-[#e5e7eb] dark:border-white/10 rounded-full p-1 ml-1">
                         {([
                           { key: false, label: t("calculator.advanced.oneShot") },
@@ -577,12 +581,14 @@ export default function RevenueCalculator() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="flex items-center gap-2 flex-wrap justify-center">
-                      <label className="font-heading font-bold text-sm">
-                        {t("calculator.advanced.decay")}
-                      </label>
-                      <InfoTooltip text={t("calculator.advanced.decayTooltip")} />
+                  <div className="flex flex-col items-start md:items-center md:text-center">
+                    <div className="flex items-center gap-2 flex-wrap justify-between md:justify-center w-full">
+                      <span className="flex items-center gap-1">
+                        <label className="font-heading font-bold text-sm">
+                          {t("calculator.advanced.decay")}
+                        </label>
+                        <InfoTooltip text={t("calculator.advanced.decayTooltip")} />
+                      </span>
                       <div role="tablist" className="inline-flex bg-white dark:bg-[#1e2535] border border-[#e5e7eb] dark:border-white/10 rounded-full p-1 ml-1">
                         {([
                           { key: false, label: t("calculator.advanced.off") },
@@ -776,7 +782,7 @@ export default function RevenueCalculator() {
                   <p className="text-white/60 text-sm mb-2 font-heading">
                     {t("calculator.investment.spent")}
                   </p>
-                  <div className="text-2xl md:text-3xl font-bold font-heading text-[#ef4444]">
+                  <div className="text-3xl md:text-3xl font-bold font-heading text-[#ef4444]">
                     {formatCurrency(totalAdSpend)}
                   </div>
                 </div>
@@ -789,7 +795,7 @@ export default function RevenueCalculator() {
                       ? profitMode ? t("calculator.investment.returnProfitLtv") : t("calculator.investment.returnLtv")
                       : profitMode ? t("calculator.investment.returnProfit") : t("calculator.investment.return")}
                   </p>
-                  <div className="text-2xl md:text-3xl font-bold font-heading text-white">
+                  <div className="text-3xl md:text-3xl font-bold font-heading text-white">
                     {formatCurrency(selectedRevenue)}
                   </div>
                 </div>
@@ -800,7 +806,7 @@ export default function RevenueCalculator() {
                   <p className="text-white/60 text-sm mb-2 font-heading">
                     {t("calculator.investment.roi")}
                   </p>
-                  <div className="text-2xl md:text-3xl font-bold font-heading text-[#FEB800]">
+                  <div className="text-3xl md:text-3xl font-bold font-heading text-[#FEB800]">
                     {roi > 0 ? "+" : ""}{roi}%
                   </div>
                 </div>
