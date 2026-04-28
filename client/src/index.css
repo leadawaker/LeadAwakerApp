@@ -129,7 +129,7 @@
 
   --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
   --input: 0 0% 93%; /* Same as muted for inputs */
-  --ring: 243 75% 59%;
+  --ring: 0 0% 20%;
 
   --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
 
@@ -218,7 +218,7 @@
   /* Borders: visible on dark surfaces */
   --border: 237 21% 59%;           /* #8183AC */
   --input: 237 21% 59%;
-  --ring: 243 85% 68%;
+  --ring: 0 0% 80%;
 
   /* Chart colors adjusted for dark */
   --chart-1: 230 80% 65%;
