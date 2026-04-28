@@ -13,6 +13,8 @@ function read(): ListPanelState {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
     if (v === "full" || v === "compact" || v === "hidden") return v;
+    // If value is invalid, clear it and return default
+    if (v !== null) localStorage.removeItem(STORAGE_KEY);
   } catch { /* ignore */ }
   return "full";
 }
