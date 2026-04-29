@@ -841,7 +841,7 @@ export function CampaignListView({
 
   // Compact list rail: auto-squeeze when main campaign panel is narrow, or user override.
   // Observer is attached to the main column inside CampaignDetailView (excludes prompt panel).
-  const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 700, deactivateAbove: 900 });
+  const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 900, deactivateAbove: 1100 });
   const isListCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
   const isListHidden = !isNarrow && leftPanelState === "hidden";
 

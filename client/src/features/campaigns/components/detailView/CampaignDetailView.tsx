@@ -217,6 +217,30 @@ export function CampaignDetailView({
   const togglePromptPanel = onTogglePromptPanelProp ?? (() => {});
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
 
+  // ── Prompt panel drag-to-resize ────────────────────────────────────────────
+  const [promptPanelWidth, setPromptPanelWidth] = usePersistedState<number>("campaigns-prompt-panel-width", 520);
+  const isDraggingPrompt = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartWidth = useRef(0);
+  const onPromptDragStart = useCallback((e: React.MouseEvent) => {
+    isDraggingPrompt.current = true;
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = promptPanelWidth;
+    e.preventDefault();
+    const onMove = (me: MouseEvent) => {
+      if (!isDraggingPrompt.current) return;
+      const delta = dragStartX.current - me.clientX;
+      setPromptPanelWidth(Math.max(320, Math.min(900, dragStartWidth.current + delta)));
+    };
+    const onUp = () => {
+      isDraggingPrompt.current = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [promptPanelWidth, setPromptPanelWidth]);
+
   // ── Animation trigger on campaign change ──────────────────────────────────
   const [animTrigger, setAnimTrigger] = useState(0);
   useEffect(() => {
@@ -490,7 +514,9 @@ export function CampaignDetailView({
 
       {/* Prompt panel — agency only, visible when open */}
       {promptPanelOpen && isAgencyUser && (
-        <div className="w-[420px] lg:w-[520px] xl:w-[640px] shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden">
+        <div style={{ width: promptPanelWidth }} className="shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden relative">
+          {/* Drag handle */}
+          <div onMouseDown={onPromptDragStart} className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-brand-indigo/30 transition-colors z-10" />
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-2 text-[13px] font-semibold">
