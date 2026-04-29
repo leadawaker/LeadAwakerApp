@@ -839,15 +839,11 @@ export function CampaignListView({
     return () => ro.disconnect();
   }, []);
 
-  // Compact list rail: auto-squeeze when right panel is narrow, or user override.
+  // Compact list rail: auto-squeeze when main campaign panel is narrow, or user override.
+  // Observer is attached to the main column inside CampaignDetailView (excludes prompt panel).
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 700, deactivateAbove: 900 });
   const isListCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
   const isListHidden = !isNarrow && leftPanelState === "hidden";
-  // Combine refs: rightPanelRef stays for the existing 500px detail logic; compactObserverRef watches same element.
-  const combinedRightPanelRef = useCallback((el: HTMLDivElement | null) => {
-    (rightPanelRef as any).current = el;
-    (compactObserverRef as any).current = el;
-  }, [compactObserverRef]);
 
   // Auto-select: handled by CampaignsPage — do NOT auto-select here (causes override)
 
@@ -1504,7 +1500,7 @@ export function CampaignListView({
       />
 
       {/* ── RIGHT PANEL: toolbar + detail view (desktop only) ───────── */}
-      <div ref={combinedRightPanelRef} className={cn(
+      <div ref={rightPanelRef} className={cn(
         "flex-1 flex-col overflow-hidden rounded-lg",
         mobileView === "list" ? "hidden md:flex" : "flex mobile-panel-enter"
       )}>
@@ -1549,6 +1545,7 @@ export function CampaignListView({
               onBack={() => setMobileView("list")}
               promptPanelOpen={promptPanelOpen}
               onTogglePromptPanel={togglePromptPanel}
+              mainColumnRef={compactObserverRef}
             />
           ) : (
             <CampaignDetailViewEmpty />

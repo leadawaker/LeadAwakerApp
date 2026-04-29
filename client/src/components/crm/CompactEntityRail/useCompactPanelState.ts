@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { COMPACT_ACTIVATE_BELOW, COMPACT_DEACTIVATE_ABOVE } from "./constants";
 
 interface Options {
@@ -10,25 +10,25 @@ interface Options {
 
 /**
  * Watches an element's width and toggles a boolean with hysteresis.
+ * Uses a callback ref so it works with conditionally-rendered elements.
  * Activates when width < activateBelow, deactivates when width > deactivateAbove.
- * The gap absorbs the panel swing that would otherwise cause oscillation.
  */
 export function useCompactPanelState(disabled = false, opts: Options = {}) {
   const activateBelow = opts.activateBelow ?? COMPACT_ACTIVATE_BELOW;
   const deactivateAbove = opts.deactivateAbove ?? COMPACT_DEACTIVATE_ABOVE;
-  const ref = useRef<HTMLDivElement>(null);
   const [narrow, setNarrow] = useState(false);
+  const roRef = useRef<ResizeObserver | null>(null);
 
-  useEffect(() => {
-    if (disabled) return;
-    const el = ref.current;
-    if (!el) return;
+  const ref = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (!el || disabled) return;
     const ro = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width ?? 0;
       setNarrow((prev) => (prev ? w < deactivateAbove : w < activateBelow));
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    roRef.current = ro;
   }, [disabled, activateBelow, deactivateAbove]);
 
   return { ref, narrow };

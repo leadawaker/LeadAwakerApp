@@ -92,6 +92,7 @@ export interface CampaignDetailViewProps {
   onBack?: () => void;
   promptPanelOpen?: boolean;
   onTogglePromptPanel?: () => void;
+  mainColumnRef?: React.Ref<HTMLDivElement>;
 }
 
 export function CampaignDetailView({
@@ -101,6 +102,7 @@ export function CampaignDetailView({
   filterAccount, onFilterAccountChange, isFilterActive, showDemoCampaigns, onShowDemoCampaignsChange,
   groupBy, onGroupByChange, isGroupNonDefault, availableAccounts, onResetControls, onBack,
   promptPanelOpen: promptPanelOpenProp, onTogglePromptPanel: onTogglePromptPanelProp,
+  mainColumnRef,
 }: CampaignDetailViewProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser, isAdmin } = useWorkspace();
@@ -348,7 +350,7 @@ export function CampaignDetailView({
   return (
     <div className="relative flex flex-row h-full overflow-hidden" data-testid="campaign-detail-view" data-onboarding="campaign-detail">
       {/* Main column */}
-      <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div ref={mainColumnRef} className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
 
       {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
