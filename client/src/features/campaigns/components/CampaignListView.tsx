@@ -841,7 +841,7 @@ export function CampaignListView({
 
   // Compact list rail: auto-squeeze when right panel is narrow, or user override.
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow);
-  const isListCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
+  const isListCompact = !isNarrow && leftPanelState === "compact";
   const isListHidden = !isNarrow && leftPanelState === "hidden";
   // Combine refs: rightPanelRef stays for the existing 500px detail logic; compactObserverRef watches same element.
   const combinedRightPanelRef = useCallback((el: HTMLDivElement | null) => {
@@ -925,7 +925,9 @@ export function CampaignListView({
           ? cn(mobileView === "detail" ? "hidden" : "flex", "md:hidden")
           : isListCompact
             ? cn("w-[65px] shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
-            : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
+            : selectedCampaign
+              ? cn("w-full md:hidden", mobileView === "detail" ? "hidden" : "flex")
+              : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
         {isListCompact && (
