@@ -922,12 +922,10 @@ export function CampaignListView({
       <div className={cn(
         "flex-col bg-muted rounded-lg overflow-hidden",
         isListHidden
-          ? cn(mobileView === "detail" ? "hidden" : "flex", "md:hidden")
+          ? cn(isNarrow && selectedCampaign ? "hidden" : "flex", "lg:hidden")
           : isListCompact
-            ? cn("w-[65px] shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
-            : selectedCampaign
-              ? cn("w-full md:hidden", mobileView === "detail" ? "hidden" : "flex")
-              : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
+            ? cn("w-[65px] shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
+            : cn("w-full lg:w-[340px] lg:shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
         {isListCompact && (
