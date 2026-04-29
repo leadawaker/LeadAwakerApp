@@ -236,6 +236,18 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     contract_id: String(c.contract_id || (c as any).contract_id || ""),
     value_per_booking: c.value_per_booking ?? "",
     channel: c.channel || "sms",
+    company_name: c.company_name || "",
+    demo_client_name: c.demo_client_name || "",
+    language: c.language || "",
+    is_demo: c.is_demo ?? false,
+    opt_out_notice: c.opt_out_notice ?? false,
+    ab_enabled: c.ab_enabled ?? false,
+    ab_split_ratio: c.ab_split_ratio ?? 50,
+    ai_role: (c as any).ai_role || "",
+    ai_style_override: (c as any).ai_style_override || "",
+    niche: (c as any).niche || "",
+    inquiry_timeframe: (c as any).inquiry_timeframe || "",
+    typo_count: (c as any).typo_count ?? "",
   }), []);
 
   const [draft, setDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));
