@@ -203,6 +203,120 @@ const FullscreenStep = ({
 const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () => void }) => {
   const { t } = useTranslation('salesRepSteps');
   const [currentStep, setCurrentStep] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const isLockedRef = useRef(false);
+  const stepRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const lastSwipeTimeRef = useRef(0);
+  const unlockCooldownRef = useRef(false);
+  const lockDebounceRef = useRef(0);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    stepRef.current = currentStep;
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const lockScroll = () => {
+      if (isLockedRef.current) return;
+      isLockedRef.current = true;
+      const scrollY = window.scrollY;
+      document.body.dataset.lockScrollY = String(scrollY);
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    };
+
+    const unlockScroll = () => {
+      if (!isLockedRef.current) return;
+      isLockedRef.current = false;
+      // Prevent checkAndLock from immediately re-locking after scrollTo()
+      unlockCooldownRef.current = true;
+      const scrollY = parseInt(document.body.dataset.lockScrollY || '0');
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+      delete document.body.dataset.lockScrollY;
+      setTimeout(() => { unlockCooldownRef.current = false; }, 1000);
+    };
+
+    const checkAndLock = () => {
+      if (isLockedRef.current || unlockCooldownRef.current || !sectionRef.current) return;
+
+      // Debounce re-locking to avoid repeated locks within 1.5 seconds
+      const now = Date.now();
+      if (now - lockDebounceRef.current < 1500) return;
+
+      const rect = sectionRef.current.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+
+      // Lock when carousel reaches the center of the viewport (no snap, smooth positioning)
+      // This allows the carousel to smoothly scroll into the center and lock there
+      if (rect.top <= viewportCenter && rect.top > -viewportCenter) {
+        lockScroll();
+        lockDebounceRef.current = now;
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartYRef.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!isLockedRef.current) return;
+      const now = Date.now();
+      if (now - lastSwipeTimeRef.current < 500) return;
+      const delta = touchStartYRef.current - e.changedTouches[0].clientY;
+      if (Math.abs(delta) < 30) return;
+      lastSwipeTimeRef.current = now;
+
+      if (delta > 0) {
+        if (stepRef.current < steps.length - 1) {
+          const next = stepRef.current + 1;
+          stepRef.current = next;
+          setCurrentStep(next);
+        } else {
+          unlockScroll();
+        }
+      } else {
+        if (stepRef.current > 0) {
+          const prev = stepRef.current - 1;
+          stepRef.current = prev;
+          setCurrentStep(prev);
+        } else {
+          unlockScroll();
+        }
+      }
+    };
+
+    window.addEventListener('scroll', checkAndLock, { passive: true });
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      if (isLockedRef.current) {
+        isLockedRef.current = false;
+        const scrollY = parseInt(document.body.dataset.lockScrollY || '0');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+        delete document.body.dataset.lockScrollY;
+      }
+      window.removeEventListener('scroll', checkAndLock);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, steps.length]);
 
   const handlePrev = () => {
     setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
@@ -213,7 +327,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
   };
 
   return (
-    <div className="relative w-full pt-12 pb-48">
+    <div ref={sectionRef} className="relative w-full pt-12 pb-48">
         <div className="mx-auto relative z-10">
 
 
@@ -418,46 +532,6 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
         </div>
       ) : null}
 
-      {/* Navigation Controls - Below Image for mobile only */}
-      <div className="flex md:hidden items-center justify-center gap-4 mb-6">
-        {/* Left Arrow */}
-        <button
-          onClick={handlePrev}
-          data-testid="button-prev-step-card-mobile"
-          className="p-2 text-gray-600 dark:text-zinc-400 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 rounded-full"
-          aria-label={t('common.prevStep')}
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-
-        {/* Dots */}
-        <div className="flex gap-2">
-          {steps.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentStep(i)}
-              data-testid={`dot-step-card-mobile-${i}`}
-              className={`rounded-full transition-all duration-300 ${
-                i === currentStep
-                  ? 'bg-blue-500 w-8 h-3'
-                  : 'bg-blue-500/50 hover:bg-blue-500/70 w-3 h-3'
-              }`}
-              aria-label={t('common.goToStep', { number: i + 1 })}
-            />
-          ))}
-        </div>
-
-        {/* Right Arrow */}
-        <button
-          onClick={handleNext}
-          data-testid="button-next-step-card-mobile"
-          className="p-2 text-gray-600 dark:text-zinc-400 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 rounded-full"
-          aria-label={t('common.nextStep')}
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-      </div>
-
       <motion.div
         animate={{ 
           height: isActive ? "auto" : 0,
@@ -486,6 +560,29 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
 
           </div>
         </div>
+
+        {/* Mobile: progress dots */}
+        {isMobile && (
+          <div className="flex flex-col items-center gap-3 -mt-8">
+            <div className="flex gap-2">
+              {steps.map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === currentStep ? 'bg-blue-500 w-8 h-3' : 'bg-blue-500/40 w-3 h-3'
+                  }`}
+                />
+              ))}
+            </div>
+            <motion.p
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-zinc-500 text-xs"
+            >
+              scroll to continue ↓
+            </motion.p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -99,11 +99,7 @@ export function Navbar() {
         ? pathWithoutLang || "/"
         : `/${lang}${pathWithoutLang === "/" ? "" : pathWithoutLang}`;
 
-    if (lang === "en") {
-      localStorage.removeItem("leadawaker_lang");
-    } else {
-      localStorage.setItem("leadawaker_lang", lang);
-    }
+    localStorage.setItem("leadawaker_lang", lang);
 
     i18n.changeLanguage(lang);
     setLocation(newPath);

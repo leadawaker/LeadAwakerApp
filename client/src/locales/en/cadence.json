@@ -1,0 +1,16 @@
+{
+  "title": "Cadence",
+  "loading": "Loading…",
+  "empty": "No contacts due today.",
+  "dailyGoal": "/ {{goal}} today",
+  "overdue": "Overdue",
+  "step": "Step {{n}}",
+  "logCall": "Log Call",
+  "logEmail": "Log Email",
+  "logWhatsApp": "Log WhatsApp",
+  "done": "Done",
+  "skip": "Skip",
+  "addToCadence": "Add to Cadence",
+  "confirm": "Confirm",
+  "notesPlaceholder": "Add notes (optional)…"
+}

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, CalendarDays, Check, ClipboardList, Columns3, Filter, FolderOpen, Gauge, Layers, Plus, Settings, Tag } from "lucide-react";
+import { ArrowUpDown, CalendarDays, Check, ClipboardList, Columns3, Filter, FolderOpen, Gauge, Layers, Plus, Settings, Tag, Trash2 } from "lucide-react";
 import { usePersistedState } from "@/hooks/usePersistedState";
 
 import { SearchPill } from "@/components/ui/search-pill";
@@ -13,7 +13,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTasks, useCreateTask, useTaskCategories } from "../api/tasksApi";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useTasks, useCreateTask, useTaskCategories, useDeleteTask } from "../api/tasksApi";
 import TasksKanbanView from "../components/TasksKanbanView";
 import TasksTableView from "../components/TasksTableView";
 import TasksInlineTable from "../components/TasksInlineTable";
@@ -146,6 +154,7 @@ export default function TasksPage() {
   const { data: rawTasks } = useTasks();
   const tasks = (rawTasks ?? []) as Task[];
   const createMutation = useCreateTask();
+  const deleteMutation = useDeleteTask();
   const isMobile = useIsMobile(768);
   const { data: categories = [] } = useTaskCategories();
   const ganttToolbarRef = useRef<HTMLDivElement>(null);
@@ -244,6 +253,9 @@ export default function TasksPage() {
 
   // Desktop detail panel state (for table views)
   const [desktopSelectedTaskId, setDesktopSelectedTaskId] = useState<number | null>(null);
+
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // ── Per-view filter reload (each view keeps its own filters) ────────
   const prevViewRef = useRef(viewMode);
@@ -458,9 +470,32 @@ export default function TasksPage() {
     } catch { /* mutation error handled by TanStack */ }
   }, [isMobile, createMutation, t]);
 
+  const handleDeleteSelected = useCallback(async () => {
+    const ids = Array.from(tableSelectedIds);
+    if (ids.length === 0) return;
+    try {
+      await Promise.all(ids.map((id) => deleteMutation.mutateAsync(id)));
+      setTableSelectedIds(new Set());
+      setDeleteDialogOpen(false);
+    } catch { /* mutation error handled by TanStack */ }
+  }, [tableSelectedIds, deleteMutation]);
+
   // ── Toolbar ─────────────────────────────────────────────────────────
   const toolbarButtons = (
     <>
+      {/* 0. Delete (table view only) */}
+      {!isMobile && viewMode === "table" && tableSelectedIds.size > 0 && (
+        <button
+          onClick={() => setDeleteDialogOpen(true)}
+          className={cn(xBase, "md:hover:max-w-[100px]", "border-red-500/40 text-red-600 hover:text-red-700")}
+          title={`Delete ${tableSelectedIds.size} task${tableSelectedIds.size !== 1 ? "s" : ""}`}
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 className="h-4 w-4 shrink-0" />
+          <span className={cn(xSpanVisible, "!opacity-100")}>{tableSelectedIds.size} delete</span>
+        </button>
+      )}
+
       {/* 1. Add */}
       <button onClick={handleCreate} className={cn(xBase, "md:hover:max-w-[90px]", xDefault)} title={t("create.title")}>
         <Plus className="h-4 w-4 shrink-0" />
@@ -920,6 +955,26 @@ export default function TasksPage() {
           }}
         />
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Delete {tableSelectedIds.size} task{tableSelectedIds.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. The selected task{tableSelectedIds.size !== 1 ? "s will" : " will"} be permanently deleted.
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end pt-4">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSelected}
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </CrmShell>
     </TagVisibilityContext.Provider>
   );

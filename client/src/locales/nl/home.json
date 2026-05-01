@@ -119,6 +119,7 @@
     "hero": {
       "sittingOn": "Je laat liggen",
       "recoverableRevenue": "aan herstelbare omzet",
+      "recoverableProfit": "aan herstelbare winst",
       "narrative": "Van {{total}} leads zullen ~{{replied}} reageren. ~{{book}} boeken een call. ~{{buy}} sluiten een deal.",
       "spentRoi": "Je betaalde {{spent}} · ROI {{roi}}",
       "showTimeline": "Toon tijdlijn ›",
@@ -154,7 +155,8 @@
     "cta": {
       "subtitle": "Zin om samen jouw echte cijfers door te nemen?",
       "label": "Laten we even chatten",
-      "waMessage": "Hey Gabriel! Ik heb net jouw calculator gebruikt: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare omzet. Hoe kunnen we dat terughalen?"
+      "waMessage": "Hey Gabriel! Ik heb net jouw calculator gebruikt: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare omzet. Hoe kunnen we dat terughalen?",
+      "waMessageProfit": "Hey Gabriel! Ik heb net jouw calculator gebruikt: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare winst. Hoe kunnen we dat terughalen?"
     },
     "share": {
       "label": "Delen",

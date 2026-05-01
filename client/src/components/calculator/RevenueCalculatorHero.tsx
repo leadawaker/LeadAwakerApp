@@ -13,11 +13,12 @@ interface Props {
   showAdvanced: boolean;
   accentColor: string;
   chartNode: React.ReactNode;
+  profitMode: boolean;
 }
 
 export function RevenueCalculatorHero({
   selectedRevenue, formatCurrency, result, effectiveLeads,
-  totalAdSpend, roi, showChart, showAdvanced, accentColor, chartNode,
+  totalAdSpend, roi, showChart, showAdvanced, accentColor, chartNode, profitMode,
 }: Props) {
   const { t } = useTranslation("home");
   const centered = !showAdvanced;
@@ -45,7 +46,7 @@ export function RevenueCalculatorHero({
       >
         {formatCurrency(selectedRevenue)}
       </div>
-      <p className={`text-base text-muted-foreground mb-6${centered ? " text-center" : ""}`}>{t("calculator.hero.recoverableRevenue")}</p>
+      <p className={`text-base text-muted-foreground mb-6${centered ? " text-center" : ""}`}>{t(profitMode ? "calculator.hero.recoverableProfit" : "calculator.hero.recoverableRevenue")}</p>
 
       <div className="flex flex-col gap-1 mb-4">
         {stats.map(({ key, label, value, prefix, accent, pct }) => (

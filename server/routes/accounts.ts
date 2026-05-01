@@ -479,11 +479,16 @@ export function registerAccountsRoutes(app: Express): void {
 
     const { interactions } = await storage.getInteractionsByProspectId(prospectId, 10);
 
+    // Load style/format overrides from Prompt_Library (allows editing in UI)
+    const allPrompts = await storage.getPrompts();
+    const styleOverride = allPrompts.find(p => p.useCase === "outreach_style" && p.name === style && p.status === "active")?.promptText ?? undefined;
+    const formatOverride = allPrompts.find(p => p.useCase === "outreach_format" && p.name === format && p.status === "active")?.promptText ?? undefined;
+
     const prompt = buildOutreachPrompt(prospect, style, format, language, interactions.map(i => ({
       content: i.content || "",
       direction: i.direction || "outbound",
       sentAt: i.sentAt,
-    })), { selectedOffer: offer, selectedContact: contact, customInstructions, templateBody });
+    })), { selectedOffer: offer, selectedContact: contact, customInstructions, templateBody, styleOverride, formatOverride });
 
     const { execFile } = await import("child_process");
     const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
@@ -570,7 +575,6 @@ export function registerAccountsRoutes(app: Express): void {
     const summary = prospect.aiSummary ? `\nCompany website brief: ${prospect.aiSummary}` : "";
     const pageSummaries = prospect.pageSummaries ? `\nWebsite research: ${String(prospect.pageSummaries).slice(0, 1200)}` : "";
     const companySummary = prospect.companySummary ? `\nLinkedIn company summary: ${prospect.companySummary}` : "";
-    const companyServices = prospect.companyServices ? `\nCompany services/products: ${prospect.companyServices}` : "";
     const personBrief = prospect.personBrief ? `\nPrimary contact: ${prospect.personBrief}` : "";
     const contact2Brief = prospect.contact2PersonBrief ? `\nSecondary contact: ${prospect.contact2PersonBrief}` : "";
     const numToGenerate = count ?? (existingOffers.length === 0 ? 5 : 1);
@@ -589,7 +593,7 @@ How Lead Awaker works:
 
 Ideal prospect signals: high-ticket sales (solar, insurance, mortgages, real estate, legal, dental, home services, automotive), existing sales team, old lead lists from past advertising, and a clear offer that closes in a phone call or meeting.
 
-Company being researched: ${companyName}${niche}${summary}${pageSummaries}${companySummary}${companyServices}${personBrief}${contact2Brief}${existingBlock}
+Company being researched: ${companyName}${niche}${summary}${pageSummaries}${companySummary}${personBrief}${contact2Brief}${existingBlock}
 
 Generate exactly ${numToGenerate} NEW and DISTINCT offer idea${numToGenerate > 1 ? "s" : ""} for how Lead Awaker could partner with ${companyName}. Each idea should:
 - Name a specific problem or opportunity at this company (dead leads, missed follow-ups, after-hours drop-off, slow response times, etc.)

@@ -536,6 +536,10 @@ export default function TasksInlineTable({
     const taskId = task.id;
     const idx = taskIndexMap.get(taskId) ?? -1;
 
+    // Don't trigger selection if clicking on an editable cell or the checkbox
+    const target = e.target as HTMLElement;
+    if (target.closest("input, select, textarea")) return;
+
     if (e.shiftKey && lastClickedIndexRef.current >= 0) {
       const lo = Math.min(lastClickedIndexRef.current, idx);
       const hi = Math.max(lastClickedIndexRef.current, idx);
@@ -543,16 +547,12 @@ export default function TasksInlineTable({
       const next = new Set(selectedIds);
       rangeIds.forEach((id) => next.add(id));
       onSelectionChange(next);
-      if (next.size === 1) onSelectTask(Array.from(next)[0]);
-    } else if (e.ctrlKey || e.metaKey) {
+    } else {
+      // Any click toggles the row selection
       const next = new Set(selectedIds);
       if (next.has(taskId)) next.delete(taskId); else next.add(taskId);
       onSelectionChange(next);
       if (next.size === 1) onSelectTask(Array.from(next)[0]);
-      lastClickedIndexRef.current = idx;
-    } else {
-      onSelectionChange(new Set([taskId]));
-      onSelectTask(taskId);
       lastClickedIndexRef.current = idx;
     }
   }, [taskIndexMap, taskOnlyItems, onSelectTask, onSelectionChange, selectedIds]);

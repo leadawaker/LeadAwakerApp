@@ -30,6 +30,7 @@ import enConversations from "./locales/en/conversations.json";
 import enBilling from "./locales/en/billing.json";
 import enAccounts from "./locales/en/accounts.json";
 import enProspects from "./locales/en/prospects.json";
+import enCadence from "./locales/en/cadence.json";
 import enTasks from "./locales/en/tasks.json";
 import enAutomation from "./locales/en/automation.json";
 import enPrompts from "./locales/en/prompts.json";
@@ -63,6 +64,7 @@ import ptConversations from "./locales/pt/conversations.json";
 import ptBilling from "./locales/pt/billing.json";
 import ptAccounts from "./locales/pt/accounts.json";
 import ptProspects from "./locales/pt/prospects.json";
+import ptCadence from "./locales/pt/cadence.json";
 import ptTasks from "./locales/pt/tasks.json";
 import ptAutomation from "./locales/pt/automation.json";
 import ptPrompts from "./locales/pt/prompts.json";
@@ -96,6 +98,7 @@ import nlConversations from "./locales/nl/conversations.json";
 import nlBilling from "./locales/nl/billing.json";
 import nlAccounts from "./locales/nl/accounts.json";
 import nlProspects from "./locales/nl/prospects.json";
+import nlCadence from "./locales/nl/cadence.json";
 import nlTasks from "./locales/nl/tasks.json";
 import nlAutomation from "./locales/nl/automation.json";
 import nlPrompts from "./locales/nl/prompts.json";
@@ -130,6 +133,7 @@ const resources = {
     billing: enBilling,
     accounts: enAccounts,
     prospects: enProspects,
+    cadence: enCadence,
     tasks: enTasks,
     automation: enAutomation,
     prompts: enPrompts,
@@ -163,6 +167,7 @@ const resources = {
     billing: ptBilling,
     accounts: ptAccounts,
     prospects: ptProspects,
+    cadence: ptCadence,
     tasks: ptTasks,
     automation: ptAutomation,
     prompts: ptPrompts,
@@ -196,6 +201,7 @@ const resources = {
     billing: nlBilling,
     accounts: nlAccounts,
     prospects: nlProspects,
+    cadence: nlCadence,
     tasks: nlTasks,
     automation: nlAutomation,
     prompts: nlPrompts,

@@ -128,7 +128,9 @@
     "automations": "Automacoes",
     "automationsDesc": "Ver logs de automacao",
     "prompts": "Prompts",
-    "promptsDesc": "Biblioteca de prompts de IA"
+    "promptsDesc": "Biblioteca de prompts de IA",
+    "prospects": "Prospectos",
+    "prospectsDesc": "Gerenciar prospectos de outreach"
   },
   "gmail": {
     "title": "Integração de Email",

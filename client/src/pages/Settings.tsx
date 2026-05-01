@@ -1417,6 +1417,7 @@ function SettingsContent() {
     { id: "social",    labelKey: "hub.social",    descKey: "hub.socialDesc",    icon: MessageSquare, action: "section" },
     { id: "docs",      labelKey: "hub.docs",      descKey: "hub.docsDesc",      icon: BookOpen,    action: "navigate", target: "docs" },
     { id: "accounts",  labelKey: "hub.accounts",  descKey: "hub.accountsDesc",  icon: Building2,   action: "navigate", target: "accounts",      agencyOnly: true },
+    { id: "prospects", labelKey: "hub.prospects", descKey: "hub.prospectsDesc", icon: Users,       action: "navigate", target: "prospects",      agencyOnly: true },
     { id: "automations", labelKey: "hub.automations", descKey: "hub.automationsDesc", icon: Cpu,   action: "navigate", target: "automation-logs", agencyOnly: true },
     { id: "prompts",   labelKey: "hub.prompts",   descKey: "hub.promptsDesc",   icon: Bot,         action: "navigate", target: "prompt-library", agencyOnly: true },
   ];
@@ -1693,6 +1694,22 @@ function SettingsContent() {
                 </button>
               );
             })}
+            {/* Desktop-only navigation links */}
+            {!isMobile && isAgencyUser && (
+              <>
+                <div className="my-1 h-px bg-border/30" />
+                <button
+                  type="button"
+                  onClick={() => setLocation(`${routePrefix}/prospects`)}
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 bg-card hover:bg-card-hover text-muted-foreground hover:text-foreground"
+                  data-testid="settings-nav-prospects"
+                >
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span>{t("hub.prospects")}</span>
+                  <ExternalLink className="h-3.5 w-3.5 ml-auto shrink-0 opacity-50" />
+                </button>
+              </>
+            )}
           </div>
         </nav>
 

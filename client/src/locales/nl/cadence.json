@@ -1,0 +1,16 @@
+{
+  "title": "Cadentie",
+  "loading": "Laden…",
+  "empty": "Geen contacten gepland voor vandaag.",
+  "dailyGoal": "/ {{goal}} vandaag",
+  "overdue": "Achterstallig",
+  "step": "Stap {{n}}",
+  "logCall": "Gesprek loggen",
+  "logEmail": "E-mail loggen",
+  "logWhatsApp": "WhatsApp loggen",
+  "done": "Klaar",
+  "skip": "Overslaan",
+  "addToCadence": "Toevoegen aan cadentie",
+  "confirm": "Bevestigen",
+  "notesPlaceholder": "Notities toevoegen (optioneel)…"
+}

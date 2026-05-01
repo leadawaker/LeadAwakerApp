@@ -14,7 +14,7 @@ type FallingPatternProps = React.ComponentProps<'div'> & {
 };
 
 export function FallingPattern({
-	color = 'var(--primary)',
+	color = '#ffffff',
 	backgroundColor = 'var(--background)',
 	maskColor,
 	duration = 150,

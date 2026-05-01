@@ -64,7 +64,7 @@ import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, BRANDED_SIGNAT
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { createAndDispatchNotification } from "./notification-dispatcher";
-import { eq, count, and, gte, lte, lt, ne, isNotNull, ilike, type SQL, desc, sql } from "drizzle-orm";
+import { eq, count, and, gte, lte, lt, ne, isNotNull, ilike, not, inArray, type SQL, desc, sql } from "drizzle-orm";
 import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands, formatConversationHistory } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
@@ -420,6 +420,92 @@ export async function registerRoutes(
   app.get("/api/prospects/conversations", requireAuth, requireAgency, wrapAsync(async (req, res) => {
     const result = await storage.getProspectConversations();
     res.json(result);
+  }));
+
+  app.get("/api/prospects/cadence-queue", requireAgency, wrapAsync(async (_req, res) => {
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    const excluded = ["paused", "deal_closed", "converted"];
+    const rows = await db
+      .select()
+      .from(prospects)
+      .where(
+        and(
+          isNotNull(prospects.nextFollowUpDate),
+          lte(prospects.nextFollowUpDate, todayEnd),
+          not(inArray(prospects.outreachStatus, excluded))
+        )
+      )
+      .orderBy(prospects.nextFollowUpDate);
+    res.json(toDbKeysArray(rows as any, prospects));
+  }));
+
+  app.post("/api/prospects/:id/enter-cadence", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const now = new Date();
+    const updated = await storage.updateProspect(id, {
+      sequenceStep: 1,
+      sequenceStartedAt: now,
+      nextFollowUpDate: now,
+      nextChannel: "call",
+      outreachStatus: "contacted",
+    });
+    res.json(toDbKeys(updated as any, prospects));
+  }));
+
+  app.post("/api/prospects/:id/log-contact", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const { channel, notes } = req.body as { channel: string; notes?: string };
+    const prospect = await storage.getProspectById(id);
+    if (!prospect) return res.status(404).json({ message: "Prospect not found" });
+
+    const now = new Date();
+    const currentStep = prospect.sequenceStep ?? 1;
+    let nextStep = currentStep;
+    let nextFollowUpDate: Date | null = null;
+    let nextChannel: string | null = null;
+    let outreachStatus: string = prospect.outreachStatus ?? "contacted";
+
+    if (currentStep === 1) {
+      nextStep = 2;
+      nextFollowUpDate = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+      nextChannel = "call";
+    } else if (currentStep === 2) {
+      nextStep = 3;
+      nextFollowUpDate = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+      nextChannel = "email";
+    } else {
+      outreachStatus = "paused";
+    }
+
+    const [updated] = await Promise.all([
+      storage.updateProspect(id, {
+        followUpCount: (prospect.followUpCount ?? 0) + 1,
+        lastContactedAt: now,
+        sequenceStep: nextStep,
+        nextFollowUpDate: nextFollowUpDate ?? undefined,
+        nextChannel: nextChannel ?? undefined,
+        outreachStatus,
+      }),
+      storage.createInteraction({
+        prospectId: id,
+        type: channel,
+        direction: "outbound",
+        content: notes || null,
+        isManualFollowUp: true,
+      } as any),
+    ]);
+
+    res.json(toDbKeys(updated as any, prospects));
+  }));
+
+  app.post("/api/prospects/:id/skip-cadence", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    const updated = await storage.updateProspect(id, { nextFollowUpDate: tomorrow });
+    res.json(toDbKeys(updated as any, prospects));
   }));
 
   app.get("/api/prospects/:id/messages", requireAuth, requireAgency, wrapAsync(async (req, res) => {

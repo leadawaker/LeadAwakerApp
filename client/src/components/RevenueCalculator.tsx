@@ -134,6 +134,7 @@ export default function RevenueCalculator() {
                 showAdvanced={calc.showAdvanced}
                 accentColor={accentColor}
                 chartNode={chartNode}
+                profitMode={calc.profitMode}
               />
             </motion.div>
 
@@ -149,7 +150,7 @@ export default function RevenueCalculator() {
           >
             <p className="text-sm text-muted-foreground mb-4">{t("calculator.cta.subtitle")}</p>
             <a
-              href={`https://wa.me/5547740002162?text=${encodeURIComponent(t("calculator.cta.waMessage", { leads: calc.leads.toLocaleString(), dealValue: calc.formatCurrency(calc.dealValue), revenue: calc.formatCurrency(calc.selectedRevenue) }))}`}
+              href={`https://wa.me/554774002162?text=${encodeURIComponent(t(calc.profitMode ? "calculator.cta.waMessageProfit" : "calculator.cta.waMessage", { leads: calc.leads.toLocaleString(), dealValue: calc.formatCurrency(calc.dealValue), revenue: calc.formatCurrency(calc.selectedRevenue) }))}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-[#4F46E5] text-white font-heading font-bold text-base hover:bg-[#4338ca] transition-colors"

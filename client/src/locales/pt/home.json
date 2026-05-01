@@ -120,6 +120,7 @@
     "hero": {
       "sittingOn": "Você está deixando passar",
       "recoverableRevenue": "em receita recuperável",
+      "recoverableProfit": "em lucro recuperável",
       "narrative": "De {{total}} leads, ~{{replied}} vão responder. ~{{book}} vão marcar uma call. ~{{buy}} vão fechar.",
       "spentRoi": "Você gastou {{spent}} · ROI {{roi}}",
       "showTimeline": "Ver linha do tempo ›",
@@ -155,7 +156,8 @@
     "cta": {
       "subtitle": "Quer passar pelos seus números reais comigo?",
       "label": "Bora bater um papo rápido",
-      "waMessage": "Oi Gabriel! Acabei de usar a calculadora: tenho {{leads}} leads inativos a {{dealValue}} por negócio, o que representa {{revenue}} em receita recuperável. Como a gente desbloqueia isso?"
+      "waMessage": "Oi Gabriel! Acabei de usar a calculadora: tenho {{leads}} leads inativos a {{dealValue}} por negócio, o que representa {{revenue}} em receita recuperável. Como a gente desbloqueia isso?",
+      "waMessageProfit": "Oi Gabriel! Acabei de usar a calculadora: tenho {{leads}} leads inativos a {{dealValue}} por negócio, o que representa {{revenue}} em lucro recuperável. Como a gente desbloqueia isso?"
     },
     "share": {
       "label": "Compartilhar",

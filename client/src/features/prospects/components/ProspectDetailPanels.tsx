@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useRef, type ReactElement } from "react";
-import { Building2, Globe, MapPin, FileText, Lightbulb, CheckSquare, Mail, MessageSquare, Clock, Plus, Layers, ChevronLeft, Linkedin, RefreshCw, Loader2, Phone } from "lucide-react";
+import { useState, useEffect, useCallback, type ReactElement } from "react";
+import { Building2, Globe, MapPin, FileText, CheckSquare, Mail, MessageSquare, Clock, Plus, Layers, ChevronLeft, Linkedin, Phone } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { EnrichmentPanel } from "./EnrichmentPanel";
 import { MessageGenerator } from "./MessageGenerator";
-import { ProspectBusinessIdeas, type ProspectBusinessIdeasHandle } from "./ProspectBusinessIdeas";
 import { ProspectTasks } from "./ProspectTasks";
 import { EmailComposer } from "./EmailComposer";
 import { WhatsAppComposer } from "./WhatsAppComposer";
@@ -39,7 +38,6 @@ export function ProspectDetailPanels({
   const { t } = useTranslation("prospects");
   const [emailOpen, setEmailOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
-  const ideasRef = useRef<ProspectBusinessIdeasHandle>(null);
 
   function readPanelCollapsed(key: string) {
     try { return localStorage.getItem(key) === "true"; } catch { return false; }
@@ -50,7 +48,6 @@ export function ProspectDetailPanels({
     onRefreshProspect?.();
   }, [onRefreshProspect]);
   const [col1Collapsed, setCol1Collapsed] = useState(() => readPanelCollapsed("panel-col1-collapsed"));
-  const [col2Collapsed, setCol2Collapsed] = useState(() => readPanelCollapsed("panel-col2-collapsed"));
   const [col3Collapsed, setCol3Collapsed] = useState(() => readPanelCollapsed("panel-col3-collapsed"));
 
   function togglePanel(key: string, val: boolean, setter: (v: boolean) => void) {
@@ -168,77 +165,7 @@ export function ProspectDetailPanels({
         </>}
       </div>
 
-      {/* Panel 2: Offer Ideas + Message Generator */}
-      <div className={cn("min-h-0 overflow-hidden bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg flex flex-col transition-all duration-200", col2Collapsed ? "w-8 shrink-0 flex-none" : "flex-1 min-w-0")}>
-        <div className={cn("shrink-0 border-b border-border/30 flex items-center", col2Collapsed ? "flex-col py-3 px-1 gap-2 border-b-0 h-full justify-start" : "pl-3 pr-2 pt-2.5 pb-2")}>
-          {col2Collapsed ? (
-            <>
-              <button onClick={() => togglePanel("panel-col2-collapsed", false, setCol2Collapsed)} className="text-muted-foreground/50 hover:text-foreground transition-colors p-1">
-                <ChevronLeft className="h-3.5 w-3.5 rotate-180" />
-              </button>
-              <span className="text-[11px] font-semibold text-foreground/40 tracking-wide" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>Proposal</span>
-            </>
-          ) : (
-            <>
-              <span className="text-[15px] font-semibold text-foreground/70 flex-1">Proposal</span>
-              <button onClick={() => togglePanel("panel-col2-collapsed", true, setCol2Collapsed)} className="text-muted-foreground/30 hover:text-muted-foreground transition-colors p-1">
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </button>
-            </>
-          )}
-        </div>
-        {!col2Collapsed && <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-6 scroll-fade-bottom">
-          <CollapsibleSection
-            id="p2-ideas"
-            title={t("sections.offerIdeas")}
-            icon={Lightbulb}
-            hasData={!!selectedProspect.offer_ideas}
-            hideDivider
-            trailing={
-              <>
-                <button
-                  onClick={() => ideasRef.current?.triggerRefresh()}
-                  className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  title="Regenerate offers"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => ideasRef.current?.triggerAdd()}
-                  className="h-6 px-2 rounded flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors text-[11px]"
-                  title="Add offer"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add
-                </button>
-              </>
-            }
-          >
-            <ProspectBusinessIdeas
-              ref={ideasRef}
-              offerIdeas={selectedProspect.offer_ideas}
-              compact
-              hideHeader
-              prospectId={pid}
-              onRefresh={onRefreshProspect}
-            />
-          </CollapsibleSection>
-          <div className="mt-2">
-            <MessageGenerator
-              key={selectedProspect.Id ?? selectedProspect.id}
-              prospectId={pid}
-              offerIdeas={offerIdeas}
-              contactName={selectedProspect.contact_name}
-              contact2Name={selectedProspect.contact2_name}
-              niche={selectedProspect.niche}
-              savedMessages={savedMessages}
-              onRefresh={onRefreshProspect}
-            />
-          </div>
-        </div>}
-      </div>
-
-      {/* Panel 3: Actions */}
+      {/* Panel 2: Channels */}
       <div className={cn("min-h-0 overflow-hidden bg-white/70 dark:bg-card/70 backdrop-blur-sm rounded-lg flex flex-col transition-all duration-200", col3Collapsed ? "w-8 shrink-0 flex-none" : "flex-1 min-w-0")}>
         <div className={cn("shrink-0 border-b border-border/30 flex items-center", col3Collapsed ? "flex-col py-3 px-1 gap-2 border-b-0 h-full justify-start" : "pl-3 pr-2 pt-2.5 pb-2")}>
           {col3Collapsed ? (
@@ -258,7 +185,17 @@ export function ProspectDetailPanels({
           )}
         </div>
         {!col3Collapsed && <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-6 scroll-fade-bottom">
-          <CollapsibleSection id="actions-tasks" title={t("sections.nextActions", "Next Actions")} icon={CheckSquare} hasData hideDivider>
+          <MessageGenerator
+            key={selectedProspect.Id ?? selectedProspect.id}
+            prospectId={pid}
+            offerIdeas={offerIdeas}
+            contactName={selectedProspect.contact_name}
+            contact2Name={selectedProspect.contact2_name}
+            niche={selectedProspect.niche}
+            savedMessages={savedMessages}
+            onRefresh={onRefreshProspect}
+          />
+          <CollapsibleSection id="actions-tasks" title={t("sections.nextActions", "Next Actions")} icon={CheckSquare} hasData>
             <ProspectTasks
               prospectCompanyName={selectedProspect.company || ""}
               accountsId={1}

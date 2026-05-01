@@ -91,7 +91,7 @@
   --bottombar-h: calc(64px + var(--safe-bottom));
 
   /* Stone Gray Design System — floating cards aesthetic */
-  --background: 0 0% 87%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
+  --background: 0 0% 88%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
   --foreground: 0 0% 12%; /* Near black — high contrast on stone gray */
   --bg-main: 0 0% 87%; /* Match background */
 

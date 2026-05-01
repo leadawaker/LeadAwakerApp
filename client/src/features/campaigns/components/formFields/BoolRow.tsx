@@ -16,8 +16,8 @@ export function BoolRow({
 }) {
   return (
     <div className="flex flex-col gap-0.5 py-2 border-b border-border/20 last:border-0">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 flex items-center gap-1">
-        {Icon && <Icon className="w-3 h-3" />}
+      <span className="text-[12px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+        {Icon && <Icon className="w-4 h-4 text-brand-indigo" />}
         {label}
       </span>
       {editChild ?? (

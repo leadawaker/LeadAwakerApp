@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Globe, Building2, Boxes, ClipboardCheck, Clock, Loader2, MapPin, Mail, Phone, X } from "lucide-react";
+import { Globe, Building2, ClipboardCheck, Loader2, MapPin, Mail, Phone, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { StructuredBrief } from "./StructuredBrief";
@@ -12,7 +12,7 @@ interface CompanyTabProps {
   loading?: boolean;
 }
 
-type SubTab = "summary" | "audit" | "services" | "history";
+type SubTab = "summary" | "audit";
 
 export function CompanyTab({ prospect, loading }: CompanyTabProps) {
   const { t } = useTranslation("prospects");
@@ -25,16 +25,10 @@ export function CompanyTab({ prospect, loading }: CompanyTabProps) {
 
   const companyName = prospect.company || prospect.name || "Company";
 
-  // New structured fields
   const summary = prospect.company_summary as string | undefined;
-  const services = prospect.company_services as string | undefined;
-  const history = prospect.company_history as string | undefined;
   const audit = prospect.audit_insights as Record<string, any> | undefined;
   const posts = prospect.company_top_post_data;
-
-  // Legacy fallback fields
   const legacyAiSummary = prospect.ai_summary as string | undefined;
-  const legacyPageSummaries = prospect.page_summaries as string | undefined;
 
   const hasAudit = !!(audit && (
     audit.strengths?.length ||
@@ -42,7 +36,7 @@ export function CompanyTab({ prospect, loading }: CompanyTabProps) {
     audit.gaps?.length ||
     audit.lead_awaker_fit
   ));
-  const hasAny = !!(summary || services || history || audit || posts || legacyAiSummary || legacyPageSummaries);
+  const hasAny = !!(summary || audit || posts || legacyAiSummary);
 
   if (!hasAny) {
     return (
@@ -59,8 +53,6 @@ export function CompanyTab({ prospect, loading }: CompanyTabProps) {
   const subTabs: Array<{ key: SubTab; label: string; icon: React.ElementType; enabled: boolean }> = [
     { key: "summary", label: t("companyTab.summary", "Summary"), icon: Building2, enabled: true },
     { key: "audit", label: t("companyTab.audit", "Audit"), icon: ClipboardCheck, enabled: hasAudit },
-    { key: "services", label: t("companyTab.services", "Services"), icon: Boxes, enabled: !!services },
-    { key: "history", label: t("companyTab.history", "History"), icon: Clock, enabled: !!history },
   ];
 
   const city = prospect.city as string | undefined;
@@ -151,17 +143,6 @@ export function CompanyTab({ prospect, loading }: CompanyTabProps) {
         <CompanyAuditSection insights={audit as any} />
       )}
 
-      {sub === "services" && (
-        services
-          ? <StructuredBrief text={services} />
-          : <EmptyHint text={t("companyTab.noServices", "No services data yet.")} />
-      )}
-
-      {sub === "history" && (
-        history
-          ? <StructuredBrief text={history} />
-          : <EmptyHint text={t("companyTab.noHistory", "No history data yet.")} />
-      )}
     </div>
   );
 }

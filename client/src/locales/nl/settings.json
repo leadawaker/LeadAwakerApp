@@ -128,7 +128,9 @@
     "automations": "Automatiseringen",
     "automationsDesc": "Automatiseringslogboeken bekijken",
     "prompts": "Prompts",
-    "promptsDesc": "AI-promptbibliotheek"
+    "promptsDesc": "AI-promptbibliotheek",
+    "prospects": "Prospects",
+    "prospectsDesc": "Outreach prospects beheren"
   },
   "gmail": {
     "title": "E-mailintegratie",

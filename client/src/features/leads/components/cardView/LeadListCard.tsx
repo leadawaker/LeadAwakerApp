@@ -2,19 +2,21 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Phone, Mail, MessageSquare, Building2, Tag as TagIcon, AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, Building2, Tag as TagIcon, Pencil, Trash2 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { resolveColor } from "@/features/tags/types";
 import { getLeadStatusAvatarColor as getStatusAvatarColor } from "@/lib/avatarUtils";
 
-import { PIPELINE_HEX, STATUS_COLORS } from "./constants";
+import { PIPELINE_HEX } from "./constants";
 import { getLeadId, getFullName, getScore, getStatus, getPhone } from "./leadUtils";
 import { formatRelativeTime } from "./formatUtils";
 import { ListScoreRing } from "./atoms";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
-const TRAY_WIDTH = 220; // Swipe-left action tray width in px (Feature #41)
+const TRAY_WIDTH = 220;
+// Scoring/sentiment tags are useful in the detail panel but add noise on compact cards
+const CARD_EXCLUDED_TAGS = new Set(["Positive Sentiment", "Negative Sentiment", "Coaching Interest", "Responded"]); // Swipe-left action tray width in px (Feature #41)
 
 export function LeadListCard({
   lead,
@@ -52,15 +54,12 @@ export function LeadListCard({
   const score       = getScore(lead);
   const phone       = getPhone(lead);
   const email       = lead.email || lead.Email || "";
-  const lastMsg     = getLastMessage(lead);
   const avatarColor = getStatusAvatarColor(status);
   const statusHex   = PIPELINE_HEX[status] || "#6B7280";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
-  const visibleTags = leadTags.slice(0, 3);
-  const statusColors = STATUS_COLORS[status] ?? { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-zinc-400", badge: "bg-zinc-100 text-zinc-600 border-zinc-200" };
+  const visibleTags = leadTags.filter(t => !CARD_EXCLUDED_TAGS.has(t.name)).slice(0, 3);
   const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
   const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
-  const partialPhone = phone ? (phone.length > 9 ? phone.slice(0, 6) + "…" + phone.slice(-3) : phone) : "";
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
 
@@ -366,7 +365,7 @@ export function LeadListCard({
                 </div>
               )}
               <div className={cn(
-                "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
+                "overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden",
                 showContactAlways
                   ? "max-h-12 opacity-100"
                   : "max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100"
@@ -410,52 +409,14 @@ export function LeadListCard({
 
       </div>
 
-      {/* ── Mobile-only footer: status badge + phone + campaign + last activity ── */}
+      {/* ── Mobile-only footer: campaign + last activity ── */}
       <div className="lg:hidden px-3 pb-3 pt-0 flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-            <span className={cn(
-              "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border shrink-0",
-              statusColors.badge
-            )}>
-              {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}
-            </span>
-            {isPastCall && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground border border-border/40 shrink-0">
-                Past
-              </span>
-            )}
-          </div>
-          {lastActivity && (
-            <span className="text-[11px] tabular-nums text-muted-foreground/60 shrink-0">
-              {formatRelativeTime(lastActivity, t)}
-            </span>
-          )}
-        </div>
-        {isPastCall && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onQuickChangeStatus?.(); }}
-            className="self-start inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-400/15 text-amber-600 dark:text-amber-400 border border-amber-400/30 hover:bg-amber-400/25 active:bg-amber-400/30 transition-colors"
-            data-testid="past-call-follow-up"
-          >
-            <AlertTriangle className="h-3 w-3" />
-            Follow Up?
-          </button>
-        )}
-        {(partialPhone || campaignName) && (
+        {campaignName && (
           <div className="flex items-center gap-3 text-[11px] text-muted-foreground/70">
-            {partialPhone && (
-              <span className="inline-flex items-center gap-1 shrink-0">
-                <Phone className="h-3 w-3 shrink-0" />
-                {partialPhone}
-              </span>
-            )}
-            {campaignName && (
-              <span className="inline-flex items-center gap-1 truncate">
-                <Building2 className="h-3 w-3 shrink-0" />
-                <span className="truncate">{campaignName}</span>
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1 truncate">
+              <Building2 className="h-3 w-3 shrink-0" />
+              <span className="truncate">{campaignName}</span>
+            </span>
           </div>
         )}
       </div>
@@ -465,7 +426,3 @@ export function LeadListCard({
   );
 }
 
-// ── Internal helper (not in leadUtils — reads raw lead fields) ─────────────────
-function getLastMessage(lead: Record<string, any>): string {
-  return lead.last_message || lead.lastMessage || lead.last_message_body || "";
-}

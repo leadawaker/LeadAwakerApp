@@ -4,6 +4,7 @@
     "campaigns": "Campagnes",
     "accounts": "Accounts",
     "prospects": "Prospects",
+    "cadence": "Cadentie",
     "leads": "Leads",
     "chats": "Chats",
     "calendar": "Kalender",
@@ -19,6 +20,7 @@
   },
   "sidebarSections": {
     "engage": "Betrekken",
+    "outreach": "Outreach",
     "admin": "Admin",
     "backend": "Backend",
     "agency": "Agentuur"

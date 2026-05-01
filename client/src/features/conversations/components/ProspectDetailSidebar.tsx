@@ -187,7 +187,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
           <div className="flex items-start gap-3">
             <EntityAvatar
               name={displayName}
-              imageUrl={logoUrl ?? undefined}
+              photoUrl={logoUrl ?? undefined}
               bgColor={avatarColor.bg}
               textColor={avatarColor.text}
               size={40}

@@ -119,6 +119,7 @@
     "hero": {
       "sittingOn": "You're sitting on",
       "recoverableRevenue": "in recoverable revenue",
+      "recoverableProfit": "in recoverable profit",
       "narrative": "Out of {{total}} leads, ~{{replied}} will reply. ~{{book}} will book a call. ~{{buy}} will buy.",
       "spentRoi": "You spent {{spent}} · ROI {{roi}}",
       "showTimeline": "Show timeline ›",
@@ -154,7 +155,8 @@
     "cta": {
       "subtitle": "Want to walk through your real numbers together?",
       "label": "Let's have a quick chat",
-      "waMessage": "Hey Gabriel! I just ran your revenue calculator: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable revenue. How can we access it?"
+      "waMessage": "Hey Gabriel! I just ran your revenue calculator: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable revenue. How can we access it?",
+      "waMessageProfit": "Hey Gabriel! I just ran your revenue calculator: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable profit. How can we access it?"
     },
     "share": {
       "label": "Share",

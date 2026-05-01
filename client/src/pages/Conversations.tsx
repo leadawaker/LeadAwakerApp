@@ -11,6 +11,7 @@ import { useListPanelState } from "@/hooks/useListPanelState";
 import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useCampaigns } from "@/hooks/useApiData";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Plus, Settings, Zap, Cpu } from "lucide-react";
@@ -436,11 +437,14 @@ export default function ConversationsPage() {
   const isSupport = false;
   const isProspects = tab === "prospects";
 
+  const isMobile = useIsMobile();
+
   // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
   // Chat panel tolerates narrower widths than detail panels, so auto-compact kicks in later.
   const { ref: chatPanelAreaRef, narrow: chatPanelNarrow } = useCompactPanelState(false, { activateBelow: 720, deactivateAbove: 960 });
   const { state: chatsListPanelState } = useListPanelState();
-  const isChatsListCompact = chatsListPanelState === "compact" || (chatsListPanelState === "full" && chatPanelNarrow);
+  // On mobile, always show the full card list (never the collapsed icon rail).
+  const isChatsListCompact = !isMobile && (chatsListPanelState === "compact" || (chatsListPanelState === "full" && chatPanelNarrow));
   const isChatsListHidden = chatsListPanelState === "hidden";
 
   return (

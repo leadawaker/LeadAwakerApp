@@ -1,0 +1,4 @@
+ALTER TABLE p2mxx34fvbf3ll6."Prospects"
+  ADD COLUMN IF NOT EXISTS sequence_step INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS sequence_started_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS next_channel TEXT;

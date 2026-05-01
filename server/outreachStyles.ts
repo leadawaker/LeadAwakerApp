@@ -58,7 +58,7 @@ export const FORMAT_PRESETS = [
     key: "cold_call",
     maxLength: 0,
     instruction:
-      "Generate 3-5 cold call talking point anchors. Each anchor is a short hook (1-2 sentences) the caller can use to open or pivot the conversation. Format as a numbered list. Focus on pain points, recent company activity, and mutual value.",
+      "Generate a cold call opening script following this exact structure: (1) Opening line: 'Our clients are [qualifying adjective] [their specific niche] who face one of these challenges:' — use the prospect context to name their niche precisely. (2) List 2-3 problems with their consequence, 1-2 sentences each — make them feel specific and real to that niche. (3) Pattern interrupt closer: 'I have a feeling you will tell me you have the opposite problem; [exaggerated opposite problem].' — make it self-deprecating and slightly absurd. The goal is to make the prospect laugh or nod, not to pitch.",
   },
 ];
 
@@ -76,7 +76,7 @@ export function buildOutreachPrompt(
   formatKey: string,
   language: string = "en",
   interactions?: Array<{ content: string; direction: string; sentAt: string | Date | null }>,
-  options?: { selectedOffer?: string; selectedContact?: "1" | "2" | "generic" | "company"; customInstructions?: string; templateBody?: string }
+  options?: { selectedOffer?: string; selectedContact?: "1" | "2" | "generic" | "company"; customInstructions?: string; templateBody?: string; styleOverride?: string; formatOverride?: string }
 ): string {
   const style = STYLE_PRESETS.find((s) => s.key === styleKey);
   const format = FORMAT_PRESETS.find((f) => f.key === formatKey);
@@ -153,11 +153,11 @@ export function buildOutreachPrompt(
 
   const contextBlock = contextLines.join("\n");
 
-  // Section 2: Style instruction
-  const styleBlock = style.instruction;
+  // Section 2: Style instruction (DB override takes precedence)
+  const styleBlock = options?.styleOverride ?? style.instruction;
 
-  // Section 3: Format instruction
-  let formatBlock = format.instruction;
+  // Section 3: Format instruction (DB override takes precedence)
+  let formatBlock = options?.formatOverride ?? format.instruction;
   if (format.maxLength > 0) {
     formatBlock += ` Keep under ${format.maxLength} characters.`;
   }

@@ -19,8 +19,6 @@ export async function generateOfferIdeas(prospectId: number): Promise<{
       niche: prospects.niche,
       company: prospects.company,
       companySummary: prospects.companySummary,
-      companyServices: prospects.companyServices,
-      companyHistory: prospects.companyHistory,
       contactName: prospects.contactName,
       contactRole: prospects.contactRole,
       contact2Name: prospects.contact2Name,
@@ -57,13 +55,7 @@ export async function generateOfferIdeas(prospectId: number): Promise<{
 Niche: ${prospect.niche || "unknown"}
 
 Company summary:
-${(prospect.companySummary || "(not available)").slice(0, 800)}
-
-Services offered:
-${prospect.companyServices || "(not available)"}
-
-Company history:
-${prospect.companyHistory || "(not available)"}${contactsBlock}
+${(prospect.companySummary || "(not available)").slice(0, 1000)}${contactsBlock}
 
 Generate 5 campaign ideas Gabriel could pitch to this company. Each idea should be:
 - Specific to THIS company's services and market (not generic solar/legal/renovation advice)

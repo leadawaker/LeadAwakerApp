@@ -1,0 +1,16 @@
+{
+  "title": "Cadência",
+  "loading": "Carregando…",
+  "empty": "Nenhum contato agendado para hoje.",
+  "dailyGoal": "/ {{goal}} hoje",
+  "overdue": "Atrasado",
+  "step": "Passo {{n}}",
+  "logCall": "Registrar Ligação",
+  "logEmail": "Registrar E-mail",
+  "logWhatsApp": "Registrar WhatsApp",
+  "done": "Concluído",
+  "skip": "Pular",
+  "addToCadence": "Adicionar à cadência",
+  "confirm": "Confirmar",
+  "notesPlaceholder": "Adicionar notas (opcional)…"
+}

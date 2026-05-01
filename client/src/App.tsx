@@ -167,14 +167,14 @@ function Router() {
   useEffect(() => {
     if (location !== "/") return;
 
-    // 1️⃣ Stored preference
+    // 1️⃣ Stored preference (explicit user choice, including "en")
     const storedLang = getStoredLang();
-    if (storedLang && storedLang !== "en") {
-      setLocation(`/${storedLang}`);
+    if (storedLang) {
+      if (storedLang !== "en") setLocation(`/${storedLang}`);
       return;
     }
 
-    // 2️⃣ Browser language (first visit)
+    // 2️⃣ Browser language (first visit, no stored preference yet)
     const browserLang = getBrowserLang();
     if (browserLang && browserLang !== "en") {
       storeLang(browserLang);

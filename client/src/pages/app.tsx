@@ -11,9 +11,11 @@ import { apiFetch } from "@/lib/apiUtils";
 import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
 import ConversationsPage from "@/pages/Conversations";
 import LeadDetailPage from "@/pages/LeadDetail";
+import ProspectDetailPage from "@/pages/ProspectDetail";
 import AppCampaigns from "@/pages/AppCampaigns";
 import AppAccounts from "@/pages/AppAccounts";
 import AppProspects from "@/pages/AppProspects";
+import AppCadence from "@/pages/AppCadence";
 import CalendarPage from "@/pages/Calendar";
 import AutomationLogsPage from "@/pages/AutomationLogs";
 // UsersPage removed — user management now lives in Settings > Team tab
@@ -97,8 +99,12 @@ export default function AppArea() {
           <Route path="/agency/accounts">
             <AgencyOnly prefix="/agency"><AppAccounts /></AgencyOnly>
           </Route>
+          <Route path="/agency/prospects/:id" component={ProspectDetailPage} />
           <Route path="/agency/prospects">
             <AgencyOnly prefix="/agency"><AppProspects /></AgencyOnly>
+          </Route>
+          <Route path="/agency/cadence">
+            <AgencyOnly prefix="/agency"><AppCadence /></AgencyOnly>
           </Route>
           <Route path="/agency/users">
             <Redirect to="/agency/settings" />
@@ -150,6 +156,7 @@ export default function AppArea() {
           <Route path="/subaccount/accounts">
             <AgencyOnly prefix="/subaccount"><AppAccounts /></AgencyOnly>
           </Route>
+          <Route path="/subaccount/prospects/:id" component={ProspectDetailPage} />
           <Route path="/subaccount/prospects">
             <AgencyOnly prefix="/subaccount"><AppProspects /></AgencyOnly>
           </Route>

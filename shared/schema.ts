@@ -162,6 +162,10 @@ export const prospects = nocodb.table("Prospects", {
   contactMethod: text("contact_method"),
   photoUrl: text("photo_url"),
   companyLogoUrl: text("company_logo_url"),
+  // Cadence sequence tracking
+  sequenceStep: integer("sequence_step").default(1),
+  sequenceStartedAt: timestamp("sequence_started_at", { withTimezone: true }),
+  nextChannel: text("next_channel"),
 });
 
 export const insertProspectsSchema = createInsertSchema(prospects).omit({

@@ -21,6 +21,7 @@ import {
   X,
   Building2,
   UserSearch,
+  PhoneCall,
   ClipboardList,
   LogOut,
   Receipt,
@@ -208,6 +209,7 @@ export function RightSidebar({
       agencyOnly: true,
     },
     { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", agencyOnly: true },
+    { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", agencyOnly: true },
     {
       href: `${prefix}/automation-logs`,
       label: t("sidebar.automations"),
@@ -654,10 +656,32 @@ export function RightSidebar({
                 );
               })()}
 
+              {/* Section: Outreach (agency only) */}
+              {(() => {
+                const outreachItems = visibleNavItems.filter(it =>
+                  ["Prospects", "Cadence"].includes(it.labelKey)
+                );
+                if (outreachItems.length === 0) return null;
+                return (
+                  <div className="mt-4">
+                    {collapsed ? (
+                      <div className="mx-auto w-5 border-t border-border/30 my-3" />
+                    ) : (
+                      <div className="px-1 pt-1.5 pb-3">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground">
+                          {t("sidebarSections.outreach")}
+                        </span>
+                      </div>
+                    )}
+                    {outreachItems.map((it) => renderDesktopNavLink(it))}
+                  </div>
+                );
+              })()}
+
               {/* Section: Admin (agency only) + Billing */}
               {(() => {
                 const adminItems = visibleNavItems.filter(it =>
-                  ["Accounts", "Prospects", "Tasks", "Billing"].includes(it.labelKey)
+                  ["Accounts", "Tasks", "Billing"].includes(it.labelKey)
                 );
                 if (adminItems.length === 0) return null;
                 return (

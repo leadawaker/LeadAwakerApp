@@ -2,7 +2,7 @@ import { useEffect, type RefObject } from "react";
 
 interface Options {
   /** Scroll container (where the list/table scrolls). If null, scroll the first matching ancestor of the item element. */
-  containerRef?: RefObject<HTMLElement>;
+  containerRef?: RefObject<HTMLElement | null>;
   /** Data attribute selector for the selected item. Receives the id. Default: data-[attr]="{id}". */
   getSelector: (id: string | number) => string;
   /** The id of the currently-focused single selection. null/undefined = no-op. */

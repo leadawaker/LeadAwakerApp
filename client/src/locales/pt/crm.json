@@ -4,6 +4,7 @@
     "campaigns": "Campanhas",
     "accounts": "Contas",
     "prospects": "Prospectos",
+    "cadence": "Cadência",
     "leads": "Leads",
     "chats": "Conversas",
     "calendar": "Calendário",
@@ -19,6 +20,7 @@
   },
   "sidebarSections": {
     "engage": "Engajar",
+    "outreach": "Prospecção",
     "admin": "Admin",
     "backend": "Backend",
     "agency": "Agência"

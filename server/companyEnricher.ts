@@ -171,15 +171,14 @@ Read the skill at /home/gabriel/.claude/skills/prospect/SKILL.md and follow the 
 3. DO NOT run the website scrape. Only use LinkedIn data (and Google Custom Search if gaps remain). Website scrape is a separate on-demand step.
 
 4. Populate with a single UPDATE SQL:
-   - company_summary (structured INDUSTRY/SIZE/MARKET/POSITIONING/SIGNALS/ACTIVITY labels, one fact per line)
-   - company_services (labeled categorized format; include products here too if the company sells them, since products was merged into services)
-   - company_history (FOUNDED/MILESTONES/EVOLUTION)
+   - company_summary (a single cohesive paragraph — 4 to 6 sentences — that covers: what the company does, their core services/products, their market/positioning, any notable history or milestones, and any recent signals from posts or activity. Write it as a concise analyst briefing, not bullet points.)
    - audit_insights (JSONB) structured audit with shape: {"strengths":[{"title","detail"}], "opportunities":[{"title","detail","quick_win":true|false}], "gaps":[{"title","detail"}], "lead_awaker_fit":{"fit_score":"high|medium|low","angle","pitch_hook"}, "generated_at":"<ISO>"}. Ground everything strictly in scraped content. Pass via psql as a JSON string (e.g. '{"strengths":[...]}'::jsonb).
    - company_top_post_data (JSONB array of up to 3 posts: [{title, date, reactions, url}], title = first 120 chars of text)
    - phone (company main line from LinkedIn /get-company-details response)
    - email (role-based address like info@company.nl from website scrape; leave NULL if website was skipped)
    - company_enrichment_status = 'enriched'
    - company_enriched_at = NOW()
+   - Do NOT write company_services or company_history — those fields are deprecated.
 
 5. DO NOT write to the \`notes\` column. It is human-only.
 

@@ -1,16 +1,14 @@
-import { useState, useMemo, useEffect, useRef, type ComponentType } from "react";
+import { useState, useEffect, useRef, type ComponentType } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Tag, Calendar, Zap, Users, BarChart2 } from "lucide-react";
+import { ChevronLeft, Calendar, Zap, Users, BarChart2 } from "lucide-react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
-import { useCampaignTags } from "../hooks/useCampaignTags";
 import { CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
-import { resolveColor } from "@/features/tags/types";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
-type TabId = "summary" | "config" | "tags";
+type TabId = "summary" | "config";
 
 interface MobileCampaignDetailPanelProps {
   campaign: Campaign | null;
@@ -199,87 +197,6 @@ function ConfigTab({ campaign }: { campaign: Campaign }) {
   );
 }
 
-/* ── Tags Tab ─────────────────────────────────────────────────────────────── */
-function TagsTab({ campaign }: { campaign: Campaign }) {
-  const { t } = useTranslation("campaigns");
-  const campaignId = campaign.id || (campaign as any).Id || 0;
-  const campaignName = String(campaign.name || "");
-
-  const { tags, tagCounts, loading, error } = useCampaignTags(campaignId, campaignName);
-
-  // Group tags by category — must be before any conditional returns (Rules of Hooks)
-  const grouped = useMemo(() => {
-    const map = new Map<string, typeof tags>();
-    tags.forEach((tag) => {
-      const cat = tag.category || "—";
-      if (!map.has(cat)) map.set(cat, []);
-      map.get(cat)!.push(tag);
-    });
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [tags]);
-
-  if (loading) {
-    return (
-      <div className="p-4 flex items-center justify-center py-16">
-        <div className="text-sm text-muted-foreground">{t("tags.loadingTags")}</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 flex items-center justify-center py-16">
-        <div className="text-sm text-destructive">{t("tags.failedToLoadTags")}</div>
-      </div>
-    );
-  }
-
-  if (tags.length === 0) {
-    return (
-      <div className="p-4 flex flex-col items-center justify-center py-16 text-center gap-3">
-        <Tag className="h-10 w-10 text-muted-foreground/30" />
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{t("tags.noTagsYet")}</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">{t("tags.createTagsDesc")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-4 space-y-4">
-      {grouped.map(([category, catTags]) => (
-        <div key={category}>
-          {category !== "—" && (
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2 px-1">
-              {category}
-            </p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {catTags.map((tag) => {
-              const hexColor = resolveColor(tag.color);
-              return (
-                <div
-                  key={tag.id}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium bg-muted text-foreground/80"
-                >
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: hexColor }}
-                  />
-                  {tag.name}
-                  {(tagCounts.get(tag.name) ?? 0) > 0 && (
-                    <span className="opacity-50 text-[11px]">({tagCounts.get(tag.name)})</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 /* ── Main Panel Component ─────────────────────────────────────────────────── */
 export function MobileCampaignDetailPanel({
@@ -313,7 +230,6 @@ export function MobileCampaignDetailPanel({
   const tabs: { id: TabId; label: string }[] = [
     { id: "summary", label: t("tabs.summary") },
     { id: "config",  label: t("tabs.configurations") },
-    { id: "tags",    label: t("tabs.tags") },
   ];
 
   if (!mounted) return null;
@@ -411,7 +327,6 @@ export function MobileCampaignDetailPanel({
               >
                 {activeTab === "summary" && <SummaryTab campaign={campaign} metrics={metrics} />}
                 {activeTab === "config"  && <ConfigTab campaign={campaign} />}
-                {activeTab === "tags"    && <TagsTab campaign={campaign} />}
               </motion.div>
             </AnimatePresence>
           </div>

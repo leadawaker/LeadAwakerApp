@@ -120,7 +120,7 @@ export default function Home() {
                     transition={{ delay: 1.5, duration: 0.4 }}
                   >
                     <FallingPattern
-                      color="rgba(255,255,255,1)"
+                      color="rgba(255,255,255,1.5)"
                       backgroundColor="transparent"
                       maskColor="#FEB800"
                       duration={120}
