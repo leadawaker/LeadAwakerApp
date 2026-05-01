@@ -272,7 +272,7 @@ export function RevenueCalculatorAdvanced({
                 {t("calculator.charts.paceValue", { count: dealsPerWeek })}
               </span>
             </div>
-            <BlueSlider min={1} max={10} step={1} value={dealsPerWeek} onChange={setDealsPerWeek} color={accentColor} />
+            <BlueSlider min={1} max={20} step={1} value={dealsPerWeek} onChange={setDealsPerWeek} color={accentColor} />
           </div>
         )}
       </div>
