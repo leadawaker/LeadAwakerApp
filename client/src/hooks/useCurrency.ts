@@ -66,8 +66,12 @@ export function useCurrency(ptLocale: boolean) {
   const [resolved, setResolved] = useState(() => !!localStorage.getItem(STORAGE_KEY) || ptLocale);
 
   useEffect(() => {
+    if (ptLocale) {
+      setCurrencyCode("BRL");
+      setResolved(true);
+      return;
+    }
     if (localStorage.getItem(STORAGE_KEY)) return;
-    if (ptLocale) { setResolved(true); return; }
     if (!countryResolved) return;
     const detected = COUNTRY_TO_CURRENCY[countryCode] ?? "EUR";
     setCurrencyCode(detected);

@@ -4,7 +4,7 @@
     "title": {
       "line1": "Stop met nieuwe leads kopen.",
       "highlight": "Maak wakker",
-      "line2": "van wat je al hebt."
+      "line2": "wat je al hebt."
     },
     "subtitle": {
       "line1": "Afspraken geboekt vanuit leads die je al hebt.",
@@ -63,11 +63,11 @@
     "leadsLabel": "Leads Waar Je Al Voor Betaald Hebt",
     "dealLabel": "Wat Elke Deal Waard Is",
     "costLabel": "Wat Je Betaalde Per Lead",
-    "closeRateLabel": "Sluitpercentage (aanpasbaar)",
+    "closeRateLabel": "Aangepaste sluitkans",
     "scenarios": {
-      "conservative": "Hele koude leads",
-      "expected": "Standaard koude leads",
-      "optimistic": "Lauwe leads",
+      "conservative": "Bevroren",
+      "expected": "Koud",
+      "optimistic": "Warm",
       "tablistLabel": "Kies een scenario"
     },
     "results": {
@@ -113,8 +113,25 @@
       "funnelAI": "AI-reactivatie",
       "funnelsFootnote": "* Handmatige follow-up sluit meestal 2-4% van dode leads omdat mensen follow-ups laten vallen. AI-reactivatie hangt af van je data en aanbod."
     },
+    "step1Label": "Stap 1 — Vul je cijfers in",
+    "step2Label": "Stap 2 — Zie wat er vastzit",
+    "step3Label": "Stap 3 — Haal het op",
+    "hero": {
+      "sittingOn": "Je laat liggen",
+      "recoverableRevenue": "aan herstelbare omzet",
+      "narrative": "Van {{total}} leads zullen ~{{replied}} reageren. ~{{book}} boeken een call. ~{{buy}} sluiten een deal.",
+      "spentRoi": "Je betaalde {{spent}} · ROI {{roi}}",
+      "showTimeline": "Toon tijdlijn ›",
+      "hideTimeline": "Verberg tijdlijn"
+    },
     "advanced": {
       "toggle": "Geavanceerd",
+      "basicMode": "Basis",
+      "advancedMode": "Geavanceerd",
+      "showAdvanced": "Geavanceerd ›",
+      "hideAdvanced": "Geavanceerd ↑",
+      "leadTemp": "Lead Temperatuur",
+      "currency": "Valuta",
       "on": "Aan",
       "off": "Uit",
       "showAs": "Toon cijfers als",
@@ -131,11 +148,13 @@
       "decayHint": "Een deel van je dode leads is onbereikbaar (gebounced, opt-outs, duplicaten). Stel bij voor een eerlijker bereikbare pool.",
       "decayLabel": "Aandeel onbereikbaar",
       "decayTooltip": "Typische marges: 3-8% voor verse databases (<6 maanden), 8-12% voor gemengd-dode databases (6-18 maanden, de meest voorkomende), 20-30% voor hele oude (2+ jaar). WhatsApp ligt vaak aan de lagere kant omdat telefoonnummers minder vaak wisselen dan e-mails.",
+      "timeline": "Break-even Tijdlijn",
       "paceHint": "Hoeveel gereactiveerde deals je team per week kan sluiten. Bepaalt de tijdlijn in de break-even grafiek."
     },
     "cta": {
       "subtitle": "Zin om samen jouw echte cijfers door te nemen?",
-      "label": "Plan een gesprek van 15 min"
+      "label": "Laten we even chatten",
+      "waMessage": "Hey Gabriel! Ik heb net jouw calculator gebruikt: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare omzet. Hoe kunnen we dat terughalen?"
     },
     "share": {
       "label": "Delen",

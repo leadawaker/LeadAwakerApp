@@ -64,11 +64,11 @@
     "leadsLabel": "Leads Que Você Já Pagou",
     "dealLabel": "Quanto Vale Cada Negócio",
     "costLabel": "Quanto Pagou Por Lead",
-    "closeRateLabel": "Taxa de fechamento (ajustável)",
+    "closeRateLabel": "Taxa de fechamento personalizada",
     "scenarios": {
-      "conservative": "Leads muito frios",
-      "expected": "Leads frios padrão",
-      "optimistic": "Leads mornos",
+      "conservative": "Muito frios",
+      "expected": "Frios",
+      "optimistic": "Mornos",
       "tablistLabel": "Escolha um cenário"
     },
     "results": {
@@ -114,8 +114,25 @@
       "funnelAI": "Reativação com IA",
       "funnelsFootnote": "* Follow-up manual geralmente fecha 2-4% de leads mortos porque humanos abandonam follow-ups. Reativação com IA depende dos seus dados e oferta."
     },
+    "step1Label": "Passo 1 — Configure seus números",
+    "step2Label": "Passo 2 — Veja o que está parado",
+    "step3Label": "Passo 3 — Recupere",
+    "hero": {
+      "sittingOn": "Você está deixando passar",
+      "recoverableRevenue": "em receita recuperável",
+      "narrative": "De {{total}} leads, ~{{replied}} vão responder. ~{{book}} vão marcar uma call. ~{{buy}} vão fechar.",
+      "spentRoi": "Você gastou {{spent}} · ROI {{roi}}",
+      "showTimeline": "Ver linha do tempo ›",
+      "hideTimeline": "Ocultar linha do tempo"
+    },
     "advanced": {
       "toggle": "Avançado",
+      "basicMode": "Básico",
+      "advancedMode": "Avançado",
+      "showAdvanced": "Avançado ›",
+      "hideAdvanced": "Avançado ↑",
+      "leadTemp": "Temperatura do lead",
+      "currency": "Moeda",
       "on": "Ligado",
       "off": "Desligado",
       "showAs": "Mostrar números como",
@@ -132,11 +149,13 @@
       "decayHint": "Parte dos seus leads mortos está inalcançável (bounces, opt-outs, duplicados). Ajuste para uma base realmente contatável.",
       "decayLabel": "Parcela inalcançável",
       "decayTooltip": "Faixas típicas: 3-8% para bases novas (<6 meses), 8-12% para bases mistas de leads mortos (6-18 meses, o caso mais comum), 20-30% para bases bem antigas (2+ anos). WhatsApp tende ao limite menor, já que números de telefone mudam menos que e-mails.",
+      "timeline": "Linha do Tempo Break-even",
       "paceHint": "Quantos negócios reativados seu time fecha por semana. Define a linha do tempo no gráfico de break-even."
     },
     "cta": {
       "subtitle": "Quer passar pelos seus números reais comigo?",
-      "label": "Agende um papo de 15 min"
+      "label": "Bora bater um papo rápido",
+      "waMessage": "Oi Gabriel! Acabei de usar a calculadora: tenho {{leads}} leads inativos a {{dealValue}} por negócio, o que representa {{revenue}} em receita recuperável. Como a gente desbloqueia isso?"
     },
     "share": {
       "label": "Compartilhar",

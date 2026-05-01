@@ -63,11 +63,11 @@
     "leadsLabel": "Leads You Already Paid For",
     "dealLabel": "What Each Deal Is Worth",
     "costLabel": "What You Paid Per Lead",
-    "closeRateLabel": "Close rate (adjustable)",
+    "closeRateLabel": "Custom close rate",
     "scenarios": {
-      "conservative": "Really cold leads",
-      "expected": "Standard cold leads",
-      "optimistic": "Lukewarm leads",
+      "conservative": "Frozen",
+      "expected": "Cold",
+      "optimistic": "Warm",
       "tablistLabel": "Pick a scenario"
     },
     "results": {
@@ -113,8 +113,25 @@
       "funnelAI": "AI reactivation",
       "funnelsFootnote": "* Manual follow-up typically closes 2-4% of dead leads since humans drop follow-ups. AI reactivation depends on your data and offer."
     },
+    "step1Label": "Step 1 — Set your numbers",
+    "step2Label": "Step 2 — See what you're sitting on",
+    "step3Label": "Step 3 — Recover it",
+    "hero": {
+      "sittingOn": "You're sitting on",
+      "recoverableRevenue": "in recoverable revenue",
+      "narrative": "Out of {{total}} leads, ~{{replied}} will reply. ~{{book}} will book a call. ~{{buy}} will buy.",
+      "spentRoi": "You spent {{spent}} · ROI {{roi}}",
+      "showTimeline": "Show timeline ›",
+      "hideTimeline": "Hide timeline"
+    },
     "advanced": {
       "toggle": "Advanced",
+      "basicMode": "Basic",
+      "advancedMode": "Advanced",
+      "showAdvanced": "Advanced ›",
+      "hideAdvanced": "Advanced ↑",
+      "leadTemp": "Lead Temperature",
+      "currency": "Currency",
       "on": "On",
       "off": "Off",
       "showAs": "Show numbers as",
@@ -131,11 +148,13 @@
       "decayHint": "Some of your dead leads are unreachable (bounced, opted-out, duplicates). Adjust for a more honest reachable pool.",
       "decayLabel": "Unreachable share",
       "decayTooltip": "Typical ranges: 3-8% for fresh databases (under 6 months old), 8-12% for mixed dead databases (6-18 months, the common case), 20-30% for very old ones (2+ years). WhatsApp reach tends toward the lower end since phone numbers change less than emails.",
+      "timeline": "Breakeven Timeline",
       "paceHint": "How many reactivated deals your team can close per week. Sets the timeline on the break-even chart."
     },
     "cta": {
       "subtitle": "Want to walk through your real numbers together?",
-      "label": "Book a 15-min chat"
+      "label": "Let's have a quick chat",
+      "waMessage": "Hey Gabriel! I just ran your revenue calculator: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable revenue. How can we access it?"
     },
     "share": {
       "label": "Share",
