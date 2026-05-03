@@ -427,6 +427,24 @@ export default function Home() {
       {/* Revenue Calculator */}
       <RevenueCalculator />
 
+      {/* Wave divider — Audit to Demo */}
+      <style>{`
+        .wave-separator { overflow: hidden; background: white; line-height: 0; position: relative; height: 100px; }
+        .wave-separator svg { position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; }
+        .wave-back  { animation: wave-drift-back  28s ease-in-out infinite alternate; }
+        .wave-front { animation: wave-drift-front 22s ease-in-out infinite alternate; }
+        @keyframes wave-drift-back  { 0% { transform: translateX(0); }    100% { transform: translateX(-50%); } }
+        @keyframes wave-drift-front { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+      `}</style>
+      <div className="wave-separator">
+        <svg className="wave-back" viewBox="0 0 2880 92" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,35 C320,92 640,0 960,46 C1280,92 1600,12 1920,52 C2240,92 2560,23 2880,46 L2880,92 L0,92 Z" fill="#ececf5"/>
+        </svg>
+        <svg className="wave-front" viewBox="0 0 2880 92" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,12 C360,92 720,0 1080,58 C1440,92 1800,6 2160,52 C2520,92 2700,23 2880,40 L2880,92 L0,92 Z" fill="#f7f7fb"/>
+        </svg>
+      </div>
+
       {/* Lead Awakening Demo */}
       <TryInSixtySeconds />
 

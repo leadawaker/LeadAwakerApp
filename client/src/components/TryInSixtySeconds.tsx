@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
@@ -66,21 +67,79 @@ function MockChatBubbles() {
   );
 }
 
+function HereIsHow() {
+  const [displayText, setDisplayText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+  const [done, setDone] = useState(false);
+  const indexRef = useRef(0);
+  const text = "Here is how";
+
+  useEffect(() => {
+    indexRef.current = 0;
+    setDisplayText("");
+    setDone(false);
+
+    const timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        setDisplayText(prev => {
+          const newIndex = prev.length;
+          if (newIndex >= text.length) {
+            clearInterval(interval);
+            setDone(true);
+            return prev;
+          }
+          return prev + text[newIndex];
+        });
+      }, 75);
+
+      return () => clearInterval(interval);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [text]);
+
+  useEffect(() => {
+    if (done) {
+      let count = 0;
+      const blink = setInterval(() => {
+        setShowCursor(v => !v);
+        if (++count > 6) { clearInterval(blink); setShowCursor(false); }
+      }, 400);
+      return () => clearInterval(blink);
+    } else {
+      const blink = setInterval(() => setShowCursor(v => !v), 530);
+      return () => clearInterval(blink);
+    }
+  }, [done]);
+
+  return (
+    <div style={{ padding: "20px 0 8px", display: "flex", justifyContent: "center" }}>
+      <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#5046e5" }}>
+        {displayText}
+        <span style={{ opacity: showCursor ? 1 : 0, transition: "opacity 0.05s", fontWeight: 300 }}>|</span>
+      </span>
+    </div>
+  );
+}
+
 export default function TryInSixtySeconds() {
   const { t } = useTranslation("home");
 
   return (
-    <section className="pb-48 pt-16 bg-[#F9FAFC] dark:bg-background">
+    <section className="bg-[#f7f7fb] dark:bg-background pb-48 pt-16">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center max-w-5xl mx-auto"
+          className="grid gap-12 lg:grid-cols-2 lg:gap-30 items-center max-w-5xl mx-auto"
         >
           {/* Left: copy + CTA */}
           <div className="text-center lg:text-left">
+            <div className="flex justify-center lg:justify-start mb-0">
+              <HereIsHow />
+            </div>
             <h2 className="font-bold text-4xl md:text-[47px] lg:text-[59px] leading-tight mb-4 text-foreground">
               {t("trySixty.title")}
             </h2>
@@ -107,7 +166,7 @@ export default function TryInSixtySeconds() {
             className="rounded-2xl bg-zinc-100 dark:bg-zinc-800 p-6 shadow-md"
           >
             {/* Phone-style header */}
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-white rounded-t-2xl -mx-6 -mt-6 px-6 pt-6">
               <div className="w-16 h-16 rounded-full bg-white ring-1 ring-zinc-200 dark:ring-zinc-700 flex items-center justify-center overflow-hidden">
                 <img
                   src="/6.%20Favicon.svg"
