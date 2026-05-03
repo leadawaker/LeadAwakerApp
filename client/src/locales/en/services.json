@@ -7,7 +7,7 @@
   "cases": {
     "solarPanel": {
       "title": "Solar Panel",
-      "heading": "Example -<colored>Solar Panel Installation</colored>",
+      "heading": "Example - <colored>Solar Panel Installation</colored>",
       "description": "Most solar quotes go cold because the buyer stalls on payback and roof orientation. Lead Awaker re-opens the thread, diagnoses the pain in euros, and books a roof-specific call where it matters.",
       "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Photo collection of roof and meter, subsidy eligibility checks, automated pre-survey questionnaires, reminders to reduce no-show calls, and post-call follow-ups with personalized next steps.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Calm technical consultant. Direct, enthusiastic, and keeps momentum toward a booked assessment.",
@@ -43,7 +43,7 @@
     },
     "gym": {
       "title": "Gym Membership",
-      "heading": "Example -<colored>Gym Membership</colored>",
+      "heading": "Example - <colored>Gym Membership</colored>",
       "description": "Most gym leads fade because motivation did, not because the gym was wrong. Lead Awaker re-opens the conversation, diagnoses why they stopped, and lines up a personal trainer plan that fits their life now.",
       "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Automated \"missed workout\" follow-ups, cancellation save sequences, reactivation offers triggered by time away, PT lead nurturing, and membership renewal reminders.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Motivational coach. High empathy, high energy, and keeps momentum toward a next step.",
@@ -75,7 +75,7 @@
     },
     "dental": {
       "title": "Dental Clinic",
-      "heading": "Example -<colored>Dental Clinic</colored>",
+      "heading": "Example - <colored>Dental Clinic</colored>",
       "description": "Dental clinics lose patients to missed 6-month checkups and unfinished treatment plans. Lead Awaker re-opens the thread, handles price concerns, books the hygiene slot, and reschedules in natural language when life shifts.",
       "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Reminders for overdue checkups, follow-ups on open treatment estimates (implants, Invisalign, whitening), insurance-reset prompts in January, post-visit review requests, and birthday whitening offers.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Warm front-desk coordinator. Reassuring, low-pressure, and focused on getting the patient on the calendar.",
@@ -111,7 +111,7 @@
     },
     "lawFirm": {
       "title": "Law Firm",
-      "heading": "Example -<colored>Law Firm</colored>",
+      "heading": "Example - <colored>Law Firm</colored>",
       "description": "Car finance refund leads stall when they can't find the paperwork. Lead Awaker reactivates the lead, explains the DSAR process in plain language, and hands a ready-to-review case to a clerk.",
       "additionalUseCases": "<strong>Additional use cases for this niche:</strong> DSAR completion reminders, \"30 working day\" status updates, auto-escalation to a clerk when documents arrive, and reactivation campaigns for leads that started but did not finish.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Compliance-first admin. Clear, process-led, and low-pressure.",
@@ -140,7 +140,7 @@
     },
     "coaching": {
       "title": "Coaching",
-      "heading": "Example -<colored>Career Transition Coaching</colored>",
+      "heading": "Example - <colored>Career Transition Coaching</colored>",
       "description": "Career-transition coaches lose leads at the \"am I ready to invest in myself\" moment. Lead Awaker re-opens the conversation months later, surfaces what's really stuck, and turns cold clarity-call signups into paid discovery calls.",
       "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Cohort or program waitlist nurturing, past-student referral asks, no-show follow-ups after discovery calls, re-engagement of leads who ghosted mid-application, and post-program upsell sequences.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Grounded, non-pushy mentor. Curious, reflective, and treats the lead's doubts as information, not objections.",

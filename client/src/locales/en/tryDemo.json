@@ -1,7 +1,7 @@
 {
-  "badge": "Live AI demo",
-  "title": "Chat with an AI sales agent in 10 seconds.",
-  "subtitle": "Message our AI on WhatsApp and see how it'd handle your dead leads.",
+  "badge": "Lead Awakening Demo",
+  "title": "Chat with our AI sales agent in 10 seconds.",
+  "subtitle": "See how it re-engages your dormant leads, right on WhatsApp.",
   "form": {
     "firstNameLabel": "Your first name",
     "firstNamePlaceholder": "John",

@@ -1,7 +1,7 @@
 {
-  "badge": "Demo ao vivo com IA",
-  "title": "Converse com uma IA de vendas em 10 segundos.",
-  "subtitle": "Mande uma mensagem pra nossa IA no WhatsApp e veja como ela lidaria com seus leads parados.",
+  "badge": "Lead Awakening Demo",
+  "title": "Converse com nossa IA de vendas em 10 segundos.",
+  "subtitle": "Veja como ela reativa seus leads dormentes, direto no WhatsApp.",
   "form": {
     "firstNameLabel": "Seu primeiro nome",
     "firstNamePlaceholder": "Marcos",

@@ -14,7 +14,7 @@ import Seo from "./Seo";
 
 import Home from "@/pages/home";
 import FAQ from "@/pages/faq";
-import BookDemo from "@/pages/book-demo";
+import BookCall from "@/pages/book-call";
 import TryDemo from "@/pages/try-demo";
 import IntakeDemo from "@/pages/intake-demo";
 import Login from "@/pages/login";
@@ -98,7 +98,7 @@ function AppRoutes() {
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
       <Route path="/services" component={() => <Redirect to="/try" />} />
-      <Route path="/book-demo" component={BookDemo} />
+      <Route path="/book-call" component={BookCall} />
       <Route path="/try" component={TryDemo} />
       <Route path="/intake/:token" component={IntakeDemo} />
       <Route path="/login" component={Login} />
@@ -130,7 +130,7 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/faq`} component={FAQ} />
       <Route path={`/${lang}/about`} component={() => <Redirect to={`/${lang}/faq`} />} />
       <Route path={`/${lang}/services`} component={() => <Redirect to={`/${lang}/try`} />} />
-      <Route path={`/${lang}/book-demo`} component={BookDemo} />
+      <Route path={`/${lang}/book-call`} component={BookCall} />
       <Route path={`/${lang}/try`} component={TryDemo} />
       <Route path={`/${lang}/login`} component={Login} />
       <Route path={`/${lang}/accept-invite`} component={AcceptInvite} />

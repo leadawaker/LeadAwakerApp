@@ -143,7 +143,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href={withLang("/book-demo")}
+                  href={withLang("/book-call")}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.bookDemo")}

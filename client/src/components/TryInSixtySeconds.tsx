@@ -70,7 +70,7 @@ export default function TryInSixtySeconds() {
   const { t } = useTranslation("home");
 
   return (
-    <section className="py-48 bg-[#F9FAFC] dark:bg-background">
+    <section className="pb-48 pt-16 bg-[#F9FAFC] dark:bg-background">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -81,7 +81,7 @@ export default function TryInSixtySeconds() {
         >
           {/* Left: copy + CTA */}
           <div className="text-center lg:text-left">
-            <h2 className="font-bold text-[32px] md:text-[40px] lg:text-[46px] leading-tight mb-4 text-foreground">
+            <h2 className="font-bold text-4xl md:text-[47px] lg:text-[59px] leading-tight mb-4 text-foreground">
               {t("trySixty.title")}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Calendar, CheckCircle, Shield, Clock, Sparkles, BarChart3 } from "lucide-react";
+import { Calendar, Shield, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function BookDemo() {
@@ -29,16 +29,6 @@ export default function BookDemo() {
 
             <div className="space-y-5 md:space-y-7 mb-10">
               <div className="flex gap-4">
-                <div className="w-11 h-11 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
-                  <BarChart3 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-1">{t("benefits.opportunity.title")}</h3>
-                  <p className="text-muted-foreground text-[15px]">{t("benefits.opportunity.description")}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
                 <div className="w-11 h-11 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 shrink-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
@@ -59,21 +49,6 @@ export default function BookDemo() {
               </div>
             </div>
 
-            {/* Trust line */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted-foreground font-medium">
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                {t("trust.duration")}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5" />
-                {t("trust.free")}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5" />
-                {t("trust.results")}
-              </span>
-            </div>
           </motion.div>
 
           {/* Right — Calendar embed */}

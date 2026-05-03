@@ -168,7 +168,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
               >
-                <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
+                <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full transition-all duration-200 hover:bg-[#FEB800] hover:text-[#1a1a1a] hover:border-[#FEB800] hover:[box-shadow:0_0_40px_12px_rgba(254,184,0,0.6)]">
                     {t("hero.cta.primary")}
                     <ArrowRight className="ml-2 w-5 h-5" />
@@ -424,11 +424,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Try in 60 Seconds */}
-      <TryInSixtySeconds />
-
       {/* Revenue Calculator */}
       <RevenueCalculator />
+
+      {/* Lead Awakening Demo */}
+      <TryInSixtySeconds />
 
       {/* Security & AI Guardrails Section */}
       <section className="py-48 bg-[#F6F5FA] dark:bg-background">
@@ -498,7 +498,7 @@ export default function Home() {
           >
             <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-10 overflow-hidden">
 
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground text-center md:whitespace-nowrap">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground text-center">
                 {tAbout("intro.title")}{" "}
                 <span className="text-indigo-500">{tAbout("intro.titleHighlight")}</span>
               </h2>
@@ -571,7 +571,7 @@ export default function Home() {
 
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
+              <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
                 <Button
                   size="lg"
                   className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary transition-all duration-200 font-bold hover:bg-[#FEB800] hover:text-[#1a1a1a] hover:border-[#FEB800] hover:[box-shadow:0_0_40px_12px_rgba(254,184,0,0.6)]"

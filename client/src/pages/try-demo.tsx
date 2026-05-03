@@ -115,8 +115,8 @@ export default function TryDemo() {
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
-            <Sparkles className="w-4 h-4" /> {t("badge")}
+          <div className="inline-flex items-center gap-2 text-primary px-4 py-2 text-base font-medium mb-2">
+            <Sparkles className="w-5 h-5" /> {t("badge")}
           </div>
           <h1 className="text-[32px] md:text-[44px] font-bold leading-tight tracking-tight mb-4">
             {t("title")}
@@ -264,7 +264,7 @@ export default function TryDemo() {
                       </p>
                     </div>
                     <div className="mt-16 flex justify-center">
-                      <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
+                      <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
                         <Button
                           size="lg"
                           className="h-14 px-8 text-base rounded-2xl shadow-xl transition-transform duration-500 ease-out hover:scale-105"

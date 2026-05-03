@@ -12,7 +12,7 @@
     },
     "cta": {
       "primary": "Book a Call",
-      "secondary": "Test the AI"
+      "secondary": "Try the AI"
     }
   },
   "results": {
@@ -57,9 +57,8 @@
     }
   },
   "calculator": {
-    "eyebrow": "Revenue Recovery Calculator",
-    "title": "You bought these leads. Let's make them pay.",
-    "subtitle": "A quick diagnosis of how much revenue is trapped in leads that never closed.",
+    "title": "Lead Awakening Audit",
+    "subtitle": "There's revenue sitting in your unclosed leads, let's unlock it",
     "leadsLabel": "Leads You Already Paid For",
     "dealLabel": "What Each Deal Is Worth",
     "costLabel": "What You Paid Per Lead",
@@ -155,8 +154,8 @@
     "cta": {
       "subtitle": "Want to walk through your real numbers together?",
       "label": "Let's have a quick chat",
-      "waMessage": "Hey Gabriel! I just ran your revenue calculator: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable revenue. How can we access it?",
-      "waMessageProfit": "Hey Gabriel! I just ran your revenue calculator: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable profit. How can we access it?"
+      "waMessage": "Hey Gabriel! I just did the Lead Awakening Audit: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable revenue. How can we unlock it?",
+      "waMessageProfit": "Hey Gabriel! I just did the Lead Awakening Audit: I have {{leads}} dormant leads at {{dealValue}} per deal, which puts {{revenue}} in recoverable profit. How can we unlock it?"
     },
     "share": {
       "label": "Share",
@@ -172,12 +171,12 @@
     "title": "AI in Action",
     "quote": "See our AI live handling conversations like an agent for your business, so your team can focus on what matters.",
     "meta": "Duration: 10 to 30 minutes\nNo commitment",
-    "button": "Book a Demo"
+    "button": "Book a Call"
   },
   "trySixty": {
-    "title": "Let the AI pitch you.",
-    "subtitle": "60 seconds on WhatsApp. Push back, ghost it, whatever a real lead would do.",
-    "cta": "Test the AI",
+    "title": "Lead Awakening Demo",
+    "subtitle": "Try the exact conversation that re-engages a lead like the ones in your audit.",
+    "cta": "Try the AI",
     "mockChat": {
       "customer1": "honestly the price last time was too steep for us",
       "ai1": "Totally fair, a decision like this deserves to feel right. What made it feel too steep, the monthly or the total?",

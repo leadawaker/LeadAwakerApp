@@ -219,7 +219,7 @@ export default function Login() {
             <div className="mt-8 pt-8 border-t border-border">
               <p className="text-center text-muted-foreground">
                 {t("form.noAccount")}{" "}
-                <a href="/book-demo" className="text-primary font-medium hover:underline">
+                <a href="/book-call" className="text-primary font-medium hover:underline">
                   {t("form.scheduleDemo")}
                 </a>
               </p>

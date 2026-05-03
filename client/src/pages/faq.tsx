@@ -114,7 +114,7 @@ export default function FAQ() {
                 {t("cta.title")}
               </h2>
 
-              <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
+              <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
                 <Button
                   size="lg"
                   className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold"

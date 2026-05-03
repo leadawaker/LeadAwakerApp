@@ -198,7 +198,7 @@ export function Navbar() {
 
             {isLoggedIn ? (
               <>
-                <Link href={withLang("/book-demo")} className="text-[15px] font-bold transition-colors hover:text-primary text-muted-foreground">
+                <Link href={withLang("/book-call")} className="text-[15px] font-bold transition-colors hover:text-primary text-muted-foreground">
                   {t("nav.bookDemo")}
                 </Link>
                 <Link href="/agency/campaigns">
@@ -214,7 +214,7 @@ export function Navbar() {
                 }`}>
                   {t("nav.login")}
                 </Link>
-                <Link href={withLang("/book-demo")}>
+                <Link href={withLang("/book-call")}>
                   <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
                     {t("nav.bookDemo")}
                   </Button>
@@ -286,8 +286,8 @@ export function Navbar() {
           </div>
 
           {[...navLinks, ...(isLoggedIn
-              ? [{ href: "/book-demo", label: t("nav.bookDemo") }, { href: "/agency/campaigns", label: t("nav.openApp") }]
-              : [{ href: "/login", label: t("nav.login") }, { href: "/book-demo", label: t("nav.bookDemo") }]
+              ? [{ href: "/book-call", label: t("nav.bookDemo") }, { href: "/agency/campaigns", label: t("nav.openApp") }]
+              : [{ href: "/login", label: t("nav.login") }, { href: "/book-call", label: t("nav.bookDemo") }]
             )].map((link) => (
             <Link
               key={link.href}

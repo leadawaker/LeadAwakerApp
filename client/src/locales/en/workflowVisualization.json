@@ -9,9 +9,9 @@
   },
   "agent": {
     "title": "AI Agent",
-    "model": "GPT-5.2",
+    "model": "GPT-5.5",
     "outputLabel": "Output",
-    "message1": "Revisiting our chat.",
+    "message1": "So John,",
     "message2": "Still up for the call?"
   },
   "guardrails": {

@@ -1,20 +1,16 @@
 {
   "hero": {
-    "title": "Let's Reactivate Your Leads",
-    "subtitle": "Schedule a 15-minute demo to see how we can automatically book appointments from your existing database."
+    "title": "Let's Look at Your Leads Together",
+    "subtitle": "In 15 minutes we'll walk through your leads together and figure out if this is a fit for your business."
   },
   "benefits": {
-    "opportunity": {
-      "title": "Review Your Opportunity",
-      "description": "We'll look at your current lead database size and estimate potential revenue."
-    },
     "demo": {
-      "title": "Live Demo",
-      "description": "See exactly how the AI conversations work and handle objections."
+      "title": "See It in Action",
+      "description": "I'll show you the full Lead Awaker setup: how the AI runs conversations, handles objections, and feeds back into your pipeline."
     },
     "noCommitment": {
-      "title": "No Commitment",
-      "description": "No strings attached, just a 15-minute conversation to explore what's possible."
+      "title": "No Pressure",
+      "description": "If it's not a fit, we'll know in 15 minutes. No pitch, no follow-up unless you want one."
     }
   },
   "calendar": {

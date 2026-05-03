@@ -9,10 +9,10 @@
   },
   "agent": {
     "title": "AI Agent",
-    "model": "GPT-5.2",
+    "model": "GPT-5.5",
     "outputLabel": "Output",
-    "message1": "Terug op ons gesprek.",
-    "message2": "Nog zin in dat belletje?"
+    "message1": "Hey Jan,",
+    "message2": "staat onze call nog?"
   },
   "guardrails": {
     "title": "Guardrails",

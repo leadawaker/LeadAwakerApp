@@ -7,7 +7,7 @@
   "cases": {
     "solarPanel": {
       "title": "Energia Solar",
-      "heading": "Exemplo -<colored>Instalação de Energia Solar</colored>",
+      "heading": "Exemplo - <colored>Instalação de Energia Solar</colored>",
       "description": "A maioria dos orçamentos solares esfria porque o cliente trava no retorno financeiro e na orientação do telhado. A Lead Awaker retoma a conversa, traduz a dor em reais, e agenda uma ligação específica sobre o telhado onde importa.",
       "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Coleta de fotos do telhado e do medidor, checagem de elegibilidade para incentivos, questionários automáticos de pré-visita, lembretes para reduzir faltas na ligação e follow-ups pós-ligação com próximos passos personalizados.",
       "agentProfile": "<strong>Perfil de fala do agente:</strong> Consultor técnico calmo. Direto, entusiasmado e mantém o ritmo até o diagnóstico ficar agendado.",
@@ -98,7 +98,7 @@
     },
     "gym": {
       "title": "Academia",
-      "heading": "Exemplo -<colored>Plano de Academia</colored>",
+      "heading": "Exemplo - <colored>Plano de Academia</colored>",
       "description": "A maioria dos leads de academia desaparece porque a motivação esfriou, não porque a academia estava errada. A Lead Awaker retoma a conversa, entende por que pararam, e agenda uma avaliação com personal que encaixa na vida atual da pessoa.",
       "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Follow-ups automáticos de \"treino perdido\", sequências para evitar cancelamento, ofertas de reativação disparadas pelo tempo sem vir, nutrição de leads para personal e lembretes de renovação do plano.",
       "agentProfile": "<strong>Perfil de fala do agente:</strong> Coach motivacional. Muita empatia, muita energia e mantém o ritmo até o próximo passo.",
@@ -180,7 +180,7 @@
     },
     "dental": {
       "title": "Clínica Odontológica",
-      "heading": "Exemplo -<colored>Clínica Odontológica</colored>",
+      "heading": "Exemplo - <colored>Clínica Odontológica</colored>",
       "description": "Clínicas odontológicas perdem pacientes em consultas semestrais não agendadas e planos de tratamento inacabados. A Lead Awaker retoma a conversa, lida com as preocupações de preço, agenda a limpeza, e remarca em linguagem natural quando a vida muda.",
       "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Lembretes para check-ups atrasados, follow-ups em orçamentos abertos (implantes, alinhadores, clareamento), avisos de renovação de plano, pedidos de avaliação pós-consulta e ofertas de clareamento de aniversário.",
       "agentProfile": "<strong>Perfil de fala do agente:</strong> Recepcionista acolhedora. Tranquilizadora, sem pressão, focada em voltar a encaixar o paciente na agenda.",
@@ -261,7 +261,7 @@
     },
     "lawFirm": {
       "title": "Escritório de Advocacia",
-      "heading": "Exemplo -<colored>Escritório de Advocacia</colored>",
+      "heading": "Exemplo - <colored>Escritório de Advocacia</colored>",
       "description": "Leads de reembolso de financiamento de veículo travam quando não acham a papelada. A Lead Awaker reativa o lead, explica o processo da solicitação em linguagem simples, e entrega ao assistente jurídico um caso já pronto para revisão.",
       "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Lembretes para concluir a solicitação, atualizações de status de \"30 dias úteis\", escalonamento automático para um assistente quando os documentos chegarem e campanhas de reativação para leads que começaram mas não terminaram.",
       "agentProfile": "<strong>Perfil de fala do agente:</strong> Administrativo focado em conformidade. Claro, guiado por processo e sem pressão.",
@@ -320,7 +320,7 @@
     },
     "coaching": {
       "title": "Coaching",
-      "heading": "Exemplo -<colored>Coaching de Transição de Carreira</colored>",
+      "heading": "Exemplo - <colored>Coaching de Transição de Carreira</colored>",
       "description": "Coaches de transição de carreira perdem leads no momento do \"estou pronto para investir em mim?\". A Lead Awaker retoma a conversa meses depois, faz aflorar o que está realmente travado, e converte inscrições frias em sessões pagas de descoberta.",
       "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Nutrição de listas de espera para turmas ou programas, pedidos de indicação a ex-alunos, follow-ups pós-no-show de sessões de descoberta, reengajamento de leads que desistiram no meio da inscrição, e sequências de upsell pós-programa.",
       "agentProfile": "<strong>Perfil de fala do agente:</strong> Mentor aterrado e sem pressão. Curioso, reflexivo, e trata as dúvidas do lead como informação, não como objeções.",

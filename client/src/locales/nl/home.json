@@ -12,7 +12,7 @@
     },
     "cta": {
       "primary": "Gesprek Boeken",
-      "secondary": "Test de AI"
+      "secondary": "Probeer de AI"
     }
   },
   "results": {
@@ -57,9 +57,8 @@
     }
   },
   "calculator": {
-    "eyebrow": "Omzetherstel Calculator",
-    "title": "Je hebt deze leads gekocht. Laat ze nu opleveren.",
-    "subtitle": "Een snelle diagnose van hoeveel omzet vastzit in leads die nooit hebben getekend.",
+    "title": "Lead Awakening Audit",
+    "subtitle": "Er zit omzet verborgen in je niet-gesloten leads, laten we het vrijmaken",
     "leadsLabel": "Leads Waar Je Al Voor Betaald Hebt",
     "dealLabel": "Wat Elke Deal Waard Is",
     "costLabel": "Wat Je Betaalde Per Lead",
@@ -155,8 +154,8 @@
     "cta": {
       "subtitle": "Zin om samen jouw echte cijfers door te nemen?",
       "label": "Laten we even chatten",
-      "waMessage": "Hey Gabriel! Ik heb net jouw calculator gebruikt: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare omzet. Hoe kunnen we dat terughalen?",
-      "waMessageProfit": "Hey Gabriel! Ik heb net jouw calculator gebruikt: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare winst. Hoe kunnen we dat terughalen?"
+      "waMessage": "Hey Gabriel! Ik heb net de Lead Awakening Audit gedaan: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare omzet. Hoe kunnen we dat vrijmaken?",
+      "waMessageProfit": "Hey Gabriel! Ik heb net de Lead Awakening Audit gedaan: ik heb {{leads}} slapende leads à {{dealValue}} per deal, goed voor {{revenue}} aan herstelbare winst. Hoe kunnen we dat vrijmaken?"
     },
     "share": {
       "label": "Delen",
@@ -172,12 +171,12 @@
     "title": "AI in de praktijk",
     "quote": "Bekijk live hoe onze AI gesprekken afhandelt als een agent voor jouw bedrijf, zodat je team kan focussen op wat echt telt.",
     "meta": "Duur: 10 tot 30 minuten\nGeen verplichtingen",
-    "button": "Boek een Demo"
+    "button": "Gesprek Boeken"
   },
   "trySixty": {
-    "title": "Laat de AI jou pitchen (let the AI pitch you).",
-    "subtitle": "60 seconden via WhatsApp. Duw terug, ghost 'm, doe wat een echte lead zou doen.",
-    "cta": "Test de AI",
+    "title": "Lead Awakening Demo",
+    "subtitle": "Probeer het exacte gesprek dat een lead zoals die in jouw audit opnieuw activeert.",
+    "cta": "Probeer de AI",
     "mockChat": {
       "customer1": "eerlijk gezegd was de prijs vorige keer te hoog voor ons",
       "ai1": "Helemaal begrijpelijk, zo'n beslissing moet gewoon goed voelen. Wat voelde te hoog, de maandlasten of het totaal?",

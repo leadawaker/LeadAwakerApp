@@ -30,7 +30,7 @@ export default function RevenueCalculator() {
     <section className="py-48 bg-white dark:bg-background">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
-          id="calculator"
+          id="audit"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -45,9 +45,6 @@ export default function RevenueCalculator() {
           >
             {calc.shareCopied ? <Check className="w-4 h-4 text-[#22c55e]" /> : <Share2 className="w-4 h-4" />}
           </button>
-          <p className="text-sm font-heading font-semibold uppercase tracking-widest text-[#4F46E5] mb-3">
-            {t("calculator.eyebrow")}
-          </p>
           <h2 className="text-4xl md:text-[47px] lg:text-[59px] font-bold tracking-tight font-heading">
             {t("calculator.title")}
           </h2>

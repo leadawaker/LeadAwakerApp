@@ -7,7 +7,7 @@
   "cases": {
     "solarPanel": {
       "title": "Zonnepanelen",
-      "heading": "Voorbeeld -<colored>Installatie Zonnepanelen</colored>",
+      "heading": "Voorbeeld - <colored>Installatie Zonnepanelen</colored>",
       "description": "De meeste zonne-offertes lopen dood omdat de klant twijfelt over terugverdientijd en dakligging. Lead Awaker pakt de draad op, maakt de pijn concreet in euro's, en boekt een dak-specifiek gesprek waar het verschil gemaakt wordt.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Fotoverzameling van dak en meterkast, controle subsidiemogelijkheden, geautomatiseerde vooronderzoeksvragenlijsten, herinneringen om no-show te verminderen en follow-ups na het gesprek met gepersonaliseerde vervolgstappen.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Rustige technische adviseur. Direct, enthousiast en houdt vaart richting een geboekte beoordeling.",
@@ -98,7 +98,7 @@
     },
     "gym": {
       "title": "Sportschool",
-      "heading": "Voorbeeld -<colored>Sportschoollidmaatschap</colored>",
+      "heading": "Voorbeeld - <colored>Sportschoollidmaatschap</colored>",
       "description": "Sportschool-leads vallen meestal stil omdat de motivatie wegzakt, niet omdat de sportschool niet paste. Lead Awaker opent het gesprek opnieuw, achterhaalt waarom iemand stopte, en plant een gesprek met een personal trainer in dat past bij het leven nu.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Geautomatiseerde \"gemiste training\" follow-ups, opzegreductiesequenties, reactiveringsaanbiedingen getriggerd door tijd weg, PT lead nurturing en herinneringen voor lidmaatschapverlenging.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Motiverende coach. Veel empathie, veel energie en houdt momentum richting een vervolgstap.",
@@ -180,7 +180,7 @@
     },
     "dental": {
       "title": "Tandartspraktijk",
-      "heading": "Voorbeeld -<colored>Tandartspraktijk</colored>",
+      "heading": "Voorbeeld - <colored>Tandartspraktijk</colored>",
       "description": "Tandartspraktijken verliezen patiënten aan gemiste halfjaarlijkse controles en onafgemaakte behandelplannen. Lead Awaker opent het gesprek opnieuw, bespreekt prijszorgen, boekt de mondhygiëne slot, en verzet afspraken in natuurlijke taal wanneer het leven verandert.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Herinneringen voor achterstallige controles, follow-ups op open behandelofferte (implantaten, Invisalign, whitening), reminders bij verzekering-reset in januari, beoordelingsverzoeken na het bezoek en verjaardags-whitening aanbiedingen.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Warme baliemedewerker. Geruststellend, laagdrempelig, en gericht op de patiënt terug in de agenda krijgen.",
@@ -261,7 +261,7 @@
     },
     "lawFirm": {
       "title": "Advocatenkantoor",
-      "heading": "Voorbeeld -<colored>Advocatenkantoor</colored>",
+      "heading": "Voorbeeld - <colored>Advocatenkantoor</colored>",
       "description": "Leads voor autofinancieringsrestituties lopen vast als ze hun papieren niet kunnen vinden. Lead Awaker reactiveert de lead, legt het AVG-verzoek uit in gewone taal, en geeft een zaak door aan een medewerker die direct beoordeeld kan worden.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Herinneringen voor AVG-voltooiing, \"30 werkdagen\" statusupdates, auto-escalatie naar een medewerker wanneer documenten arriveren en reactivatiecampagnes voor leads die zijn begonnen maar niet zijn afgerond.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Compliance-first administratie. Helder, procesgestuurd en zonder druk.",
@@ -320,7 +320,7 @@
     },
     "coaching": {
       "title": "Coaching",
-      "heading": "Voorbeeld -<colored>Loopbaan Coaching</colored>",
+      "heading": "Voorbeeld - <colored>Loopbaan Coaching</colored>",
       "description": "Loopbaancoaches verliezen leads op het moment van \"ben ik er klaar voor om in mezelf te investeren\". Lead Awaker opent het gesprek maanden later opnieuw, brengt naar boven wat echt vastzit, en zet koude aanmeldingen voor een oriëntatiegesprek om in betaalde kennismakings-calls.",
       "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Nurturing van wachtlijsten voor cohorten of programma's, referral-verzoeken aan oud-studenten, no-show follow-ups na kennismakings-calls, re-engagement van leads die midden in de aanmelding afhaakten, en upsell-sequenties na het programma.",
       "agentProfile": "<strong>Spreekprofiel agent:</strong> Geaarde, niet-pusherige mentor. Nieuwsgierig, reflectief, en behandelt twijfels van de lead als informatie, niet als bezwaren.",
