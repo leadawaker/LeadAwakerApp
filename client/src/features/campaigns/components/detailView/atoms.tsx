@@ -314,7 +314,7 @@ export function WhatsAppDemoLinkButton({
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Link expires in 2 hours if the prospect doesn't click. Campaign ID: <span className="font-mono font-semibold">{campaignId}</span>
+                Link expires in 7 days if the prospect doesn't click. Campaign ID: <span className="font-mono font-semibold">{campaignId}</span>
               </p>
               <div className="flex justify-between pt-2">
                 <button
