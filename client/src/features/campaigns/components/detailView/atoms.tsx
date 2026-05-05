@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import type { Campaign } from "@/types/models";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { apiFetch } from "@/lib/apiUtils";
 import { xBase, xDefault, xSpan } from "./constants";
 
 // ── Duplicate button (inline confirm) ─────────────────────────────────────────
@@ -167,9 +168,8 @@ export function WhatsAppDemoLinkButton({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/demo/create-link", {
+      const res = await apiFetch("/api/demo/create-link", {
         method: "POST",
-        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           firstName: firstName.trim(),
