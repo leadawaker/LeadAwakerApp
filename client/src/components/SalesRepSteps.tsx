@@ -13,26 +13,47 @@ import conversationCardImg from "../assets/Gemini_Generated_Image_j212wcj212wcj2
 import { MeteorContainer } from "./Meteor";
 import { StepCarousel } from "./StepCarousel";
 
+const Trail = ({ startTrigger }: { startTrigger: boolean }) => (
+  <svg
+    className="absolute inset-0 w-full h-full pointer-events-none"
+    style={{ zIndex: 3 }}
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    <motion.path
+      d="M 105 -12 L -10 75"
+      stroke="rgba(210,210,210,0.03)"
+      strokeWidth="0.25"
+      strokeDasharray="1.2 3.5"
+      fill="none"
+      initial={{ pathLength: 0 }}
+      animate={startTrigger ? { pathLength: 1 } : { pathLength: 0 }}
+      transition={{ duration: 35, ease: "linear", repeat: Infinity, repeatDelay: 5 }}
+    />
+  </svg>
+);
+
 const Plane = ({ startTrigger }: { startTrigger: boolean }) => (
   <motion.div
-    initial={{ top: "18%", left: "105%", rotate: -5 }}
+    initial={{ top: "-12%", left: "105%", rotate: -5 }}
     animate={startTrigger ? { top: "75%", left: "-10%", rotate: -15 } : {}}
-    transition={{ duration: 35, ease: "linear", repeat: 0 }}
-    className="absolute w-2 h-2 z-0 pointer-events-none"
+    transition={{ duration: 35, ease: "linear", repeat: Infinity, repeatDelay: 5 }}
+    className="absolute w-2 h-2 pointer-events-none"
+    style={{ zIndex: 3 }}
   >
     <motion.div
       animate={{
         opacity: [0, 1, 1, 0, 1, 1, 0],
         backgroundColor: ["#000000", "#ffffff", "#ffffff", "#000000", "#ff0000", "#ff0000", "#000000"],
         boxShadow: [
-          "0 0 10px 3px transparent", "0 0 10px 3px #ffffff", "0 0 10px 3px #ffffff",
-          "0 0 10px 3px transparent", "0 0 10px 3px #ff0000", "0 0 10px 3px #ff0000",
-          "0 0 10px 3px transparent"
+          "0 0 0px 0px transparent", "0 0 8px 4px rgba(255,255,255,0.9)", "0 0 8px 4px rgba(255,255,255,0.9)",
+          "0 0 0px 0px transparent", "0 0 8px 4px rgba(255,80,80,0.9)", "0 0 8px 4px rgba(255,80,80,0.9)",
+          "0 0 0px 0px transparent"
         ]
       }}
       transition={{ duration: 4, repeat: Infinity, times: [0, 0.01, 0.25, 0.5, 0.51, 0.75, 1] }}
       className="rounded-full"
-      style={{ width: "2px", height: "2px" }}
+      style={{ width: "3px", height: "3px" }}
     />
   </motion.div>
 );
@@ -44,9 +65,20 @@ export const SalesRepSteps = () => {
   const [planeStarted, setPlaneStarted] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setPlaneStarted(true), 1000);
-    setGlitchAnimating(true);
-    return () => clearTimeout(timer);
+    const planeTimer = setTimeout(() => setPlaneStarted(true), 1000);
+    let cycleInterval: ReturnType<typeof setInterval>;
+    const glitchTimer = setTimeout(() => {
+      setGlitchAnimating(true);
+      cycleInterval = setInterval(() => {
+        setGlitchAnimating(false);
+        setTimeout(() => setGlitchAnimating(true), 50);
+      }, 5000);
+    }, 2000);
+    return () => {
+      clearTimeout(planeTimer);
+      clearTimeout(glitchTimer);
+      clearInterval(cycleInterval);
+    };
   }, []);
 
   const { scrollYProgress } = useScroll({ target: scrollRef, offset: ["start start", "end end"] });
@@ -106,43 +138,49 @@ export const SalesRepSteps = () => {
     >
       {/* Background stars */}
       <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 12% 85%, white 0.6px, transparent 0.6px),
-                          radial-gradient(circle at 88% 12%, white 1.1px, transparent 1.1px),
-                          radial-gradient(circle at 25% 65%, white 0.8px, transparent 0.8px),
-                          radial-gradient(circle at 75% 60%, white 0.7px, transparent 0.7px),
-                          radial-gradient(circle at 45% 70%, white 0.5px, transparent 0.5px),
-                          radial-gradient(circle at 15% 90%, white 0.6px, transparent 0.6px),
-                          radial-gradient(circle at 85% 85%, white 0.8px, transparent 0.8px),
-                          radial-gradient(circle at 50% 95%, white 0.5px, transparent 0.5px),
-                          radial-gradient(circle at 30% 80%, white 0.7px, transparent 0.7px),
-                          radial-gradient(circle at 70% 90%, white 0.6px, transparent 0.6px)`,
+        zIndex: 1,
+        backgroundImage: `radial-gradient(circle at 8% 10%, white 0.72px, transparent 0.72px),
+                          radial-gradient(circle at 92% 8%, white 0.96px, transparent 0.96px),
+                          radial-gradient(circle at 35% 20%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 60% 15%, white 0.72px, transparent 0.72px),
+                          radial-gradient(circle at 78% 25%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 20% 35%, white 0.72px, transparent 0.72px),
+                          radial-gradient(circle at 50% 30%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 85% 40%, white 0.96px, transparent 0.96px),
+                          radial-gradient(circle at 12% 55%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 70% 50%, white 0.72px, transparent 0.72px)`,
         backgroundRepeat: 'repeat',
-        backgroundSize: 'max(1300px, 200vw) max(1100px, 200vh)',
-        willChange: 'transform', backfaceVisibility: 'hidden', perspective: '1000px',
-        animation: 'twinkle-fast 0.8s ease-in-out infinite', filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
-        opacity: 0.4
+        backgroundSize: '700px 600px',
+        animation: 'twinkle-fast 0.8s ease-in-out infinite',
+        filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.9))',
       }} />
       <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 67% 42%, #e8e8e8 1.0px, transparent 1.0px),
-                          radial-gradient(circle at 15% 15%, white 0.8px, transparent 0.8px)`,
-        backgroundRepeat: 'repeat', backgroundSize: 'max(1700px, 200vw) max(1400px, 200vh)',
-        filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
-        animation: 'twinkle-fast-offset-1 1s ease-in-out infinite', animationDelay: '0.5s', opacity: 0.4
+        zIndex: 1,
+        backgroundImage: `radial-gradient(circle at 45% 12%, white 0.72px, transparent 0.72px),
+                          radial-gradient(circle at 22% 22%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 68% 35%, white 0.96px, transparent 0.96px),
+                          radial-gradient(circle at 90% 18%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 5% 42%, white 0.72px, transparent 0.72px)`,
+        backgroundRepeat: 'repeat', backgroundSize: '900px 700px',
+        filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.9))',
+        animation: 'twinkle-fast-offset-1 1s ease-in-out infinite', animationDelay: '0.5s',
       }} />
       <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 39% 79%, white 0.6px, transparent 0.6px),
-                          radial-gradient(circle at 83% 33%, #f0f0f0 1.4px, transparent 1.4px)`,
-        backgroundRepeat: 'repeat', backgroundSize: 'max(2100px, 200vw) max(1800px, 200vh)',
-        filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
-        animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite', animationDelay: '1.2s', opacity: 0.4
+        zIndex: 1,
+        backgroundImage: `radial-gradient(circle at 55% 8%, white 0.48px, transparent 0.48px),
+                          radial-gradient(circle at 30% 45%, white 0.96px, transparent 0.96px),
+                          radial-gradient(circle at 80% 30%, white 0.72px, transparent 0.72px),
+                          radial-gradient(circle at 15% 18%, white 0.48px, transparent 0.48px)`,
+        backgroundRepeat: 'repeat', backgroundSize: '1100px 800px',
+        filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.9))',
+        animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite', animationDelay: '1.2s',
       }} />
 
       {/* Background gradients */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.7) 25%, rgba(29, 78, 216, 0.55) 45%, rgba(30, 58, 138, 0.3) 65%, rgba(30, 58, 138, 0) 100%)', zIndex: 0 }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 440% 100% at 50% 95%, rgba(254, 215, 170, 0.75) 0%, rgba(251, 146, 60, 0.5) 25%, rgba(37, 99, 235, 0) 50%)', zIndex: 0 }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(254, 243, 199, 0.45) 0%, rgba(254, 243, 199, 0.2) 15%, transparent 50%)', zIndex: 0 }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgb(255, 239, 216) 20%, rgb(198, 137, 97) 30%, rgb(18, 62, 103) 50%, rgba(0, 16, 60, 0.73) 63%, rgba(30, 58, 138, 0) 70%)', zIndex: 0 }} />
       <div className="absolute inset-x-0 bottom-0 pointer-events-none [background:linear-gradient(to_bottom,transparent_0%,#F4F5F9_100%)] dark:[background:linear-gradient(to_bottom,transparent_0%,hsl(var(--background))_100%)]" style={{ height: '25vh', zIndex: 5 }} />
 
+      <Trail startTrigger={planeStarted} />
       <Plane startTrigger={planeStarted} />
 
       <div className="relative z-10">
