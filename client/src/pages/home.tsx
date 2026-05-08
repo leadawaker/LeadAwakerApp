@@ -33,6 +33,7 @@ import { FallingPattern } from "@/components/ui/falling-pattern";
 import { TestimonialCarousel } from "@/components/ui/testimonial-carousel";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 import profileImg from "@/assets/profile.webp";
+import founderHeroImg from "@/assets/Project (20260508053902).png";
 import abdullaImg from "@/assets/Screenshot_20260508_155721_My Files.jpg";
 import diederikImg from "@/assets/Screenshot_20260508_154846_Gallery.jpg";
 
@@ -588,50 +589,53 @@ export default function Home() {
       </section>
 
       {/* About the Founder */}
-      <section className="py-32 bg-[#F9FAFC] dark:bg-background">
-        <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="max-w-6xl mx-auto space-y-16"
-          >
-            {/* Top block: photo + white card with quote */}
-            <div className="flex flex-col md:flex-row items-stretch gap-8">
-              <img
-                src={profileImg}
-                alt={tAbout("founder.name")}
-                className="w-56 md:w-64 xl:w-72 shrink-0 rounded-2xl object-cover shadow-lg aspect-[3/4]"
-              />
-              <div className="flex-grow bg-white dark:bg-card rounded-2xl shadow-md p-8 text-left flex flex-col justify-center space-y-5">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
-                    {tAbout("founder.name")}
-                  </h2>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                    {tAbout("founder.title")}
-                  </p>
-                </div>
-                <div className="relative pl-1">
-                  <span className="absolute -top-4 -left-1 text-[52px] text-primary/15 font-serif leading-none select-none">"</span>
-                  <p className="relative italic text-[14px] md:text-[15px] text-foreground/70 leading-relaxed">
-                    {tAbout("founder.quote")}
-                  </p>
-                </div>
-                <p className="text-[13px] text-muted-foreground leading-relaxed">
-                  {tAbout("founder.description")}
-                </p>
-              </div>
+      <section className="bg-slate-200 dark:bg-zinc-900 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-end">
+
+          {/* Left: photo with primary-colored block behind */}
+          <div className="relative w-full md:w-[440px] flex-shrink-0 flex justify-center items-end h-[500px] md:h-[560px]">
+            <div className="absolute inset-x-8 bottom-0 top-16 bg-primary" />
+            <img
+              src={founderHeroImg}
+              alt={tAbout("founder.name")}
+              className="relative z-10 h-full w-auto object-contain object-bottom drop-shadow-xl"
+            />
+          </div>
+
+          {/* Right: white card */}
+          <div className="flex-1 bg-white dark:bg-card px-10 md:px-16 py-14 md:py-20 flex flex-col justify-center space-y-6 text-left">
+            <div className="space-y-1">
+              <p className="text-3xl md:text-4xl font-light text-foreground">Hi, I'm</p>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground leading-tight">
+                {tAbout("founder.name")}.
+              </h2>
             </div>
 
-            {/* Proof cards */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {credentialItems.map((item, i) => (
-                <TracingCard key={i} item={item} i={i} />
-              ))}
-            </div>
-          </motion.div>
+            <div className="w-14 h-[3px] bg-primary rounded-full" />
+
+            <p className="text-[17px] md:text-[18px] font-semibold text-foreground leading-snug">
+              {tAbout("founder.tagline")}
+            </p>
+
+            <p className="text-[15px] text-muted-foreground leading-relaxed">
+              {tAbout("founder.paragraph1")}
+            </p>
+            <p className="text-[15px] text-muted-foreground leading-relaxed">
+              {tAbout("founder.paragraph2")}
+            </p>
+            <p className="text-[15px] text-foreground/75 leading-relaxed">
+              {tAbout("founder.paragraph3")}
+            </p>
+          </div>
+        </div>
+
+        {/* Proof cards */}
+        <div className="max-w-[1200px] mx-auto px-6 md:px-10 pb-16 pt-10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {credentialItems.map((item, i) => (
+              <TracingCard key={i} item={item} i={i} />
+            ))}
+          </div>
         </div>
       </section>
 
