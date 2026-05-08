@@ -9,8 +9,8 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Founder",
-    "quote": "\"At my parents' clinic, I saw the same pattern again and again: genuine interest, booked consultations then... silence. They were spending thousands filling a bucket that was leaking from the bottom. That's when I learned: you don't need more leads. You need to stop losing the ones you have.\"",
-    "description": "I spent 12 years shipping digital art for products that did more than $3.3B in combined revenue: Warner Bros movies, Sega titles, Insurgency: Sandstorm. Then I built a real business with my wife Danique, where every lead mattered because it was our money on the line. Lead Awaker exists because I lived the problem."
+    "quote": "At my parents' clinic, I saw the same pattern again and again: booked consultations, then silence. They were spending thousands filling a leaking bucket. That's when I learned: you don't need more leads. You need to stop losing the ones you already have.",
+    "description": "12 years shipping creative work at scale — then built a real business where every lost lead cost me personally. Lead Awaker exists because I lived this problem."
   },
   "credentials": {
     "title": "It's not a lead problem. It's a leak problem.",
@@ -18,29 +18,22 @@
     "resultsNode": "Real results.",
     "items": [
       {
-        "metric": "Framestore",
-        "label": "Oscar-winning VFX studio",
-        "description": "Contributed digital art to Tom & Jerry (Warner Bros, 2021). The film did $136M at the global box office. Framestore has won the Academy Award for Best Visual Effects. You don't get assets through their pipeline unless they're ready for theatrical release."
+        "metric": "$136M box office",
+        "label": "Warner Bros · Framestore",
+        "logoKey": "warnerbros",
+        "description": "Digital art cleared for theatrical release at an Oscar-winning VFX studio. You don't get through their pipeline unless it's ready."
       },
       {
-        "metric": "Sega",
-        "label": "3 AAA games in 12 months",
-        "description": "Delivered digital assets for three titles at Creative Assembly, a Sega studio with a $3.1B parent. Three releases in twelve months is the kind of pace that breaks most people. I build systems that scale, not ones that collapse when things get busy."
+        "metric": "3 titles · 12 months",
+        "label": "Sega · Creative Assembly",
+        "logoKey": "sega",
+        "description": "Shipped three AAA games in a year at a $3.1B studio. Built systems designed to survive that pace."
       },
       {
-        "metric": "Embracer Group",
-        "label": "Led a team, shipped 2 titles",
-        "description": "Led a team at New World Interactive (now an Embracer Group studio) and shipped two titles, including Insurgency: Sandstorm. The game has done more than $52M in revenue and still has an active player base seven years after launch. Embracer is publicly traded in Stockholm with 100+ studios in its portfolio. Leading a team to ship on time, at standard, with nothing dropped is the same discipline I bring to your outbound."
-      },
-      {
-        "metric": "Valve",
-        "label": "Invite-only VR game jam",
-        "description": "Selected for Valve's closed VR game jam in London. Jammed alongside devs who now ship at Valve, Epic, and Ubisoft. When a team trusts you to build something from zero in 48 hours, they're not testing your output, they're testing your judgment under pressure."
-      },
-      {
-        "metric": "TA Monks",
-        "label": "Built a business from zero",
-        "description": "Co-founded an automated trading operation with my wife Danique. 4 years building systems that perform without supervision. Lead Awaker runs on the same principle: if it needs me to hold its hand every day, it isn't worth shipping."
+        "metric": "$52M+ revenue",
+        "label": "Embracer Group · New World Interactive",
+        "logoKey": "embracer",
+        "description": "Led the team, shipped two titles. Insurgency: Sandstorm is still active 7 years later. Nothing dropped."
       }
     ],
     "recognition": "Featured artwork on ZBrush Central (Pixologic) and ArtStation. Workshop presenter at Design Week, Federal University of Rio de Janeiro. Published profile in an online design magazine."

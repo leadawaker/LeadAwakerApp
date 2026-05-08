@@ -30,8 +30,68 @@ import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import { FallingPattern } from "@/components/ui/falling-pattern";
+import { TestimonialCarousel } from "@/components/ui/testimonial-carousel";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 import profileImg from "@/assets/profile.webp";
+import abdullaImg from "@/assets/Screenshot_20260508_155721_My Files.jpg";
+import diederikImg from "@/assets/Screenshot_20260508_154846_Gallery.jpg";
+
+type CredentialItem = { metric: string; label: string; description: string; logoKey?: string };
+
+function TracingCard({ item, i }: { item: CredentialItem; i: number }) {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const ref = (el: HTMLDivElement | null) => {
+    if (el) {
+      const { width, height } = el.getBoundingClientRect();
+      if (width !== size.w || height !== size.h) setSize({ w: width, h: height });
+    }
+  };
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: i * 0.12, ease: "easeOut" }}
+      className="relative px-5 py-6 text-left bg-white dark:bg-card/70 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3"
+    >
+      {size.w > 0 && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ borderRadius: "1rem" }}>
+          <motion.rect
+            x="1" y="1"
+            width={size.w - 2} height={size.h - 2}
+            rx="16" ry="16"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: [0, 1], opacity: [0, 1, 1, 0] }}
+            viewport={{ once: true }}
+            transition={{
+              pathLength: { duration: 1.8, delay: i * 0.15 + 0.3, ease: "easeInOut" },
+              opacity: { duration: 2.2, delay: i * 0.15 + 0.3, times: [0, 0.05, 0.75, 1] },
+            }}
+          />
+        </svg>
+      )}
+      <div className="relative z-10 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-[22px] font-bold text-primary leading-none">{item.metric}</p>
+          {item.logoKey && (
+            <img
+              src={`/logos/credibility/${item.logoKey}.svg`}
+              alt={item.label}
+              className="h-5 w-auto opacity-40 grayscale shrink-0 mt-0.5"
+            />
+          )}
+        </div>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</p>
+        <div className="h-px bg-border/60" />
+        <p className="text-[12px] text-foreground/65 leading-relaxed">{item.description}</p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
@@ -41,6 +101,10 @@ export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const [openLogo, setOpenLogo] = useState<string | null>(null);
+
+  const credentialItems =
+    (tAbout("credentials.items", { returnObjects: true }) as Array<CredentialItem>) || [];
+
 
   return (
     <div className="min-h-screen pt-32 overflow-x-clip md:overflow-visible bg-[#F9FAFC] dark:bg-background">
@@ -175,7 +239,7 @@ export default function Home() {
                   </Button>
                 </Link>
 
-                <Link href={isDefaultLang ? "/try" : `/${lang}/try`}>
+                <a href="#demo">
                   <Button
                     size="lg"
                     variant="outline"
@@ -183,7 +247,7 @@ export default function Home() {
                   >
                     {t("hero.cta.secondary")}
                   </Button>
-                </Link>
+                </a>
               </motion.div>
             </motion.div>
 
@@ -201,47 +265,35 @@ export default function Home() {
             </div>
           </section>
 
-      {/* Slim "Trusted by" logo strip — compressed credibility under the hero */}
-      <section className="py-10 md:py-12 bg-[#F9FAFC] dark:bg-background border-y border-border/30">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
-            <p className="text-xs text-muted-foreground tracking-[0.2em] uppercase whitespace-nowrap">
-              {t("founderBackground.slimLabel")}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:gap-x-10">
-              {[
-                { key: "warnerbros", src: "/logos/credibility/warnerbros.svg", alt: "Warner Bros", height: "h-7 md:h-8" },
-                { key: "sega", src: "/logos/credibility/sega.svg", alt: "Sega", height: "h-5 md:h-6" },
-                { key: "embracer", src: "/logos/credibility/embracer.svg", alt: "Embracer Group", height: "h-5 md:h-6" },
-                { key: "valve", src: "/logos/credibility/valve.svg", alt: "Valve", height: "h-5 md:h-6" },
-              ].map((logo) => (
-                <div
-                  key={`slim-${logo.key}`}
-                  className="relative group"
-                  onClick={() => setOpenLogo(openLogo === `slim-${logo.key}` ? null : `slim-${logo.key}`)}
-                >
-                  <button
-                    type="button"
-                    aria-label={logo.alt}
-                    className="inline-block opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
-                  >
-                    <img
-                      src={logo.src}
-                      alt={logo.alt}
-                      className={`${logo.height} w-auto block`}
-                    />
-                  </button>
-                  <div
-                    className={`absolute left-1/2 -translate-x-1/2 top-full mt-4 w-[260px] rounded-md bg-white border border-border/60 shadow-lg p-3 text-xs text-foreground leading-relaxed z-50 pointer-events-none transition-opacity duration-200 ${
-                      openLogo === `slim-${logo.key}` ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                    }`}
-                  >
-                    {t(`founderBackground.tooltips.${logo.key}`)}
+      {/* Testimonials */}
+      <section className="pt pb-50 bg-[#F9FAFC] dark:bg-background">
+        <div className="container mx-auto px-4 md:px-">
+          <TestimonialCarousel
+            sectionLabel={t("testimonial.sectionLabel")}
+            testimonials={[
+              {
+                name: t("testimonial.abdulla.name"),
+                title: t("testimonial.abdulla.role"),
+                description: t("testimonial.abdulla.quote"),
+                imageUrl: abdullaImg,
+                imagePosition: "center 20%",
+                imageScale: 1.1,
+                logo: <img src="/logos/hubspot.svg" alt="HubSpot" className="h-5 w-auto opacity-60" />,
+              },
+              {
+                name: t("testimonial.diederik.name"),
+                title: t("testimonial.diederik.role"),
+                description: t("testimonial.diederik.quote"),
+                imageUrl: diederikImg,
+                logo: (
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <img src="/logos/fusioncraft.svg" alt="FusionCraft" className="h-4 w-4" />
+                    <span className="text-[11px] font-semibold tracking-wide text-foreground">FusionCraft</span>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ),
+              },
+            ]}
+          />
         </div>
       </section>
 
@@ -424,6 +476,7 @@ export default function Home() {
         </div>
       </section>
 
+
       {/* Revenue Calculator */}
       <RevenueCalculator />
 
@@ -446,7 +499,9 @@ export default function Home() {
       </div>
 
       {/* Lead Awakening Demo */}
-      <TryInSixtySeconds />
+      <div id="demo" className="scroll-mt-24">
+        <TryInSixtySeconds />
+      </div>
 
       {/* Security & AI Guardrails Section */}
       <section className="py-48 bg-[#F6F5FA] dark:bg-background">
@@ -527,32 +582,54 @@ export default function Home() {
                 <LeadReactivationAnimation />
               </div>
 
-              <motion.div
-                className="flex flex-col md:flex-row items-start gap-8"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-              >
-                <img
-                  src={profileImg}
-                  alt={tAbout("founder.name")}
-                  className="w-50 h-43 shrink-0 rounded-2xl object-cover shadow-md mx-auto md:mx-0"
-                />
-                <div className="flex-grow space-y-4 text-center md:text-left">
-                  <div className="flex items-baseline gap-3 justify-center md:justify-start">
-                    <h3 className="text-lg md:text-2xl font-bold text-foreground">
-                      {tAbout("founder.name")}
-                    </h3>
-                    <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-                      {tAbout("founder.title")}
-                    </p>
-                  </div>
-                  <p className="italic border-l-4 border-primary/30 pl-6 text-[17px] md:text-[19px] text-foreground/80">
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* About the Founder */}
+      <section className="py-32 bg-[#F9FAFC] dark:bg-background">
+        <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-6xl mx-auto space-y-16"
+          >
+            {/* Top block: photo + white card with quote */}
+            <div className="flex flex-col md:flex-row items-stretch gap-8">
+              <img
+                src={profileImg}
+                alt={tAbout("founder.name")}
+                className="w-56 md:w-64 xl:w-72 shrink-0 rounded-2xl object-cover shadow-lg aspect-[3/4]"
+              />
+              <div className="flex-grow bg-white dark:bg-card rounded-2xl shadow-md p-8 text-left flex flex-col justify-center space-y-5">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                    {tAbout("founder.name")}
+                  </h2>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    {tAbout("founder.title")}
+                  </p>
+                </div>
+                <div className="relative pl-1">
+                  <span className="absolute -top-4 -left-1 text-[52px] text-primary/15 font-serif leading-none select-none">"</span>
+                  <p className="relative italic text-[14px] md:text-[15px] text-foreground/70 leading-relaxed">
                     {tAbout("founder.quote")}
                   </p>
                 </div>
-              </motion.div>
+                <p className="text-[13px] text-muted-foreground leading-relaxed">
+                  {tAbout("founder.description")}
+                </p>
+              </div>
+            </div>
+
+            {/* Proof cards */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {credentialItems.map((item, i) => (
+                <TracingCard key={i} item={item} i={i} />
+              ))}
             </div>
           </motion.div>
         </div>
