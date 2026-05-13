@@ -116,7 +116,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: t("nav.home") },
-    { href: "/try", label: t("nav.try") },
+    { href: "#demo", label: t("nav.try"), isHash: true },
     { href: "/faq", label: t("nav.about") },
   ];
 
@@ -130,9 +130,12 @@ export function Navbar() {
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <Link href={withLang("/")} className="flex items-center -ml-4">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="flex items-center -ml-4 cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <img src="/4.SideLogo.svg" alt="Lead Awaker Logo" className="h-10 md:h-10 object-contain" data-testid="img-navbar-logo" />
-          </Link>
+          </button>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
@@ -182,6 +185,17 @@ export function Navbar() {
             </div>
 
             {navLinks.map((link) => {
+              if ((link as any).isHash) {
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className={`text-[15px] font-bold transition-colors hover:text-primary text-muted-foreground`}
+                  >
+                    {link.label}
+                  </a>
+                );
+              }
               const href = withLang(link.href);
               return (
                 <Link
@@ -198,9 +212,6 @@ export function Navbar() {
 
             {isLoggedIn ? (
               <>
-                <Link href={withLang("/book-call")} className="text-[15px] font-bold transition-colors hover:text-primary text-muted-foreground">
-                  {t("nav.bookDemo")}
-                </Link>
                 <Link href="/agency/campaigns">
                   <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
                     {t("nav.openApp")}
@@ -213,11 +224,6 @@ export function Navbar() {
                   location === withLang("/login") ? "text-primary" : "text-muted-foreground"
                 }`}>
                   {t("nav.login")}
-                </Link>
-                <Link href={withLang("/book-call")}>
-                  <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
-                    {t("nav.bookDemo")}
-                  </Button>
                 </Link>
               </>
             )}
@@ -286,18 +292,32 @@ export function Navbar() {
           </div>
 
           {[...navLinks, ...(isLoggedIn
-              ? [{ href: "/book-call", label: t("nav.bookDemo") }, { href: "/agency/campaigns", label: t("nav.openApp") }]
-              : [{ href: "/login", label: t("nav.login") }, { href: "/book-call", label: t("nav.bookDemo") }]
-            )].map((link) => (
-            <Link
-              key={link.href}
-              href={withLang(link.href)}
-              className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
-              onClick={() => setIsOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+              ? [{ href: "/agency/campaigns", label: t("nav.openApp") }]
+              : [{ href: "/login", label: t("nav.login") }]
+            )].map((link) => {
+              if ((link as any).isHash) {
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                );
+              }
+              return (
+                <Link
+                  key={link.href}
+                  href={withLang(link.href)}
+                  className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
         </div>
       )}
     </>

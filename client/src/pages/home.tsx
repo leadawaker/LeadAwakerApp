@@ -31,7 +31,6 @@ import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import { FallingPattern } from "@/components/ui/falling-pattern";
 import { TestimonialCarousel } from "@/components/ui/testimonial-carousel";
-import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 import profileImg from "@/assets/profile.webp";
 import FounderSection from "@/components/FounderSection";
 import abdullaImg from "@/assets/Screenshot_20260508_155721_My Files.jpg";
@@ -39,7 +38,6 @@ import diederikImg from "@/assets/Screenshot_20260508_154846_Gallery.jpg";
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
-  const { t: tAbout } = useTranslation("about");
   const lang = i18n.language;
   const isDefaultLang = lang === "en";
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -173,12 +171,12 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
               >
-                <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
+                <a href="#audit">
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full transition-all duration-200 hover:bg-[#FEB800] hover:text-[#1a1a1a] hover:border-[#FEB800] hover:[box-shadow:0_0_40px_12px_rgba(254,184,0,0.6)]">
                     {t("hero.cta.primary")}
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
-                </Link>
+                </a>
 
                 <a href="#demo">
                   <Button
@@ -419,7 +417,9 @@ export default function Home() {
 
 
       {/* Revenue Calculator */}
-      <RevenueCalculator />
+      <div id="audit">
+        <RevenueCalculator />
+      </div>
 
       {/* Wave divider — Audit to Demo */}
       <style>{`
@@ -445,7 +445,7 @@ export default function Home() {
       </div>
 
       {/* Security & AI Guardrails Section */}
-      <section className="py-48 bg-[#F6F5FA] dark:bg-background">
+      <section className="py-48 bg-[#f7f7fb] dark:bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -494,40 +494,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Mission */}
-      <section className="py-24 bg-gray-200 dark:bg-card/80 border-y border-border relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-        <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-7xl mx-auto"
-          >
-            <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-border shadow-xl space-y-10 overflow-hidden">
-
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground text-center">
-                {tAbout("intro.title")}{" "}
-                <span className="text-indigo-500">{tAbout("intro.titleHighlight")}</span>
-              </h2>
-              <p className="text-xl text-muted-foreground leading-relaxed text-center max-w-6xl mx-auto">
-                {tAbout("intro.paragraph2")}
-              </p>
-              <div className="w-full max-w-5xl mx-auto -mb-4">
-                <LeadReactivationAnimation />
-              </div>
-
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* About the Founder */}
       <FounderSection />
 
@@ -562,7 +528,7 @@ export default function Home() {
 
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
+              <a href={t("bottomCta.waLink")} target="_blank" rel="noopener noreferrer">
                 <Button
                   size="lg"
                   className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary transition-all duration-200 font-bold hover:bg-[#FEB800] hover:text-[#1a1a1a] hover:border-[#FEB800] hover:[box-shadow:0_0_40px_12px_rgba(254,184,0,0.6)]"
@@ -570,7 +536,7 @@ export default function Home() {
                   {t("bottomCta.button")}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>

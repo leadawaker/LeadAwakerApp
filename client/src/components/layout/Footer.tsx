@@ -127,7 +127,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={withLang("/try")}
+                  href="#demo"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.try")}
@@ -141,14 +141,6 @@ export function Footer() {
               {t("footer.contact")}
             </h4>
             <ul className="space-y-3">
-              <li>
-                <Link
-                  href={withLang("/book-call")}
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {t("nav.bookDemo")}
-                </Link>
-              </li>
               <li>
                 <a
                   href="https://wa.me/5547974002162"
