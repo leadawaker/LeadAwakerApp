@@ -93,7 +93,7 @@
         },
         { "type": "user", "sender": "Thiago", "content": "Valeu, Rafael", "time": "10:40 AM" },
         { "type": "agent", "sender": "Rafael", "content": "Por nada. Tenha um ótimo dia 🙂", "time": "10:41 AM" },
-        { "type": "system", "content": "Encerrado", "id": "sol-6" }
+        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "sol-6" }
       ]
     },
     "gym": {
@@ -175,7 +175,7 @@
         },
         { "type": "user", "sender": "Marcos", "content": "tá ótimo, obrigado", "time": "11:10 AM" },
         { "type": "agent", "sender": "Sara", "content": "Por nada. Tenha um ótimo dia 🙂", "time": "11:11 AM" },
-        { "type": "system", "content": "Encerrado", "id": "gym-6" }
+        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "gym-6" }
       ]
     },
     "dental": {
@@ -256,7 +256,7 @@
         { "type": "system", "content": "Agendamento atualizado 📅", "id": "dent-7" },
         { "type": "user", "sender": "Laura", "content": "valeu pela flexibilidade", "time": "06:00 PM" },
         { "type": "agent", "sender": "Sofia", "content": "Imagina. Até sexta! 🙂", "time": "06:01 PM" },
-        { "type": "system", "content": "Encerrado", "id": "dent-8" }
+        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "dent-8" }
       ]
     },
     "lawFirm": {
@@ -273,6 +273,7 @@
           "time": "14:35"
         },
         { "type": "system", "content": "Lead engajado", "id": "lf-1" },
+        { "type": "system", "content": "Auto-bump", "id": "lf-bump" },
         { "type": "agent", "sender": "Sofia", "content": "Só dando um toque aqui caso você tenha ficado ocupado antes :)", "time": "14:55" },
         { "type": "user", "sender": "Otávio", "content": "Oi, sim", "time": "15:00" },
         { "type": "system", "content": "Lead respondeu", "id": "lf-2" },
@@ -315,7 +316,7 @@
         },
         { "type": "user", "sender": "Otávio", "content": "legal, torcendo que de certo", "time": "15:40" },
         { "type": "agent", "sender": "Sofia", "content": "Vai dar Otávio, tenha um ótimo dia :)", "time": "15:41" },
-        { "type": "system", "content": "Encerrado", "id": "lf-5" }
+        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "lf-5" }
       ]
     },
     "coaching": {
@@ -385,7 +386,7 @@
         },
         { "type": "user", "sender": "Ellen", "content": "obrigada Maya, era esse empurrão que eu precisava", "time": "12:30 PM" },
         { "type": "agent", "sender": "Maya", "content": "É pra isso que a gente retoma 🙂 Até quinta.", "time": "12:31 PM" },
-        { "type": "system", "content": "Encerrado", "id": "co-6" }
+        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "co-6" }
       ]
     }
   }

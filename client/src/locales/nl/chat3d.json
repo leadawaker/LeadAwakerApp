@@ -28,5 +28,12 @@
   },
   "button": {
     "continue": "Doorgaan"
+  },
+  "cases": {
+    "solar": "Solar",
+    "coaching": "Coaching",
+    "gym": "Sportschool",
+    "dental": "Tandarts",
+    "legal": "Juridisch"
   }
 }

@@ -56,6 +56,7 @@ import {
   outreachTemplates,
   insertOutreachTemplatesSchema,
 } from "@shared/schema";
+import { generateCampaignContext } from "./demo-session";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -1090,6 +1091,43 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       console.error("[generate-summary] Error:", err);
       return res.status(500).json({ error: "Internal error" });
     }
+  }));
+
+  // POST /api/campaigns/:id/generate-demo — AI-fill all demo campaign fields from a niche
+  app.post("/api/campaigns/:id/generate-demo", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const { niche } = req.body;
+    if (!niche || typeof niche !== "string" || !niche.trim()) {
+      return res.status(400).json({ message: "niche is required" });
+    }
+    const existing = await storage.getCampaignById(campaignId);
+    if (!existing) return res.status(404).json({ message: "Campaign not found" });
+
+    const ctx = await generateCampaignContext(niche.trim());
+    if (!ctx) return res.status(500).json({ message: "Generation failed — check OPEN_AI_API_KEY" });
+
+    const patch = insertCampaignsSchema.partial().parse({
+      name: `${ctx.niche_label.charAt(0).toUpperCase() + ctx.niche_label.slice(1)} Demo`,
+      companyName: ctx.company_name,
+      niche: ctx.niche_label,
+      serviceName: ctx.service_name,
+      campaignUsp: ctx.usp,
+      description: ctx.business_description,
+      bookingModeOverride: ctx.booking_mode_call ? "call" : "direct",
+      whatLeadDid: ctx.what_lead_did,
+      nicheQuestion: ctx.niche_question,
+      agentName: ctx.agent_name,
+      firstMessage: ctx.first_message,
+      secondMessage: ctx.second_message,
+      bump1Template: ctx.bump_1_template,
+      bump2Template: ctx.bump_2_template,
+      isDemo: true,
+      language: "en",
+    });
+
+    const updated = await storage.updateCampaign(campaignId, patch);
+    if (!updated) return res.status(500).json({ message: "Failed to update campaign" });
+    res.json(toDbKeys(updated as any, campaigns));
   }));
 
   // ─── Leads ────────────────────────────────────────────────────────

@@ -1147,6 +1147,13 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const priority = lead.priority || lead.Priority || "";
   const isAgency = window.location.pathname.startsWith("/agency");
 
+  // Demo niche context
+  const demoNicheRaw = lead.demo_niche || lead.demoNiche || "";
+  const demoNicheCtx = (() => {
+    if (!demoNicheRaw) return null;
+    try { return JSON.parse(demoNicheRaw) as Record<string, any>; } catch { return null; }
+  })();
+
   // Derived engagement metrics
   const sentCount = Number(lead.message_count_sent || 0);
   const recvCount = Number(lead.message_count_received || 0);
@@ -1349,6 +1356,17 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               label={t("detail.fields.source")}
               value={source}
             />
+            {demoNicheCtx && (
+              <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
+                <span className="text-[11px] text-muted-foreground shrink-0">Niche</span>
+                <div className="text-right text-[11px] text-foreground/80">
+                  <div className="font-medium">{demoNicheCtx.niche_label || demoNicheCtx.raw || "—"}</div>
+                  {demoNicheCtx.raw && demoNicheCtx.raw !== demoNicheCtx.niche_label && (
+                    <div className="text-muted-foreground/60 mt-0.5 italic">{demoNicheCtx.raw}</div>
+                  )}
+                </div>
+              </div>
+            )}
             {/* Campaign — editable dropdown (#31, agency view only) */}
             {isAgencyPanel && (
               <div
@@ -1498,6 +1516,11 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5">
+                  {demoNicheCtx && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/15 text-violet-500 dark:text-violet-400 border border-violet-500/25 self-start">
+                      DEMO{demoNicheCtx.niche_label ? ` · ${demoNicheCtx.niche_label}` : ""}
+                    </span>
+                  )}
                   {scoreBreakdown && (
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <TrendIcon
@@ -1893,6 +1916,17 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 )}
               </div>
             </div>
+            {demoNicheCtx && (
+              <div className="mb-2 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2 text-[11px] space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-violet-500/70 mb-1.5">Demo Campaign</div>
+                {demoNicheCtx.company_name && <div><span className="text-muted-foreground">Company:</span> <span className="text-foreground/80">{demoNicheCtx.company_name}</span></div>}
+                {(demoNicheCtx.niche_label || demoNicheCtx.raw) && <div><span className="text-muted-foreground">Niche:</span> <span className="text-foreground/80">{demoNicheCtx.niche_label || demoNicheCtx.raw}</span></div>}
+                {demoNicheCtx.service_name && <div><span className="text-muted-foreground">Service:</span> <span className="text-foreground/80">{demoNicheCtx.service_name}</span></div>}
+                {demoNicheCtx.usp && <div><span className="text-muted-foreground">USP:</span> <span className="text-foreground/80">{demoNicheCtx.usp}</span></div>}
+                {demoNicheCtx.what_lead_did && <div><span className="text-muted-foreground">Lead did:</span> <span className="text-foreground/80">{demoNicheCtx.what_lead_did}</span></div>}
+                {demoNicheCtx.niche_question && <div><span className="text-muted-foreground">Question:</span> <span className="text-foreground/80 italic">{demoNicheCtx.niche_question}</span></div>}
+              </div>
+            )}
             <div className="rounded-xl border border-border/40 bg-muted/20 p-2">
               <Textarea
                 value={localNotes}

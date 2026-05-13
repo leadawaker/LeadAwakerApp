@@ -91,11 +91,11 @@
   --bottombar-h: calc(64px + var(--safe-bottom));
 
   /* Stone Gray Design System — floating cards aesthetic */
-  --background: 0 0% 88%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
-  --foreground: 0 0% 12%; /* Near black — high contrast on stone gray */
-  --bg-main: 0 0% 87%; /* Match background */
+  --background: 0 0% 100%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
+  --foreground: 0 0% 0%; /* Near black — high contrast on stone gray */
+  --bg-main: 0 0% 100%; /* Match background */
 
-  --card: 0 0% 97%; /* #F8F8F8 — floating cards, selectable elements */
+  --card: 0 0% 98%; /* #F8F8F8 — floating cards, selectable elements */
   --card-foreground: 0 0% 12%;
   --card-hover: 0 0% 100%; /* #FFFFFF — pure white hover on cards */
 
@@ -111,7 +111,7 @@
   --secondary-foreground: 0 0% 15%;
 
   /* Muted — secondary panels (#EDEDED) */
-  --muted: 0 0% 93%;
+  --muted: 0 0% 100%;
   --muted-foreground: 0 0% 38%;
 
   /* Accent: Warm yellow (#FFEA80) */

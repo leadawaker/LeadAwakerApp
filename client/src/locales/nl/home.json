@@ -11,8 +11,29 @@
       "line2": "Wij worden alleen betaald als jij dat ook bent."
     },
     "cta": {
-      "primary": "Gesprek Boeken",
+      "primary": "Controleer mijn Leads",
       "secondary": "Probeer de AI"
+    },
+    "demoForm": {
+      "firstNamePlaceholder": "Jouw naam",
+      "submit": "Probeer Demo",
+      "fineprint": "Geen aanmelding. Opent WhatsApp met een live AI.",
+      "errors": {
+        "missingFields": "Vul beide velden in (min. 5 tekens voor de niche).",
+        "rateLimited": "Te veel verzoeken. Probeer het over een uur opnieuw.",
+        "generic": "Er is iets misgegaan. Probeer het opnieuw.",
+        "network": "Netwerkfout. Controleer je verbinding."
+      },
+      "nichePlaceholders": [
+        "bijv. tandartspraktijk in Amsterdam",
+        "bijv. SaaS voor accountants",
+        "bijv. makelaarskantoor",
+        "bijv. sportschool in Rotterdam",
+        "bijv. advocatenkantoor",
+        "bijv. hypotheekadviseur",
+        "bijv. autodealer",
+        "bijv. verzekeringsagent"
+      ]
     }
   },
   "results": {
@@ -171,7 +192,8 @@
     "title": "Klaar voor een Persoonlijke Blik?",
     "quote": "Laten we jouw leads bespreken en samen een plan bouwen. Ik werk met maximaal 5 partners, plekken vullen snel.",
     "meta": "Duur: 10 tot 30 minuten\nGeen verplichtingen",
-    "button": "Gesprek Boeken"
+    "button": "Chat op WhatsApp",
+    "waLink": "https://wa.me/5547974002162?text=Hoi%20Gabriel!%20Ik%20heb%20zojuist%20de%20Lead%20Awakening%20Audit%20gedaan.%20Ik%20wil%20graag%20bespreken%20hoe%20we%20inkomsten%20uit%20mijn%20slapende%20leads%20kunnen%20ontgrendelen."
   },
   "trySixty": {
     "eyebrow": "Hier is hoe",
@@ -182,6 +204,19 @@
       "customer1": "eerlijk gezegd was de prijs vorige keer te hoog voor ons",
       "ai1": "Helemaal begrijpelijk, zo'n beslissing moet gewoon goed voelen. Wat voelde te hoog, de maandlasten of het totaal?",
       "customer2": "het totaal, dat had ik niet verwacht"
+    }
+  },
+  "testimonial": {
+    "sectionLabel": "Wat onze partners zeggen",
+    "abdulla": {
+      "quote": "We gebruiken al een goed systeem, de techniek is niet het probleem. Gabriel haalde leads terug die we volledig uit het oog hadden verloren, en het voelde nooit geautomatiseerd, gewoon natuurlijke gesprekken.",
+      "name": "Abdulla Dilimi",
+      "role": "Growth Specialist"
+    },
+    "diederik": {
+      "quote": "Gabriel zette het niet gewoon op en liep weg. Hij begreep onze contacten en stemde de toon af, de resultaten spraken voor zich. Voelde meer als een consultant dan als een tool.",
+      "name": "Diederik van de Laarschot",
+      "role": "Medeoprichter, FusionCraft"
     }
   },
   "founderBackground": {

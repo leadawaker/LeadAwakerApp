@@ -1,18 +1,39 @@
 {
   "hero": {
-    "badge": "For high-ticket sales teams",
+    "badge": "For high-ticket sales teams only",
     "title": {
       "line1": "Stop buying new leads.",
       "highlight": "Wake up",
       "line2": "the ones you have."
     },
     "subtitle": {
-      "line1": "Booked calls from leads you already own.",
+      "line1": "We turn your old contacts into booked calls without spending more on ads.",
       "line2": "We only get paid when you do."
     },
     "cta": {
-      "primary": "Book a Call",
+      "primary": "Audit my Leads",
       "secondary": "Try the AI"
+    },
+    "demoForm": {
+      "firstNamePlaceholder": "Your name",
+      "submit": "Try Demo",
+      "fineprint": "No sign-up. Opens WhatsApp with a live AI.",
+      "errors": {
+        "missingFields": "Please fill in both fields (min 5 chars for the niche).",
+        "rateLimited": "Too many requests. Try again in an hour.",
+        "generic": "Something went wrong. Please try again.",
+        "network": "Network error. Check your connection."
+      },
+      "nichePlaceholders": [
+        "e.g. dental clinic in Amsterdam",
+        "e.g. SaaS for accountants",
+        "e.g. real estate agency",
+        "e.g. gym in Rotterdam",
+        "e.g. law firm",
+        "e.g. mortgage broker",
+        "e.g. car dealership",
+        "e.g. insurance agency"
+      ]
     }
   },
   "results": {
@@ -168,11 +189,12 @@
     "subtitle": "Watch how a real conversation goes from cold lead to booked call, automatically."
   },
   "bottomCta": {
-    "title": "Ready for a Personalized Look?",
-    "quote": "Let's discuss your leads and build a plan together. I work with 5 partners max, spots fill up fast.",
-    "meta": "Duration: 10 to 30 minutes\nNo commitment",
-    "button": "Book a Call"
-  },
+  "title": "Only 5 Active Partners at a Time",
+  "quote": "We stay intentionally hands-on with every partner.  This isn’t a plug-and-play AI tool. The results come from understanding your sales process, where your leads come from, and how people actually buy from you.",
+  "meta": "I reply personally. If it’s not a fit, I’ll tell you fast.",
+  "button": "Start on WhatsApp",
+  "waLink": "https://wa.me/5547974002162?text=Hi%20Gabriel!%20I%20just%20did%20the%20Lead%20Awakening%20Audit.%20I’d%20like%20to%20discuss%20how%20we%20can%20unlock%20revenue%20from%20my%20dormant%20leads."
+},
   "trySixty": {
     "eyebrow": "Here is how",
     "title": "Lead Awakening Demo",
@@ -184,16 +206,18 @@
       "customer2": "the total, I wasn't expecting that number"
     }
   },
-  "founderBackground": {
-    "slimLabel": "Founder previously worked with",
-    "eyebrow": "Who's behind Lead Awaker",
-    "label": "12 years building for products that did over $3.3B in revenue",
-    "cta": "Read the full story",
-    "tooltips": {
-      "warnerbros": "Warner Bros' Tom & Jerry (2021): contributed digital art during post-production at Framestore, the Oscar-winning VFX studio behind the film. $136M global box office.",
-      "sega": "Creative Assembly (Sega, $3.1B parent): shipped 3 titles in 12 months. Same pace, same standards I bring to Lead Awaker.",
-      "embracer": "New World Interactive (now an Embracer Group studio): led a team and shipped 2 titles, including Insurgency: Sandstorm ($52M revenue, still has a live community 7 years in). Embracer is publicly traded in Stockholm with 100+ studios in its portfolio.",
-      "valve": "Selected for Valve's invite-only VR game jam in London. Jammed with devs who now ship at Valve, Epic, and Ubisoft."
+  "testimonial": {
+    "sectionLabel": "What our Partners say",
+    "abdulla": {
+      "quote": "We already use a great system, so the tech isn't the issue. Gabriel re-engaged leads we'd completely lost touch with, and it never felt automated, just natural conversations.",
+      "name": "Abdulla Dilimi",
+      "role": "Growth Specialist"
+    },
+    "diederik": {
+      "quote": "Gabriel didn't just set it and walked away. He understood our contacts and tuned the tone, the results showed. Felt more like a consultant than a tool.",
+      "name": "Diederik van de Laarschot",
+      "role": "Co-Founder, FusionCraft"
     }
+  
   }
 }

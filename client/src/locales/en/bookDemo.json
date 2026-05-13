@@ -1,20 +1,20 @@
 {
   "hero": {
-    "title": "Let's Look at Your Leads Together",
-    "subtitle": "In 15 minutes we'll walk through your leads together and figure out if this is a fit for your business."
+    "title": "Pick a time that works.",
+    "subtitle": ""
   },
   "benefits": {
     "demo": {
-      "title": "See It in Action",
-      "description": "I'll show you the full Lead Awaker setup: how the AI runs conversations, handles objections, and feeds back into your pipeline."
+      "title": "",
+      "description": ""
     },
     "noCommitment": {
-      "title": "No Pressure",
-      "description": "If it's not a fit, we'll know in 15 minutes. No pitch, no follow-up unless you want one."
+      "title": "",
+      "description": ""
     }
   },
   "calendar": {
-    "title": "Pick a time"
+    "title": ""
   },
   "trust": {
     "duration": "15-minute call",

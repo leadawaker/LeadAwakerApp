@@ -28,5 +28,12 @@
   },
   "button": {
     "continue": "Continue"
+  },
+  "cases": {
+    "solar": "Solar",
+    "coaching": "Coaching",
+    "gym": "Gym",
+    "dental": "Dental",
+    "legal": "Legal"
   }
 }

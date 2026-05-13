@@ -10,9 +10,12 @@
     "name": "Gabriel Fronza",
     "title": "Founder",
     "tagline": "I build systems that earn attention.",
-    "body": "As a digital artist, developer, designer, and AI specialist, my work is shaped by psychology, aesthetics, and technology. Meditation taught me that attention is our most valuable resource, and the brands that grow are the ones that know how to guide it with intention. Lead Awaker was built to help businesses capture attention and redirect it toward meaningful growth."
+    "body1": "As an AI specialist, developer, designer, and digital artist, my work is shaped by psychology, technology and aesthetics.",
+    "body2": "Meditation taught me that attention is our most valuable resource. In the digital era, it is constantly pulled in every direction, scattered across platforms, distractions, and noise. The brands that grow are the ones that know how to guide it with intention.",
+    "body3": "I built Lead Awaker to help them do exactly that."
   },
   "credentials": {
+    "experienceLabel": "Experience that shaped this",
     "title": "It's not a lead problem. It's a leak problem.",
     "subtitle": "From Oscar-winning studios to shipping AAA games. The same discipline, applied to your leads.",
     "resultsNode": "Real results.",
@@ -41,7 +44,8 @@
   "cta": {
     "title": "See it running on your leads",
     "quote": "I've shipped under the tightest deadlines in entertainment, then built a business where every lost lead cost me personally. That experience is baked into every campaign we run.",
-    "button": "Book a free demo"
+    "button": "Start on WhatsApp",
+    "waLink": "https://wa.me/5547974002162?text=Hi%20Gabriel!%20I%20just%20did%20the%20Lead%20Awakening%20Audit.%20I'd%20like%20to%20discuss%20how%20we%20can%20unlock%20revenue%20from%20my%20dormant%20leads."
   },
   "faq": {
     "title": "Frequently Asked Questions",

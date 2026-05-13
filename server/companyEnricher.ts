@@ -19,6 +19,7 @@ import { prospects } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { generateOfferIdeas } from "./offerIdeasGenerator";
 import { discoverCompanyContacts } from "./contactDiscovery";
+import { startCompanyEnrichmentOpenAI } from "./companyEnricherOpenAI";
 
 const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 
@@ -32,6 +33,16 @@ export async function startCompanyEnrichment(prospectId: number): Promise<{ star
     .update(prospects)
     .set({ companyEnrichmentStatus: "in_progress" })
     .where(eq(prospects.id, prospectId));
+
+  // Check if OpenAI fallback is enabled
+  if (process.env.COMPANY_ENRICH_PROVIDER === "openai") {
+    (async () => {
+      await startCompanyEnrichmentOpenAI(prospectId);
+      // Background poller runs after enrichment completes (see below)
+      pollAndGenerateOfferIdeas(prospectId);
+    })();
+    return { started: true };
+  }
 
   const prompt = buildPrompt(prospectId);
 
@@ -61,99 +72,103 @@ export async function startCompanyEnrichment(prospectId: number): Promise<{ star
     console.error(`[companyEnricher] spawn error for prospect ${prospectId}:`, err.message);
   });
 
-  // Background poller: when the detached agent flips status to 'enriched',
-  // auto-generate offer_ideas. Fire-and-forget; dies if the process restarts.
-  (async () => {
-    const POLL_INTERVAL_MS = 10_000;
-    const MAX_WAIT_MS = 5 * 60_000;
-    const start = Date.now();
-
-    while (Date.now() - start < MAX_WAIT_MS) {
-      await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
-      const [row] = await db
-        .select({ status: prospects.companyEnrichmentStatus })
-        .from(prospects)
-        .where(eq(prospects.id, prospectId))
-        .limit(1);
-
-      if (!row) return;
-      if (row.status === "enriched") {
-        // Step 1: auto-discover 2 contacts (cheap, Google + Haiku, 0 RapidAPI credits)
-        if (process.env.ENABLE_CONTACT_DISCOVERY_IN_COMPANY_ENRICH !== "false") {
-          try {
-            const [p] = await db
-              .select({
-                company: prospects.company,
-                niche: prospects.niche,
-                companySummary: prospects.companySummary,
-                contactManual: prospects.contactManual,
-                contact2Manual: prospects.contact2Manual,
-                contactLinkedin: prospects.contactLinkedin,
-                contact2Linkedin: prospects.contact2Linkedin,
-              })
-              .from(prospects)
-              .where(eq(prospects.id, prospectId))
-              .limit(1);
-
-            if (p) {
-              const needContact1 = !p.contactManual && !p.contactLinkedin;
-              const needContact2 = !p.contact2Manual && !p.contact2Linkedin;
-              const needed = (needContact1 ? 1 : 0) + (needContact2 ? 1 : 0);
-              if (needed > 0 && p.company) {
-                console.log(`[ContactDiscovery] Running for prospect ${prospectId} (need=${needed})...`);
-                // Avoid picking a URL already assigned to the other (non-empty) slot
-                const exclude: string[] = [];
-                if (p.contactLinkedin) exclude.push(p.contactLinkedin);
-                if (p.contact2Linkedin) exclude.push(p.contact2Linkedin);
-                const discovered = await discoverCompanyContacts(p.company, p.niche, p.companySummary, needed, exclude);
-                const updates: Record<string, string | null> = {};
-                let di = 0;
-                if (needContact1 && discovered[di]) {
-                  updates.contactName = discovered[di].name;
-                  updates.contactRole = discovered[di].role;
-                  updates.contactLinkedin = discovered[di].linkedinUrl;
-                  di++;
-                }
-                if (needContact2 && discovered[di]) {
-                  updates.contact2Name = discovered[di].name;
-                  updates.contact2Role = discovered[di].role;
-                  updates.contact2Linkedin = discovered[di].linkedinUrl;
-                }
-                if (Object.keys(updates).length > 0) {
-                  await db.update(prospects).set(updates).where(eq(prospects.id, prospectId));
-                  console.log(`[ContactDiscovery] Wrote ${Object.keys(updates).length / 3} contact(s) for ${prospectId}`);
-                } else {
-                  console.log(`[ContactDiscovery] No valid picks for ${prospectId}, leaving contacts empty`);
-                }
-              } else {
-                console.log(`[ContactDiscovery] Skipping ${prospectId}, both slots manual or already have LinkedIn URL`);
-              }
-            }
-          } catch (e) {
-            console.error(`[ContactDiscovery] Failed for ${prospectId}:`, e);
-          }
-        }
-
-        // Step 2: generate offer ideas (existing)
-        console.log(`[OfferIdeas] Company enrichment complete for ${prospectId}, generating offer ideas...`);
-        try {
-          const result = await generateOfferIdeas(prospectId);
-          console.log(`[OfferIdeas] Prospect ${prospectId}: generated=${result.generated} ${result.reason || ""}`);
-        } catch (e) {
-          console.error(`[OfferIdeas] Failed for ${prospectId}:`, e);
-        }
-        return;
-      }
-      if (row.status === "failed" || row.status === "not_found") {
-        console.log(`[OfferIdeas] Skipping ${prospectId}, company enrichment ${row.status}`);
-        return;
-      }
-    }
-
-    console.warn(`[OfferIdeas] Timeout waiting for company enrichment on prospect ${prospectId}`);
-  })();
+  pollAndGenerateOfferIdeas(prospectId);
 
   return { started: true };
+}
+
+/**
+ * Background poller that runs after enrichment completes (regardless of provider).
+ * Auto-discovers contacts and generates offer ideas. Fire-and-forget.
+ */
+async function pollAndGenerateOfferIdeas(prospectId: number): Promise<void> {
+  const POLL_INTERVAL_MS = 10_000;
+  const MAX_WAIT_MS = 5 * 60_000;
+  const start = Date.now();
+
+  while (Date.now() - start < MAX_WAIT_MS) {
+    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+    const [row] = await db
+      .select({ status: prospects.companyEnrichmentStatus })
+      .from(prospects)
+      .where(eq(prospects.id, prospectId))
+      .limit(1);
+
+    if (!row) return;
+    if (row.status === "enriched") {
+      // Step 1: auto-discover 2 contacts (cheap, Google + Haiku, 0 RapidAPI credits)
+      if (process.env.ENABLE_CONTACT_DISCOVERY_IN_COMPANY_ENRICH !== "false") {
+        try {
+          const [p] = await db
+            .select({
+              company: prospects.company,
+              niche: prospects.niche,
+              companySummary: prospects.companySummary,
+              contactManual: prospects.contactManual,
+              contact2Manual: prospects.contact2Manual,
+              contactLinkedin: prospects.contactLinkedin,
+              contact2Linkedin: prospects.contact2Linkedin,
+            })
+            .from(prospects)
+            .where(eq(prospects.id, prospectId))
+            .limit(1);
+
+          if (p) {
+            const needContact1 = !p.contactManual && !p.contactLinkedin;
+            const needContact2 = !p.contact2Manual && !p.contact2Linkedin;
+            const needed = (needContact1 ? 1 : 0) + (needContact2 ? 1 : 0);
+            if (needed > 0 && p.company) {
+              console.log(`[ContactDiscovery] Running for prospect ${prospectId} (need=${needed})...`);
+              // Avoid picking a URL already assigned to the other (non-empty) slot
+              const exclude: string[] = [];
+              if (p.contactLinkedin) exclude.push(p.contactLinkedin);
+              if (p.contact2Linkedin) exclude.push(p.contact2Linkedin);
+              const discovered = await discoverCompanyContacts(p.company, p.niche, p.companySummary, needed, exclude);
+              const updates: Record<string, string | null> = {};
+              let di = 0;
+              if (needContact1 && discovered[di]) {
+                updates.contactName = discovered[di].name;
+                updates.contactRole = discovered[di].role;
+                updates.contactLinkedin = discovered[di].linkedinUrl;
+                di++;
+              }
+              if (needContact2 && discovered[di]) {
+                updates.contact2Name = discovered[di].name;
+                updates.contact2Role = discovered[di].role;
+                updates.contact2Linkedin = discovered[di].linkedinUrl;
+              }
+              if (Object.keys(updates).length > 0) {
+                await db.update(prospects).set(updates).where(eq(prospects.id, prospectId));
+                console.log(`[ContactDiscovery] Wrote ${Object.keys(updates).length / 3} contact(s) for ${prospectId}`);
+              } else {
+                console.log(`[ContactDiscovery] No valid picks for ${prospectId}, leaving contacts empty`);
+              }
+            } else {
+              console.log(`[ContactDiscovery] Skipping ${prospectId}, both slots manual or already have LinkedIn URL`);
+            }
+          }
+        } catch (e) {
+          console.error(`[ContactDiscovery] Failed for ${prospectId}:`, e);
+        }
+      }
+
+      // Step 2: generate offer ideas (existing)
+      console.log(`[OfferIdeas] Company enrichment complete for ${prospectId}, generating offer ideas...`);
+      try {
+        const result = await generateOfferIdeas(prospectId);
+        console.log(`[OfferIdeas] Prospect ${prospectId}: generated=${result.generated} ${result.reason || ""}`);
+      } catch (e) {
+        console.error(`[OfferIdeas] Failed for ${prospectId}:`, e);
+      }
+      return;
+    }
+    if (row.status === "failed" || row.status === "not_found") {
+      console.log(`[OfferIdeas] Skipping ${prospectId}, company enrichment ${row.status}`);
+      return;
+    }
+  }
+
+  console.warn(`[OfferIdeas] Timeout waiting for company enrichment on prospect ${prospectId}`);
 }
 
 function buildPrompt(prospectId: number): string {

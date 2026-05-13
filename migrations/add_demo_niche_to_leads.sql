@@ -1,0 +1,1 @@
+ALTER TABLE p2mxx34fvbf3ll6."Leads" ADD COLUMN IF NOT EXISTS demo_niche TEXT;

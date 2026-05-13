@@ -3,9 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Phone, Mail, MessageSquare, Building2, Tag as TagIcon, Pencil, Trash2 } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { resolveColor } from "@/features/tags/types";
 import { getLeadStatusAvatarColor as getStatusAvatarColor } from "@/lib/avatarUtils";
 
 import { PIPELINE_HEX } from "./constants";
@@ -15,16 +13,14 @@ import { ListScoreRing } from "./atoms";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
 const TRAY_WIDTH = 220;
-// Scoring/sentiment tags are useful in the detail panel but add noise on compact cards
-const CARD_EXCLUDED_TAGS = new Set(["Positive Sentiment", "Negative Sentiment", "Coaching Interest", "Responded"]); // Swipe-left action tray width in px (Feature #41)
 
 export function LeadListCard({
   lead,
   isActive,
   onClick,
-  leadTags,
+  leadTags: _leadTags,
   showContactAlways = false,
-  tagsColorful = false,
+  tagsColorful: _tagsColorful,
   hideTags = false,
   campaignsById,
   onOpenConversation,
@@ -48,7 +44,6 @@ export function LeadListCard({
   onQuickDelete?: () => void;
 }) {
   const { t } = useTranslation("leads");
-  const { isDark } = useTheme();
   const name        = getFullName(lead);
   const status      = getStatus(lead);
   const score       = getScore(lead);
@@ -57,11 +52,17 @@ export function LeadListCard({
   const avatarColor = getStatusAvatarColor(status);
   const statusHex   = PIPELINE_HEX[status] || "#6B7280";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
-  const visibleTags = leadTags.filter(t => !CARD_EXCLUDED_TAGS.has(t.name)).slice(0, 3);
   const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
   const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
+  const isDemo = (lead.source || lead.Source) === "WhatsApp Demo" ||
+    (lead.channel_identifier || lead.channelIdentifier || "").startsWith("wa-demo:");
+  const demoNicheLabel = (() => {
+    const raw = lead.demo_niche || lead.demoNiche || "";
+    if (!raw) return "";
+    try { return JSON.parse(raw)?.niche_label || JSON.parse(raw)?.raw || ""; } catch { return ""; }
+  })();
 
   // ── Swipe gestures: right → inbox, left → quick actions tray ────────────────
   const cardWrapRef     = useRef<HTMLDivElement>(null);
@@ -328,42 +329,30 @@ export function LeadListCard({
 
           {/* Left: name + status */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
-              {name}
-            </p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
+                {name}
+              </p>
+              {isDemo && (
+                <span className="inline-flex items-center shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-500/15 text-violet-500 dark:text-violet-400 border border-violet-500/25 leading-none">
+                  DEMO
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-1 mt-0.5">
               <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", (status === "New" || status === "Responded" || status === "Multiple Responses") && "animate-status-pulse")} style={{ backgroundColor: statusHex, color: statusHex }} />
               <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
+              {isDemo && demoNicheLabel && (
+                <span className="text-[10px] text-violet-500/70 dark:text-violet-400/60 truncate">{demoNicheLabel}</span>
+              )}
             </div>
-
-            {/* Tags + contact — collapses when hideTags, expands on hover */}
+            {/* Contact info — collapses when hideTags, expands on hover */}
             <div className={cn(
               "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
               hideTags
                 ? "max-h-0 opacity-0 group-hover/card:max-h-24 group-hover/card:opacity-100"
                 : "max-h-24 opacity-100"
             )}>
-              {visibleTags.length > 0 && (
-                <div className="relative z-10 flex items-center gap-1 flex-wrap mt-1">
-                  {visibleTags.map((t) => {
-                    const hex = resolveColor(t.color);
-                    return (
-                      <span
-                        key={t.name}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                        style={tagsColorful
-                          ? { backgroundColor: `${hex}20`, color: hex }
-                          : isDark
-                            ? { backgroundColor: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }
-                            : { backgroundColor: isActive ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }
-                        }
-                      >
-                        {t.name}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
               <div className={cn(
                 "overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden",
                 showContactAlways

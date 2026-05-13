@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ArrowRight } from "lucide-react";
@@ -8,6 +8,53 @@ import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import Seo from "@/Seo";
 import profileImg from "@/assets/profile.webp";
+
+type CredentialItem = { metric: string; label: string; description: string };
+
+function TracingCard({ item, i }: { item: CredentialItem; i: number }) {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const ref = (el: HTMLDivElement | null) => {
+    if (el) {
+      const { width, height } = el.getBoundingClientRect();
+      if (width !== size.w || height !== size.h) setSize({ w: width, h: height });
+    }
+  };
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: i * 0.3, ease: "easeOut" }}
+      className="relative px-4 py-5 text-left bg-white/70 dark:bg-card/70 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+    >
+      {size.w > 0 && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ borderRadius: "1rem" }}>
+          <motion.rect
+            x="1" y="1"
+            width={size.w - 2} height={size.h - 2}
+            rx="16" ry="16"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: [0, 1], opacity: [0, 1, 1, 0] }}
+            viewport={{ once: true }}
+            transition={{
+              pathLength: { duration: 1.8, delay: i * 0.4 + 0.3, ease: "easeInOut" },
+              opacity: { duration: 2.2, delay: i * 0.4 + 0.3, times: [0, 0.05, 0.75, 1] },
+            }}
+          />
+        </svg>
+      )}
+      <div className="relative z-10">
+        <div className="text-[28px] font-bold text-primary mb-1 text-center">{item.metric}</div>
+        <div className="text-[12px] font-semibold text-foreground mb-2 text-center">{item.label}</div>
+        <p className="text-[12px] text-muted-foreground leading-relaxed">{item.description}</p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function About() {
   const { t, i18n } = useTranslation("about");
@@ -92,65 +139,9 @@ export default function About() {
 
                 {/* Credential cards */}
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {credentialItems.map((item, i) => {
-                    const TracingCard = () => {
-                      const [size, setSize] = useState({ w: 0, h: 0 });
-                      const ref = (el: HTMLDivElement | null) => {
-                        if (el) {
-                          const { width, height } = el.getBoundingClientRect();
-                          if (width !== size.w || height !== size.h) {
-                            setSize({ w: width, h: height });
-                          }
-                        }
-                      };
-
-                      return (
-                        <motion.div
-                          key={i}
-                          ref={ref}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: i * 0.3, ease: "easeOut" }}
-                          className="relative px-4 py-5 text-left bg-white/70 dark:bg-card/70 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
-                        >
-                          {/* SVG border trace */}
-                          {size.w > 0 && (
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ borderRadius: "1rem" }}>
-                              <motion.rect
-                                x="1"
-                                y="1"
-                                width={size.w - 2}
-                                height={size.h - 2}
-                                rx="16"
-                                ry="16"
-                                fill="none"
-                                stroke="hsl(var(--primary))"
-                                strokeWidth="2"
-                                initial={{ pathLength: 0, opacity: 0 }}
-                                whileInView={{
-                                  pathLength: [0, 1],
-                                  opacity: [0, 1, 1, 0],
-                                }}
-                                viewport={{ once: true }}
-                                transition={{
-                                  pathLength: { duration: 1.8, delay: i * 0.4 + 0.3, ease: "easeInOut" },
-                                  opacity: { duration: 2.2, delay: i * 0.4 + 0.3, times: [0, 0.05, 0.75, 1] },
-                                }}
-                              />
-                            </svg>
-                          )}
-                          <div className="relative z-10">
-                            <div className="text-[28px] font-bold text-primary mb-1 text-center">{item.metric}</div>
-                            <div className="text-[12px] font-semibold text-foreground mb-2 text-center">{item.label}</div>
-                            <p className="text-[12px] text-muted-foreground leading-relaxed">{item.description}</p>
-                          </div>
-                        </motion.div>
-                      );
-                    };
-
-                    return <TracingCard key={i} />;
-                  })}
+                  {credentialItems.map((item, i) => (
+                    <TracingCard key={i} item={item} i={i} />
+                  ))}
                 </div>
           </motion.div>
         </div>
@@ -192,6 +183,53 @@ export default function About() {
             </motion.div>
           </div>
         </section>
+
+        {/* About the Founder - personal section */}
+        <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 py-24">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-6xl mx-auto space-y-14"
+          >
+            <motion.div
+              className="flex flex-col md:flex-row items-start gap-10"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <img
+                src={profileImg}
+                alt={t("founder.name")}
+                className="w-64 md:w-72 shrink-0 rounded-2xl object-cover shadow-md aspect-[3/4]"
+              />
+              <div className="flex-grow space-y-6 text-left">
+                <div className="flex items-baseline gap-3">
+                  <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+                    {t("founder.name")}
+                  </h3>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+                    {t("founder.title")}
+                  </p>
+                </div>
+                <p className="italic border-l-4 border-primary/30 pl-6 text-[18px] md:text-[20px] text-foreground/80 leading-relaxed">
+                  {t("founder.quote")}
+                </p>
+                <p className="text-[16px] text-muted-foreground leading-relaxed">
+                  {t("founder.description")}
+                </p>
+              </div>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {credentialItems.map((item, i) => (
+                <TracingCard key={i} item={item} i={i} />
+              ))}
+            </div>
+          </motion.div>
+        </div>
 
         {/* FAQ */}
         <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24 py-24">

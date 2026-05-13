@@ -501,6 +501,7 @@ export const leads = nocodb.table("Leads", {
   aiNotes: text("ai_notes"),
   aiNotesGeneratedAt: timestamp("ai_notes_generated_at", { withTimezone: true }),
   abVariant: text("ab_variant"),
+  demoNiche: text("demo_niche"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),

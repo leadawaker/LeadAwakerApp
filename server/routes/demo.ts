@@ -4,12 +4,15 @@ import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth } from "../auth";
 import {
   DEMO_CAMPAIGNS,
+  UNIVERSAL_DEMO_CAMPAIGN_ID,
   isValidDemoCampaignId,
   isDemoCampaign,
   checkRateLimit,
   generateToken,
   createPendingDemoLead,
   buildWhatsAppLink,
+  generateNicheContext,
+  buildFallbackNicheContext,
 } from "../demo-session";
 
 const createSessionSchema = z.object({
@@ -19,6 +22,13 @@ const createSessionSchema = z.object({
   // campaign. The AI + First_Message render in this language at runtime.
   language: z.enum(["en", "nl", "pt"]),
   campaignId: z.number().int(),
+});
+
+// Universal (website) flow: free-text niche instead of fixed campaignId
+const universalSessionSchema = z.object({
+  firstName: z.string().trim().min(1).max(80),
+  niche: z.string().trim().min(5).max(300),
+  language: z.enum(["en", "nl", "pt"]),
 });
 
 function clientIp(req: Request): string {
@@ -35,15 +45,6 @@ export function registerDemoRoutes(app: Express): void {
   app.post(
     "/api/demo/create-session",
     wrapAsync(async (req, res) => {
-      const parsed = createSessionSchema.safeParse(req.body);
-      if (!parsed.success) return handleZodError(res, parsed.error);
-
-      const { firstName, language, campaignId } = parsed.data;
-
-      if (!isValidDemoCampaignId(campaignId)) {
-        return res.status(400).json({ message: "Invalid campaign." });
-      }
-
       const ip = clientIp(req);
       const gate = checkRateLimit(ip);
       if (!gate.ok) {
@@ -54,20 +55,41 @@ export function registerDemoRoutes(app: Express): void {
         return res.status(429).json({ message: msg });
       }
 
+      // Universal flow: body has `niche` (website landing page form)
+      if (typeof req.body?.niche === "string") {
+        const parsed = universalSessionSchema.safeParse(req.body);
+        if (!parsed.success) return handleZodError(res, parsed.error);
+
+        const { firstName, niche, language } = parsed.data;
+        const nicheCtx = (await generateNicheContext(niche, language)) ?? buildFallbackNicheContext(niche, language);
+        const { token } = generateToken();
+
+        await createPendingDemoLead({
+          token,
+          firstName,
+          language,
+          campaignId: UNIVERSAL_DEMO_CAMPAIGN_ID,
+          demoNiche: JSON.stringify(nicheCtx),
+        });
+
+        return res.json({ whatsappUrl: buildWhatsAppLink({ token }) });
+      }
+
+      // Legacy flow: body has `campaignId` (admin direct links + old /try form)
+      const parsed = createSessionSchema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+
+      const { firstName, language, campaignId } = parsed.data;
+      if (!isValidDemoCampaignId(campaignId)) {
+        return res.status(400).json({ message: "Invalid campaign." });
+      }
+
       const { token } = generateToken();
-
-      await createPendingDemoLead({
-        token,
-        firstName,
-        language,
-        campaignId,
-      });
-
-      const whatsappUrl = buildWhatsAppLink({ token });
+      await createPendingDemoLead({ token, firstName, language, campaignId });
 
       // Intentionally do NOT return the token or leadId separately —
       // the client only needs the wa.me link.
-      res.json({ whatsappUrl });
+      res.json({ whatsappUrl: buildWhatsAppLink({ token }) });
     }),
   );
 

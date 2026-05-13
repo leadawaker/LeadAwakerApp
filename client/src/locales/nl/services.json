@@ -93,7 +93,7 @@
         },
         { "type": "user", "sender": "Jan", "content": "Bedankt Michiel", "time": "10:40 AM" },
         { "type": "agent", "sender": "Michiel", "content": "Graag gedaan en fijne dag 🙂", "time": "10:41 AM" },
-        { "type": "system", "content": "Afgesloten", "id": "sol-6" }
+        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "sol-6" }
       ]
     },
     "gym": {
@@ -175,7 +175,7 @@
         },
         { "type": "user", "sender": "Mark", "content": "perfect bedankt", "time": "11:10 AM" },
         { "type": "agent", "sender": "Sara", "content": "Graag gedaan, fijne dag 🙂", "time": "11:11 AM" },
-        { "type": "system", "content": "Afgesloten", "id": "gym-6" }
+        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "gym-6" }
       ]
     },
     "dental": {
@@ -256,7 +256,7 @@
         { "type": "system", "content": "Afspraak verzet 📅", "id": "dent-7" },
         { "type": "user", "sender": "Laura", "content": "bedankt voor de flexibiliteit", "time": "06:00 PM" },
         { "type": "agent", "sender": "Sophie", "content": "Graag gedaan. Tot vrijdag! 🙂", "time": "06:01 PM" },
-        { "type": "system", "content": "Afgesloten", "id": "dent-8" }
+        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "dent-8" }
       ]
     },
     "lawFirm": {
@@ -273,6 +273,7 @@
           "time": "14:35"
         },
         { "type": "system", "content": "Lead geëngageerd", "id": "lf-1" },
+        { "type": "system", "content": "Auto-bump", "id": "lf-bump" },
         { "type": "agent", "sender": "Sophie", "content": "Even een reminder voor het geval je druk was :)", "time": "14:55" },
         { "type": "user", "sender": "Oliver", "content": "Hoi, ja", "time": "15:00" },
         { "type": "system", "content": "Lead heeft gereageerd", "id": "lf-2" },
@@ -314,7 +315,7 @@
           "time": "15:39"
         },
         { "type": "user", "sender": "Oliver", "content": "Nee, dat is alles van mijn kant", "time": "15:40" },
-        { "type": "system", "content": "Afgesloten", "id": "lf-5" },
+        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "lf-5" },
         { "type": "agent", "sender": "Sophie", "content": "Oké Oliver, fijne dag :)", "time": "15:41" }
       ]
     },
@@ -385,7 +386,7 @@
         },
         { "type": "user", "sender": "Ellen", "content": "bedankt Maya, dit is het zetje dat ik nodig had", "time": "12:30 PM" },
         { "type": "agent", "sender": "Maya", "content": "Daarom bellen we 🙂 Tot donderdag.", "time": "12:31 PM" },
-        { "type": "system", "content": "Afgesloten", "id": "co-6" }
+        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "co-6" }
       ]
     }
   }

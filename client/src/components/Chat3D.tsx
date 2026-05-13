@@ -1,14 +1,78 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Sun, GraduationCap, Dumbbell, Scale, Laugh, ChevronDown, CheckCheck } from "lucide-react";
+
+type MessageItem = {
+  type: "agent" | "user" | "system";
+  sender?: string;
+  content: string;
+  time?: string;
+  id?: string;
+};
+
+const CASES = [
+  { key: "solar",    caseKey: "solarPanel", icon: Sun,           label: "Solar",    color: "#2563EB", leadName: "James Walker"  },
+  { key: "coaching", caseKey: "coaching",   icon: GraduationCap, label: "Coaching", color: "#0D9488", leadName: "Ellen Jansen"  },
+  { key: "gym",      caseKey: "gym",        icon: Dumbbell,      label: "Gym",      color: "#8B5CF6", leadName: "Mark Evans"    },
+  { key: "dental",   caseKey: "dental",     icon: Laugh,         label: "Dental",   color: "#10B981", leadName: "Laura Brandt"  },
+  { key: "legal",    caseKey: "lawFirm",    icon: Scale,         label: "Legal",    color: "#E11D48", leadName: "Oliver Harris" },
+];
+
+// Keyed by message ID so translation differences don't matter
+const BADGE_BY_ID: Record<string, string> = {
+  'sol-3':   '🛡️ Objection handled automatically',
+  'gym-3':   '🛡️ Objection handled automatically',
+  'dent-3':  '🛡️ Objection handled automatically',
+  'dent-6':  '🔄 Reschedule handled automatically',
+  'co-3':    '🎯 Real goal surfaced',
+  'lf-bump': '📨 Follow-up sent automatically',
+};
+
+const DEMO_MSG_LIMIT    = 30;
+const MS_PER_CHAR       = 45;
+const MIN_DELAY         = 600;
+const MAX_DELAY         = 3500;
+const INITIAL_TYPING    = 1800;
+const SYSTEM_GAP        = 450;
+const READ_RECEIPT_LEAD = 700;
+const UP_NEXT_WAIT      = 2000;
+const UP_NEXT_HOLD      = 5000;
 
 export default function Chat3D() {
   const { t } = useTranslation('chat3d');
-  const [scrollY, setScrollY] = useState(0);
-  const [showEngagement, setShowEngagement] = useState(false);
-  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
-  const [isDark, setIsDark] = useState(false);
+  const { t: tServices } = useTranslation('services');
 
+  const [scrollY,             setScrollY]             = useState(0);
+  const [activeCaseIdx,       setActiveCaseIdx]       = useState(0);
+  const [restartKey,          setRestartKey]          = useState(0);
+  const [visibleMessages,     setVisibleMessages]     = useState<number[]>([]);
+  const [visibleReadReceipts, setVisibleReadReceipts] = useState<Set<number>>(new Set());
+  const [badgeMessages,       setBadgeMessages]       = useState<Record<number, string>>({});
+  const [isDark,              setIsDark]              = useState(false);
+  const [isFollowMode,        setIsFollowMode]        = useState(true);
+  const [showInitTyping,      setShowInitTyping]      = useState(true);
+  const [showUpNext,          setShowUpNext]          = useState(false);
+  const [upNextCountdown,     setUpNextCountdown]     = useState(5);
+
+  const scrollContainerRef    = useRef<HTMLDivElement>(null);
+  const timeoutsRef           = useRef<NodeJS.Timeout[]>([]);
+  const programmaticScrollRef = useRef(false);
+  const isFollowModeRef       = useRef(true);
+
+  useEffect(() => { isFollowModeRef.current = isFollowMode; }, [isFollowMode]);
+
+  const activeCase = CASES[activeCaseIdx];
+
+  const messages = useMemo(
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () => (tServices(`cases.${CASES[activeCaseIdx].caseKey}.messages`, { returnObjects: true }) as MessageItem[]).slice(0, DEMO_MSG_LIMIT),
+    [activeCaseIdx]
+  );
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  // Dark mode detection
   useEffect(() => {
     const check = () => setIsDark(document.documentElement.classList.contains('dark'));
     check();
@@ -16,377 +80,404 @@ export default function Chat3D() {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Window scroll for 3D tilt
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, [visibleMessages, showEngagement]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
+    const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Move engagementMessages INSIDE the useEffect
+  const scrollToBottom = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    programmaticScrollRef.current = true;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setTimeout(() => { programmaticScrollRef.current = false; }, 600);
+  }, []);
+
   useEffect(() => {
-    if (showEngagement) {
-      setVisibleMessages([]);
+    if (isFollowMode) scrollToBottom();
+  }, [visibleMessages, showUpNext, isFollowMode, scrollToBottom]);
 
-      const engagementMessages = [
-        { type: 'jack', text: t('messages.jack2'), time: "15:06" },
-        { type: 'jack', text: t('messages.jack3'), time: "15:06" },
-        { type: 'sophie', text: t('messages.sophie4'), time: "15:08" },
-        { type: 'jack', text: t('messages.jack4'), time: "15:09" },
-        { type: 'sophie', text: t('messages.sophie5'), time: "15:10" },
-        { type: 'tag', text: t('tags.callBooked'), subtext: t('tags.sentToClient') },
-        { type: 'sophie', text: t('messages.sophie6'), time: "15:12" },
-        { type: 'jack', text: t('messages.jack5'), time: "15:13" },
-        { type: 'sophie', text: t('messages.sophie7'), time: "15:14" },
-        { type: 'tag', text: t('tags.chatClosed') }
-      ];
+  const handleChatScroll = useCallback(() => {
+    if (programmaticScrollRef.current) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+    setIsFollowMode(atBottom);
+  }, []);
 
-      const timeouts: NodeJS.Timeout[] = [];
-      let currentDelay = 0;
+  // Up next countdown
+  useEffect(() => {
+    if (!showUpNext) { setUpNextCountdown(5); return; }
+    const interval = setInterval(() => setUpNextCountdown(prev => Math.max(0, prev - 1)), 1000);
+    return () => clearInterval(interval);
+  }, [showUpNext]);
 
-      // tuning values
-      const BASE_DELAY = 3700;        // delay for first message
-      const MS_PER_CHAR = 90;        // delay per character
-      const MIN_DELAY = 1000;
-      const MAX_DELAY = 10000;
+  // Main animation loop
+  useEffect(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+    setVisibleMessages([]);
+    setVisibleReadReceipts(new Set());
+    setBadgeMessages({});
+    setShowUpNext(false);
+    setIsFollowMode(true);
+    isFollowModeRef.current = true;
+    setShowInitTyping(true);
 
-      engagementMessages.forEach((msg, index) => {
-        const timeout = setTimeout(() => {
-          setVisibleMessages(prev => [...prev, index]);
-        }, currentDelay);
+    const msgs = messagesRef.current;
 
-        timeouts.push(timeout);
+    // Pre-compute absolute arrival time for each message.
+    // Delay before msg[N] = msg[N].content.length * MS_PER_CHAR (typing time for that message).
+    let acc = 0;
+    const msgTimes: number[] = msgs.map((msg, index) => {
+      if (index === 0) {
+        acc = INITIAL_TYPING;
+      } else if (msg.type === 'system') {
+        acc += SYSTEM_GAP;
+      } else {
+        acc += Math.min(Math.max(msg.content.length * MS_PER_CHAR, MIN_DELAY), MAX_DELAY);
+      }
+      return acc;
+    });
 
-        const previousMsg = engagementMessages[index - 1];
+    // Clear initial typing indicator as first message arrives
+    timeoutsRef.current.push(setTimeout(() => setShowInitTyping(false), INITIAL_TYPING));
 
-        // TAGS should appear immediately after their related balloon
-        if (msg.type === 'tag') {
-          currentDelay += 400; // small pause so it feels intentional
-          return;
+    msgs.forEach((msg, index) => {
+      // Reveal message
+      timeoutsRef.current.push(setTimeout(() => {
+        setVisibleMessages(prev => [...prev, index]);
+        if (msg.type === 'system' && msg.id && BADGE_BY_ID[msg.id]) {
+          setBadgeMessages(prev => ({ ...prev, [index]: BADGE_BY_ID[msg.id!] }));
         }
+      }, msgTimes[index]));
 
-        // Balloons get typing-based delay
-        let msgDelay = BASE_DELAY;
-
-        if (previousMsg?.type !== 'tag' && previousMsg?.text) {
-          msgDelay = previousMsg.text.length * MS_PER_CHAR;
+      // Schedule read receipt on the last agent bubble before each user message
+      if (msg.type === 'user') {
+        for (let i = index - 1; i >= 0; i--) {
+          if (msgs[i].type === 'agent') {
+            const rrTime = Math.max(msgTimes[i] + 500, msgTimes[index] - READ_RECEIPT_LEAD);
+            timeoutsRef.current.push(setTimeout(() => {
+              setVisibleReadReceipts(prev => new Set([...prev, i]));
+            }, rrTime));
+            break;
+          }
         }
+      }
+    });
 
-        msgDelay = Math.min(Math.max(msgDelay, MIN_DELAY), MAX_DELAY);
-        currentDelay += msgDelay;
-      });
+    // Auto-advance after flow ends — only if user hasn't scrolled up
+    const lastTime = msgTimes[msgTimes.length - 1] ?? INITIAL_TYPING;
+    const nextIdx = (activeCaseIdx + 1) % CASES.length;
+    timeoutsRef.current.push(setTimeout(() => {
+      if (isFollowModeRef.current) setShowUpNext(true);
+    }, lastTime + UP_NEXT_WAIT));
+    timeoutsRef.current.push(setTimeout(() => {
+      setShowUpNext(false);
+      if (isFollowModeRef.current) setActiveCaseIdx(nextIdx);
+    }, lastTime + UP_NEXT_WAIT + UP_NEXT_HOLD));
 
-      return () => timeouts.forEach(t => clearTimeout(t));
-    }
-  }, [showEngagement, t]); // Add 't' to dependencies
+    return () => timeoutsRef.current.forEach(clearTimeout);
+  }, [activeCaseIdx, restartKey]);
 
-  // Create engagementMessages for rendering
-  const engagementMessages = [
-    { type: 'jack', text: t('messages.jack2'), time: "15:06" },
-    { type: 'jack', text: t('messages.jack3'), time: "15:06" },
-    { type: 'sophie', text: t('messages.sophie4'), time: "15:08" },
-    { type: 'jack', text: t('messages.jack4'), time: "15:09" },
-    { type: 'sophie', text: t('messages.sophie5'), time: "15:10" },
-    { type: 'tag', text: t('tags.callBooked'), subtext: t('tags.sentToClient') },
-    { type: 'sophie', text: t('messages.sophie6'), time: "15:12" },
-    { type: 'jack', text: t('messages.jack5'), time: "15:13" },
-    { type: 'sophie', text: t('messages.sophie7'), time: "15:14" },
-    { type: 'tag', text: t('tags.chatClosed') }
-  ];
+  function handleCaseSwitch(idx: number) {
+    if (idx === activeCaseIdx) setRestartKey(k => k + 1);
+    else setActiveCaseIdx(idx);
+  }
 
-  const messageVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        delay: i * 0.15,
-        duration: 0.5,
-      },
-    }),
-  };
-
-
+  const nextMsgType = messages[visibleMessages.length]?.type;
+  const showTypingBubble = showInitTyping || (
+    visibleMessages.length > 0 &&
+    visibleMessages.length < messages.length &&
+    nextMsgType !== 'system'
+  );
+  const typingDir = showInitTyping ? (messages[0]?.type ?? 'agent') : nextMsgType;
 
   return (
-    <div className="relative perspective-container" style={{ filter: 'none', WebkitFilter: 'none' }}>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ 
-          opacity: 1, 
-          scale: 1 
-        }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        className="relative transform-3d w-full max-w-md mx-auto"
-        style={{ 
-          perspective: "2000px",
-          transformStyle: "preserve-3d",
-          filter: 'none',
-          WebkitFilter: 'none',
-        }}
-      >
-        <div style={{ 
-          transform: `rotateY(${Math.min(-10.5 + scrollY * 0.05, 0)}deg) rotateX(${Math.max(10.5 - scrollY * 0.05, 0)}deg)`, 
-          transformStyle: "preserve-3d",
-          transition: "transform 0.1s ease-out",
-          marginTop: "50px",
-          filter: 'none',
-          WebkitFilter: 'none',
-        }}>
-        <div
-          className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-zinc-700 overflow-hidden relative"
-          style={{
-            transform: "rotateY(0deg) rotateX(0deg) rotateZ(0deg)",
-            boxShadow: isDark
-              ? "15px 15px 40px -10px rgba(0,0,0,0.4), -8px -8px 20px rgba(0,0,0,0.2)"
-              : "15px 15px 40px -10px rgba(0,0,0,0.08), -8px -8px 20px rgba(255,255,255,0.6)",
-            background: isDark
-              ? undefined
-              : "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 100%), linear-gradient(to right, rgba(37,99,235,0.02) 0%, transparent 50%)"
-          }}
-          data-testid="chat-3d-card"
+    <div className="flex flex-col items-center w-full">
+      <div className="relative perspective-container w-full" style={{ filter: 'none', WebkitFilter: 'none' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="relative transform-3d w-full max-w-md mx-auto"
+          style={{ perspective: "2000px", transformStyle: "preserve-3d", filter: 'none', WebkitFilter: 'none' }}
         >
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: "radial-gradient(circle at 20% 50%, rgba(37,99,235,0.05) 0%, transparent 40%)",
-          }} />
+          <div style={{
+            transform: `rotateY(${Math.min(-10.5 + scrollY * 0.05, 0)}deg) rotateX(${Math.max(10.5 - scrollY * 0.05, 0)}deg)`,
+            transformStyle: "preserve-3d",
+            transition: "transform 0.1s ease-out",
+            marginTop: "50px",
+            position: "relative",
+            filter: 'none',
+            WebkitFilter: 'none',
+          }}>
 
-          <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
-            <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">J</div>
-            <div>
-              <h3 className="text-white font-medium text-sm" data-testid="chat-name">{t('header.name')}</h3>
-              <p className="text-xs flex items-center gap-1" style={{ color: "#FCC700" }} data-testid="chat-status">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FCC700" }} />
-                {t('header.status')}
-              </p>
-            </div>
-          </div>
-
-          <div 
-            ref={scrollContainerRef}
-             className="p-6 pb-2 space-y-1 min-h-[650px] max-h-[650px] overflow-y-auto relative scrollbar-hide bg-[#fafafa] dark:bg-zinc-900"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
-
-            <div className="relative z-10 space-y-2">
-              <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    {t('messages.sophie1')}
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">14:35</span>
-                </div>
-              </motion.div>
-
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="flex flex-col items-center gap-2 py-2"
+            {/* Card */}
+            <div
+              className="bg-white dark:bg-zinc-900 rounded-t-2xl border border-b-0 border-slate-100 dark:border-zinc-700 overflow-hidden relative min-w-[320px]"
+              style={{
+                boxShadow: isDark
+                  ? "15px 0px 40px -10px rgba(0,0,0,0.4), -8px -8px 20px rgba(0,0,0,0.2)"
+                  : "15px 0px 40px -10px rgba(0,0,0,0.08), -8px -8px 20px rgba(255,255,255,0.6)",
+              }}
+              data-testid="chat-3d-card"
+            >
+              {/* Header */}
+              <div
+                className="p-4 flex items-center gap-3 transition-colors duration-500"
+                style={{ backgroundColor: activeCase.color }}
               >
-                <div className="h-[1px] w-full bg-slate-200 dark:bg-zinc-700" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 dark:bg-zinc-900 px-3 -mt-3.5">{t('tags.leadEngaged')}</span>
-              </motion.div>
-
-              <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm inline-block" style={{ backgroundColor: "#2563EB", whiteSpace: "nowrap" }}>
-                    {t('messages.sophie2')}
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">14:55</span>
+                <div
+                  className="rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ width: "44px", height: "44px", backgroundColor: "rgba(0,0,0,0.2)" }}
+                  data-testid="chat-avatar"
+                >
+                  {activeCase.leadName[0]}
                 </div>
-              </motion.div>
-
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="flex flex-col items-center gap-2 py-2"
-              >
-                <div className="h-[1px] w-full bg-slate-200 dark:bg-zinc-700" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 dark:bg-zinc-900 px-3 -mt-3.5">{t('tags.followedUp')}</span>
-              </motion.div>
-
-              <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="bg-gray-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-gray-200 dark:border-zinc-600 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
-                    {t('messages.jack1')}
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:02</span>
+                <div>
+                  <h3 className="text-white font-medium text-sm" data-testid="chat-name">{activeCase.leadName}</h3>
+                  <p className="text-xs flex items-center gap-1" style={{ color: "#FCC700" }} data-testid="chat-status">
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FCC700" }} />
+                    {t('header.status')}
+                  </p>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="flex flex-col items-center gap-2 py-2"
-              >
-                <div className="h-[1px] w-full bg-slate-200 dark:bg-zinc-700" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 dark:bg-zinc-900 px-3 -mt-3.5">{t('tags.leadReplied')}</span>
-              </motion.div>
+              {/* Message area */}
+              <div className="relative">
+                <div
+                  ref={scrollContainerRef}
+                  onScroll={handleChatScroll}
+                  className="p-6 pb-4 space-y-1 h-[650px] overflow-y-auto relative scrollbar-hide bg-[#fafafa] dark:bg-zinc-900"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
+                  <div className="relative z-10 space-y-2">
+                    <AnimatePresence>
+                      {visibleMessages.map(msgIdx => {
+                        const msg = messages[msgIdx];
+                        if (!msg) return null;
 
-              <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    {t('messages.sophie3')}
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">15:03</span>
-                </div>
-              </motion.div>
-
-              <AnimatePresence>
-                {!showEngagement ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative flex justify-center items-center pt-4 pb-2"
-                  >
-                    <div className="absolute left-0 flex items-center gap-1 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-600 px-3 py-4 rounded-2xl rounded-bl-sm shadow-sm scale-90">
-                      <motion.span 
-                        animate={{ opacity: [0.4, 1, 0.4] }} 
-                        transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
-                        className="w-2 h-2 bg-slate-400 rounded-full" 
-                      />
-                      <motion.span 
-                        animate={{ opacity: [0.4, 1, 0.4] }} 
-                        transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }}
-                        className="w-2 h-2 bg-slate-400 rounded-full" 
-                      />
-                      <motion.span 
-                        animate={{ opacity: [0.4, 1, 0.4] }} 
-                        transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }}
-                        className="w-2 h-2 bg-slate-400 rounded-full" 
-                      />
-                    </div>
-                    <button 
-                      onClick={() => setShowEngagement(true)}
-                      className="bg-primary text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm z-10"
-                    >
-                      {t('button.continue')}
-                    </button>
-                  </motion.div>
-                ) : (
-                  <>
-                    {visibleMessages
-                      .filter(msgIdx => msgIdx < engagementMessages.length)
-                      .map((msgIdx) => {
-                        const msg = engagementMessages[msgIdx];
-                        if (msg.type === 'tag') {
+                        if (msg.type === 'system') {
+                          const badge = msg.id ? badgeMessages[msgIdx] : undefined;
                           return (
-                            <motion.div 
-                              key={`tag-${msgIdx}`}
+                            <motion.div
+                              key={msg.id ?? `sys-${msgIdx}`}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              className="flex flex-col items-center gap-2 py-4"
+                              className="flex flex-col items-center gap-2 py-2"
                             >
-                              <div className="h-[1px] w-full bg-slate-200 dark:bg-zinc-700" />
-                              <div className="flex flex-col items-center bg-slate-50 dark:bg-zinc-900 px-3 -mt-3.5">
-                                <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${msg.text.includes(t('tags.chatClosed')) ? 'text-slate-400' : 'text-primary'}`}>
-                                  {msg.text}
-                                </span>
-                                {msg.subtext && (
-                                  <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1">
-                                    {msg.subtext}
+                              {/* When a badge exists it replaces the tag line entirely */}
+                              {!badge && (
+                                <>
+                                  <div className="h-[1px] w-full bg-slate-200 dark:bg-zinc-700" />
+                                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-[#fafafa] dark:bg-zinc-900 px-3 -mt-3.5">
+                                    {msg.content}
                                   </span>
-                                )}
-                              </div>
+                                </>
+                              )}
+                              {badge && (
+                                <motion.div
+                                  initial={{ opacity: 0, x: 8, scale: 0.92 }}
+                                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex justify-end w-full"
+                                >
+                                  <span
+                                    className="text-[11px] font-semibold bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 px-2.5 py-1 rounded-full border border-slate-200 dark:border-zinc-600 whitespace-nowrap"
+                                    style={{ boxShadow: "0 4px 4px -2px rgba(0,0,0,0.03), 0 2px 5px -1px rgba(0,0,0,0.03)" }}
+                                  >
+                                    {badge}
+                                  </span>
+                                </motion.div>
+                              )}
                             </motion.div>
                           );
                         }
 
-                        return (
-                          <div key={`message-${msgIdx}`}>
-                            <motion.div 
-                              className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
-                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ duration: 0.4 }}
-                            >
-                              <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
-                                <div 
-                                  className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${
-                                    msg.type === 'sophie'
-                                      ? 'text-white rounded-tr-sm max-w-[90%]'
-                                      : 'bg-gray-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-gray-200 dark:border-zinc-600 rounded-tl-sm'
-                                  }`}
-                                  style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
-                                >
-                                  {msg.text && msg.text.includes("[link]") ? (
-                                  <>
-                                    {msg.text.split("[link]")[0]}
-                                    <span className="font-bold underline cursor-pointer">[link]</span>
-                                    {msg.text.split("[link]")[1]}
-                                  </>
-                                ) : msg.text}
-                                </div>
-                                <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
-                              </div>
-                            </motion.div>
+                        const isAgent = msg.type === 'agent';
+                        const showReadReceipt = isAgent && visibleReadReceipts.has(msgIdx);
 
-                            {msg.text && msg.text.includes(t('messages.jack4').split('.')[0]) && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="flex flex-col items-center gap-2 py-2"
+                        return (
+                          <motion.div
+                            key={msg.id ?? `msg-${msgIdx}`}
+                            className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.4 }}
+                          >
+                            <div className={`flex flex-col ${isAgent ? 'items-end' : 'items-start'} gap-1`}>
+                              <div
+                                className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${
+                                  isAgent
+                                    ? 'text-white rounded-tr-sm max-w-[90%]'
+                                    : 'bg-gray-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-gray-200 dark:border-zinc-600 rounded-tl-sm'
+                                }`}
+                                style={isAgent ? { backgroundColor: activeCase.color } : {}}
                               >
-                                <div className="h-[1px] w-full bg-slate-200 dark:bg-zinc-700" />
-                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 dark:bg-zinc-900 px-3 -mt-3.5">{t('tags.leadQualified')}</span>
-                              </motion.div>
-                            )}
-                          </div>
+                                {msg.content}
+                              </div>
+                              {(msg.time || showReadReceipt) && (
+                                <div className={`flex items-center gap-1 ${isAgent ? 'pr-2' : 'pl-2'}`}>
+                                  {msg.time && <span className="text-xs text-slate-400">{msg.time}</span>}
+                                  <AnimatePresence>
+                                    {showReadReceipt && (
+                                      <motion.span
+                                        initial={{ opacity: 0, scale: 0.6 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.25 }}
+                                      >
+                                        <CheckCheck size={12} className="text-blue-400" strokeWidth={2.5} />
+                                      </motion.span>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
                         );
                       })}
+                    </AnimatePresence>
 
-                    {showEngagement && visibleMessages.length < engagementMessages.length && (
-                      <motion.div 
+                    {/* Up next pill with countdown */}
+                    <AnimatePresence>
+                      {showUpNext && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="flex justify-center py-3"
+                        >
+                          <div className="flex items-center gap-2 bg-slate-100 dark:bg-zinc-800 rounded-full px-4 py-1.5">
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wide">
+                              Up next: {t(`cases.${CASES[(activeCaseIdx + 1) % CASES.length].key}`)}
+                            </span>
+                            <motion.span
+                              key={upNextCountdown}
+                              initial={{ scale: 1.4, opacity: 0.5 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.25 }}
+                              className="text-[11px] font-bold text-slate-600 dark:text-zinc-300 min-w-[1ch] text-center tabular-nums"
+                            >
+                              {upNextCountdown}
+                            </motion.span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Typing indicator */}
+                    {showTypingBubble && (
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`relative flex items-center pt-4 pb-2 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex pt-2 ${typingDir === 'agent' ? 'justify-end' : 'justify-start'}`}
                       >
-                        {engagementMessages[visibleMessages.length]?.type !== 'tag' && (
-                          <div className={`flex items-center gap-1 ${engagementMessages[visibleMessages.length]?.type === 'jack' ? 'bg-gray-100 dark:bg-zinc-800 border-gray-200 dark:border-zinc-600' : 'bg-white dark:bg-zinc-800 border-slate-100 dark:border-zinc-700'} border px-3 py-4 rounded-2xl shadow-sm scale-90 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
-                            <motion.span 
-                              animate={{ opacity: [0.4, 1, 0.4] }} 
-                              transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
-                              className="w-2 h-2 bg-slate-400 rounded-full" 
+                        <div
+                          className={`flex items-center gap-1 px-3 py-4 rounded-2xl shadow-sm scale-90 ${
+                            typingDir === 'agent'
+                              ? 'rounded-br-sm'
+                              : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-600 rounded-bl-sm'
+                          }`}
+                          style={typingDir === 'agent' ? { backgroundColor: activeCase.color } : {}}
+                        >
+                          {[0, 0.2, 0.4].map((delay, i) => (
+                            <motion.span
+                              key={i}
+                              animate={{ opacity: [0.4, 1, 0.4] }}
+                              transition={{ repeat: Infinity, duration: 1.4, delay }}
+                              className={`w-2 h-2 rounded-full ${typingDir === 'agent' ? 'bg-white/70' : 'bg-slate-400'}`}
                             />
-                            <motion.span 
-                              animate={{ opacity: [0.4, 1, 0.4] }} 
-                              transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }}
-                              className="w-2 h-2 bg-slate-400 rounded-full" 
-                            />
-                            <motion.span 
-                              animate={{ opacity: [0.4, 1, 0.4] }} 
-                              transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }}
-                              className="w-2 h-2 bg-slate-400 rounded-full" 
-                            />
-                          </div>
-                        )}
+                          ))}
+                        </div>
                       </motion.div>
                     )}
+                  </div>
+                </div>
 
-                  </>
-                )}
-              </AnimatePresence>
+                {/* Scroll lock re-engage button */}
+                <AnimatePresence>
+                  {!isFollowMode && (
+                    <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-30">
+                      <motion.button
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
+                        onClick={() => { setIsFollowMode(true); scrollToBottom(); }}
+                        className="pointer-events-auto flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-600 text-slate-600 dark:text-zinc-300 text-xs font-semibold px-3 py-1.5 rounded-full shadow-md cursor-pointer"
+                      >
+                        <motion.span
+                          animate={{ y: [0, 3, 0] }}
+                          transition={{ repeat: Infinity, duration: 1.2 }}
+                          className="flex"
+                        >
+                          <ChevronDown size={13} />
+                        </motion.span>
+                        Live
+                      </motion.button>
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Case selector tab bar */}
+            <div
+              className="px-3 py-3 rounded-b-2xl border border-t-0 border-slate-100 dark:border-zinc-700"
+              style={{
+                backgroundColor: isDark ? "#18181b" : "#fafafa",
+                transform: "translateZ(0)",
+                position: "relative",
+                zIndex: 10,
+                boxShadow: isDark
+                  ? "15px 15px 40px -10px rgba(0,0,0,0.4), -8px 8px 20px rgba(0,0,0,0.2)"
+                  : "15px 15px 40px -10px rgba(0,0,0,0.08), -8px 8px 20px rgba(255,255,255,0.6)",
+              }}
+            >
+              <div
+                className="relative flex rounded-full p-1"
+                style={{
+                  backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(255, 255, 255, 0.4)",
+                  outline: "1px solid transparent",
+                  boxShadow: isDark ? "0 4px 18px rgba(0,0,0,0.35)" : "0 4px 18px rgba(0,0,0,0.07)",
+                }}
+              >
+                <motion.div
+                  className="absolute top-1 bottom-1 rounded-full pointer-events-none"
+                  animate={{
+                    left: `calc(${(activeCaseIdx / CASES.length) * 100}% + 4px)`,
+                    width: `calc(${100 / CASES.length}% - 8px)`,
+                    backgroundColor: activeCase.color,
+                  }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  style={{ outline: "1px solid transparent" }}
+                />
+                {CASES.map((c, i) => (
+                  <button
+                    key={c.key}
+                    onClick={() => handleCaseSwitch(i)}
+                    className="relative flex-1 px-2 py-2 rounded-full z-10 flex items-center justify-center"
+                    style={{ transform: "translateZ(0)", outline: "1px solid transparent" }}
+                  >
+                    <div
+                      className="flex flex-col items-center gap-0.5 transition-colors duration-200"
+                      style={{ color: activeCaseIdx === i ? "white" : isDark ? "#a1a1aa" : "#64748b" }}
+                    >
+                      <c.icon size={16} strokeWidth={2} />
+                      <span className="text-[10px] font-semibold whitespace-nowrap leading-none">
+                        {t(`cases.${c.key}`)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

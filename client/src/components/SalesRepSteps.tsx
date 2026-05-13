@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail } from "lucide-react";
+import { Database, MessageSquare, TrendingUp, Archive, Clock, TrendingDown, Mail } from "lucide-react";
 
 import leadsDbImg from "../assets/step-1-main.webp";
 import conversationImg from "../assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.webp";
@@ -22,7 +22,7 @@ const Trail = ({ startTrigger }: { startTrigger: boolean }) => (
   >
     <motion.path
       d="M 105 -12 L -10 75"
-      stroke="rgba(210,210,210,0.03)"
+      stroke="rgba(210,210,210,0.02)"
       strokeWidth="0.25"
       strokeDasharray="1.2 3.5"
       fill="none"
@@ -35,7 +35,7 @@ const Trail = ({ startTrigger }: { startTrigger: boolean }) => (
 
 const Plane = ({ startTrigger }: { startTrigger: boolean }) => (
   <motion.div
-    initial={{ top: "-12%", left: "105%", rotate: -5 }}
+    initial={{ top: "-12%", left: "105%", rotate: -15 }}
     animate={startTrigger ? { top: "75%", left: "-10%", rotate: -15 } : {}}
     transition={{ duration: 35, ease: "linear", repeat: Infinity, repeatDelay: 5 }}
     className="absolute w-2 h-2 pointer-events-none"
@@ -46,8 +46,8 @@ const Plane = ({ startTrigger }: { startTrigger: boolean }) => (
         opacity: [0, 1, 1, 0, 1, 1, 0],
         backgroundColor: ["#000000", "#ffffff", "#ffffff", "#000000", "#ff0000", "#ff0000", "#000000"],
         boxShadow: [
-          "0 0 0px 0px transparent", "0 0 8px 4px rgba(255,255,255,0.9)", "0 0 8px 4px rgba(255,255,255,0.9)",
-          "0 0 0px 0px transparent", "0 0 8px 4px rgba(255,80,80,0.9)", "0 0 8px 4px rgba(255,80,80,0.9)",
+          "0 0 0px 0px transparent", "0 0 8px 3px rgba(255,255,255,0.9)", "0 0 8px 3px rgba(255,255,255,0.9)",
+          "0 0 0px 0px transparent", "0 0 8px 3px rgba(255,80,80,0.9)", "0 0 8px 3px rgba(255,80,80,0.9)",
           "0 0 0px 0px transparent"
         ]
       }}
@@ -62,6 +62,7 @@ export const SalesRepSteps = () => {
   const { t } = useTranslation('salesRepSteps');
   const scrollRef = useRef(null);
   const [glitchAnimating, setGlitchAnimating] = useState(false);
+  const [glitchKey, setGlitchKey] = useState(0);
   const [planeStarted, setPlaneStarted] = useState(false);
 
   useEffect(() => {
@@ -70,8 +71,7 @@ export const SalesRepSteps = () => {
     const glitchTimer = setTimeout(() => {
       setGlitchAnimating(true);
       cycleInterval = setInterval(() => {
-        setGlitchAnimating(false);
-        setTimeout(() => setGlitchAnimating(true), 50);
+        setGlitchKey(k => k + 1);
       }, 5000);
     }, 2000);
     return () => {
@@ -124,8 +124,8 @@ export const SalesRepSteps = () => {
   ];
 
   const painPoints = [
-    { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.bloatedCrm') },
-    { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.wastedTime') },
+    { icon: <Archive className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.bloatedCrm') },
+    { icon: <Clock className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.wastedTime') },
     { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.lowReplyRates') },
     { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.spamCampaigns') }
   ];
@@ -142,12 +142,7 @@ export const SalesRepSteps = () => {
         backgroundImage: `radial-gradient(circle at 8% 10%, white 0.72px, transparent 0.72px),
                           radial-gradient(circle at 92% 8%, white 0.96px, transparent 0.96px),
                           radial-gradient(circle at 35% 20%, white 0.48px, transparent 0.48px),
-                          radial-gradient(circle at 60% 15%, white 0.72px, transparent 0.72px),
-                          radial-gradient(circle at 78% 25%, white 0.48px, transparent 0.48px),
-                          radial-gradient(circle at 20% 35%, white 0.72px, transparent 0.72px),
-                          radial-gradient(circle at 50% 30%, white 0.48px, transparent 0.48px),
                           radial-gradient(circle at 85% 40%, white 0.96px, transparent 0.96px),
-                          radial-gradient(circle at 12% 55%, white 0.48px, transparent 0.48px),
                           radial-gradient(circle at 70% 50%, white 0.72px, transparent 0.72px)`,
         backgroundRepeat: 'repeat',
         backgroundSize: '700px 600px',
@@ -159,7 +154,6 @@ export const SalesRepSteps = () => {
         backgroundImage: `radial-gradient(circle at 45% 12%, white 0.72px, transparent 0.72px),
                           radial-gradient(circle at 22% 22%, white 0.48px, transparent 0.48px),
                           radial-gradient(circle at 68% 35%, white 0.96px, transparent 0.96px),
-                          radial-gradient(circle at 90% 18%, white 0.48px, transparent 0.48px),
                           radial-gradient(circle at 5% 42%, white 0.72px, transparent 0.72px)`,
         backgroundRepeat: 'repeat', backgroundSize: '900px 700px',
         filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.9))',
@@ -177,7 +171,7 @@ export const SalesRepSteps = () => {
       }} />
 
       {/* Background gradients */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgb(255, 239, 216) 20%, rgb(198, 137, 97) 30%, rgb(18, 62, 103) 50%, rgba(0, 16, 60, 0.73) 63%, rgba(30, 58, 138, 0) 70%)', zIndex: 0 }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgb(255, 247, 223) 20%, rgb(255, 195, 155) 40%, rgb(46, 91, 134) 50%, rgba(0, 16, 60, 0.73) 63%, rgba(30, 58, 138, 0) 70%)', zIndex: 0 }} />
       <div className="absolute inset-x-0 bottom-0 pointer-events-none [background:linear-gradient(to_bottom,transparent_0%,#F4F5F9_100%)] dark:[background:linear-gradient(to_bottom,transparent_0%,hsl(var(--background))_100%)]" style={{ height: '25vh', zIndex: 5 }} />
 
       <Trail startTrigger={planeStarted} />
@@ -190,8 +184,8 @@ export const SalesRepSteps = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              onViewportEnter={() => setGlitchAnimating(true)}
-              viewport={{ once: true, margin: "-20% 0px -20% 0px" }}
+              onViewportEnter={() => { setGlitchAnimating(true); setGlitchKey(k => k + 1); }}
+              viewport={{ once: false, margin: "-20% 0px -20% 0px" }}
               transition={{ duration: 0.3 }}
               className="text-center max-w-6xl mx-auto mb-24"
             >
@@ -203,7 +197,7 @@ export const SalesRepSteps = () => {
                 <span style={{ color: '#E0F2FE', display: 'inline-block', marginRight: '0.24em' }}>
                   {t('painPoints.titleIs')}
                 </span>
-                <span className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`} data-testid="text-broken" data-text={t('painPoints.titleBroken')}>
+                <span key={glitchKey} className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`} data-testid="text-broken" data-text={t('painPoints.titleBroken')}>
                   {t('painPoints.titleBroken')}
                 </span>
                 <span style={{ color: '#E0F2FE', filter: 'drop-shadow(3px 0px 12px rgba(147, 197, 253, 0.225)) drop-shadow(1.5px 0px 3px rgba(147, 197, 253, 0.18))', textShadow: '2.4px 0px 4.5px rgba(147, 197, 253, 0.18), 3.6px 0px 7.5px rgba(147, 197, 253, 0.135)', display: 'inline-block' }} data-testid="text-dot">.</span>
@@ -275,7 +269,7 @@ export const SalesRepSteps = () => {
         </section>
 
         {/* Intro */}
-        <section className="flex items-start justify-center relative overflow-hidden mb-2 py-8 md:py-9 md:pt-12" style={{ minHeight: '12vh' }}>
+        <section className="flex items-start justify-center relative overflow-hidden mb-2 py-8 md:py-9 md:pt-12 pb-12 md:pb-16" style={{ minHeight: '12vh' }}>
           <motion.div
             initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}

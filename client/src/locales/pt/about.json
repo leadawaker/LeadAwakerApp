@@ -9,39 +9,35 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Fundador",
-    "quote": "\"Na clínica dos meus pais, vi o mesmo padrão repetidas vezes: interesse genuíno, consultas agendadas e depois... silêncio. Gastavam milhares enchendo um balde que vazava por baixo. Foi quando aprendi: você não precisa de mais leads. Precisa parar de perder os que já tem.\"",
-    "description": "12 anos entregando digital art para produtos que juntos faturaram mais de US$ 3.3B: filmes da Warner Bros, títulos da Sega, Insurgency: Sandstorm. Depois construí um negócio real com minha esposa Danique, onde cada lead importava porque era o nosso dinheiro em jogo. O Lead Awaker existe porque eu vivi o problema."
+    "tagline": "Construo sistemas que conquistam atenção.",
+    "body1": "Como especialista em IA, desenvolvedor, designer e artista digital, meu trabalho é moldado pela psicologia, tecnologia e estética.",
+    "body2": "A meditação me ensinou que a atenção é nosso recurso mais valioso. Na era digital, ela é constantemente puxada em todas as direções, dispersa entre plataformas, distrações e ruído. As marcas que crescem são as que sabem guiá-la com intenção.",
+    "body3": "Criei o Lead Awaker para ajudá-las a fazer exatamente isso."
   },
 
   "credentials": {
+    "experienceLabel": "Experiência que moldou isso",
     "title": "Não é um problema de leads. É um problema de vazamento.",
     "subtitle": "De estúdios vencedores do Oscar a lançar games AAA. A mesma disciplina, aplicada aos seus leads.",
     "resultsNode": "Resultados reais.",
     "items": [
       {
-        "metric": "Framestore",
-        "label": "Estúdio VFX vencedor do Oscar",
-        "description": "Contribuí com digital art para Tom & Jerry (Warner Bros, 2021). O filme fez US$ 136M de bilheteria mundial. A Framestore ganhou o Oscar de Melhores Efeitos Visuais. Asset não passa pela pipeline deles se não estiver pronto para tela de cinema."
+        "metric": "US$ 136M de bilheteria",
+        "label": "Warner Bros · Framestore",
+        "logoKey": "warnerbros",
+        "description": "Digital art para Tom & Jerry (2021), vencedor do Oscar de Melhores Efeitos Visuais. Asset não passa pela pipeline deles se não estiver pronto para cinema."
       },
       {
-        "metric": "Sega",
-        "label": "3 games AAA em 12 meses",
-        "description": "Entreguei assets digitais para três títulos na Creative Assembly, um estúdio da Sega (matriz de US$ 3.1B). Três releases em doze meses é o tipo de ritmo que quebra a maioria. Construo sistemas que escalam, não sistemas que desmoronam quando a demanda aperta."
+        "metric": "3 títulos · 12 meses",
+        "label": "Sega · Creative Assembly",
+        "logoKey": "sega",
+        "description": "Entreguei assets para três títulos na Creative Assembly, um estúdio da Sega (matriz de US$ 3.1B). Construo sistemas que escalam nesse ritmo."
       },
       {
-        "metric": "Embracer Group",
-        "label": "Liderei um time, lancei 2 títulos",
-        "description": "Liderei um time na New World Interactive (hoje um estúdio do Embracer Group) e lancei dois títulos, incluindo Insurgency: Sandstorm. O jogo fez mais de US$ 52M de receita e ainda tem base ativa de jogadores sete anos depois do lançamento. A Embracer é listada em bolsa em Estocolmo e tem mais de 100 estúdios no portfólio. Liderar um time pra entregar no prazo, no padrão e sem deixar nada cair é a mesma disciplina que eu levo pro seu outbound."
-      },
-      {
-        "metric": "Valve",
-        "label": "VR game jam por convite",
-        "description": "Selecionado pro VR game jam fechado da Valve em Londres. Jammei ao lado de devs que hoje lançam games na Valve, Epic e Ubisoft. Quando um time te confia pra construir algo do zero em 48 horas, não tá testando seu output, tá testando seu julgamento sob pressão."
-      },
-      {
-        "metric": "TA Monks",
-        "label": "Construí um negócio do zero",
-        "description": "Co-fundei uma operação de trading automatizada com minha esposa Danique. 4 anos construindo sistemas que funcionam sem supervisão. O Lead Awaker roda no mesmo princípio: se precisa da minha mão todo dia, não vale a pena lançar."
+        "metric": "US$ 52M+ de receita",
+        "label": "Embracer Group · New World Interactive",
+        "logoKey": "embracer",
+        "description": "Liderei um time, lancei dois títulos. Insurgency: Sandstorm segue ativo sete anos depois. Nada caiu."
       }
     ],
     "recognition": "Arte em destaque no ZBrush Central (Pixologic) e no ArtStation. Palestrante no Design Week da Universidade Federal do Rio de Janeiro. Perfil publicado em revista de design online."
@@ -49,7 +45,8 @@
   "cta": {
     "title": "Veja funcionando nos seus leads",
     "quote": "Entreguei sob os deadlines mais apertados da indústria de entretenimento, depois construí um negócio onde cada lead perdido me custava pessoalmente. Essa experiência está em cada campanha que rodamos.",
-    "button": "Agendar uma demo grátis"
+    "button": "Conversar no WhatsApp",
+    "waLink": "https://wa.me/5547974002162?text=Oi%20Gabriel!%20Acabei%20de%20fazer%20a%20Auditoria%20de%20Leads.%20Gostaria%20de%20conversar%20sobre%20como%20desbloquear%20receita%20dos%20meus%20leads%20adormecidos."
   },
 
   "faq": {

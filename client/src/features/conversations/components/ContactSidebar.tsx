@@ -256,6 +256,14 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       ?? "";
   }, [lead, campaignsMap]);
 
+  // ── Demo niche context ──
+  const demoNicheCtx = useMemo(() => {
+    if (!lead) return null;
+    const raw = (lead as any).demo_niche || (lead as any).demoNiche || "";
+    if (!raw) return null;
+    try { return JSON.parse(raw) as Record<string, any>; } catch { return null; }
+  }, [lead]);
+
   // ── Local status state for pipeline dropdown ──
   const [localStatus, setLocalStatus] = useState(status);
   useEffect(() => { setLocalStatus(status); }, [status]);
@@ -355,6 +363,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                 <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
                     campaignName && { icon: <Megaphone className="h-4 w-4" />, label: t("contact.fields.campaign"), value: campaignName },
+                    demoNicheCtx && { icon: <span className="h-4 w-4 flex items-center justify-center text-[10px] font-bold text-violet-500">✦</span>, label: "Niche", value: demoNicheCtx.niche_label || demoNicheCtx.raw || "", niche: true },
                     selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: t("contact.fields.phone"), value: selected.lead.phone, mono: true },
                     (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-4 w-4" />, label: t("contact.fields.email"), value: selected.lead.Email ?? selected.lead.email },
                   ].filter(Boolean).map((row: any) => (
@@ -362,7 +371,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                       <span className="text-foreground/70 shrink-0">{row.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-[10px] text-muted-foreground font-medium leading-none mb-0.5">{row.label}</div>
-                        <div className={cn("text-[12px] text-foreground truncate", row.mono && "font-mono")}>
+                        <div className={cn("text-[12px] text-foreground truncate", row.mono && "font-mono", row.niche && "text-violet-500 dark:text-violet-400")}>
                           {row.value}
                         </div>
                       </div>
@@ -572,6 +581,17 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("notes") && (
               <div className="px-4 pb-5">
+                {demoNicheCtx && (
+                  <div className="mb-2 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2 text-[11px] space-y-1">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-violet-500/70 mb-1.5">Demo Campaign</div>
+                    {demoNicheCtx.company_name && <div><span className="text-muted-foreground">Company:</span> <span className="text-foreground/80">{demoNicheCtx.company_name}</span></div>}
+                    {(demoNicheCtx.niche_label || demoNicheCtx.raw) && <div><span className="text-muted-foreground">Niche:</span> <span className="text-foreground/80">{demoNicheCtx.niche_label || demoNicheCtx.raw}</span></div>}
+                    {demoNicheCtx.service_name && <div><span className="text-muted-foreground">Service:</span> <span className="text-foreground/80">{demoNicheCtx.service_name}</span></div>}
+                    {demoNicheCtx.usp && <div><span className="text-muted-foreground">USP:</span> <span className="text-foreground/80">{demoNicheCtx.usp}</span></div>}
+                    {demoNicheCtx.what_lead_did && <div><span className="text-muted-foreground">Lead did:</span> <span className="text-foreground/80">{demoNicheCtx.what_lead_did}</span></div>}
+                    {demoNicheCtx.niche_question && <div><span className="text-muted-foreground">Question:</span> <span className="text-foreground/80 italic">{demoNicheCtx.niche_question}</span></div>}
+                  </div>
+                )}
                 <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
                   {onUpdateLead ? (
                     <textarea

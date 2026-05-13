@@ -13,6 +13,8 @@ const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 const CLAUDE_TIMEOUT_MS = 30_000;
 const GROQ_TIMEOUT_MS = 20_000;
 const GROQ_MODEL = "llama-3.1-8b-instant";
+const OPENAI_TIMEOUT_MS = 20_000;
+const OPENAI_MODEL = "gpt-4o-mini";
 
 function cleanClaudeEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
@@ -79,6 +81,43 @@ async function tryGroq(prompt: string, systemPrompt?: string): Promise<string | 
   }
 }
 
+/** Single completion via OpenAI. Returns null on error or missing key. */
+async function tryOpenAI(prompt: string, systemPrompt?: string): Promise<string | null> {
+  const apiKey = process.env.OPEN_AI_API_KEY;
+  if (!apiKey) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 800,
+        temperature: 0.4,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.warn("[aiTextHelper] OpenAI error:", res.status);
+      return null;
+    }
+    const json = await res.json() as any;
+    const text = json.choices?.[0]?.message?.content?.trim();
+    return text || null;
+  } catch (err: any) {
+    console.warn("[aiTextHelper] OpenAI fetch failed:", err.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Strip common markdown code fences from a completion. */
 export function stripFences(s: string): string {
   let out = s.trim();
@@ -96,5 +135,6 @@ export async function completeText(prompt: string, systemPrompt?: string): Promi
   const haiku = await tryHaiku(systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt);
   if (haiku) return haiku;
   const groq = await tryGroq(prompt, systemPrompt);
-  return groq;
+  if (groq) return groq;
+  return tryOpenAI(prompt, systemPrompt);
 }

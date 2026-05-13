@@ -112,6 +112,14 @@ export function LeadCard({
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
 
+  const isDemo = (lead.source || lead.Source) === "WhatsApp Demo" ||
+    (lead.channel_identifier || lead.channelIdentifier || "").startsWith("wa-demo:");
+  const demoNicheLabel = (() => {
+    const raw = lead.demoNiche || lead.demo_niche || "";
+    if (!raw) return "";
+    try { return JSON.parse(raw)?.niche_label || JSON.parse(raw)?.raw || ""; } catch { return ""; }
+  })();
+
   const cardWrapRef         = useRef<HTMLDivElement>(null);
   const [swipeX, setSwipeX]               = useState(0);
   const [swipeLeft, setSwipeLeft]         = useState(0);
@@ -370,6 +378,13 @@ export function LeadCard({
                 <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
               </div>
 
+              {isDemo && (
+                <div className="relative z-10 mt-1">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/15 text-violet-500 dark:text-violet-400 border border-violet-500/25 shrink-0">
+                    DEMO{demoNicheLabel ? ` · ${demoNicheLabel}` : ""}
+                  </span>
+                </div>
+              )}
               <div className={cn(
                 "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
                 hideTags

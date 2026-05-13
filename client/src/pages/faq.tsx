@@ -114,7 +114,7 @@ export default function FAQ() {
                 {t("cta.title")}
               </h2>
 
-              <Link href={isDefaultLang ? "/book-call" : `/${lang}/book-call`}>
+              <a href={t("cta.waLink")} target="_blank" rel="noopener noreferrer">
                 <Button
                   size="lg"
                   className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold"
@@ -122,7 +122,7 @@ export default function FAQ() {
                   {t("cta.button")}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-              </Link>
+              </a>
             </motion.div>
           </div>
         </section>

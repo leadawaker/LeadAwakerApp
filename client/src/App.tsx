@@ -16,6 +16,7 @@ import Home from "@/pages/home";
 import FAQ from "@/pages/faq";
 import BookCall from "@/pages/book-call";
 import TryDemo from "@/pages/try-demo";
+import Cases from "@/pages/cases";
 import IntakeDemo from "@/pages/intake-demo";
 import Login from "@/pages/login";
 import AcceptInvite from "@/pages/AcceptInvite";
@@ -97,9 +98,10 @@ function AppRoutes() {
       <Route path="/" component={Home} />
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
-      <Route path="/services" component={() => <Redirect to="/try" />} />
+      <Route path="/services" component={() => <Redirect to="/cases" />} />
       <Route path="/book-call" component={BookCall} />
       <Route path="/try" component={TryDemo} />
+      <Route path="/cases" component={Cases} />
       <Route path="/intake/:token" component={IntakeDemo} />
       <Route path="/login" component={Login} />
       <Route path="/accept-invite" component={AcceptInvite} />
@@ -129,9 +131,10 @@ function LanguageRouter({ lang }: { lang: Lang }) {
     <Switch>
       <Route path={`/${lang}/faq`} component={FAQ} />
       <Route path={`/${lang}/about`} component={() => <Redirect to={`/${lang}/faq`} />} />
-      <Route path={`/${lang}/services`} component={() => <Redirect to={`/${lang}/try`} />} />
+      <Route path={`/${lang}/services`} component={() => <Redirect to={`/${lang}/cases`} />} />
       <Route path={`/${lang}/book-call`} component={BookCall} />
       <Route path={`/${lang}/try`} component={TryDemo} />
+      <Route path={`/${lang}/cases`} component={Cases} />
       <Route path={`/${lang}/login`} component={Login} />
       <Route path={`/${lang}/accept-invite`} component={AcceptInvite} />
       <Route path={`/${lang}/canvas`} component={Canvas} />

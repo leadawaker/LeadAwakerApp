@@ -11,8 +11,29 @@
       "line2": "A gente só ganha se você fechar negócio."
     },
     "cta": {
-      "primary": "Agendar uma Ligação",
+      "primary": "Auditar meus Leads",
       "secondary": "Experimentar a IA"
+    },
+    "demoForm": {
+      "firstNamePlaceholder": "Seu nome",
+      "submit": "Testar Demo",
+      "fineprint": "Sem cadastro. Abre o WhatsApp com uma IA ao vivo.",
+      "errors": {
+        "missingFields": "Preencha os dois campos (mín. 5 caracteres para o nicho).",
+        "rateLimited": "Muitas requisições. Tente novamente em uma hora.",
+        "generic": "Algo deu errado. Tente novamente.",
+        "network": "Erro de rede. Verifique sua conexão."
+      },
+      "nichePlaceholders": [
+        "ex: clínica odontológica em São Paulo",
+        "ex: SaaS para contadores",
+        "ex: imobiliária",
+        "ex: academia de ginástica",
+        "ex: escritório de advocacia",
+        "ex: corretora de seguros",
+        "ex: concessionária de carros",
+        "ex: consultoria financeira"
+      ]
     }
   },
   "results": {
@@ -172,7 +193,8 @@
     "title": "Pronto pra uma Conversa Personalizada?",
     "quote": "Vamos discutir seus leads e construir um plano juntos. Eu trabalho com no máximo 5 parceiros, as vagas enchem rápido.",
     "meta": "Duração: de 10 a 30 minutos\nSem compromisso",
-    "button": "Agendar uma Call"
+    "button": "Conversar no WhatsApp",
+    "waLink": "https://wa.me/5547974002162?text=Oi%20Gabriel!%20Acabei%20de%20fazer%20a%20Auditoria%20de%20Leads.%20Gostaria%20de%20conversar%20sobre%20como%20desbloquear%20receita%20dos%20meus%20leads%20adormecidos."
   },
   "trySixty": {
     "eyebrow": "Veja como",
@@ -183,6 +205,19 @@
       "customer1": "sinceramente o preço da outra vez ficou caro pra gente",
       "ai1": "Faz total sentido, uma decisão dessas precisa te deixar tranquilo. O que pesou mais, a parcela ou o total?",
       "customer2": "o total, não esperava esse número"
+    }
+  },
+  "testimonial": {
+    "sectionLabel": "O que nossos parceiros dizem",
+    "abdulla": {
+      "quote": "A gente já usa um bom sistema, a tecnologia não é o problema. Gabriel reativou leads que a gente tinha perdido de vista, e nunca pareceu automatizado, só conversas naturais.",
+      "name": "Abdulla Dilimi",
+      "role": "Growth Specialist"
+    },
+    "diederik": {
+      "quote": "Gabriel não configurou e foi embora. Ele entendeu nossos contatos e ajustou o tom, os resultados apareceram. Pareceu mais um consultor do que uma ferramenta.",
+      "name": "Diederik van de Laarschot",
+      "role": "Co-Fundador, FusionCraft"
     }
   },
   "founderBackground": {

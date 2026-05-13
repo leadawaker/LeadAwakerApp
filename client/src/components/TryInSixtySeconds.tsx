@@ -1,9 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import i18n from "@/i18n";
 
 function TypingDots() {
   return (
@@ -122,6 +121,93 @@ function HereIsHow() {
   );
 }
 
+function UniversalDemoForm() {
+  const { t } = useTranslation("home");
+  const lang = i18n.language.split("-")[0] as "en" | "nl" | "pt";
+  const submitLang: "en" | "nl" | "pt" = (["en", "nl", "pt"] as const).includes(lang) ? lang : "en";
+
+  const [firstName, setFirstName] = useState("");
+  const [niche, setNiche] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [focused, setFocused] = useState(false);
+
+  const placeholders = t("hero.demoForm.nichePlaceholders", { returnObjects: true }) as string[];
+
+  useEffect(() => {
+    if (focused) return;
+    const iv = setInterval(() => setPlaceholderIdx((i) => (i + 1) % placeholders.length), 4000);
+    return () => clearInterval(iv);
+  }, [focused, placeholders.length]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!firstName.trim() || niche.trim().length < 5) {
+      setError(t("hero.demoForm.errors.missingFields"));
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/demo/create-session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ firstName: firstName.trim(), niche: niche.trim(), language: submitLang }),
+      });
+      if (res.status === 429) { setError(t("hero.demoForm.errors.rateLimited")); setLoading(false); return; }
+      if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.message || t("hero.demoForm.errors.generic")); setLoading(false); return; }
+      const data = await res.json();
+      window.location.href = data.whatsappUrl;
+    } catch {
+      setError(t("hero.demoForm.errors.network"));
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 max-w-lg mx-auto lg:mx-0">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          type="text"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder={t("hero.demoForm.firstNamePlaceholder")}
+          className="flex-shrink-0 w-full sm:w-36 px-4 py-3 rounded-full border border-input bg-white dark:bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          maxLength={80}
+        />
+        <input
+          type="text"
+          value={niche}
+          onChange={(e) => setNiche(e.target.value)}
+          placeholder={Array.isArray(placeholders) ? placeholders[placeholderIdx] ?? "" : ""}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="flex-1 px-4 py-3 rounded-full border border-input bg-white dark:bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          maxLength={300}
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={loading}
+        className="bg-[#25D366] hover:bg-[#20BC5A] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-3 rounded-full transition inline-flex items-center justify-center gap-1.5"
+      >
+        {loading ? (
+          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+        ) : (
+          <MessageSquare className="w-4 h-4" />
+        )}
+        {t("hero.demoForm.submit")}
+      </button>
+      {error && <p className="text-xs text-red-600 px-1">{error}</p>}
+      <p className="text-xs text-muted-foreground px-1">{t("hero.demoForm.fineprint")}</p>
+    </form>
+  );
+}
+
 export default function TryInSixtySeconds() {
   const { t } = useTranslation("home");
 
@@ -146,15 +232,7 @@ export default function TryInSixtySeconds() {
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">
               {t("trySixty.subtitle")}
             </p>
-            <Link href="/try">
-              <Button
-                size="lg"
-                className="h-14 px-8 text-lg rounded-full transition-all duration-200 hover:bg-[#FEB800] hover:text-[#1a1a1a] hover:border-[#FEB800] hover:[box-shadow:0_0_40px_12px_rgba(254,184,0,0.6)]"
-              >
-                {t("trySixty.cta")}
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+            <UniversalDemoForm />
           </div>
 
           {/* Right: mock chat */}

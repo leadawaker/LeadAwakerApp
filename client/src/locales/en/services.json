@@ -38,7 +38,7 @@
         { "type": "agent", "sender": "Michael", "content": "Perfect James, you're booked for Monday at 11:00 ✅\n\nOur specialist will call you then to go through payback and your north-facing roof.", "time": "10:35 AM" },
         { "type": "user", "sender": "James", "content": "Thanks Michael", "time": "10:40 AM" },
         { "type": "agent", "sender": "Michael", "content": "You are welcome and have a good day 🙂", "time": "10:41 AM" },
-        { "type": "system", "content": "Closed", "id": "sol-6" }
+        { "type": "system", "content": "Closed - Sent to Client", "id": "sol-6" }
       ]
     },
     "gym": {
@@ -70,7 +70,7 @@
         { "type": "agent", "sender": "Sara", "content": "Awesome, you're booked for Monday 4pm ✅\n\nJake will call you then. He's our go-to at habit systems and progress plans, especially for new parents.\n\nIf you need to reschedule, reply here.", "time": "10:58 AM" },
         { "type": "user", "sender": "Mark", "content": "perfect thanks", "time": "11:10 AM" },
         { "type": "agent", "sender": "Sara", "content": "You are welcome, have a good day 🙂", "time": "11:11 AM" },
-        { "type": "system", "content": "Closed", "id": "gym-6" }
+        { "type": "system", "content": "Closed - Sent to Client", "id": "gym-6" }
       ]
     },
     "dental": {
@@ -106,7 +106,7 @@
         { "type": "system", "content": "Appointment re-booked 📅", "id": "dent-7" },
         { "type": "user", "sender": "Laura", "content": "thanks for the flexibility", "time": "06:00 PM" },
         { "type": "agent", "sender": "Sophie", "content": "My pleasure. See you Friday! 🙂", "time": "06:01 PM" },
-        { "type": "system", "content": "Closed", "id": "dent-8" }
+        { "type": "system", "content": "Closed - Sent to Client", "id": "dent-8" }
       ]
     },
     "lawFirm": {
@@ -118,6 +118,7 @@
       "messages": [
         { "type": "agent", "sender": "Sophie", "content": "Hi, this is Sophie from Sterling Finance. Is this Oliver who wanted to check whether they were owed a refund on their car finance?", "time": "14:35" },
         { "type": "system", "content": "Lead engaged", "id": "lf-1" },
+        { "type": "system", "content": "Auto-bump", "id": "lf-bump" },
         { "type": "agent", "sender": "Sophie", "content": "Just bumping this up in case you got busy before :)", "time": "14:55" },
         { "type": "user", "sender": "Oliver", "content": "Hi, yes", "time": "15:00" },
         { "type": "system", "content": "Lead replied", "id": "lf-2" },
@@ -131,10 +132,10 @@
         { "type": "user", "sender": "Oliver", "content": "Do you let me know if I'm eligible once you retrieve the docs and then I confirm I want to proceed?", "time": "15:20" },
         { "type": "agent", "sender": "Sophie", "content": "Absolutely. Once you complete the DSAR form, we request your agreement and review it. If we find you are eligible for a claim, we will get in touch to discuss next steps.\n\nIt typically takes around 30 working days to receive and review the documents. We operate on a no-win, no-fee basis, so there is no risk to you.\n\nForm link: https://www.dsarform.com", "time": "15:22" },
         { "type": "user", "sender": "Oliver", "content": "Thanks.", "time": "15:24" },
-        { "type": "system", "content": "Appointment booked 📅", "id": "lf-4" },
+        { "type": "system", "content": "Form signed ✅", "id": "lf-4" },
         { "type": "agent", "sender": "Sophie", "content": "Thanks for completing the form. You will hear from us soon. If you have any questions, feel free to ask 🙂", "time": "15:39" },
         { "type": "user", "sender": "Oliver", "content": "No, that is all from me", "time": "15:40" },
-        { "type": "system", "content": "Closed", "id": "lf-5" },
+        { "type": "system", "content": "Closed - Sent to Client", "id": "lf-5" },
         { "type": "agent", "sender": "Sophie", "content": "Ok Oliver, have a great day :)", "time": "15:41" }
       ]
     },
@@ -170,7 +171,7 @@
         { "type": "agent", "sender": "Maya", "content": "You're booked Thursday at 10:00 ✅\n\nJames will walk you through the transition framework and where coaching blue-collar workers fits in the market.", "time": "12:20 PM" },
         { "type": "user", "sender": "Ellen", "content": "thank you Maya, this is the nudge I needed", "time": "12:30 PM" },
         { "type": "agent", "sender": "Maya", "content": "That's why we reach out 🙂 Talk Thursday.", "time": "12:31 PM" },
-        { "type": "system", "content": "Closed", "id": "co-6" }
+        { "type": "system", "content": "Closed - Sent to Client", "id": "co-6" }
       ]
     }
   }
