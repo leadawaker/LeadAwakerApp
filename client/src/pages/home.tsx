@@ -30,11 +30,8 @@ import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import { FallingPattern } from "@/components/ui/falling-pattern";
-import { TestimonialCarousel } from "@/components/ui/testimonial-carousel";
 import profileImg from "@/assets/profile.webp";
 import FounderSection from "@/components/FounderSection";
-import abdullaImg from "@/assets/Screenshot_20260508_155721_My Files.jpg";
-import diederikImg from "@/assets/Screenshot_20260508_154846_Gallery.jpg";
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
@@ -203,38 +200,6 @@ export default function Home() {
              </div>
             </div>
           </section>
-
-      {/* Testimonials */}
-      <section className="pt pb-50 bg-[#F9FAFC] dark:bg-background">
-        <div className="container mx-auto px-4 md:px-">
-          <TestimonialCarousel
-            sectionLabel={t("testimonial.sectionLabel")}
-            testimonials={[
-              {
-                name: t("testimonial.abdulla.name"),
-                title: t("testimonial.abdulla.role"),
-                description: t("testimonial.abdulla.quote"),
-                imageUrl: abdullaImg,
-                imagePosition: "center 20%",
-                imageScale: 1.1,
-                logo: <img src="/logos/hubspot.svg" alt="HubSpot" className="h-5 w-auto opacity-60" />,
-              },
-              {
-                name: t("testimonial.diederik.name"),
-                title: t("testimonial.diederik.role"),
-                description: t("testimonial.diederik.quote"),
-                imageUrl: diederikImg,
-                logo: (
-                  <div className="flex items-center gap-1.5 opacity-60">
-                    <img src="/logos/fusioncraft.svg" alt="FusionCraft" className="h-4 w-4" />
-                    <span className="text-[11px] font-semibold tracking-wide text-foreground">FusionCraft</span>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </div>
-      </section>
 
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
