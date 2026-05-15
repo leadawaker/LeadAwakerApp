@@ -64,6 +64,13 @@ reset-pw-temp.ts
 get-users.mjs
 probe-ports.mjs
 check-db.mjs
+
+# Script run artifacts
+scripts/
+script/utils/*.log
+
+# Playwright snapshots
+*-page.yaml
 .autoforge/
 core.*
 cookies.txt
