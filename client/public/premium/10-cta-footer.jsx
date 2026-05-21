@@ -248,11 +248,11 @@ function CTA({ textures = true }) {
         {textures && (
           <div aria-hidden style={{
             position: "absolute", top: "50%", left: "50%",
-            width: isMobile ? "280%" : "200%", height: isMobile ? "280%" : "200%", pointerEvents: "none",
+            width: isMobile ? "280%" : "140%", height: isMobile ? "280%" : "140%", pointerEvents: "none",
             backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "200%", backgroundPosition: "center",
+            backgroundSize: "cover", backgroundPosition: "center",
             opacity: 0.35, mixBlendMode: "overlay",
-            transform: "translate(-50%, -50%) rotate(90deg)"
+            transform: "translate(-50%, -50%) rotate(0deg)"
           }} />
         )}
 
@@ -272,11 +272,11 @@ function CTA({ textures = true }) {
         {/* Wood shadow mask — rotate to match */}
         <div aria-hidden style={{
           position: "absolute", top: "50%", left: "50%",
-          width: isMobile ? "280%" : "200%", height: isMobile ? "280%" : "200%", pointerEvents: "none",
+          width: isMobile ? "280%" : "140%", height: isMobile ? "280%" : "140%", pointerEvents: "none",
           backgroundImage: "url(/premium/assets/texture-wood.webp)",
-          backgroundSize: "200%", backgroundPosition: "center",
+          backgroundSize: "cover", backgroundPosition: "center",
           mixBlendMode: "multiply", opacity: 1,
-          transform: "translate(-50%, -50%) rotate(90deg)"
+          transform: "translate(-50%, -50%) rotate(0deg)"
         }} />
 
         <div aria-hidden style={{
