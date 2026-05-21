@@ -14,7 +14,8 @@ function App() {
   React.useEffect(() => {
     if (t.scrollLight) return;
     const cancel = window.setLightAngle(TWEAK_DEFAULTS.lightAngle, 5000);
-    return cancel;
+    window.__cancelGlobalLight = cancel;
+    return () => { cancel(); window.__cancelGlobalLight = null; };
   }, []);
 
   React.useEffect(() => {

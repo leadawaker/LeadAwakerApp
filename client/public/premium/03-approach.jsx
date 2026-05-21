@@ -126,11 +126,15 @@ function PainShapes({ converge, isMobile }) {
     });
 
     const computeHome = (w, h) => {
+      // Cap the layout zone so shapes don't sprawl on ultrawides.
+      const maxZone = 1600;
+      const zone = Math.min(w, maxZone);
+      const zoneOffset = (w - zone) / 2;
       meshes.forEach((m) => {
         const s = m.userData.def;
         const px = s.left !== undefined
-          ? (parseFloat(s.left) / 100) * w + s.size / 2
-          : w - (parseFloat(s.right) / 100) * w - s.size / 2;
+          ? zoneOffset + (parseFloat(s.left) / 100) * zone + s.size / 2
+          : zoneOffset + zone - (parseFloat(s.right) / 100) * zone - s.size / 2;
         const py = s.top !== undefined
           ? (parseFloat(s.top) / 100) * h + s.size / 2
           : h - (parseFloat(s.bottom) / 100) * h - s.size / 2;

@@ -122,7 +122,7 @@ function CTA({ textures = true }) {
 
     const fromAngle = getLightAngle();
     const normFrom  = ((fromAngle % 360) + 360) % 360;
-    const travel    = 360 - normFrom; // always forward to land exactly at 360°
+    const travel    = -normFrom; // always backward (through top) to land exactly at 0°
     const intensity = getLightIntensity();
     origAngleRef.current = normFrom;
     const t0  = performance.now();
@@ -136,7 +136,7 @@ function CTA({ textures = true }) {
         rotateFrameRef.current = requestAnimationFrame(tick);
       } else {
         rotateFrameRef.current = null;
-        applyLight(360, 100, intensity);
+        applyLight(0, 100, intensity);
       }
     };
     rotateFrameRef.current = requestAnimationFrame(tick);
@@ -148,7 +148,7 @@ function CTA({ textures = true }) {
     rotateFrameRef.current = null;
 
     const fromAngle = getLightAngle();
-    const toAngle   = origAngleRef.current ?? 120;
+    const toAngle   = 175; // return to CTA light angle
     const intensity = getLightIntensity();
     const t0 = performance.now();
     const dur = 8000;
@@ -179,6 +179,7 @@ function CTA({ textures = true }) {
 
   const animateLightTo = React.useCallback((targetAngle, dur = 1600) => {
     if (scrollFrameRef.current) { cancelAnimationFrame(scrollFrameRef.current); scrollFrameRef.current = null; }
+    if (window.__cancelGlobalLight) { window.__cancelGlobalLight(); window.__cancelGlobalLight = null; }
     const fromAngle = getLightAngle();
     const intensity = getLightIntensity();
     const diff = ((targetAngle - fromAngle + 540) % 360) - 180; // shortest path
@@ -244,22 +245,31 @@ function CTA({ textures = true }) {
         clipPath: "inset(0 round 14px)"
       }}>
 
-        {/* Wood overlay — rotate 90° so grain runs the other direction */}
+        {/* Wood overlay */}
         {textures && (
-          <div aria-hidden style={{
-            position: "absolute", top: "50%", left: "50%",
-            width: isMobile ? "280%" : "140%", height: isMobile ? "280%" : "140%", pointerEvents: "none",
-            backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "cover", backgroundPosition: "center",
-            opacity: 0.35, mixBlendMode: "overlay",
-            transform: "translate(-50%, -50%) rotate(0deg)"
-          }} />
+          isMobile ? (
+            <div aria-hidden style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              backgroundImage: "url(/premium/assets/texture-wood.webp)",
+              backgroundSize: "auto 140%", backgroundPosition: "center 70%",
+              backgroundRepeat: "no-repeat", opacity: 0.35, mixBlendMode: "overlay",
+            }} />
+          ) : (
+            <div aria-hidden style={{
+              position: "absolute", top: "50%", left: "50%",
+              width: "140%", height: "140%", pointerEvents: "none",
+              backgroundImage: "url(/premium/assets/texture-wood.webp)",
+              backgroundSize: "cover", backgroundPosition: "center",
+              opacity: 0.35, mixBlendMode: "overlay",
+              transform: "translate(-50%, -50%)",
+            }} />
+          )
         )}
 
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient( 85% 70% at calc(50% + var(--lx) * 35%) calc(50% + var(--ly) * 35%),
-              rgba(var(--light-warm), calc(var(--light-intensity) * 0.65)),
+          background: `radial-gradient( 125% 100% at calc(50% + var(--lx) * 35%) calc(50% + var(--ly) * 35%),
+              rgba(var(--light-warm), calc(var(--light-intensity) * 0.75)),
               transparent 75% ) `,
           mixBlendMode: "screen", opacity: 0.95,
         }} />
@@ -269,15 +279,24 @@ function CTA({ textures = true }) {
           mixBlendMode: "screen",
         }} />
 
-        {/* Wood shadow mask — rotate to match */}
-        <div aria-hidden style={{
-          position: "absolute", top: "50%", left: "50%",
-          width: isMobile ? "280%" : "140%", height: isMobile ? "280%" : "140%", pointerEvents: "none",
-          backgroundImage: "url(/premium/assets/texture-wood.webp)",
-          backgroundSize: "cover", backgroundPosition: "center",
-          mixBlendMode: "multiply", opacity: 1,
-          transform: "translate(-50%, -50%) rotate(0deg)"
-        }} />
+        {/* Wood shadow mask */}
+        {isMobile ? (
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            backgroundImage: "url(/premium/assets/texture-wood.webp)",
+            backgroundSize: "auto 140%", backgroundPosition: "center 70%",
+            backgroundRepeat: "no-repeat", mixBlendMode: "multiply", opacity: 1,
+          }} />
+        ) : (
+          <div aria-hidden style={{
+            position: "absolute", top: "50%", left: "50%",
+            width: "140%", height: "140%", pointerEvents: "none",
+            backgroundImage: "url(/premium/assets/texture-wood.webp)",
+            backgroundSize: "cover", backgroundPosition: "center",
+            mixBlendMode: "multiply", opacity: 1,
+            transform: "translate(-50%, -50%)",
+          }} />
+        )}
 
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
