@@ -13,7 +13,7 @@ function NetherlandsMap() {
 
   React.useEffect(() => {
     let cancelled = false;
-    fetch("/premium/uploads/netherlands.svg")
+    fetch("/premium/netherlands.svg")
       .then((r) => r.text())
       .then((text) => {
         if (cancelled || !ref.current) return;
