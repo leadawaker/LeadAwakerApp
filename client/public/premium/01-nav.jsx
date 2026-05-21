@@ -59,7 +59,7 @@ function Nav({ logoVariant }) {
 
           <a href="/" onClick={handleLogoClick} aria-label="Lead Awaker" style={{ display: "inline-flex", alignItems: "center" }}>
             <img
-              src="/premium/uploads/logo-v2.svg"
+              src="/premium/logo-v2.svg"
               alt="Lead Awaker"
               style={{ height: isMobile ? 30 : 38, width: "auto", display: "block" }} />
           </a>
