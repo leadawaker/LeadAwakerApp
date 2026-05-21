@@ -8,7 +8,7 @@ function About() {
 
   const photoPeople = [
     { photo: "/images/Project%20(20260521052903).jpg", photoZoom: 1.87, photoFocus: "45% 10%", photoRotate: 5 },
-    { photo: "/images/file_00000000a29871f4b7f12305e811031e.webp", photoZoom: 1.65, photoFocus: "50% 20%" },
+    { photo: "/images/file_00000000a29871f4b7f12305e811031e.png", photoZoom: 1.65, photoFocus: "50% 20%" },
   ];
 
   const sz = isMobile ? 88 : 108;
@@ -71,7 +71,6 @@ function About() {
                     {/* Name + roles stacked */}
                     <div>
                       <div className="serif" style={{
-                        fontFamily: idx === 0 ? '"Bodoni Moda", "Bodoni 72", Georgia, serif' : undefined,
                         fontStyle: idx === 1 ? "italic" : "normal",
                         color: idx === 1 ? "var(--wine-soft, #7A2E3E)" : "var(--fg)",
                         fontSize: isMobile ? 20 : 23, lineHeight: 1.15,
