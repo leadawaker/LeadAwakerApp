@@ -3,71 +3,22 @@ import { useTranslation } from "react-i18next";
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useMemo } from "react";
 
-/* -------------------- Logo Animation (unchanged) -------------------- */
+/* -------------------- Logo Animation -------------------- */
 
 function LogoAnimation() {
   const ref = useRef<HTMLDivElement | null>(null);
   const inView = useInView(ref, { once: true, amount: 0.1 });
 
-  const [topWaveKey, setTopWaveKey] = useState(0);
-  const [showTopWave, setShowTopWave] = useState(false);
-
-  const replayTopWave = () => {
-    setTopWaveKey((prev) => prev + 1);
-  };
-
-  useEffect(() => {
-    if (!inView) return;
-
-    const timeout = setTimeout(() => {
-      setShowTopWave(true);
-      replayTopWave();
-    }, 2600);
-
-    return () => clearTimeout(timeout);
-  }, [inView]);
-
   return (
     <motion.div
       ref={ref}
-      className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 pointer-events-auto cursor-pointer"
+      className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
       initial={{ opacity: 0 }}
       animate={inView ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: 0.5 }}
-      onMouseEnter={replayTopWave}
-      onClick={replayTopWave}
     >
       <div className="w-44 h-44 md:w-52 md:h-52 lg:w-64 lg:h-64">
-        <div className="relative w-full h-full">
-          <motion.img
-            src="/Logo-Lead.svg"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain"
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          />
-
-          <motion.img
-            src="/Logo-Awaker.svg"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain"
-            initial={{ opacity: 0, y: 10 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-          />
-
-          <motion.img
-            src="/Logo-Rooster.svg"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ delay: 2.2, duration: 0.4 }}
-          />
-
-         
-        </div>
+        <img src="/logo-footer.svg" alt="" className="w-full h-full object-contain" />
       </div>
     </motion.div>
   );
@@ -101,7 +52,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-slate-50 dark:bg-background pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden">
+    <footer className="pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden" style={{ backgroundColor: '#dad5c7' }}>
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-4 md:mb-16 relative z-10">
           <div>
@@ -127,7 +78,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="#demo"
+                  href="/#try"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.try")}
@@ -143,7 +94,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://wa.me/5547974002162"
+                  href="https://wa.me/558481118224"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-colors"
@@ -182,13 +133,7 @@ export function Footer() {
         {/* Mobile Logo */}
         <div className="flex justify-center items-center mt-1 mb-2 md:hidden">
           <div className="relative w-[220px] h-[220px]">
-            <img src="/Logo-Lead.svg" className="absolute inset-0 w-full h-full object-contain" />
-            <img src="/Logo-Awaker.svg" className="absolute inset-0 w-full h-full object-contain" />
-            <img src="/Logo-Rooster.svg" className="absolute inset-0 w-full h-full object-contain" />
-            <img 
-              src="/Logo-Top.svg" 
-              className="absolute inset-0 w-[120%] h-[120%] object-contain left-1/2 -translate-x-1/2 -translate-y-[10%] grayscale opacity-40 brightness-150 contrast-75" 
-            />
+            <img src="/logo-footer.svg" className="w-full h-full object-contain" />
           </div>
         </div>
 

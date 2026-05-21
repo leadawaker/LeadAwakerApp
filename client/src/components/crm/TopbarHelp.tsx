@@ -92,7 +92,7 @@ export function TopbarHelp({ onNavigateDocs }: TopbarHelpProps) {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl ml-3 focus:bg-transparent focus:text-blue-500 transition-colors">
-                <a href="https://wa.me/5547974002162" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/558481118224" target="_blank" rel="noopener noreferrer">
                   <Phone className="h-4 w-4 text-emerald-600" />
                   WhatsApp
                 </a>

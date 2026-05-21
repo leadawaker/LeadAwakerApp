@@ -89,6 +89,10 @@ export async function verifySmtp(): Promise<void> {
   }
 }
 
+export async function sendRawEmail(opts: { to: string; subject: string; text: string; html?: string }): Promise<void> {
+  await transporter.sendMail({ from: FROM, ...opts });
+}
+
 export async function sendInviteEmail(params: {
   to: string;
   inviteLink: string;

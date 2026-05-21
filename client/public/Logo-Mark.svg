@@ -1,0 +1,46 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- LEAD text (white) -->
+  <g fill="white">
+    <rect x="80" y="140" width="80" height="150"/>
+    <rect x="105" y="200" width="25" height="35"/>
+    <rect x="140" y="140" width="80" height="50"/>
+    <rect x="180" y="180" width="25" height="120"/>
+  </g>
+
+  <!-- Rooster character -->
+  <g transform="translate(310, 190)">
+    <!-- Head/comb (pink) -->
+    <ellipse cx="0" cy="-35" rx="30" ry="40" fill="#E89BB5"/>
+    <!-- Head outline (dark red/maroon) -->
+    <path d="M -20,-15 Q -30,-45 0,-55 Q 30,-45 20,-15 Q 12,-8 0,-12 Q -12,-8 -20,-15" stroke="#5C1A33" stroke-width="7" fill="none"/>
+
+    <!-- Eye -->
+    <circle cx="4" cy="-30" r="4" fill="#5C1A33"/>
+
+    <!-- Body -->
+    <ellipse cx="0" cy="15" rx="35" ry="45" fill="#E89BB5" opacity="0.7"/>
+
+    <!-- Body outline (dark maroon) -->
+    <ellipse cx="0" cy="15" rx="35" ry="45" stroke="#5C1A33" stroke-width="7" fill="none"/>
+
+    <!-- Left wing -->
+    <path d="M -25,5 Q -45,-10 -35,-35" stroke="#5C1A33" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- Right wing -->
+    <path d="M 25,5 Q 45,-10 35,-35" stroke="#5C1A33" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- Left leg -->
+    <path d="M -12,55 Q -16,80 -12,100" stroke="#5C1A33" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+    <!-- Right leg -->
+    <path d="M 12,55 Q 16,80 12,100" stroke="#5C1A33" stroke-width="7" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- D text (white) -->
+  <g fill="white">
+    <path d="M 470,140 L 560,140 Q 595,140 595,190 L 595,290 Q 595,340 560,340 L 470,340 Z M 495,180 L 495,300 L 555,300 Q 575,300 575,270 L 575,210 Q 575,180 555,180 Z"/>
+  </g>
+
+  <!-- "Awaker" text -->
+  <text x="400" y="430" font-family="Georgia, serif" font-size="65" fill="#5C1A33" text-anchor="middle" font-weight="bold">Awaker</text>
+</svg>

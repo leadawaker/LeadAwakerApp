@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Leadawaker. A revival service for premium home improvement businesses.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700&family=Yeseva+One&family=Geist+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=EB+Garamond:ital@0;1&family=Playfair+Display:ital@0;1&family=Bodoni+Moda:ital@0;1&family=Lora:ital@0;1&family=Cormorant+Garamond:ital@0;1&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/premium/design-tokens.css" />
+<style>
+  /* ----- index.html — landing page only ----- */
+  @keyframes cardSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Mobile (<=768px) overrides */
+  @media (max-width: 768px) {
+    body::after { background: none; }
+    .btn-neu { padding: 14px 22px; font-size: 12px; letter-spacing: 0.03em; }
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="/premium/tweaks-panel.jsx"></script>
+<script type="text/babel" src="/premium/translations-en.jsx"></script>
+<script type="text/babel" src="/premium/translations-nl.jsx"></script>
+<script type="text/babel" src="/premium/translations-en-2.jsx"></script>
+<script type="text/babel" src="/premium/translations-nl-2.jsx"></script>
+<script type="text/babel" src="/premium/config.jsx"></script>
+<script type="text/babel" src="/premium/trust-strip.jsx"></script>
+<script type="text/babel" src="/premium/conversation-card.jsx"></script>
+<script type="text/babel" src="/premium/_motion.jsx"></script>
+<script type="text/babel" src="/premium/01-nav.jsx"></script>
+<script type="text/babel" src="/premium/02-hero.jsx"></script>
+<script type="text/babel" src="/premium/03-approach.jsx"></script>
+<script type="text/babel" src="/premium/04-process.jsx"></script>
+<script type="text/babel" src="/premium/05-pipeline.jsx"></script>
+<script type="text/babel" src="/premium/06-audit.jsx"></script>
+<script type="text/babel" src="/premium/07-demo.jsx"></script>
+<script type="text/babel" src="/premium/08-about.jsx"></script>
+<script type="text/babel" src="/premium/09-faq.jsx"></script>
+<script type="text/babel" src="/premium/footer-mark.jsx"></script>
+<script type="text/babel" src="/premium/10-cta-footer.jsx"></script>
+<script type="text/babel" src="/premium/app-main.jsx"></script>
+
+<script>
+// Auto-reload when files change
+(function() {
+  const filesToWatch = ['/premium/_motion.jsx', '/premium/app-main.jsx', '/premium/translations-en.jsx', '/premium/translations-nl.jsx', '/premium/translations-en-2.jsx', '/premium/translations-nl-2.jsx', '/premium/config.jsx', '/premium/trust-strip.jsx', '/premium/conversation-card.jsx', '/premium/01-nav.jsx', '/premium/02-hero.jsx', '/premium/03-approach.jsx', '/premium/04-process.jsx', '/premium/05-pipeline.jsx', '/premium/06-audit.jsx', '/premium/07-demo.jsx', '/premium/08-about.jsx', '/premium/09-faq.jsx', '/premium/footer-mark.jsx', '/premium/10-cta-footer.jsx'];
+  let hashes = {};
+
+  async function hashContent(text) {
+    const msgUint8 = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function checkForChanges() {
+    let reloadNeeded = false;
+    for (const file of filesToWatch) {
+      try {
+        const response = await fetch(file + '?t=' + Date.now());
+        const text = await response.text();
+        const hash = await hashContent(text);
+
+        if (hashes[file] && hashes[file] !== hash) {
+          console.log(`📝 ${file} changed`);
+          reloadNeeded = true;
+        }
+        hashes[file] = hash;
+      } catch (e) {
+        console.error(`Error checking ${file}:`, e);
+      }
+    }
+    if (reloadNeeded) {
+      console.log('🔄 Reloading...');
+      setTimeout(() => window.location.reload(), 500);
+    }
+  }
+
+  // Check every 2 seconds
+  setInterval(checkForChanges, 2000);
+  // Initial hash
+  checkForChanges();
+})();
+</script>
+</body>
+</html>

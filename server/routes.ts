@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import { storage, paginatedQuery } from "./storage";
 import { addClient, removeClient, broadcast } from "./sse";
-import { sendInviteEmail, verifySmtp } from "./email";
+import { sendInviteEmail, sendRawEmail, verifySmtp } from "./email";
 import {
   requireAuth,
   requireAgency,
@@ -255,6 +255,24 @@ export async function registerRoutes(
       res.json({ message: `Test email sent to ${to}` });
     } catch (err: any) {
       res.status(500).json({ message: `Email failed: ${err.message}` });
+    }
+  });
+
+  // ─── Landing page contact form (public) ───────────────────────────
+  app.post("/api/contact", async (req, res) => {
+    const { name, email, description } = req.body ?? {};
+    if (!name || !email) return res.status(400).json({ message: "name and email are required" });
+    try {
+      await sendRawEmail({
+        to: "gabriel@leadawaker.com",
+        subject: `New introduction: ${name}`,
+        text: `Name: ${name}\nEmail: ${email}\n\n${description ?? ""}`,
+        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p>${(description ?? "").replace(/\n/g, "<br>")}</p>`,
+      });
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error("[contact] email failed:", err.message);
+      res.status(500).json({ message: "Failed to send — try again later." });
     }
   });
 

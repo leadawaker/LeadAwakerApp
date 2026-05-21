@@ -26,8 +26,8 @@ const SOCIAL_LINKS = [
   },
   {
     label: "WhatsApp",
-    href: "https://wa.me/5547974002162",
-    handle: "+(55) 47 9740-02162",
+    href: "https://wa.me/558481118224",
+    handle: "+(55) 84 8111-8224",
     icon: Phone,
     color: "text-emerald-600",
   },

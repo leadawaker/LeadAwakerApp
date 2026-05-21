@@ -195,17 +195,6 @@
     "button": "Chat op WhatsApp",
     "waLink": "https://wa.me/5547974002162?text=Hoi%20Gabriel!%20Ik%20heb%20zojuist%20de%20Lead%20Awakening%20Audit%20gedaan.%20Ik%20wil%20graag%20bespreken%20hoe%20we%20inkomsten%20uit%20mijn%20slapende%20leads%20kunnen%20ontgrendelen."
   },
-  "trySixty": {
-    "eyebrow": "Hier is hoe",
-    "title": "Lead Awakening Demo",
-    "subtitle": "Probeer het exacte gesprek dat een lead zoals die in jouw audit opnieuw activeert.",
-    "cta": "Probeer de AI",
-    "mockChat": {
-      "customer1": "eerlijk gezegd was de prijs vorige keer te hoog voor ons",
-      "ai1": "Helemaal begrijpelijk, zo'n beslissing moet gewoon goed voelen. Wat voelde te hoog, de maandlasten of het totaal?",
-      "customer2": "het totaal, dat had ik niet verwacht"
-    }
-  },
   "testimonial": {
     "sectionLabel": "Wat onze partners zeggen",
     "abdulla": {

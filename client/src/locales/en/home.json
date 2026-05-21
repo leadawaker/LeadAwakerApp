@@ -189,22 +189,11 @@
     "subtitle": "Watch how a real conversation goes from cold lead to booked call, automatically."
   },
   "bottomCta": {
-  "title": "Only 5 Active Partners at a Time",
-  "quote": "We stay intentionally hands-on with every partner.  This isn’t a plug-and-play AI tool. The results come from understanding your sales process, where your leads come from, and how people actually buy from you.",
-  "meta": "I reply personally. If it’s not a fit, I’ll tell you fast.",
-  "button": "Start on WhatsApp",
-  "waLink": "https://wa.me/5547974002162?text=Hi%20Gabriel!%20I%20just%20did%20the%20Lead%20Awakening%20Audit.%20I’d%20like%20to%20discuss%20how%20we%20can%20unlock%20revenue%20from%20my%20dormant%20leads."
-},
-  "trySixty": {
-    "eyebrow": "Here is how",
-    "title": "Lead Awakening Demo",
-    "subtitle": "Try the exact conversation that re-engages a lead like the ones in your audit.",
-    "cta": "Try the AI",
-    "mockChat": {
-      "customer1": "honestly the price last time was too steep for us",
-      "ai1": "Totally fair, a decision like this deserves to feel right. What made it feel too steep, the monthly or the total?",
-      "customer2": "the total, I wasn't expecting that number"
-    }
+    "title": "Only 5 Active Partners at a Time",
+    "quote": "We stay intentionally hands-on with every partner.  This isn’t a plug-and-play AI tool. The results come from understanding your sales process, where your leads come from, and how people actually buy from you.",
+    "meta": "I reply personally. If it’s not a fit, I’ll tell you fast.",
+    "button": "Start on WhatsApp",
+    "waLink": "https://wa.me/5547974002162?text=Hi%20Gabriel!%20I%20just%20did%20the%20Lead%20Awakening%20Audit.%20I’d%20like%20to%20discuss%20how%20we%20can%20unlock%20revenue%20from%20my%20dormant%20leads."
   },
   "testimonial": {
     "sectionLabel": "What our Partners say",
@@ -218,6 +207,5 @@
       "name": "Diederik van de Laarschot",
       "role": "Co-Founder, FusionCraft"
     }
-  
   }
 }

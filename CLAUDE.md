@@ -64,6 +64,16 @@ The campaign launcher, bump scheduler, AI conversation pipeline, and inbound han
 - Campaign config fields (First_Message, bump_1_template, bump_2_template, etc.) are read from the DB by this service — not by Express
 - The CRM's AutomationLogs page (`AutomationLogs.tsx` → `features/automation/`) displays logs written by this service
 
+## Landing Page (leadawaker.com)
+
+The public-facing landing page is a **static HTML/JSX site**, separate from the CRM app.
+
+- All files live in `client/public/premium/` — see `client/public/premium/FILE_MAP.md` for a full index
+- "Landing page", "the website", or "homepage" always means these files — never `client/src/pages/legacy/`
+- Legacy pages (`client/src/pages/legacy/`) are retired backups — do not edit unless explicitly asked
+- The page uses its own design system (CSS variables, neumorphic tokens, Google Fonts) — `UI_STANDARDS.md` does not apply here
+- Design tweaks (typography, light, depth, textures) are controlled via `config.jsx` + `app-main.jsx`
+
 ## Feature Specs
 
 When working on a planned feature, check `specs/<feature-name>/` first:

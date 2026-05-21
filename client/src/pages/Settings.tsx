@@ -1426,7 +1426,7 @@ function SettingsContent() {
     { label: "Instagram", handle: "@leadawaker", href: "https://www.instagram.com/leadawaker/", Icon: Instagram, color: "text-pink-600" },
     { label: "Facebook",  handle: "Lead Awaker",  href: "https://www.facebook.com/profile.php?id=61552291063345", Icon: Facebook, color: "text-blue-600" },
     { label: "Email",     handle: "gabriel@leadawaker.com", href: "mailto:gabriel@leadawaker.com", Icon: Mail, color: "text-foreground/70" },
-    { label: "WhatsApp",  handle: "+(55) 47 9740-02162", href: "https://wa.me/5547974002162", Icon: Phone, color: "text-emerald-600" },
+    { label: "WhatsApp",  handle: "+(55) 84 8111-8224", href: "https://wa.me/558481118224", Icon: Phone, color: "text-emerald-600" },
   ];
 
   const routePrefix = location.startsWith("/agency") ? "/agency" : "/subaccount";

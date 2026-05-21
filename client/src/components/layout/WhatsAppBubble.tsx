@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 
 /* ------------------------------------------------------------------ */
@@ -64,16 +63,16 @@ function BubbleInner({ hidden }: { hidden: boolean }) {
           role="menu"
           className="mb-2 w-56 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden"
         >
-          <Link
-            href="/try"
+          <a
+            href="/#try"
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#25D366] transition-colors"
             role="menuitem"
           >
             {t("bubble.tryDemo")}
-          </Link>
+          </a>
           <a
-            href={`https://wa.me/5547974002162?text=${encodeURIComponent(t("bubble.founderPrefill"))}`}
+            href={`https://wa.me/558481118224?text=${encodeURIComponent(t("bubble.founderPrefill"))}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}

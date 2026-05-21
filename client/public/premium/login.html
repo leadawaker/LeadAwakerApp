@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Lead Awaker — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #ECE6DA;
+    --bg-2: #E5DECF;
+    --paper: #F4EFE3;
+    --ink: #1F1A14;
+    --ink-soft: #322B22;
+    --mute: #6C6354;
+    --mute-2: #948A77;
+    --line: rgba(110, 95, 65, 0.14);
+    --wine: #5E2230;
+    --wine-soft: #7A2E3E;
+    --wine-glow: rgba(94, 34, 48, 0.18);
+    --neu-dark: rgba(120, 105, 75, 0.55);
+    --neu-light: rgba(255, 253, 245, 0.95);
+    --neu-dark-soft: rgba(120, 105, 75, 0.32);
+    --neu-light-soft: rgba(255, 253, 245, 0.85);
+    --serif: "Instrument Serif", Georgia, serif;
+    --sans: "Instrument Serif", Georgia, serif;
+    --mono: "Geist Mono", ui-monospace, monospace;
+    --lx: 0.94;
+    --ly: -0.34;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.005em;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* Soft ambient gradient — same atmosphere as the homepage */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(900px 700px at -10% 110%, rgba(220,205,175,0.32), transparent 55%),
+      radial-gradient(800px 600px at 50% 50%, rgba(255,250,240,0.18), transparent 60%);
+  }
+  /* Warm directional key light */
+  body::after {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 55% 45% at 92% 6%,
+        rgba(255,224,168,0.55) 0%,
+        rgba(255,224,168,0.26) 18%,
+        rgba(255,224,168,0.10) 38%,
+        transparent 62%),
+      radial-gradient(ellipse 120% 95% at 92% 6%,
+        rgba(255,224,168,0.12) 0%,
+        rgba(255,224,168,0.05) 30%,
+        transparent 70%);
+    mix-blend-mode: screen;
+  }
+  ::selection { background: var(--wine); color: #fff; }
+  a { color: inherit; text-decoration: none; }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ----- Top nav (matches 01-nav.jsx) ----- */
+  .nav-wrap { position: sticky; top: 0; z-index: 30; }
+  .nav {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 8px 32px;
+  }
+  .nav-inner {
+    padding: 10px 14px 10px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: rgba(218, 213, 199, 0.72);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 250, 238, 0.8);
+    transform: translateZ(0);
+  }
+  .nav-logo { display: inline-flex; align-items: center; }
+  .nav-logo img { height: 38px; width: auto; display: block; }
+  .nav-links { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.01em;
+    transition: background 180ms;
+  }
+  .nav-link:hover { background: rgba(255, 255, 255, 0.4); }
+  .nav-lang {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 8px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(110, 95, 65, 0.18);
+  }
+  .nav-lang button {
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 10px;
+    font-weight: 400;
+    color: var(--mute);
+  }
+  .nav-lang button.active { font-weight: 700; color: var(--ink); }
+
+  /* Mobile-only right cluster — hidden on desktop */
+  .nav-mobile-right { display: none; }
+
+  /* Hamburger button */
+  .nav-burger {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    color: var(--ink);
+    align-items: center;
+    justify-content: center;
+    transition: background 180ms;
+  }
+  .nav-burger:hover { background: rgba(255,255,255,0.3); }
+
+  /* Mobile dropdown */
+  .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0; right: 0;
+    background: rgba(224,218,205,0.97);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255,250,238,0.9);
+    border-radius: 10px;
+    padding: 6px;
+    z-index: 100;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  .nav-dropdown.open { display: flex; }
+  .nav-dropdown a {
+    padding: 13px 16px;
+    border-radius: 7px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    display: block;
+    transition: background 150ms;
+  }
+  .nav-dropdown a:hover { background: rgba(255,255,255,0.5); }
+
+  @media (max-width: 768px) {
+    .nav { padding: 6px 12px; }
+    .nav-inner { padding: 8px 10px 8px 14px; gap: 8px; position: relative; }
+    .nav-logo img { height: 30px; }
+    .nav-links { display: none; }
+    .nav-mobile-right { display: flex; align-items: center; gap: 4px; }
+    .nav-lang { margin-left: 2px; padding-left: 4px; border-left: none; }
+    .nav-lang button { padding: 6px 7px; font-size: 10px; }
+    .nav-burger { display: flex; }
+  }
+
+  /* ----- Centered card ----- */
+  .center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 18px 64px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: linear-gradient(145deg, var(--paper), var(--bg-2));
+    border-radius: 18px;
+    box-shadow:
+      calc(var(--lx) * -16px) calc(var(--ly) * -16px) 44px var(--neu-light),
+      calc(var(--lx) *  16px) calc(var(--ly) *  16px) 44px var(--neu-dark);
+    padding: 40px 36px 32px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin: 0 0 14px;
+  }
+  h1.title {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(34px, 4vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 24px;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  h1.title .italic { font-style: italic; color: var(--wine); }
+
+  .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin: 0 0 8px;
+  }
+
+  .field { position: relative; margin-bottom: 18px; }
+  .field-icon {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--mute);
+    pointer-events: none;
+    width: 18px; height: 18px;
+  }
+  .input {
+    width: 100%;
+    background: linear-gradient(145deg, var(--bg-2), var(--paper));
+    box-shadow:
+      inset calc(var(--lx) * -3px) calc(var(--ly) * -3px) 8px var(--neu-light-soft),
+      inset calc(var(--lx) *  3px) calc(var(--ly) *  3px) 8px var(--neu-dark-soft);
+    border: none; outline: none;
+    padding: 14px 18px 14px 44px;
+    border-radius: 10px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    transition: box-shadow 180ms ease;
+  }
+  .input:focus {
+    box-shadow:
+      inset calc(var(--lx) * -2px) calc(var(--ly) * -2px) 6px var(--neu-light-soft),
+      inset calc(var(--lx) *  2px) calc(var(--ly) *  2px) 6px var(--neu-dark-soft),
+      0 0 0 2px var(--wine-glow);
+  }
+  .input::placeholder { color: var(--mute-2); }
+  .input.pw { padding-right: 44px; }
+
+  .eye-btn {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: transparent; border: none;
+    color: var(--mute); cursor: pointer;
+    padding: 4px; display: inline-flex;
+  }
+  .eye-btn:hover { color: var(--ink); }
+  .eye-btn svg { width: 18px; height: 18px; }
+
+  .row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--mute);
+    margin-bottom: 22px;
+  }
+  .check-label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check {
+    appearance: none; -webkit-appearance: none;
+    width: 18px; height: 18px; border-radius: 5px;
+    background: linear-gradient(145deg, var(--bg-2), var(--paper));
+    box-shadow:
+      inset calc(var(--lx) * -2px) calc(var(--ly) * -2px) 4px var(--neu-light-soft),
+      inset calc(var(--lx) *  2px) calc(var(--ly) *  2px) 4px var(--neu-dark-soft);
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+  }
+  .check:checked { background: linear-gradient(145deg, #6E2638, #4B1A26); }
+  .check:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 5px; height: 10px;
+    border: solid #F4EFE3;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .forgot { color: var(--wine); }
+  .forgot:hover { text-decoration: underline; }
+
+  .btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 24px;
+    border: none; cursor: pointer;
+    background: linear-gradient(145deg, #6E2638, #4B1A26);
+    color: #F4EFE3;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 10px;
+    box-shadow:
+      calc(var(--lx) * -7px) calc(var(--ly) * -7px) 16px var(--neu-light),
+      calc(var(--lx) *  7px) calc(var(--ly) *  7px) 16px var(--neu-dark),
+      inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 rgba(255,255,255,0.18);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      calc(var(--lx) * -9px) calc(var(--ly) * -9px) 20px var(--neu-light),
+      calc(var(--lx) *  9px) calc(var(--ly) *  9px) 20px var(--neu-dark),
+      inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 rgba(255,255,255,0.22);
+  }
+  .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+  .arrow { width: 14px; height: 10px; }
+
+  .divider {
+    margin: 26px 0 0;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    color: var(--mute);
+    font-size: 14px;
+  }
+  .divider a { color: var(--wine); font-weight: 500; }
+  .divider a:hover { text-decoration: underline; }
+
+  .error {
+    background: rgba(94, 34, 48, 0.08);
+    border: 1px solid var(--wine-glow);
+    color: var(--wine);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .error.hidden { display: none; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(244,239,227,0.3);
+    border-top-color: #F4EFE3;
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+    display: none;
+  }
+  .btn[data-loading="1"] .spinner { display: inline-block; }
+  .btn[data-loading="1"] .arrow { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .card { padding: 32px 24px 24px; border-radius: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="nav-wrap">
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo" aria-label="Lead Awaker">
+          <img src="/premium/uploads/logo-v2.svg" alt="Lead Awaker" />
+        </a>
+        <!-- Desktop nav -->
+        <div class="nav-links">
+          <a href="/" class="nav-link" data-i18n="nav.home">Home</a>
+          <a href="/#try" class="nav-link" data-i18n="nav.try">Try</a>
+          <a href="/#approach" class="nav-link" data-i18n="nav.about">About</a>
+          <a href="/login" class="nav-link" id="nav-login-desktop" data-i18n="nav.login">Login</a>
+          <div class="nav-lang">
+            <button type="button" data-lang="en" class="active">EN</button>
+            <button type="button" data-lang="nl">NL</button>
+          </div>
+        </div>
+        <!-- Mobile right side -->
+        <div class="nav-mobile-right">
+          <div class="nav-lang">
+            <button type="button" data-lang="en" class="active">EN</button>
+            <button type="button" data-lang="nl">NL</button>
+          </div>
+          <button type="button" class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+            <svg id="burger-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <!-- Mobile dropdown -->
+        <div class="nav-dropdown" id="nav-dropdown">
+          <a href="/" data-i18n="nav.home">Home</a>
+          <a href="/#try" data-i18n="nav.try">Try</a>
+          <a href="/#approach" data-i18n="nav.about">About</a>
+          <a href="/login" id="nav-login-mobile" data-i18n="nav.login">Login</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <main class="center">
+    <div class="card">
+      <p class="eyebrow">— Sign in</p>
+      <h1 class="title">Welcome <span class="italic">back</span>.</h1>
+
+      <div id="err" class="error hidden"></div>
+
+      <form id="login-form" autocomplete="on" novalidate>
+        <label class="label" for="email">Email</label>
+        <div class="field">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <input id="email" name="email" type="email" class="input" placeholder="you@firm.com" required />
+        </div>
+
+        <label class="label" for="password">Password</label>
+        <div class="field">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <input id="password" name="password" type="password" class="input pw" placeholder="••••••••" required />
+          <button type="button" id="eye" class="eye-btn" tabindex="-1" aria-label="Show password">
+            <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <div class="row-between">
+          <label class="check-label">
+            <input id="remember" type="checkbox" class="check" />
+            <span>Remember me</span>
+          </label>
+          <a href="#" class="forgot">Forgot password?</a>
+        </div>
+
+        <button type="submit" id="submit" class="btn">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-label">Sign in</span>
+          <svg class="arrow" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+            <path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </form>
+
+      <p class="divider">
+        Don't have an account?
+        <a href="/book-call">Schedule a demo</a>
+      </p>
+    </div>
+  </main>
+</div>
+
+<script>
+(function() {
+  // ----- Tiny i18n for the login page -----
+  const I18N = {
+    en: {
+      'nav.home': 'Home', 'nav.try': 'Try', 'nav.about': 'About',
+      'nav.login': 'Login', 'nav.open_app': 'Open app',
+    },
+    nl: {
+      'nav.home': 'Start', 'nav.try': 'Probeer', 'nav.about': 'Over',
+      'nav.login': 'Inloggen', 'nav.open_app': 'Open app',
+    }
+  };
+  function applyLang(lang) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const k = el.getAttribute('data-i18n');
+      const v = (I18N[lang] || {})[k];
+      if (v) el.textContent = v;
+    });
+    document.querySelectorAll('.nav-lang button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+  }
+  const initial = (navigator.language || '').startsWith('nl') ? 'nl' : 'en';
+  applyLang(initial);
+  document.querySelectorAll('.nav-lang button').forEach((b) => {
+    b.addEventListener('click', () => applyLang(b.dataset.lang));
+  });
+
+  // ----- "Open app" when already logged in -----
+  try {
+    const isAuthed = Boolean(localStorage.getItem('leadawaker_auth'));
+    if (isAuthed) {
+      const role = localStorage.getItem('leadawaker_user_role') || '';
+      const href = (role === 'Admin' || role === 'Operator') ? '/agency/campaigns' : '/subaccount/campaigns';
+      ['nav-login-desktop', 'nav-login-mobile'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.href = href;
+          el.removeAttribute('data-i18n');
+          el.textContent = I18N[initial]?.['nav.open_app'] || 'Open app';
+        }
+      });
+    }
+  } catch (_) {}
+
+  // ----- Hamburger menu -----
+  const burger = document.getElementById('nav-burger');
+  const dropdown = document.getElementById('nav-dropdown');
+  const burgerIcon = document.getElementById('burger-icon');
+  const CLOSE_ICON = '<path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>';
+  const OPEN_ICON  = '<path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>';
+
+  function setMenuOpen(open) {
+    dropdown.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    burgerIcon.innerHTML = open ? CLOSE_ICON : OPEN_ICON;
+    burger.style.background = open ? 'rgba(255,255,255,0.3)' : 'transparent';
+  }
+
+  burger.addEventListener('click', () => {
+    setMenuOpen(!dropdown.classList.contains('open'));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-inner')) setMenuOpen(false);
+  });
+
+  dropdown.querySelectorAll('a').forEach((a) => {
+    a.addEventListener('click', () => setMenuOpen(false));
+  });
+
+  const form = document.getElementById('login-form');
+  const emailEl = document.getElementById('email');
+  const pwEl = document.getElementById('password');
+  const rememberEl = document.getElementById('remember');
+  const errEl = document.getElementById('err');
+  const submitBtn = document.getElementById('submit');
+  const btnLabel = submitBtn.querySelector('.btn-label');
+  const eyeBtn = document.getElementById('eye');
+
+  // Already-logged-in shortcut (matches former React behavior)
+  try {
+    const isAuthed = Boolean(localStorage.getItem('leadawaker_auth'));
+    const remembered = localStorage.getItem('leadawaker_remember_me') === 'true';
+    if (isAuthed && remembered) {
+      const role = localStorage.getItem('leadawaker_user_role') || 'Viewer';
+      const isAgency = role === 'Admin' || role === 'Operator';
+      window.location.href = isAgency ? '/agency/campaigns' : '/subaccount/campaigns';
+    }
+  } catch (_) {}
+
+  eyeBtn.addEventListener('click', function() {
+    const showing = pwEl.type === 'text';
+    pwEl.type = showing ? 'password' : 'text';
+    eyeBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  });
+
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.classList.remove('hidden');
+  }
+  function clearError() {
+    errEl.textContent = '';
+    errEl.classList.add('hidden');
+  }
+  function setLoading(on) {
+    submitBtn.disabled = on;
+    submitBtn.dataset.loading = on ? '1' : '0';
+    btnLabel.textContent = on ? 'Signing in…' : 'Sign in';
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearError();
+    const email = emailEl.value.trim();
+    const password = pwEl.value;
+    if (!email || !password) { showError('Email and password are required.'); return; }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      if (!res.ok) {
+        let msg = 'Invalid email or password';
+        try { const body = await res.json(); if (body && body.message) msg = body.message; } catch (_) {}
+        showError(msg);
+        return;
+      }
+      const data = await res.json();
+      const user = data.user || {};
+      localStorage.setItem('leadawaker_auth', 'session');
+      localStorage.setItem('leadawaker_user_email', user.email || email);
+      localStorage.setItem('leadawaker_user_role', user.role || 'Viewer');
+      localStorage.setItem('leadawaker_user_name', user.fullName1 || user.email || email);
+      if (user.avatarUrl) localStorage.setItem('leadawaker_user_avatar', user.avatarUrl);
+      localStorage.setItem('leadawaker_current_account_id', String(user.accountsId || 1));
+      if (rememberEl.checked) localStorage.setItem('leadawaker_remember_me', 'true');
+      else localStorage.removeItem('leadawaker_remember_me');
+
+      const isAgency = user.role === 'Admin' || user.role === 'Operator';
+      window.location.href = isAgency ? '/agency/campaigns' : '/subaccount/campaigns';
+    } catch (_) {
+      showError('Network error — please try again');
+    } finally {
+      setLoading(false);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -77,7 +77,6 @@
       "description": "A IA aprende seu tom, sua linguagem de produto e seus limites. Se uma conversa sai do assunto, é sinalizada antes de chegar ao seu contato. Você mantém o controle."
     }
   },
-
   "calculator": {
     "title": "Auditoria de Leads Adormecidos",
     "subtitle": "Há receita parada nos seus leads não fechados, vamos desbloqueá-la",
@@ -196,17 +195,6 @@
     "button": "Conversar no WhatsApp",
     "waLink": "https://wa.me/5547974002162?text=Oi%20Gabriel!%20Acabei%20de%20fazer%20a%20Auditoria%20de%20Leads.%20Gostaria%20de%20conversar%20sobre%20como%20desbloquear%20receita%20dos%20meus%20leads%20adormecidos."
   },
-  "trySixty": {
-    "eyebrow": "Veja como",
-    "title": "Lead Awakening Demo",
-    "subtitle": "Experimente a conversa exata que reativa um lead como os da sua auditoria.",
-    "cta": "Experimentar a IA",
-    "mockChat": {
-      "customer1": "sinceramente o preço da outra vez ficou caro pra gente",
-      "ai1": "Faz total sentido, uma decisão dessas precisa te deixar tranquilo. O que pesou mais, a parcela ou o total?",
-      "customer2": "o total, não esperava esse número"
-    }
-  },
   "testimonial": {
     "sectionLabel": "O que nossos parceiros dizem",
     "abdulla": {
@@ -233,4 +221,3 @@
     }
   }
 }
-

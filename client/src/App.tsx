@@ -15,11 +15,10 @@ import Seo from "./Seo";
 import Home from "@/pages/home";
 import FAQ from "@/pages/faq";
 import BookCall from "@/pages/book-call";
-import TryDemo from "@/pages/try-demo";
 import Cases from "@/pages/cases";
 import IntakeDemo from "@/pages/intake-demo";
-import Login from "@/pages/login";
 import AcceptInvite from "@/pages/AcceptInvite";
+import LegacyHome from "@/pages/legacy/home";
 
 import AppArea from "@/pages/app";
 import Canvas from "@/pages/canvas";
@@ -96,14 +95,13 @@ function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/legacy" component={LegacyHome} />
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
       <Route path="/services" component={() => <Redirect to="/cases" />} />
       <Route path="/book-call" component={BookCall} />
-      <Route path="/try" component={TryDemo} />
       <Route path="/cases" component={Cases} />
       <Route path="/intake/:token" component={IntakeDemo} />
-      <Route path="/login" component={Login} />
       <Route path="/accept-invite" component={AcceptInvite} />
       <Route path="/agency" component={AppArea} />
       <Route path="/agency/:rest*" component={AppArea} />
@@ -133,13 +131,12 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/about`} component={() => <Redirect to={`/${lang}/faq`} />} />
       <Route path={`/${lang}/services`} component={() => <Redirect to={`/${lang}/cases`} />} />
       <Route path={`/${lang}/book-call`} component={BookCall} />
-      <Route path={`/${lang}/try`} component={TryDemo} />
       <Route path={`/${lang}/cases`} component={Cases} />
-      <Route path={`/${lang}/login`} component={Login} />
       <Route path={`/${lang}/accept-invite`} component={AcceptInvite} />
       <Route path={`/${lang}/canvas`} component={Canvas} />
       <Route path={`/${lang}/privacy-policy`} component={PrivacyPolicy} />
       <Route path={`/${lang}/terms-of-service`} component={TermsOfService} />
+      <Route path={`/${lang}/legacy`} component={LegacyHome} />
 
       {/* Home MUST be last */}
       <Route path={`/${lang}`} component={Home} />

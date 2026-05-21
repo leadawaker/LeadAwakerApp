@@ -106,7 +106,7 @@ const SIGNATURE_TEMPLATE = (whatsappNumber: string) => `
 export const BRANDED_SIGNATURE = SIGNATURE_TEMPLATE("(+31)62745-8300");
 
 /** Brazilian signature — for PT outreach */
-export const BRANDED_SIGNATURE_BR = SIGNATURE_TEMPLATE("+55 47 7400-2162");
+export const BRANDED_SIGNATURE_BR = SIGNATURE_TEMPLATE("+55 84 8111-8224");
 
 /** Pick the right signature based on email language. Defaults to NL/EN. */
 export function getSignatureForLanguage(language?: string): string {

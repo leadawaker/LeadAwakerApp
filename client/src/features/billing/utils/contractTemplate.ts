@@ -148,7 +148,7 @@ This Service Agreement ("Agreement") is entered into as of ${fmtDate(f.startDate
     Gabriel Barbosa Fronza (trading as "Lead Awaker")
     Christiaan Huygensweg 32, s'Hertogenbosch, The Netherlands
     KVK: 99366738 | Email: gabriel@leadawaker.com
-    Phone: +55 47 97400 2162
+    Phone: +55 84 8111 8224
 
   Client:
     ${clientName}${f.signerName ? `\n    Authorised signatory: ${f.signerName}` : ""}
@@ -312,7 +312,7 @@ ${"─".repeat(60)}
 
 
 ${"─".repeat(60)}
-  Lead Awaker | gabriel@leadawaker.com | +55 47 97400 2162
+  Lead Awaker | gabriel@leadawaker.com | +55 84 8111 8224
   Christiaan Huygensweg 32, s'Hertogenbosch, NL | KVK 99366738
 ${"─".repeat(60)}
 `;

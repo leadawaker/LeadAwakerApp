@@ -1,0 +1,357 @@
+/* ============================================================
+   Lead Awaker — Premium Design Tokens
+   Single source of truth for the premium landing page and the
+   design system showcase. Loaded by both index.html and
+   components.html via <link rel="stylesheet">.
+   ============================================================ */
+
+:root {
+  /* Warm bone neumorphic base — slightly desaturated, warm */
+  --bg: #ECE6DA;
+  --bg-2: #E5DECF;
+  --paper: #F4EFE3;
+  --surface: #EDE7DB;  /* card surface — 20% toward paper from bg */
+
+  --ink: #1F1A14;
+  --ink-soft: #322B22;
+  --mute: #6C6354;
+  --mute-2: #948A77;
+  --line: rgba(110, 95, 65, 0.14);
+
+  /* Wine accent */
+  --wine: #5E2230;
+  --wine-soft: #7A2E3E;
+  --wine-tint: rgba(94, 34, 48, 0.08);
+  --wine-glow: rgba(94, 34, 48, 0.18);
+
+  /* Neumorphic shadow tokens */
+  --neu-dark: rgba(105, 75, 40, 0.55);
+  --neu-light: rgba(255, 253, 245, 1.0);
+  --neu-dark-soft: rgba(105, 75, 40, 0.32);
+  --neu-light-soft: rgba(255, 253, 245, 0.9);
+
+  /* Glass tokens */
+  --glass-bg: rgba(255, 250, 240, 0.55);
+  --glass-bg-strong: rgba(255, 250, 240, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-edge: rgba(255, 255, 255, 0.85);
+
+  --serif: "Instrument Serif", Georgia, serif;
+  --sans: "Instrument Serif", Georgia, serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+
+  /* Directional light system */
+  --lx: 0.94;
+  --ly: -0.34;
+  --light-x: 92%;
+  --light-y: 6%;
+  --light-intensity: 0.7;
+  --light-warm: 255, 224, 168;
+  --light-strength: 1;
+
+  /* Depth system — Tweaks → Depth slider scales all tiers together */
+  --depth-scale: 1;
+  --depth-polished: 4; /* polished cards always render deeper than global depth scale */
+  --d-crisp-o:  calc(5px  * var(--depth-scale));
+  --d-crisp-b:  calc(13px * var(--depth-scale));
+  --d-medium-o: calc(10px * var(--depth-scale));
+  --d-medium-b: calc(28px * var(--depth-scale));
+  --d-large-o:  calc(18px * var(--depth-scale));
+  --d-large-b:  calc(48px * var(--depth-scale));
+
+  /* RAISED — bilateral neumorphic (extruded from surface) */
+  --sh-raised-crisp:
+    calc(var(--lx) * var(--d-crisp-o)  * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o)  * var(--light-strength) * -1) var(--d-crisp-b)  var(--neu-dark),
+    calc(var(--lx) * var(--d-crisp-o)  * var(--light-strength))      calc(var(--ly) * var(--d-crisp-o)  * var(--light-strength))      var(--d-crisp-b)  var(--neu-light);
+  --sh-raised-medium:
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength))      calc(var(--ly) * var(--d-medium-o) * var(--light-strength))      var(--d-medium-b) var(--neu-light);
+  --sh-raised-large:
+    calc(var(--lx) * var(--d-large-o)  * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o)  * var(--light-strength) * -1) var(--d-large-b)  var(--neu-dark),
+    calc(var(--lx) * var(--d-large-o)  * var(--light-strength))      calc(var(--ly) * var(--d-large-o)  * var(--light-strength))      var(--d-large-b)  var(--neu-light);
+
+  /* INSET — pressed in: dark on near-light edge, light on far-light edge (raised inverted) */
+  --sh-inset-crisp:
+    inset calc(var(--lx) * var(--d-crisp-o)  * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o)  * var(--light-strength) * -1) var(--d-crisp-b)  var(--neu-dark),
+    inset calc(var(--lx) * var(--d-crisp-o)  * var(--light-strength))      calc(var(--ly) * var(--d-crisp-o)  * var(--light-strength))      var(--d-crisp-b)  var(--neu-light);
+  --sh-inset-medium:
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength))      calc(var(--ly) * var(--d-medium-o) * var(--light-strength))      var(--d-medium-b) var(--neu-light);
+  --sh-inset-large:
+    inset calc(var(--lx) * var(--d-large-o)  * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o)  * var(--light-strength) * -1) var(--d-large-b)  var(--neu-dark),
+    inset calc(var(--lx) * var(--d-large-o)  * var(--light-strength))      calc(var(--ly) * var(--d-large-o)  * var(--light-strength))      var(--d-large-b)  var(--neu-light);
+
+  /* POLISHED — drop shadows away from light + sharp rim highlight on the far-light edge.
+     crisp = very tight + light. medium = tight. large = farther offset, still tight.
+     All three multiply offsets/blur by --depth-polished so polished reads deeper than global scale. */
+  --sh-polished-crisp:
+    calc(var(--lx) * var(--d-crisp-o)  * 1 * var(--depth-polished) * -1)
+    calc(var(--ly) * var(--d-crisp-o)  * 1 * var(--depth-polished) * -1)
+    calc(var(--d-crisp-b)  * 0.2 * var(--depth-polished))
+    calc(var(--d-crisp-o)  * -0.1)
+    rgba(101, 66, 24, 0.06),
+
+    inset calc(var(--lx) * var(--d-crisp-o)  *  1.3)
+    calc(var(--ly) * var(--d-crisp-o)  *  1.3)
+    0px 0
+    rgba(255,253,245,0.95),
+
+    inset
+    0
+    1px
+    0
+    0
+    rgba(255, 255, 255, 0.6);
+  --sh-polished-medium:
+
+    calc(var(--lx) * var(--d-crisp-o)  * 2 * var(--depth-polished) * -2)
+    calc(var(--ly) * var(--d-crisp-o)  * 2 * var(--depth-polished) * -2)
+    calc(var(--d-crisp-b)  * 1 * var(--depth-polished))
+    calc(var(--d-crisp-o)  * -0.2)
+    rgba(101, 66, 24, 0.06),
+
+   
+    0
+    calc(var(--d-large-o) * 1.2 * var(--depth-polished))
+    calc(var(--d-large-b) * 1.0 * var(--depth-polished))
+    calc(var(--d-large-o) * -0.3)
+    rgba(95, 70, 40, 0.10),
+
+  
+    inset
+    calc(var(--lx) * var(--d-large-o) * 1.5)
+    calc(var(--ly) * var(--d-large-o) * 1.5)
+    1px
+    0
+    rgba(255,253,245,0.95),
+
+
+    inset
+    calc(var(--lx) * var(--d-large-o) * -1.5)
+    calc(var(--ly) * var(--d-large-o) * -1.5)
+    10px
+    0
+    rgba(255,253,245,0.35),
+
+
+    inset
+    0
+    1px
+    0
+    0
+    rgba(255, 255, 255, 0.6);
+    
+    --sh-polished-large:
+
+    calc(var(--lx) * var(--d-large-o) * 3.5 * var(--depth-polished) * -1)
+    calc(var(--ly) * var(--d-large-o) * 3.5 * var(--depth-polished) * -1)
+    calc(var(--d-large-b) * 2.0 * var(--depth-polished))
+    calc(var(--d-large-o) * -0.2)
+    rgba(151, 119, 81, 0.15),
+
+   
+    0
+    calc(var(--d-large-o) * 1.6 * var(--depth-polished))
+    calc(var(--d-large-b) * 1.4 * var(--depth-polished))
+    calc(var(--d-large-o) * -0.4)
+    rgba(95, 70, 40, 0.10),
+
+  
+    inset
+    calc(var(--lx) * var(--d-large-o) * 1.8)
+    calc(var(--ly) * var(--d-large-o) * 1.8)
+    1px
+    0
+    rgba(255,253,245,0.95),
+
+
+    inset
+    calc(var(--lx) * var(--d-large-o) * -1.8)
+    calc(var(--ly) * var(--d-large-o) * -1.8)
+    30px
+    0
+    rgba(255,253,245,0.35),
+
+
+    inset
+    0
+    1px
+    0
+    0
+    rgba(255, 255, 255, 0.6);}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(900px 700px at -10% 110%, rgba(220,205,175,0.32), transparent 55%),
+    radial-gradient(800px 600px at 50% 50%, rgba(255,250,240,0.18), transparent 60%);
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at var(--light-x) var(--light-y),
+      rgba(var(--light-warm), calc(var(--light-intensity) * 0.95)) 0%,
+      rgba(var(--light-warm), calc(var(--light-intensity) * 0.45)) 18%,
+      rgba(var(--light-warm), calc(var(--light-intensity) * 0.16)) 38%,
+      transparent 62%),
+    radial-gradient(ellipse 120% 95% at var(--light-x) var(--light-y),
+      rgba(var(--light-warm), calc(var(--light-intensity) * 0.18)) 0%,
+      rgba(var(--light-warm), calc(var(--light-intensity) * 0.08)) 30%,
+      transparent 70%);
+  mix-blend-mode: screen;
+}
+#root { position: relative; z-index: 1; }
+a { color: inherit; text-decoration: none; }
+
+.invisible-plate {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 55% 45% at var(--light-x) var(--light-y),
+      rgba(255,224,168,0.665) 0%, rgba(255,224,168,0.315) 18%,
+      rgba(255,224,168,0.112) 38%, transparent 62%),
+    radial-gradient(ellipse 120% 95% at var(--light-x) var(--light-y),
+      rgba(255,224,168,0.126) 0%, rgba(255,224,168,0.056) 30%, transparent 70%),
+    radial-gradient(900px 700px at -10% 110%, rgba(220,205,175,0.32), transparent 55%),
+    radial-gradient(800px 600px at 50% 50%, rgba(255,250,240,0.18), transparent 60%);
+  background-attachment: fixed, fixed, fixed, fixed;
+  background-blend-mode: screen, screen, normal, normal;
+}
+
+/* ----- type primitives ----- */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--mute);
+}
+.serif { font-family: var(--serif); font-weight: 400; letter-spacing: -0.012em; }
+.italic { font-style: italic; }
+.wine { color: var(--wine); }
+::selection { background: var(--wine); color: #fff; }
+
+/* ----- Neumorphic primitives ----- */
+.neu-raised-crisp  { background: var(--surface); box-shadow: var(--sh-raised-crisp); }
+.neu-raised, .neu-raised-soft { background: var(--surface); box-shadow: var(--sh-raised-medium); }
+.neu-raised-large  { background: var(--surface); box-shadow: var(--sh-raised-large); }
+
+.neu-inset-crisp   { background: var(--surface); box-shadow: var(--sh-inset-crisp); }
+.neu-inset         { background: var(--surface); box-shadow: var(--sh-inset-medium); }
+.neu-inset-large   { background: var(--surface); box-shadow: var(--sh-inset-large); }
+
+.neu-polished-crisp { background: radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255,230,180,0.18), transparent 60%), radial-gradient(ellipse 50% 35% at 50% 105%, rgba(255,255,255,0.22), transparent 70%), var(--surface); box-shadow: var(--sh-polished-crisp); }
+.neu-polished       { background: linear-gradient(180deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.05) 40%, transparent 40%), radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255,230,180,0.18), transparent 60%), radial-gradient(ellipse 50% 35% at 50% 105%, rgba(255,255,255,0.22), transparent 70%), var(--surface); box-shadow: var(--sh-polished-medium); }
+.neu-polished-large { background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 45%), radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255,230,180,0.10), transparent 60%), rgba(237, 231, 219, 0.30); box-shadow: var(--sh-polished-large); -webkit-backdrop-filter: blur(28px) saturate(1.2); backdrop-filter: blur(28px) saturate(1.2); }
+
+.neu-pill { border-radius: 999px; }
+
+/* ----- Glass primitives ----- */
+.glass {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: saturate(160%) blur(22px);
+  -webkit-backdrop-filter: saturate(160%) blur(22px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 var(--glass-edge),
+    calc(var(--lx) * -40px) calc(var(--ly) * -40px) 70px -28px rgba(113, 82, 41, 0.45),
+    0 2px 10px -2px rgba(60, 45, 20, 0.1);
+}
+.glass-strong {
+  position: relative;
+  background: var(--glass-bg-strong);
+  backdrop-filter: saturate(160%) blur(28px);
+  -webkit-backdrop-filter: saturate(160%) blur(28px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset calc(var(--lx) * 1.2px) calc(var(--ly) * 1.2px) 0 0 var(--glass-edge),
+    calc(var(--lx) * -20px * var(--light-strength)) calc(var(--ly) * -20px * var(--light-strength)) 40px -10px rgba(100, 65, 19, 0.25),
+    calc(var(--lx) * 14px) calc(var(--ly) * 14px) 60px -40px rgba(var(--light-warm), calc(var(--light-intensity) * 0.55));
+}
+
+/* ----- Buttons ----- */
+.btn-neu {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px; border: none; cursor: pointer;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  border-radius: 8px;
+  box-shadow: var(--sh-raised-medium);
+  transition: box-shadow 220ms cubic-bezier(.2,.7,.2,1), transform 220ms cubic-bezier(.2,.7,.2,1);
+}
+.btn-neu:hover { box-shadow: var(--sh-raised-crisp); transform: translateY(-1px); }
+.btn-neu:active { box-shadow: var(--sh-inset-crisp); transform: translateY(0); }
+.btn-wine { background: linear-gradient(145deg, #6E2638, #4B1A26); color: #F4EFE3; box-shadow: var(--sh-raised-medium); }
+.btn-wine:hover { box-shadow: var(--sh-raised-crisp); }
+.btn-ghost { background: transparent; box-shadow: none; border: 1px solid var(--line); color: var(--ink); }
+.btn-ghost:hover { background: var(--glass-bg); box-shadow: none; transform: none; }
+
+/* ----- Inputs ----- */
+.neu-input {
+  width: 100%;
+  background: var(--bg);
+  box-shadow: var(--sh-inset-crisp);
+  border: none; outline: none;
+  padding: 14px 18px; border-radius: 6px;
+  color: var(--ink);
+  font-family: var(--sans); font-size: 14px;
+}
+.neu-input::placeholder { color: var(--mute-2); }
+
+/* ----- Textures ----- */
+.tex-wood { position: relative; isolation: isolate; }
+.tex-wood::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  border-radius: inherit;
+  background-image: url("/premium/assets/texture-wood.webp");
+  background-size: cover; background-position: center;
+  opacity: 0.55; mix-blend-mode: overlay;
+}
+.tex-wood > * { position: relative; z-index: 1; }
+
+.tex-stone { position: relative; isolation: isolate; }
+.tex-stone::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  border-radius: inherit;
+  background-image: url("/premium/assets/texture-stone.jpg");
+  background-size: cover; background-position: center;
+  opacity: 0.22; mix-blend-mode: multiply;
+}
+.tex-stone > * { position: relative; z-index: 1; }
+
+.tex-rock { position: relative; isolation: isolate; }
+.tex-rock::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  border-radius: inherit;
+  background-image: url("/premium/assets/texture-rock.jpg");
+  background-size: cover; background-position: center;
+  opacity: 0.35; mix-blend-mode: multiply;
+}
+.tex-rock > * { position: relative; z-index: 1; }
+
+/* ----- Misc ----- */
+.row { display: flex; align-items: center; }
+.rule { height: 1px; background: var(--line); width: 100%; }
+
+@keyframes float { 0%,100% { transform: translateY(0) rotate(-1.2deg); } 50% { transform: translateY(-6px) rotate(-1.2deg); } }
+.floaty { animation: float 7s ease-in-out infinite; }
+
+/* ============================================================
+   Pain section — decorative shapes (spheres + tori).
+   Rendered via Three.js into a canvas inside .pain-shapes; the
+   wrapper just provides positioning.
+   ============================================================ */
+.pain-shapes { position: absolute; inset: 0; pointer-events: none; }

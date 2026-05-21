@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
+import path from "path";
+import fs from "fs";
 import { registerRoutes } from "./routes/index";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -95,6 +97,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Premium landing page is the default homepage. Serve the static HTML at "/"
+  // (before Vite middleware claims the route) and the JSX/asset sidecars at /premium/*.
+  const premiumDir = path.resolve("client/public/premium");
+  const sendPremium = (file: string) => (_req: Request, res: Response, next: NextFunction) => {
+    fs.readFile(path.join(premiumDir, file), "utf-8", (err, html) => {
+      if (err) return next();
+      res.type("html").send(html);
+    });
+  };
+  app.get("/", sendPremium("index.html"));
+  app.get("/login", sendPremium("login.html"));
+  app.use("/premium", express.static(premiumDir));
+
   await registerRoutes(httpServer, app);
   startSseListener(); // Real-time push via PostgreSQL LISTEN/NOTIFY
   verifySmtp(); // Log SMTP status at startup (non-blocking)
