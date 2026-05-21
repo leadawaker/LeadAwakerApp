@@ -8,7 +8,7 @@ function About() {
 
   const photoPeople = [
     { photo: "/images/Project%20(20260521052903).jpg", photoZoom: 1.87, photoFocus: "45% 10%", photoRotate: 5 },
-    { photo: "/images/file_00000000a29871f4b7f12305e811031e.png", photoZoom: 1.65, photoFocus: "50% 20%" },
+    { photo: "/images/file_00000000a29871f4b7f12305e811031e.webp", photoZoom: 1.65, photoFocus: "50% 20%" },
   ];
 
   const sz = isMobile ? 88 : 108;
