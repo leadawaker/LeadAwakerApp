@@ -250,7 +250,7 @@ function CTA({ textures = true }) {
             position: "absolute", top: "50%", left: "50%",
             width: isMobile ? "280%" : "200%", height: isMobile ? "280%" : "200%", pointerEvents: "none",
             backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "360px auto", backgroundPosition: "center",
+            backgroundSize: "200%", backgroundPosition: "center",
             opacity: 0.35, mixBlendMode: "overlay",
             transform: "translate(-50%, -50%) rotate(90deg)"
           }} />
@@ -274,7 +274,7 @@ function CTA({ textures = true }) {
           position: "absolute", top: "50%", left: "50%",
           width: isMobile ? "280%" : "200%", height: isMobile ? "280%" : "200%", pointerEvents: "none",
           backgroundImage: "url(/premium/assets/texture-wood.webp)",
-          backgroundSize: "360px auto", backgroundPosition: "center",
+          backgroundSize: "200%", backgroundPosition: "center",
           mixBlendMode: "multiply", opacity: 1,
           transform: "translate(-50%, -50%) rotate(90deg)"
         }} />
