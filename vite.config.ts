@@ -32,6 +32,9 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      input: path.resolve(__dirname, "client/app.html"),
+    },
   },
   server: {
     host: "0.0.0.0",
