@@ -114,6 +114,9 @@ function CTA({ textures = true }) {
   const [quotes, setQuotes] = React.useState(200);
   const [silentPct, setSilentPct] = React.useState(50);
   const [avgValue, setAvgValue] = React.useState(8000);
+  const [quotesActive, setQuotesActive] = React.useState(true);
+  const [silentActive, setSilentActive] = React.useState(true);
+  const [valueActive, setValueActive] = React.useState(true);
 
   const [prefill, setPrefill] = React.useState(null);
 
@@ -125,13 +128,20 @@ function CTA({ textures = true }) {
     if (!n || !em) return;
     setFormState("sending");
 
-    const extras = extraOpen
-      ? { quotes_per_year: quotes, silent_percentage: silentPct, avg_project_value: avgValue }
-      : {};
+    const extras = extraOpen ? {
+      ...(quotesActive ? { quotes_per_year: quotes } : {}),
+      ...(silentActive ? { silent_percentage: silentPct } : {}),
+      ...(valueActive  ? { avg_project_value: avgValue } : {}),
+    } : {};
 
-    const notes = desc + (extraOpen
-      ? `\n\nQuotes/year: ${quotes}\nGo silent: ${silentPct}%\nAvg project value: €${avgValue.toLocaleString('nl-NL')}`
-      : "");
+    const extraLines = extraOpen
+      ? [
+          quotesActive ? `Quotes/year: ${quotes}` : null,
+          silentActive ? `Go silent: ${silentPct}%` : null,
+          valueActive  ? `Avg project value: €${avgValue.toLocaleString('nl-NL')}` : null,
+        ].filter(Boolean)
+      : [];
+    const notes = desc + (extraLines.length ? "\n\n" + extraLines.join("\n") : "");
 
     try {
       await fetch("/api/contact", {
@@ -458,12 +468,12 @@ function CTA({ textures = true }) {
           alignItems: "end",
           marginTop: isMobile ? 44 : 72,
         }}>
-          {/* Col 1: favicon mark + map (address hidden — exposed via JSON-LD for SEO) */}
+          {/* Col 1: map + favicon mark (address hidden — exposed via JSON-LD for SEO) */}
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <FooterMark size={44} />
             <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
               <NetherlandsMap />
             </a>
+            <FooterMark size={44} />
           </div>
 
           {/* Col 2: Terms + Privacy — bottom-right */}
@@ -540,13 +550,13 @@ function CalInlineEmbed({ prefill }) {
     ns("inline", {
       elementOrSelector: ref.current,
       calLink: linkWithPrefill,
-      config: { layout: "month_view", theme: "dark" },
+      config: { layout: "column_view", theme: "dark" },
     });
 
     ns("ui", {
       theme: "dark",
       hideEventTypeDetails: false,
-      layout: "month_view",
+      layout: "column_view",
       cssVarsPerTheme: {
         dark: {
           "cal-brand": "#D9A3B0",
@@ -569,9 +579,9 @@ function CalInlineEmbed({ prefill }) {
       ref={ref}
       style={{
         width: "100%",
-        minHeight: 620,
+        height: 480,
         borderRadius: 8,
-        overflow: "hidden",
+        overflow: "auto",
       }}
     />
   );
