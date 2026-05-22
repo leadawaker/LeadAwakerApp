@@ -6,6 +6,39 @@ const sectionWrap = {
 };
 
 const MAPS_URL = "https://www.google.com/maps/place/Christiaan+Huygensweg+32,+5223+BH+'s-Hertogenbosch,+Netherlands/@51.691872,5.2869323,17z";
+const CAL_LINK = "lead-awaker-orlfpr/discovery-call";
+const CAL_NAMESPACE = "discovery-call";
+
+/* Cal.com inline embed loader — runs once per page */
+function loadCalEmbed() {
+  if (window.__calEmbedLoaded) return;
+  window.__calEmbedLoaded = true;
+  (function (C, A, L) {
+    let p = function (a, ar) { a.q.push(ar); };
+    let d = C.document;
+    C.Cal = C.Cal || function () {
+      let cal = C.Cal; let ar = arguments;
+      if (!cal.loaded) {
+        cal.ns = {}; cal.q = cal.q || [];
+        d.head.appendChild(d.createElement("script")).src = A;
+        cal.loaded = true;
+      }
+      if (ar[0] === L) {
+        const api = function () { p(api, arguments); };
+        const namespace = ar[1];
+        api.q = api.q || [];
+        if (typeof namespace === "string") {
+          cal.ns[namespace] = cal.ns[namespace] || api;
+          p(cal.ns[namespace], ar);
+          p(cal, ["initNamespace", namespace]);
+        } else p(cal, ar);
+        return;
+      }
+      p(cal, ar);
+    };
+  })(window, "https://app.cal.com/embed/embed.js", "init");
+  window.Cal("init", CAL_NAMESPACE, { origin: "https://app.cal.com" });
+}
 
 /* ------------------------- NETHERLANDS MAP SVG --------------------------- */
 function NetherlandsMap() {
@@ -74,27 +107,43 @@ function CTA({ textures = true }) {
 
   /* ---- form state ---- */
   const [formState, setFormState] = React.useState("idle"); // idle | sending | sent | error
-  const nameRef  = React.useRef(null);
-  const emailRef = React.useRef(null);
-  const descRef  = React.useRef(null);
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [extraOpen, setExtraOpen] = React.useState(false);
+  const [quotes, setQuotes] = React.useState(200);
+  const [silentPct, setSilentPct] = React.useState(50);
+  const [avgValue, setAvgValue] = React.useState(8000);
+
+  const [prefill, setPrefill] = React.useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const name  = nameRef.current?.value?.trim();
-    const email = emailRef.current?.value?.trim();
-    const description = descRef.current?.value?.trim();
-    if (!name || !email) return;
+    const n = name.trim();
+    const em = email.trim();
+    const desc = description.trim();
+    if (!n || !em) return;
     setFormState("sending");
+
+    const extras = extraOpen
+      ? { quotes_per_year: quotes, silent_percentage: silentPct, avg_project_value: avgValue }
+      : {};
+
+    const notes = desc + (extraOpen
+      ? `\n\nQuotes/year: ${quotes}\nGo silent: ${silentPct}%\nAvg project value: €${avgValue.toLocaleString('nl-NL')}`
+      : "");
+
     try {
-      const r = await fetch("/api/contact", {
+      await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, description }),
+        body: JSON.stringify({ name: n, email: em, description: desc, ...extras }),
       });
-      setFormState(r.ok ? "sent" : "error");
     } catch {
-      setFormState("error");
+      // non-blocking: still show calendar even if lead capture errored
     }
+    setPrefill({ name: n, email: em, notes });
+    setFormState("sent");
   };
 
   const [contentRef, contentInView] = window.useInView();
@@ -338,11 +387,8 @@ function CTA({ textures = true }) {
 
           {/* Right: text + form — pushed down to feel lower on the page */}
           <div style={{ paddingTop: isMobile ? 0 : 56, ...window.revealStyle(contentInView, { delay: 150 }) }}>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(244,239,227,0.7)", margin: "0 0 14px", maxWidth: 420 }}>
+            <p style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(244,239,227,0.7)", margin: "0 0 28px", maxWidth: 420 }}>
               {t('cta.body')}
-            </p>
-            <p style={{ fontSize: 12, lineHeight: 1.5, color: "rgba(244,239,227,0.5)", margin: "0 0 28px", maxWidth: 420, fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>
-              {t('cta.note')}
             </p>
 
             {/* Form — focus triggers light rotation */}
@@ -359,22 +405,23 @@ function CTA({ textures = true }) {
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 50px -30px rgba(0,0,0,0.6)"
               }}>
                 {formState === "sent" ? (
-                  <div style={{ padding: "24px 8px", textAlign: "center" }}>
-                    <div style={{ fontSize: 28, marginBottom: 12 }}>✓</div>
-                    <p style={{ fontSize: 15, color: "var(--paper)", margin: "0 0 6px", fontFamily: "var(--sans)" }}>
-                      Introduction received.
-                    </p>
-                    <p style={{ fontSize: 12, color: "rgba(244,239,227,0.5)", margin: 0, fontFamily: "var(--mono)", letterSpacing: "0.06em" }}>
-                      {t('cta.reply_note')}
-                    </p>
-                  </div>
+                  <CalInlineEmbed prefill={prefill} />
                 ) : (
                   <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                      <GlassInput ph={t('cta.ph_name')} innerRef={nameRef} />
-                      <GlassInput ph={t('cta.ph_email')} type="email" innerRef={emailRef} />
+                      <GlassInput ph={t('cta.ph_name')} value={name} onChange={(e) => setName(e.target.value)} />
+                      <GlassInput ph={t('cta.ph_email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
-                    <GlassTextarea ph={t('cta.ph_describe')} innerRef={descRef} />
+                    <GlassTextarea ph={t('cta.ph_describe')} value={description} onChange={(e) => setDescription(e.target.value)} />
+
+                    <OptionalQuestions
+                      t={t}
+                      open={extraOpen}
+                      setOpen={setExtraOpen}
+                      quotes={quotes} setQuotes={setQuotes}
+                      silentPct={silentPct} setSilentPct={setSilentPct}
+                      avgValue={avgValue} setAvgValue={setAvgValue}
+                    />
                     {formState === "error" && (
                       <p style={{ margin: 0, fontSize: 12, color: "#D9A3B0", fontFamily: "var(--mono)" }}>
                         Something went wrong — please try again.
@@ -394,7 +441,7 @@ function CTA({ textures = true }) {
               </div>
             </div>
 
-            {formState !== "sent" && (
+            {formState === "sent" && (
               <p style={{ fontSize: 11, color: "rgba(244,239,227,0.45)", margin: "14px 4px 0", fontFamily: "var(--mono)", letterSpacing: "0.06em" }}>
                 {t('cta.reply_note')}
               </p>
@@ -411,24 +458,12 @@ function CTA({ textures = true }) {
           alignItems: "end",
           marginTop: isMobile ? 44 : 72,
         }}>
-          {/* Col 1: favicon mark + Studio address + map */}
-          <div style={{ display: "flex", gap: 28, alignItems: "flex-end" }}>
-            <div>
-              <FooterMark size={44} />
-              <div style={{ marginTop: 16 }}>
-                <div style={labelStyle}>{t('cta.studio_label')}</div>
-                <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" style={monoStyle}>
-                  Christiaan Huygensweg 32<br />
-                  5223 BH 's-Hertogenbosch<br />
-                  The Netherlands
-                </a>
-              </div>
-            </div>
-            {!isMobile && (
-              <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                <NetherlandsMap />
-              </a>
-            )}
+          {/* Col 1: favicon mark + map (address hidden — exposed via JSON-LD for SEO) */}
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <FooterMark size={44} />
+            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
+              <NetherlandsMap />
+            </a>
           </div>
 
           {/* Col 2: Terms + Privacy — bottom-right */}
@@ -447,19 +482,17 @@ function CTA({ textures = true }) {
   );
 }
 
-function GlassInput({ ph, type = "text", innerRef }) {
+function GlassInput({ ph, type = "text", value, onChange }) {
   return (
     <input
-      ref={innerRef}
       type={type}
       placeholder={ph}
+      value={value}
+      onChange={onChange}
       className="glass-field"
       style={{
-        background: "rgba(255,255,255,0.08)",
-        border: "1px solid rgba(255,255,255,0.15)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.2)",
+        background: "transparent",
+        border: "1px solid rgba(255,255,255,0.18)",
         padding: "14px 18px", borderRadius: 6, outline: "none",
         color: "rgba(244,239,227,1)", fontFamily: "var(--sans)", fontSize: 14,
         width: "100%", boxSizing: "border-box"
@@ -467,19 +500,17 @@ function GlassInput({ ph, type = "text", innerRef }) {
   );
 }
 
-function GlassTextarea({ ph, innerRef }) {
+function GlassTextarea({ ph, value, onChange }) {
   return (
     <textarea
-      ref={innerRef}
       placeholder={ph}
+      value={value}
+      onChange={onChange}
       rows={4}
       className="glass-field"
       style={{
-        background: "rgba(255,255,255,0.08)",
-        border: "1px solid rgba(255,255,255,0.15)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.2)",
+        background: "transparent",
+        border: "1px solid rgba(255,255,255,0.18)",
         padding: "14px 18px", borderRadius: 6, outline: "none",
         color: "rgba(244,239,227,1)", fontFamily: "var(--sans)", fontSize: 14,
         width: "100%", boxSizing: "border-box",
@@ -487,6 +518,135 @@ function GlassTextarea({ ph, innerRef }) {
       }} />
   );
 }
+
+function CalInlineEmbed({ prefill }) {
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    loadCalEmbed();
+    if (!window.Cal || !window.Cal.ns) return;
+    const ns = window.Cal.ns[CAL_NAMESPACE];
+    if (!ns || !ref.current) return;
+
+    // Reset container so re-mount doesn't stack embeds
+    ref.current.innerHTML = "";
+
+    const linkWithPrefill = CAL_LINK + "?" + new URLSearchParams({
+      name: prefill?.name || "",
+      email: prefill?.email || "",
+      notes: prefill?.notes || "",
+    }).toString();
+
+    ns("inline", {
+      elementOrSelector: ref.current,
+      calLink: linkWithPrefill,
+      config: { layout: "month_view", theme: "dark" },
+    });
+
+    ns("ui", {
+      theme: "dark",
+      hideEventTypeDetails: false,
+      layout: "month_view",
+      cssVarsPerTheme: {
+        dark: {
+          "cal-brand": "#D9A3B0",
+          "cal-bg-emphasis": "#221C14",
+          "cal-bg": "#14110D",
+          "cal-bg-subtle": "#1C1815",
+          "cal-bg-muted": "#1C1815",
+          "cal-text": "#F4EFE3",
+          "cal-text-emphasis": "#FFFFFF",
+          "cal-border": "rgba(244,239,227,0.14)",
+          "cal-border-subtle": "rgba(244,239,227,0.08)",
+          "cal-border-emphasis": "rgba(244,239,227,0.22)",
+        },
+      },
+    });
+  }, [prefill]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        width: "100%",
+        minHeight: 620,
+        borderRadius: 8,
+        overflow: "hidden",
+      }}
+    />
+  );
+}
+
+function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue }) {
+  const rows = [
+    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString('nl-NL') },
+    { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
+    { label: t('cta.q_value'),  min: 1000, max: 100000, step: 1000, value: avgValue,  setValue: setAvgValue,  fmt: (v) => "€" + v.toLocaleString('nl-NL') },
+  ];
+  return (
+    <div style={{
+      borderRadius: 8,
+      border: "1px solid rgba(255,255,255,0.12)",
+      background: "rgba(255,255,255,0.04)",
+      overflow: "hidden",
+    }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%", background: "transparent", border: "none",
+          padding: "12px 16px", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          color: "rgba(244,239,227,0.78)", fontFamily: "var(--mono)",
+          fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
+        }}
+      >
+        <span>{t('cta.optional_toggle')}</span>
+        <span style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 200ms ease", fontSize: 12 }}>⌄</span>
+      </button>
+      {open && (
+        <div style={{ padding: "4px 16px 16px", display: "grid", gap: 18 }}>
+          {rows.map((row) => (
+            <div key={row.label}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: "rgba(244,239,227,0.7)", fontFamily: "var(--sans)" }}>{row.label}</span>
+                <span style={{ fontFamily: "var(--mono)", fontSize: 13, color: "#D9A3B0", fontWeight: 700 }}>{row.fmt(row.value)}</span>
+              </div>
+              <input
+                type="range"
+                className="cta-slider"
+                min={row.min} max={row.max} step={row.step}
+                value={row.value}
+                onChange={(e) => row.setValue(Number(e.target.value))}
+                style={{
+                  '--pct': (((row.value - row.min) / (row.max - row.min)) * 100).toFixed(1) + "%",
+                  width: "100%",
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Inject CTA slider style + placeholder color */
+(function() {
+  if (document.getElementById('_cta-slider-style')) return;
+  const s = document.createElement('style');
+  s.id = '_cta-slider-style';
+  s.textContent = `
+    .cta-slider { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; outline: none; cursor: pointer; padding: 0; margin: 0; border: none; }
+    .cta-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, #D9A3B0 var(--pct, 0%), rgba(255,255,255,0.14) var(--pct, 0%)); }
+    .cta-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: #D9A3B0; box-shadow: 0 0 0 2px rgba(34,28,20,0.9), 0 2px 6px rgba(0,0,0,0.4); cursor: grab; }
+    .cta-slider:active::-webkit-slider-thumb { cursor: grabbing; }
+    .cta-slider::-moz-range-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.14); }
+    .cta-slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #D9A3B0; }
+    .cta-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: none; background: #D9A3B0; box-shadow: 0 0 0 2px rgba(34,28,20,0.9), 0 2px 6px rgba(0,0,0,0.4); cursor: grab; }
+  `;
+  document.head.appendChild(s);
+})();
 
 /* Inject placeholder color once */
 (function() {
