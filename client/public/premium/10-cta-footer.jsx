@@ -251,7 +251,7 @@ function CTA({ textures = true }) {
             <div aria-hidden style={{
               position: "absolute", inset: 0, pointerEvents: "none",
               backgroundImage: "url(/premium/assets/texture-wood.webp)",
-              backgroundSize: "auto 140%", backgroundPosition: "center 70%",
+              backgroundSize: "auto 160%", backgroundPosition: "center",
               backgroundRepeat: "no-repeat", opacity: 0.35, mixBlendMode: "overlay",
             }} />
           ) : (
@@ -259,7 +259,7 @@ function CTA({ textures = true }) {
               position: "absolute", top: "50%", left: "50%",
               width: "140%", height: "140%", pointerEvents: "none",
               backgroundImage: "url(/premium/assets/texture-wood.webp)",
-              backgroundSize: "cover", backgroundPosition: "center",
+              backgroundSize: "cover", backgroundPosition: "center 70%",
               opacity: 0.35, mixBlendMode: "overlay",
               transform: "translate(-50%, -50%)",
             }} />
@@ -284,7 +284,7 @@ function CTA({ textures = true }) {
           <div aria-hidden style={{
             position: "absolute", inset: 0, pointerEvents: "none",
             backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "auto 140%", backgroundPosition: "center 70%",
+            backgroundSize: "auto 160%", backgroundPosition: "center 70%",
             backgroundRepeat: "no-repeat", mixBlendMode: "multiply", opacity: 1,
           }} />
         ) : (
@@ -292,7 +292,7 @@ function CTA({ textures = true }) {
             position: "absolute", top: "50%", left: "50%",
             width: "140%", height: "140%", pointerEvents: "none",
             backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "cover", backgroundPosition: "center",
+            backgroundSize: "cover", backgroundPosition: "center 70%",
             mixBlendMode: "multiply", opacity: 1,
             transform: "translate(-50%, -50%)",
           }} />

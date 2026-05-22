@@ -116,8 +116,8 @@ function App() {
       <FAQ />
       <CTA textures={t.textures} />
 
-      {/* Floating tweaks toggle button — hidden on mobile (design-time only) */}
-      {!isMobile && <button
+      {/* Floating tweaks toggle button — dev only, absent when tweaks-panel.jsx not loaded */}
+      {!isMobile && TweaksPanel && <button
         onClick={() => window.postMessage({ type: '__activate_edit_mode' }, '*')}
         style={{
           position: 'fixed',
@@ -153,7 +153,7 @@ function App() {
         ⚙️
       </button>}
 
-      {!isMobile && <TweaksPanel title="Tweaks">
+      {!isMobile && TweaksPanel && <TweaksPanel title="Tweaks">
         <TweakSection label="Light">
           <TweakSlider
             label="Angle"

@@ -89,13 +89,20 @@ window.TRANSLATIONS.en = {
     people: [
       {
         name: "Gabriel Fronza",
-        roles: ["Founder", "Design", "Software"],
-        bio: "Gabriel has over 12 years of experience building digital workflows, including for Warner Bros. and Sega. With the rise of AI, he turned his focus to intelligent automation for SMEs. Today he builds follow-up systems where timing, automation, and personalisation come together.",
+        role: "Founder · Systems & Automation",
+        bio: [
+          "12+ years building digital systems for SMEs and companies like Warner Bros. and Sega.",
+          "Today he designs AI-driven workflows that handle follow-up, timing, and personalisation at scale.",
+        ],
+        brands: ["Warner Bros.", "Sega"],
       },
       {
         name: "Finn Zijlstra",
-        roles: ["Partner", "Strategy", "Sales"],
-        bio: "Finn combines years of experience in sales, lead generation, and business development with a strong focus on follow-up and conversion. As a hunter, he sold millions in technical projects, then helped dozens of entrepreneurs build profitable acquisition systems.",
+        role: "Partner · Sales & Acquisition",
+        bio: [
+          "Sales strategist with a track record in lead generation, closing, and high-ticket conversions.",
+          "Has sold millions in technical projects and helped entrepreneurs build profitable acquisition systems.",
+        ],
       },
     ],
   },
@@ -107,8 +114,8 @@ window.TRANSLATIONS.en = {
         a: "Only if it sounds like a sales blast, and it won't. Every message picks up where the original thread left off: their project, their room, their last question. People rarely close the door, they postpone. A considered note months later usually lands as helpful, not pushy.",
       },
       {
-        q: "What if it doesn't sound like us?",
-        a: "Nothing goes live until it sounds like you. We study your past correspondence, create sample re-engagements, and refine them with you until the tone is right. After launch, we continuously optimise behind the scenes. You stay in control of direction while we handle the execution.",
+        q: "What about brand tone, GDPR, and our reputation?",
+        a: "Nothing goes live until it sounds like you. We study your past correspondence, create samples, and refine them together until the tone is right. Every message also passes through a guardrail layer before it sends, checking for tone, GDPR compliance, and brand safety. Your reputation stays intact on all fronts.",
       },
       {
         q: "How is this different from a marketing agency or AI tool?",

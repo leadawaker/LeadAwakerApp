@@ -162,7 +162,10 @@ function PainShapes({ converge, isMobile }) {
     window.addEventListener("resize", resize);
 
     let raf;
+    let visible = false;
+
     const tick = () => {
+      if (!visible) { raf = null; return; }
       const conv = stateRef.current.converge;
       const cs = getComputedStyle(document.documentElement);
       const lx = parseFloat(cs.getPropertyValue("--lx")) || 0.94;
@@ -185,10 +188,16 @@ function PainShapes({ converge, isMobile }) {
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
-    tick();
+
+    const io = new IntersectionObserver((entries) => {
+      visible = entries[0].isIntersecting;
+      if (visible && !raf) raf = requestAnimationFrame(tick);
+    }, { threshold: 0 });
+    io.observe(wrap);
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       ro.disconnect();
       window.removeEventListener("resize", resize);
       meshes.forEach((m) => m.geometry.dispose());

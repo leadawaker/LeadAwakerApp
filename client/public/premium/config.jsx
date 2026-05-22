@@ -18,6 +18,16 @@ window.useIsMobile = function useIsMobile(breakpoint = 768) {
   return isMobile;
 };
 
+/* Fallback stubs — overridden by tweaks-panel.jsx when present on dev */
+if (!window.useTweaks) {
+  window.useTweaks = function(defaults) {
+    return [defaults, function() {}];
+  };
+}
+if (!window.TweaksPanel) {
+  window.TweaksPanel = null;
+}
+
 /* ----------------------------- TWEAK DEFAULTS ----------------------------- */
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "palette": 0,

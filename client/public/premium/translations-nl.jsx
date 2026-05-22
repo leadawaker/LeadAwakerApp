@@ -87,14 +87,21 @@ window.TRANSLATIONS.nl = {
     body: "De één komt uit design en de ander uit premium sales. Leadawaker brengt die twee samen, zodat jullie werk ook als premium wordt begrepen en verkocht — met helderheid en vertrouwen.",
     people: [
       {
-        name: "Gabriel B. Fronza",
-        roles: ["Oprichter", "Design", "Software"],
-        bio: "Gabriel heeft meer dan 12 jaar ervaring in het bouwen van digitale workflows, voor onder andere Warner Bros. en Sega. Met de opkomst van AI richtte hij zich op slimme automatisering voor het MKB. Vandaag bouwt hij opvolgsystemen waarin timing, automatisering en personalisatie samenkomen.",
+        name: "Gabriel Fronza",
+        role: "Oprichter · Systemen & Automatisering",
+        bio: [
+          "12+ jaar digitale systemen bouwen voor mkb-bedrijven en namen als Warner Bros. en Sega.",
+          "Vandaag ontwerpt hij AI-gestuurde workflows voor opvolging, timing en personalisatie op schaal.",
+        ],
+        brands: ["Warner Bros.", "Sega"],
       },
       {
         name: "Finn Zijlstra",
-        roles: ["Partner", "Strategie", "Sales"],
-        bio: "Finn combineert jarenlange ervaring in sales, leadgeneratie en business development met een sterke focus op opvolging en conversie. Hij verkocht als hunter voor miljoenen aan technische projecten en hielp daarna tientallen ondernemers bij het bouwen van winstgevende acquisitiesystemen.",
+        role: "Partner · Sales & Acquisitie",
+        bio: [
+          "Salesstrateeg met een trackrecord in leadgeneratie, closing en high-ticket conversies.",
+          "Verkocht voor miljoenen aan technische projecten en hielp ondernemers winstgevende acquisitiesystemen bouwen.",
+        ],
       },
     ],
   },
@@ -106,8 +113,8 @@ window.TRANSLATIONS.nl = {
         a: "Alleen als het klinkt als een standaard salesbericht — en dat doet het niet. Elk bericht sluit aan op waar het eerdere gesprek stopte: hun project, hun ruimte, hun laatste vraag. Mensen sluiten de deur zelden echt; meestal stellen ze uit. Een doordacht bericht maanden later voelt vaak behulpzaam, niet opdringerig.",
       },
       {
-        q: "Wat als het niet klinkt zoals wij?",
-        a: "Er gaat niets live totdat het klinkt als jullie. We analyseren eerdere communicatie, maken voorbeeldberichten en verfijnen alles samen totdat de toon klopt. Na livegang blijven we achter de schermen optimaliseren. Jullie houden controle over de richting, wij regelen de uitvoering.",
+        q: "Hoe zit het met merktoon, AVG en onze reputatie?",
+        a: "Er gaat niets live totdat het klinkt als jullie. We analyseren eerdere communicatie, maken voorbeeldberichten en verfijnen alles samen totdat de toon klopt. Elk bericht wordt voor verzending ook gecontroleerd door een guardrail-laag, op toon, AVG-compliance en merkconformiteit. Jullie reputatie blijft op alle fronten intact.",
       },
       {
         q: "Hoe verschilt dit van een marketingbureau of AI-tool?",
