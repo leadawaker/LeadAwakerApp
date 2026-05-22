@@ -3,13 +3,14 @@
 function Hero({ wineIntensity, textures }) {
   const [niche, setNiche] = React.useState("kitchen");
   const isMobile = window.useIsMobile();
+  const isTablet = window.useIsMobile(1440);
   const { t } = window.useI18n();
   const [heroRef, heroInView] = window.useInView({ immediate: true });
 
   return (
     <section ref={heroRef} data-screen-label="01 Hero" style={{
       maxWidth: 1240, margin: "0 auto",
-      padding: isMobile ? "32px 18px 48px" : "140px 48px 80px",
+      padding: isMobile ? "32px 18px 48px" : isTablet ? "64px 32px 48px" : "140px 48px 80px",
       position: "relative",
       minHeight: isMobile ? undefined : "auto",
       display: isMobile ? "block" : "flex",
@@ -19,7 +20,7 @@ function Hero({ wineIntensity, textures }) {
       <div style={{
         display: "grid",
         gridTemplateColumns: isMobile ? "1fr" : "1.15fr 0.85fr",
-        gap: isMobile ? 36 : 64, alignItems: "flex-start",
+        gap: isMobile ? 36 : isTablet ? 32 : 64, alignItems: "flex-start",
         position: "relative", width: "100%"
       }}>
         <div>
@@ -82,7 +83,7 @@ function Hero({ wineIntensity, textures }) {
             <a href="#contact" className="btn-neu btn-wine" style={isMobile ? { justifyContent: "center" } : null}>
               {t('hero.cta_primary')} <ArrowSm />
             </a>
-            <a href="#process" className="btn-neu" style={isMobile ? { justifyContent: "center" } : null}>
+            <a href="#try" className="btn-neu" style={isMobile ? { justifyContent: "center" } : null}>
               {t('hero.cta_secondary')}
             </a>
           </div>

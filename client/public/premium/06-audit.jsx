@@ -358,6 +358,11 @@ function Audit() {
         <div style={{ marginTop: "auto", fontFamily: "var(--sans)", fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.5 }}>
           You recover <strong style={{ color: "var(--ink)" }}>{r.closed} {t('audit.recover_deals')}</strong>
           {totalSpend > 0 && <span> {t('audit.recover_roi')} <strong style={{ color: accentColor }}>{roi > 0 ? "+" : ""}{roi}%</strong></span>}
+          {" — "}
+          <a href="#contact" style={{
+            color: "var(--wine)", textDecoration: "none", fontWeight: 600,
+            borderBottom: "1px solid var(--wine)", paddingBottom: 1,
+          }}>{t('audit.cta_btn')}</a>
         </div>
 
         {showChart && BreakevenChart()}
@@ -495,38 +500,6 @@ function Audit() {
         {ResultsCol()}
       </div>
 
-      {/* CTA — simple, matches original audit tool */}
-      {(() => {
-        const waMsg = encodeURIComponent(
-          `Hey Gabriel! I just did the Lead Awakening Audit: I have ${leads.toLocaleString('nl-NL')} dormant leads at ${fmt(dealValue)} per deal, which puts ${fmt(r.revenue)} in recoverable revenue. How can we unlock it?`
-        );
-        return (
-          <div style={{ marginTop: 56, textAlign: "center", ...window.revealStyle(sectionInView, { delay: 300 }) }}>
-            <p style={{ fontSize: 14, color: "var(--mute)", marginBottom: 16 }}>
-              {t('audit.cta_desc')}
-            </p>
-            <a
-              href={`https://wa.me/554774002162?text=${waMsg}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-neu btn-wine"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "13px 36px", borderRadius: 999, textDecoration: "none",
-                fontFamily: "var(--sans)", fontWeight: 700, fontSize: 14,
-                letterSpacing: "0.04em", color: "#fff",
-                background: "linear-gradient(145deg, var(--wine-soft), var(--wine))",
-                boxShadow: "var(--sh-raised-crisp)",
-                transition: "opacity 150ms ease, transform 150ms ease",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "none"; }}
-            >
-              {t('audit.cta_btn')}
-            </a>
-          </div>
-        );
-      })()}
     </section>
   );
 }

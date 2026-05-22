@@ -63,13 +63,6 @@ function NetherlandsMap() {
         svg.style.height = "100%";
         svg.style.overflow = "visible";
 
-        svg.querySelectorAll("path").forEach((p) => {
-          p.setAttribute("fill", "rgba(244,239,227,0.16)");
-          p.setAttribute("stroke", "rgba(244,239,227,0.2)");
-          p.setAttribute("stroke-width", "5");
-          p.setAttribute("stroke-linejoin", "round");
-        });
-
         const NS = "http://www.w3.org/2000/svg";
         const make = (tag, attrs) => {
           const el = document.createElementNS(NS, tag);
@@ -77,14 +70,46 @@ function NetherlandsMap() {
           return el;
         };
 
-        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 36, fill: "#7A2E3E", opacity: 0.22 }));
-        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 12, fill: "#D9A3B0" }));
+        /* Carved silhouette: SVG inner shadow clipped to the map shape. */
+        let defs = svg.querySelector("defs");
+        if (!defs) {
+          defs = make("defs", {});
+          svg.insertBefore(defs, svg.firstChild);
+        }
+        const filt = make("filter", { id: "map-carve", x: "-5%", y: "-5%", width: "110%", height: "110%" });
+        // Correct inner-shadow recipe: blur alpha → offset → (alpha out offset) → color → clip → merge
+        const f1 = make("feGaussianBlur", { in: "SourceAlpha", stdDeviation: "4", result: "blur" });
+        const f2 = make("feOffset", { in: "blur", dx: "16", dy: "3", result: "offset" });
+        const f3 = make("feComposite", { in: "SourceAlpha", in2: "offset", operator: "out", result: "inner" });
+        const f4 = make("feFlood", { "flood-color": "#000000", "flood-opacity": "0.5", result: "flood" });
+        const f5 = make("feComposite", { in: "flood", in2: "inner", operator: "in", result: "shadow" });
+        const fMerge = make("feMerge", {});
+        fMerge.appendChild(make("feMergeNode", { in: "SourceGraphic" }));
+        fMerge.appendChild(make("feMergeNode", { in: "shadow" }));
+        [f1, f2, f3, f4, f5, fMerge].forEach(el => filt.appendChild(el));
+        defs.appendChild(filt);
+
+        const silGroup = make("g", { filter: "url(#map-carve)" });
+        Array.from(svg.querySelectorAll("path")).forEach(p => {
+          p.setAttribute("fill", "rgba(215, 201, 170, 0.22)");
+          p.setAttribute("stroke", "rgba(255,255,255,0.3)");
+          p.setAttribute("stroke-width", "1");
+          p.setAttribute("vector-effect", "non-scaling-stroke");
+          silGroup.appendChild(p);
+        });
+        svg.appendChild(silGroup);
+
+        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 36, fill: "#7A2E3E", opacity: 0.4 }));
+        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 15, fill: "#FFB6C8" }));
         const label = make("text", {
           x: 330, y: 490,
           "font-family": "Geist Mono, monospace",
           "font-size": 66,
           "letter-spacing": 3,
-          fill: "rgba(244,239,227,1)"
+          fill: "rgba(244,239,227,1)",
+          stroke: "#000",
+          "stroke-width": 7,
+          "paint-order": "stroke fill"
         });
         label.textContent = "DEN BOSCH";
         svg.appendChild(label);
@@ -95,7 +120,7 @@ function NetherlandsMap() {
 
   return (
     <div ref={ref} aria-hidden style={{
-      width: 110, height: 130, display: "block", lineHeight: 0
+      width: 110, height: 130, display: "block", lineHeight: 0,
     }} />
   );
 }
@@ -119,6 +144,8 @@ function CTA({ textures = true }) {
   const [valueActive, setValueActive] = React.useState(true);
 
   const [prefill, setPrefill] = React.useState(null);
+  const [bookingConfirmed, setBookingConfirmed] = React.useState(false);
+  const [bookedSlot, setBookedSlot] = React.useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -294,14 +321,16 @@ function CTA({ textures = true }) {
   return (
     <section ref={sectionRef} id="contact" data-screen-label="06 Contact" style={isMobile
       ? { maxWidth: 1240, margin: "0 auto", padding: "60px 18px 60px" }
-      : { ...sectionWrap, paddingBottom: 96 }}>
+      : { ...sectionWrap, paddingBottom: 0 }}>
       <div className="neu-raised" style={{
-        borderRadius: 14, padding: isMobile ? "44px 24px 32px" : "80px 64px 56px",
+        borderRadius: 14, padding: isMobile ? "44px 24px 32px" : (formState === "sent" ? "36px 64px 52px" : "80px 64px 52px"),
         background: "linear-gradient(155deg, #221C14, #14110D)",
         color: "var(--paper)",
         boxShadow: "var(--sh-raised-large), inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 rgba(255,255,255,0.08)",
         position: "relative", overflow: "hidden",
-        clipPath: "inset(0 round 14px)"
+        clipPath: "inset(0 round 14px)",
+        display: "flex", flexDirection: "column",
+        height: isMobile ? undefined : 720,
       }}>
 
         {/* Wood overlay */}
@@ -374,71 +403,111 @@ function CTA({ textures = true }) {
           filter: "blur(20px)"
         }} />
 
-        {/* TOP: request access + form */}
-        <div ref={contentRef} style={{
-          position: "relative",
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr",
-          gap: isMobile ? 32 : 80,
-          alignItems: "start"
-        }}>
-          {/* Left: heading */}
-          <div style={{ paddingTop: isMobile ? 0 : 48, ...window.revealStyle(contentInView, { delay: 0 }) }}>
-            <div className="eyebrow" style={{ color: "rgba(244,239,227,0.55)", marginBottom: isMobile ? 18 : 32 }}>{t('cta.eyebrow')}</div>
-            <h2 className="serif" style={{
-              margin: 0, fontSize: isMobile ? "clamp(34px, 9vw, 48px)" : "clamp(48px, 5.4vw, 84px)",
-              lineHeight: 0.98, letterSpacing: "-0.025em",
-              color: "var(--paper)", textWrap: "balance"
-            }}>
-              {t('cta.h2_l1')}<br />{t('cta.h2_l2')}<br />{t('cta.h2_l3')}{" "}
-              <span className="italic" style={{ color: "#D9A3B0" }}>{t('cta.h2_italic')}</span>
-            </h2>
-          </div>
+        {/* TOP: request access + form — or full-width calendar after submit */}
+        {formState === "sent" ? (
+          <CalInlineEmbed
+            prefill={prefill}
+            bookingConfirmed={bookingConfirmed}
+            bookedSlot={bookedSlot}
+            onBookingConfirmed={(data) => { setBookingConfirmed(true); setBookedSlot(data); }}
+            onRebook={() => setBookingConfirmed(false)}
+            style={{ flex: 1, minHeight: 0 }}
+          />
+        ) : (
+          <div ref={contentRef} style={{
+            position: "relative", flex: 1, minHeight: 0, overflow: "hidden",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr",
+            gap: isMobile ? 32 : 80,
+            alignItems: "stretch"
+          }}>
+            {/* Left: heading + map/terms pinned to bottom */}
+            <div style={{ paddingTop: isMobile ? 0 : 24, display: "flex", flexDirection: "column", ...window.revealStyle(contentInView, { delay: 0 }) }}>
+              <div>
+                <div className="eyebrow" style={{ color: "rgba(244,239,227,0.55)", marginBottom: isMobile ? 18 : 32 }}>{t('cta.eyebrow')}</div>
+                <h2 className="serif" style={{
+                  margin: 0, fontSize: isMobile ? "clamp(34px, 9vw, 48px)" : "clamp(48px, 5.4vw, 84px)",
+                  lineHeight: 0.98, letterSpacing: "-0.025em",
+                  color: "var(--paper)", textWrap: "balance"
+                }}>
+                  {t('cta.h2_l1')}<br />{t('cta.h2_l2')}<br />{t('cta.h2_l3')}<br />
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "0.2em" }}>
+                    <span className="italic" style={{ color: "#D9A3B0" }}>{t('cta.h2_italic')}</span>
+                    <span style={{ display: "inline-block", marginTop: 5 }}>
+                      <FooterMark size={isMobile ? 30 : 46} />
+                    </span>
+                  </span>
+                </h2>
+              </div>
+              {!isMobile && (
+                <div style={{
+                  marginTop: "auto",
+                  display: "flex", alignItems: "flex-end", gap: 40,
+                }}>
+                  <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
+                    <NetherlandsMap />
+                  </a>
+                  <div style={{ display: "flex", gap: 26, alignSelf: "flex-end", paddingBottom: 6 }}>
+                    <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                      {t('cta.terms')}
+                    </a>
+                    <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                      {t('cta.privacy')}
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {/* Right: text + form — pushed down to feel lower on the page */}
-          <div style={{ paddingTop: isMobile ? 0 : 56, ...window.revealStyle(contentInView, { delay: 150 }) }}>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(244,239,227,0.7)", margin: "0 0 28px", maxWidth: 420 }}>
-              {t('cta.body')}
-            </p>
-
-            {/* Form — focus triggers light rotation */}
-            <div
-              onFocus={startRotation}
-              onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) stopRotation(); }}
-            >
-              <div style={{
-                padding: 20, borderRadius: 10,
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 50px -30px rgba(0,0,0,0.6)"
-              }}>
-                {formState === "sent" ? (
-                  <CalInlineEmbed prefill={prefill} />
-                ) : (
-                  <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                      <GlassInput ph={t('cta.ph_name')} value={name} onChange={(e) => setName(e.target.value)} />
-                      <GlassInput ph={t('cta.ph_email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    </div>
-                    <GlassTextarea ph={t('cta.ph_describe')} value={description} onChange={(e) => setDescription(e.target.value)} />
-
-                    <OptionalQuestions
-                      t={t}
-                      open={extraOpen}
-                      setOpen={setExtraOpen}
-                      quotes={quotes} setQuotes={setQuotes}
-                      silentPct={silentPct} setSilentPct={setSilentPct}
-                      avgValue={avgValue} setAvgValue={setAvgValue}
-                    />
-                    {formState === "error" && (
-                      <p style={{ margin: 0, fontSize: 12, color: "#D9A3B0", fontFamily: "var(--mono)" }}>
-                        Something went wrong — please try again.
+            {/* Right: form */}
+            <div style={{ paddingTop: isMobile ? 0 : 24, minHeight: 0, display: "flex", flexDirection: "column", ...window.revealStyle(contentInView, { delay: 150 }) }}>
+              <div
+                onFocus={startRotation}
+                onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) stopRotation(); }}
+                style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+              >
+                <div style={{
+                  padding: 20, borderRadius: 10,
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 50px -30px rgba(0,0,0,0.6)",
+                  flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
+                }}>
+                  <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+                      <p style={{
+                        margin: 0,
+                        fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em",
+                        color: "rgba(244,239,227,0.55)", lineHeight: 1.5,
+                      }}>
+                        Five partner businesses at a time. Send us a short intro.
                       </p>
-                    )}
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+                        <GlassInput ph={t('cta.ph_name')} value={name} onChange={(e) => setName(e.target.value)} />
+                        <GlassInput ph={t('cta.ph_email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      </div>
+                      <GlassTextarea ph={t('cta.ph_describe')} value={description} onChange={(e) => setDescription(e.target.value)} />
+                      <OptionalQuestions
+                        t={t}
+                        open={extraOpen}
+                        setOpen={setExtraOpen}
+                        quotes={quotes} setQuotes={setQuotes}
+                        silentPct={silentPct} setSilentPct={setSilentPct}
+                        avgValue={avgValue} setAvgValue={setAvgValue}
+                        quotesActive={quotesActive} setQuotesActive={setQuotesActive}
+                        silentActive={silentActive} setSilentActive={setSilentActive}
+                        valueActive={valueActive} setValueActive={setValueActive}
+                      />
+                      {formState === "error" && (
+                        <p style={{ margin: 0, fontSize: 12, color: "#D9A3B0", fontFamily: "var(--mono)" }}>
+                          Something went wrong — please try again.
+                        </p>
+                      )}
+                    </div>
                     <button type="submit" className="btn-neu" disabled={formState === "sending"} style={{
-                      marginTop: 6, justifyContent: "center",
+                      flexShrink: 0, marginTop: 12, justifyContent: "center",
                       background: "linear-gradient(145deg, #F4EFE3, #E5DECF)",
                       color: "var(--ink)", opacity: formState === "sending" ? 0.6 : 1,
                       boxShadow: "4px 4px 12px rgba(0,0,0,0.45), -2px -2px 8px rgba(255,255,255,0.05)"
@@ -447,45 +516,28 @@ function CTA({ textures = true }) {
                       {formState !== "sending" && <ArrowSm />}
                     </button>
                   </form>
-                )}
+                </div>
               </div>
             </div>
-
-            {formState === "sent" && (
-              <p style={{ fontSize: 11, color: "rgba(244,239,227,0.45)", margin: "14px 4px 0", fontFamily: "var(--mono)", letterSpacing: "0.06em" }}>
-                {t('cta.reply_note')}
-              </p>
-            )}
           </div>
-        </div>
+        )}
 
-        {/* BOTTOM: footer — favicon above Studio label, map to its right, terms far right */}
-        <div style={{
-          position: "relative",
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
-          gap: isMobile ? 28 : 48,
-          alignItems: "end",
-          marginTop: isMobile ? 44 : 72,
-        }}>
-          {/* Col 1: map + favicon mark (address hidden — exposed via JSON-LD for SEO) */}
-          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        {/* Mobile-only: map + terms below form */}
+        {isMobile && (
+          <div style={{
+            position: "relative", flexShrink: 0,
+            display: "flex", alignItems: "flex-end", flexWrap: "wrap",
+            gap: 24, marginTop: 44,
+          }}>
             <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
               <NetherlandsMap />
             </a>
-            <FooterMark size={44} />
+            <div style={{ display: "flex", gap: 16, alignSelf: "flex-end", paddingBottom: 6 }}>
+              <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>{t('cta.terms')}</a>
+              <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>{t('cta.privacy')}</a>
+            </div>
           </div>
-
-          {/* Col 2: Terms + Privacy — bottom-right */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, alignSelf: "end" }}>
-            <a href="https://leadawaker.com/terms" target="_blank" rel="noopener noreferrer" style={linkStyle}>
-              {t('cta.terms')}
-            </a>
-            <a href="https://leadawaker.com/privacy" target="_blank" rel="noopener noreferrer" style={linkStyle}>
-              {t('cta.privacy')}
-            </a>
-          </div>
-        </div>
+        )}
 
       </div>
     </section>
@@ -516,7 +568,7 @@ function GlassTextarea({ ph, value, onChange }) {
       placeholder={ph}
       value={value}
       onChange={onChange}
-      rows={4}
+      rows={1}
       className="glass-field"
       style={{
         background: "transparent",
@@ -524,74 +576,121 @@ function GlassTextarea({ ph, value, onChange }) {
         padding: "14px 18px", borderRadius: 6, outline: "none",
         color: "rgba(244,239,227,1)", fontFamily: "var(--sans)", fontSize: 14,
         width: "100%", boxSizing: "border-box",
-        resize: "vertical", lineHeight: 1.55
+        resize: "none", lineHeight: "normal",
+        height: 50, overflow: "hidden",
       }} />
   );
 }
 
-function CalInlineEmbed({ prefill }) {
+function CalInlineEmbed({ prefill, bookingConfirmed, bookedSlot, onBookingConfirmed, onRebook, style }) {
   const ref = React.useRef(null);
 
   React.useEffect(() => {
+    if (bookingConfirmed) return;
+
     loadCalEmbed();
-    if (!window.Cal || !window.Cal.ns) return;
-    const ns = window.Cal.ns[CAL_NAMESPACE];
-    if (!ns || !ref.current) return;
 
-    // Reset container so re-mount doesn't stack embeds
-    ref.current.innerHTML = "";
+    /* Cal embed may not be ready immediately after loadCalEmbed() injects the
+       script tag. Poll until Cal.ns exists (max ~3 s) before mounting. */
+    let attempts = 0;
+    const tryMount = () => {
+      attempts++;
+      if (!window.Cal?.ns) {
+        if (attempts < 30) setTimeout(tryMount, 100);
+        return;
+      }
+      const ns = window.Cal.ns[CAL_NAMESPACE];
+      if (!ns || !ref.current) return;
 
-    const linkWithPrefill = CAL_LINK + "?" + new URLSearchParams({
-      name: prefill?.name || "",
-      email: prefill?.email || "",
-      notes: prefill?.notes || "",
-    }).toString();
+      ref.current.innerHTML = "";
 
-    ns("inline", {
-      elementOrSelector: ref.current,
-      calLink: linkWithPrefill,
-      config: { layout: "column_view", theme: "dark" },
-    });
+      const linkWithPrefill = CAL_LINK + "?" + new URLSearchParams({
+        name: prefill?.name || "",
+        email: prefill?.email || "",
+        notes: prefill?.notes || "",
+      }).toString();
 
-    ns("ui", {
-      theme: "dark",
-      hideEventTypeDetails: false,
-      layout: "column_view",
-      cssVarsPerTheme: {
-        dark: {
-          "cal-brand": "#D9A3B0",
-          "cal-bg-emphasis": "#221C14",
-          "cal-bg": "#14110D",
-          "cal-bg-subtle": "#1C1815",
-          "cal-bg-muted": "#1C1815",
-          "cal-text": "#F4EFE3",
-          "cal-text-emphasis": "#FFFFFF",
-          "cal-border": "rgba(244,239,227,0.14)",
-          "cal-border-subtle": "rgba(244,239,227,0.08)",
-          "cal-border-emphasis": "rgba(244,239,227,0.22)",
+      ns("inline", {
+        elementOrSelector: ref.current,
+        calLink: linkWithPrefill,
+        config: { layout: "month_view", theme: "dark" },
+      });
+
+      ns("ui", {
+        theme: "dark",
+        hideEventTypeDetails: false,
+        layout: "month_view",
+        cssVarsPerTheme: {
+          dark: {
+            "cal-brand": "#D9A3B0",
+            "cal-bg-emphasis": "#221C14",
+            "cal-bg": "#14110D",
+            "cal-bg-subtle": "#1C1815",
+            "cal-bg-muted": "#1C1815",
+            "cal-text": "#F4EFE3",
+            "cal-text-emphasis": "#FFFFFF",
+            "cal-border": "rgba(244,239,227,0.14)",
+            "cal-border-subtle": "rgba(244,239,227,0.08)",
+            "cal-border-emphasis": "rgba(244,239,227,0.22)",
+          },
         },
-      },
-    });
-  }, [prefill]);
+      });
+    };
+    tryMount();
+
+    const handleMessage = (e) => {
+      const type = e.data?.data?.type || e.data?.type;
+      if (type === "bookingSuccessful" || type === "cal:booking_confirmed") {
+        onBookingConfirmed(e.data?.data || e.data || {});
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [prefill, bookingConfirmed]);
+
+  if (bookingConfirmed) {
+    const dt = bookedSlot?.startTime ? new Date(bookedSlot.startTime) : null;
+    const formatted = dt ? dt.toLocaleString("nl-NL", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : null;
+    return (
+      <div style={{ ...style, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "48px 0" }}>
+        <div style={{ fontSize: 36, marginBottom: 16 }}>✓</div>
+        <p style={{ fontSize: 18, color: "var(--paper)", fontFamily: "var(--serif)", margin: "0 0 8px" }}>
+          Discovery call booked.
+        </p>
+        {formatted && (
+          <p style={{ fontSize: 13, color: "#D9A3B0", fontFamily: "var(--mono)", margin: "0 0 28px", letterSpacing: "0.06em" }}>
+            {formatted}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={onRebook}
+          style={{
+            background: "transparent", border: "none", cursor: "pointer",
+            fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.08em",
+            color: "rgba(244,239,227,0.5)", textDecoration: "underline",
+            textUnderlineOffset: 3,
+          }}
+        >
+          Need to rebook?
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
       ref={ref}
-      style={{
-        width: "100%",
-        height: 480,
-        borderRadius: 8,
-        overflow: "auto",
-      }}
+      style={{ ...style, width: "100%", borderRadius: 8, overflowY: "auto", overflowX: "hidden" }}
     />
   );
 }
 
-function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue }) {
+function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, quotesActive, setQuotesActive, silentActive, setSilentActive, valueActive, setValueActive }) {
   const rows = [
-    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString('nl-NL') },
-    { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
-    { label: t('cta.q_value'),  min: 1000, max: 100000, step: 1000, value: avgValue,  setValue: setAvgValue,  fmt: (v) => "€" + v.toLocaleString('nl-NL') },
+    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    active: quotesActive, setActive: setQuotesActive, fmt: (v) => v.toLocaleString('nl-NL') },
+    { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, active: silentActive, setActive: setSilentActive, fmt: (v) => v + "%" },
+    { label: t('cta.q_value'),  min: 1000, max: 100000, step: 1000, value: avgValue,  setValue: setAvgValue,  active: valueActive,  setActive: setValueActive,  fmt: (v) => "€" + v.toLocaleString('nl-NL') },
   ];
   return (
     <div style={{
@@ -617,20 +716,35 @@ function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, set
       {open && (
         <div style={{ padding: "4px 16px 16px", display: "grid", gap: 18 }}>
           {rows.map((row) => (
-            <div key={row.label}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+            <div key={row.label} style={{ opacity: row.active ? 1 : 0.45 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: "rgba(244,239,227,0.7)", fontFamily: "var(--sans)" }}>{row.label}</span>
-                <span style={{ fontFamily: "var(--mono)", fontSize: 13, color: "#D9A3B0", fontWeight: 700 }}>{row.fmt(row.value)}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, color: row.active ? "#D9A3B0" : "rgba(244,239,227,0.35)" }}>
+                    {row.active ? row.fmt(row.value) : "—"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => row.setActive(!row.active)}
+                    title={row.active ? "Leave blank" : "Set a value"}
+                    style={{
+                      background: "transparent", border: "1px solid rgba(255,255,255,0.2)",
+                      width: 17, height: 17, borderRadius: 999, padding: 0, cursor: "pointer",
+                      color: "rgba(244,239,227,0.55)", fontSize: 11, lineHeight: 0,
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >{row.active ? "×" : "+"}</button>
+                </span>
               </div>
               <input
-                type="range"
-                className="cta-slider"
+                type="range" className="cta-slider"
                 min={row.min} max={row.max} step={row.step}
                 value={row.value}
+                disabled={!row.active}
                 onChange={(e) => row.setValue(Number(e.target.value))}
                 style={{
                   '--pct': (((row.value - row.min) / (row.max - row.min)) * 100).toFixed(1) + "%",
-                  width: "100%",
+                  width: "100%", cursor: row.active ? "pointer" : "not-allowed",
                 }}
               />
             </div>

@@ -141,7 +141,7 @@ window.ArrowSm = function ArrowSm() {
 const CHAT_CASES = {
   kitchen: {
     label: "Kitchen",
-    leadName: "Sarah Mitchell",
+    leadName: "Eline de Vries",
     avatar: "S",
     project: "Full kitchen remodel",
     ago: "7 mo. ago",
@@ -183,7 +183,7 @@ const CHAT_CASES = {
   },
   flooring: {
     label: "Flooring",
-    leadName: "Caroline Hirst",
+    leadName: "Nathalie van den Berg",
     avatar: "C",
     project: "Parquet restoration",
     ago: "5 mo. ago",
@@ -222,7 +222,7 @@ const CHAT_CASES = {
   },
   wellness: {
     label: "Wellness",
-    leadName: "Emma Whitfield",
+    leadName: "Lisa Bakker",
     avatar: "E",
     project: "Wellness bathroom suite",
     ago: "6 mo. ago",
@@ -259,7 +259,7 @@ const CHAT_CASES = {
   },
   landscaping: {
     label: "Garden",
-    leadName: "Thomas Renner",
+    leadName: "Thomas Janssen",
     avatar: "T",
     project: "Garden & terrace redesign",
     ago: "9 mo. ago",
@@ -298,7 +298,7 @@ const CHAT_CASES = {
   },
   roofing: {
     label: "Roofing",
-    leadName: "Daniel Marsh",
+    leadName: "Mark Verhoeven",
     avatar: "D",
     project: "Heritage roof repair",
     ago: "6 mo. ago",
