@@ -428,26 +428,35 @@ function CTA({ textures = true }) {
                 <h2 className="serif" style={{
                   margin: 0, fontSize: isMobile ? "clamp(34px, 9vw, 48px)" : "clamp(48px, 5.4vw, 84px)",
                   lineHeight: 0.98, letterSpacing: "-0.025em",
-                  color: "var(--paper)", textWrap: "balance"
+                  color: "var(--paper)", textWrap: "balance",
+                  textShadow: "0 1px 0 rgba(0,0,0,0.55)"
                 }}>
                   {t('cta.h2_l1')}<br />{t('cta.h2_l2')}<br />{t('cta.h2_l3')}<br />
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "0.2em" }}>
-                    <span className="italic" style={{ color: "#D9A3B0" }}>{t('cta.h2_italic')}</span>
-                    <span style={{ display: "inline-block", marginTop: 5 }}>
-                      <FooterMark size={isMobile ? 30 : 46} />
-                    </span>
-                  </span>
+                  <span className="italic" style={{ color: "#D9A3B0" }}>{t('cta.h2_italic')}</span>
                 </h2>
+                <p style={{
+                  margin: isMobile ? "16px 0 0" : "22px 0 0",
+                  fontFamily: "var(--sans)", fontSize: isMobile ? 16 : 19,
+                  fontWeight: 400, letterSpacing: "-0.01em",
+                  color: "rgba(244,239,227,0.78)",
+                  lineHeight: 1.4,
+                  textShadow: "0 1px 0 rgba(0,0,0,0.55)",
+                }}>
+                  Make sure you're the one they hear from first.
+                </p>
               </div>
               {!isMobile && (
                 <div style={{
                   marginTop: "auto",
-                  display: "flex", alignItems: "flex-end", gap: 40,
+                  display: "flex", alignItems: "flex-end", gap: 20,
                 }}>
                   <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
                     <NetherlandsMap />
                   </a>
-                  <div style={{ display: "flex", gap: 26, alignSelf: "flex-end", paddingBottom: 6 }}>
+                  <div style={{ paddingBottom: 2 }}>
+                    <FooterMark size={40} />
+                  </div>
+                  <div style={{ display: "flex", gap: 30, alignSelf: "flex-end", paddingBottom: 6, marginLeft: 8 }}>
                     <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>
                       {t('cta.terms')}
                     </a>
@@ -532,6 +541,9 @@ function CTA({ textures = true }) {
             <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
               <NetherlandsMap />
             </a>
+            <div style={{ paddingBottom: 4 }}>
+              <FooterMark size={28} />
+            </div>
             <div style={{ display: "flex", gap: 16, alignSelf: "flex-end", paddingBottom: 6 }}>
               <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>{t('cta.terms')}</a>
               <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>{t('cta.privacy')}</a>

@@ -4,16 +4,16 @@ const NICHE_IMAGES = {
   kitchen:     '/premium/hero-images/kitchen.webp',
   flooring:    '/premium/hero-images/flooring.webp',
   wellness:    '/premium/hero-images/sauna final.webp',
-  landscaping: '/premium/hero-images/garden7.webp',
-  roofing:     '/premium/hero-images/roof5.webp',
+  landscaping: '/premium/hero-images/garden8.webp',
+  roofing:     '/premium/hero-images/roof6.webp',
 };
 
 const NICHE_IMAGE_STYLE = {
-  kitchen:     { objectFit: "contain", objectPosition: "center 80%",  transformOrigin: "center center", defaultAdj: { scale: 0.95, tx: -11, ty: -7,  rot: 0 } },
+  kitchen:     { objectFit: "contain", objectPosition: "center 80%",  transformOrigin: "center center", defaultAdj: { scale: 0.95, tx: -13, ty: 1,   rot: 0 } },
   flooring:    { objectFit: "contain", objectPosition: "center 90%",  transformOrigin: "center center", defaultAdj: { scale: 0.8,  tx: -17, ty: 4,   rot: 0 } },
-  wellness:    { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.5,  tx: -13, ty: 6,   rot: 0 } },
-  landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.7,  tx: -12, ty: 8,   rot: 0 } },
-  roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -9,  ty: 9,   rot: 0 } },
+  wellness:    { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -12, ty: 6,   rot: 0 } },
+  landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.65, tx: -12, ty: 4,   rot: 0 } },
+  roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -10, ty: 12,  rot: 0 } },
 };
 
 const DEFAULT_ADJUST = { scale: 1, tx: 0, ty: 0, rot: 0 };
@@ -44,6 +44,8 @@ function Hero({ wineIntensity, textures }) {
       return next;
     });
   }
+  const [imgVisible, setImgVisible] = React.useState(false);
+  React.useEffect(() => { const t = setTimeout(() => setImgVisible(true), 600); return () => clearTimeout(t); }, []);
   const isTablet = window.useIsMobile(1440);
   const { t } = window.useI18n();
   const [heroRef, heroInView] = window.useInView({ immediate: true });
@@ -69,6 +71,8 @@ function Hero({ wineIntensity, textures }) {
           left: "35%",
           zIndex: 0,
           pointerEvents: "none",
+          opacity: imgVisible ? 1 : 0,
+          transition: "opacity 600ms ease",
         }}>
           {Object.keys(NICHE_IMAGES).map(key => {
             const base = NICHE_IMAGE_STYLE[key];
@@ -130,10 +134,9 @@ function Hero({ wineIntensity, textures }) {
 
           <div style={{ background: "transparent", backdropFilter: "blur(0px)", WebkitBackdropFilter: "blur(0px)" }}>
             <h1 className="serif" style={{
-              fontSize: isMobile ? "clamp(36px, 10vw, 52px)" : "clamp(48px, 5.5vw, 80px)",
+              fontSize: isMobile ? "clamp(36px, 10vw, 52px)" : "clamp(47px, 5.4vw, 70px)",
               lineHeight: 1.08,
               margin: "0 0 20px", color: "var(--ink)", letterSpacing: "-0.025em",
-              textWrap: "balance",
               ...window.revealStyle(heroInView, { delay: window.stagger(1) }),
             }}>
               {t('hero.h1_line1')}<br />

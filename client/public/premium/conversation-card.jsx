@@ -212,8 +212,8 @@ function ConversationCard({ niche, onSetNiche }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{data.leadName}</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 2, gap: 8 }}>
-            <div style={{ fontSize: 11, color: "var(--mute)", fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>{data.project}</div>
-            <div style={{ fontSize: 10, color: "var(--mute)", fontFamily: "var(--mono)", letterSpacing: "0.04em", opacity: 0.7, whiteSpace: "nowrap" }}>{t('hero.conv_enquired')} {data.ago.split(' ')[0]} {t('convUI.months_ago')}</div>
+            <div style={{ fontSize: 11, color: "var(--ink)", fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>{data.project}</div>
+            <div style={{ fontSize: 10, color: "var(--ink)", fontFamily: "var(--mono)", letterSpacing: "0.04em", opacity: 0.7, whiteSpace: "nowrap" }}>{t('hero.conv_enquired')} {data.ago.split(' ')[0]} {t('convUI.months_ago')}</div>
           </div>
         </div>
       </div>
@@ -350,8 +350,8 @@ function TypingBubble({ dir }) {
 function CheckCheckIcon() {
   return (
     <svg width="14" height="9" viewBox="0 0 14 9" fill="none" aria-hidden>
-      <path d="M1 4.5l3 3L9 1" stroke="#7BA8E8" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M5 4.5l3 3 5-7" stroke="#7BA8E8" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M1 4.5l3 3L9 1" stroke="rgba(255,255,255,0.75)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M5 4.5l3 3 5-7" stroke="rgba(255,255,255,0.75)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>);
 }
 
