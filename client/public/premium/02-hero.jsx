@@ -1,11 +1,11 @@
 // Hero section
 
 const NICHE_IMAGES = {
-  kitchen:     '/premium/hero-images/kitchenfinalyes.webp',
+  kitchen:     '/premium/hero-images/kitchen.webp',
   flooring:    '/premium/hero-images/flooring.webp',
   wellness:    '/premium/hero-images/sauna final.webp',
   landscaping: '/premium/hero-images/garden7.webp',
-  roofing:     '/premium/hero-images/roof3.webp',
+  roofing:     '/premium/hero-images/roof5.webp',
 };
 
 const NICHE_IMAGE_STYLE = {
@@ -17,6 +17,7 @@ const NICHE_IMAGE_STYLE = {
 };
 
 const DEFAULT_ADJUST = { scale: 1, tx: 0, ty: 0, rot: 0 };
+window._NICHE_IMAGE_STYLE = NICHE_IMAGE_STYLE;
 
 function getAdjust(adj, key) {
   return { ...DEFAULT_ADJUST, ...(NICHE_IMAGE_STYLE[key]?.defaultAdj || {}), ...(adj[key] || {}) };
@@ -31,7 +32,18 @@ function buildFreeTransform({ scale, tx, ty, rot }) {
 
 function Hero({ wineIntensity, textures }) {
   const [niche, setNiche] = React.useState("kitchen");
+  const [adjustments, setAdjustments] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("hero_niche_adjustments")) || {}; } catch { return {}; }
+  });
   const isMobile = window.useIsMobile();
+
+  function updateAdjust(nicheKey, field, value) {
+    setAdjustments(prev => {
+      const next = { ...prev, [nicheKey]: { ...getAdjust(prev, nicheKey), [field]: value } };
+      localStorage.setItem("hero_niche_adjustments", JSON.stringify(next));
+      return next;
+    });
+  }
   const isTablet = window.useIsMobile(1440);
   const { t } = window.useI18n();
   const [heroRef, heroInView] = window.useInView({ immediate: true });
@@ -60,7 +72,7 @@ function Hero({ wineIntensity, textures }) {
         }}>
           {Object.keys(NICHE_IMAGES).map(key => {
             const base = NICHE_IMAGE_STYLE[key];
-            const adj = getAdjust({}, key);
+            const adj = getAdjust(adjustments, key);
             const hasAdj = adj.scale !== 1 || adj.tx !== 0 || adj.ty !== 0;
             const isFree = base.objectFit === "none";
             return (
@@ -173,6 +185,10 @@ function Hero({ wineIntensity, textures }) {
           </div>
         </div>
       </div>
+
+      {typeof NicheImageDebug !== "undefined" && (
+        <NicheImageDebug niche={niche} adjustments={adjustments} onUpdate={updateAdjust} />
+      )}
     </section>);
 }
 
