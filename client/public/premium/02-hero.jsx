@@ -1,30 +1,23 @@
 // Hero section
 
 const NICHE_IMAGES = {
-  kitchen:     '/premium/uploads/hero-images/kitchenfinalyes.webp',
-  flooring:    '/premium/uploads/hero-images/flooring.webp',
-  wellness:    '/premium/uploads/hero-images/sauna final.webp',
-  landscaping: '/premium/uploads/hero-images/garden6-2.webp',
-  roofing:     '/premium/uploads/hero-images/roof3.webp',
+  kitchen:     '/premium/hero-images/kitchenfinalyes.webp',
+  flooring:    '/premium/hero-images/flooring.webp',
+  wellness:    '/premium/hero-images/sauna final.webp',
+  landscaping: '/premium/hero-images/garden7.webp',
+  roofing:     '/premium/hero-images/roof3.webp',
 };
 
 const NICHE_IMAGE_STYLE = {
   kitchen:     { objectFit: "contain", objectPosition: "center 80%",  transformOrigin: "center center", defaultAdj: { scale: 0.95, tx: -11, ty: -7,  rot: 0 } },
   flooring:    { objectFit: "contain", objectPosition: "center 90%",  transformOrigin: "center center", defaultAdj: { scale: 0.8,  tx: -17, ty: 4,   rot: 0 } },
   wellness:    { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.5,  tx: -13, ty: 6,   rot: 0 } },
-  landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.5,  tx: -16, ty: 20,  rot: 0 } },
+  landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.7,  tx: -12, ty: 8,   rot: 0 } },
   roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -9,  ty: 9,   rot: 0 } },
 };
 
-const NICHE_ADJUST_KEY = "hero_niche_adjustments";
 const DEFAULT_ADJUST = { scale: 1, tx: 0, ty: 0, rot: 0 };
 
-function loadAdjustments() {
-  try { return JSON.parse(localStorage.getItem(NICHE_ADJUST_KEY)) || {}; } catch { return {}; }
-}
-function saveAdjustments(data) {
-  localStorage.setItem(NICHE_ADJUST_KEY, JSON.stringify(data));
-}
 function getAdjust(adj, key) {
   return { ...DEFAULT_ADJUST, ...(NICHE_IMAGE_STYLE[key]?.defaultAdj || {}), ...(adj[key] || {}) };
 }
@@ -38,16 +31,7 @@ function buildFreeTransform({ scale, tx, ty, rot }) {
 
 function Hero({ wineIntensity, textures }) {
   const [niche, setNiche] = React.useState("kitchen");
-  const [adjustments, setAdjustments] = React.useState(loadAdjustments);
   const isMobile = window.useIsMobile();
-
-  function updateAdjust(nicheKey, field, value) {
-    setAdjustments(prev => {
-      const next = { ...prev, [nicheKey]: { ...getAdjust(prev, nicheKey), [field]: value } };
-      saveAdjustments(next);
-      return next;
-    });
-  }
   const isTablet = window.useIsMobile(1440);
   const { t } = window.useI18n();
   const [heroRef, heroInView] = window.useInView({ immediate: true });
@@ -76,7 +60,7 @@ function Hero({ wineIntensity, textures }) {
         }}>
           {Object.keys(NICHE_IMAGES).map(key => {
             const base = NICHE_IMAGE_STYLE[key];
-            const adj = getAdjust(adjustments, key);
+            const adj = getAdjust({}, key);
             const hasAdj = adj.scale !== 1 || adj.tx !== 0 || adj.ty !== 0;
             const isFree = base.objectFit === "none";
             return (
@@ -171,8 +155,6 @@ function Hero({ wineIntensity, textures }) {
             </a>
           </div>
 
-          <NicheImageDebug niche={niche} adjustments={adjustments} onUpdate={updateAdjust} />
-
         </div>
 
         <div style={{
@@ -194,52 +176,6 @@ function Hero({ wineIntensity, textures }) {
     </section>);
 }
 
-function NicheImageDebug({ niche, adjustments, onUpdate }) {
-  const adj = getAdjust(adjustments, niche);
-
-  function reset() {
-    ["scale","tx","ty","rot"].forEach(f => onUpdate(niche, f, DEFAULT_ADJUST[f]));
-  }
-
-  const SLIDERS = [
-    { field: "scale", label: "S",   min: 0.1,  max: 3,   step: 0.05, unit: "×" },
-    { field: "tx",    label: "X",   min: -200, max: 200, step: 1,    unit: "%" },
-    { field: "ty",    label: "Y",   min: -200, max: 200, step: 1,    unit: "%" },
-    { field: "rot",   label: "R",   min: 0,    max: 360, step: 1,    unit: "°" },
-  ];
-
-  return (
-    <div style={{
-      background: "var(--surface)", border: "1px solid var(--border)",
-      borderRadius: 8, padding: "8px 10px", marginBottom: 24,
-      maxWidth: 260, fontSize: 10, fontFamily: "var(--mono)",
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <span style={{ color: "var(--mute)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          <strong style={{ color: "var(--ink)" }}>{niche}</strong>
-        </span>
-        <button onClick={reset} style={{
-          fontSize: 9, color: "var(--mute)", background: "none",
-          border: "1px solid var(--border)", borderRadius: 3,
-          padding: "1px 6px", cursor: "pointer",
-        }}>reset</button>
-      </div>
-
-      {SLIDERS.map(({ field, label, min, max, step, unit }) => (
-        <div key={field} style={{ display: "grid", gridTemplateColumns: "12px 1fr 28px", gap: 6, alignItems: "center", marginBottom: 4 }}>
-          <span style={{ color: "var(--mute)" }}>{label}</span>
-          <input
-            type="range" min={min} max={max} step={step}
-            value={adj[field]}
-            onChange={e => onUpdate(niche, field, parseFloat(e.target.value))}
-            style={{ width: "100%", accentColor: "var(--wine)", cursor: "pointer", height: 3 }}
-          />
-          <span style={{ color: "var(--ink)", textAlign: "right" }}>{adj[field]}{unit}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function Blobs() {
   return (

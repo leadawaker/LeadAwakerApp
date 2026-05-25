@@ -31,7 +31,7 @@ if (!window.TweaksPanel) {
 /* ----------------------------- TWEAK DEFAULTS ----------------------------- */
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "palette": 0,
-  "displayFont": "Instrument Serif",
+  "displayFont": "Playfair Display",
   "wineIntensity": "subtle",
   "depthScale": 0.4,
   "logoVariant": "horizontal",

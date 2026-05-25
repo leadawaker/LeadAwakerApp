@@ -187,12 +187,14 @@ function ConversationCard({ niche, onSetNiche }) {
     : nextMsgType;
 
   return (
-    <div className="glass-strong" style={{
+    <div className="glass" style={{
       padding: isMobile ? "18px 16px 14px" : "24px 22px 20px",
+      backdropFilter: "saturate(160%) blur(14px)",
+      WebkitBackdropFilter: "saturate(160%) blur(14px)",
       width: "100%", position: "relative", zIndex: 1,
       display: "flex",
-      minHeight: isMobile ? 600 : (isTabletOrBelow ? 560 : 640),
-      height: isMobile ? "620px" : (isTabletOrBelow ? "600px" : "500px"),
+      minHeight: isMobile ? 600 : (isTabletOrBelow ? 510 : 580),
+      height: isMobile ? "620px" : (isTabletOrBelow ? "540px" : "450px"),
       flexDirection: "column", fontWeight: "100", borderRadius: "10px"
     }}>
 
@@ -381,7 +383,7 @@ function NicheSwitcher({ value, onChange }) {
               transition: "all 200ms ease"
             }}
             aria-pressed={on}>
-            <span style={{ width: 18, height: 18, display: "inline-flex", alignItems: "center", justifyContent: "center", color: on ? "var(--wine)" : "var(--mute)" }}>
+            <span style={{ width: 24, height: 24, display: "inline-flex", alignItems: "center", justifyContent: "center", color: on ? "var(--wine)" : "var(--mute)" }}>
               {it.icon}
             </span>
             <span style={{
@@ -394,11 +396,11 @@ function NicheSwitcher({ value, onChange }) {
 }
 
 const NICHE_ICONS = {
-  kitchen:     <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="6" width="13" height="9" rx="1"/><circle cx="6.5" cy="10" r="1.8"/><circle cx="11.5" cy="10" r="1.8"/><path d="M2.5 3.5h13"/></svg>,
-  flooring:    <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="3.5" width="13" height="11" rx="0.5"/><path d="M2.5 7.5h13M2.5 11.5h13"/><path d="M7 3.5v4M11 7.5v4M7 11.5v3"/></svg>,
-  wellness:    <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5h14v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5Z"/><path d="M5 9.5V7a1.5 1.5 0 0 1 3 0v2.5"/><path d="M5 13.5l-1 2M13 13.5l1 2"/></svg>,
-  landscaping: <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14.5V9"/><path d="M9 9C9 6.5 6.5 4 4 4c0 3 2 5.5 5 5Z"/><path d="M9 12C9 9.5 11.5 7 15 7c0 3-2 5-6 5Z"/><path d="M3 14.5h12"/></svg>,
-  roofing:     <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 9 9 3.5 15.5 9" /><path d="M4 8v6.5h10V8" /><path d="M12 5.5V3.5h1.5v3.2" /></svg>
+  kitchen:     <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="6" width="13" height="9" rx="1"/><circle cx="6.5" cy="10" r="1.8"/><circle cx="11.5" cy="10" r="1.8"/><path d="M2.5 3.5h13"/></svg>,
+  flooring:    <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="3.5" width="13" height="11" rx="0.5"/><path d="M2.5 7.5h13M2.5 11.5h13"/><path d="M7 3.5v4M11 7.5v4M7 11.5v3"/></svg>,
+  wellness:    <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5h14v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5Z"/><path d="M5 9.5V7a1.5 1.5 0 0 1 3 0v2.5"/><path d="M5 13.5l-1 2M13 13.5l1 2"/></svg>,
+  landscaping: <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14.5V9"/><path d="M9 9C9 6.5 6.5 4 4 4c0 3 2 5.5 5 5Z"/><path d="M9 12C9 9.5 11.5 7 15 7c0 3-2 5-6 5Z"/><path d="M3 14.5h12"/></svg>,
+  roofing:     <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 9 9 3.5 15.5 9" /><path d="M4 8v6.5h10V8" /><path d="M12 5.5V3.5h1.5v3.2" /></svg>
 };
 
 function Msg({ from, time, readReceipt, children }) {
