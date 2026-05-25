@@ -135,40 +135,54 @@ function CTA({ textures = true }) {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [extraOpen, setExtraOpen] = React.useState(false);
   const [quotes, setQuotes] = React.useState(200);
   const [silentPct, setSilentPct] = React.useState(50);
   const [avgValue, setAvgValue] = React.useState(8000);
-  const [quotesActive, setQuotesActive] = React.useState(true);
-  const [silentActive, setSilentActive] = React.useState(true);
-  const [valueActive, setValueActive] = React.useState(true);
+  const [numbersAccurate, setNumbersAccurate] = React.useState(false);
 
   const [prefill, setPrefill] = React.useState(null);
   const [bookingConfirmed, setBookingConfirmed] = React.useState(false);
   const [bookedSlot, setBookedSlot] = React.useState(null);
+
+  /* ---- texture/shine debug adjustments (dev only) ---- */
+  const [texAdjust, setTexAdjust] = React.useState(() =>
+    (typeof loadCtaTexAdjustments === "function")
+      ? loadCtaTexAdjustments()
+      : { wood: { scale: 1.4, tx: 50, ty: 70, rot: 0, flipX: false, brightness: 0.35 },
+          shine: { scale: 1.0, tx: 35, ty: 35, rot: 0, flipX: false, brightness: 0.95 } }
+  );
+  const updateTexAdjust = React.useCallback((section, field, value) => {
+    setTexAdjust(prev => {
+      const next = { ...prev, [section]: { ...prev[section], [field]: value } };
+      if (typeof saveCtaTexAdjustments === "function") saveCtaTexAdjustments(next);
+      return next;
+    });
+  }, []);
+  const wood  = texAdjust.wood;
+  const shine = texAdjust.shine;
+  const woodTransform  = `translate(-50%, -50%) rotate(${wood.rot}deg) scaleX(${wood.flipX ? -1 : 1})`;
+  const shineTransform = `rotate(${shine.rot}deg) scaleX(${shine.flipX ? -1 : 1})`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const n = name.trim();
     const em = email.trim();
     const desc = description.trim();
-    if (!n || !em) return;
+    if (!n || !em || !numbersAccurate) return;
     setFormState("sending");
 
-    const extras = extraOpen ? {
-      ...(quotesActive ? { quotes_per_year: quotes } : {}),
-      ...(silentActive ? { silent_percentage: silentPct } : {}),
-      ...(valueActive  ? { avg_project_value: avgValue } : {}),
-    } : {};
+    const extras = {
+      quotes_per_year: quotes,
+      silent_percentage: silentPct,
+      avg_project_value: avgValue,
+    };
 
-    const extraLines = extraOpen
-      ? [
-          quotesActive ? `Quotes/year: ${quotes}` : null,
-          silentActive ? `Go silent: ${silentPct}%` : null,
-          valueActive  ? `Avg project value: €${avgValue.toLocaleString('nl-NL')}` : null,
-        ].filter(Boolean)
-      : [];
-    const notes = desc + (extraLines.length ? "\n\n" + extraLines.join("\n") : "");
+    const extraLines = [
+      `Quotes/year: ${quotes}`,
+      `Go silent: ${silentPct}%`,
+      `Avg project value: €${avgValue.toLocaleString('nl-NL')}`,
+    ];
+    const notes = desc + "\n\n" + extraLines.join("\n");
 
     try {
       await fetch("/api/contact", {
@@ -321,7 +335,7 @@ function CTA({ textures = true }) {
   return (
     <section ref={sectionRef} id="contact" data-screen-label="06 Contact" style={isMobile
       ? { maxWidth: 1240, margin: "0 auto", padding: "60px 18px 60px" }
-      : { ...sectionWrap, paddingBottom: 0 }}>
+      : { ...sectionWrap, paddingBottom: 100 }}>
       <div className="neu-raised" style={{
         borderRadius: 14, padding: isMobile ? "44px 24px 32px" : (formState === "sent" ? "36px 64px 52px" : "80px 64px 52px"),
         background: "linear-gradient(155deg, #221C14, #14110D)",
@@ -345,21 +359,22 @@ function CTA({ textures = true }) {
           ) : (
             <div aria-hidden style={{
               position: "absolute", top: "50%", left: "50%",
-              width: "140%", height: "140%", pointerEvents: "none",
+              width: `${wood.scale * 100}%`, height: `${wood.scale * 100}%`, pointerEvents: "none",
               backgroundImage: "url(/premium/assets/texture-wood.webp)",
-              backgroundSize: "cover", backgroundPosition: "center 70%",
-              opacity: 0.35, mixBlendMode: "overlay",
-              transform: "translate(-50%, -50%)",
+              backgroundSize: "cover", backgroundPosition: `${wood.tx}% ${wood.ty}%`,
+              opacity: wood.brightness, mixBlendMode: "overlay",
+              transform: woodTransform,
             }} />
           )
         )}
 
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient( 125% 100% at calc(50% + var(--lx) * 35%) calc(50% + var(--ly) * 35%),
+          background: `radial-gradient( ${shine.scale * 125}% ${shine.scale * 100}% at calc(50% + var(--lx) * ${shine.tx}%) calc(50% + var(--ly) * ${shine.ty}%),
               rgba(var(--light-warm), calc(var(--light-intensity) * 0.75)),
               transparent 75% ) `,
-          mixBlendMode: "screen", opacity: 0.95,
+          mixBlendMode: "screen", opacity: shine.brightness,
+          transform: shineTransform,
         }} />
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
@@ -378,11 +393,11 @@ function CTA({ textures = true }) {
         ) : (
           <div aria-hidden style={{
             position: "absolute", top: "50%", left: "50%",
-            width: "140%", height: "140%", pointerEvents: "none",
+            width: `${wood.scale * 100}%`, height: `${wood.scale * 100}%`, pointerEvents: "none",
             backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "cover", backgroundPosition: "center 70%",
+            backgroundSize: "cover", backgroundPosition: `${wood.tx}% ${wood.ty}%`,
             mixBlendMode: "multiply", opacity: 1,
-            transform: "translate(-50%, -50%)",
+            transform: woodTransform,
           }} />
         )}
 
@@ -431,18 +446,28 @@ function CTA({ textures = true }) {
                   color: "var(--paper)", textWrap: "balance",
                   textShadow: "0 1px 0 rgba(0,0,0,0.55)"
                 }}>
-                  {t('cta.h2_l1')}<br />{t('cta.h2_l2')}<br />{t('cta.h2_l3')}<br />
-                  <span className="italic" style={{ color: "#D9A3B0" }}>{t('cta.h2_italic')}</span>
+                  {t('cta.h2_l1')}<br />
+                  <span className="italic" style={{
+                    color: "#F5C2D0",
+                    fontSize: "1.12em",
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
+                    textShadow: "0 1px 0 rgba(0,0,0,0.55), 0 0 22px rgba(245,194,208,0.35)",
+                    display: "inline-block",
+                  }}>
+                    {t('cta.h2_l3')}<br />{t('cta.h2_italic')}
+                  </span>
                 </h2>
                 <p style={{
-                  margin: isMobile ? "16px 0 0" : "22px 0 0",
-                  fontFamily: "var(--sans)", fontSize: isMobile ? 16 : 19,
+                  margin: isMobile ? "20px 0 0" : "28px 0 0",
+                  fontFamily: "var(--sans)", fontSize: isMobile ? 15 : 17,
                   fontWeight: 400, letterSpacing: "-0.01em",
                   color: "rgba(244,239,227,0.78)",
-                  lineHeight: 1.4,
+                  lineHeight: 1.45,
                   textShadow: "0 1px 0 rgba(0,0,0,0.55)",
+                  maxWidth: 520,
                 }}>
-                  Make sure you're the one they hear from first.
+                  {t('cta.btn_sub')}
                 </p>
               </div>
               {!isMobile && (
@@ -486,28 +511,17 @@ function CTA({ textures = true }) {
                 }}>
                   <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                     <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
-                      <p style={{
-                        margin: 0,
-                        fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em",
-                        color: "rgba(244,239,227,0.55)", lineHeight: 1.5,
-                      }}>
-                        Five partner businesses at a time. Send us a short intro.
-                      </p>
                       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                         <GlassInput ph={t('cta.ph_name')} value={name} onChange={(e) => setName(e.target.value)} />
                         <GlassInput ph={t('cta.ph_email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                       </div>
                       <GlassTextarea ph={t('cta.ph_describe')} value={description} onChange={(e) => setDescription(e.target.value)} />
-                      <OptionalQuestions
+                      <QualifyingSliders
                         t={t}
-                        open={extraOpen}
-                        setOpen={setExtraOpen}
                         quotes={quotes} setQuotes={setQuotes}
                         silentPct={silentPct} setSilentPct={setSilentPct}
                         avgValue={avgValue} setAvgValue={setAvgValue}
-                        quotesActive={quotesActive} setQuotesActive={setQuotesActive}
-                        silentActive={silentActive} setSilentActive={setSilentActive}
-                        valueActive={valueActive} setValueActive={setValueActive}
+                        numbersAccurate={numbersAccurate} setNumbersAccurate={setNumbersAccurate}
                       />
                       {formState === "error" && (
                         <p style={{ margin: 0, fontSize: 12, color: "#D9A3B0", fontFamily: "var(--mono)" }}>
@@ -515,15 +529,25 @@ function CTA({ textures = true }) {
                         </p>
                       )}
                     </div>
-                    <button type="submit" className="btn-neu" disabled={formState === "sending"} style={{
-                      flexShrink: 0, marginTop: 12, justifyContent: "center",
+                    <button type="submit" className="btn-neu" disabled={formState === "sending" || !numbersAccurate} style={{
+                      flexShrink: 0, marginTop: 14, justifyContent: "center",
                       background: "linear-gradient(145deg, #F4EFE3, #E5DECF)",
-                      color: "var(--ink)", opacity: formState === "sending" ? 0.6 : 1,
+                      color: "var(--ink)",
+                      opacity: (formState === "sending" || !numbersAccurate) ? 0.45 : 1,
+                      cursor: (formState === "sending" || !numbersAccurate) ? "not-allowed" : "pointer",
                       boxShadow: "4px 4px 12px rgba(0,0,0,0.45), -2px -2px 8px rgba(255,255,255,0.05)"
                     }}>
                       {formState === "sending" ? "Sending…" : t('cta.btn_send')}
                       {formState !== "sending" && <ArrowSm />}
                     </button>
+                    <p style={{
+                      flexShrink: 0, margin: "10px 0 0",
+                      fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.04em",
+                      color: "rgba(244,239,227,0.5)", lineHeight: 1.5,
+                      textAlign: "center",
+                    }}>
+                      {t('cta.btn_after')}
+                    </p>
                   </form>
                 </div>
               </div>
@@ -552,6 +576,10 @@ function CTA({ textures = true }) {
         )}
 
       </div>
+
+      {!isMobile && typeof CtaTextureDebug !== "undefined" && (
+        <CtaTextureDebug adjustments={texAdjust} onUpdate={updateTexAdjust} />
+      )}
     </section>
   );
 }
@@ -698,11 +726,11 @@ function CalInlineEmbed({ prefill, bookingConfirmed, bookedSlot, onBookingConfir
   );
 }
 
-function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, quotesActive, setQuotesActive, silentActive, setSilentActive, valueActive, setValueActive }) {
+function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, numbersAccurate, setNumbersAccurate }) {
   const rows = [
-    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    active: quotesActive, setActive: setQuotesActive, fmt: (v) => v.toLocaleString('nl-NL') },
-    { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, active: silentActive, setActive: setSilentActive, fmt: (v) => v + "%" },
-    { label: t('cta.q_value'),  min: 1000, max: 100000, step: 1000, value: avgValue,  setValue: setAvgValue,  active: valueActive,  setActive: setValueActive,  fmt: (v) => "€" + v.toLocaleString('nl-NL') },
+    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString('nl-NL') },
+    { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
+    { label: t('cta.q_value'),  min: 1000, max: 100000, step: 1000, value: avgValue,  setValue: setAvgValue,  fmt: (v) => "€" + v.toLocaleString('nl-NL') },
   ];
   return (
     <div style={{
@@ -711,58 +739,45 @@ function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, set
       background: "rgba(255,255,255,0.04)",
       overflow: "hidden",
     }}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        style={{
-          width: "100%", background: "transparent", border: "none",
-          padding: "12px 16px", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          color: "rgba(244,239,227,0.78)", fontFamily: "var(--mono)",
-          fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
-        }}
-      >
-        <span>{t('cta.optional_toggle')}</span>
-        <span style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 200ms ease", fontSize: 12 }}>⌄</span>
-      </button>
-      {open && (
-        <div style={{ padding: "4px 16px 16px", display: "grid", gap: 18 }}>
-          {rows.map((row) => (
-            <div key={row.label} style={{ opacity: row.active ? 1 : 0.45 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: "rgba(244,239,227,0.7)", fontFamily: "var(--sans)" }}>{row.label}</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, color: row.active ? "#D9A3B0" : "rgba(244,239,227,0.35)" }}>
-                    {row.active ? row.fmt(row.value) : "—"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => row.setActive(!row.active)}
-                    title={row.active ? "Leave blank" : "Set a value"}
-                    style={{
-                      background: "transparent", border: "1px solid rgba(255,255,255,0.2)",
-                      width: 17, height: 17, borderRadius: 999, padding: 0, cursor: "pointer",
-                      color: "rgba(244,239,227,0.55)", fontSize: 11, lineHeight: 0,
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    }}
-                  >{row.active ? "×" : "+"}</button>
-                </span>
-              </div>
-              <input
-                type="range" className="cta-slider"
-                min={row.min} max={row.max} step={row.step}
-                value={row.value}
-                disabled={!row.active}
-                onChange={(e) => row.setValue(Number(e.target.value))}
-                style={{
-                  '--pct': (((row.value - row.min) / (row.max - row.min)) * 100).toFixed(1) + "%",
-                  width: "100%", cursor: row.active ? "pointer" : "not-allowed",
-                }}
-              />
+      <div style={{ padding: "16px 16px 14px", display: "grid", gap: 16 }}>
+        {rows.map((row) => (
+          <div key={row.label}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontSize: 12, color: "rgba(244,239,227,0.78)", fontFamily: "var(--sans)" }}>{row.label}</span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, color: "#D9A3B0" }}>
+                {row.fmt(row.value)}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+            <input
+              type="range" className="cta-slider"
+              min={row.min} max={row.max} step={row.step}
+              value={row.value}
+              onChange={(e) => row.setValue(Number(e.target.value))}
+              style={{
+                '--pct': (((row.value - row.min) / (row.max - row.min)) * 100).toFixed(1) + "%",
+                width: "100%", cursor: "pointer",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <label style={{
+        display: "flex", alignItems: "flex-start", gap: 10,
+        padding: "12px 16px",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(0,0,0,0.15)",
+        cursor: "pointer",
+      }}>
+        <input
+          type="checkbox"
+          checked={numbersAccurate}
+          onChange={(e) => setNumbersAccurate(e.target.checked)}
+          className="cta-checkbox"
+        />
+        <span style={{ fontSize: 12, fontFamily: "var(--sans)", color: "rgba(244,239,227,0.82)", lineHeight: 1.45 }}>
+          {t('cta.checkbox_confirm')}
+        </span>
+      </label>
     </div>
   );
 }
@@ -780,6 +795,10 @@ function OptionalQuestions({ t, open, setOpen, quotes, setQuotes, silentPct, set
     .cta-slider::-moz-range-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.14); }
     .cta-slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #D9A3B0; }
     .cta-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: none; background: #D9A3B0; box-shadow: 0 0 0 2px rgba(34,28,20,0.9), 0 2px 6px rgba(0,0,0,0.4); cursor: grab; }
+    .cta-checkbox { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin: 0; flex-shrink: 0; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.25); cursor: pointer; position: relative; transition: background 120ms ease, border-color 120ms ease; }
+    .cta-checkbox:hover { border-color: rgba(217,163,176,0.6); }
+    .cta-checkbox:checked { background: #D9A3B0; border-color: #D9A3B0; }
+    .cta-checkbox:checked::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid #221C14; border-width: 0 2px 2px 0; transform: rotate(45deg); }
   `;
   document.head.appendChild(s);
 })();
