@@ -39,7 +39,7 @@ window.TRANSLATIONS.nl = {
     h2_italic: "Ze hebben meer ingeplande gesprekken nodig.",
     p1: "High-end woningverbetering draait om aanbevelingen, reputatie en timing. De leads die het meest tellen zitten al in je CRM.",
     p1_italic: "Het echte werk zit in terugkomen bij hen.",
-    p2: "Leadawaker is een managed studio. We bestuderen jullie eerdere communicatie, schrijven in jullie tone of voice en hervatten gesprekken op een rustige, doordachte manier. Jouw team wordt pas betrokken wanneer een lead klaar is om te praten.",
+    p2: "Wij verzorgen de outreach volledig: we bestuderen de geschiedenis met elke lead, schrijven elk bericht in jouw stem en timen het contact op basis van intentiesignalen. Jij wordt erbij betrokken wanneer een lead écht klaar is om verder te gaan.",
   },
   process: {
     eyebrow: "Proces",
