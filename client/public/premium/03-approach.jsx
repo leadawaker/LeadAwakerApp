@@ -39,7 +39,7 @@ function PainShapes({ converge, isMobile }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.25;
 
     const scene = new THREE.Scene();
     // Orthographic camera in pixel space: 1 world unit == 1 CSS pixel.
@@ -68,7 +68,7 @@ function PainShapes({ converge, isMobile }) {
     ];
     const envCube = new THREE.CubeTexture(envFaces);
     envCube.needsUpdate = true;
-    envCube.colorSpace = THREE.SRGBColorSpace;
+    envCube.colorSpace = THREE.LinearSRGBColorSpace;
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileCubemapShader();
     const envMap = pmrem.fromCubemap(envCube).texture;
@@ -93,7 +93,7 @@ function PainShapes({ converge, isMobile }) {
       metalness: 0.0,
       clearcoat: 0.15,
       clearcoatRoughness: 0.5,
-      envMapIntensity: 0.55,
+      envMapIntensity: 0.9,
     });
     const torusMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color("#ecdebf"),
@@ -101,7 +101,7 @@ function PainShapes({ converge, isMobile }) {
       metalness: 0.0,
       clearcoat: 0.20,
       clearcoatRoughness: 0.45,
-      envMapIntensity: 0.6,
+      envMapIntensity: 0.95,
     });
 
     const meshes = shapes.map((s) => {
@@ -343,7 +343,7 @@ function Approach() {
               <div style={{ paddingTop: isMobile ? 0 : 12 }}>
                 <p style={{ fontSize: isMobile ? 16 : 19, lineHeight: 1.55, color: "var(--ink-soft, #322B22)", fontWeight: 400, margin: "0 0 24px", maxWidth: 620 }}>
                   {t('approach.p1')}{" "}
-                  <span className="serif italic" style={{ color: "var(--wine)", fontSize: isMobile ? 16 : 19 }}>{t('approach.p1_italic')}</span>
+                  <span className="serif italic" style={{ color: "var(--wine)", fontSize: isMobile ? 20 : 26 }}>{t('approach.p1_italic')}</span>
                 </p>
                 <p style={{ fontSize: isMobile ? 14.5 : 15.5, lineHeight: 1.65, color: "var(--mute)", margin: 0, maxWidth: 620 }}>
                   {t('approach.p2')}
