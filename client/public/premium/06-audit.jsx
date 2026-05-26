@@ -373,7 +373,7 @@ function Audit() {
 
   /* ── Render ── */
   return (
-    <section ref={sectionRef} id="audit" data-screen-label="04 Audit" style={{ maxWidth: 1240, margin: "0 auto", padding: isMobile ? "84px 18px" : "144px 48px" }}>
+    <section ref={sectionRef} id="audit" data-screen-label="04 Audit" style={{ maxWidth: 1240, margin: "0 auto", padding: isMobile ? "84px 18px" : "96px 48px 144px" }}>
       <style>{`
         /* ── Raised cards inside audit get a touch of extra drop for depth ── */
         #audit .neu-raised-soft, #audit .neu-raised {
