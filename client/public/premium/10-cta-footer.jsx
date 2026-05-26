@@ -105,6 +105,29 @@ function CTA() {
 
   const [contentRef, contentInView] = window.useInView();
 
+  /* ---- crop reveal animation ---- */
+  const [animCropTop, setAnimCropTop] = React.useState(100);
+  const hasAnimatedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!contentInView || hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+    const target = bgAdj.cropTop;
+    const duration = 1600;
+    const startTime = performance.now();
+    function tick(now) {
+      const p = Math.min((now - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setAnimCropTop(100 + (target - 100) * ease);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [contentInView]);
+
+  React.useEffect(() => {
+    if (hasAnimatedRef.current) setAnimCropTop(bgAdj.cropTop);
+  }, [bgAdj.cropTop]);
+
   /* ---- styles ---- */
   const linkStyle = {
     fontFamily: "var(--mono)", fontSize: 11,
@@ -122,8 +145,8 @@ function CTA() {
         position: "relative", overflow: "hidden",
       }}>
         {(() => {
-          const cropL = (bgAdj.cropTop ?? 0) - (bgAdj.cropTilt ?? 0);
-          const cropR = (bgAdj.cropTop ?? 0) + (bgAdj.cropTilt ?? 0);
+          const cropL = animCropTop - (bgAdj.cropTilt ?? 0);
+          const cropR = animCropTop + (bgAdj.cropTilt ?? 0);
           return (
             <>
               <div aria-hidden style={{
