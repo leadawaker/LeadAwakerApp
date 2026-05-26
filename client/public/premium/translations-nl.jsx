@@ -176,8 +176,9 @@ window.TRANSLATIONS.nl = {
   cta: {
     eyebrow: "Vraag toegang aan",
     h2_l1: "Jullie deden het werk.",
-    h2_l3: "Wij zorgen dat",
-    h2_italic: "het loont.",
+    h2_l2: "Wij zorgen",
+    h2_l3: "",
+    h2_italic: "dat het loont.",
     ph_name: "Jouw naam",
     ph_email: "E-mail",
     ph_describe: "Wat maakte dat je nu contact opneemt?",

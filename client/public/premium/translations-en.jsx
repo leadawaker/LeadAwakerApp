@@ -177,7 +177,8 @@ window.TRANSLATIONS.en = {
   cta: {
     eyebrow: "Request access",
     h2_l1: "You did the work.",
-    h2_l3: "We make sure",
+    h2_l2: "We make sure",
+    h2_l3: "",
     h2_italic: "it pays.",
     ph_name: "Your name",
     ph_email: "Email",

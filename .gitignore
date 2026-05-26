@@ -78,6 +78,8 @@ uploads/
 !client/public/premium/uploads/
 !client/public/premium/uploads/textures/
 !client/public/premium/uploads/textures/*.webp
+!client/public/premium/uploads/textures/*.jpg
+!client/public/premium/uploads/textures/*.png
 n8n automations/
 client/public/rocky_ridge_puresky_1k.hdr
 client/src/assets/Gemini_Generated_Image_r3r08ar3r08ar3r0.png

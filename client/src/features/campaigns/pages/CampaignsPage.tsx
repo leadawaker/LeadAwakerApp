@@ -169,6 +169,18 @@ function CampaignsContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignsHaveData]);
 
+  // Sync selectedCampaign with fresh data after any campaigns refresh (e.g. Generate button)
+  const isFirstCampaignsLoad = useRef(true);
+  useEffect(() => {
+    if (campaigns.length === 0) return;
+    if (isFirstCampaignsLoad.current) { isFirstCampaignsLoad.current = false; return; }
+    if (!selectedCampaign) return;
+    const id = (selectedCampaign as any).id ?? (selectedCampaign as any).Id;
+    const fresh = campaigns.find((c: any) => ((c as any).id ?? (c as any).Id) === id);
+    if (fresh) setSelectedCampaign(fresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaigns]);
+
   // ── Breadcrumb ─────────────────────────────────────────────────────────────
   const { setCrumb } = useBreadcrumb();
   useEffect(() => {

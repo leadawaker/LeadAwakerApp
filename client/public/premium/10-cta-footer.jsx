@@ -2,6 +2,7 @@
 
 const CAL_LINK = "lead-awaker-orlfpr/discovery-call";
 const CAL_NAMESPACE = "discovery-call";
+const MAPS_URL = "https://www.google.com/maps/place/Christiaan+Huygensweg+32,+5223+BH+'s-Hertogenbosch,+Netherlands/@51.691872,5.2869323,17z";
 
 /* Cal.com inline embed loader — runs once per page */
 function loadCalEmbed() {
@@ -34,6 +35,59 @@ function loadCalEmbed() {
   window.Cal("init", CAL_NAMESPACE, { origin: "https://app.cal.com" });
 }
 
+/* ------------------------- NETHERLANDS MAP SVG --------------------------- */
+function NetherlandsMap() {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch("/premium/netherlands.svg")
+      .then((r) => r.text())
+      .then((text) => {
+        if (cancelled || !ref.current) return;
+        ref.current.innerHTML = text;
+        const svg = ref.current.querySelector("svg");
+        if (!svg) return;
+        svg.removeAttribute("width");
+        svg.removeAttribute("height");
+        svg.setAttribute("viewBox", "0 0 612.54 723.62");
+        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+        svg.style.display = "block";
+        svg.style.width = "100%";
+        svg.style.height = "100%";
+        svg.style.overflow = "visible";
+        svg.querySelectorAll("path").forEach((p) => {
+          p.setAttribute("fill", "rgb(240, 234, 222)");
+          p.setAttribute("stroke", "rgb(103, 95, 80)");
+          p.setAttribute("stroke-width", "5");
+          p.setAttribute("stroke-linejoin", "round");
+        });
+        const NS = "http://www.w3.org/2000/svg";
+        const make = (tag, attrs) => {
+          const el = document.createElementNS(NS, tag);
+          Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+          return el;
+        };
+        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 36, fill: "#bd4660", opacity: 0.22 }));
+        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 12, fill: "#e55a7b" }));
+        const label = make("text", {
+          x: 370, y: 490,
+          "font-family": "Manrope, sans-serif",
+          "font-size": 60,
+          "letter-spacing": 6,
+          fill: "rgb(0, 0, 0, 1)",
+          stroke: "rgb(246, 243, 235)",
+          "stroke-width": "16",
+          "paint-order": "stroke fill",
+        });
+        label.textContent = "DEN BOSCH";
+        svg.appendChild(label);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  return <div ref={ref} aria-hidden style={{ width: 110, height: 130, display: "block", lineHeight: 0 }} />;
+}
+
 /* ---------------------------- CTA + FOOTER ------------------------------- */
 function buildCtaBgTransform({ scale, tx, ty, rot, flipX, flipY }) {
   const sx = (flipX ? -1 : 1) * scale;
@@ -61,7 +115,7 @@ function CTA() {
   const [description, setDescription] = React.useState("");
   const [quotes, setQuotes] = React.useState(200);
   const [silentPct, setSilentPct] = React.useState(50);
-  const [avgValue, setAvgValue] = React.useState(8000);
+  const [avgValue, setAvgValue] = React.useState(40000);
   const [numbersAccurate, setNumbersAccurate] = React.useState(false);
 
   const [prefill, setPrefill] = React.useState(null);
@@ -105,28 +159,6 @@ function CTA() {
 
   const [contentRef, contentInView] = window.useInView();
 
-  /* ---- crop reveal animation ---- */
-  const [animCropTop, setAnimCropTop] = React.useState(100);
-  const hasAnimatedRef = React.useRef(false);
-
-  React.useEffect(() => {
-    if (!contentInView || hasAnimatedRef.current) return;
-    hasAnimatedRef.current = true;
-    const target = bgAdj.cropTop;
-    const duration = 1600;
-    const startTime = performance.now();
-    function tick(now) {
-      const p = Math.min((now - startTime) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      setAnimCropTop(100 + (target - 100) * ease);
-      if (p < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }, [contentInView]);
-
-  React.useEffect(() => {
-    if (hasAnimatedRef.current) setAnimCropTop(bgAdj.cropTop);
-  }, [bgAdj.cropTop]);
 
   /* ---- styles ---- */
   const linkStyle = {
@@ -141,12 +173,12 @@ function CTA() {
     }}>
       <div className="neu-raised-large" style={{
         maxWidth: 1176, margin: "0 auto", borderRadius: 20,
-        padding: isMobile ? "28px 20px 24px" : "48px 56px 40px",
+        padding: isMobile ? "28px 20px 12px" : "48px 56px 20px",
         position: "relative", overflow: "hidden",
       }}>
         {(() => {
-          const cropL = animCropTop - (bgAdj.cropTilt ?? 0);
-          const cropR = animCropTop + (bgAdj.cropTilt ?? 0);
+          const cropL = bgAdj.cropTop - (bgAdj.cropTilt ?? 0);
+          const cropR = bgAdj.cropTop + (bgAdj.cropTilt ?? 0);
           return (
             <>
               <div aria-hidden style={{
@@ -155,7 +187,7 @@ function CTA() {
                 pointerEvents: "none",
               }}>
                 <img
-                  src="/premium/uploads/textures/ctatext15.webp"
+                  src="/premium/uploads/textures/ctatext17.jpg"
                   style={{
                     position: "absolute", top: "50%", left: "50%",
                     width: "100%", height: "auto",
@@ -239,7 +271,7 @@ function CTA() {
                 }}>
                   {t('cta.h2_l1')}<br />
                   <span className="italic" style={{ color: "#9B3A50", whiteSpace: "nowrap" }}>
-                    {t('cta.h2_l3')} {t('cta.h2_italic')}
+                    {t('cta.h2_l2')} {t('cta.h2_italic')}
                   </span>
                 </h2>
                 <p style={{
@@ -298,18 +330,26 @@ function CTA() {
               </div>
             </div>
 
-            {/* Footer row: terms + copyright */}
+            {/* Footer row: map+favicon left, terms center, copyright right */}
             <div style={{
-              marginTop: isMobile ? 32 : 48,
-              paddingTop: isMobile ? 20 : 28,
+              marginTop: isMobile ? 24 : 32,
               display: "flex", alignItems: "flex-end", justifyContent: "space-between",
               gap: isMobile ? 20 : 20,
               flexWrap: isMobile ? "wrap" : "nowrap",
             }}>
-              <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18, marginLeft: isMobile ? 0 : 290 }}>
+              {/* Map + favicon — bottom aligned together */}
+              <div style={{ display: "flex", gap: 16, alignItems: "flex-end", paddingBottom: 18 }}>
+                <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
+                  <NetherlandsMap />
+                </a>
+                <FooterMark size={44} />
+              </div>
+              {/* Terms + Privacy */}
+              <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18 }}>
                 <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.terms')}</a>
                 <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.privacy')}</a>
               </div>
+              {/* Copyright */}
               <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#3D2817", whiteSpace: "nowrap" }}>
                 Lead Awaker 2026 &mdash; All rights reserved.
               </span>
