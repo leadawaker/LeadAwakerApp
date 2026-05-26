@@ -1,11 +1,5 @@
-// CTA + Footer merged into a single dark container
-// FooterMark lives in footer-mark.jsx (loaded before this file)
+// CTA + Footer — cream background with live-edge wood slab borders
 
-const sectionWrap = {
-  maxWidth: 1240, margin: "0 auto", padding: "144px 48px"
-};
-
-const MAPS_URL = "https://www.google.com/maps/place/Christiaan+Huygensweg+32,+5223+BH+'s-Hertogenbosch,+Netherlands/@51.691872,5.2869323,17z";
 const CAL_LINK = "lead-awaker-orlfpr/discovery-call";
 const CAL_NAMESPACE = "discovery-call";
 
@@ -40,98 +34,28 @@ function loadCalEmbed() {
   window.Cal("init", CAL_NAMESPACE, { origin: "https://app.cal.com" });
 }
 
-/* ------------------------- NETHERLANDS MAP SVG --------------------------- */
-function NetherlandsMap() {
-  const ref = React.useRef(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    fetch("/premium/netherlands.svg")
-      .then((r) => r.text())
-      .then((text) => {
-        if (cancelled || !ref.current) return;
-        ref.current.innerHTML = text;
-        const svg = ref.current.querySelector("svg");
-        if (!svg) return;
-
-        svg.removeAttribute("width");
-        svg.removeAttribute("height");
-        svg.setAttribute("viewBox", "0 0 612.54 723.62");
-        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-        svg.style.display = "block";
-        svg.style.width = "100%";
-        svg.style.height = "100%";
-        svg.style.overflow = "visible";
-
-        const NS = "http://www.w3.org/2000/svg";
-        const make = (tag, attrs) => {
-          const el = document.createElementNS(NS, tag);
-          Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
-          return el;
-        };
-
-        /* Carved silhouette: SVG inner shadow clipped to the map shape. */
-        let defs = svg.querySelector("defs");
-        if (!defs) {
-          defs = make("defs", {});
-          svg.insertBefore(defs, svg.firstChild);
-        }
-        const filt = make("filter", { id: "map-carve", x: "-5%", y: "-5%", width: "110%", height: "110%" });
-        // Correct inner-shadow recipe: blur alpha → offset → (alpha out offset) → color → clip → merge
-        const f1 = make("feGaussianBlur", { in: "SourceAlpha", stdDeviation: "4", result: "blur" });
-        const f2 = make("feOffset", { in: "blur", dx: "16", dy: "3", result: "offset" });
-        const f3 = make("feComposite", { in: "SourceAlpha", in2: "offset", operator: "out", result: "inner" });
-        const f4 = make("feFlood", { "flood-color": "#000000", "flood-opacity": "0.5", result: "flood" });
-        const f5 = make("feComposite", { in: "flood", in2: "inner", operator: "in", result: "shadow" });
-        const fMerge = make("feMerge", {});
-        fMerge.appendChild(make("feMergeNode", { in: "SourceGraphic" }));
-        fMerge.appendChild(make("feMergeNode", { in: "shadow" }));
-        [f1, f2, f3, f4, f5, fMerge].forEach(el => filt.appendChild(el));
-        defs.appendChild(filt);
-
-        const silGroup = make("g", { filter: "url(#map-carve)" });
-        Array.from(svg.querySelectorAll("path")).forEach(p => {
-          p.setAttribute("fill", "rgba(215, 201, 170, 0.22)");
-          p.setAttribute("stroke", "rgba(255,255,255,0.3)");
-          p.setAttribute("stroke-width", "1");
-          p.setAttribute("vector-effect", "non-scaling-stroke");
-          silGroup.appendChild(p);
-        });
-        svg.appendChild(silGroup);
-
-        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 36, fill: "#7A2E3E", opacity: 0.4 }));
-        svg.appendChild(make("circle", { cx: 307, cy: 482, r: 15, fill: "#FFB6C8" }));
-        const label = make("text", {
-          x: 330, y: 490,
-          "font-family": "Geist Mono, monospace",
-          "font-size": 66,
-          "letter-spacing": 3,
-          fill: "rgba(244,239,227,1)",
-          stroke: "#000",
-          "stroke-width": 7,
-          "paint-order": "stroke fill"
-        });
-        label.textContent = "DEN BOSCH";
-        svg.appendChild(label);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  return (
-    <div ref={ref} aria-hidden style={{
-      width: 110, height: 130, display: "block", lineHeight: 0,
-    }} />
-  );
+/* ---------------------------- CTA + FOOTER ------------------------------- */
+function buildCtaBgTransform({ scale, tx, ty, rot, flipX, flipY }) {
+  const sx = (flipX ? -1 : 1) * scale;
+  const sy = (flipY ? -1 : 1) * scale;
+  return `translate(-50%, -50%) rotate(${rot}deg) scale(${sx}, ${sy}) translate(${tx}%, ${ty}%)`;
 }
 
-/* ---------------------------- CTA + FOOTER ------------------------------- */
-function CTA({ textures = true }) {
+function CTA() {
   const isMobile = window.useIsMobile();
   const { t } = window.useI18n();
 
+  /* ---- bg image debug adjustments ---- */
+  const [bgAdj, setBgAdj] = React.useState(() =>
+    typeof loadCtaBgAdjustments !== "undefined" ? loadCtaBgAdjustments() : { scale: 1, tx: 0, ty: 5, rot: 0, flipX: false, flipY: false, brightness: 1, cropTop: 43, cropTilt: 0 }
+  );
+  const handleBgAdjUpdate = React.useCallback((next) => {
+    setBgAdj(next);
+    if (typeof saveCtaBgAdjustments !== "undefined") saveCtaBgAdjustments(next);
+  }, []);
+
   /* ---- form state ---- */
-  const [formState, setFormState] = React.useState("idle"); // idle | sending | sent | error
+  const [formState, setFormState] = React.useState("idle");
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [description, setDescription] = React.useState("");
@@ -141,27 +65,7 @@ function CTA({ textures = true }) {
   const [numbersAccurate, setNumbersAccurate] = React.useState(false);
 
   const [prefill, setPrefill] = React.useState(null);
-  const [bookingConfirmed, setBookingConfirmed] = React.useState(false);
-  const [bookedSlot, setBookedSlot] = React.useState(null);
-
-  /* ---- texture/shine debug adjustments (dev only) ---- */
-  const [texAdjust, setTexAdjust] = React.useState(() =>
-    (typeof loadCtaTexAdjustments === "function")
-      ? loadCtaTexAdjustments()
-      : { wood: { scale: 1.4, tx: 50, ty: 70, rot: 0, flipX: false, brightness: 0.35 },
-          shine: { scale: 1.0, tx: 35, ty: 35, rot: 0, flipX: false, brightness: 0.95 } }
-  );
-  const updateTexAdjust = React.useCallback((section, field, value) => {
-    setTexAdjust(prev => {
-      const next = { ...prev, [section]: { ...prev[section], [field]: value } };
-      if (typeof saveCtaTexAdjustments === "function") saveCtaTexAdjustments(next);
-      return next;
-    });
-  }, []);
-  const wood  = texAdjust.wood;
-  const shine = texAdjust.shine;
-  const woodTransform  = `translate(-50%, -50%) rotate(${wood.rot}deg) scaleX(${wood.flipX ? -1 : 1})`;
-  const shineTransform = `rotate(${shine.rot}deg) scaleX(${shine.flipX ? -1 : 1})`;
+  const formHeightRef = React.useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -176,13 +80,11 @@ function CTA({ textures = true }) {
       silent_percentage: silentPct,
       avg_project_value: avgValue,
     };
-
-    const extraLines = [
+    const notes = desc + "\n\n" + [
       `Quotes/year: ${quotes}`,
       `Go silent: ${silentPct}%`,
       `Avg project value: €${avgValue.toLocaleString('nl-NL')}`,
-    ];
-    const notes = desc + "\n\n" + extraLines.join("\n");
+    ].join("\n");
 
     try {
       await fetch("/api/contact", {
@@ -191,7 +93,11 @@ function CTA({ textures = true }) {
         body: JSON.stringify({ name: n, email: em, description: desc, ...extras }),
       });
     } catch {
-      // non-blocking: still show calendar even if lead capture errored
+      // non-blocking
+    }
+    if (formHeightRef.current) {
+      formHeightRef.current.style.height = formHeightRef.current.offsetHeight + "px";
+      formHeightRef.current.style.overflow = "auto";
     }
     setPrefill({ name: n, email: em, notes });
     setFormState("sent");
@@ -199,317 +105,136 @@ function CTA({ textures = true }) {
 
   const [contentRef, contentInView] = window.useInView();
 
-  /* ---- light rotation state ---- */
-  const rotateFrameRef  = React.useRef(null);
-  const returnFrameRef  = React.useRef(null);
-  const rotateStartRef  = React.useRef(null);
-  const startAngleRef   = React.useRef(null);
-  const origAngleRef    = React.useRef(null);
-
-  const getLightAngle = () => {
-    const s = getComputedStyle(document.documentElement);
-    const lx = parseFloat(s.getPropertyValue("--lx") || "0");
-    const ly = parseFloat(s.getPropertyValue("--ly") || "0");
-    return Math.atan2(-ly, lx) * (180 / Math.PI);
-  };
-
-  const getLightIntensity = () =>
-    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--light-intensity") || "1") * 100;
-
-  const startRotation = React.useCallback(() => {
-    if (returnFrameRef.current) { cancelAnimationFrame(returnFrameRef.current); returnFrameRef.current = null; }
-    if (rotateFrameRef.current) return;
-
-    const fromAngle = getLightAngle();
-    const normFrom  = ((fromAngle % 360) + 360) % 360;
-    const travel    = -normFrom; // always backward (through top) to land exactly at 0°
-    const intensity = getLightIntensity();
-    origAngleRef.current = normFrom;
-    const t0  = performance.now();
-    const dur = 12000;
-
-    const tick = (now) => {
-      const p = Math.min((now - t0) / dur, 1);
-      const e = 1 - Math.pow(1 - p, 3);
-      applyLight(normFrom + travel * e, 100, intensity);
-      if (p < 1) {
-        rotateFrameRef.current = requestAnimationFrame(tick);
-      } else {
-        rotateFrameRef.current = null;
-        applyLight(0, 100, intensity);
-      }
-    };
-    rotateFrameRef.current = requestAnimationFrame(tick);
-  }, []);
-
-  const stopRotation = React.useCallback(() => {
-    if (!rotateFrameRef.current) return;
-    cancelAnimationFrame(rotateFrameRef.current);
-    rotateFrameRef.current = null;
-
-    const fromAngle = getLightAngle();
-    const toAngle   = 175; // return to CTA light angle
-    const intensity = getLightIntensity();
-    const t0 = performance.now();
-    const dur = 8000;
-
-    const ret = (now) => {
-      const p = Math.min((now - t0) / dur, 1);
-      const e = 1 - Math.pow(1 - p, 3);
-      const diff = ((toAngle - fromAngle + 540) % 360) - 180;
-      applyLight(fromAngle + diff * e, 100, intensity);
-      if (p < 1) {
-        returnFrameRef.current = requestAnimationFrame(ret);
-      } else {
-        returnFrameRef.current = null;
-        applyLight(toAngle, 100, intensity);
-      }
-    };
-    returnFrameRef.current = requestAnimationFrame(ret);
-  }, []);
-
-  React.useEffect(() => () => {
-    if (rotateFrameRef.current) cancelAnimationFrame(rotateFrameRef.current);
-    if (returnFrameRef.current) cancelAnimationFrame(returnFrameRef.current);
-  }, []);
-
-  /* ---- scroll-triggered light shift: 175° in footer, 65° (default) elsewhere ---- */
-  const sectionRef       = React.useRef(null);
-  const scrollFrameRef   = React.useRef(null);
-
-  const animateLightTo = React.useCallback((targetAngle, dur = 1600) => {
-    if (scrollFrameRef.current) { cancelAnimationFrame(scrollFrameRef.current); scrollFrameRef.current = null; }
-    if (window.__cancelGlobalLight) { window.__cancelGlobalLight(); window.__cancelGlobalLight = null; }
-    const fromAngle = getLightAngle();
-    const intensity = getLightIntensity();
-    const diff = ((targetAngle - fromAngle + 540) % 360) - 180; // shortest path
-    const t0 = performance.now();
-
-    const tick = (now) => {
-      const p = Math.min((now - t0) / dur, 1);
-      const e = 1 - Math.pow(1 - p, 3);
-      applyLight(fromAngle + diff * e, 100, intensity);
-      if (p < 1) {
-        scrollFrameRef.current = requestAnimationFrame(tick);
-      } else {
-        scrollFrameRef.current = null;
-        applyLight(targetAngle, 100, intensity);
-      }
-    };
-    scrollFrameRef.current = requestAnimationFrame(tick);
-  }, []);
-
-  React.useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (rotateFrameRef.current) return; // don't fight form-focus rotation
-        animateLightTo(entry.isIntersecting ? 175 : 65);
-      },
-      { threshold: 0.25 }
-    );
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    };
-  }, [animateLightTo]);
-
   /* ---- styles ---- */
-  const monoStyle = {
-    fontFamily: "var(--mono)", fontSize: isMobile ? 11 : 12,
-    letterSpacing: "0.06em", color: "rgba(244,239,227,0.82)",
-    textDecoration: "none", lineHeight: 1.55
-  };
-  const labelStyle = {
-    fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.18em",
-    textTransform: "uppercase", color: "rgba(244,239,227,0.6)", marginBottom: 10
-  };
   const linkStyle = {
     fontFamily: "var(--mono)", fontSize: 11,
-    letterSpacing: "0.06em", color: "rgba(244,239,227,0.45)",
+    letterSpacing: "0.06em", color: "rgba(28,24,16,0.45)",
     textDecoration: "none", lineHeight: 1.8, display: "block"
   };
 
   return (
-    <section ref={sectionRef} id="contact" data-screen-label="06 Contact" style={isMobile
-      ? { maxWidth: 1240, margin: "0 auto", padding: "60px 18px 60px" }
-      : { ...sectionWrap, paddingBottom: 100 }}>
-      <div className="neu-raised" style={{
-        borderRadius: 14, padding: isMobile ? "44px 24px 32px" : (formState === "sent" ? "36px 64px 52px" : "80px 64px 52px"),
-        background: "linear-gradient(155deg, #221C14, #14110D)",
-        color: "var(--paper)",
-        boxShadow: "var(--sh-raised-large), inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 rgba(255,255,255,0.08)",
+    <section id="contact" data-screen-label="06 Contact" style={{
+      padding: isMobile ? "48px 18px 48px" : "80px 32px 64px",
+    }}>
+      <div className="neu-raised-large" style={{
+        maxWidth: 1176, margin: "0 auto", borderRadius: 20,
+        padding: isMobile ? "28px 20px 24px" : "48px 56px 40px",
         position: "relative", overflow: "hidden",
-        clipPath: "inset(0 round 14px)",
-        display: "flex", flexDirection: "column",
-        height: isMobile ? undefined : 720,
       }}>
-
-        {/* Wood overlay */}
-        {textures && (
-          isMobile ? (
-            <div aria-hidden style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              backgroundImage: "url(/premium/assets/texture-wood.webp)",
-              backgroundSize: "auto 160%", backgroundPosition: "center",
-              backgroundRepeat: "no-repeat", opacity: 0.35, mixBlendMode: "overlay",
-            }} />
-          ) : (
-            <div aria-hidden style={{
-              position: "absolute", top: "50%", left: "50%",
-              width: `${wood.scale * 100}%`, height: `${wood.scale * 100}%`, pointerEvents: "none",
-              backgroundImage: "url(/premium/assets/texture-wood.webp)",
-              backgroundSize: "cover", backgroundPosition: `${wood.tx}% ${wood.ty}%`,
-              opacity: wood.brightness, mixBlendMode: "overlay",
-              transform: woodTransform,
-            }} />
-          )
-        )}
-
-        <div aria-hidden style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient( ${shine.scale * 125}% ${shine.scale * 100}% at calc(50% + var(--lx) * ${shine.tx}%) calc(50% + var(--ly) * ${shine.ty}%),
-              rgba(var(--light-warm), calc(var(--light-intensity) * 0.75)),
-              transparent 75% ) `,
-          mixBlendMode: "screen", opacity: shine.brightness,
-          transform: shineTransform,
-        }} />
-        <div aria-hidden style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient(circle at 50% 40%, rgba(var(--light-warm), 0.08), transparent 80%)`,
-          mixBlendMode: "screen",
-        }} />
-
-        {/* Wood shadow mask */}
-        {isMobile ? (
-          <div aria-hidden style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "auto 160%", backgroundPosition: "center 70%",
-            backgroundRepeat: "no-repeat", mixBlendMode: "multiply", opacity: 1,
-          }} />
-        ) : (
-          <div aria-hidden style={{
-            position: "absolute", top: "50%", left: "50%",
-            width: `${wood.scale * 100}%`, height: `${wood.scale * 100}%`, pointerEvents: "none",
-            backgroundImage: "url(/premium/assets/texture-wood.webp)",
-            backgroundSize: "cover", backgroundPosition: `${wood.tx}% ${wood.ty}%`,
-            mixBlendMode: "multiply", opacity: 1,
-            transform: woodTransform,
-          }} />
-        )}
-
-        <div aria-hidden style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient(40% 30% at calc(50% + var(--lx) * 20%) calc(45% + var(--ly) * 20%),
-              rgba(255, 255, 240, calc(var(--light-intensity) * 0.18)),
-              transparent 55% )`,
-          mixBlendMode: "screen", opacity: 1,
-          WebkitMaskImage: `radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,1) 70%)`,
-          maskImage: `radial-gradient( ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 35%,  rgba(0,0,0,1) 70%)`
-        }} />
-
-        <div aria-hidden style={{
-          position: "absolute", top: -120, right: -100, width: 360, height: 360,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(122,46,62,0.45), transparent 70%)",
-          filter: "blur(20px)"
-        }} />
-
-        {/* TOP: request access + form — or full-width calendar after submit */}
+        {(() => {
+          const cropL = (bgAdj.cropTop ?? 0) - (bgAdj.cropTilt ?? 0);
+          const cropR = (bgAdj.cropTop ?? 0) + (bgAdj.cropTilt ?? 0);
+          return (
+            <>
+              <div aria-hidden style={{
+                position: "absolute", inset: 0, zIndex: 0,
+                clipPath: `polygon(0 ${cropL}%, 100% ${cropR}%, 100% 100%, 0 100%)`,
+                pointerEvents: "none",
+              }}>
+                <img
+                  src="/premium/uploads/textures/ctatext15.webp"
+                  style={{
+                    position: "absolute", top: "50%", left: "50%",
+                    width: "100%", height: "auto",
+                    transform: buildCtaBgTransform(bgAdj),
+                    transformOrigin: "0 0",
+                    filter: `brightness(${bgAdj.brightness ?? 1})`,
+                    pointerEvents: "none", userSelect: "none",
+                  }}
+                />
+              </div>
+              {/* neu-polished highlight sheen — sits above texture, below crop effects */}
+              <div aria-hidden style={{
+                position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1,
+                background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 40%, transparent 40%)",
+                borderRadius: "inherit",
+              }} />
+              {/* Crop edge: drop shadow into plain area + 2px highlight */}
+              <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 2, pointerEvents: "none", overflow: "hidden", borderRadius: "inherit" }}>
+                <defs>
+                  <filter id="cta-shadow-filt" x="-2%" y="-600%" width="104%" height="700%">
+                    <feGaussianBlur stdDeviation="1 6" />
+                  </filter>
+                  <clipPath id="cta-above-crop">
+                    <polygon points={`0,0 100,0 100,${cropR} 0,${cropL}`} />
+                  </clipPath>
+                </defs>
+                {/* Blurred dark line, clipped to plain area — shadow cast by texture edge */}
+                <line
+                  x1="0" y1={cropL} x2="100" y2={cropR}
+                  stroke="rgba(0,0,0,0)"
+                  strokeWidth="3"
+                  filter="url(#cta-shadow-filt)"
+                  clipPath="url(#cta-above-crop)"
+                  vectorEffect="non-scaling-stroke"
+                />
+                {/* 2px highlight at crop edge */}
+                <line
+                  x1="0" y1={cropL} x2="100" y2={cropR}
+                  stroke="rgba(255,255,255,0.20)"
+                  strokeWidth="6"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+            </>
+          );
+        })()}
+        <div ref={formHeightRef} style={{ position: "relative", zIndex: 3 }}>
         {formState === "sent" ? (
-          <CalInlineEmbed
-            prefill={prefill}
-            bookingConfirmed={bookingConfirmed}
-            bookedSlot={bookedSlot}
-            onBookingConfirmed={(data) => { setBookingConfirmed(true); setBookedSlot(data); }}
-            onRebook={() => setBookingConfirmed(false)}
-            style={{ flex: 1, minHeight: 0 }}
-          />
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setFormState("idle")}
+              aria-label="Close calendar"
+              style={{
+                position: "absolute", top: 0, right: 0, zIndex: 10,
+                background: "var(--surface)", border: "1px solid rgba(28,24,16,0.12)",
+                borderRadius: "50%", width: 32, height: 32,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 16, color: "var(--ink)", lineHeight: 1,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+              }}
+            >×</button>
+            <CalInlineEmbed prefill={prefill} style={{ minHeight: 520 }} />
+          </div>
         ) : (
-          <div ref={contentRef} style={{
-            position: "relative", flex: 1, minHeight: 0, overflow: "hidden",
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr",
-            gap: isMobile ? 32 : 80,
-            alignItems: "stretch"
-          }}>
-            {/* Left: heading + map/terms pinned to bottom */}
-            <div style={{ paddingTop: isMobile ? 0 : 24, display: "flex", flexDirection: "column", ...window.revealStyle(contentInView, { delay: 0 }) }}>
-              <div>
-                <div className="eyebrow" style={{ color: "rgba(244,239,227,0.55)", marginBottom: isMobile ? 18 : 32 }}>{t('cta.eyebrow')}</div>
+          <>
+            <div ref={contentRef} style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr",
+              gap: isMobile ? 32 : 80,
+              alignItems: "stretch",
+            }}>
+              {/* Left: heading */}
+              <div style={{ paddingTop: isMobile ? 0 : 24, display: "flex", flexDirection: "column", ...window.revealStyle(contentInView, { delay: 0 }) }}>
+                <div className="eyebrow" style={{ color: "rgba(28,24,16,0.42)", marginBottom: isMobile ? 18 : 28 }}>{t('cta.eyebrow')}</div>
                 <h2 className="serif" style={{
-                  margin: 0, fontSize: isMobile ? "clamp(34px, 9vw, 48px)" : "clamp(48px, 5.4vw, 84px)",
+                  margin: 0, fontSize: isMobile ? "clamp(34px, 9vw, 48px)" : "clamp(48px, 5.4vw, 64px)",
                   lineHeight: 0.98, letterSpacing: "-0.025em",
-                  color: "var(--paper)", textWrap: "balance",
-                  textShadow: "0 1px 0 rgba(0,0,0,0.55)"
+                  color: "var(--ink)", whiteSpace: "nowrap",
+                  textShadow: "0 1px 0 rgba(0,0,0,0.12)",
                 }}>
                   {t('cta.h2_l1')}<br />
-                  <span className="italic" style={{
-                    color: "#F5C2D0",
-                    fontSize: "1.12em",
-                    fontWeight: 500,
-                    letterSpacing: "-0.01em",
-                    textShadow: "0 1px 0 rgba(0,0,0,0.55), 0 0 22px rgba(245,194,208,0.35)",
-                    display: "inline-block",
-                  }}>
-                    {t('cta.h2_l3')}<br />{t('cta.h2_italic')}
+                  <span className="italic" style={{ color: "#9B3A50", whiteSpace: "nowrap" }}>
+                    {t('cta.h2_l3')} {t('cta.h2_italic')}
                   </span>
                 </h2>
                 <p style={{
-                  margin: isMobile ? "20px 0 0" : "28px 0 0",
-                  fontFamily: "var(--sans)", fontSize: isMobile ? 15 : 17,
-                  fontWeight: 400, letterSpacing: "-0.01em",
-                  color: "rgba(244,239,227,0.78)",
-                  lineHeight: 1.45,
-                  textShadow: "0 1px 0 rgba(0,0,0,0.55)",
-                  maxWidth: 520,
+                  margin: isMobile ? "16px 0 0" : "22px 0 0",
+                  fontFamily: "var(--sans)", fontSize: isMobile ? 16 : 18,
+                  fontWeight: 600, letterSpacing: "-0.01em",
+                  color: "rgba(28,24,16,0.8)",
+                  lineHeight: 1.4,
+                  textShadow: "0 1px 0 rgba(0,0,0,0.06)",
                 }}>
                   {t('cta.btn_sub')}
                 </p>
               </div>
-              {!isMobile && (
-                <div style={{
-                  marginTop: "auto",
-                  display: "flex", alignItems: "flex-end", gap: 20,
-                }}>
-                  <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
-                    <NetherlandsMap />
-                  </a>
-                  <div style={{ paddingBottom: 2 }}>
-                    <FooterMark size={40} />
-                  </div>
-                  <div style={{ display: "flex", gap: 30, alignSelf: "flex-end", paddingBottom: 6, marginLeft: 8 }}>
-                    <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>
-                      {t('cta.terms')}
-                    </a>
-                    <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>
-                      {t('cta.privacy')}
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* Right: form */}
-            <div style={{ paddingTop: isMobile ? 0 : 24, minHeight: 0, display: "flex", flexDirection: "column", ...window.revealStyle(contentInView, { delay: 150 }) }}>
-              <div
-                onFocus={startRotation}
-                onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) stopRotation(); }}
-                style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
-              >
-                <div style={{
-                  padding: 20, borderRadius: 10,
-                  background: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 50px -30px rgba(0,0,0,0.6)",
-                  flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
-                }}>
-                  <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+              {/* Right: form */}
+              <div style={{ paddingTop: isMobile ? 0 : 24, display: "flex", flexDirection: "column", ...window.revealStyle(contentInView, { delay: 150 }) }}>
+                <div className="glass-strong" style={{ padding: 20, borderRadius: 14, flex: 1, display: "flex", flexDirection: "column" }}>
+                  <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
                     <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
                       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                         <GlassInput ph={t('cta.ph_name')} value={name} onChange={(e) => setName(e.target.value)} />
@@ -524,26 +249,23 @@ function CTA({ textures = true }) {
                         numbersAccurate={numbersAccurate} setNumbersAccurate={setNumbersAccurate}
                       />
                       {formState === "error" && (
-                        <p style={{ margin: 0, fontSize: 12, color: "#D9A3B0", fontFamily: "var(--mono)" }}>
+                        <p style={{ margin: 0, fontSize: 12, color: "#7A2E3E", fontFamily: "var(--mono)" }}>
                           Something went wrong — please try again.
                         </p>
                       )}
                     </div>
-                    <button type="submit" className="btn-neu" disabled={formState === "sending" || !numbersAccurate} style={{
-                      flexShrink: 0, marginTop: 14, justifyContent: "center",
-                      background: "linear-gradient(145deg, #F4EFE3, #E5DECF)",
-                      color: "var(--ink)",
-                      opacity: (formState === "sending" || !numbersAccurate) ? 0.45 : 1,
-                      cursor: (formState === "sending" || !numbersAccurate) ? "not-allowed" : "pointer",
-                      boxShadow: "4px 4px 12px rgba(0,0,0,0.45), -2px -2px 8px rgba(255,255,255,0.05)"
+                    <button type="submit" className="btn-wine" disabled={formState === "sending" || !numbersAccurate} style={{
+                      flexShrink: 0, marginTop: 14, justifyContent: "center", width: "100%",
+                      textTransform: "none", letterSpacing: "0.01em", fontSize: 15, borderRadius: 8,
+                      padding: "18px 28px",
                     }}>
                       {formState === "sending" ? "Sending…" : t('cta.btn_send')}
                       {formState !== "sending" && <ArrowSm />}
                     </button>
                     <p style={{
                       flexShrink: 0, margin: "10px 0 0",
-                      fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.04em",
-                      color: "rgba(244,239,227,0.5)", lineHeight: 1.5,
+                      fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.04em",
+                      color: "rgba(28,24,16,0.38)", lineHeight: 1.5,
                       textAlign: "center",
                     }}>
                       {t('cta.btn_after')}
@@ -552,33 +274,29 @@ function CTA({ textures = true }) {
                 </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Mobile-only: map + terms below form */}
-        {isMobile && (
-          <div style={{
-            position: "relative", flexShrink: 0,
-            display: "flex", alignItems: "flex-end", flexWrap: "wrap",
-            gap: 24, marginTop: 44,
-          }}>
-            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
-              <NetherlandsMap />
-            </a>
-            <div style={{ paddingBottom: 4 }}>
-              <FooterMark size={28} />
+            {/* Footer row: terms + copyright */}
+            <div style={{
+              marginTop: isMobile ? 32 : 48,
+              paddingTop: isMobile ? 20 : 28,
+              display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+              gap: isMobile ? 20 : 20,
+              flexWrap: isMobile ? "wrap" : "nowrap",
+            }}>
+              <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18, marginLeft: isMobile ? 0 : 290 }}>
+                <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.terms')}</a>
+                <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.privacy')}</a>
+              </div>
+              <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#3D2817", whiteSpace: "nowrap" }}>
+                Lead Awaker 2026 &mdash; All rights reserved.
+              </span>
             </div>
-            <div style={{ display: "flex", gap: 16, alignSelf: "flex-end", paddingBottom: 6 }}>
-              <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>{t('cta.terms')}</a>
-              <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={linkStyle}>{t('cta.privacy')}</a>
-            </div>
-          </div>
+          </>
         )}
-
+        </div>
       </div>
-
-      {!isMobile && typeof CtaTextureDebug !== "undefined" && (
-        <CtaTextureDebug adjustments={texAdjust} onUpdate={updateTexAdjust} />
+      {typeof CTABgDebug !== "undefined" && (
+        <CTABgDebug adj={bgAdj} onUpdate={handleBgAdjUpdate} />
       )}
     </section>
   );
@@ -591,14 +309,8 @@ function GlassInput({ ph, type = "text", value, onChange }) {
       placeholder={ph}
       value={value}
       onChange={onChange}
-      className="glass-field"
-      style={{
-        background: "transparent",
-        border: "1px solid rgba(255,255,255,0.18)",
-        padding: "14px 18px", borderRadius: 6, outline: "none",
-        color: "rgba(244,239,227,1)", fontFamily: "var(--sans)", fontSize: 14,
-        width: "100%", boxSizing: "border-box"
-      }} />
+      className="neu-input"
+      style={{ width: "100%", boxSizing: "border-box", borderRadius: 10 }} />
   );
 }
 
@@ -609,29 +321,20 @@ function GlassTextarea({ ph, value, onChange }) {
       value={value}
       onChange={onChange}
       rows={1}
-      className="glass-field"
+      className="neu-input"
       style={{
-        background: "transparent",
-        border: "1px solid rgba(255,255,255,0.18)",
-        padding: "14px 18px", borderRadius: 6, outline: "none",
-        color: "rgba(244,239,227,1)", fontFamily: "var(--sans)", fontSize: 14,
-        width: "100%", boxSizing: "border-box",
-        resize: "none", lineHeight: "normal",
-        height: 50, overflow: "hidden",
+        width: "100%", boxSizing: "border-box", borderRadius: 10,
+        resize: "none", lineHeight: "normal", height: 50, overflow: "hidden",
       }} />
   );
 }
 
-function CalInlineEmbed({ prefill, bookingConfirmed, bookedSlot, onBookingConfirmed, onRebook, style }) {
+function CalInlineEmbed({ prefill, style }) {
   const ref = React.useRef(null);
 
   React.useEffect(() => {
-    if (bookingConfirmed) return;
-
     loadCalEmbed();
 
-    /* Cal embed may not be ready immediately after loadCalEmbed() injects the
-       script tag. Poll until Cal.ns exists (max ~3 s) before mounting. */
     let attempts = 0;
     const tryMount = () => {
       attempts++;
@@ -653,75 +356,36 @@ function CalInlineEmbed({ prefill, bookingConfirmed, bookedSlot, onBookingConfir
       ns("inline", {
         elementOrSelector: ref.current,
         calLink: linkWithPrefill,
-        config: { layout: "month_view", theme: "dark" },
+        config: { layout: "month_view", theme: "light" },
       });
 
       ns("ui", {
-        theme: "dark",
+        theme: "light",
         hideEventTypeDetails: false,
         layout: "month_view",
         cssVarsPerTheme: {
-          dark: {
-            "cal-brand": "#D9A3B0",
-            "cal-bg-emphasis": "#221C14",
-            "cal-bg": "#14110D",
-            "cal-bg-subtle": "#1C1815",
-            "cal-bg-muted": "#1C1815",
-            "cal-text": "#F4EFE3",
-            "cal-text-emphasis": "#FFFFFF",
-            "cal-border": "rgba(244,239,227,0.14)",
-            "cal-border-subtle": "rgba(244,239,227,0.08)",
-            "cal-border-emphasis": "rgba(244,239,227,0.22)",
+          light: {
+            "cal-brand": "#9B3A50",
+            "cal-bg": "#ffffff",
+            "cal-bg-emphasis": "#f5f5f5",
+            "cal-bg-subtle": "#eeeeee",
+            "cal-bg-muted": "#f9f9f9",
+            "cal-text": "#1C1810",
+            "cal-text-emphasis": "#0D0B08",
+            "cal-border": "rgba(28,24,16,0.12)",
+            "cal-border-subtle": "rgba(28,24,16,0.07)",
+            "cal-border-emphasis": "rgba(28,24,16,0.2)",
           },
         },
       });
     };
     tryMount();
-
-    const handleMessage = (e) => {
-      const type = e.data?.data?.type || e.data?.type;
-      if (type === "bookingSuccessful" || type === "cal:booking_confirmed") {
-        onBookingConfirmed(e.data?.data || e.data || {});
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [prefill, bookingConfirmed]);
-
-  if (bookingConfirmed) {
-    const dt = bookedSlot?.startTime ? new Date(bookedSlot.startTime) : null;
-    const formatted = dt ? dt.toLocaleString("nl-NL", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : null;
-    return (
-      <div style={{ ...style, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "48px 0" }}>
-        <div style={{ fontSize: 36, marginBottom: 16 }}>✓</div>
-        <p style={{ fontSize: 18, color: "var(--paper)", fontFamily: "var(--serif)", margin: "0 0 8px" }}>
-          Discovery call booked.
-        </p>
-        {formatted && (
-          <p style={{ fontSize: 13, color: "#D9A3B0", fontFamily: "var(--mono)", margin: "0 0 28px", letterSpacing: "0.06em" }}>
-            {formatted}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={onRebook}
-          style={{
-            background: "transparent", border: "none", cursor: "pointer",
-            fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.08em",
-            color: "rgba(244,239,227,0.5)", textDecoration: "underline",
-            textUnderlineOffset: 3,
-          }}
-        >
-          Need to rebook?
-        </button>
-      </div>
-    );
-  }
+  }, [prefill]);
 
   return (
     <div
       ref={ref}
-      style={{ ...style, width: "100%", borderRadius: 8, overflowY: "auto", overflowX: "hidden" }}
+      style={{ ...style, width: "100%", borderRadius: 8, background: "#ffffff", overflowY: "auto", overflowX: "hidden" }}
     />
   );
 }
@@ -735,16 +399,15 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
   return (
     <div style={{
       borderRadius: 8,
-      border: "1px solid rgba(255,255,255,0.12)",
-      background: "rgba(255,255,255,0.04)",
+      
       overflow: "hidden",
     }}>
       <div style={{ padding: "16px 16px 14px", display: "grid", gap: 16 }}>
         {rows.map((row) => (
           <div key={row.label}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 12, color: "rgba(244,239,227,0.78)", fontFamily: "var(--sans)" }}>{row.label}</span>
-              <span style={{ fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, color: "#D9A3B0" }}>
+              <span style={{ fontSize: 14, color: "var(--ink)", fontFamily: "var(--sans)" }}>{row.label}</span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>
                 {row.fmt(row.value)}
               </span>
             </div>
@@ -764,8 +427,6 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
       <label style={{
         display: "flex", alignItems: "flex-start", gap: 10,
         padding: "12px 16px",
-        borderTop: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(0,0,0,0.15)",
         cursor: "pointer",
       }}>
         <input
@@ -774,7 +435,7 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
           onChange={(e) => setNumbersAccurate(e.target.checked)}
           className="cta-checkbox"
         />
-        <span style={{ fontSize: 12, fontFamily: "var(--sans)", color: "rgba(244,239,227,0.82)", lineHeight: 1.45 }}>
+        <span style={{ fontSize: 14, fontFamily: "var(--sans)", color: "rgba(28,24,16,0.75)", lineHeight: 1.45 }}>
           {t('cta.checkbox_confirm')}
         </span>
       </label>
@@ -782,37 +443,26 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
   );
 }
 
-/* Inject CTA slider style + placeholder color */
+/* Inject CTA slider + checkbox styles */
 (function() {
   if (document.getElementById('_cta-slider-style')) return;
   const s = document.createElement('style');
   s.id = '_cta-slider-style';
   s.textContent = `
-    .cta-slider { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; outline: none; cursor: pointer; padding: 0; margin: 0; border: none; }
-    .cta-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, #D9A3B0 var(--pct, 0%), rgba(255,255,255,0.14) var(--pct, 0%)); }
-    .cta-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: #D9A3B0; box-shadow: 0 0 0 2px rgba(34,28,20,0.9), 0 2px 6px rgba(0,0,0,0.4); cursor: grab; }
-    .cta-slider:active::-webkit-slider-thumb { cursor: grabbing; }
-    .cta-slider::-moz-range-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.14); }
-    .cta-slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #D9A3B0; }
-    .cta-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: none; background: #D9A3B0; box-shadow: 0 0 0 2px rgba(34,28,20,0.9), 0 2px 6px rgba(0,0,0,0.4); cursor: grab; }
-    .cta-checkbox { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin: 0; flex-shrink: 0; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.25); cursor: pointer; position: relative; transition: background 120ms ease, border-color 120ms ease; }
-    .cta-checkbox:hover { border-color: rgba(217,163,176,0.6); }
-    .cta-checkbox:checked { background: #D9A3B0; border-color: #D9A3B0; }
-    .cta-checkbox:checked::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid #221C14; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    .cta-slider { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 40px; background: transparent; outline: none; cursor: pointer; padding: 0; margin: 0; border: none; }
+    .cta-slider::-webkit-slider-container { overflow: visible; }
+    .cta-slider::-webkit-slider-runnable-track { height: 10px; border-radius: 999px; background: linear-gradient(to right, rgba(94,34,48,0.38) var(--pct, 0%), var(--bg-2) var(--pct, 0%)); box-shadow: var(--sh-inset-crisp); }
+    .cta-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; margin-top: calc((8px - 20px) / 2); border-radius: 50%; background: linear-gradient(145deg, var(--wine-soft), var(--wine)); box-shadow: var(--sh-raised-crisp), 0 0 0 2px rgba(255,252,244,0.95); cursor: grab; transition: transform 100ms ease; }
+    .cta-slider:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.12); }
+    .cta-slider::-moz-range-track { height: 8px; border-radius: 999px; background: var(--bg-2); box-shadow: var(--sh-inset-crisp); }
+    .cta-slider::-moz-range-progress { height: 8px; border-radius: 999px; background: rgba(94,34,48,0.38); }
+    .cta-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; border: none; background: linear-gradient(145deg, var(--wine-soft), var(--wine)); box-shadow: var(--sh-raised-crisp), 0 0 0 2px rgba(255,252,244,0.95); cursor: grab; }
+    .cta-checkbox { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin: 0; flex-shrink: 0; border-radius: 4px; background: var(--bg); box-shadow: var(--sh-inset-crisp); cursor: pointer; position: relative; transition: background 120ms ease; }
+    .cta-checkbox:checked { background: var(--wine); }
+    .cta-checkbox:checked::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid #F4EFE3; border-width: 0 2px 2px 0; transform: rotate(45deg); }
   `;
   document.head.appendChild(s);
 })();
 
-/* Inject placeholder color once */
-(function() {
-  if (document.getElementById('_glass-field-style')) return;
-  const s = document.createElement('style');
-  s.id = '_glass-field-style';
-  s.textContent = '.glass-field::placeholder { color: rgba(244,239,227,0.55); opacity: 1; }';
-  document.head.appendChild(s);
-})();
 
 const ArrowSm = window.ArrowSm;
-
-/* Footer kept as a no-op so app-main's <Footer /> reference (if any) doesn't break. */
-function Footer() { return null; }

@@ -293,6 +293,8 @@ a { color: inherit; text-decoration: none; }
 .btn-neu:active { box-shadow: var(--sh-inset-crisp); transform: translateY(0); }
 .btn-wine { background: linear-gradient(145deg, #6E2638, #4B1A26); color: #F4EFE3; box-shadow: var(--sh-raised-medium); }
 .btn-wine:hover { box-shadow: var(--sh-raised-crisp); }
+.btn-wine:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-wine:disabled:hover { box-shadow: var(--sh-raised-medium); transform: none; }
 .btn-ghost { background: transparent; box-shadow: none; border: 1px solid var(--line); color: var(--ink); }
 .btn-ghost:hover { background: var(--glass-bg); box-shadow: none; transform: none; }
 
@@ -307,6 +309,21 @@ a { color: inherit; text-decoration: none; }
   font-family: var(--sans); font-size: 14px;
 }
 .neu-input::placeholder { color: var(--mute-2); }
+
+.neu-field {
+  background: linear-gradient(145deg, var(--bg-2), var(--paper));
+  box-shadow: var(--sh-inset-crisp);
+  border: none; outline: none;
+  color: var(--ink);
+  font-family: var(--sans); font-size: 14px;
+  transition: box-shadow 180ms ease;
+}
+.neu-field:focus {
+  box-shadow: var(--sh-inset-crisp);
+  outline: 2px solid var(--wine-glow);
+  outline-offset: 0;
+}
+.neu-field::placeholder { color: var(--mute-2); opacity: 1; }
 
 /* ----- Textures ----- */
 .tex-wood { position: relative; isolation: isolate; }

@@ -109,7 +109,7 @@ window.TRANSLATIONS.nl = {
     heading: "FAQ",
     items: [
       {
-        q: "Worden leads niet geïrriteerd als we terugkomen op een offerte van zes maanden geleden?",
+        q: "Worden leads niet geïrriteerd door een follow-up op een oude offerte?",
         a: "Alleen als het klinkt als een standaard salesbericht — en dat doet het niet. Elk bericht sluit aan op waar het eerdere gesprek stopte: hun project, hun ruimte, hun laatste vraag. Mensen sluiten de deur zelden echt; meestal stellen ze uit. Een doordacht bericht maanden later voelt vaak behulpzaam, niet opdringerig.",
       },
       {
@@ -127,6 +127,10 @@ window.TRANSLATIONS.nl = {
       {
         q: "Wat als onze database klein of rommelig is?",
         a: "We hebben ongeveer 150 eerdere aanvragen nodig om echt goed werk te kunnen doen. Minder dan dat geeft simpelweg te weinig volume om het de moeite waard te maken. Rommelig is prima: spreadsheets, exports, oude inboxen. Wij doen het leeswerk. Wat we niet kunnen doen is contacten terughalen die nooit opgeslagen zijn.",
+      },
+      {
+        q: "Moeten we beschikbaar zijn zodra een lead reageert?",
+        a: "Nee. Als een lead klaar is om verder te gaan, boekt die rechtstreeks in jullie agenda. Jullie bepalen zelf hoeveel plekken je openzet en wanneer. Sommige eigenaren houden twee of drie momenten per week vrij, anderen zetten er meer open in rustigere periodes. De AI houdt het gesprek warm totdat er een tijd is gevonden die past, en jullie ontvangen een gekwalificeerd gesprek, geen koude achtervolging.",
       },
     ],
   },

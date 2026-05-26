@@ -35,7 +35,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "wineIntensity": "subtle",
   "depthScale": 0.4,
   "logoVariant": "horizontal",
-  "lightAngle": 70,
+  "lightAngle": 60,
   "lightDistance": 100,
   "lightIntensity": 100,
   "textures": true,

@@ -110,7 +110,7 @@ window.TRANSLATIONS.en = {
     heading: "FAQ",
     items: [
       {
-        q: "Won't leads be annoyed to hear from us about a six-month-old quote?",
+        q: "Won't leads be annoyed by a follow-up on an old quote?",
         a: "Only if it sounds like a sales blast, and it won't. Every message picks up where the original thread left off: their project, their room, their last question. People rarely close the door, they postpone. A considered note months later usually lands as helpful, not pushy.",
       },
       {
@@ -128,6 +128,10 @@ window.TRANSLATIONS.en = {
       {
         q: "What if our database is small or messy?",
         a: "We need roughly 150 past enquiries to do meaningful work. Fewer than that and there isn't enough surface area to be worth the engagement. Messy is fine: spreadsheets, exports, archived inboxes. We do the reading. What we can't do is recover contacts that never existed.",
+      },
+      {
+        q: "Do we need to be available when a lead responds?",
+        a: "No. When a lead is ready to move forward, they book directly into your calendar. Your availability is entirely your own: you decide how many slots to open, and when. Some owners keep two or three spots a week, others open more during quieter periods. The AI holds the conversation warm until they find a time that works, and you show up to a pre-qualified call, not a cold chase.",
       },
     ],
   },
