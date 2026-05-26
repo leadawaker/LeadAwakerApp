@@ -343,7 +343,7 @@ function Approach() {
               <div style={{ paddingTop: isMobile ? 0 : 12 }}>
                 <p style={{ fontSize: isMobile ? 16 : 19, lineHeight: 1.55, color: "var(--ink-soft, #322B22)", fontWeight: 400, margin: "0 0 24px", maxWidth: 620 }}>
                   {t('approach.p1')}{" "}
-                  <span className="serif italic" style={{ color: "var(--wine)", fontSize: isMobile ? 18 : 22 }}>{t('approach.p1_italic')}</span>
+                  <span className="serif italic" style={{ color: "var(--wine)", fontSize: isMobile ? 16 : 19 }}>{t('approach.p1_italic')}</span>
                 </p>
                 <p style={{ fontSize: isMobile ? 14.5 : 15.5, lineHeight: 1.65, color: "var(--mute)", margin: 0, maxWidth: 620 }}>
                   {t('approach.p2')}

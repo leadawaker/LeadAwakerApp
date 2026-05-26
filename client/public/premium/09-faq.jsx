@@ -45,7 +45,7 @@ function FAQ() {
   const right = items.slice(3);
 
   return (
-    <section ref={sectionRef} id="enquiries" data-screen-label="05 Enquiries" style={isMobile ? { maxWidth: 1240, margin: "0 auto", padding: "64px 18px 84px" } : { maxWidth: 1240, margin: "0 auto", padding: "80px 48px 144px" }}>
+    <section ref={sectionRef} id="enquiries" data-screen-label="05 Enquiries" style={isMobile ? { maxWidth: 1240, margin: "0 auto", padding: "64px 18px 100px" } : { maxWidth: 1240, margin: "0 auto", padding: "80px 48px 176px" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: isMobile ? 28 : 48 }}>
         <h2 className="serif" style={{ margin: 0, textAlign: "center", fontSize: isMobile ? "clamp(30px, 8vw, 40px)" : "clamp(36px, 3.4vw, 52px)", lineHeight: 1.02, letterSpacing: "-0.02em", ...window.revealStyle(sectionInView, { delay: 0 }) }}>
           <span className="italic">{t('faq.heading')}</span>
