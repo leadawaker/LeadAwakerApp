@@ -40,7 +40,7 @@ window.TRANSLATIONS.en = {
     h2_italic: "They need more booked calls.",
     p1: "High-end home improvement runs on referral, reputation, and timing. The leads who matter most are already in your CRM.",
     p1_italic: "The work is in returning to them.",
-    p2: "Leadawaker is a managed studio. We study your past correspondence, write in your voice, and resume conversations on a slow, considered cadence. Your team is only involved when a lead is ready to talk to you.",
+    p2: "We handle the outreach entirely, studying your history with each lead, writing every message as you would, and timing contact around intent signals. You're involved when a lead is genuinely ready to move.",
   },
   process: {
     eyebrow: "Process",
