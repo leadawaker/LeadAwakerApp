@@ -39,7 +39,7 @@ function PainShapes({ converge, isMobile }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.0;
 
     const scene = new THREE.Scene();
     // Orthographic camera in pixel space: 1 world unit == 1 CSS pixel.
@@ -93,7 +93,7 @@ function PainShapes({ converge, isMobile }) {
       metalness: 0.0,
       clearcoat: 0.15,
       clearcoatRoughness: 0.5,
-      envMapIntensity: 0.9,
+      envMapIntensity: 0.55,
     });
     const torusMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color("#ecdebf"),
@@ -101,7 +101,7 @@ function PainShapes({ converge, isMobile }) {
       metalness: 0.0,
       clearcoat: 0.20,
       clearcoatRoughness: 0.45,
-      envMapIntensity: 0.95,
+      envMapIntensity: 0.6,
     });
 
     const meshes = shapes.map((s) => {
