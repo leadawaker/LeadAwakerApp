@@ -45,7 +45,6 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-
 /**
  * Trigger a short haptic feedback vibration (10ms) on mobile devices only.
  * Uses the Web Vibration API (navigator.vibrate). Gracefully degrades on
@@ -607,7 +606,7 @@ export function RightSidebar({
           {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "flex items-center shrink-0 mt-6 mb-6 h-10",
+              "flex items-center shrink-0 mt-12 mb-4 h-10",
               collapsed ? "px-1.5" : "px-2.5",
               collapsed ? "justify-center" : "justify-between"
             )}
@@ -631,7 +630,7 @@ export function RightSidebar({
           {/* NAV — categorized sections */}
           <TooltipProvider delayDuration={300}>
             <nav className={cn("flex-1 overflow-y-auto min-h-0 pb-2", collapsed ? "px-1.5" : "px-2.5")}>
-              {/* Section: (top — Campaigns) */}
+              {/* Campaigns */}
               {visibleNavItems.filter(it => it.labelKey === "Campaigns").map((it) => renderDesktopNavLink(it))}
 
               {/* Section: Engage */}

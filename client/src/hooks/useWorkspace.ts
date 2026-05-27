@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
+import { API_BASE } from "@/lib/apiUtils";
 
 const KEY = "leadawaker_current_account_id";
 /** Set when an agency user explicitly picks an account from the dropdown. Cleared on logout. */
@@ -18,6 +19,12 @@ export type Account = {
   [key: string]: unknown;
 };
 
+export type ImpersonationInfo = {
+  role: "Admin" | "Manager" | "Viewer";
+  accountId?: number;
+  sandbox: boolean;
+} | null;
+
 export type WorkspaceState = {
   currentAccountId: number;
   setCurrentAccountId: (id: number) => void;
@@ -25,13 +32,15 @@ export type WorkspaceState = {
   isAgencyView: boolean;
   accounts: Account[];
   isLoadingAccounts: boolean;
-  /** Current user's role from localStorage */
+  /** Current user's real role from localStorage */
   userRole: string;
+  /** Effective role: impersonated role if active, otherwise real role */
+  effectiveRole: string;
   /** Whether the current user is an Owner (top-tier admin) */
   isOwner: boolean;
-  /** Whether the current user is an Admin (includes Owner + Operator alias) */
+  /** Whether the effective role is Admin (includes Owner + Operator alias). Falls to false during client impersonation. */
   isAdmin: boolean;
-  /** Whether the current user is an agency user (Owner, Admin, or Operator) */
+  /** Whether the effective role is an agency user (Owner, Admin, or Operator) */
   isAgencyUser: boolean;
   /** Whether the current user can invite/remove other users */
   canInviteUsers: boolean;
@@ -43,9 +52,12 @@ export type WorkspaceState = {
   canSeeSystemAiKeys: boolean;
   /** Pages that the current user is allowed to see */
   allowedPages: string[];
-  /** Whether to show the Lead Awaker AI bot button in the topbar. True for Owner/Admin; false during
-   *  client impersonation (TODO Prompt 3: set to false when isImpersonatingClient is true). */
+  /** Whether to show the Lead Awaker AI bot button in the topbar. Hidden during client impersonation. */
   showLeadAwakerAi: boolean;
+  /** Whether Owner is currently impersonating another role */
+  isImpersonating: boolean;
+  /** The active impersonation details, or null */
+  impersonation: ImpersonationInfo;
 };
 
 /** Pages visible to client users (Manager/Agent/Viewer) — billing is admin+ only */
@@ -60,27 +72,53 @@ const ALL_PAGES = [
 export function useWorkspace(): WorkspaceState {
   const [location] = useLocation();
   const userRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  const isOwner = userRole === "Owner";
-  // isAdmin is true for Owner, Admin, Operator (Owner is a superset of Admin permissions on the client)
-  const isAdmin = isOwner || userRole === "Admin" || userRole === "Operator";
+  const isRealOwner = userRole === "Owner";
+
+  // Fetch /api/auth/me to get impersonation state (cached, stale after 30s)
+  const { data: meData } = useQuery<{ impersonation: ImpersonationInfo }>({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include" });
+      if (!res.ok) return { impersonation: null };
+      return res.json();
+    },
+    // Only fetch if the real user is an Owner (only Owners can impersonate)
+    enabled: isRealOwner,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const impersonation: ImpersonationInfo = (isRealOwner ? meData?.impersonation : null) ?? null;
+  const isImpersonating = Boolean(impersonation);
+
+  // The effective role drives all UI permission checks
+  const effectiveRole = impersonation ? impersonation.role : userRole;
+
+  const isOwner = isRealOwner && !isImpersonating;
+  // isAdmin true for Owner, Admin, Operator — but false when impersonating a client role
+  const isAdmin = effectiveRole === "Owner" || effectiveRole === "Admin" || effectiveRole === "Operator";
   const isAgencyUser = isAdmin;
   const canInviteUsers = isAdmin;
   const canHardDelete = isOwner;
   const canSeeExpenses = isOwner;
   const canSeeSystemAiKeys = isOwner;
-  // TODO Prompt 3: set to false when isImpersonatingClient flag is available from useWorkspace
+  // Hidden when impersonating a client (non-agency) role
   const showLeadAwakerAi = isAdmin;
 
-  const [currentAccountId, setCurrentAccountIdState] = useState<number>(() => {
+  const [currentAccountIdState, setCurrentAccountIdState] = useState<number>(() => {
     const raw = localStorage.getItem(KEY);
     const n = raw ? Number(raw) : NaN;
     const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
     const isAgency = role === "Owner" || role === "Admin" || role === "Operator";
     // Agency users default to 0 (all-accounts view) unless they've explicitly picked an account.
-    // This prevents stale localStorage values (e.g. set by old code) from defaulting to a subaccount.
     if (isAgency && !localStorage.getItem(SELECTED_KEY)) return 0;
     return Number.isFinite(n) && n >= 0 ? n : 0;
   });
+
+  // During client impersonation, override the account to the impersonated one
+  const currentAccountId = (impersonation?.accountId && !isAdmin)
+    ? impersonation.accountId
+    : currentAccountIdState;
 
   // Fetch accounts from real API (only for agency users)
   const { data: apiAccounts, isLoading: isLoadingAccounts } = useQuery<Account[]>({
@@ -109,12 +147,12 @@ export function useWorkspace(): WorkspaceState {
   useEffect(() => {
     if (!isAgencyUser) {
       const accountId = Number(localStorage.getItem(KEY)) || 1;
-      if (currentAccountId !== accountId) {
+      if (currentAccountIdState !== accountId) {
         setCurrentAccountIdState(accountId);
       }
     }
-    localStorage.setItem(KEY, String(currentAccountId));
-  }, [currentAccountId, isAgencyUser]);
+    localStorage.setItem(KEY, String(currentAccountIdState));
+  }, [currentAccountIdState, isAgencyUser]);
 
   const setCurrentAccountId = (id: number) => {
     if (isAgencyUser) {
@@ -126,11 +164,11 @@ export function useWorkspace(): WorkspaceState {
 
   // Force non-agency users away from 0 (all accounts)
   useEffect(() => {
-    if (!isAgencyUser && currentAccountId === 0) {
+    if (!isAgencyUser && currentAccountIdState === 0) {
       const fallback = Number(localStorage.getItem(KEY)) || 1;
       setCurrentAccountIdState(fallback > 0 ? fallback : 1);
     }
-  }, [isAgencyUser, currentAccountId]);
+  }, [isAgencyUser, currentAccountIdState]);
 
   const currentAccount = useMemo(() => {
     // 0 = "All Accounts" — no specific account selected
@@ -143,7 +181,7 @@ export function useWorkspace(): WorkspaceState {
       id: currentAccountId,
       name: localStorage.getItem("leadawaker_account_name") || "My Account",
     };
-  }, [currentAccountId, accountsList]);
+  }, [currentAccountId, accountsList, ownAccount]);
 
   // Agency view: reactive URL-based detection via wouter useLocation
   const isAgencyView = useMemo(() => {
@@ -160,6 +198,7 @@ export function useWorkspace(): WorkspaceState {
     accounts: accountsList,
     isLoadingAccounts,
     userRole,
+    effectiveRole,
     isOwner,
     isAdmin,
     isAgencyUser,
@@ -169,5 +208,7 @@ export function useWorkspace(): WorkspaceState {
     canSeeSystemAiKeys,
     allowedPages,
     showLeadAwakerAi,
+    isImpersonating,
+    impersonation,
   };
 }

@@ -63,7 +63,8 @@ export function DemoLinkButton({
   const [copied, setCopied] = useState(false);
 
   const campaignId = campaign.id || campaign.Id;
-  const demoLink = `https://t.me/Demo_Lead_Awaker_bot?start=campaign_${campaignId}`;
+  const botUsername = import.meta.env.VITE_TELEGRAM_DEMO_BOT_USERNAME || "Demo_Lead_Awaker_bot";
+  const demoLink = `https://t.me/${botUsername}?start=campaign_${campaignId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(demoLink);
@@ -80,20 +81,20 @@ export function DemoLinkButton({
       <button
         onClick={() => setOpen(true)}
         className={cn(xBase, "hover:max-w-[140px]", xDefault)}
-        title="Generate demo link for this campaign"
+        title="Generate Telegram demo link for this campaign"
       >
         <LinkIcon className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>Demo Link</span>
+        <span className={xSpan}>Telegram Link</span>
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Demo Campaign Link</DialogTitle>
+            <DialogTitle>Telegram Demo Link</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Share this link with prospects to start the demo:
+              Share this Telegram link — the bot asks for language and name on first message. No message cap.
             </p>
             <div className="flex items-center gap-2">
               <input

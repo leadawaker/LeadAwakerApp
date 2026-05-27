@@ -25,6 +25,10 @@
     "backend": "Backend",
     "agency": "Agentuur"
   },
+  "sidebarSubmenu": {
+    "summary": "Overzicht",
+    "configurations": "Instellingen"
+  },
   "topbar": {
     "search": "Zoeken",
     "searchPlaceholder": "Zoek leads op naam, telefoon, e-mail…",
@@ -42,7 +46,15 @@
     "allAccounts": "Alle Accounts",
     "switchAccount": "Account Wisselen",
     "myProfile": "Mijn Profiel",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "viewAs": "Bekijken als...",
+    "viewAsRole": "Rol",
+    "viewAsAdmin": "Admin",
+    "viewAsClientSandbox": "Klant (sandbox)",
+    "viewAsAccount": "Echt account",
+    "exitImpersonation": "Impersonatie beëindigen",
+    "impersonationBannerViewing": "Bekijken als {{role}}",
+    "impersonationBannerExit": "Afsluiten"
   },
   "search": {
     "leads": "Leads",

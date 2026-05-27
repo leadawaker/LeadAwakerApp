@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
 import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
 import { SettingsPanel } from "@/components/crm/SettingsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { ImpersonationBanner } from "@/components/crm/ImpersonationBanner";
 import { cn } from "@/lib/utils";
 import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun, Instagram, Facebook, Mail, Phone, ChevronDown, Sparkles, Tag, BarChart3 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
@@ -22,7 +23,7 @@ import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { currentAccount, currentAccountId } = useWorkspace();
+  const { currentAccount, currentAccountId, isImpersonating, impersonation } = useWorkspace();
   const { dockMode, dockWidth, isWideViewport, isOpen: agentOpen } = useAgentWidget();
   const dockActive = dockMode && isWideViewport && agentOpen;
 
@@ -158,21 +159,42 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     };
   }, [bumpColors]);
 
+  const BANNER_H = 28;
+
   return (
     <TopbarActionsProvider>
     <div
       className={cn("min-h-svh bg-background", isAgencyView && "agency-mode", isMobileMenuOpen && "mobile-scroll-lock")}
       data-testid="shell-crm"
       key={isAgencyView ? 'agency' : 'subaccount'}
-      style={pageAccent ? {
-        "--highlight-active": pageAccent.active,
-        "--highlight-selected": pageAccent.selected,
-      } as React.CSSProperties : undefined}
+      style={{
+        "--banner-h": isImpersonating ? `${BANNER_H}px` : "0px",
+        ...(pageAccent ? {
+          "--highlight-active": pageAccent.active,
+          "--highlight-selected": pageAccent.selected,
+        } : {}),
+      } as React.CSSProperties}
     >
       {/* Skip to main content link — visible only on keyboard focus for accessibility */}
       <a href="#main-content" className="sr-skip-link" data-testid="skip-to-main">
         Skip to main content
       </a>
+      {/* Impersonation banner — fixed above the topbar; pushes topbar + sidebar down via --banner-h */}
+      {isImpersonating && impersonation && (
+        <ImpersonationBanner
+          role={impersonation.role}
+          onStop={async () => {
+            try {
+              const { apiFetch } = await import("@/lib/apiUtils");
+              const { queryClient } = await import("@/lib/queryClient");
+              await apiFetch("/api/auth/impersonate/stop", { method: "POST" });
+              await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+            } catch (err) {
+              console.error("Failed to stop impersonation", err);
+            }
+          }}
+        />
+      )}
       <Topbar
         onOpenPanel={(p) => setActivePanel(p)}
         collapsed={collapsed}
@@ -180,7 +202,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
         onLogout={handleLogout}
       />
-      <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
+      <div className="fixed left-0 bottom-0 z-40" style={{ top: "var(--banner-h, 0px)" }} data-testid="wrap-left-nav">
         <RightSidebar
           collapsed={collapsed}
           onCollapse={handleCollapse}
@@ -243,7 +265,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           collapsed ? "md:pl-[56px]" : "md:pl-[200px]"
         )}
         style={{
-          paddingTop: "var(--topbar-h)",
+          paddingTop: "calc(var(--topbar-h) + var(--banner-h, 0px))",
           paddingBottom: "var(--bottombar-h)",
           paddingRight: (() => {
             if (!dockActive) return undefined;

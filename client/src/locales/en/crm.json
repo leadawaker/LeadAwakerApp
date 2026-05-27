@@ -25,6 +25,10 @@
     "backend": "Backend",
     "agency": "Agency"
   },
+  "sidebarSubmenu": {
+    "summary": "Summary",
+    "configurations": "Settings"
+  },
   "topbar": {
     "search": "Search",
     "searchPlaceholder": "Search leads by name, phone, email…",
@@ -42,7 +46,15 @@
     "allAccounts": "All Accounts",
     "switchAccount": "Switch Account",
     "myProfile": "My Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "viewAs": "View as...",
+    "viewAsRole": "Role",
+    "viewAsAdmin": "Admin",
+    "viewAsClientSandbox": "Client (sandbox)",
+    "viewAsAccount": "Real Account",
+    "exitImpersonation": "Exit impersonation",
+    "impersonationBannerViewing": "Viewing as {{role}}",
+    "impersonationBannerExit": "Exit"
   },
   "search": {
     "leads": "Leads",

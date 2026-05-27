@@ -1111,7 +1111,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     }
   }));
 
-  // POST /api/campaigns/:id/generate-demo — AI-fill all demo campaign fields from a niche
+  // POST /api/campaigns/:id/generate-demo — AI-fill demo campaign fields; preserves non-empty fields
   app.post("/api/campaigns/:id/generate-demo", requireAuth, wrapAsync(async (req, res) => {
     const campaignId = Number(req.params.id);
     const { niche } = req.body;
@@ -1124,28 +1124,46 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const ctx = await generateCampaignContext(niche.trim());
     if (!ctx) return res.status(500).json({ message: "Generation failed — check OPEN_AI_API_KEY" });
 
-    const patch = insertCampaignsSchema.partial().parse({
+    const isEmpty = (v: unknown) =>
+      v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+
+    // Metadata fields always written (non-content)
+    const basePatch: Record<string, unknown> = {
       name: `${ctx.niche_label.charAt(0).toUpperCase() + ctx.niche_label.slice(1)} Demo`,
-      companyName: ctx.company_name,
       niche: ctx.niche_label,
-      serviceName: ctx.service_name,
-      campaignUsp: ctx.usp,
-      description: ctx.business_description,
-      bookingModeOverride: ctx.booking_mode_call ? "call" : "direct",
-      whatLeadDid: ctx.what_lead_did,
-      nicheQuestion: ctx.niche_question,
-      agentName: ctx.agent_name,
-      firstMessage: ctx.first_message,
-      secondMessage: ctx.second_message,
-      bump1Template: ctx.bump_1_template,
-      bump2Template: ctx.bump_2_template,
       isDemo: true,
       language: "en",
-    });
+      bookingModeOverride: ctx.booking_mode_call ? "call" : "direct",
+      whatLeadDid: ctx.what_lead_did,
+    };
 
+    // Content fields: only fill if the campaign field is currently empty
+    const CONTENT_FIELDS: Array<{ patchKey: string; ctxValue: unknown; existingKey: string; displayName: string }> = [
+      { patchKey: "companyName",   ctxValue: ctx.company_name,         existingKey: "companyName",   displayName: "Company Name" },
+      { patchKey: "serviceName",   ctxValue: ctx.service_name,         existingKey: "serviceName",   displayName: "Service Name" },
+      { patchKey: "campaignUsp",   ctxValue: ctx.usp,                  existingKey: "campaignUsp",   displayName: "USP" },
+      { patchKey: "description",   ctxValue: ctx.business_description, existingKey: "description",   displayName: "Business Description" },
+      { patchKey: "nicheQuestion", ctxValue: ctx.niche_question,       existingKey: "nicheQuestion", displayName: "Niche Question" },
+      { patchKey: "agentName",     ctxValue: ctx.agent_name,           existingKey: "agentName",     displayName: "Agent Name" },
+      { patchKey: "firstMessage",  ctxValue: ctx.first_message,        existingKey: "firstMessage",  displayName: "First Message" },
+      { patchKey: "secondMessage", ctxValue: ctx.second_message,       existingKey: "secondMessage", displayName: "Second Message" },
+      { patchKey: "bump1Template", ctxValue: ctx.bump_1_template,      existingKey: "bump1Template", displayName: "Bump 1" },
+      { patchKey: "bump2Template", ctxValue: ctx.bump_2_template,      existingKey: "bump2Template", displayName: "Bump 2" },
+    ];
+
+    const filledFields: string[] = [];
+    const contentPatch: Record<string, unknown> = {};
+    for (const f of CONTENT_FIELDS) {
+      if (isEmpty((existing as any)[f.existingKey])) {
+        contentPatch[f.patchKey] = f.ctxValue;
+        filledFields.push(f.displayName);
+      }
+    }
+
+    const patch = insertCampaignsSchema.partial().parse({ ...basePatch, ...contentPatch });
     const updated = await storage.updateCampaign(campaignId, patch);
     if (!updated) return res.status(500).json({ message: "Failed to update campaign" });
-    res.json(toDbKeys(updated as any, campaigns));
+    res.json({ campaign: toDbKeys(updated as any, campaigns), filledFields });
   }));
 
   // ─── Leads ────────────────────────────────────────────────────────

@@ -50,8 +50,9 @@ export function CampaignBehaviorColumn({
   }
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 overflow-y-auto h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="@container bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-y-auto h-full">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 pb-3 bg-white/80 dark:bg-black/40 backdrop-blur-sm">
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground">Behavior</h3>
         <button
           onClick={onToggle}
@@ -62,7 +63,8 @@ export function CampaignBehaviorColumn({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6">
+      <div className="px-4 md:px-8 pb-4 md:pb-8">
+      <div className="grid grid-cols-1 @sm:grid-cols-2 gap-x-6">
         <InfoRow icon={Globe} label={t("config.language")} value={campaign.language}
           {...editFor("language")}
           editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["", "English", "Portuguese", "Dutch", "Spanish"]} {...focusFor("language")} /> : undefined}
@@ -296,6 +298,7 @@ export function CampaignBehaviorColumn({
           />
         )}
       </div>
+      </div>{/* end px wrapper */}
     </div>
   );
 }

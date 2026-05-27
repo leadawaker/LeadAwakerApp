@@ -76,9 +76,9 @@
   --brand-indian-yellow: 0 0% 100%;
   --brand-indian-yellow-foreground: 231 59% 18%;
   /* Highlight tokens — active/selected UI state colors */
-  --highlight-active: 53 100% 78%;   /* #FFF28D — active pill, nav, tab, bloom */
-  --highlight-selected: 51 100% 93%; /* #FFF9D9 — selected card, table row */
-  --highlight-hover: 236 100% 79%;   /* #949BFF — hover on already-highlighted element */
+  --highlight-active: 0 0% 96%;      /* #F5F5F5 — active pill, nav, tab, bloom */
+  --highlight-selected: 0 0% 100%;   /* #FFFFFF — selected card, table row */
+  --highlight-hover: 0 0% 93%;       /* #EDEDED — hover on already-highlighted element */
   /* Input field background — almost white */
   --input-bg: 0 0% 95%;             /* #F3F2F2 — form inputs, textareas, selects */
 

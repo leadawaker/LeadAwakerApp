@@ -19,6 +19,7 @@ import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 import { apiFetch } from "@/lib/apiUtils";
+import { queryClient } from "@/lib/queryClient";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import { NotificationCenter } from "@/components/crm/NotificationCenter";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
@@ -48,7 +49,7 @@ export function Topbar({
 }) {
   const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
-  const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount, showLeadAwakerAi } = useWorkspace();
+  const { isAgencyView, isAgencyUser, isOwner, currentAccountId, accounts, setCurrentAccountId, currentAccount, showLeadAwakerAi, isImpersonating, impersonation } = useWorkspace();
   const { crumb } = useBreadcrumb();
   const { isDark, toggleTheme } = useTheme();
   const { toggleWidget: toggleAiWidget } = useAgentWidget();
@@ -298,6 +299,29 @@ export function Topbar({
     setLocation(`${nextBase}${safeTail || "/dashboard"}`);
   };
 
+  // ── Impersonation ───────────────────────────────────────────────────────────
+  const handleImpersonate = async (role: string, accountId?: number) => {
+    try {
+      await apiFetch("/api/auth/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, accountId }),
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    } catch (err) {
+      console.error("Failed to start impersonation", err);
+    }
+  };
+
+  const handleStopImpersonation = async () => {
+    try {
+      await apiFetch("/api/auth/impersonate/stop", { method: "POST" });
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    } catch (err) {
+      console.error("Failed to stop impersonation", err);
+    }
+  };
+
   const currentUserName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_account_name") || "User";
   const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "";
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string>(() => localStorage.getItem("leadawaker_user_avatar") || "");
@@ -329,6 +353,8 @@ export function Topbar({
     userInitials,
     isAgencyUser,
     isAgencyView,
+    isOwner,
+    isImpersonating,
     currentAccountId,
     accounts,
     isDark,
@@ -340,14 +366,16 @@ export function Topbar({
     },
     onNavigateTasks: () => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/tasks`),
     onToggleSupport: () => setSupportOpen((v) => !v),
+    onImpersonate: handleImpersonate,
+    onStopImpersonation: handleStopImpersonation,
     onLogout,
   };
 
   return (
     <>
     <header
-      className="fixed top-0 left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:pl-4"
-      style={{ height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "4px" }}
+      className="fixed left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:pl-4"
+      style={{ top: "var(--banner-h, 0px)", height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "4px" }}
       data-testid="header-crm-topbar"
     >
       {/* ══ MOBILE TOP BAR (< 768px) ══

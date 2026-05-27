@@ -25,6 +25,10 @@
     "backend": "Backend",
     "agency": "Agência"
   },
+  "sidebarSubmenu": {
+    "summary": "Resumo",
+    "configurations": "Configurações"
+  },
   "topbar": {
     "search": "Buscar",
     "searchPlaceholder": "Buscar leads por nome, telefone, email…",

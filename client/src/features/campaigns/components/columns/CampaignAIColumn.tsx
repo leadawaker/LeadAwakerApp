@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
-  Clock, Bot, Mic, Send, Tag, Cpu, Thermometer, ChevronRight, ChevronLeft,
+  Clock, Bot, Mic, Send, Tag, Cpu, Thermometer, ChevronRight, ChevronLeft, MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -51,9 +51,10 @@ export function CampaignAIColumn({
   }
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 overflow-y-auto h-full" data-testid="campaign-detail-view-ai">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground pb-1">{t("config.aiSettings")}</h3>
+    <div className="@container bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-y-auto h-full" data-testid="campaign-detail-view-ai">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 pb-3 bg-white/80 dark:bg-black/40 backdrop-blur-sm">
+        <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("config.aiSettings")}</h3>
         <button
           onClick={onToggle}
           className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors text-foreground/40 hover:text-foreground -mr-1"
@@ -63,7 +64,8 @@ export function CampaignAIColumn({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6">
+      <div className="px-4 md:px-8 pb-4 md:pb-8">
+      <div className="grid grid-cols-1 @sm:grid-cols-2 gap-x-6">
 
         {/* First Message — full width */}
         <div className="col-span-2 space-y-1.5 py-3 min-h-[3.5rem] border-b border-border/20">
@@ -250,7 +252,13 @@ export function CampaignAIColumn({
           editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" {...focusFor("ai_temperature")} /> : undefined}
         />
 
+        <InfoRow icon={MapPin} label={t("config.inquiriesSource")} value={campaign.inquiries_source}
+          {...editFor("inquiries_source")}
+          editChild={isEditing ? <EditText value={String(draft.inquiries_source ?? "")} onChange={(v) => setDraft(d => ({...d, inquiries_source: v}))} placeholder="e.g. Contact form, landing page" {...focusFor("inquiries_source")} /> : undefined}
+        />
+
       </div>{/* end grid */}
+      </div>{/* end px wrapper */}
     </div>
   );
 }

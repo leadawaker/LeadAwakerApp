@@ -9,6 +9,22 @@ import { storage } from "./storage";
 import type { Express, Request, Response, NextFunction } from "express";
 import type { Users } from "@shared/schema";
 
+// ─── Session type augmentation ───────────────────────────────────────────────
+
+export type ImpersonationRole = "Admin" | "Manager" | "Viewer";
+
+export interface ImpersonationSession {
+  role: ImpersonationRole;
+  accountId?: number;
+  sandbox: boolean;
+}
+
+declare module "express-session" {
+  interface SessionData {
+    impersonation?: ImpersonationSession;
+  }
+}
+
 const scrypt = promisify(crypto.scrypt);
 
 // Extend Express.User to match our AppUser type
@@ -188,6 +204,12 @@ export function requireAdminOrOwner(req: Request, res: Response, next: NextFunct
 export function scopeToAccount(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
   const user = req.user!;
+  // Client impersonation: lock all data to the impersonated account
+  const imp = req.session?.impersonation;
+  if (imp?.accountId) {
+    (req as any).forcedAccountId = imp.accountId;
+    return next();
+  }
   // Agency can pass ?accountId= freely; subaccounts are locked to their own
   if (user.accountsId !== 1) {
     (req as any).forcedAccountId = user.accountsId;
@@ -224,6 +246,21 @@ function checkAcceptInviteRateLimit(ip: string): boolean {
   attempts.push(now);
   acceptInviteAttempts.set(ip, attempts);
   return true;
+}
+
+// ─── Sandbox account helper ──────────────────────────────────────────────────
+
+/** Find an existing sandbox account or create one. Idempotent — one sandbox per system. */
+async function getOrCreateSandboxAccount(): Promise<number> {
+  const allAccounts = await storage.getAccounts();
+  const existing = allAccounts.find((a) => a.type === "sandbox");
+  if (existing && existing.id) return existing.id;
+  const created = await storage.createAccount({
+    name: "Sandbox Client",
+    type: "sandbox",
+    status: "Active",
+  } as any);
+  return created.id!;
 }
 
 // ─── Auth Route Handlers (mounted by registerRoutes) ────────────────────────
@@ -263,10 +300,47 @@ export function registerAuthRoutes(app: Express) {
     });
   });
 
-  /** GET /api/auth/me — returns session user or 401 */
+  /** GET /api/auth/me — returns session user or 401, plus active impersonation state */
   app.get("/api/auth/me", requireAuth, (req, res) => {
     const { passwordHash: _, ...safeUser } = req.user!;
-    res.json({ user: safeUser });
+    res.json({ user: safeUser, impersonation: req.session.impersonation ?? null });
+  });
+
+  /** POST /api/auth/impersonate — Owner starts impersonating a role/account */
+  app.post("/api/auth/impersonate", requireOwner, async (req, res) => {
+    try {
+      const { role, accountId } = req.body as { role?: string; accountId?: number };
+      const validRoles: ImpersonationRole[] = ["Admin", "Manager", "Viewer"];
+      if (!role || !validRoles.includes(role as ImpersonationRole)) {
+        return res.status(400).json({ message: "Invalid role. Must be Admin, Manager, or Viewer." });
+      }
+      const isClientRole = role === "Manager" || role === "Viewer";
+      let resolvedAccountId: number | undefined;
+      let sandbox = false;
+      if (isClientRole) {
+        if (accountId) {
+          resolvedAccountId = accountId;
+        } else {
+          resolvedAccountId = await getOrCreateSandboxAccount();
+          sandbox = true;
+        }
+      }
+      req.session.impersonation = {
+        role: role as ImpersonationRole,
+        accountId: resolvedAccountId,
+        sandbox,
+      };
+      res.json({ impersonation: req.session.impersonation });
+    } catch (err: any) {
+      console.error("Error starting impersonation:", err);
+      res.status(500).json({ message: "Failed to start impersonation" });
+    }
+  });
+
+  /** POST /api/auth/impersonate/stop — Owner ends impersonation */
+  app.post("/api/auth/impersonate/stop", requireOwner, (req, res) => {
+    delete req.session.impersonation;
+    res.json({ message: "Impersonation stopped" });
   });
 
   /** POST /api/auth/change-password — change password with current password verification */

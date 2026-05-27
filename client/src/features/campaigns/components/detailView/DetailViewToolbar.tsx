@@ -4,9 +4,11 @@ import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import type { Campaign } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { useCampaignDetail } from "../useCampaignDetail";
-import { WhatsAppDemoLinkButton } from "./atoms";
+import { WhatsAppDemoLinkButton, DemoLinkButton } from "./atoms";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiUtils";
+import { xBase, xDefault, xSpan } from "./constants";
 
 interface DetailViewToolbarProps {
   detail: ReturnType<typeof useCampaignDetail>;
@@ -51,7 +53,7 @@ export function DetailViewToolbar({
     setGenerating(true);
     try {
       const id = campaign.id || (campaign as any).Id;
-      const res = await fetch(`/api/campaigns/${id}/generate-demo`, {
+      const res = await apiFetch(`/api/campaigns/${id}/generate-demo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ niche: niche.trim() }),
@@ -60,10 +62,16 @@ export function DetailViewToolbar({
         const err = await res.json().catch(() => ({}));
         throw new Error((err as any).message || "Generation failed");
       }
+      const data = await res.json();
+      const filledFields: string[] = data.filledFields ?? [];
       setPopoverOpen(false);
       setNiche("");
       onRefresh?.();
-      toast({ title: "Campaign generated", description: `Fields filled for "${niche.trim()}"` });
+      if (filledFields.length === 0) {
+        toast({ title: "Nothing to fill", description: "All fields already have values — clear them first to regenerate." });
+      } else {
+        toast({ title: "Fields filled", description: filledFields.join(", ") });
+      }
     } catch (err: any) {
       toast({ title: "Generation failed", description: err.message, variant: "destructive" });
     } finally {
@@ -99,37 +107,40 @@ export function DetailViewToolbar({
         )}
 
         <WhatsAppDemoLinkButton campaign={campaign} />
+        <DemoLinkButton campaign={campaign} />
 
-        {/* Generate demo campaign fields */}
-        <Popover open={popoverOpen} onOpenChange={(v) => { setPopoverOpen(v); if (v) setTimeout(() => inputRef.current?.focus(), 50); }}>
-          <PopoverTrigger asChild>
-            <button className="h-9 px-3 rounded-full border border-black/[0.125] flex items-center gap-1.5 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:border-black/[0.2] transition-colors shrink-0">
-              <Sparkles className="h-3.5 w-3.5" />
-              Generate
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-72 p-3">
-            <p className="text-[11px] text-muted-foreground mb-2">Type a niche and AI will fill all campaign fields.</p>
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                value={niche}
-                onChange={e => setNiche(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") handleGenerate(); }}
-                placeholder="e.g. dental clinic, solar, gym"
-                className="flex-1 h-8 rounded-md border border-black/[0.125] bg-background px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
-              />
-              <button
-                onClick={handleGenerate}
-                disabled={!niche.trim() || generating}
-                className="h-8 px-3 rounded-md bg-brand-indigo text-white text-[12px] font-semibold disabled:opacity-50 hover:bg-brand-indigo/90 transition-colors flex items-center gap-1.5 shrink-0"
-              >
-                {generating ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                {generating ? "..." : "Generate"}
+        {/* Generate — configurations tab only; fills only empty fields */}
+        {activeTab === "configurations" && (
+          <Popover open={popoverOpen} onOpenChange={(v) => { setPopoverOpen(v); if (v) setTimeout(() => inputRef.current?.focus(), 50); }}>
+            <PopoverTrigger asChild>
+              <button className={cn(xBase, "hover:max-w-[110px]", xDefault)}>
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Generate</span>
               </button>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-3">
+              <p className="text-[11px] text-muted-foreground mb-2">Type a niche and AI fills only the empty fields.</p>
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  value={niche}
+                  onChange={e => setNiche(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleGenerate(); }}
+                  placeholder="e.g. dental clinic, solar, gym"
+                  className="flex-1 h-8 rounded-md border border-black/[0.125] bg-background px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                />
+                <button
+                  onClick={handleGenerate}
+                  disabled={!niche.trim() || generating}
+                  className="h-8 w-8 rounded-full bg-brand-indigo text-white disabled:opacity-50 hover:bg-brand-indigo/90 transition-colors flex items-center justify-center shrink-0"
+                  title="Generate"
+                >
+                  {generating ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
       </>
     </div>
   );

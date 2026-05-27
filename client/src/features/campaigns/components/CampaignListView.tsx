@@ -21,7 +21,6 @@ import {
   Copy,
   Trash2,
   Palette,
-  Link as LinkIcon,
   PauseCircle,
   PlayCircle,
 } from "lucide-react";
@@ -1302,17 +1301,13 @@ export function CampaignListView({
                   {t("toolbar.duplicate", "Duplicate")}
                 </DropdownMenuItem>
               )}
-              {selectedCampaign && (
+              {onShowDemoCampaignsChange && (
                 <DropdownMenuItem
-                  onClick={() => {
-                    const cid = selectedCampaign.id || selectedCampaign.Id;
-                    const link = `https://t.me/Demo_Lead_Awaker_bot?start=campaign_${cid}`;
-                    navigator.clipboard.writeText(link);
-                  }}
+                  onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }}
                   className="flex items-center gap-2 text-[12px]"
                 >
-                  <LinkIcon className="h-3.5 w-3.5 shrink-0" />
-                  {t("toolbar.copyDemoLink", "Copy Demo Link")}
+                  <span className={cn("flex-1", showDemoCampaigns && "text-brand-indigo font-semibold")}>{t("config.showDemoCampaigns")}</span>
+                  {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
