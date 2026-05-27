@@ -90,6 +90,36 @@ function App() {
 
   const { TweaksPanel, TweakSection, TweakSlider, TweakToggle, TweakSelect } = window;
 
+  // CTA texture controls — state lives in CTABgDebug, bridged via window + event
+  const [ctaBg, setCtaBg] = React.useState(() => window.__ctaBgAdj || null);
+  React.useEffect(() => {
+    const handler = (e) => setCtaBg({ ...e.detail });
+    window.addEventListener('ctaBgChange', handler);
+    return () => window.removeEventListener('ctaBgChange', handler);
+  }, []);
+  const updateCtaBg = (field, val) => {
+    const next = { ...ctaBg, [field]: val };
+    setCtaBg(next);
+    if (window.__ctaBgUpdate) window.__ctaBgUpdate(next);
+  };
+
+  // Hero image controls — state lives in NicheImageDebug, bridged via window + event
+  const [heroState, setHeroState] = React.useState(() =>
+    window.__heroNiche ? { niche: window.__heroNiche, adjustments: window.__heroAdjustments } : null
+  );
+  React.useEffect(() => {
+    const handler = (e) => setHeroState({ ...e.detail });
+    window.addEventListener('heroAdjChange', handler);
+    return () => window.removeEventListener('heroAdjChange', handler);
+  }, []);
+  const HERO_DEFAULTS = { scale: 1, tx: 0, ty: 0, rot: 0 };
+  const heroAdj = heroState
+    ? { ...HERO_DEFAULTS, ...(heroState.adjustments?.[heroState.niche] || {}) }
+    : null;
+  const updateHeroAdj = (field, val) => {
+    if (window.__heroUpdate && heroState) window.__heroUpdate(heroState.niche, field, val);
+  };
+
   const TITLE_FONT_OPTIONS = [
     { value: "Instrument Serif",   label: "Instrument Serif" },
     { value: "Cormorant Garamond", label: "Cormorant Garamond" },
@@ -173,6 +203,23 @@ function App() {
             options={TITLE_FONT_OPTIONS}
             onChange={(v) => setTweak("displayFont", v)} />
         </TweakSection>
+        {ctaBg && <TweakSection label="CTA Texture">
+          <TweakSlider label="Scale"      value={ctaBg.scale}      min={0.1} max={4}    step={0.05} unit="×"  onChange={(v) => updateCtaBg('scale', v)} />
+          <TweakSlider label="X"          value={ctaBg.tx}         min={-100} max={100} step={1}    unit="%"  onChange={(v) => updateCtaBg('tx', v)} />
+          <TweakSlider label="Y"          value={ctaBg.ty}         min={-100} max={100} step={1}    unit="%"  onChange={(v) => updateCtaBg('ty', v)} />
+          <TweakSlider label="Rotate"     value={ctaBg.rot}        min={0}   max={360}  step={1}    unit="°"  onChange={(v) => updateCtaBg('rot', v)} />
+          <TweakSlider label="Brightness" value={ctaBg.brightness} min={0}   max={2}    step={0.05}           onChange={(v) => updateCtaBg('brightness', v)} />
+          <TweakSlider label="Crop top"   value={ctaBg.cropTop}    min={0}   max={80}   step={1}    unit="%"  onChange={(v) => updateCtaBg('cropTop', v)} />
+          <TweakSlider label="Crop tilt"  value={ctaBg.cropTilt}   min={-30} max={30}   step={1}    unit="°"  onChange={(v) => updateCtaBg('cropTilt', v)} />
+          <TweakToggle label="Flip X"     value={ctaBg.flipX}  onChange={(v) => updateCtaBg('flipX', v)} />
+          <TweakToggle label="Flip Y"     value={ctaBg.flipY}  onChange={(v) => updateCtaBg('flipY', v)} />
+        </TweakSection>}
+        {heroAdj && <TweakSection label={`Hero Image · ${heroState.niche}`}>
+          <TweakSlider label="Scale"  value={heroAdj.scale} min={0.1} max={3}    step={0.05} unit="×"  onChange={(v) => updateHeroAdj('scale', v)} />
+          <TweakSlider label="X"      value={heroAdj.tx}    min={-200} max={200} step={1}    unit="%"  onChange={(v) => updateHeroAdj('tx', v)} />
+          <TweakSlider label="Y"      value={heroAdj.ty}    min={-200} max={200} step={1}    unit="%"  onChange={(v) => updateHeroAdj('ty', v)} />
+          <TweakSlider label="Rotate" value={heroAdj.rot}   min={0}   max={360}  step={1}    unit="°"  onChange={(v) => updateHeroAdj('rot', v)} />
+        </TweakSection>}
       </TweaksPanel>}
     </I18nProvider>);
 }

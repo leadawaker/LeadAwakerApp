@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, BookOpen, Instagram, Facebook, Mail, Phone, BarChart3, Sparkles, Tag } from "lucide-react";
+import { ChevronDown, BookOpen, Instagram, Facebook, Mail, Phone, BarChart3, Sparkles, Tag, Headphones } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,10 @@ const TOPBAR_HELP_UPDATES: HelpUpdate[] = [
 
 export interface TopbarHelpProps {
   onNavigateDocs: () => void;
+  onOpenSupport: () => void;
 }
 
-export function TopbarHelp({ onNavigateDocs }: TopbarHelpProps) {
+export function TopbarHelp({ onNavigateDocs, onOpenSupport }: TopbarHelpProps) {
   const { t } = useTranslation("crm");
   const [helpSocialOpen, setHelpSocialOpen] = useState(false);
   const [helpWhatsNewOpen, setHelpWhatsNewOpen] = useState(false);
@@ -53,6 +54,14 @@ export function TopbarHelp({ onNavigateDocs }: TopbarHelpProps) {
           </TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-black/[0.08] bg-white dark:bg-popover mt-2">
+          <DropdownMenuItem
+            className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 focus:bg-transparent focus:text-blue-500 transition-colors"
+            onClick={onOpenSupport}
+          >
+            <Headphones className="h-4 w-4" />
+            {t("topbar.customerSupport")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 focus:bg-transparent focus:text-blue-500 transition-colors"
             onClick={onNavigateDocs}

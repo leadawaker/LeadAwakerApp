@@ -47,6 +47,7 @@ import { SkeletonCampaignPanel } from "@/components/ui/skeleton";
 import { getInitials, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { SearchPill } from "@/components/ui/search-pill";
 import { Search } from "lucide-react";
 import {
@@ -338,8 +339,6 @@ interface CampaignFilterBottomSheetProps {
   onSortByChange: (v: CampaignSortBy) => void;
   filterStatus: string[];
   onFilterStatusSet: (v: string[]) => void;
-  showDemoCampaigns: boolean;
-  onShowDemoCampaignsChange: (v: boolean) => void;
   onReset: () => void;
 }
 
@@ -350,8 +349,6 @@ function CampaignFilterBottomSheet({
   onSortByChange,
   filterStatus,
   onFilterStatusSet,
-  showDemoCampaigns,
-  onShowDemoCampaignsChange,
   onReset,
 }: CampaignFilterBottomSheetProps) {
   const { t } = useTranslation("campaigns");
@@ -361,17 +358,15 @@ function CampaignFilterBottomSheet({
   // Pending state — only commits when Apply is pressed
   const [pendingSortBy, setPendingSortBy] = useState<CampaignSortBy>(sortBy);
   const [pendingStatus, setPendingStatus] = useState<string[]>([...filterStatus]);
-  const [pendingDemo, setPendingDemo] = useState(showDemoCampaigns);
 
   // Sync pending state when sheet opens
   useEffect(() => {
     if (open) {
       setPendingSortBy(sortBy);
       setPendingStatus([...filterStatus]);
-      setPendingDemo(showDemoCampaigns);
       setExpandedSection(null);
     }
-  }, [open, sortBy, filterStatus, showDemoCampaigns]);
+  }, [open, sortBy, filterStatus]);
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
@@ -388,19 +383,17 @@ function CampaignFilterBottomSheet({
   const handleApply = () => {
     onSortByChange(pendingSortBy);
     onFilterStatusSet(pendingStatus);
-    onShowDemoCampaignsChange(pendingDemo);
     onClose();
   };
 
   const handleReset = () => {
     setPendingSortBy("recent");
     setPendingStatus([]);
-    setPendingDemo(false);
     onReset();
     onClose();
   };
 
-  const isModified = pendingStatus.length > 0 || pendingSortBy !== "recent" || pendingDemo;
+  const isModified = pendingStatus.length > 0 || pendingSortBy !== "recent";
 
   return createPortal(
     <AnimatePresence>
@@ -534,38 +527,6 @@ function CampaignFilterBottomSheet({
               </div>
 
               {/* Type section — collapsible */}
-              <div className="rounded-2xl overflow-hidden border border-border/40">
-                <button
-                  onClick={() => toggleSection("type")}
-                  className="w-full flex items-center justify-between min-h-[48px] px-4 bg-card text-foreground/80 hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Settings2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-[13px] font-semibold">{t("filter.type", "Type")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {pendingDemo && (
-                      <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
-                    )}
-                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expandedSection === "type" && "rotate-180")} />
-                  </div>
-                </button>
-                {expandedSection === "type" && (
-                  <div className="px-2 pb-2 space-y-1 bg-card border-t border-border/30">
-                    <button
-                      onClick={() => setPendingDemo(!pendingDemo)}
-                      className={cn(
-                        "w-full flex items-center gap-3 min-h-[44px] px-4 rounded-xl text-[14px] font-medium transition-colors",
-                        pendingDemo ? "bg-brand-indigo/10 text-brand-indigo" : "text-foreground/80 hover:bg-muted"
-                      )}
-                    >
-                      <span className="flex-1 text-left">{t("config.showDemoCampaigns")}</span>
-                      {pendingDemo && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                    </button>
-                  </div>
-                )}
-              </div>
-
             </div>
 
             {/* Footer: Reset + Apply */}
@@ -673,6 +634,7 @@ export function CampaignListView({
   onDelete,
 }: CampaignListViewProps) {
   const { t } = useTranslation("campaigns");
+  const { label: deleteLabel } = useDeleteAction("campaign");
   const isMobile768 = useIsMobile(768);
   const isNarrow = useIsMobile(1024);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -977,7 +939,7 @@ export function CampaignListView({
                       <span className="flex-1">{t("toolbar.filter")}</span>
                       {isFilterActive && (
                         <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                          {filterStatus.length + (filterAccount ? 1 : 0) + (showDemoCampaigns ? 1 : 0)}
+                          {filterStatus.length + (filterAccount ? 1 : 0)}
                         </span>
                       )}
                     </DropdownMenuSubTrigger>
@@ -1020,12 +982,6 @@ export function CampaignListView({
                           </DropdownMenuSubContent>
                         </DropdownMenuSub>
                       )}
-                      {onShowDemoCampaignsChange && (
-                        <DropdownMenuItem onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }} className="flex items-center gap-2 text-[12px]">
-                          <span className="flex-1">{t("config.showDemoCampaigns")}</span>
-                          {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                        </DropdownMenuItem>
-                      )}
                       {isFilterActive && (
                         <>
                           <DropdownMenuSeparator />
@@ -1066,6 +1022,16 @@ export function CampaignListView({
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
+
+                  {onShowDemoCampaignsChange && (
+                    <DropdownMenuItem
+                      onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }}
+                      className="flex items-center gap-2 text-[12px]"
+                    >
+                      <span className={cn("flex-1", showDemoCampaigns && "text-brand-indigo font-semibold")}>{t("config.showDemoCampaigns")}</span>
+                      {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuSeparator />
 
@@ -1140,7 +1106,7 @@ export function CampaignListView({
               <span>{t("toolbar.filter")}</span>
               {(isFilterActive || isSortNonDefault) && (
                 <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">
-                  {filterStatus.length + (isSortNonDefault ? 1 : 0) + (showDemoCampaigns ? 1 : 0)}
+                  {filterStatus.length + (isSortNonDefault ? 1 : 0)}
                 </span>
               )}
             </button>
@@ -1207,23 +1173,6 @@ export function CampaignListView({
                         {filterAccount === a && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </DropdownMenuItem>
                     ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              )}
-
-              {onShowDemoCampaignsChange && (
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="text-[12px]">
-                    <span className="flex-1">{t("filter.type", "Type")}</span>
-                    {showDemoCampaigns && (
-                      <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
-                    )}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-44 bg-white">
-                    <DropdownMenuItem onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }} className="flex items-center gap-2 text-[12px]">
-                      <span className={cn("flex-1", showDemoCampaigns && "font-bold text-brand-indigo")}>{t("config.showDemoCampaigns")}</span>
-                      {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               )}
@@ -1389,7 +1338,7 @@ export function CampaignListView({
                     className="flex items-center gap-2 text-[12px] text-red-500 focus:text-red-500"
                   >
                     <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                    {t("toolbar.delete", "Delete")}
+                    {deleteLabel}
                   </DropdownMenuItem>
                 </>
               )}
@@ -1494,8 +1443,6 @@ export function CampaignListView({
           toAdd.forEach((s) => onToggleFilterStatus(s));
           toRemove.forEach((s) => onToggleFilterStatus(s));
         })}
-        showDemoCampaigns={showDemoCampaigns ?? false}
-        onShowDemoCampaignsChange={onShowDemoCampaignsChange ?? (() => {})}
         onReset={onResetControls}
       />
 

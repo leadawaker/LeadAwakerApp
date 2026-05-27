@@ -48,7 +48,7 @@ export function Topbar({
 }) {
   const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
-  const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount } = useWorkspace();
+  const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount, showLeadAwakerAi } = useWorkspace();
   const { crumb } = useBreadcrumb();
   const { isDark, toggleTheme } = useTheme();
   const { toggleWidget: toggleAiWidget } = useAgentWidget();
@@ -346,8 +346,8 @@ export function Topbar({
   return (
     <>
     <header
-      className="fixed top-0 left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:pl-6"
-      style={{ height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "7px" }}
+      className="fixed top-0 left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:pl-4"
+      style={{ height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "4px" }}
       data-testid="header-crm-topbar"
     >
       {/* ══ MOBILE TOP BAR (< 768px) ══
@@ -414,8 +414,8 @@ export function Topbar({
 
       {/* ── Branding (desktop only) ── */}
       <div className="hidden md:flex items-center gap-2.5 shrink-0 mr-4">
-        <a href="/" className="shrink-0">
-          <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-7 w-7" />
+        <a href="/" className="shrink-0 -ml-0">
+          <img src="/premium/favicon.svg" alt="Lead Awaker" className="h-7 w-7" />
         </a>
         <span className="font-heading font-bold text-xl text-foreground tracking-tight whitespace-nowrap">
           Lead Awaker
@@ -438,7 +438,7 @@ export function Topbar({
                 className={cn("flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1", currentAccountId === 0 && "font-semibold")}
               >
                 <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-brand-yellow text-brand-yellow-foreground">
-                  <img src="/6. Favicon.svg" alt="" className="h-3.5 w-3.5" />
+                  <img src="/premium/favicon.svg" alt="" className="h-3.5 w-3.5" />
                 </div>
                 <span className="text-sm truncate flex-1">{t("topbar.allAccounts")}</span>
                 {currentAccountId === 0 && <Check className="h-3 w-3 text-muted-foreground shrink-0" />}
@@ -544,59 +544,61 @@ export function Topbar({
             </Tooltip>
           </span>
 
-          {/* Customer Support Chat — hidden on mobile */}
-          <span className="hidden md:contents">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="relative">
-                  <IconBtn
-                    onClick={() => setSupportOpen((v) => !v)}
-                    data-testid="button-support-chat"
-                    data-onboarding="topbar-support"
-                    aria-label={`Customer Support${supportUnreadCount > 0 ? ` (${supportUnreadCount} unread)` : ""}`}
-                  >
-                    <Headphones className="h-4 w-4" />
-                  </IconBtn>
-                  {supportUnreadCount > 0 && (
-                    <div
-                      className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-background pointer-events-none"
-                      data-testid="badge-support-count"
-                      aria-hidden="true"
-                    >
-                      <span className="text-[9px] font-bold text-white">{supportUnreadCount > 9 ? "9+" : supportUnreadCount}</span>
-                    </div>
-                  )}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                {t("topbar.customerSupport")}
-              </TooltipContent>
-            </Tooltip>
-          </span>
-
-          {/* AI Agent — agency users only, hidden on mobile */}
+          {/* AI Agent / Tom support — agency users only, hidden on mobile.
+              Shows Bot when showLeadAwakerAi is true; falls back to Tom headphones
+              when Lead Awaker AI is hidden (e.g. client impersonation — see Prompt 3). */}
           {isAgencyUser && (
             <span className="hidden md:contents">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <IconBtn
-                    onClick={toggleAiWidget}
-                    data-testid="button-ai-agent"
-                    aria-label="AI Agent"
-                  >
-                    <Bot className="h-4 w-4" />
-                  </IconBtn>
-                </TooltipTrigger>
-                <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                  AI Agent
-                </TooltipContent>
-              </Tooltip>
+              {showLeadAwakerAi ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <IconBtn
+                      onClick={toggleAiWidget}
+                      data-testid="button-ai-agent"
+                      aria-label="AI Agent"
+                    >
+                      <Bot className="h-4 w-4" />
+                    </IconBtn>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                    AI Agent
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <IconBtn
+                        onClick={() => setSupportOpen((v) => !v)}
+                        data-testid="button-support-chat"
+                        data-onboarding="topbar-support"
+                        aria-label={`Customer Support${supportUnreadCount > 0 ? ` (${supportUnreadCount} unread)` : ""}`}
+                      >
+                        <Headphones className="h-4 w-4" />
+                      </IconBtn>
+                      {supportUnreadCount > 0 && (
+                        <div
+                          className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-background pointer-events-none"
+                          data-testid="badge-support-count"
+                          aria-hidden="true"
+                        >
+                          <span className="text-[9px] font-bold text-white">{supportUnreadCount > 9 ? "9+" : supportUnreadCount}</span>
+                        </div>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                    {t("topbar.customerSupport")}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </span>
           )}
 
           {/* Help — hidden on mobile */}
           <TopbarHelp
             onNavigateDocs={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/docs`)}
+            onOpenSupport={() => setSupportOpen((v) => !v)}
           />
 
           {/* ── Notifications ── */}
@@ -648,10 +650,10 @@ export function Topbar({
       {/* Right gutter — aligns buttons with leads detail panel edge on ultra-wide screens.
           Formula: max(20px, 50vw - Xpx) mirrors the leads panel max-w centering:
           sidebar + leads-max-w(1729) + pr-5(20) = transition point → point/2 - 20 = X
-          Expanded: (225+1729+20)/2 - 20 = 967   Collapsed: (56+1729+20)/2 - 20 = 882.5 */}
+          Expanded: (200+1729+20)/2 - 20 = 954.5   Collapsed: (56+1729+20)/2 - 20 = 882.5 */}
       <div
-        className="hidden md:block shrink-0 grow-0 transition-[flex-basis] duration-200"
-        style={{ flexBasis: collapsed ? "max(20px, calc(50vw - 882.5px))" : "max(20px, calc(50vw - 967px))" }}
+        className="hidden md:block shrink-0 grow-0 transition-[flex-basis] duration-150"
+        style={{ flexBasis: collapsed ? "max(20px, calc(50vw - 882.5px))" : "max(20px, calc(50vw - 954.5px))" }}
       />
 
     </header>

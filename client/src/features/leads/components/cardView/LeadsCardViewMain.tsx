@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import {
   useCompactPanelState,
   useCompactHoverCard,
@@ -130,6 +131,7 @@ export function LeadsCardView({
   campaignsById,
 }: LeadsCardViewProps) {
   const { t } = useTranslation("leads");
+  const { label: deleteLabel } = useDeleteAction("lead");
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
   const isNarrow = useIsMobile(1024);
@@ -1005,7 +1007,7 @@ export function LeadsCardView({
                         className="flex-1 h-12 rounded-2xl bg-red-500 text-white text-[15px] font-semibold disabled:opacity-60"
                         data-testid="quick-delete-confirm"
                       >
-                        {quickActionBusy ? "Deleting…" : "Delete"}
+                        {quickActionBusy ? "…" : deleteLabel}
                       </button>
                     </div>
                   </div>

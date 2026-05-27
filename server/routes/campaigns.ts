@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { storage, paginatedQuery } from "../storage";
-import { requireAuth, requireAgency, scopeToAccount } from "../auth";
+import { requireAuth, requireAgency, requireOwner, scopeToAccount } from "../auth";
+import { canDeleteHard } from "../permissions";
 import {
   campaigns,
   interactions,
@@ -271,20 +272,44 @@ export function registerCampaignsRoutes(app: Express): void {
   }));
 
   app.delete("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
-    const existing = await storage.getCampaignById(Number(req.params.id));
+    const id = Number(req.params.id);
+    const existing = await storage.getCampaignById(id);
     if (!existing) return res.status(404).json({ message: "Campaign not found" });
-    // Subaccount users can only delete their own campaigns
     if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    // Auto-delete associated prompts before removing the campaign
-    try {
-      await storage.deletePromptsByCampaignId(Number(req.params.id));
-    } catch (err) {
-      console.error("Failed to delete prompts for campaign", req.params.id, err);
+
+    // Internal API key (Python automations) keeps legacy hard-delete behavior.
+    const internalKey = req.headers["x-internal-key"] as string | undefined;
+    const wantsHardDelete = !!internalKey || canDeleteHard(req.user);
+
+    if (!wantsHardDelete) {
+      const updated = await storage.updateCampaign(id, { status: "Archived" } as any);
+      if (!updated) return res.status(404).json({ message: "Campaign not found" });
+      return res.status(204).end();
     }
 
-    const ok = await storage.deleteCampaign(Number(req.params.id));
+    try {
+      await storage.deletePromptsByCampaignId(id);
+    } catch (err) {
+      console.error("Failed to delete prompts for campaign", id, err);
+    }
+    const ok = await storage.deleteCampaign(id);
+    if (!ok) return res.status(404).json({ message: "Campaign not found" });
+    res.status(204).end();
+  }));
+
+  // Owner-only hard purge — used from the Archived view to permanently delete.
+  app.post("/api/campaigns/:id/purge", requireOwner, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getCampaignById(id);
+    if (!existing) return res.status(404).json({ message: "Campaign not found" });
+    try {
+      await storage.deletePromptsByCampaignId(id);
+    } catch (err) {
+      console.error("Failed to delete prompts for campaign", id, err);
+    }
+    const ok = await storage.deleteCampaign(id);
     if (!ok) return res.status(404).json({ message: "Campaign not found" });
     res.status(204).end();
   }));

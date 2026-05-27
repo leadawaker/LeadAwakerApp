@@ -36,5 +36,11 @@
     "founderPrefill": "Oi Gabriel, gostaria de saber mais sobre a Lead Awaker.",
     "ariaOpen": "Abrir menu de contato WhatsApp",
     "ariaClose": "Fechar menu de contato WhatsApp"
+  },
+  "deleteAction": {
+    "archive": "Arquivar",
+    "delete": "Excluir",
+    "confirmArchive": "Arquivar este(a) {{entity}}? Ficará oculto das visualizações ativas, mas pode ser restaurado depois.",
+    "confirmDelete": "Excluir este(a) {{entity}} permanentemente? Essa ação não pode ser desfeita."
   }
 }

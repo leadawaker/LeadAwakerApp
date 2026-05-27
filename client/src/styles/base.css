@@ -1,0 +1,115 @@
+@layer base {
+  * {
+    @apply border-border;
+    cursor: auto;
+  }
+  body {
+    @apply bg-background font-sans antialiased text-foreground;
+  }
+  button,
+  [role="button"],
+  .cursor-pointer,
+  a,
+  input[type="submit"],
+  input[type="button"],
+  button *,
+  .cursor-pointer * {
+    cursor: pointer !important;
+  }
+
+  /* Final override to ensure no arrow appears on buttons */
+  button:hover,
+  [role="button"]:hover,
+  .cursor-pointer:hover {
+    cursor: pointer !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight;
+  }
+
+  /* ── Global Focus-Visible Styles ──
+     Consistent visible focus indicators for keyboard navigation (accessibility).
+     Uses :focus-visible so mouse clicks don't show the ring, only keyboard Tab.
+     These act as a safety net for elements not covered by shadcn/Tailwind ring classes. */
+
+  /* All interactive elements get a consistent focus ring */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible:not([tabindex="-1"]) {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 4px);
+  }
+
+  /* Skip-navigation link for keyboard users (hidden until focused) */
+  .sr-skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border: 2px solid hsl(var(--ring));
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 150ms ease;
+  }
+  .sr-skip-link:focus {
+    top: 1rem;
+  }
+
+  /* Sidebar focus ring: use brand-blue (sidebar is now light) */
+  [data-sidebar-focus] a:focus-visible,
+  [data-sidebar-focus] button:focus-visible,
+  [data-sidebar-focus] [role="button"]:focus-visible {
+    outline-color: hsl(var(--ring));
+  }
+}
+
+/* ── Responsive zoom — scale down on tablet/small screens ──
+   Viewport-unit classes (h-svh, h-screen, etc.) are overridden because
+   CSS zoom does not affect vh/svh calculations — they still reference the
+   physical viewport. Compensating with (100svh / zoom) fills the screen. */
+@media (max-width: 1366px) {
+  html { zoom: 0.8; }
+  .h-svh, .h-screen { height: calc(100svh / 0.8) !important; }
+  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.8) !important; }
+}
+@media (max-width: 1024px) {
+  html { zoom: 0.8; }
+  .h-svh, .h-screen { height: calc(100svh / 0.8) !important; }
+  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.8) !important; }
+}
+@media (max-width: 820px) {
+  html { zoom: 0.75; }
+  .h-svh, .h-screen { height: calc(100svh / 0.75) !important; }
+  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.75) !important; }
+}
+
+/* Scroll fade: fades last 24px of scrollable content to transparent */
+.scroll-fade-bottom {
+  mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+}
+
+/* Falling pattern animation — smooth vertical descent */
+@keyframes fall {
+  0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 0 600px, 0 700px, 0 800px, 0 650px, 0 750px; }
+}
+
+/* Aurora background animation */
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}

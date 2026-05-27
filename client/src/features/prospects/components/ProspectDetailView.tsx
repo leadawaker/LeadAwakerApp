@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { EmailComposeModal } from "./EmailComposeModal";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { cn } from "@/lib/utils";
 import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
 import { useTranslation } from "react-i18next";
@@ -324,6 +325,7 @@ interface ProspectDetailViewProps {
 
 export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, onBack }: ProspectDetailViewProps) {
   const { t } = useTranslation("prospects");
+  const { label: deleteLabel } = useDeleteAction("prospect");
   const isMobile = useIsMobile();
   const status = String(prospect.status || "New");
   const priority = String(prospect.priority || "Medium");
@@ -586,7 +588,7 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
               >
                 <Trash2 className="h-4 w-4 shrink-0" />
                 <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  {deleteConfirm ? t("detail.confirm") : t("toolbar.delete")}
+                  {deleteConfirm ? t("detail.confirm") : deleteLabel}
                 </span>
               </button>
             </div>

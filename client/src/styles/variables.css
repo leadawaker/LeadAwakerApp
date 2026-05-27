@@ -1,0 +1,179 @@
+/* LIGHT MODE - Brand Colors derived from Lead Awaker */
+:root {
+  /* Safe-area insets for notched/bar devices (iOS, Android) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --topbar-h: calc(50px + var(--safe-top));
+  --bottombar-h: calc(64px + var(--safe-bottom));
+
+  /* Warm Bone Design System — floating cards aesthetic */
+  --background: 40 32% 89%; /* #ECE6DA — warm bone page bg, sidebar, topbar (seamless base) */
+  --foreground: 0 0% 20%; /* Near black — high contrast on warm bone */
+  --bg-main: 40 32% 89%; /* Match background */
+
+  --card: 40 50% 97%; /* warm off-white — two shades brighter than bg */
+  --card-foreground: 0 0% 12%;
+  --card-hover: 40 60% 99%; /* warm near-white hover on cards */
+
+  --popover: 0 0% 100%; /* White — popovers/dropdowns elevated above cards */
+  --popover-foreground: 0 0% 12%;
+
+  /* Primary Brand Color: Brand Indigo */
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: Medium gray */
+  --secondary: 0 0% 93%;
+  --secondary-foreground: 0 0% 15%;
+
+  /* Muted — outer list cards / secondary panels (warm off-white, slightly brighter than bg) */
+  --muted: 40 38% 95%;
+  --muted-foreground: 0 0% 38%;
+
+  /* Accent: Warm yellow (#FFEA80) */
+  --accent: 50 100% 75%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Toast semantic colors */
+  --success: 228 100% 68%;
+  --success-foreground: 0 0% 100%;
+  --info: 243 75% 59%;
+  --info-foreground: 0 0% 100%;
+
+  --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
+  --input: 0 0% 93%; /* Same as muted for inputs */
+  --ring: 0 0% 20%;
+
+  --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
+
+  /* Chart colors (light mode) — brand-aligned */
+  --chart-1: 243 75% 59%;    /* Brand Indigo */
+  --chart-2: 160 60% 45%;    /* Teal */
+  --chart-3: 44 98% 50%;     /* Brand Yellow */
+  --chart-4: 280 65% 55%;    /* Purple */
+  --chart-5: 0 72% 55%;      /* Red */
+
+  /* ── Brand Tokens (Light Mode) ── */
+  /* Brand Indigo — primary actions, buttons, links */
+  --brand-blue: 243 75% 59%;
+  --brand-blue-foreground: 0 0% 100%;
+  /* Deep Blue: #131B49 — sidebar, headers, strong emphasis */
+  --brand-deep-blue: 231 59% 18%;
+  --brand-deep-blue-foreground: 0 0% 100%;
+  /* Brand Yellow: #FFDF3D — Call Booked highlights, success accents */
+  --brand-yellow: 50 100% 62%;
+  --brand-yellow-foreground: 231 59% 18%;
+  /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
+  --brand-soft-yellow: 43 97% 63%;
+  --brand-soft-yellow-foreground: 231 59% 18%;
+  /* Brand Indigo — merged with brand-blue */
+  --brand-indigo: 243 75% 59%;
+  --brand-indigo-foreground: 0 0% 100%;
+  /* Indian Yellow: #FFFFFF — source for UI highlight tints */
+  --brand-indian-yellow: 0 0% 100%;
+  --brand-indian-yellow-foreground: 231 59% 18%;
+  /* Highlight tokens — active/selected UI state colors */
+  --highlight-active: 53 100% 78%;   /* #FFF28D — active pill, nav, tab, bloom */
+  --highlight-selected: 51 100% 93%; /* #FFF9D9 — selected card, table row */
+  --highlight-hover: 236 100% 79%;   /* #949BFF — hover on already-highlighted element */
+  /* Input field background — almost white */
+  --input-bg: 0 0% 95%;             /* #F3F2F2 — form inputs, textareas, selects */
+
+  /* Sidebar tokens (light mode) — sidebar now blends with page background */
+  --sidebar-bg: 40 26% 85%; /* Slightly darker warm bone — sidebar contrast layer */
+  --sidebar-foreground: 0 0% 25%; /* Dark text readable on light sidebar */
+  --sidebar-active: 243 75% 59%;
+  --sidebar-active-foreground: 0 0% 100%;
+}
+
+/* DARK MODE — Deep navy-indigo surfaces with proper elevation hierarchy */
+.dark {
+  /* Base surfaces — #131E30 background, stepped elevation via lightness */
+  --background: 217 43% 13%;       /* #131E30 — main page bg */
+  --foreground: 0 0% 100%;         /* #FFFFFF — primary text */
+  --bg-main: 217 43% 13%;          /* Match background */
+
+  /* Cards — #243249 elevated surface */
+  --card: 217 34% 21%;             /* #243249 — floating cards */
+  --card-foreground: 0 0% 100%;
+  --card-hover: 225 26% 32%;       /* #3D4868 — hover tint on cards */
+
+  /* Popovers — #232B38 slightly above background */
+  --popover: 217 23% 18%;          /* #232B38 — dropdowns, popovers */
+  --popover-foreground: 0 0% 100%;
+
+  /* Primary: Brand Indigo — brighter for dark bg legibility */
+  --primary: 243 85% 68%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: subtle navy surface */
+  --secondary: 215 44% 17%;
+  --secondary-foreground: 0 0% 95%;
+
+  /* Muted — #18283E navy dark surface */
+  --muted: 215 44% 17%;            /* #18283E */
+  --muted-foreground: 225 23% 59%; /* #7E8AAE */
+
+  /* Accent: warmer gold adjusted for dark */
+  --accent: 38 90% 58%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive: lighter red on dark for readability */
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Toast semantic colors (dark mode) */
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --info: 243 85% 68%;
+  --info-foreground: 0 0% 100%;
+
+  /* Borders: visible on dark surfaces */
+  --border: 237 21% 59%;           /* #8183AC */
+  --input: 237 21% 59%;
+  --ring: 0 0% 80%;
+
+  /* Chart colors adjusted for dark */
+  --chart-1: 230 80% 65%;
+  --chart-2: 160 60% 50%;
+  --chart-3: 38 90% 58%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 0 72% 55%;
+
+  /* ── Brand Tokens (Dark Mode) ── */
+  --brand-blue: 243 85% 68%;
+  --brand-blue-foreground: 0 0% 100%;
+  --brand-deep-blue: 217 43% 13%;
+  --brand-deep-blue-foreground: 223 20% 93%;
+  --brand-yellow: 44 98% 55%;
+  --brand-yellow-foreground: 218 41% 12%;
+  --brand-soft-yellow: 43 97% 65%;
+  --brand-soft-yellow-foreground: 218 41% 12%;
+  /* Brand Indigo (dark mode) */
+  --brand-indigo: 243 85% 68%;
+  --brand-indigo-foreground: 0 0% 100%;
+  /* Indian Yellow (dark mode) */
+  --brand-indian-yellow: 35 60% 52%;
+  --brand-indian-yellow-foreground: 0 0% 100%;
+  /* Highlight tokens (dark) */
+  --highlight-active: 40 50% 24%;   /* Deep warm amber — active pill/tab */
+  --highlight-selected: 40 55% 30%; /* 25% brighter amber — selected card/row */
+  --highlight-hover: 243 40% 36%;   /* Indigo-tinted — hover on highlighted */
+  /* Input field background — #232E4D */
+  --input-bg: 224 38% 22%;
+
+  /* Sidebar tokens (dark mode) — deeper than background */
+  --sidebar-bg: 217 45% 9%;
+  --sidebar-foreground: 0 0% 90%;
+  --sidebar-active: 243 85% 68%;
+  --sidebar-active-foreground: 0 0% 100%;
+}
+
+/* Agency mode: unified Brand Indigo — no swap */
+.agency-mode {
+  --brand-blue: 243 75% 59%;
+  --brand-blue-foreground: 0 0% 100%;
+}

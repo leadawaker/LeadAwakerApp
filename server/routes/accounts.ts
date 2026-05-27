@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { storage, paginatedQuery } from "../storage";
-import { requireAuth, requireAgency } from "../auth";
+import { requireAuth, requireAgency, requireOwner } from "../auth";
+import { canDeleteHard, canManageUser, isOwner } from "../permissions";
 import {
   accounts,
   prospects,
@@ -887,7 +888,25 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
   }));
 
   app.delete("/api/prospects/:id", requireAgency, wrapAsync(async (req, res) => {
-    const ok = await storage.deleteProspect(Number(req.params.id));
+    const id = Number(req.params.id);
+
+    const internalKey = req.headers["x-internal-key"] as string | undefined;
+    const wantsHardDelete = !!internalKey || canDeleteHard(req.user);
+
+    if (!wantsHardDelete) {
+      const updated = await storage.updateProspect(id, { status: "Archived" } as any);
+      if (!updated) return res.status(404).json({ message: "Prospect not found" });
+      return res.status(204).end();
+    }
+
+    const ok = await storage.deleteProspect(id);
+    if (!ok) return res.status(404).json({ message: "Prospect not found" });
+    res.status(204).end();
+  }));
+
+  app.post("/api/prospects/:id/purge", requireOwner, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const ok = await storage.deleteProspect(id);
     if (!ok) return res.status(404).json({ message: "Prospect not found" });
     res.status(204).end();
   }));
@@ -932,18 +951,31 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
   app.get("/api/users", requireAuth, wrapAsync(async (req, res) => {
     const sessionUser = req.user!;
     const allUsers = await storage.getAppUsers();
-    // Agency users (Admin/Operator on account 1) see all users;
+    // Agency users (Owner/Admin/Operator on account 1) see all users;
     // sub-account users only see users from their own account.
-    const isAgency = sessionUser.accountsId === 1 || sessionUser.role === "Admin";
-    const data = isAgency
+    const isAgency =
+      sessionUser.accountsId === 1 ||
+      sessionUser.role === "Owner" ||
+      sessionUser.role === "Admin" ||
+      sessionUser.role === "Operator";
+    let data = isAgency
       ? allUsers
       : allUsers.filter((u: any) => u.accountsId === sessionUser.accountsId);
+    // Admins must not see Owner-role users — keeps Finn from being able to act on Gabriel.
+    if (!isOwner(sessionUser)) {
+      data = data.filter((u: any) => u.role !== "Owner");
+    }
     res.json(data);
   }));
 
   app.get("/api/users/:id", requireAuth, wrapAsync(async (req, res) => {
+    const sessionUser = req.user!;
     const user = await storage.getAppUserById(Number(req.params.id));
     if (!user) return res.status(404).json({ message: "User not found" });
+    // Hide Owner-role users from non-Owners.
+    if (user.role === "Owner" && !isOwner(sessionUser)) {
+      return res.status(404).json({ message: "User not found" });
+    }
     // Never expose password hash
     const { passwordHash: _, ...safeUser } = user;
     res.json(safeUser);
@@ -953,15 +985,30 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
     try {
       const sessionUser = req.user!;
       const targetId = Number(req.params.id);
-      if (sessionUser.role !== "Admin" && sessionUser.id !== targetId) {
+      const target = await storage.getAppUserById(targetId);
+      if (!target) return res.status(404).json({ message: "User not found" });
+
+      const isAdminRole =
+        sessionUser.role === "Owner" ||
+        sessionUser.role === "Admin" ||
+        sessionUser.role === "Operator";
+
+      // Self-edit OR admin-grade actor managing a non-Owner target.
+      const selfEdit = sessionUser.id === targetId;
+      if (!selfEdit && !canManageUser(sessionUser, target)) {
         return res.status(403).json({ message: "Forbidden" });
       }
+
       const rawBody = { ...req.body };
-      if (sessionUser.role !== "Admin") {
+      if (!isAdminRole) {
         delete rawBody.role;
         delete rawBody.status;
         delete rawBody.accountsId;
         delete rawBody.Accounts_id;
+      }
+      // Only Owners can promote a user to Owner.
+      if (rawBody.role === "Owner" && !isOwner(sessionUser)) {
+        return res.status(403).json({ message: "Only an Owner can grant Owner role" });
       }
       const parsed = insertUsersSchema.partial().safeParse(fromDbKeys(rawBody, users));
       if (!parsed.success) return handleZodError(res, parsed.error);

@@ -14,6 +14,7 @@ import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { ProspectsInlineTable } from "../components/ProspectsInlineTable";
 import type { ProspectTableItem } from "../components/ProspectsInlineTable";
 import { ProspectListView } from "../components/ProspectListView";
@@ -251,6 +252,7 @@ function FilterAccordionSection({
 
 export default function ProspectsPage() {
   const { t } = useTranslation("prospects");
+  const { label: deleteLabel } = useDeleteAction("prospect");
   const { currentAccountId } = useWorkspace();
 
   const TABLE_COL_META = TABLE_COL_META_KEYS.map((c) => ({
@@ -1042,7 +1044,7 @@ export default function ProspectsPage() {
             </DropdownMenu>
 
             <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateProspects} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
-            <ConfirmToolbarButton icon={Trash2} label={t("toolbar.delete")} onConfirm={handleBulkDeleteProspects} variant="danger" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
+            <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteProspects} variant="danger" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
 
             {/* Count badge with dismiss */}
             <button

@@ -1,0 +1,104 @@
+/* ── Card entrance stagger — lightweight fade+slide for left-panel lists ────── */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-enter {
+  animation: card-enter 0.35s ease-out both;
+}
+
+/* ── Status dot pulse — subtle glow ring for active/hot lead statuses ────────── */
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%       { box-shadow: 0 0 0 3px transparent; opacity: 0.6; }
+}
+.animate-status-pulse {
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+
+/* ── Fade-only entrance — safe for virtualized lists (no transform conflict) ── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.22s ease-out both;
+}
+
+/* ── Chat bubble entrance — fade+slide from side ────── */
+@keyframes bubble-enter-left {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes bubble-enter-right {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-bubble-left {
+  animation: bubble-enter-left 0.2s ease-out both;
+}
+.animate-bubble-right {
+  animation: bubble-enter-right 0.2s ease-out both;
+}
+.bubble-shadow {
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+}
+.dark .bubble-shadow {
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.50));
+}
+
+/* ── Detail panel slide-up — smooth entrance when selecting a new card ── */
+@keyframes panel-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-panel-slide-up {
+  animation: panel-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Mobile chat panel slide-in from right ── */
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.animate-slide-in-from-right {
+  animation: slide-in-from-right 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Mobile chat panel slide-out to right (back navigation) ── */
+@keyframes slide-out-to-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+.animate-slide-out-to-right {
+  animation: slide-out-to-right 0.28s cubic-bezier(0.55, 0, 0.78, 0) both;
+}
+
+/* ── Calendar pill pop-in — scale+fade for booking pills in grid ────── */
+@keyframes pill-pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-pill-pop {
+  animation: pill-pop 0.2s ease-out both;
+}
+
+@keyframes twinkle-fast {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes twinkle-fast-offset-1 {
+  0%, 100% { opacity: 0.70; }
+  50% { opacity: 0.88; }
+}
+
+@keyframes twinkle-fast-offset-2 {
+  0%, 100% { opacity: 0.68; }
+  50% { opacity: 0.86; }
+}
+
+@keyframes parallax-shift-slow {
+  0%, 100% { background-position: 0 0; }
+  100% { background-position: 450px 0; }
+}

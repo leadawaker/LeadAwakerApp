@@ -38,7 +38,7 @@ function isAuthed() {
  */
 function isAgencyUser(): boolean {
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  return role === "Admin" || role === "Operator";
+  return role === "Owner" || role === "Admin" || role === "Operator";
 }
 
 function Protected({ children }: { children: ReactElement }) {

@@ -83,7 +83,7 @@ export function setupAuth(app: Express) {
       { usernameField: "email" },
       async (email, password, done) => {
         try {
-          const user = await storage.getAppUserByEmail(email);
+          const user = await storage.getAppUserByEmail(resolveLoginEmail(email));
           if (!user || !user.passwordHash) {
             return done(null, false, { message: "Invalid email or password" });
           }
@@ -123,6 +123,15 @@ export function setupAuth(app: Express) {
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "";
 
+// Login email aliases — alternate addresses that resolve to a canonical account.
+const EMAIL_ALIASES: Record<string, string> = {
+  "gabriel@leadawaker.com": "leadawaker@gmail.com",
+};
+function resolveLoginEmail(email: string): string {
+  const lower = email.toLowerCase().trim();
+  return EMAIL_ALIASES[lower] ?? lower;
+}
+
 function isValidInternalKey(key: string | undefined): boolean {
   if (!INTERNAL_API_KEY || !key) return false;
   const a = Buffer.from(key);
@@ -140,15 +149,37 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Unauthorized" });
 }
 
-/** Only the agency account (accountsId === 1) or Admin role can access this route. */
+/** Owner, Admin, Operator, or anyone on the agency account (accountsId === 1). */
 export function requireAgency(req: Request, res: Response, next: NextFunction) {
   // Internal API key = agency-level access
   const key = req.headers["x-internal-key"] as string | undefined;
   if (isValidInternalKey(key)) return next();
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
   const user = req.user!;
-  if (user.accountsId !== 1 && user.role !== "Admin") {
+  const agencyRole = user.role === "Owner" || user.role === "Admin" || user.role === "Operator";
+  if (user.accountsId !== 1 && !agencyRole) {
     return res.status(403).json({ message: "Agency access required" });
+  }
+  next();
+}
+
+/** Owner role only. No internal-key bypass — Owner actions are always interactive. */
+export function requireOwner(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+  if (req.user!.role !== "Owner") {
+    return res.status(403).json({ message: "Owner access required" });
+  }
+  next();
+}
+
+/** Owner or Admin (or Operator, the legacy alias). */
+export function requireAdminOrOwner(req: Request, res: Response, next: NextFunction) {
+  const key = req.headers["x-internal-key"] as string | undefined;
+  if (isValidInternalKey(key)) return next();
+  if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+  const role = req.user!.role;
+  if (role !== "Owner" && role !== "Admin" && role !== "Operator") {
+    return res.status(403).json({ message: "Admin or Owner access required" });
   }
   next();
 }

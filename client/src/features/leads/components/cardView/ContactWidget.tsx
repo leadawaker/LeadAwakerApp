@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { resolveColor } from "@/features/tags/types";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { updateLead } from "../../api/leadsApi";
@@ -84,6 +85,7 @@ export function ContactWidget({
   isAgencyUser?: boolean;
 }) {
   const { t } = useTranslation("leads");
+  const { label: deleteLabel } = useDeleteAction("lead");
   const leadId      = getLeadId(lead);
   const phone       = lead.phone || lead.Phone || "";
   const email       = lead.email || lead.Email || "";
@@ -456,7 +458,7 @@ export function ContactWidget({
               className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600"
             >
               <Trash2 className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("detailView.delete")}</span>
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{deleteLabel}</span>
             </button>
           )}
         </div>

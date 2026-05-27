@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import {
@@ -173,6 +174,7 @@ function ConfirmToolbarButton({
 
 export function LeadsTable() {
   const { t } = useTranslation("leads");
+  const { label: deleteLabel } = useDeleteAction("lead");
   const VIEW_TABS: TabDef[] = useMemo(() => VIEW_TAB_KEYS.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t]);
   const { currentAccountId, isAgencyView } = useWorkspace();
   const filterAccountId = currentAccountId > 0 ? currentAccountId : undefined;
@@ -1128,7 +1130,7 @@ export function LeadsTable() {
             />
             <ConfirmToolbarButton
               icon={Trash2}
-              label="Delete"
+              label={deleteLabel}
               onConfirm={handleBulkDeleteLeads}
               variant="danger"
             />

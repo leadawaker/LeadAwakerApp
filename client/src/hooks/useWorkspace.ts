@@ -27,34 +27,55 @@ export type WorkspaceState = {
   isLoadingAccounts: boolean;
   /** Current user's role from localStorage */
   userRole: string;
-  /** Whether the current user is an Admin */
+  /** Whether the current user is an Owner (top-tier admin) */
+  isOwner: boolean;
+  /** Whether the current user is an Admin (includes Owner + Operator alias) */
   isAdmin: boolean;
-  /** Whether the current user is an agency user (Admin or Operator) */
+  /** Whether the current user is an agency user (Owner, Admin, or Operator) */
   isAgencyUser: boolean;
+  /** Whether the current user can invite/remove other users */
+  canInviteUsers: boolean;
+  /** Whether the current user can hard-delete rows (Owner only) */
+  canHardDelete: boolean;
+  /** Whether the current user can see the expenses page (Owner only). Page wiring is TODO. */
+  canSeeExpenses: boolean;
+  /** Whether the current user can edit system-default AI keys (Owner only). UI wiring is TODO. */
+  canSeeSystemAiKeys: boolean;
   /** Pages that the current user is allowed to see */
   allowedPages: string[];
+  /** Whether to show the Lead Awaker AI bot button in the topbar. True for Owner/Admin; false during
+   *  client impersonation (TODO Prompt 3: set to false when isImpersonatingClient is true). */
+  showLeadAwakerAi: boolean;
 };
 
-/** Pages visible to client users (Manager/Viewer) */
+/** Pages visible to client users (Manager/Agent/Viewer) — billing is admin+ only */
 const CLIENT_PAGES = ["contacts", "leads", "campaigns", "conversations", "calendar"];
-/** All pages (for agency users: Admin/Operator) */
+/** All pages (for agency users: Owner/Admin/Operator) */
 const ALL_PAGES = [
   "contacts", "leads", "campaigns", "conversations",
   "calendar", "accounts", "tags", "prompt-library", "users",
-  "automation-logs", "settings",
+  "automation-logs", "settings", "billing",
 ];
 
 export function useWorkspace(): WorkspaceState {
   const [location] = useLocation();
   const userRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  const isAdmin = userRole === "Admin";
-  const isAgencyUser = userRole === "Admin" || userRole === "Operator";
+  const isOwner = userRole === "Owner";
+  // isAdmin is true for Owner, Admin, Operator (Owner is a superset of Admin permissions on the client)
+  const isAdmin = isOwner || userRole === "Admin" || userRole === "Operator";
+  const isAgencyUser = isAdmin;
+  const canInviteUsers = isAdmin;
+  const canHardDelete = isOwner;
+  const canSeeExpenses = isOwner;
+  const canSeeSystemAiKeys = isOwner;
+  // TODO Prompt 3: set to false when isImpersonatingClient flag is available from useWorkspace
+  const showLeadAwakerAi = isAdmin;
 
   const [currentAccountId, setCurrentAccountIdState] = useState<number>(() => {
     const raw = localStorage.getItem(KEY);
     const n = raw ? Number(raw) : NaN;
     const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-    const isAgency = role === "Admin" || role === "Operator";
+    const isAgency = role === "Owner" || role === "Admin" || role === "Operator";
     // Agency users default to 0 (all-accounts view) unless they've explicitly picked an account.
     // This prevents stale localStorage values (e.g. set by old code) from defaulting to a subaccount.
     if (isAgency && !localStorage.getItem(SELECTED_KEY)) return 0;
@@ -139,8 +160,14 @@ export function useWorkspace(): WorkspaceState {
     accounts: accountsList,
     isLoadingAccounts,
     userRole,
+    isOwner,
     isAdmin,
     isAgencyUser,
+    canInviteUsers,
+    canHardDelete,
+    canSeeExpenses,
+    canSeeSystemAiKeys,
     allowedPages,
+    showLeadAwakerAi,
   };
 }

@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { storage, paginatedQuery } from "../storage";
-import { requireAuth, requireAgency, scopeToAccount } from "../auth";
+import { requireAuth, requireAgency, requireOwner, scopeToAccount } from "../auth";
+import { canDeleteHard } from "../permissions";
 import {
   leads,
   interactions,
@@ -156,13 +157,30 @@ export function registerLeadsRoutes(app: Express): void {
   }));
 
   app.delete("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
-    const existing = await storage.getLeadById(Number(req.params.id));
+    const id = Number(req.params.id);
+    const existing = await storage.getLeadById(id);
     if (!existing) return res.status(404).json({ message: "Lead not found" });
-    // Subaccount users can only delete their own leads
     if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    const ok = await storage.deleteLead(Number(req.params.id));
+
+    const internalKey = req.headers["x-internal-key"] as string | undefined;
+    const wantsHardDelete = !!internalKey || canDeleteHard(req.user);
+
+    if (!wantsHardDelete) {
+      const updated = await storage.updateLead(id, { status: "Archived" } as any);
+      if (!updated) return res.status(404).json({ message: "Lead not found" });
+      return res.status(204).end();
+    }
+
+    const ok = await storage.deleteLead(id);
+    if (!ok) return res.status(404).json({ message: "Lead not found" });
+    res.status(204).end();
+  }));
+
+  app.post("/api/leads/:id/purge", requireOwner, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const ok = await storage.deleteLead(id);
     if (!ok) return res.status(404).json({ message: "Lead not found" });
     res.status(204).end();
   }));

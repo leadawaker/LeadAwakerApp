@@ -18,7 +18,7 @@ function LogoAnimation() {
       transition={{ duration: 0.5 }}
     >
       <div className="w-44 h-44 md:w-52 md:h-52 lg:w-64 lg:h-64">
-        <img src="/logo-footer.svg" alt="" className="w-full h-full object-contain" />
+        <img src="/2.Full-LOGO.svg" alt="" className="w-full h-full object-contain" />
       </div>
     </motion.div>
   );
@@ -52,7 +52,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden" style={{ backgroundColor: '#dad5c7' }}>
+    <footer className="pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-4 md:mb-16 relative z-10">
           <div>
@@ -133,7 +133,7 @@ export function Footer() {
         {/* Mobile Logo */}
         <div className="flex justify-center items-center mt-1 mb-2 md:hidden">
           <div className="relative w-[220px] h-[220px]">
-            <img src="/logo-footer.svg" className="w-full h-full object-contain" />
+            <img src="/2.Full-LOGO.svg" className="w-full h-full object-contain" />
           </div>
         </div>
 

@@ -208,7 +208,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             "absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 border border-border/60 bg-background shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden",
             activePanel === 'settings' ? "sm:w-[540px]" : "sm:w-[400px]"
           )}>
-            <div className="h-[62px] px-4 flex items-center justify-between border-b border-border/30 bg-background sticky top-0 z-10 shrink-0">
+            <div className="h-[40px] px-4 flex items-center justify-between border-b border-border/30 bg-background sticky top-0 z-10 shrink-0">
               <div className="font-bold text-base capitalize pl-1">
                 {activePanel === 'settings' ? 'Settings' : activePanel.replace('-', ' ')}
               </div>
@@ -239,8 +239,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-svh flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
-          collapsed ? "md:pl-[56px]" : "md:pl-[225px]"
+          "h-svh flex flex-col bg-background transition-[padding-left] duration-150 overflow-hidden",
+          collapsed ? "md:pl-[56px]" : "md:pl-[200px]"
         )}
         style={{
           paddingTop: "var(--topbar-h)",
@@ -248,7 +248,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           paddingRight: (() => {
             if (!dockActive) return undefined;
             if (isAnyFullWidth) return `${dockWidth - 1.5}px`;
-            const sidebar = collapsed ? 56 : 225;
+            const sidebar = collapsed ? 56 : 200;
             const mainArea = viewportW - sidebar;
             const freeRight = Math.max(0, (mainArea - 1729) / 2) + 20;
             return dockWidth > freeRight ? `${dockWidth - freeRight}px` : undefined;

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { Phone, Mail, MessageSquare, Building2, Tag as TagIcon, Pencil, Trash2 } from "lucide-react";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getLeadStatusAvatarColor as getStatusAvatarColor } from "@/lib/avatarUtils";
@@ -44,6 +45,7 @@ export function LeadListCard({
   onQuickDelete?: () => void;
 }) {
   const { t } = useTranslation("leads");
+  const { label: deleteLabel } = useDeleteAction("lead");
   const name        = getFullName(lead);
   const status      = getStatus(lead);
   const score       = getScore(lead);
@@ -294,7 +296,7 @@ export function LeadListCard({
           aria-label="Delete Lead"
         >
           <Trash2 className="h-5 w-5" />
-          <span className="text-[10px] font-semibold leading-none">Delete</span>
+          <span className="text-[10px] font-semibold leading-none">{deleteLabel}</span>
         </button>
       </div>
 

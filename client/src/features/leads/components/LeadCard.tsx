@@ -5,6 +5,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { cn } from "@/lib/utils";
 import {
   Phone, Mail, Building2, MessageSquare, AlertTriangle,
@@ -95,6 +96,7 @@ export function LeadCard({
   onQuickDelete,
 }: LeadCardProps) {
   const { t } = useTranslation("leads");
+  const { label: deleteLabel } = useDeleteAction("lead");
   const { isDark } = useTheme();
   const name         = getFullName(lead);
   const status       = getStatus(lead);
@@ -334,7 +336,7 @@ export function LeadCard({
           aria-label="Delete Lead"
         >
           <Trash2 className="h-5 w-5" />
-          <span className="text-[10px] font-semibold leading-none">Delete</span>
+          <span className="text-[10px] font-semibold leading-none">{deleteLabel}</span>
         </button>
       </div>
 

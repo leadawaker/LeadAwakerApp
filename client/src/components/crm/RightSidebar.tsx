@@ -598,8 +598,8 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-0 top-[62px] bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-[width] duration-200",
-          collapsed ? "w-[56px]" : "w-[225px]"
+          "fixed left-0 top-[50px] bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-[width] duration-150",
+          collapsed ? "w-[56px]" : "w-[200px]"
         )}
         data-sidebar-focus
       >
@@ -607,7 +607,7 @@ export function RightSidebar({
           {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "flex items-center shrink-0 mt-[45px] mb-6 h-10",
+              "flex items-center shrink-0 mt-6 mb-6 h-10",
               collapsed ? "px-1.5" : "px-2.5",
               collapsed ? "justify-center" : "justify-between"
             )}
