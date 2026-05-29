@@ -84,8 +84,14 @@ export function setupAuth(app: Express) {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
+        // secure + SameSite=None required for cross-origin (Vercel → api.leadawaker.com)
         secure: process.env.NODE_ENV === "production" || !!process.env.CORS_ORIGIN,
         sameSite: process.env.CORS_ORIGIN ? "none" as const : "lax" as const,
+        // COOKIE_DOMAIN=.leadawaker.com makes the session cookie work for all subdomains.
+        // Without this, login.html (via Vercel proxy, cookie set for leadawaker.com) and
+        // the React app (calling api.leadawaker.com directly via VITE_API_URL) get different
+        // cookie domains and the browser never sends the cookie to the API.
+        domain: process.env.COOKIE_DOMAIN || undefined,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       },
     }),
@@ -165,14 +171,14 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Unauthorized" });
 }
 
-/** Owner, Admin, Operator, or anyone on the agency account (accountsId === 1). */
+/** Owner, Admin, or anyone on the agency account (accountsId === 1). */
 export function requireAgency(req: Request, res: Response, next: NextFunction) {
   // Internal API key = agency-level access
   const key = req.headers["x-internal-key"] as string | undefined;
   if (isValidInternalKey(key)) return next();
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
   const user = req.user!;
-  const agencyRole = user.role === "Owner" || user.role === "Admin" || user.role === "Operator";
+  const agencyRole = user.role === "Owner" || user.role === "Admin";
   if (user.accountsId !== 1 && !agencyRole) {
     return res.status(403).json({ message: "Agency access required" });
   }
@@ -188,13 +194,13 @@ export function requireOwner(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-/** Owner or Admin (or Operator, the legacy alias). */
+/** Owner or Admin. */
 export function requireAdminOrOwner(req: Request, res: Response, next: NextFunction) {
   const key = req.headers["x-internal-key"] as string | undefined;
   if (isValidInternalKey(key)) return next();
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
   const role = req.user!.role;
-  if (role !== "Owner" && role !== "Admin" && role !== "Operator") {
+  if (role !== "Owner" && role !== "Admin") {
     return res.status(403).json({ message: "Admin or Owner access required" });
   }
   next();

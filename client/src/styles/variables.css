@@ -6,48 +6,63 @@
   --topbar-h: calc(50px + var(--safe-top));
   --bottombar-h: calc(64px + var(--safe-bottom));
 
-  /* Warm Bone Design System — floating cards aesthetic */
-  --background: 40 32% 89%; /* #ECE6DA — warm bone page bg, sidebar, topbar (seamless base) */
-  --foreground: 0 0% 20%; /* Near black — high contrast on warm bone */
-  --bg-main: 40 32% 89%; /* Match background */
+  /* Palette: wine (accent), gray (page bg), beige (cards/nav), white */
+  --background: 0 0% 100%; /* White — base */
+  --foreground: 0 0% 20%; /* Near black — high contrast */
+  --bg-main: 0 0% 88%; /* #E0E0E0 — gray page background behind cards */
 
-  --card: 40 50% 97%; /* warm off-white — two shades brighter than bg */
+  --card: 0 0% 98%; /* #FAFAFA — cards */
   --card-foreground: 0 0% 12%;
-  --card-hover: 40 60% 99%; /* warm near-white hover on cards */
+  --card-hover: 0 0% 99%; /* slightly brighter on hover */
 
-  --popover: 0 0% 100%; /* White — popovers/dropdowns elevated above cards */
+  --popover: 0 0% 98%; /* #FAFAFA — popovers/dropdowns */
   --popover-foreground: 0 0% 12%;
 
-  /* Primary Brand Color: Brand Indigo */
-  --primary: 243 75% 59%;
+  /* Primary: Wine */
+  --primary: 345 45% 38%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: Medium gray */
-  --secondary: 0 0% 93%;
+  /* Secondary: light neutral gray */
+  --secondary: 0 0% 90%;
   --secondary-foreground: 0 0% 15%;
 
-  /* Muted — outer list cards / secondary panels (warm off-white, slightly brighter than bg) */
-  --muted: 40 38% 95%;
-  --muted-foreground: 0 0% 38%;
+  /* Muted — outer list containers / secondary panels (beige) */
+  --muted: 0 0% 98%;
+  --muted-foreground: 40 6% 42%;
 
-  /* Accent: Warm yellow (#FFEA80) */
-  --accent: 50 100% 75%;
+  /* Accent: Wine */
+  --accent: 345 45% 38%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
 
   /* Toast semantic colors */
-  --success: 228 100% 68%;
+  --success: 152 45% 42%;
   --success-foreground: 0 0% 100%;
-  --info: 243 75% 59%;
+  --info: 345 45% 38%;
   --info-foreground: 0 0% 100%;
 
-  --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
-  --input: 0 0% 93%; /* Same as muted for inputs */
-  --ring: 0 0% 20%;
+  --border: 0 0% 82%; /* neutral gray border */
+  --input: 0 0% 92%; /* neutral gray for inputs */
+  --ring: 345 45% 38%;
 
   --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
+
+  /* ── Layout tokens — centralized so a single edit propagates everywhere ── */
+  --panel-gap: 16px;                      /* gap between the list menu and the main panel on every page */
+  --panel-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06); /* default resting shadow on panels */
+  --card-glow: 0 0 0 1px rgb(60 40 30 / 0.04), 0 0 10px 0 rgb(40 25 15 / 0.10); /* small dark glow — bigger off-white panels */
+  --card-shadow: 0 2px 4px 0 rgb(40 25 15 / 0.12); /* small 2px-beneath shadow — small cards / contact sections (default) */
+  --panel-radius: 0.5rem;                 /* panel container corner radius */
+  --shell-corner: var(--radius);          /* rounded inner corner where navbar meets topbar — default curve */
+
+  /* ── Button tokens — change button look in one place ── */
+  --btn-radius: 0.75rem;                  /* default button corner radius */
+  --btn-height: 2.25rem;                  /* default (md) button height = 36px */
+  --btn-height-sm: 2rem;                  /* small button height = 32px */
+  --btn-height-lg: 2.75rem;               /* large button height = 44px */
+  --btn-px: 1rem;                         /* default horizontal padding */
 
   /* Chart colors (light mode) — brand-aligned */
   --chart-1: 243 75% 59%;    /* Brand Indigo */
@@ -56,36 +71,30 @@
   --chart-4: 280 65% 55%;    /* Purple */
   --chart-5: 0 72% 55%;      /* Red */
 
-  /* ── Brand Tokens (Light Mode) ── */
-  /* Brand Indigo — primary actions, buttons, links */
-  --brand-blue: 243 75% 59%;
+  /* ── Brand Tokens (Light Mode) — all mapped to Wine ── */
+  --brand-blue: 345 45% 38%;
   --brand-blue-foreground: 0 0% 100%;
-  /* Deep Blue: #131B49 — sidebar, headers, strong emphasis */
-  --brand-deep-blue: 231 59% 18%;
+  --brand-deep-blue: 345 50% 25%;
   --brand-deep-blue-foreground: 0 0% 100%;
-  /* Brand Yellow: #FFDF3D — Call Booked highlights, success accents */
-  --brand-yellow: 50 100% 62%;
-  --brand-yellow-foreground: 231 59% 18%;
-  /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
-  --brand-soft-yellow: 43 97% 63%;
-  --brand-soft-yellow-foreground: 231 59% 18%;
-  /* Brand Indigo — merged with brand-blue */
-  --brand-indigo: 243 75% 59%;
+  --brand-yellow: 345 45% 38%;
+  --brand-yellow-foreground: 0 0% 100%;
+  --brand-soft-yellow: 345 40% 55%;
+  --brand-soft-yellow-foreground: 0 0% 100%;
+  --brand-indigo: 345 45% 38%;
   --brand-indigo-foreground: 0 0% 100%;
-  /* Indian Yellow: #FFFFFF — source for UI highlight tints */
-  --brand-indian-yellow: 0 0% 100%;
-  --brand-indian-yellow-foreground: 231 59% 18%;
-  /* Highlight tokens — active/selected UI state colors */
-  --highlight-active: 0 0% 96%;      /* #F5F5F5 — active pill, nav, tab, bloom */
-  --highlight-selected: 0 0% 100%;   /* #FFFFFF — selected card, table row */
-  --highlight-hover: 0 0% 93%;       /* #EDEDED — hover on already-highlighted element */
-  /* Input field background — almost white */
-  --input-bg: 0 0% 95%;             /* #F3F2F2 — form inputs, textareas, selects */
+  --brand-indian-yellow: 0 0% 98%;
+  --brand-indian-yellow-foreground: 0 0% 12%;
+  /* Highlight tokens — wine tints for active/selected */
+  --highlight-active: 347 40% 87%;   /* #EBD1D7 — light wine active pill/tab */
+  --highlight-selected: 347 40% 87%; /* #EBD1D7 — light wine selected card/row */
+  --highlight-hover: 345 45% 80%;    /* wine — hover on highlighted */
+  /* Input field background */
+  --input-bg: 0 0% 92%;
 
-  /* Sidebar tokens (light mode) — sidebar now blends with page background */
-  --sidebar-bg: 40 26% 85%; /* Slightly darker warm bone — sidebar contrast layer */
-  --sidebar-foreground: 0 0% 25%; /* Dark text readable on light sidebar */
-  --sidebar-active: 243 75% 59%;
+  /* Sidebar / nav surface (light mode) — beige #FFFBF5, shared by nav + topbar */
+  --sidebar-bg: 0 0% 96%; /* #F5F5F5 — nav & topbar */
+  --sidebar-foreground: 0 0% 25%;
+  --sidebar-active: 345 45% 38%; /* Wine — selected nav page */
   --sidebar-active-foreground: 0 0% 100%;
 }
 
@@ -168,7 +177,7 @@
   /* Sidebar tokens (dark mode) — deeper than background */
   --sidebar-bg: 217 45% 9%;
   --sidebar-foreground: 0 0% 90%;
-  --sidebar-active: 243 85% 68%;
+  --sidebar-active: 348 50% 45%; /* Strong wine (dark mode) — selected nav page */
   --sidebar-active-foreground: 0 0% 100%;
 }
 

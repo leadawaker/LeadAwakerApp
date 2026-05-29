@@ -3,7 +3,7 @@
  * One category visible at a time; navigate with ← → arrows.
  * Floats on the right edge of the screen.
  */
-import { useState, useEffect, useCallback, useRef, type PointerEvent as RPointerEvent } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   PIPELINE_HEX, LEAD_AVATAR_BG, refreshLeadAvatarColors,
@@ -91,15 +91,39 @@ function blendWithWhite(hex: string, alpha: number): string {
   return `#${toHex(blend(r))}${toHex(blend(g))}${toHex(blend(b))}`;
 }
 
-/* ── Inline HSV Picker ── */
+/* ── Inline HSV Slider Picker ── */
 
-const SQ = 156;
-const BAR_H = 13;
+const SLIDER_CSS = `
+  .hsv-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px; outline: none; cursor: pointer; border: none; }
+  .hsv-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: white; border: 2px solid rgba(0,0,0,0.28); box-shadow: 0 1px 3px rgba(0,0,0,0.25); cursor: pointer; }
+  .hsv-slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: white; border: 2px solid rgba(0,0,0,0.28); box-shadow: 0 1px 3px rgba(0,0,0,0.25); cursor: pointer; }
+`;
+
+function SliderRow({
+  label, display, value, min, max, gradient, onChange,
+}: {
+  label: string; display: string; value: number; min: number; max: number;
+  gradient: string; onChange: (val: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex justify-between items-center">
+        <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+        <span className="text-[9px] text-gray-400 tabular-nums">{display}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={1}
+        value={Math.round(value)}
+        onChange={(e) => onChange(+e.target.value)}
+        className="hsv-slider"
+        style={{ background: gradient }}
+      />
+    </div>
+  );
+}
 
 export function HsvPicker({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
   const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(value));
-  const sqRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setHsv(hexToHsv(value)); }, [value]);
 
@@ -108,65 +132,30 @@ export function HsvPicker({ value, onChange }: { value: string; onChange: (hex: 
     onChange(hsvToHex(h, s, v));
   }, [onChange]);
 
-  const handleSqPointer = useCallback((e: RPointerEvent<HTMLDivElement>) => {
-    const rect = sqRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-    emit(hsv[0], x, 1 - y);
-  }, [emit, hsv]);
-
-  const onSqDown = useCallback((e: RPointerEvent<HTMLDivElement>) => {
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    handleSqPointer(e);
-  }, [handleSqPointer]);
-
-  const handleBarPointer = useCallback((e: RPointerEvent<HTMLDivElement>) => {
-    const rect = barRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    emit(x * 360, hsv[1], hsv[2]);
-  }, [emit, hsv]);
-
-  const onBarDown = useCallback((e: RPointerEvent<HTMLDivElement>) => {
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    handleBarPointer(e);
-  }, [handleBarPointer]);
-
-  const hueColor = `hsl(${hsv[0]}, 100%, 50%)`;
+  const [h, s, v] = hsv;
+  const hueGrad = "linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)";
+  const satGrad = `linear-gradient(to right,${hsvToHex(h, 0, v)},${hsvToHex(h, 1, v)})`;
+  const blkGrad = `linear-gradient(to right,${hsvToHex(h, s, 1)},#000)`;
+  const blackPct = Math.round((1 - v) * 100);
 
   return (
-    <div className="flex flex-col gap-1.5 py-1.5">
-      <div
-        ref={sqRef}
-        className="relative cursor-crosshair rounded overflow-hidden"
-        style={{ width: SQ, height: SQ }}
-        onPointerDown={onSqDown}
-        onPointerMove={(e) => { if (e.buttons > 0) handleSqPointer(e); }}
-      >
-        <div className="absolute inset-0" style={{ background: hueColor }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, #fff, transparent)" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent, #000)" }} />
-        <div
-          className="absolute w-3 h-3 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.3)] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ left: hsv[1] * SQ, top: (1 - hsv[2]) * SQ }}
-        />
-      </div>
-      <div
-        ref={barRef}
-        className="relative cursor-pointer rounded-full overflow-hidden"
-        style={{
-          width: SQ, height: BAR_H,
-          background: "linear-gradient(to right, hsl(0,100%,50%), hsl(60,100%,50%), hsl(120,100%,50%), hsl(180,100%,50%), hsl(240,100%,50%), hsl(300,100%,50%), hsl(360,100%,50%))",
-        }}
-        onPointerDown={onBarDown}
-        onPointerMove={(e) => { if (e.buttons > 0) handleBarPointer(e); }}
-      >
-        <div
-          className="absolute top-0 bottom-0 w-2.5 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.25)] -translate-x-1/2 pointer-events-none"
-          style={{ left: (hsv[0] / 360) * SQ }}
-        />
-      </div>
+    <div className="flex flex-col gap-2.5 py-1.5 px-0.5" style={{ width: 156 }}>
+      <style>{SLIDER_CSS}</style>
+      <SliderRow
+        label="Hue" display={`${Math.round(h)}°`}
+        value={h} min={0} max={360} gradient={hueGrad}
+        onChange={(val) => emit(val, s, v)}
+      />
+      <SliderRow
+        label="Saturation" display={`${Math.round(s * 100)}%`}
+        value={s * 100} min={0} max={100} gradient={satGrad}
+        onChange={(val) => emit(h, val / 100, v)}
+      />
+      <SliderRow
+        label="Black" display={`${blackPct}%`}
+        value={blackPct} min={0} max={100} gradient={blkGrad}
+        onChange={(val) => emit(h, s, 1 - val / 100)}
+      />
     </div>
   );
 }
@@ -204,297 +193,29 @@ const G = COLOR_GROUPS();
 
 function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry[] }[] {
   return [
-    /* 1 ─ Surfaces & Text ───────────────────────────────── */
+    /* Theme — wine / gray / beige / white */
     {
-      title: "Surfaces & Text",
+      title: "Theme",
+      subtitle: "Wine · gray · beige · white",
       entries: [
-        { label: "Background",  id: "bg",       type: "css", cssVars: ["--background", "--bg-main"] },
-        { label: "Card",        id: "card",      type: "css", cssVars: ["--card"] },
-        { label: "Card Hover",  id: "card-hov",  type: "css", cssVars: ["--card-hover"] },
-        { label: "Muted",       id: "muted",     type: "css", cssVars: ["--muted", "--secondary", "--input"] },
-        { label: "Popover",     id: "popover",   type: "css", cssVars: ["--popover"] },
-        { label: "Input Bg",    id: "input-bg",  type: "css", cssVars: ["--input-bg"] },
-        { label: "Foreground",  id: "fg",        type: "css", cssVars: ["--foreground", "--card-foreground", "--popover-foreground"] },
-        { label: "Muted Text",  id: "muted-fg",  type: "css", cssVars: ["--muted-foreground"] },
-        { label: "Border",      id: "border",    type: "css", cssVars: ["--border"] },
+        { label: "Wine (accent)",   id: "wine",      type: "css", cssVars: ["--primary", "--accent", "--brand-indigo", "--brand-blue", "--brand-yellow", "--brand-soft-yellow", "--ring", "--sidebar-active", "--info", "--highlight-hover"] },
+        { label: "Wine — selected", id: "wine-sel",  type: "css", cssVars: ["--highlight-active", "--highlight-selected"] },
+        { label: "Page Background", id: "bg",        type: "css", cssVars: ["--bg-main"] },
+        { label: "Card (beige)",    id: "card",      type: "css", cssVars: ["--card", "--card-hover", "--muted", "--popover"] },
+        { label: "Nav & Topbar",    id: "nav",       type: "css", cssVars: ["--sidebar-bg"] },
+        { label: "Text",            id: "fg",        type: "css", cssVars: ["--foreground", "--card-foreground", "--popover-foreground", "--sidebar-foreground"] },
+        { label: "Muted Text",      id: "muted-fg",  type: "css", cssVars: ["--muted-foreground"] },
+        { label: "Border",          id: "border",    type: "css", cssVars: ["--border", "--input", "--input-bg", "--secondary"] },
       ],
     },
 
-    /* 2 ─ Brand Colors ──────────────────────────────────── */
-    {
-      title: "Brand Colors",
-      entries: [
-        { label: "Indigo",         id: "indigo",        type: "css", cssVars: ["--brand-indigo", "--brand-blue", "--primary", "--ring", "--sidebar-active", "--info"] },
-        { label: "Yellow",         id: "yellow",        type: "css", cssVars: ["--brand-yellow"] },
-        { label: "Deep Blue",      id: "deep-blue",     type: "css", cssVars: ["--brand-deep-blue"] },
-        { label: "Soft Yellow",    id: "soft-yellow",   type: "css", cssVars: ["--brand-soft-yellow"] },
-        { label: "Indian Yellow",  id: "indian-yellow", type: "css", cssVars: ["--brand-indian-yellow"] },
-      ],
-    },
-
-    /* 3 ─ Highlights & Selections ───────────────────────── */
-    {
-      title: "Highlights & Selections",
-      subtitle: "Active pills, selected cards, tabs",
-      entries: [
-        { label: "Active Pill / Tab",   id: "hl-active",   type: "css", cssVars: ["--highlight-active"] },
-        { label: "Selected Card / Row", id: "hl-selected", type: "css", cssVars: ["--highlight-selected"] },
-        { label: "Highlight Hover",     id: "hl-hover",    type: "css", cssVars: ["--highlight-hover"] },
-      ],
-    },
-
-    /* 4 ─ Nav Sidebar ───────────────────────────────────── */
-    {
-      title: "Nav Sidebar",
-      entries: [
-        { label: "Sidebar Bg",      id: "sidebar-bg",      type: "css", cssVars: ["--sidebar-bg"] },
-        { label: "Sidebar Text",    id: "sidebar-fg",      type: "css", cssVars: ["--sidebar-foreground"] },
-        { label: "Nav Active",      id: "sidebar-active",  type: "css", cssVars: ["--sidebar-active"] },
-        { label: "Nav Active Text", id: "sidebar-act-fg",  type: "css", cssVars: ["--sidebar-active-foreground"] },
-      ],
-    },
-
-    /* 5 ─ Buttons & Pills ───────────────────────────────── */
-    {
-      title: "Buttons & Pills",
-      subtitle: "Icon circles, toolbar pills, active state",
-      entries: [
-        { label: "Pill Active Bg",  id: "pill-bg",   type: "computed", computedGet: "--brand-indigo", computedAlpha: 0.1 },
-        { label: "Pill Active Bdr", id: "pill-bdr",  type: "computed", computedGet: "--brand-indigo", computedAlpha: 0.5 },
-        { label: "Btn Hover Bg",    id: "btn-hov",   type: "css", cssVars: ["--card"] },
-        { label: "Btn Active Bg",   id: "btn-act",   type: "css", cssVars: ["--muted"] },
-        { label: "Btn Icon Color",  id: "btn-text",  type: "css", cssVars: ["--muted-foreground"] },
-      ],
-    },
-
-    /* 6 ─ Semantic ──────────────────────────────────────── */
+    /* Semantic — kept for functional states */
     {
       title: "Semantic",
+      subtitle: "Success / error states",
       entries: [
         { label: "Success",     id: "success",     type: "css", cssVars: ["--success"] },
         { label: "Destructive", id: "destructive", type: "css", cssVars: ["--destructive"] },
-        { label: "Accent",      id: "accent",      type: "css", cssVars: ["--accent"] },
-      ],
-    },
-
-    /* 7 ─ Campaigns ─────────────────────────────────────── */
-    {
-      title: "Campaigns",
-      subtitle: "Status dots & card avatars",
-      entries: [
-        { label: "Active pill / tab",  id: "cp-pill",    type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "campaigns",   hslField: "active" },
-        { label: "Selected card",      id: "cp-sel",     type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "campaigns",   hslField: "selected" },
-        { label: "Card bg",            id: "cp-card",    type: "css", cssVars: ["--card"] },
-        { label: "Active — dot",      id: "c-act-dot",  type: "map", mapRef: CAMPAIGN_STATUS_HEX, mapKey: "Active" },
-        { label: "Paused — dot",      id: "c-pau-dot",  type: "map", mapRef: CAMPAIGN_STATUS_HEX, mapKey: "Paused" },
-        { label: "Completed — dot",   id: "c-com-dot",  type: "map", mapRef: CAMPAIGN_STATUS_HEX, mapKey: "Completed" },
-        { label: "Draft — dot",       id: "c-dra-dot",  type: "map", mapRef: CAMPAIGN_STATUS_HEX, mapKey: "Draft" },
-        { label: "Inactive — dot",    id: "c-ina-dot",  type: "map", mapRef: CAMPAIGN_STATUS_HEX, mapKey: "Inactive" },
-        { label: "Active — avatar",   id: "c-act-bg",   type: "map", mapRef: CAMPAIGN_AVATAR_BG,  mapKey: "Active" },
-        { label: "Paused — avatar",   id: "c-pau-bg",   type: "map", mapRef: CAMPAIGN_AVATAR_BG,  mapKey: "Paused" },
-        { label: "Completed — avatar",id: "c-com-bg",   type: "map", mapRef: CAMPAIGN_AVATAR_BG,  mapKey: "Completed" },
-        { label: "Draft — avatar",    id: "c-dra-bg",   type: "map", mapRef: CAMPAIGN_AVATAR_BG,  mapKey: "Draft" },
-      ],
-    },
-
-    /* 8 ─ Leads — Pipeline ──────────────────────────────── */
-    {
-      title: "Leads — Pipeline",
-      subtitle: "Ring / dot / stripe colors per stage",
-      entries: [
-        { label: "Active pill / tab",  id: "lp-pill", type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "contacts",      hslField: "active" },
-        { label: "Selected card",      id: "lp-sel",  type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "contacts",      hslField: "selected" },
-        { label: "Card bg",            id: "lp-card", type: "css", cssVars: ["--card"] },
-        { label: "New",                id: "p-new",   type: "pipeline", pipelineKey: "New" },
-        { label: "Contacted",          id: "p-con",   type: "pipeline", pipelineKey: "Contacted" },
-        { label: "Responded",          id: "p-res",   type: "pipeline", pipelineKey: "Responded" },
-        { label: "Multiple Responses", id: "p-mul",   type: "pipeline", pipelineKey: "Multiple Responses" },
-        { label: "Qualified",          id: "p-qua",   type: "pipeline", pipelineKey: "Qualified" },
-        { label: "Booked",             id: "p-boo",   type: "pipeline", pipelineKey: "Booked" },
-        { label: "Closed",             id: "p-clo",   type: "pipeline", pipelineKey: "Closed" },
-        { label: "Lost",               id: "p-los",   type: "pipeline", pipelineKey: "Lost" },
-        { label: "DND",                id: "p-dnd",   type: "pipeline", pipelineKey: "DND" },
-      ],
-    },
-
-    /* 9 ─ Leads — Avatars ───────────────────────────────── */
-    {
-      title: "Leads — Avatars",
-      subtitle: "Pastel bg colors on lead cards & inbox",
-      entries: [
-        { label: "Active pill / tab",  id: "la-pill", type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "contacts",      hslField: "active" },
-        { label: "Selected card",      id: "la-sel",  type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "contacts",      hslField: "selected" },
-        { label: "Card bg",            id: "la-card", type: "css", cssVars: ["--card"] },
-        { label: "New",                id: "a-new",   type: "avatar", avatarKey: "New" },
-        { label: "Contacted",          id: "a-con",   type: "avatar", avatarKey: "Contacted" },
-        { label: "Responded",          id: "a-res",   type: "avatar", avatarKey: "Responded" },
-        { label: "Multiple Responses", id: "a-mul",   type: "avatar", avatarKey: "Multiple Responses" },
-        { label: "Qualified",          id: "a-qua",   type: "avatar", avatarKey: "Qualified" },
-        { label: "Booked",             id: "a-boo",   type: "avatar", avatarKey: "Booked" },
-        { label: "Closed",             id: "a-clo",   type: "avatar", avatarKey: "Closed" },
-        { label: "Lost",               id: "a-los",   type: "avatar", avatarKey: "Lost" },
-        { label: "DND",                id: "a-dnd",   type: "avatar", avatarKey: "DND" },
-      ],
-    },
-
-    /* 10 ─ Chats ─────────────────────────────────────────── */
-    {
-      title: "Chats",
-      subtitle: "Inbox thread avatars (uses lead stage colors)",
-      entries: [
-        { label: "Active pill / tab",  id: "ch-pill", type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "conversations", hslField: "active" },
-        { label: "Selected thread",    id: "ch-sel",  type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "conversations", hslField: "selected" },
-        { label: "Thread bg",          id: "ch-card", type: "css", cssVars: ["--card"] },
-        { label: "Contacted avatar",   id: "ch-con", type: "avatar", avatarKey: "Contacted" },
-        { label: "Responded avatar",   id: "ch-res", type: "avatar", avatarKey: "Responded" },
-        { label: "Booked avatar",      id: "ch-boo", type: "avatar", avatarKey: "Booked" },
-        { label: "Lost avatar",        id: "ch-los", type: "avatar", avatarKey: "Lost" },
-        { label: "Unread badge",       id: "ch-badge", type: "css",  cssVars: ["--brand-indigo"] },
-      ],
-    },
-
-    /* 11 ─ Calendar ─────────────────────────────────────── */
-    {
-      title: "Calendar",
-      subtitle: "Event cards use lead stage colors",
-      entries: [
-        { label: "Active pill / tab",    id: "cal-pill",   type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "calendar",       hslField: "active" },
-        { label: "Selected event card",  id: "cal-sel",    type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "calendar",       hslField: "selected" },
-        { label: "Event card bg",        id: "cal-card",   type: "css",    cssVars: ["--card"] },
-        { label: "Booked event avatar",  id: "cal-boo",    type: "avatar", avatarKey: "Booked" },
-        { label: "Qualified avatar",     id: "cal-qua",    type: "avatar", avatarKey: "Qualified" },
-        { label: "KPI call badge",       id: "cal-kpi",    type: "css",    cssVars: ["--brand-yellow"] },
-      ],
-    },
-
-    /* 12 ─ Accounts ─────────────────────────────────────── */
-    {
-      title: "Accounts",
-      subtitle: "Status dots & card avatars",
-      entries: [
-        { label: "Active pill / tab",  id: "acp-pill",   type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "accounts",      hslField: "active" },
-        { label: "Selected card",      id: "acp-sel",    type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "accounts",      hslField: "selected" },
-        { label: "Card bg",            id: "acp-card",   type: "css", cssVars: ["--card"] },
-        { label: "Active — dot",     id: "ac-act-dot", type: "map", mapRef: ACCOUNT_STATUS_HEX, mapKey: "Active" },
-        { label: "Trial — dot",      id: "ac-tri-dot", type: "map", mapRef: ACCOUNT_STATUS_HEX, mapKey: "Trial" },
-        { label: "Inactive — dot",   id: "ac-ina-dot", type: "map", mapRef: ACCOUNT_STATUS_HEX, mapKey: "Inactive" },
-        { label: "Suspended — dot",  id: "ac-sus-dot", type: "map", mapRef: ACCOUNT_STATUS_HEX, mapKey: "Suspended" },
-        { label: "Active — avatar",  id: "ac-act-bg",  type: "map", mapRef: ACCOUNT_AVATAR_BG,  mapKey: "Active" },
-        { label: "Trial — avatar",   id: "ac-tri-bg",  type: "map", mapRef: ACCOUNT_AVATAR_BG,  mapKey: "Trial" },
-        { label: "Inactive — avatar",id: "ac-ina-bg",  type: "map", mapRef: ACCOUNT_AVATAR_BG,  mapKey: "Inactive" },
-        { label: "Suspended — avatar",id:"ac-sus-bg",  type: "map", mapRef: ACCOUNT_AVATAR_BG,  mapKey: "Suspended" },
-      ],
-    },
-
-    /* 13 ─ Tasks ────────────────────────────────────────── */
-    {
-      title: "Tasks",
-      subtitle: "Kanban column & card accent colors",
-      entries: [
-        { label: "Active pill / tab",  id: "tk-pill",    type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "tasks",          hslField: "active" },
-        { label: "Selected card",      id: "tk-sel",     type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "tasks",          hslField: "selected" },
-        { label: "Card bg",            id: "tk-card",    type: "css", cssVars: ["--card"] },
-        { label: "To Do — dot",       id: "tk-todo",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "todo" },
-        { label: "In Progress — dot", id: "tk-prog",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "in_progress" },
-        { label: "Done — dot",        id: "tk-done",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "done" },
-        { label: "Cancelled — dot",   id: "tk-canc",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "cancelled" },
-        { label: "Low — priority",    id: "tk-low",     type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "low" },
-        { label: "Medium — priority", id: "tk-med",     type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "medium" },
-        { label: "High — priority",   id: "tk-hi",      type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "high" },
-        { label: "Urgent — priority", id: "tk-urg",     type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "urgent" },
-      ],
-    },
-
-    /* 14 ─ Billing — Invoices ───────────────────────────── */
-    {
-      title: "Billing — Invoices",
-      subtitle: "Invoice status badge dots & backgrounds",
-      entries: [
-        { label: "Active pill / tab",  id: "bi-pill",     type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "invoices",      hslField: "active" },
-        { label: "Selected row",       id: "bi-sel",      type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "invoices",      hslField: "selected" },
-        { label: "Row bg",             id: "bi-card",     type: "css", cssVars: ["--card"] },
-        { label: "Draft — dot",     id: "inv-dra-dot", type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Draft",     mapSubKey: "dot" },
-        { label: "Sent — dot",      id: "inv-sen-dot", type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Sent",      mapSubKey: "dot" },
-        { label: "Viewed — dot",    id: "inv-vie-dot", type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Viewed",    mapSubKey: "dot" },
-        { label: "Paid — dot",      id: "inv-pai-dot", type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Paid",      mapSubKey: "dot" },
-        { label: "Overdue — dot",   id: "inv-ove-dot", type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Overdue",   mapSubKey: "dot" },
-        { label: "Cancelled — dot", id: "inv-can-dot", type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Cancelled", mapSubKey: "dot" },
-        { label: "Draft — bg",      id: "inv-dra-bg",  type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Draft",     mapSubKey: "bg" },
-        { label: "Sent — bg",       id: "inv-sen-bg",  type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Sent",      mapSubKey: "bg" },
-        { label: "Paid — bg",       id: "inv-pai-bg",  type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Paid",      mapSubKey: "bg" },
-        { label: "Overdue — bg",    id: "inv-ove-bg",  type: "map", mapRef: INVOICE_STATUS_COLORS, mapKey: "Overdue",   mapSubKey: "bg" },
-      ],
-    },
-
-    /* 15 ─ Billing — Contracts ──────────────────────────── */
-    {
-      title: "Billing — Contracts",
-      subtitle: "Contract status badge dots & backgrounds",
-      entries: [
-        { label: "Active pill / tab",  id: "bc-pill",     type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "contracts",     hslField: "active" },
-        { label: "Selected row",       id: "bc-sel",      type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "contracts",     hslField: "selected" },
-        { label: "Row bg",             id: "bc-card",     type: "css", cssVars: ["--card"] },
-        { label: "Draft — dot",     id: "con-dra-dot", type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Draft",     mapSubKey: "dot" },
-        { label: "Sent — dot",      id: "con-sen-dot", type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Sent",      mapSubKey: "dot" },
-        { label: "Viewed — dot",    id: "con-vie-dot", type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Viewed",    mapSubKey: "dot" },
-        { label: "Signed — dot",    id: "con-sig-dot", type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Signed",    mapSubKey: "dot" },
-        { label: "Expired — dot",   id: "con-exp-dot", type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Expired",   mapSubKey: "dot" },
-        { label: "Cancelled — dot", id: "con-can-dot", type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Cancelled", mapSubKey: "dot" },
-        { label: "Signed — bg",     id: "con-sig-bg",  type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Signed",    mapSubKey: "bg" },
-        { label: "Expired — bg",    id: "con-exp-bg",  type: "map", mapRef: CONTRACT_STATUS_COLORS, mapKey: "Expired",   mapSubKey: "bg" },
-      ],
-    },
-
-    /* 16 ─ Library ───────────────────────────────────────── */
-    {
-      title: "Library",
-      subtitle: "Prompt status & avatar colors",
-      entries: [
-        { label: "Active pill / tab",  id: "lb-pill",     type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "prompt-library",   hslField: "active" },
-        { label: "Selected card",      id: "lb-sel",      type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "prompt-library",   hslField: "selected" },
-        { label: "Card bg",            id: "lb-card",     type: "css", cssVars: ["--card"] },
-        { label: "Active — avatar",   id: "lib-act-bg",  type: "map", mapRef: PROMPT_AVATAR_BG,   mapKey: "Active" },
-        { label: "Archived — avatar", id: "lib-arc-bg",  type: "map", mapRef: PROMPT_AVATAR_BG,   mapKey: "Archived" },
-        { label: "Active — text",     id: "lib-act-tx",  type: "map", mapRef: PROMPT_AVATAR_TEXT, mapKey: "Active" },
-        { label: "Archived — text",   id: "lib-arc-tx",  type: "map", mapRef: PROMPT_AVATAR_TEXT, mapKey: "Archived" },
-      ],
-    },
-
-    /* 17 ─ Automations ───────────────────────────────────── */
-    {
-      title: "Automations",
-      subtitle: "Log status colors (from semantic palette)",
-      entries: [
-        { label: "Active pill / tab",  id: "am-pill",  type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "automation-logs", hslField: "active" },
-        { label: "Selected row",       id: "am-sel",   type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "automation-logs", hslField: "selected" },
-        { label: "Row bg",             id: "am-card",  type: "css", cssVars: ["--card"] },
-        { label: "Success",     id: "atm-suc", type: "css", cssVars: ["--success"] },
-        { label: "Destructive", id: "atm-des", type: "css", cssVars: ["--destructive"] },
-        { label: "Waiting",     id: "atm-wai", type: "css", cssVars: ["--brand-yellow"] },
-        { label: "Retrying",    id: "atm-ret", type: "css", cssVars: ["--brand-indigo"] },
-        { label: "Muted",       id: "atm-mut", type: "css", cssVars: ["--muted-foreground"] },
-        { label: "Row hover",   id: "atm-hov", type: "css", cssVars: ["--card-hover"] },
-      ],
-    },
-
-    /* 18 ─ Settings — Roles ──────────────────────────────── */
-    {
-      title: "Settings — Roles",
-      subtitle: "User role avatar badge colors",
-      entries: [
-        { label: "Active pill / tab",  id: "sr-pill",   type: "css", cssVars: ["--highlight-active"] },
-        { label: "Selected card",      id: "sr-sel",    type: "css", cssVars: ["--highlight-selected"] },
-        { label: "Card bg",            id: "sr-card",   type: "css", cssVars: ["--card"] },
-        { label: "Admin — bg",    id: "ro-adm-bg", type: "map", mapRef: ROLE_AVATAR, mapKey: "Admin",    mapSubKey: "bg" },
-        { label: "Operator — bg", id: "ro-ope-bg", type: "map", mapRef: ROLE_AVATAR, mapKey: "Operator", mapSubKey: "bg" },
-        { label: "Manager — bg",  id: "ro-man-bg", type: "map", mapRef: ROLE_AVATAR, mapKey: "Manager",  mapSubKey: "bg" },
-        { label: "Agent — bg",    id: "ro-age-bg", type: "map", mapRef: ROLE_AVATAR, mapKey: "Agent",    mapSubKey: "bg" },
-        { label: "Viewer — bg",   id: "ro-vie-bg", type: "map", mapRef: ROLE_AVATAR, mapKey: "Viewer",   mapSubKey: "bg" },
-        { label: "Admin — text",  id: "ro-adm-tx", type: "map", mapRef: ROLE_AVATAR, mapKey: "Admin",    mapSubKey: "text" },
-        { label: "Operator — text",id:"ro-ope-tx", type: "map", mapRef: ROLE_AVATAR, mapKey: "Operator", mapSubKey: "text" },
-        { label: "Manager — text",id: "ro-man-tx", type: "map", mapRef: ROLE_AVATAR, mapKey: "Manager",  mapSubKey: "text" },
-        { label: "Agent — text",  id: "ro-age-tx", type: "map", mapRef: ROLE_AVATAR, mapKey: "Agent",    mapSubKey: "text" },
-        { label: "Viewer — text", id: "ro-vie-tx", type: "map", mapRef: ROLE_AVATAR, mapKey: "Viewer",   mapSubKey: "text" },
       ],
     },
   ];
