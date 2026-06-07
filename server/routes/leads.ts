@@ -22,6 +22,53 @@ import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates } f
 import { eq, count, and, gte, lte, ne, isNotNull, type SQL, desc } from "drizzle-orm";
 import type { Request, Response } from "express";
 
+// Fetch the latest interaction (content + direction) and unread inbound count
+// for a set of lead IDs in a single query (no N+1). Uses a LEFT JOIN LATERAL
+// against the Interactions table to grab the most recent interaction per lead,
+// plus a correlated subquery counting unread inbound interactions.
+async function getLeadMessagePeek(
+  leadIds: number[],
+): Promise<Map<number, { last_message: string | null; last_message_direction: string | null; unread_count: number }>> {
+  const map = new Map<number, { last_message: string | null; last_message_direction: string | null; unread_count: number }>();
+  if (leadIds.length === 0) return map;
+  try {
+    const result = await pool.query(
+      `SELECT
+         l.id AS lead_id,
+         LEFT(lm."Content", 140) AS last_message,
+         lm.direction          AS last_message_direction,
+         COALESCE(uc.unread_count, 0) AS unread_count
+       FROM p2mxx34fvbf3ll6."Leads" l
+       LEFT JOIN LATERAL (
+         SELECT i."Content", i.direction
+         FROM p2mxx34fvbf3ll6."Interactions" i
+         WHERE i."Leads_id" = l.id
+         ORDER BY i.created_at DESC NULLS LAST
+         LIMIT 1
+       ) lm ON true
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS unread_count
+         FROM p2mxx34fvbf3ll6."Interactions" i2
+         WHERE i2."Leads_id" = l.id
+           AND i2.direction = 'inbound'
+           AND COALESCE(i2.is_read, true) = false
+       ) uc ON true
+       WHERE l.id = ANY($1::int[])`,
+      [leadIds],
+    );
+    for (const row of result.rows as Array<{ lead_id: number; last_message: string | null; last_message_direction: string | null; unread_count: number }>) {
+      map.set(row.lead_id, {
+        last_message: row.last_message ?? null,
+        last_message_direction: row.last_message_direction ?? null,
+        unread_count: Number(row.unread_count) || 0,
+      });
+    }
+  } catch (err) {
+    console.error("[getLeadMessagePeek] failed:", err);
+  }
+  return map;
+}
+
 export function registerLeadsRoutes(app: Express): void {
   // ─── Leads ────────────────────────────────────────────────────────
 
@@ -49,7 +96,17 @@ export function registerLeadsRoutes(app: Express): void {
         arr.push(row.tagsId);
         pageTagMap.set(row.leadsId, arr);
       });
-      const enrichedPage = pageData.map((l: any) => ({ ...l, tag_ids: pageTagMap.get(l.id) ?? [] }));
+      const pagePeekMap = pageIds.length > 0 ? await getLeadMessagePeek(pageIds) : new Map();
+      const enrichedPage = pageData.map((l: any) => {
+        const peek = pagePeekMap.get(l.id);
+        return {
+          ...l,
+          tag_ids: pageTagMap.get(l.id) ?? [],
+          last_message: peek?.last_message ?? null,
+          last_message_direction: peek?.last_message_direction ?? null,
+          unread_count: peek?.unread_count ?? 0,
+        };
+      });
       return res.json({ ...result, data: toDbKeysArray(enrichedPage as any, leads) });
     }
 
@@ -70,7 +127,17 @@ export function registerLeadsRoutes(app: Express): void {
       arr.push(row.tagsId);
       tagIdsByLead.set(row.leadsId, arr);
     });
-    const enrichedData = data.map((l: any) => ({ ...l, tag_ids: tagIdsByLead.get(l.id) ?? [] }));
+    const peekMap = leadIds.length > 0 ? await getLeadMessagePeek(leadIds) : new Map();
+    const enrichedData = data.map((l: any) => {
+      const peek = peekMap.get(l.id);
+      return {
+        ...l,
+        tag_ids: tagIdsByLead.get(l.id) ?? [],
+        last_message: peek?.last_message ?? null,
+        last_message_direction: peek?.last_message_direction ?? null,
+        unread_count: peek?.unread_count ?? 0,
+      };
+    });
     res.json(toDbKeysArray(enrichedData as any, leads));
   }));
 
@@ -685,6 +752,8 @@ export function registerLeadsRoutes(app: Express): void {
       optedOut: false,
       dncReason: null,
       aiSentiment: null,
+      aiMemory: null,
+      automationStatus: "queued",
       leadScore: 0,
       engagementScore: 0,
       activityScore: 0,
@@ -722,6 +791,8 @@ export function registerLeadsRoutes(app: Express): void {
       optedOut: false,
       dncReason: null,
       aiSentiment: null,
+      aiMemory: null,
+      automationStatus: "queued",
       leadScore: 0,
       engagementScore: 0,
       activityScore: 0,

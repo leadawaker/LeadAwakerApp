@@ -98,7 +98,7 @@ function EditText({ value, onChange, placeholder, type = "text" }: {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25"
     />
   );
 }
@@ -110,7 +110,7 @@ function EditSelect({ value, onChange, options }: {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40"
     >
       {options.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -126,7 +126,7 @@ function EditTextarea({ value, onChange, placeholder, rows = 3 }: {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25 leading-relaxed"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-blue/30 rounded-lg px-2.5 py-1 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25 leading-relaxed"
     />
   );
 }
@@ -729,7 +729,7 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
         }}
       >
         <div className="max-w-[700px] mr-auto">
-          <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col" data-testid="prospect-widget-details">
+          <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 flex flex-col" data-testid="prospect-widget-details">
 
             {/* Basic Info */}
             <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("sections.basicInfo")}</p>

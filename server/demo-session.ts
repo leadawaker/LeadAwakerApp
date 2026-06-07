@@ -17,7 +17,6 @@ export interface NicheContext {
   when_label: string;
   niche_question: string;
   first_message: string;
-  second_message: string;
 }
 
 const NICHE_GENERATOR_SYSTEM_FALLBACK = `You generate realistic demo context for a lead reactivation AI demo.
@@ -28,7 +27,6 @@ Given a business niche description, output a JSON object with these exact keys:
 - niche_question: ONE sharp qualifying question that reconnects the lead with their original intent (e.g. "Heb je inmiddels een andere tandarts gevonden, of ben je nog op zoek?", "Are you still thinking about going solar this year?")
 - niche_label: a short 1-2 word label for the niche in the output language (e.g. "real estate", "solar", "tandheelkunde")
 - first_message: the Sophie opener — format exactly: "Hi, this is {agent_name} from [company_name]. Is this the same {first_name} who [what_lead_did] [when_label]?" — adapt to the output language (e.g. Dutch: "Hi, dit is {agent_name} van [company_name]. Ben jij dezelfde {first_name} die [what_lead_did] [when_label]?") — the name {first_name} appears ONLY ONCE in the identity question, never in the greeting
-- second_message: the follow-up — format: "My manager asked me to reach out but I didn't want to bother you. Are you still interested in [niche]?" — adapt to the output language
 
 Output language will be specified in the user message. Return ONLY valid JSON, no markdown.`;
 
@@ -110,17 +108,14 @@ export function buildFallbackNicheContext(niche: string, language: "en" | "nl" |
   const templates = {
     en: {
       first_message: `Hi, this is {agent_name} from our ${niche} team. Is this the same {first_name} who reached out about ${niche} recently?`,
-      second_message: `My manager asked me to reach out but I didn't want to bother you. Are you still interested in ${niche}?`,
       niche_question: `Are you still looking for ${niche} services?`,
     },
     nl: {
       first_message: `Hi, dit is {agent_name} van ons ${niche} team. Ben jij dezelfde {first_name} die onlangs contact had over ${niche}?`,
-      second_message: `Mijn manager had me gevraagd om te bellen, maar ik wilde je niet storen. Ben je nog steeds geïnteresseerd in ${niche}?`,
       niche_question: `Ben je nog op zoek naar ${niche} diensten?`,
     },
     pt: {
       first_message: `Oi, aqui é {agent_name} da nossa equipe de ${niche}. Você é o mesmo {first_name} que entrou em contato sobre ${niche} recentemente?`,
-      second_message: `Meu gerente me pediu para ligar, mas não quis incomodar. Você ainda tem interesse em ${niche}?`,
       niche_question: `Você ainda está procurando serviços de ${niche}?`,
     },
   };
@@ -128,12 +123,15 @@ export function buildFallbackNicheContext(niche: string, language: "en" | "nl" |
   return {
     raw: niche,
     company_name: "",
+    service_name: niche,
+    usp: "",
+    business_description: "",
+    booking_mode_call: true,
     what_lead_did: `showed interest in ${niche}`,
     when_label: language === "nl" ? "onlangs" : language === "pt" ? "recentemente" : "recently",
     niche_label: niche,
     niche_question: t.niche_question,
     first_message: t.first_message,
-    second_message: t.second_message,
   };
 }
 
@@ -294,9 +292,9 @@ export interface CampaignContext {
   niche_question: string;
   agent_name: string;
   first_message: string;
-  second_message: string;
   bump_1_template: string;
   bump_2_template: string;
+  kb: string;
 }
 
 const CAMPAIGN_GENERATOR_SYSTEM = `You generate a complete demo campaign configuration for a lead reactivation AI tool.
@@ -311,9 +309,9 @@ Given a business niche, output a JSON object with these exact keys:
 - niche_question: ONE sharp qualifying question that reconnects the lead with their original intent (e.g. "Have you found another dentist in the meantime, or are you still looking?", "Are you still thinking about going solar this year?")
 - agent_name: a realistic first name for the AI outreach agent (e.g. "Sarah", "Emily", "Alex", "Jordan")
 - first_message: the opener — format exactly: "Hi, this is {agent_name} from [company_name]. Is this the same {first_name} who [what_lead_did] a while back?" — {first_name} appears ONLY ONCE in the identity question, never in the greeting
-- second_message: the follow-up — format: "My manager asked me to reach out but I didn't want to bother you. Are you still interested in [service_name]?"
 - bump_1_template: a gentle follow-up for no response after 24h. Short, curious tone, reference the service. No greeting.
 - bump_2_template: a second follow-up 48h later, different angle, slight urgency or a soft offer. Short.
+- kb: a single string of 4-6 specific, detailed facts the AI should know when talking to leads about this business. Each line should be a concrete talking point the AI can use — include numbers, timelines, guarantees, differentiators, and common objections with rebuttals. Example for solar: "Average savings: 40% on energy bills with payback in 4-6 years.\n25-year panel warranty + 10-year inverter warranty included.\nFree site survey and quote within 48h, no obligation.\nGovernment feed-in tariff still available — we handle all paperwork.\nCommon objection: 'too expensive upfront' — rebuttal: $0-down financing available, payments start lower than current power bill." Separate each point with a newline. NOT an array.
 
 Return ONLY valid JSON, no markdown.`;
 
@@ -360,6 +358,10 @@ export async function generateCampaignContext(niche: string): Promise<CampaignCo
       parsed.first_message = fixed.includes("{first_name}")
         ? fixed
         : parsed.first_message.trimEnd().replace(/\??\s*$/, "") + ", is this {first_name}?";
+    }
+    // Coerce kb from array to string if the model returned one
+    if (Array.isArray((parsed as any).kb)) {
+      (parsed as any).kb = (parsed as any).kb.join("\n");
     }
 
     return parsed;

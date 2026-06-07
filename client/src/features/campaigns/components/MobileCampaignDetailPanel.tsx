@@ -35,7 +35,7 @@ function SummaryTab({ campaign }: { campaign: Campaign; metrics: CampaignMetrics
   const messages = Number(campaign.total_messages_sent ?? 0);
   const responseRate = Number(campaign.response_rate_percent ?? 0);
   const bookings = Number(campaign.bookings_generated ?? 0);
-  const statusHex = CAMPAIGN_STATUS_HEX[String(campaign.status)] || "#6B7280";
+  const statusHex = CAMPAIGN_STATUS_HEX[String(campaign.status)] || "#9D8E76";
 
   const roiPercent = Number(campaign.roi_percent ?? 0);
   const estRevenue = Number(campaign.value_per_booking ?? 0) * Number(campaign.bookings_generated ?? 0);
@@ -255,7 +255,7 @@ export function MobileCampaignDetailPanel({
           <div
             className="sticky top-0 z-10 border-b border-border/20 flex items-center gap-2 px-3 shrink-0"
             style={{
-              paddingTop: "calc(0.75rem + var(--safe-top, 0px))",
+              paddingTop: "calc(0.75rem + var(--safe-top))",
               paddingBottom: "0.75rem",
               backgroundColor: isScrolled ? "hsl(var(--background) / 0.75)" : "hsl(var(--background))",
               backdropFilter: isScrolled ? "blur(12px) saturate(1.2)" : "none",
@@ -315,7 +315,7 @@ export function MobileCampaignDetailPanel({
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto"
-            style={{ paddingBottom: "var(--bottombar-h, 64px)" }}
+            style={{ paddingBottom: "var(--bottombar-h)" }}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div

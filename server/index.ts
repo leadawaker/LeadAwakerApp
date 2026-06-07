@@ -5,6 +5,7 @@ import fs from "fs";
 import { registerRoutes } from "./routes/index";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { connect } from "net";
 import { setupAuth } from "./auth";
 import { verifySmtp } from "./email";
 import { startSseListener } from "./sse-listener";
@@ -109,6 +110,39 @@ app.use((req, res, next) => {
   app.get("/", sendPremium("index.html"));
   app.get("/login", sendPremium("login.html"));
   app.use("/premium", express.static(premiumDir));
+
+  // Dev: proxy /preview to legacy-handoff Vite dev server (HMR, no rebuild needed)
+  app.use("/preview", async (req, res) => {
+    try {
+      const upstream = await fetch(`http://localhost:5173${req.originalUrl}`);
+      res.status(upstream.status);
+      const ct = upstream.headers.get("content-type");
+      if (ct) res.set("content-type", ct);
+      res.send(Buffer.from(await upstream.arrayBuffer()));
+    } catch {
+      res.status(502).send("Vite not running. Run: cd /home/gabriel/legacy-handoff && npm run dev");
+    }
+  });
+
+  // Proxy WebSocket upgrades to Vite dev server so HMR works through the tunnel
+  httpServer.on("upgrade", (req, socket, head) => {
+    if (!req.url) return;
+    const isHmr = req.url.startsWith("/preview/") || req.url.startsWith("/@");
+    if (!isHmr) return;
+    const proxy = connect(5173, "localhost", () => {
+      const headers = [
+        `${req.method} ${req.url} HTTP/1.1`,
+        ...Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`),
+        "\r\n",
+      ].join("\r\n");
+      proxy.write(headers);
+      proxy.write(head);
+      socket.pipe(proxy);
+      proxy.pipe(socket);
+    });
+    proxy.on("error", () => socket.destroy());
+    socket.on("error", () => proxy.destroy());
+  });
 
   await registerRoutes(httpServer, app);
   startSseListener(); // Real-time push via PostgreSQL LISTEN/NOTIFY

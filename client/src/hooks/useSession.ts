@@ -43,11 +43,11 @@ export function useSession(): SessionState {
           localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
           window.dispatchEvent(new Event("leadawaker-avatar-changed"));
           // Only set account ID if not already stored (preserve explicit user selections).
-          // For agency users (Admin/Operator), default to 0 (all-accounts view).
+          // For agency users (Admin), default to 0 (all-accounts view).
           // For client users, default to their linked account.
           if (!localStorage.getItem("leadawaker_current_account_id")) {
             const role = user.role ?? "Viewer";
-            const isAgency = role === "Admin" || role === "Operator";
+            const isAgency = role === "Owner" || role === "Admin";
             localStorage.setItem(
               "leadawaker_current_account_id",
               String(isAgency ? 0 : (user.accountsId ?? 1)),

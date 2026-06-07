@@ -18,6 +18,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { xBase, xDefault, xActive, xSpan } from "@/components/crm/primitives";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -230,6 +231,13 @@ export function ProspectListView({
     setGradientTesterOpen(prev => !prev);
   }, [gradientTesterOpen]);
 
+  // Listen for the global gradient toggle dispatched by the nav menu button
+  useEffect(() => {
+    const handler = () => toggleGradientTester();
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [toggleGradientTester]);
+
   // ── Server-side paginated list ────────────────────────────────────────────
   const paginated = useProspectsPaginated({
     niche: filterNiche.length ? filterNiche : undefined,
@@ -387,11 +395,7 @@ export function ProspectListView({
 
   const isFilterActive = filterNiche.length > 0 || filterStatus.length > 0 || filterCountry.length > 0 || filterPriority.length > 0 || filterSource.length > 0;
 
-  // ── Expand-on-hover button classes ────────────────────────────────────────
-  const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-  const xActive  = "border-brand-indigo text-brand-indigo";
-  const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+  // ── Expand-on-hover button classes — shared from @/components/crm/primitives ──
 
   // ── Search pill ───────────────────────────────────────────────────────────
   const searchPill = (
@@ -763,11 +767,11 @@ export function ProspectListView({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full gap-[3px]" data-testid="prospect-list-view">
+    <div className="flex h-full gap-[var(--panel-gap)]" data-testid="prospect-list-view">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
-        "flex-col bg-muted rounded-lg overflow-hidden",
+        "flex-col bg-panel-list-bg rounded-lg overflow-hidden shadow-[var(--card-glow)]",
         isHidden
           ? cn(isNarrow && selectedProspect ? "hidden" : "flex", "lg:hidden")
           : isCompact
@@ -807,7 +811,7 @@ export function ProspectListView({
         )}
 
         {/* Scrollable prospect list */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+        <div ref={scrollContainerRef} className="la-list-area">
           {listLoading ? (
             <ListSkeleton compact={isCompact} />
           ) : paginatedItems.length === 0 ? (
@@ -840,7 +844,7 @@ export function ProspectListView({
                     {section.header && section.header.kind === "header" && (
                       isCompact ? <CompactGroupDivider label={section.header.label} count={section.header.count} /> : <GroupHeader label={section.header.label} count={section.header.count} />
                     )}
-                    <div className={cn("flex flex-col px-0", isCompact ? "gap-0 items-center" : "gap-[3px]")}>
+                    <div className={cn("la-cards", isCompact && "gap-0 items-center")}>
                       {section.items.map(({ item, idx }) => {
                         if (item.kind !== "prospect") return null;
                         const pid = getProspectId(item.prospect);
@@ -938,32 +942,6 @@ export function ProspectListView({
         ) : selectedProspect ? (
           <div className="relative flex flex-col h-full overflow-hidden rounded-lg">
 
-            {/* Gradient background */}
-            {gradientTesterOpen ? (
-              <>
-                {gradientLayers.map(layer => {
-                  const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0 dark:opacity-[0.08]" style={style} /> : null;
-                })}
-                {gradientDragMode && (
-                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-                )}
-              </>
-            ) : savedGradient ? (
-              <>
-                {savedGradient.map((layer: GradientLayer) => {
-                  const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0 dark:opacity-[0.08]" style={style} /> : null;
-                })}
-              </>
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-white dark:bg-background" />
-                <div className="absolute inset-0 dark:opacity-[0.08] bg-[linear-gradient(157deg,rgba(252,62,255,0.12)_0%,rgba(242,225,155,0.55)_100%)]" />
-                <div className="absolute inset-0 dark:opacity-[0.08] bg-[radial-gradient(ellipse_148%_200%_at_100%_100%,rgba(255,200,134,0.4)_0%,transparent_80%)]" />
-                <div className="absolute inset-0 dark:opacity-[0.08] bg-[radial-gradient(ellipse_200%_200%_at_0%_0%,rgba(158,143,255,0.1)_0%,transparent_80%)]" />
-              </>
-            )}
 
             <ProspectDetailHeader
               selectedProspect={selectedProspect}

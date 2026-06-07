@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { type ChatBgStyle } from "@/hooks/useChatDoodle";
-import { CURATED_PATTERNS } from "@/components/ui/doodle-patterns";
+import { DOODLE_PATTERNS } from "@/components/ui/doodle-patterns";
 import { BotAvatarFull } from "./SupportChatHelpers";
 
 // Matches FounderChatProps in SupportChatWidget — kept local to avoid circular import
@@ -255,17 +255,17 @@ export function SupportChatHeader({
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] text-muted-foreground">Pattern</span>
                           <span className="text-[11px] font-semibold tabular-nums text-foreground/70">
-                            #{(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
+                            #{(DOODLE_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
                           </span>
                         </div>
                         <Slider
-                          value={[(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
+                          value={[(DOODLE_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
                           onValueChange={([v]) => {
-                            const entry = CURATED_PATTERNS[v - 1];
+                            const entry = DOODLE_PATTERNS[v - 1];
                             if (entry) setDoodleConfig({ patternId: entry.id, size: entry.size });
                           }}
                           min={1}
-                          max={10}
+                          max={42}
                           step={1}
                         />
                       </div>

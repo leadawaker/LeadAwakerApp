@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FlaskConical } from "lucide-react";
 import type { Campaign } from "@/types/models";
+import { PanelShell, SectionHead } from "./panelPrimitives";
 
 // ── ABTestCard ────────────────────────────────────────────────────────────────
 
@@ -21,27 +22,28 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
 
   if (loading) {
     return (
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0 max-h-[680px]" data-testid="campaign-detail-view-ab">
-        <div className="flex items-center min-h-[36px] shrink-0">
-          <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("abTesting.title")}</span>
-        </div>
+      <PanelShell variant="flat" testId="campaign-detail-view-ab" style={{ overflowY: "auto", minHeight: 0, maxHeight: 680 }}>
+        <SectionHead eyebrow={t("summary.eyebrows.experiment")} title={t("abTesting.title")} />
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground text-xs">Loading...</div>
+          <div className="animate-pulse text-muted-foreground text-xs">{t("summary.generating")}</div>
         </div>
-      </div>
+      </PanelShell>
     );
   }
 
   const hasData = stats?.variants && (stats.variants.A || stats.variants.B);
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto min-h-0 max-h-[680px]" data-testid="campaign-detail-view-ab">
-      <div className="flex items-center justify-between min-h-[36px] shrink-0">
-        <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("abTesting.title")}</span>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          {stats?.split_ratio != null ? `${100 - stats.split_ratio}/${stats.split_ratio}` : "50/50"}
-        </span>
-      </div>
+    <PanelShell variant="flat" testId="campaign-detail-view-ab" style={{ overflowY: "auto", minHeight: 0, maxHeight: 680 }}>
+      <SectionHead
+        eyebrow={t("summary.eyebrows.experiment")}
+        title={t("abTesting.title")}
+        action={
+          <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.12em", color: "var(--mute)" }}>
+            {stats?.split_ratio != null ? `${100 - stats.split_ratio}/${stats.split_ratio}` : "50/50"}
+          </span>
+        }
+      />
       {!hasData ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-2 text-muted-foreground">
           <FlaskConical className="w-8 h-8 opacity-20" />
@@ -54,7 +56,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
               const isWinner = stats.winner === v;
               return (
                 <div key={v} className="flex items-center gap-2">
-                  <div className={`w-2.5 h-2.5 rounded-sm ${v === "A" ? "bg-indigo-500" : "bg-transparent ring-1 ring-indigo-500"}`} />
+                  <div className={`w-2.5 h-2.5 rounded-sm`} style={v === "A" ? { backgroundColor: "#6C5A8C" } : { backgroundColor: "transparent", boxShadow: "0 0 0 1px #6C5A8C" }} />
                   <span className={`text-xs font-medium ${isWinner ? "text-amber-400" : "text-foreground"}`}>
                     {v}{isWinner ? " ✦" : ""}
                   </span>
@@ -92,8 +94,8 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                     return (
                       <div key={v} className="relative h-6">
                         <div
-                          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ${isSolid ? "bg-indigo-500" : "border border-indigo-500/60 bg-indigo-500/8"}`}
-                          style={{ width: `${w}%`, minWidth: w > 0 ? "24px" : "0" }}
+                          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700`}
+                          style={isSolid ? { backgroundColor: "#6C5A8C", width: `${w}%`, minWidth: w > 0 ? "24px" : "0" } : { border: "1px solid rgba(108,90,140,0.6)", backgroundColor: "rgba(108,90,140,0.08)", width: `${w}%`, minWidth: w > 0 ? "24px" : "0" }}
                         />
                         {isSolid ? (
                           <>
@@ -120,7 +122,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
             <div className="flex flex-col gap-2 pt-3 border-t border-border/30">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">{t("abTesting.confidence")}</span>
-                <span className={`font-mono font-semibold ${stats.confidence >= 0.95 ? "text-emerald-500" : stats.confidence >= 0.7 ? "text-amber-500" : "text-indigo-400"}`}>
+                <span className="font-mono font-semibold" style={{ color: stats.confidence >= 0.95 ? "var(--good)" : stats.confidence >= 0.7 ? "var(--warn)" : "#8A7AA0" }}>
                   {(stats.confidence * 100).toFixed(0)}%
                 </span>
               </div>
@@ -130,10 +132,10 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                   style={{
                     width: `${stats.confidence * 100}%`,
                     background: stats.confidence >= 0.95
-                      ? "linear-gradient(90deg, #10b981, #34d399)"
+                      ? "linear-gradient(90deg, var(--good), #45B070)"
                       : stats.confidence >= 0.7
-                        ? "linear-gradient(90deg, #f59e0b, #fbbf24)"
-                        : "linear-gradient(90deg, #6366f1, #818cf8)",
+                        ? "linear-gradient(90deg, var(--warn), #E0A830)"
+                        : "linear-gradient(90deg, #6C5A8C, #8A7AA0)",
                   }}
                 />
               </div>
@@ -146,6 +148,6 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
           )}
         </>
       )}
-    </div>
+    </PanelShell>
   );
 }

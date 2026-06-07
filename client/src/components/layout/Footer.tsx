@@ -51,6 +51,11 @@ export function Footer() {
     return `/${currentLang}${path === "/" ? "" : path}`;
   };
 
+  const pathWithoutLang = currentLang === "en"
+    ? location
+    : location.slice(`/${currentLang}`.length) || "/";
+  const isLegacy = pathWithoutLang.startsWith("/legacy");
+
   return (
     <footer className="pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
       <div className="container mx-auto px-4 md:px-6">
@@ -62,7 +67,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href={withLang("/")}
+                  href={withLang(isLegacy ? "/legacy" : "/")}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.home")}
@@ -77,12 +82,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/#try"
+                <a
+                  href={isLegacy ? "/legacy#demo" : "/#try"}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.try")}
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

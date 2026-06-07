@@ -569,7 +569,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
           <div className="grid grid-cols-2">
             {/* Left: editor */}
             <div className="px-[3px] pb-[3px]">
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 h-full">
+              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5 h-full">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">
                     {t("form.promptContent")}
@@ -611,7 +611,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
 
           {/* System Message + Notes below the split, full width */}
           <div className="flex flex-col gap-[3px] px-[3px] pb-[3px] mt-[3px]">
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
               <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
                 {t("form.systemMessage")}
               </p>
@@ -625,7 +625,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                 />
               </div>
             </div>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
               <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
                 {t("form.notes")}
               </p>
@@ -660,7 +660,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
           )}
           <div className="flex flex-col gap-[3px] w-full">
             <div className="flex flex-col gap-[3px]">
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">
                     {t("form.promptContent")}
@@ -688,7 +688,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                 )}
               </div>
 
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
                 <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
                   {t("form.systemMessage")}
                 </p>
@@ -703,7 +703,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                 </div>
               </div>
 
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
+              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
                 <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
                   {t("form.notes")}
                 </p>

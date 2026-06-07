@@ -1,6 +1,7 @@
 import { RefObject } from "react";
 import type { Virtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
+import { ListCard } from "@/components/crm/primitives";
 import { Hand } from "lucide-react";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -161,15 +162,14 @@ export function ThreadList({
                       animationDelay: `${Math.min(virtualRow.index, 12) * 25}ms`,
                     }}
                   >
-                    <div
+                    <ListCard
+                      selected={active}
+                      padded={false}
                       role="button"
                       tabIndex={0}
                       onClick={() => onSelectLead(lead.id)}
                       onKeyDown={(e) => e.key === "Enter" && onSelectLead(lead.id)}
-                      className={cn(
-                        "relative rounded-xl cursor-pointer transition-colors min-h-[64px]",
-                        active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-                      )}
+                      className="relative"
                       data-testid={`button-thread-${lead.id}`}
                       data-thread-id={lead.id}
                     >
@@ -242,7 +242,7 @@ export function ThreadList({
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </ListCard>
                   </div>
                 );
               })}

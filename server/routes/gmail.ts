@@ -19,7 +19,7 @@ export function registerGmailRoutes(app: Express): void {
     if (error) {
       console.error("[Gmail OAuth] Google returned error:", error);
       const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      return res.redirect(`${base}/agency/settings?gmail=error&reason=${encodeURIComponent(error)}`);
+      return res.redirect(`${base}/platform/settings?gmail=error&reason=${encodeURIComponent(error)}`);
     }
     const code = req.query.code as string;
     if (!code) return res.status(400).json({ message: "Missing authorization code" });
@@ -36,11 +36,11 @@ export function registerGmailRoutes(app: Express): void {
       });
 
       const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      res.redirect(`${base}/agency/settings?gmail=connected`);
+      res.redirect(`${base}/platform/settings?gmail=connected`);
     } catch (err: any) {
       console.error("[Gmail OAuth] Callback error:", err);
       const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      res.redirect(`${base}/agency/settings?gmail=error`);
+      res.redirect(`${base}/platform/settings?gmail=error`);
     }
   }));
 

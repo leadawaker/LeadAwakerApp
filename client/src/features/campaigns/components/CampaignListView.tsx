@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
   Megaphone,
-  Building2,
   Filter,
   Check,
   X,
@@ -17,18 +16,12 @@ import {
   Plus,
   Layers,
   MoreVertical,
-  RefreshCw,
-  Copy,
-  Trash2,
-  Palette,
-  PauseCircle,
-  PlayCircle,
+  EyeOff,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -38,16 +31,14 @@ import {
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
-import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
 import { MobileCampaignDetailPanel } from "./MobileCampaignDetailPanel";
 import { SkeletonCampaignPanel } from "@/components/ui/skeleton";
-import { getInitials, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
+import { getInitials, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useDeleteAction } from "@/hooks/useDeleteAction";
-import { SearchPill } from "@/components/ui/search-pill";
+import type { TabDef } from "@/components/ui/view-tab-bar";
 import { Search } from "lucide-react";
 import {
   useCompactPanelState,
@@ -59,10 +50,6 @@ import { CompactCampaignCard } from "./CompactCampaignCard";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import {
-  xBase,
-  xDefault,
-  xActive,
-  xSpan,
   DETAIL_SORT_LABEL_KEYS,
   DETAIL_GROUP_LABEL_KEYS,
   DETAIL_STATUS_FILTER_OPTIONS,
@@ -101,6 +88,9 @@ type VirtualListItem =
   | { kind: "campaign"; campaign: Campaign };
 
 // ── Campaign card ────────────────────────────────────────────────────────────
+// Uses la-camp-card / la-mono-tile / la-status from the warm-bone design system.
+// Default state: transparent, no shadow. Active: white surface + raised-crisp
+// shadow + wine left-edge accent bar (all via CSS classes in components.css).
 function CampaignListCard({
   campaign,
   isActive,
@@ -114,21 +104,32 @@ function CampaignListCard({
   const name = String(campaign.name || t("detail.unnamed"));
   const initials = getInitials(name);
   const status = String(campaign.status || "");
-  const avatarColor = getCampaignAvatarColor(status);
   const leads = getLeadCount(campaign);
   const responseRate = getResponseRate(campaign);
   const bookings = Number(campaign.bookings_generated ?? 0);
   const accountName = campaign.account_name || "";
-  const accountLogo = (campaign as any).account_logo_url || "";
-  const statusHex = CAMPAIGN_STATUS_HEX[status] || "#6B7280";
+  const cid = getCampaignId(campaign);
+
+  // Design‑system status mapping
+  const statusClass =
+    status === "Active" ? "active-s"
+    : status === "Paused" ? "paused"
+    : "inactive";
+  const statusLabel = t(`statusLabels.${status}`, status) || t("statusLabels.Unknown");
+
+  // Mono-tile variant: wine gradient when active/running, inset when inactive
+  const tileClass = status === "Active" || isActive ? "wine"
+    : status === "Inactive" || status === "Draft" ? "inactive"
+    : "";
+
+  // Campaign sticker
   const campaignStickerSlug = campaign.campaign_sticker ?? null;
   const campaignSticker = campaignStickerSlug
     ? CAMPAIGN_STICKERS.find(s => s.slug === campaignStickerSlug) ?? null
     : null;
-  const campaignStickerSize = Math.min(Number((campaign as any).campaign_sticker_size ?? 70), 70);
   const isGrayscale = status === "Inactive";
-  const isDraft = status === "Draft";
-  const isPaused = status === "Paused";
+
+  // Date label
   const createdAt: string | null = (campaign as any).createdAt ?? (campaign as any).created_at ?? null;
   const startAt: string | null = campaign.start_date ?? createdAt;
   const daysRunning = (status === "Active" && startAt)
@@ -142,151 +143,121 @@ function CampaignListCard({
 
   return (
     <div
-      className={cn(
-        "group relative rounded-3xl md:rounded-xl cursor-pointer transition-shadow overflow-hidden",
-        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-      )}
-
+      className={`la-camp-card group${isActive ? " active" : ""}`}
+      style={{ flexDirection: "column", alignItems: "stretch", gap: 'var(--space-xs)' }}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
-      <div className="px-2.5 pt-3.5 pb-2.5 flex flex-col gap-2">
+      {/* Top row: avatar + body */}
+      <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+        {/* Avatar — sticker or la-mono-tile initials */}
+        {campaignSticker ? (
+          <div className="la-mono-tile" style={{ overflow: "hidden", padding: 0 }}>
+            <img
+              src={campaignSticker.url}
+              alt=""
+              className="h-full w-full object-contain"
+              style={isGrayscale ? { filter: "grayscale(1) opacity(0.45)" } : undefined}
+            />
+          </div>
+        ) : (
+          <div className={`la-mono-tile ${tileClass}`}>{initials}</div>
+        )}
 
-        {/* Top row: Avatar + Name */}
-        <div className="flex items-center gap-2.5">
-          {/* Avatar: sticker (no circle) > account logo > initials */}
-          {campaignSticker ? (
-            <div className="flex items-center justify-center shrink-0" style={{ width: campaignStickerSize, height: campaignStickerSize }}>
-              <img
-                src={campaignSticker.url}
-                alt=""
-                className="object-contain w-full h-full"
-                style={{ filter:
-                  isGrayscale ? "grayscale(1) opacity(0.45)"
-                  : isDraft ? "grayscale(1) sepia(1) hue-rotate(185deg) saturate(4) brightness(0.9) opacity(0.6)"
-                  : isPaused ? "sepia(1) saturate(2) hue-rotate(-5deg) brightness(0.85) opacity(0.6)"
-                  : `hue-rotate(${campaign.campaign_hue ?? 0}deg)`
-                }}
-              />
-            </div>
-          ) : accountLogo ? (
-            <div className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 overflow-hidden relative">
-              <img
-                src={accountLogo}
-                alt=""
-                className="h-full w-full object-cover"
-                style={
-                  isGrayscale ? { filter: "grayscale(1)" }
-                  : isDraft ? { filter: "grayscale(1)" }
-                  : isPaused ? { filter: "grayscale(0.5)" }
-                  : undefined
-                }
-              />
-              {!isGrayscale && !isPaused && !isDraft && <div className="absolute inset-0 rounded-full bg-brand-indigo/40 mix-blend-multiply" />}
-              {isDraft && <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "rgba(80,100,220,0.35)", mixBlendMode: "color" }} />}
-              {isPaused && <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "rgba(200,160,40,0.55)", mixBlendMode: "color" }} />}
-            </div>
-          ) : (
-            <div
-              className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-              style={
-                isGrayscale ? { backgroundColor: "#D0D0D0", color: "#888888" }
-                : isPaused ? { backgroundColor: "#C8B86A", color: "#6B5A1E", filter: "grayscale(0.5) sepia(0.3) saturate(1.2)" }
-                : isDraft ? { backgroundColor: "#BFCFFF", color: "#3B4FA0" }
-                : { backgroundColor: avatarColor.bg, color: avatarColor.text }
-              }
-            >
-              {initials}
-            </div>
-          )}
+        {/* Body */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 14, fontWeight: 600, color: "var(--ink)",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            marginBottom: 'var(--space-xxs)',
+          }}>
+            {name}
+          </div>
 
-          <div className="flex-1 min-w-0">
-            <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
-              {name}
-            </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0"
-                style={{ backgroundColor: `${statusHex}18`, color: statusHex }}
-              >
-                <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: statusHex }} />
-                {t(`statusLabels.${status}`, status) || t("statusLabels.Unknown")}
+          <div className="row" style={{ gap: 'var(--space-xs)', marginBottom: 6 }}>
+            <span className={`la-status ${statusClass}`}>
+              <span className="dot" />{statusLabel}
+            </span>
+            {cid > 0 && (
+              <span style={{
+                fontFamily: "'Geist Mono', ui-monospace, monospace",
+                fontSize: 10, color: "var(--mute-2)", letterSpacing: "0.1em",
+              }}>
+                #{cid}
               </span>
-              {getCampaignId(campaign) > 0 && (
-                <span className="text-[10px] font-semibold text-foreground/35">#{getCampaignId(campaign)}</span>
-              )}
-            </div>
-            {accountName && (
-              <div className="flex items-center gap-1 mt-1">
-                <Building2 className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" />
-                <span className="text-[11px] font-medium text-foreground/65 truncate">{accountName}</span>
-              </div>
             )}
           </div>
 
-        </div>
-
-        {/* Metrics strip: always visible on mobile, hover-only on desktop. Hidden entirely for demo campaigns. */}
-        {!campaign.is_demo && (
-        <div className={cn(
-          "opacity-100 max-h-[64px] md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[64px]",
-          "transition-[opacity,max-height] duration-200 flex flex-col gap-1"
-        )}>
-          {/* Metrics strip */}
-          <div className={cn(
-            "grid grid-cols-3 gap-px rounded-lg overflow-hidden",
-            isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
-          )}>
-            {([
-              { label: t("card.leads"),    value: leads > 0        ? leads.toLocaleString()   : "—", isBooked: false },
-              { label: t("card.response"), value: responseRate > 0 ? `${responseRate}%`        : "—", isBooked: false },
-              { label: t("card.booked"),   value: bookings > 0     ? bookings.toLocaleString() : "—", isBooked: true  },
-            ] as const).map((stat) => (
-              <div
-                key={stat.label}
-                className={cn(
-                  "flex flex-col items-center py-1.5",
-                  isActive ? "bg-highlight-selected" : "bg-card group-hover:bg-card-hover"
-                )}
-              >
-                <span className={cn(
-                  "font-bold tabular-nums leading-tight",
-                  stat.isBooked && bookings > 0
-                    ? "text-[15px] text-emerald-600 dark:text-emerald-400"
-                    : "text-[13px] text-foreground"
-                )}>{stat.value}</span>
-                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mt-0.5">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Date row */}
-          {createdLabel && (
-            <div className="flex items-center gap-1 px-1">
-              <span className="text-[10px] text-muted-foreground/70 tabular-nums">{daysRunning !== null ? createdLabel : t("card.started", { date: createdLabel })}</span>
+          {accountName && (
+            <div className="row" style={{ gap: 5, fontSize: 11, color: "var(--mute)" }}>
+              <span className="dot" style={{ background: "var(--mute-2)" }} />
+              {accountName}
             </div>
           )}
         </div>
-        )}
-
       </div>
+
+      {/* Metrics strip — always visible on mobile, hover-only on desktop */}
+      {!campaign.is_demo && (
+      <div className={cn(
+        "opacity-100 max-h-[72px] md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[72px]",
+        "transition-[opacity,max-height] duration-200 flex flex-col gap-1 overflow-hidden"
+      )}>
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
+          borderRadius: "var(--r-button)", overflow: "hidden",
+          background: isActive ? "var(--warn-tint)" : "var(--line)",
+        }}>
+          {([
+            { label: t("card.leads"),    value: leads > 0        ? leads.toLocaleString()   : "—", booked: false },
+            { label: t("card.response"), value: responseRate > 0 ? `${responseRate}%`        : "—", booked: false },
+            { label: t("card.booked"),   value: bookings > 0     ? bookings.toLocaleString() : "—", booked: true  },
+          ] as const).map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                padding: "6px 0",
+                background: isActive ? "hsl(var(--highlight-selected))" : "var(--card)",
+              }}
+            >
+              <span style={{
+                fontWeight: 700, fontVariantNumeric: "tabular-nums", lineHeight: 1.15,
+                color: stat.booked && bookings > 0 ? "var(--good)" : "var(--ink)",
+                fontSize: stat.booked && bookings > 0 ? 15 : 13,
+              }}>{stat.value}</span>
+              <span style={{
+                fontSize: 9, color: "var(--mute)", textTransform: "uppercase",
+                letterSpacing: "0.05em", marginTop: 2,
+              }}>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {createdLabel && (
+          <div style={{ paddingLeft: 'var(--space-xxs)' }}>
+            <span style={{
+              fontSize: 10, color: "var(--mute)", fontVariantNumeric: "tabular-nums",
+            }}>
+              {daysRunning !== null ? createdLabel : t("card.started", { date: createdLabel })}
+            </span>
+          </div>
+        )}
+      </div>
+      )}
     </div>
   );
 }
 
 // ── Group header ─────────────────────────────────────────────────────────────
+// Matches spec: eyebrow label with count + trailing rule
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
-      <div className="flex items-center gap-[10px]">
-        <div className="flex-1 h-px bg-foreground/15" />
-        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
-        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15" />
-      </div>
+    <div className="row" style={{ gap: 'var(--space-xs)', padding: '12px 17px 2px' }}>
+      <span className="eyebrow eyebrow-sm">{label} — {count}</span>
+      <div className="rule" style={{ flex: 1 }} />
     </div>
   );
 }
@@ -324,11 +295,11 @@ const SORT_FILTER_OPTIONS: { value: CampaignSortBy; optKey: string }[] = [
 const STATUS_FILTER_OPTIONS = ["Active", "Paused", "Draft", "Completed", "Inactive"];
 
 const STATUS_COLOR: Record<string, string> = {
-  Active:    "#22c55e",
-  Paused:    "#f59e0b",
-  Completed: "#3b82f6",
-  Draft:     "#9ca3af",
-  Inactive:  "#9ca3af",
+  Active:    "var(--good)",
+  Paused:    "var(--warn)",
+  Completed: "#6C5A8C",
+  Draft:     "var(--mute-2)",
+  Inactive:  "var(--mute-2)",
 };
 
 interface CampaignFilterBottomSheetProps {
@@ -515,7 +486,7 @@ function CampaignFilterBottomSheet({
                             active ? "bg-brand-indigo/10 text-brand-indigo" : "text-foreground/80 hover:bg-muted"
                           )}
                         >
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLOR[status] ?? "#9ca3af" }} />
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLOR[status] ?? "var(--mute-2)" }} />
                           <span className="flex-1 text-left">{t(`statusLabels.${status}`, status)}</span>
                           {active && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                         </button>
@@ -583,8 +554,8 @@ interface CampaignListViewProps {
   filterAccount?: string;
   onFilterAccountChange?: (a: string) => void;
   availableAccounts?: string[];
-  showDemoCampaigns?: boolean;
-  onShowDemoCampaignsChange?: (v: boolean) => void;
+  showDemoCampaigns?: boolean | null;
+  onShowDemoCampaignsChange?: (v: boolean | null) => void;
   hasNonDefaultControls: boolean;
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
@@ -623,7 +594,7 @@ export function CampaignListView({
   filterAccount = "",
   onFilterAccountChange,
   availableAccounts = [],
-  showDemoCampaigns = false,
+  showDemoCampaigns = null,
   onShowDemoCampaignsChange,
   hasNonDefaultControls,
   isGroupNonDefault,
@@ -633,7 +604,6 @@ export function CampaignListView({
   onDelete,
 }: CampaignListViewProps) {
   const { t } = useTranslation("campaigns");
-  const { label: deleteLabel } = useDeleteAction("campaign");
   const isMobile768 = useIsMobile(768);
   const isNarrow = useIsMobile(1024);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -661,6 +631,14 @@ export function CampaignListView({
   // Active filter state
   const isFilterActive = filterStatus.length > 0 || !!filterAccount;
 
+  // Responsive toolbar collapse at < 1200px
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1200);
+  useEffect(() => {
+    const onResize = () => setToolbarCollapsed(window.innerWidth < 1200);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   // Build flat grouped list
   const flatItems = useMemo((): VirtualListItem[] => {
     // 1. Text search
@@ -687,8 +665,10 @@ export function CampaignListView({
       filtered = filtered.filter((c) => String(c.account_name || "") === filterAccount);
     }
 
-    // 2c. Demo filter — when on, show ONLY demo campaigns; when off, hide all demos
-    filtered = filtered.filter((c) => showDemoCampaigns ? c.is_demo : !c.is_demo);
+    // 2c. Demo filter — null means show all; true = demos only; false = hide demos
+    if (showDemoCampaigns !== null) {
+      filtered = filtered.filter((c) => showDemoCampaigns ? c.is_demo : !c.is_demo);
+    }
 
     // 3. Sort
     filtered = [...filtered].sort((a, b) => {
@@ -873,16 +853,175 @@ export function CampaignListView({
   });
 
   return (
-    <div className={cn("flex h-full gap-[3px] mx-auto w-full", promptPanelOpen ? "max-w-[2369px]" : "max-w-[1729px]")} data-testid="campaign-list-view">
+    <div className={cn("flex flex-col h-full w-full", promptPanelOpen ? "max-w-[2369px]" : "max-w-[1729px]")} data-testid="campaign-list-view">
+
+      {/* ── FULL-WIDTH TOP BAR (desktop only) ─────────────────────────── */}
+      {!isListCompact && (
+        <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px] border-b border-[var(--line)] bg-panel-list-bg" style={{ height: 52 }}>
+          {/* Left: title + count + tabs */}
+          <span className="serif" style={{ fontSize: 20, color: 'var(--ink)', letterSpacing: '-0.01em' }}>{t("title")}</span>
+          <span className="eyebrow eyebrow-sm" style={{ color: 'var(--mute-2)', marginLeft: 4 }}>#{totalCampaigns}</span>
+          <div className="la-seg la-seg--fill shrink-0" style={{ marginLeft: 10 }}>
+            {DETAIL_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onDetailTabChange(tab.id as CampaignDetailTab)}
+                className={`la-seg-btn${detailTab === tab.id ? ' on' : ''}`}
+                style={{ padding: '8px 12px', fontSize: 11, letterSpacing: '0.13em' }}
+              >
+                {tab.icon && <span className="flex items-center"><tab.icon size={13} /></span>}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex-1" />
+          {/* Search */}
+          <div className="relative shrink-0" style={{ width: 180 }}>
+            <input
+              value={listSearch}
+              onChange={(e) => onListSearchChange(e.target.value)}
+              placeholder={t("toolbar.searchPlaceholder", "Search...")}
+              className="la-input"
+              style={{ padding: '7px 10px 7px 28px', fontSize: 12 }}
+            />
+            <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+            </span>
+          </div>
+          {/* Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                <Filter className="h-4 w-4 shrink-0" />
+                {isFilterActive && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44 bg-white">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-[12px]">
+                  <span className="flex-1">{t("filter.status")}</span>
+                  {filterStatus.length > 0 && <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">{filterStatus.length}</span>}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-44 bg-white">
+                  {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+                    <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "var(--mute-2)" }} />
+                      <span className={cn("flex-1", filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
+                      {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              {availableAccounts.length > 0 && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="text-[12px]">
+                    <span className="flex-1">{t("filter.account", "Account")}</span>
+                    {filterAccount && <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-44 bg-white">
+                    <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}>
+                      <span className="flex-1">{t("filter.allAccounts", "All accounts")}</span>
+                      {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {availableAccounts.map((a) => (
+                      <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}>
+                        <span className="flex-1 truncate">{a}</span>
+                        {filterAccount === a && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
+              {onShowDemoCampaignsChange && (
+                <DropdownMenuItem onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(showDemoCampaigns === null ? true : showDemoCampaigns === true ? false : null); }} className="flex items-center gap-2 text-[12px]">
+                  <span className={cn("flex-1", showDemoCampaigns !== null && "text-brand-indigo font-semibold")}>
+                    {showDemoCampaigns === true ? "Demo only" : showDemoCampaigns === false ? "Hide demos" : t("config.showDemoCampaigns")}
+                  </span>
+                  {showDemoCampaigns === true && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  {showDemoCampaigns === false && <EyeOff className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              )}
+              {isFilterActive && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">{t("filter.clearAllFilters", "Clear all filters")}</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Sort */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                <ArrowUpDown className="h-4 w-4 shrink-0" />
+                {isSortNonDefault && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {(() => {
+                const isActive = sortBy === "name_asc" || sortBy === "name_desc";
+                const activeDir: "asc" | "desc" = sortBy === "name_asc" ? "asc" : "desc";
+                return (
+                  <DropdownMenuItem key="name" onSelect={(e) => { e.preventDefault(); onSortByChange(isActive ? sortBy : "name_desc"); }} className="text-[12px] flex items-center gap-2">
+                    <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sortOptions.name", "Name")}</span>
+                    {isActive && (
+                      <>
+                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending"><ArrowUp className="h-3 w-3" /></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending"><ArrowDown className="h-3 w-3" /></button>
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })()}
+              {(["recent", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
+                <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onSortByChange(s); }} className="text-[12px] flex items-center gap-2">
+                  <span className={cn("flex-1", sortBy === s && "font-semibold !text-brand-indigo")}>{t(DETAIL_SORT_LABEL_KEYS[s])}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Group */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                <Layers className="h-4 w-4 shrink-0" />
+                {isGroupNonDefault && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
+                <DropdownMenuItem key={g} onSelect={(e) => { e.preventDefault(); onGroupByChange(g); }} className="text-[12px] flex items-center gap-2">
+                  <span className={cn("flex-1", groupBy === g && "font-semibold !text-brand-indigo")}>{t(DETAIL_GROUP_LABEL_KEYS[g])}</span>
+                  {groupBy === g && g !== "none" && (
+                    <>
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending"><ArrowUp className="h-3 w-3" /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending"><ArrowDown className="h-3 w-3" /></button>
+                    </>
+                  )}
+                  {groupBy === g && g === "none" && <Check className="h-3 w-3" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* + New */}
+          <button className="la-btn la-btn--wine la-btn--icon" onClick={onCreateCampaign} title={t("toolbar.add", "New campaign")}>
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* ── CONTENT ROW: left panel + right panel ─────────────────────── */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
       <div className={cn(
-        "flex-col bg-muted rounded-lg overflow-hidden",
+        "flex-col bg-panel-list-bg overflow-hidden border-r border-[var(--line)]",
         isListHidden
           ? cn(isNarrow && selectedCampaign ? "hidden" : "flex", "lg:hidden")
           : isListCompact
             ? cn("w-[65px] shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
-            : cn("w-full lg:w-[340px] lg:shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
+            : cn("w-full lg:w-[356px] lg:shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
         {isListCompact && (
@@ -953,7 +1092,7 @@ export function CampaignListView({
                         <DropdownMenuSubContent className="w-44">
                           {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
                             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }} />
+                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "var(--mute-2)" }} />
                               <span className="flex-1">{t(`statusLabels.${s}`, s)}</span>
                               {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                             </DropdownMenuItem>
@@ -1024,11 +1163,14 @@ export function CampaignListView({
 
                   {onShowDemoCampaignsChange && (
                     <DropdownMenuItem
-                      onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }}
+                      onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(showDemoCampaigns === null ? true : showDemoCampaigns === true ? false : null); }}
                       className="flex items-center gap-2 text-[12px]"
                     >
-                      <span className={cn("flex-1", showDemoCampaigns && "text-brand-indigo font-semibold")}>{t("config.showDemoCampaigns")}</span>
-                      {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      <span className={cn("flex-1", showDemoCampaigns !== null && "text-brand-indigo font-semibold")}>
+                        {showDemoCampaigns === true ? "Demo only" : showDemoCampaigns === false ? "Hide demos" : t("config.showDemoCampaigns")}
+                      </span>
+                      {showDemoCampaigns === true && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      {showDemoCampaigns === false && <EyeOff className="h-3 w-3 text-brand-indigo shrink-0" />}
                     </DropdownMenuItem>
                   )}
 
@@ -1043,7 +1185,7 @@ export function CampaignListView({
               </DropdownMenu>
             </div>
 
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto la-list-area">
               {loading ? (
                 <div className="flex items-center justify-center py-6"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
               ) : flatItems.length === 0 ? (
@@ -1076,274 +1218,329 @@ export function CampaignListView({
 
         {!isListCompact && <>
 
-        {/* Header: title + Detail Tab Bar */}
-        <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
-          <div className="flex items-center justify-between w-full md:w-[306px]">
-            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h2>
-            <span className="hidden md:block">
-              <ViewTabBar tabs={DETAIL_TABS} activeId={detailTab} onTabChange={(id) => onDetailTabChange(id as CampaignDetailTab)} variant="segment" />
-            </span>
-          </div>
-          {/* Mobile: Detail tabs + Demo toggle + Filter button row */}
-          <div className="md:hidden flex items-center gap-2">
-            <div className="flex-1">
-              <ViewTabBar tabs={DETAIL_TABS} activeId={detailTab} onTabChange={(id) => onDetailTabChange(id as CampaignDetailTab)} variant="segment" />
-            </div>
-            {/* Filter button — shows active badge when filters are active */}
-            <button
-              onClick={() => setFilterSheetOpen(true)}
-              data-testid="campaign-filter-btn"
-              className={cn(
-                "relative flex items-center gap-1.5 min-h-[44px] px-3 rounded-full border text-[12px] font-medium transition-colors shrink-0",
-                isFilterActive || isSortNonDefault
-                  ? "border-brand-indigo text-brand-indigo bg-brand-indigo/8"
-                  : "border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
-              )}
-              aria-label={t("toolbar.filter")}
-            >
-              <Filter className="h-3.5 w-3.5 shrink-0" />
-              <span>{t("toolbar.filter")}</span>
-              {(isFilterActive || isSortNonDefault) && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">
-                  {filterStatus.length + (isSortNonDefault ? 1 : 0)}
-                </span>
-              )}
-            </button>
+        {/* ── Title header (mobile only — desktop uses top bar) ── */}
+        <div className="shrink-0 md:hidden flex items-center gap-2 pl-[17px] pr-[17px] border-b border-[var(--line)]" style={{ height: 60 }}>
+          <span className="serif" style={{ fontSize: 22, color: 'var(--ink)', letterSpacing: '-0.01em' }}>{t("title")}</span>
+          <span className="eyebrow eyebrow-sm" style={{ color: 'var(--mute-2)' }}>#{totalCampaigns}</span>
+        </div>
+
+        {/* ── Stats / Settings seg (mobile only) ── */}
+        <div className="shrink-0 md:hidden px-[17px] pt-3 pb-1">
+          <div className="la-seg la-seg--fill" style={{ width: '100%' }}>
+            {DETAIL_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onDetailTabChange(tab.id as CampaignDetailTab)}
+                className={`la-seg-btn${detailTab === tab.id ? ' on' : ''}`}
+                style={{ padding: '10px 14px', fontSize: 11, letterSpacing: '0.13em' }}
+              >
+                {tab.icon && <span className="flex items-center"><tab.icon size={14} /></span>}
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ── Desktop list toolbar: search + sort + filter + group + add ── */}
-        <div className="hidden md:flex pl-2 pr-[17px] pb-2 items-center gap-1 shrink-0">
-          <SearchPill
-            value={listSearch}
-            onChange={onListSearchChange}
-            open={searchOpen}
-            onOpenChange={onSearchOpenChange}
-            placeholder={t("toolbar.searchPlaceholder", "Search campaigns...")}
-            className="ml-[9px] max-w-[171px]"
-          />
+        {/* ── Toolbar: search + filter + sort + group + add (mobile only) ── */}
+        <div className="shrink-0 md:hidden flex items-center gap-[5px] pl-[17px] pr-[17px]" style={{ paddingTop: 10, paddingBottom: 10 }}>
+          <div className="relative flex-1 min-w-0">
+            <input
+              value={listSearch}
+              onChange={(e) => onListSearchChange(e.target.value)}
+              placeholder={t("toolbar.searchPlaceholder", "Search campaigns...")}
+              className="la-input"
+              style={{ padding: '9px 10px 9px 28px', fontSize: 12 }}
+            />
+            <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+            </span>
+          </div>
 
-          {/* Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className={cn(xBase, isFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
-                <Filter className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.filter")}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44 bg-white">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-[12px]">
-                  <span className="flex-1">{t("filter.status")}</span>
-                  {filterStatus.length > 0 && (
-                    <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">
-                      {filterStatus.length}
-                    </span>
+          {/* ── Responsive Filter/Sort/Group (collapse to single ⚙ below 1200px) ── */}
+          {toolbarCollapsed ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                  <Settings2 className="h-4 w-4 shrink-0" />
+                  {(isFilterActive || isSortNonDefault || isGroupNonDefault) && (
+                    <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />
                   )}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-44 bg-white">
-                  {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
-                    <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }} />
-                      <span className={cn("flex-1", filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
-                      {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {availableAccounts.length > 0 && (
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-52 bg-white">
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="text-[12px]">
-                    <span className="flex-1">{t("filter.account", "Account")}</span>
-                    {filterAccount && (
-                      <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
-                    )}
+                  <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                    <Filter className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1">{t("toolbar.filter")}</span>
+                    {isFilterActive && <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">{filterStatus.length + (filterAccount ? 1 : 0)}</span>}
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-44 bg-white">
-                    <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}>
-                      <span className="flex-1">{t("filter.allAccounts", "All accounts")}</span>
-                      {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {availableAccounts.map((a) => (
-                      <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}>
-                        <span className="flex-1 truncate">{a}</span>
-                        {filterAccount === a && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  <DropdownMenuSubContent className="w-48 bg-white">
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <span className="flex-1">{t("filter.status")}</span>
+                        {filterStatus.length > 0 && <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">{filterStatus.length}</span>}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-44 bg-white">
+                        {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+                          <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                            <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "var(--mute-2)" }} />
+                            <span className={cn("flex-1", filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
+                            {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    {availableAccounts.length > 0 && (
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="text-[12px]">
+                          <span className="flex-1">{t("filter.account", "Account")}</span>
+                          {filterAccount && <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-44 bg-white">
+                          <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}>
+                            <span className="flex-1">{t("filter.allAccounts", "All accounts")}</span>
+                            {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {availableAccounts.map((a) => (
+                            <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}>
+                              <span className="flex-1 truncate">{a}</span>
+                              {filterAccount === a && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    )}
+                    {onShowDemoCampaignsChange && (
+                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(showDemoCampaigns === null ? true : showDemoCampaigns === true ? false : null); }} className="flex items-center gap-2 text-[12px]">
+                        <span className={cn("flex-1", showDemoCampaigns !== null && "text-brand-indigo font-semibold")}>
+                          {showDemoCampaigns === true ? "Demo only" : showDemoCampaigns === false ? "Hide demos" : t("config.showDemoCampaigns")}
+                        </span>
+                        {showDemoCampaigns === true && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        {showDemoCampaigns === false && <EyeOff className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      </DropdownMenuItem>
+                    )}
+                    {isFilterActive && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">{t("filter.clearAllFilters", "Clear all filters")}</DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                    <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
+                    <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.sort")}</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-52">
+                    {(["recent", "name_asc", "name_desc", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
+                      <DropdownMenuItem key={s} onClick={() => onSortByChange(s)} className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}>
+                        {t(DETAIL_SORT_LABEL_KEYS[s])}
+                        {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-              )}
-
-              {isFilterActive && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">{t("filter.clearAllFilters", "Clear all filters")}</DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Sort */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
-                <ArrowUpDown className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.sort")}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              {/* Name — paired asc/desc row */}
-              {(() => {
-                const isActive = sortBy === "name_asc" || sortBy === "name_desc";
-                const activeDir: "asc" | "desc" = sortBy === "name_asc" ? "asc" : "desc";
-                return (
-                  <DropdownMenuItem
-                    key="name"
-                    onSelect={(e) => { e.preventDefault(); onSortByChange(isActive ? sortBy : "name_desc"); }}
-                    className="text-[12px] flex items-center gap-2"
-                  >
-                    <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sortOptions.name", "Name")}</span>
-                    {isActive && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_asc"); }}
-                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                          title="Ascending"
-                        >
-                          <ArrowUp className="h-3 w-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_desc"); }}
-                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                          title="Descending"
-                        >
-                          <ArrowDown className="h-3 w-3" />
-                        </button>
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })()}
-              {/* Standalone sort options */}
-              {(["recent", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
-                <DropdownMenuItem
-                  key={s}
-                  onSelect={(e) => { e.preventDefault(); onSortByChange(s); }}
-                  className="text-[12px] flex items-center gap-2"
-                >
-                  <span className={cn("flex-1", sortBy === s && "font-semibold !text-brand-indigo")}>{t(DETAIL_SORT_LABEL_KEYS[s])}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Group */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className={cn(xBase, isGroupNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
-                <Layers className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.group", "Group")}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
-                <DropdownMenuItem
-                  key={g}
-                  onSelect={(e) => { e.preventDefault(); onGroupByChange(g); }}
-                  className="text-[12px] flex items-center gap-2"
-                >
-                  <span className={cn("flex-1", groupBy === g && "font-semibold !text-brand-indigo")}>{t(DETAIL_GROUP_LABEL_KEYS[g])}</span>
-                  {groupBy === g && g !== "none" && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                    <Layers className="h-3.5 w-3.5 shrink-0" />
+                    <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.group", "Group")}</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-44">
+                    {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
+                      <DropdownMenuItem key={g} onClick={() => onGroupByChange(g)} className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}>
+                        {t(DETAIL_GROUP_LABEL_KEYS[g])}
+                        {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              {/* Filter — always soft, wine dot when active */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                    <Filter className="h-4 w-4 shrink-0" />
+                    {isFilterActive && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44 bg-white">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="text-[12px]">
+                      <span className="flex-1">{t("filter.status")}</span>
+                      {filterStatus.length > 0 && (
+                        <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">
+                          {filterStatus.length}
+                        </span>
+                      )}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44 bg-white">
+                      {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "var(--mute-2)" }} />
+                          <span className={cn("flex-1", filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
+                          {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  {availableAccounts.length > 0 && (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <span className="flex-1">{t("filter.account", "Account")}</span>
+                        {filterAccount && (
+                          <span className="ml-1 h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                        )}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-44 bg-white">
+                        <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}>
+                          <span className="flex-1">{t("filter.allAccounts", "All accounts")}</span>
+                          {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {availableAccounts.map((a) => (
+                          <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}>
+                            <span className="flex-1 truncate">{a}</span>
+                            {filterAccount === a && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  )}
+                  {onShowDemoCampaignsChange && (
+                    <DropdownMenuItem
+                      onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(showDemoCampaigns === null ? true : showDemoCampaigns === true ? false : null); }}
+                      className="flex items-center gap-2 text-[12px]"
+                    >
+                      <span className={cn("flex-1", showDemoCampaigns !== null && "text-brand-indigo font-semibold")}>
+                        {showDemoCampaigns === true ? "Demo only" : showDemoCampaigns === false ? "Hide demos" : t("config.showDemoCampaigns")}
+                      </span>
+                      {showDemoCampaigns === true && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      {showDemoCampaigns === false && <EyeOff className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    </DropdownMenuItem>
+                  )}
+                  {isFilterActive && (
                     <>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }}
-                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                        title="Ascending"
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }}
-                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                        title="Descending"
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </button>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">{t("filter.clearAllFilters", "Clear all filters")}</DropdownMenuItem>
                     </>
                   )}
-                  {groupBy === g && g === "none" && <Check className="h-3 w-3" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-          {/* Actions menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="h-9 w-9 rounded-full border border-black/[0.125] grid place-items-center shrink-0 text-foreground/60 hover:text-foreground transition-colors">
-                <MoreVertical className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={onCreateCampaign} className="flex items-center gap-2 text-[12px]">
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                {t("toolbar.add", "New Campaign")}
-              </DropdownMenuItem>
-              {selectedCampaign && onDuplicate && (
-                <DropdownMenuItem onClick={() => onDuplicate(selectedCampaign)} className="flex items-center gap-2 text-[12px]">
-                  <Copy className="h-3.5 w-3.5 shrink-0" />
-                  {t("toolbar.duplicate", "Duplicate")}
-                </DropdownMenuItem>
-              )}
-              {onShowDemoCampaignsChange && (
-                <DropdownMenuItem
-                  onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(!showDemoCampaigns); }}
-                  className="flex items-center gap-2 text-[12px]"
-                >
-                  <span className={cn("flex-1", showDemoCampaigns && "text-brand-indigo font-semibold")}>{t("config.showDemoCampaigns")}</span>
-                  {showDemoCampaigns && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              {onRefresh && (
-                <DropdownMenuItem onClick={onRefresh} className="flex items-center gap-2 text-[12px]">
-                  <RefreshCw className="h-3.5 w-3.5 shrink-0" />
-                  {t("toolbar.refresh", "Refresh")}
-                </DropdownMenuItem>
-              )}
-              {selectedCampaign && (
-                <DropdownMenuItem onClick={() => onToggleStatus(selectedCampaign)} className="flex items-center gap-2 text-[12px]">
-                  {String(selectedCampaign.status) === "Active"
-                    ? <><PauseCircle className="h-3.5 w-3.5 shrink-0" />{t("toolbar.pause", "Pause")}</>
-                    : <><PlayCircle className="h-3.5 w-3.5 shrink-0" />{t("toolbar.activate", "Activate")}</>
-                  }
-                </DropdownMenuItem>
-              )}
-              {selectedCampaign && onDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => onDelete(selectedCampaign.id || selectedCampaign.Id)}
-                    className="flex items-center gap-2 text-[12px] text-red-500 focus:text-red-500"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                    {deleteLabel}
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {/* Sort — always soft, wine dot when non-default */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                    <ArrowUpDown className="h-4 w-4 shrink-0" />
+                    {isSortNonDefault && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  {/* Name — paired asc/desc row */}
+                  {(() => {
+                    const isActive = sortBy === "name_asc" || sortBy === "name_desc";
+                    const activeDir: "asc" | "desc" = sortBy === "name_asc" ? "asc" : "desc";
+                    return (
+                      <DropdownMenuItem
+                        key="name"
+                        onSelect={(e) => { e.preventDefault(); onSortByChange(isActive ? sortBy : "name_desc"); }}
+                        className="text-[12px] flex items-center gap-2"
+                      >
+                        <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sortOptions.name", "Name")}</span>
+                        {isActive && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_asc"); }}
+                              className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                              title="Ascending"
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange("name_desc"); }}
+                              className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                              title="Descending"
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })()}
+                  {/* Standalone sort options */}
+                  {(["recent", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
+                    <DropdownMenuItem
+                      key={s}
+                      onSelect={(e) => { e.preventDefault(); onSortByChange(s); }}
+                      className="text-[12px] flex items-center gap-2"
+                    >
+                      <span className={cn("flex-1", sortBy === s && "font-semibold !text-brand-indigo")}>{t(DETAIL_SORT_LABEL_KEYS[s])}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Group — always soft, wine dot when non-default */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="la-btn la-btn--soft la-btn--icon" style={{ position: 'relative' }}>
+                    <Layers className="h-4 w-4 shrink-0" />
+                    {isGroupNonDefault && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: 'var(--wine)' }} />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
+                    <DropdownMenuItem
+                      key={g}
+                      onSelect={(e) => { e.preventDefault(); onGroupByChange(g); }}
+                      className="text-[12px] flex items-center gap-2"
+                    >
+                      <span className={cn("flex-1", groupBy === g && "font-semibold !text-brand-indigo")}>{t(DETAIL_GROUP_LABEL_KEYS[g])}</span>
+                      {groupBy === g && g !== "none" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }}
+                            className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
+                            title="Ascending"
+                          >
+                            <ArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }}
+                            className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
+                            title="Descending"
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </button>
+                        </>
+                      )}
+                      {groupBy === g && g === "none" && <Check className="h-3 w-3" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+
+          {/* + New campaign — matching spec toolbar */}
+          <button className="la-btn la-btn--wine la-btn--icon" onClick={onCreateCampaign} title={t("toolbar.add", "New campaign")}>
+            <Plus className="h-4 w-4" />
+          </button>
 
         </div>
 
         {/* Campaign list */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto la-list-area">
           {/* Pull-to-refresh indicator — mobile only */}
           <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} />
           {loading ? (
@@ -1357,7 +1554,7 @@ export function CampaignListView({
           ) : (
             <div
               key={`page-${currentPage}`}
-              className="flex flex-col gap-[3px]"
+              className="la-cards"
             >
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
@@ -1443,7 +1640,7 @@ export function CampaignListView({
 
       {/* ── RIGHT PANEL: toolbar + detail view (desktop only) ───────── */}
       <div ref={rightPanelRef} className={cn(
-        "flex-1 flex-col overflow-hidden rounded-lg",
+        "flex-1 flex-col overflow-hidden",
         mobileView === "list" ? "hidden md:flex" : "flex mobile-panel-enter"
       )}>
 
@@ -1509,6 +1706,7 @@ export function CampaignListView({
           />
         </CompactHoverCardPortal>
       )}
+      </div> {/* end content row */}
     </div>
   );
 }

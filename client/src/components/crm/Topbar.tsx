@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { Bell, Moon, Sun, Menu, X, Headphones, ChevronDown, Check, Bot } from "lucide-react";
+import { Bell, Moon, Sun, Menu, X, Headphones, ChevronDown, Check } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useTheme } from "@/hooks/useTheme";
@@ -40,16 +40,18 @@ export function Topbar({
   isMobileMenuOpen,
   onToggleMobileMenu,
   onLogout,
+  hideDesktop = false,
 }: {
   onOpenPanel: (panel: string) => void;
   collapsed: boolean;
+  hideDesktop?: boolean;
   isMobileMenuOpen?: boolean;
   onToggleMobileMenu?: () => void;
   onLogout?: () => void;
 }) {
   const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
-  const { isAgencyView, isAgencyUser, isOwner, currentAccountId, accounts, setCurrentAccountId, currentAccount, showLeadAwakerAi, isImpersonating, impersonation } = useWorkspace();
+  const { isAgencyView, isAgencyUser, isAdmin: wsIsAdmin, isOwner, currentAccountId, accounts, setCurrentAccountId, currentAccount, showLeadAwakerAi, isImpersonating, impersonation } = useWorkspace();
   const { crumb } = useBreadcrumb();
   const { isDark, toggleTheme } = useTheme();
   const { toggleWidget: toggleAiWidget } = useAgentWidget();
@@ -84,7 +86,6 @@ export function Topbar({
     closeSession: supportCloseSession,
     updateBotConfig: supportUpdateBotConfig,
     clearContext: supportClearContext,
-    resetInit: supportResetInit,
     unreadCount: supportUnreadCount,
     markAsRead: supportMarkAsRead,
     notifyOpen: supportNotifyOpen,
@@ -94,18 +95,8 @@ export function Topbar({
 
   const [supportOpen, setSupportOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
-  // Determine admin status from localStorage role (stored as "Admin" with capital A)
   const currentUserRole = localStorage.getItem("leadawaker_user_role") || "";
-  const isAdmin = currentUserRole === "Admin";
-
-  // Open the support chat in the Conversations page (support tab) instead of floating widget
-  const handleSupportOpenInChats = () => {
-    // Reset so the floating widget re-fetches fresh messages when reopened later
-    supportResetInit();
-    setSupportOpen(false);
-    try { sessionStorage.setItem("support-chat-open", "1"); } catch {}
-    setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
-  };
+  const isAdmin = wsIsAdmin;
 
   // AI agents (agency users only) — fetched for the Sophie "Switch to" footer
   const { data: topbarAiAgents = [] } = useQuery<{ id: number; name: string; type: string; photoUrl: string | null; enabled: boolean }[]>({
@@ -120,11 +111,10 @@ export function Topbar({
   });
 
   const handleOpenAgent = (agentId: number) => {
-    try { sessionStorage.setItem("selected-agent-id", String(agentId)); } catch {}
+    // Agents live on their dedicated /ai-agents page (Chats page retired)
     setSupportOpen(false);
     setMobileSupportOpen(false);
-    window.dispatchEvent(new CustomEvent("select-agent", { detail: { agentId } }));
-    setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
+    setLocation(`/platform/ai-agents/${agentId}`);
   };
 
   // Sync open state with hook so it knows when to count unreads
@@ -257,49 +247,36 @@ export function Topbar({
   const handleLeadClick = (leadId: number) => {
     setSearchOpen(false);
     setPersistedSelection("selected-lead-id", leadId);
-    const base = isAgencyView ? "/agency" : "/subaccount";
-    setLocation(`${base}/contacts`);
+    setLocation(`/platform/contacts`);
   };
 
   const handleCampaignClick = (campaignId: number) => {
     setSearchOpen(false);
     setPersistedSelection("selected-campaign-id", campaignId);
-    const base = isAgencyView ? "/agency" : "/subaccount";
-    setLocation(`${base}/campaigns`);
+    setLocation(`/platform/campaigns`);
   };
   const handleProspectClick = (prospectId: number) => {
     setSearchOpen(false);
     setPersistedSelection("selected-prospect-id", prospectId);
-    setLocation(`/agency/prospects`);
+    setLocation(`/platform/prospects`);
   };
-  const handleAccountClick = () => { setSearchOpen(false); setLocation(`/agency/accounts`); };
+  const handleAccountClick = () => { setSearchOpen(false); setLocation(`/platform/accounts`); };
   const handleUserClick = () => {
     setSearchOpen(false);
     sessionStorage.setItem("pendingSettingsSection", "team");
-    const base = isAgencyView ? "/agency" : "/subaccount";
-    setLocation(`${base}/settings`);
+    setLocation(`/platform/settings`);
   };
 
   // ── Account switch ───────────────────────────────────────────────────────────
-  // id=0 means "All Accounts" (agency-wide, no scoping)
+  // id=0 means "All Accounts" (agency-wide, no scoping). The URL no longer
+  // changes on account switch — selecting an account only scopes the data.
   const handleAccountSelect = (id: number) => {
     setCurrentAccountId(id);
-    // Admin stays in agency view regardless of which account is selected
-    if (isAdmin && isAgencyView) return;
-    const prevBase = isAgencyView ? "/agency" : "/subaccount";
-    const nextIsAgency = id === 0 || id === 1;
-    const nextBase = nextIsAgency ? "/agency" : "/subaccount";
-    if (prevBase === nextBase) return;
-    const tail = location.startsWith(prevBase)
-      ? location.slice(prevBase.length)
-      : location.replace(/^\/(agency|subaccount)/, "");
-    const agencyOnlyPaths = ["/accounts", "/prompt-library", "/automation-logs", "/invoices"];
-    const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
-    const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/dashboard" : tail;
-    setLocation(`${nextBase}${safeTail || "/dashboard"}`);
   };
 
   // ── Impersonation ───────────────────────────────────────────────────────────
+  // Role/account changes re-render the app (allowedPages + AgencyOnly guards react
+  // to the effective role); there is no URL prefix to switch anymore.
   const handleImpersonate = async (role: string, accountId?: number) => {
     try {
       await apiFetch("/api/auth/impersonate", {
@@ -341,9 +318,9 @@ export function Topbar({
 
   const { topbarActions } = useTopbarActions();
 
-  const accountLabel = isAgencyView
-    ? (currentAccountId === 0 ? t("topbar.agencyView") : currentAccount?.name || t("topbar.agencyView"))
-    : (currentAccount?.name || "");
+  const accountLabel = currentAccountId === 0
+    ? t("topbar.agencyView")
+    : (currentAccount?.name || t("topbar.agencyView"));
 
   // Shared props for the user menu
   const userMenuSharedProps = {
@@ -362,9 +339,9 @@ export function Topbar({
     onAccountSelect: handleAccountSelect,
     onNavigateSettings: () => {
       sessionStorage.setItem("pendingSettingsSection", isAgencyUser ? "profile" : "account");
-      setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`);
+      setLocation(`/platform/settings`);
     },
-    onNavigateTasks: () => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/tasks`),
+    onNavigateTasks: () => setLocation(`/platform/tasks`),
     onToggleSupport: () => setSupportOpen((v) => !v),
     onImpersonate: handleImpersonate,
     onStopImpersonation: handleStopImpersonation,
@@ -374,8 +351,8 @@ export function Topbar({
   return (
     <>
     <header
-      className="fixed left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:pl-4"
-      style={{ top: "var(--banner-h, 0px)", height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "4px" }}
+      className={cn("fixed left-0 right-0 bg-sidebar-bg z-50 flex items-center md:items-center px-4 md:pl-4", hideDesktop && "h-[var(--topbar-h)] md:!h-0 md:overflow-hidden")}
+      style={{ top: "var(--banner-h, 0px)", height: hideDesktop ? undefined : "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "0px" }}
       data-testid="header-crm-topbar"
     >
       {/* ══ MOBILE TOP BAR (< 768px) ══
@@ -413,28 +390,19 @@ export function Topbar({
           )}
         </IconBtn>
 
-        {/* Support / Headphones */}
-        <div className="relative shrink-0">
-          <IconBtn
-            onClick={() => setMobileSupportOpen((v) => !v)}
-            data-testid="button-support-chat-mobile-topbar"
-            aria-label={`Customer Support${supportUnreadCount > 0 ? ` (${supportUnreadCount} unread)` : ""}`}
-            className="min-h-[44px] min-w-[44px]"
-          >
-            <Headphones className="h-4 w-4" />
-          </IconBtn>
-          {supportUnreadCount > 0 && (
-            <div
-              className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-background pointer-events-none"
-              data-testid="badge-support-count-mobile"
-              aria-hidden="true"
+        {/* AI Agent headphones button — mobile version */}
+        {isAgencyUser && (
+          <div className="relative shrink-0">
+            <IconBtn
+              onClick={toggleAiWidget}
+              data-testid="button-ai-agent-headphones-mobile"
+              aria-label="AI Agent"
+              className="min-h-[44px] min-w-[44px]"
             >
-              <span className="text-[9px] font-bold text-white">{supportUnreadCount > 9 ? "9+" : supportUnreadCount}</span>
-            </div>
-          )}
-        </div>
-
-        {/* AI Agent button intentionally hidden on mobile — widget is desktop-only */}
+              <Headphones className="h-4 w-4" />
+            </IconBtn>
+          </div>
+        )}
 
         {/* User Avatar (mobile) */}
         <TopbarUserMenu variant="mobile" {...userMenuSharedProps} />
@@ -572,60 +540,29 @@ export function Topbar({
             </Tooltip>
           </span>
 
-          {/* AI Agent / Tom support — agency users only, hidden on mobile.
-              Shows Bot when showLeadAwakerAi is true; falls back to Tom headphones
-              when Lead Awaker AI is hidden (e.g. client impersonation — see Prompt 3). */}
+          {/* AI Agent headphones button — opens the AI widget for agency users only */}
           {isAgencyUser && (
             <span className="hidden md:contents">
-              {showLeadAwakerAi ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <IconBtn
-                      onClick={toggleAiWidget}
-                      data-testid="button-ai-agent"
-                      aria-label="AI Agent"
-                    >
-                      <Bot className="h-4 w-4" />
-                    </IconBtn>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                    AI Agent
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="relative">
-                      <IconBtn
-                        onClick={() => setSupportOpen((v) => !v)}
-                        data-testid="button-support-chat"
-                        data-onboarding="topbar-support"
-                        aria-label={`Customer Support${supportUnreadCount > 0 ? ` (${supportUnreadCount} unread)` : ""}`}
-                      >
-                        <Headphones className="h-4 w-4" />
-                      </IconBtn>
-                      {supportUnreadCount > 0 && (
-                        <div
-                          className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-background pointer-events-none"
-                          data-testid="badge-support-count"
-                          aria-hidden="true"
-                        >
-                          <span className="text-[9px] font-bold text-white">{supportUnreadCount > 9 ? "9+" : supportUnreadCount}</span>
-                        </div>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                    {t("topbar.customerSupport")}
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <IconBtn
+                    onClick={toggleAiWidget}
+                    data-testid="button-ai-agent-headphones"
+                    aria-label="AI Agent"
+                  >
+                    <Headphones className="h-4 w-4" />
+                  </IconBtn>
+                </TooltipTrigger>
+                <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                  AI Agent
+                </TooltipContent>
+              </Tooltip>
             </span>
           )}
 
           {/* Help — hidden on mobile */}
           <TopbarHelp
-            onNavigateDocs={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/docs`)}
+            onNavigateDocs={() => setLocation(`/platform/docs`)}
             onOpenSupport={() => setSupportOpen((v) => !v)}
           />
 
@@ -701,7 +638,6 @@ export function Topbar({
         isAdmin={isAdmin}
         onClose={() => setSupportOpen(false)}
         mode="floating"
-        onOpenInChats={handleSupportOpenInChats}
         aiAgents={topbarAiAgents}
         onOpenAgent={handleOpenAgent}
         founderChat={!isAgencyUser ? {

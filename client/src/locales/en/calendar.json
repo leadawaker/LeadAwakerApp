@@ -123,5 +123,90 @@
     "failedToReschedule": "Failed to reschedule: {{error}}"
   },
   "clearDateFilter": "Clear date filter",
-  "selectDate": "Select {{date}}"
+  "selectDate": "Select {{date}}",
+  "mobile": {
+    "agenda": "Agenda",
+    "month": "Month",
+    "weekOf": "Week of",
+    "tapDay": "Tap a day",
+    "noMeetingsWeek": "No meetings this week",
+    "today": "Today",
+    "book": "Book",
+    "filters": {
+      "all": "All",
+      "noShow": "No-show",
+      "rescheduled": "Rescheduled",
+      "attention": "Needs attention"
+    },
+    "stats": {
+      "meetings": "Meetings this week",
+      "upcoming": "Upcoming",
+      "needsAttention": "Needs attention"
+    },
+    "detail": {
+      "date": "Date",
+      "time": "Time",
+      "via": "Via",
+      "status": "Status",
+      "phone": "Phone",
+      "email": "Email",
+      "campaign": "Campaign",
+      "contact": "Contact",
+      "openInLead": "Open in lead",
+      "callNow": "Call now",
+      "joinMeeting": "Join meeting",
+      "reschedule": "Reschedule"
+    },
+    "channel": {
+      "phone": "Phone",
+      "video": "Video call"
+    },
+    "legend": {
+      "booked": "Booked",
+      "rescheduled": "Rescheduled",
+      "noShow": "No-show"
+    }
+  },
+  "design": {
+    "kpi": {
+      "meetings": "Meetings this week",
+      "attendance": "Avg. attendance",
+      "highIntent": "High intent · 70%+"
+    },
+    "tabs": {
+      "all": "All",
+      "booked": "Booked",
+      "noshow": "No-show",
+      "rescheduled": "Rescheduled"
+    },
+    "status": {
+      "booked": "Booked",
+      "noShow": "No-show",
+      "rescheduled": "Rescheduled"
+    },
+    "legend": {
+      "high": "High intent · 70%+",
+      "needs": "Needs confirmation · 40–70%",
+      "risk": "At risk · <40%"
+    },
+    "bookedByAI": "Booked by AI",
+    "detail": {
+      "date": "Date",
+      "channel": "Channel",
+      "time": "Time",
+      "attendance": "Attendance",
+      "whyBooked": "Why AI booked this",
+      "recentConversation": "Recent conversation",
+      "openInLead": "Open in lead",
+      "selectMeeting": "Select a meeting",
+      "noMeetings": "No meetings",
+      "aiAgent": "AI Agent",
+      "googleMeet": "Google Meet",
+      "phone": "Phone",
+      "placeholderHeadline": "This lead has been engaging consistently and looks like a strong candidate for a booked call.",
+      "placeholderReason1": "Replied across multiple touchpoints with a positive tone.",
+      "placeholderReason2": "Showed clear interest in the offer during the conversation.",
+      "placeholderReason3": "Agreed to a specific time without hesitation."
+    }
+  }
 }

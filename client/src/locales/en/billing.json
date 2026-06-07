@@ -650,5 +650,31 @@
     "views": "Views",
     "firstViewed": "First Viewed",
     "paid": "Paid"
+  },
+  "mobile": {
+    "amountDue": "Amount due",
+    "dueToday": "Due today",
+    "notSent": "Not sent",
+    "chips": {
+      "all": "All",
+      "deductible": "Deductible",
+      "nonDeductible": "Non-ded."
+    },
+    "groups": {
+      "outstanding": "Outstanding",
+      "drafts": "Drafts",
+      "awaitingSignature": "Awaiting signature"
+    },
+    "stats": {
+      "invoicesCount": "{{count}} issued",
+      "itemsCount": "{{count}} items",
+      "open": "Open",
+      "pastDue": "Past due",
+      "collected": "Collected",
+      "reclaimable": "Reclaimable",
+      "inEffect": "In effect",
+      "committed": "Committed",
+      "awaiting": "Awaiting"
+    }
   }
 }

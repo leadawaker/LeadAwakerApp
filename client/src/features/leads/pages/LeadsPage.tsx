@@ -4,7 +4,9 @@ import { CrmShell } from "@/components/crm/CrmShell";
 export function LeadsPage() {
   return (
     <CrmShell>
-      <LeadsTable />
+      <div className="la-page">
+        <LeadsTable />
+      </div>
     </CrmShell>
   );
 }

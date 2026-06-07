@@ -66,7 +66,7 @@ export function MobileSupportPanel({
           <div
             className="sticky top-0 z-10 bg-background/90 backdrop-blur-sm border-b border-border/20 flex items-center gap-2 px-3 shrink-0"
             style={{
-              paddingTop: "calc(0.75rem + var(--safe-top, 0px))",
+              paddingTop: "calc(0.75rem + var(--safe-top))",
               paddingBottom: "0.75rem",
             }}
           >

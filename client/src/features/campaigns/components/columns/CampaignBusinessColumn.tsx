@@ -21,7 +21,7 @@ export function CampaignBusinessColumn({
 
   if (collapsed) {
     return (
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl flex flex-col items-center pt-4 pb-4 overflow-hidden cursor-pointer group h-full" onClick={onToggle} title="Expand Business & Campaign">
+      <div className="bg-card shadow-[var(--card-glow)] rounded-xl flex flex-col items-center pt-4 pb-4 overflow-hidden cursor-pointer group h-full" onClick={onToggle} title="Expand Business & Campaign">
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
           className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors text-foreground/50 group-hover:text-foreground"
@@ -36,7 +36,7 @@ export function CampaignBusinessColumn({
   }
 
   return (
-    <div className="@container bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-y-auto h-full" data-testid="campaign-detail-view-settings">
+    <div className="@container bg-card shadow-[var(--card-glow)] rounded-xl overflow-y-auto h-full" data-testid="campaign-detail-view-settings">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 pb-3 bg-white/80 dark:bg-black/40 backdrop-blur-sm">
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground">Business & Campaign</h3>

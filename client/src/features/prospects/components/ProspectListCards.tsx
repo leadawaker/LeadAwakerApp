@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Globe, Mail, Phone, Linkedin, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { ListCard, GroupHeader as SharedGroupHeader } from "@/components/crm/primitives";
 import { ProspectAvatar } from "./ProspectAvatar";
 import { getInitials } from "@/lib/avatarUtils";
 import {
@@ -38,17 +39,11 @@ export function SignalBars({ priority }: { priority: string }) {
 
 // ── Group header ──────────────────────────────────────────────────────────────
 
+// Routes through the shared primitive; the -top-[3px]/pt-[15px]/z-20 overrides
+// preserve this list's exact sticky offset (its scroll container uses p-[3px]).
 export function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div data-group-header="true" className="sticky -top-[3px] z-20 bg-muted px-3 pt-[15px] pb-3">
-      <div className="flex items-center gap-[10px]">
-        <div className="flex-1 h-px bg-foreground/15" />
-        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">&ndash;</span>
-        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15" />
-      </div>
-    </div>
+    <SharedGroupHeader label={label} count={count} className="-top-[3px] z-20 pt-[15px]" />
   );
 }
 
@@ -161,13 +156,11 @@ export function ProspectListCard({
   const isOverdue = followUpDate ? followUpDate.getTime() < Date.now() : false;
 
   return (
-    <div
-      className={cn(
-        "group rounded-xl cursor-pointer",
-        "transition-[background-color,box-shadow] duration-150 ease-out",
-        "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-      )}
+    <ListCard
+      selected={isActive}
+      hoverShadow
+      padded={false}
+      className="group"
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -288,7 +281,7 @@ export function ProspectListCard({
           </div>
         )}
       </div>
-    </div>
+    </ListCard>
   );
 }
 

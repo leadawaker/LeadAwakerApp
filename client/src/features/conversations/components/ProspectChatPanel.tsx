@@ -333,11 +333,11 @@ export function ProspectChatPanel({
             <div className="px-4 pt-4 pb-3">
               <div className="flex items-center gap-3">
                 {/* Avatar */}
-                <button type="button" onClick={() => navigate("/agency/prospects")} className="shrink-0 rounded-full focus:outline-none">
+                <button type="button" onClick={() => navigate("/platform/prospects")} className="shrink-0 rounded-full focus:outline-none">
                   <EntityAvatar name={displayName} bgColor={avatarColor.bg} textColor={avatarColor.text} size={45} />
                 </button>
                 {/* Name */}
-                <button type="button" onClick={() => navigate("/agency/prospects")} className="flex flex-col min-w-0 text-left focus:outline-none">
+                <button type="button" onClick={() => navigate("/platform/prospects")} className="flex flex-col min-w-0 text-left focus:outline-none">
                   <h2 className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate min-w-0">
                     {displayName}
                   </h2>

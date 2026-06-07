@@ -253,6 +253,16 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
   const [draft, setDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));
   const [originalDraft, setOriginalDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));
 
+  // Re-sync prompt_linked_id when linkedPrompt resolves (async fetch)
+  useEffect(() => {
+    const promptId = linkedPrompt ? String(linkedPrompt.id || linkedPrompt.Id) : "";
+    const currentId = String(draftRef.current.prompt_linked_id ?? "");
+    if (promptId !== currentId) {
+      setDraft(d => ({ ...d, prompt_linked_id: promptId }));
+      setOriginalDraft(d => ({ ...d, prompt_linked_id: promptId }));
+    }
+  }, [linkedPrompt]);
+
   // Track prev campaign ID so we can flush saves with the correct ID on switch
   const prevCampaignIdRef = useRef(campaignId);
 

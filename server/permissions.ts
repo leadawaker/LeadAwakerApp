@@ -1,14 +1,12 @@
 // Centralized permission helpers for the LeadAwaker CRM.
 //
 // Role model (May 2026 onward):
-//   Owner    — Gabriel + future co-owners. Full power, no guardrails.
-//   Admin    — Trusted operator (e.g. Finn). Can manage day-to-day but cannot
-//              hard-delete, see expenses, edit system-default AI keys, or
-//              manage Owner-role users.
-//   Operator — Legacy alias of Admin. Same permissions.
-//   Manager  — Client-side manager. Read+write on own account.
-//   Agent    — Legacy alias of Manager.
-//   Viewer   — Read-only.
+//   Owner   — Gabriel + future co-owners. Full power, no guardrails.
+//   Admin   — Trusted teammate (e.g. Finn). Can manage day-to-day but cannot
+//             hard-delete, see expenses, edit system-default AI keys, or
+//             manage Owner-role users.
+//   Manager — Client-side manager. Read+write on own account.
+//   Viewer  — Read-only.
 //
 // All checks take the actor user (typically req.user) and return a boolean.
 // Internal API key callers bypass these helpers at the route layer.
@@ -22,8 +20,8 @@ export interface ActorLike {
 }
 
 const OWNER = "Owner";
-const ADMIN_ROLES = new Set(["Admin", "Operator"]);
-const AGENCY_ROLES = new Set(["Owner", "Admin", "Operator"]);
+const ADMIN_ROLES = new Set(["Admin"]);
+const AGENCY_ROLES = new Set(["Owner", "Admin"]);
 
 export function isOwner(user: ActorLike | null | undefined): boolean {
   return !!user && user.role === OWNER;
@@ -33,7 +31,7 @@ export function isAdmin(user: ActorLike | null | undefined): boolean {
   return !!user && ADMIN_ROLES.has(user.role ?? "");
 }
 
-/** Owner, Admin, or Operator. Used for agency-scope routes. */
+/** Owner or Admin. Used for agency-scope routes. */
 export function isAgencyUser(user: ActorLike | null | undefined): boolean {
   return !!user && AGENCY_ROLES.has(user.role ?? "");
 }

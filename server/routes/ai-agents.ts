@@ -2147,7 +2147,7 @@ export function startAutomationFailureNotifier(): void {
             userId: user.id!,
             accountId: user.accountsId ?? null,
             read: false,
-            link: "/agency/automation-logs",
+            link: "/platform/automation-logs",
           });
         }
       }

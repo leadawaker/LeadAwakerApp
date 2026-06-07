@@ -1,7 +1,6 @@
 import { useRef } from "react";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
-import { getFullName, getStatus } from "./leadUtils";
+import { PIPELINE_HEX } from "@/lib/avatarUtils";
+import { getFullName, getStatus, getInitials } from "./leadUtils";
 
 interface Props {
   lead: Record<string, any>;
@@ -11,32 +10,52 @@ interface Props {
   onHoverEnd: () => void;
 }
 
+const SIZE = 38;
+
+/**
+ * Minimized-rail avatar tile. Matches the design's StageAvatar: a square-rounded
+ * tile filled with the lead's stage color, white initials, raised-crisp shadow.
+ * The active lead gets a wine ring. Rendered inside the ~65px rail.
+ */
 export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLButtonElement>(null);
   const name = getFullName(lead);
   const status = getStatus(lead);
-  const { bg, text } = getLeadStatusAvatarColor(status);
+  const color = PIPELINE_HEX[status] ?? "#6B7280";
+  const initials = getInitials(name);
 
   return (
-    <div
+    <button
       ref={ref}
-      className="flex items-center justify-center py-1 mx-1 cursor-pointer"
+      type="button"
+      title={name}
       onClick={onClick}
       onMouseEnter={() => { if (ref.current) onHover(lead, ref.current.getBoundingClientRect()); }}
       onMouseLeave={onHoverEnd}
+      style={{
+        width: SIZE,
+        height: SIZE,
+        flexShrink: 0,
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        background: color,
+        borderRadius: 11,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontFamily: "var(--mono)",
+        fontWeight: 600,
+        fontSize: Math.round(SIZE * 0.34),
+        letterSpacing: "0.01em",
+        boxShadow: isActive
+          ? "var(--sh-raised-crisp), 0 0 0 2px var(--wine)"
+          : "var(--sh-raised-crisp)",
+        transition: "box-shadow 120ms",
+      }}
     >
-      <div
-        className="rounded-full"
-        style={isActive ? { boxShadow: "0 0 0 3px #ffffff, 0 0 0 4px rgba(0,0,0,0.9)" } : undefined}
-      >
-        <EntityAvatar
-          name={name}
-          photoUrl={lead.avatar_url || lead.Avatar_URL || null}
-          bgColor={bg}
-          textColor={text}
-          size={40}
-        />
-      </div>
-    </div>
+      {initials}
+    </button>
   );
 }

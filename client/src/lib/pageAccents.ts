@@ -8,13 +8,13 @@
  * as inline CSS custom property overrides on the shell div.
  */
 
-const WHITE_ACTIVE_LIGHT = "0 0% 96%";
-const WHITE_SELECTED_LIGHT = "0 0% 100%";
-const WHITE_ACTIVE_DARK = "40 50% 24%";
-const WHITE_SELECTED_DARK = "40 55% 30%";
+const WINE_ACTIVE_LIGHT = "345 40% 87%";
+const WINE_SELECTED_LIGHT = "345 55% 94%";
+const WINE_ACTIVE_DARK = "345 30% 26%";
+const WINE_SELECTED_DARK = "345 35% 32%";
 
-const LIGHT = { active: WHITE_ACTIVE_LIGHT, selected: WHITE_SELECTED_LIGHT };
-const DARK = { active: WHITE_ACTIVE_DARK, selected: WHITE_SELECTED_DARK };
+const LIGHT = { active: WINE_ACTIVE_LIGHT, selected: WINE_SELECTED_LIGHT };
+const DARK = { active: WINE_ACTIVE_DARK, selected: WINE_SELECTED_DARK };
 
 /* ── Light-mode accents ──────────────────────────────────────────────────── */
 export const PAGE_ACCENTS: Record<string, { active: string; selected: string }> = {

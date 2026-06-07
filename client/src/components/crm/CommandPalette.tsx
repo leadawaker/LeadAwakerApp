@@ -57,14 +57,14 @@ export function CommandPalette() {
   const { isAgencyView, isAgencyUser, currentAccountId } = useWorkspace();
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const prefix = isAgencyView ? "/agency" : "/subaccount";
+  const prefix = "/platform";
 
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
     { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, keywords: "clients organizations", agencyOnly: true },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, keywords: "messages outreach drip" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, keywords: "leads people prospects" },
-    { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, keywords: "inbox messages whatsapp" },
+    { href: `${prefix}/outreach-inbox`, label: "Inbox", icon: MessageSquare, keywords: "inbox messages whatsapp prospects outreach chats", agencyOnly: true },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, keywords: "events schedule bookings" },
     { href: `${prefix}/prompt-library`, label: "Prompt Library", icon: BookOpen, keywords: "ai templates prompts", agencyOnly: true },
     { href: `${prefix}/users`, label: "Users", icon: Users, keywords: "team members roles", agencyOnly: true },

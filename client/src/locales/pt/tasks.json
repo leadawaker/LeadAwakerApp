@@ -26,7 +26,28 @@
     "delete": "Excluir",
     "deleteConfirm": "Excluir esta tarefa?",
     "created": "Criado",
-    "updated": "Atualizado"
+    "updated": "Atualizado",
+    "back": "Voltar",
+    "markComplete": "Concluir",
+    "reopen": "Reabrir tarefa"
+  },
+  "relative": {
+    "today": "Hoje",
+    "tomorrow": "Amanha",
+    "yesterday": "Ontem"
+  },
+  "groups": {
+    "overdue": "Atrasadas",
+    "today": "Hoje",
+    "thisWeek": "Esta Semana",
+    "upcoming": "Proximas",
+    "completed": "Concluidas"
+  },
+  "assignee": {
+    "everyone": "Todos"
+  },
+  "board": {
+    "empty": "Vazio"
   },
   "fields": {
     "description": "Descricao",
@@ -46,6 +67,8 @@
     "assigneePlaceholder": "Nome do responsavel",
     "linkedTo": "Vinculado a",
     "category": "Categoria",
+    "noCategory": "Sem Categoria",
+    "title": "Titulo",
     "parentTask": "Tarefa Pai",
     "noParent": "Sem Pai",
     "tags": "Tags",
@@ -66,6 +89,7 @@
   "status": {
     "todo": "A Fazer",
     "inProgress": "Em Progresso",
+    "waiting": "Aguardando",
     "done": "Concluido",
     "cancelled": "Cancelado"
   },
@@ -141,15 +165,26 @@
   },
   "views": {
     "kanban": "Kanban",
+    "swimlane": "Swimlane",
     "list": "Lista",
     "table": "Tabela",
     "simple": "Simples",
     "tree": "Arvore",
     "gantt": "Gantt",
+    "schedule": "Agenda",
+    "board": "Quadro",
+    "agenda": "Agenda",
     "overdue": "Atrasadas",
     "today": "Hoje",
     "unscheduled": "Sem data",
     "noDailyTasks": "Sem tarefas para hoje"
+  },
+  "filter": {
+    "all": "Todas",
+    "next7": "Proximos 7 Dias",
+    "overdue": "Atrasadas",
+    "waiting": "Aguardando",
+    "completed": "Concluidas"
   },
   "gantt": {
     "today": "Hoje",

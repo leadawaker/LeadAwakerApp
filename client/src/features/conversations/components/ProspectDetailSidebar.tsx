@@ -394,7 +394,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
         <div className="shrink-0 px-4 py-3 border-t border-black/[0.06]">
           <button
             type="button"
-            onClick={() => navigate(`/agency/prospects?id=${prospectId}`)}
+            onClick={() => navigate(`/platform/prospects?id=${prospectId}`)}
             className="w-full h-8 rounded-md border border-black/[0.125] text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-colors"
           >
             View full profile

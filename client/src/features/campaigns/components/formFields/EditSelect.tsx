@@ -10,7 +10,7 @@ export function EditSelect({
   value: string;
   onChange: (v: string) => void;
   options: string[];
-  labels?: string[];
+  labels?: string[] | Record<string, string>;
   autoFocus?: boolean;
 }) {
   const ref = useRef<HTMLSelectElement>(null);
@@ -19,16 +19,22 @@ export function EditSelect({
     if (autoFocus) ref.current?.focus();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const getLabel = (o: string, i: number) => {
+    if (!labels) return o;
+    if (Array.isArray(labels)) return labels[i] ?? o;
+    return labels[o] ?? o;
+  };
+
   return (
     <select
       ref={ref}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[14px] bg-white dark:bg-white rounded-lg px-2.5 py-1.5 outline-none"
+      className="la-input"
     >
       {options.map((o, i) => (
         <option key={o} value={o}>
-          {labels?.[i] ?? o}
+          {getLabel(o, i)}
         </option>
       ))}
     </select>

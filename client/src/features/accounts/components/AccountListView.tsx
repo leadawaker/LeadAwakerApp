@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useListPanelState } from "@/hooks/useListPanelState";
+import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { useTranslation } from "react-i18next";
 import {
   Building2,
@@ -9,8 +11,6 @@ import {
   Plus,
   Check,
   Layers,
-  Maximize2,
-  Minimize2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -114,9 +114,8 @@ export function AccountListView({
   const { t } = useTranslation("accounts");
   const isMobile = useIsMobile();
   const [currentPage, setCurrentPage] = useState(0);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
-    try { return localStorage.getItem("accounts-left-panel-collapsed") === "true"; } catch { return false; }
-  });
+  const { state: listPanelState } = useListPanelState();
+  const leftPanelCollapsed = listPanelState === "hidden";
 
   // Translated view tabs (built inside component where hook is available)
   const viewTabs = useMemo(
@@ -324,7 +323,7 @@ export function AccountListView({
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
-        "flex-col bg-muted rounded-lg overflow-hidden",
+        "flex-col bg-muted rounded-lg overflow-hidden shadow-[var(--card-glow)]",
         leftPanelCollapsed
           ? cn(isMobile ? "flex" : "hidden")
           : cn("w-full md:w-[340px] md:shrink-0 min-h-[300px] md:min-h-0",
@@ -497,7 +496,7 @@ export function AccountListView({
         </div>
 
         {/* Account list */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
+        <div ref={scrollContainerRef} className="la-list-area">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -507,7 +506,7 @@ export function AccountListView({
               {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">{t("page.tryDifferentSearch")}</p>}
             </div>
           ) : (
-            <div className="flex flex-col gap-[3px]">
+            <div className="la-cards">
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
                   return (
@@ -577,17 +576,7 @@ export function AccountListView({
             onToggleStatus={onToggleStatus}
             onBack={() => onSelectAccount(null)}
             toolbarPrefix={
-              <button
-                onClick={() => {
-                  const next = !leftPanelCollapsed;
-                  setLeftPanelCollapsed(next);
-                  try { localStorage.setItem("accounts-left-panel-collapsed", String(next)); } catch {}
-                }}
-                className="hidden md:grid h-9 w-9 rounded-full border border-black/[0.125] place-items-center shrink-0 text-foreground/60 hover:text-foreground transition-colors"
-                title={leftPanelCollapsed ? "Show list" : "Hide list"}
-              >
-                {leftPanelCollapsed ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-              </button>
+              <ListPanelToggleButton />
             }
           />
         ) : (

@@ -18,20 +18,21 @@
     "fields": "Campos",
     "csv": "CSV",
     "importCsv": "Importar CSV",
-    "exportCsv": "Exportar CSV",
+    "exportCsv": "Exportar para CSV",
     "fold": "Recolher",
     "unfold": "Expandir",
     "tags": "Tags",
     "compactView": "Compacto",
     "normalView": "Normal",
     "changeStage": "Mudar Etapa",
+    "assignCampaign": "Atribuir campanha",
     "duplicate": "Duplicar",
     "clearAll": "Limpar tudo",
     "clearAllFilters": "Limpar todos os filtros",
-    "resetToDefault": "Restaurar padr\u00e3o",
+    "resetToDefault": "Restaurar padrão",
     "showHideColumns": "Mostrar / Ocultar Colunas",
-    "settings": "Defini\u00e7\u00f5es",
-    "display": "Visualiza\u00e7\u00e3o",
+    "settings": "Definições",
+    "display": "Visualização",
     "verticalLines": "Linhas verticais",
     "fullWidth": "Tabela largura total",
     "resetColumnOrder": "Repor ordem das colunas",
@@ -39,28 +40,36 @@
     "data": "Dados",
     "sortBy": "Ordenar por",
     "yes": "Sim",
-    "no": "N\u00e3o",
+    "no": "Não",
     "delete": "Eliminar",
     "previous": "Anterior",
     "next": "Seguinte",
-    "of": "de"
+    "of": "de",
+    "chats": "Conversas",
+    "chatsPeek": "Mostrar a última mensagem de cada lead",
+    "minimizeList": "Minimizar lista",
+    "expandList": "Expandir lista",
+    "filterLeads": "Filtrar leads",
+    "switchToList": "Ver em lista",
+    "switchToKanban": "Ver em kanban",
+    "upcomingCalls": "Próximas chamadas"
   },
   "sort": {
     "sortBy": "Ordenar por",
-    "default": "Padr\u00e3o",
-    "scoreHighToLow": "Pontua\u00e7\u00e3o (Maior para Menor)",
-    "scoreDesc": "Pontua\u00e7\u00e3o (Maior \u2192 Menor)",
+    "default": "Padrão",
+    "scoreHighToLow": "Pontuação (Maior para Menor)",
+    "scoreDesc": "Pontuação (Maior → Menor)",
     "recency": "Recentes (Mais novos primeiro)",
-    "alphaAZ": "Alfab\u00e9tico (A a Z)",
-    "alpha": "Alfab\u00e9tico (A \u2192 Z)",
+    "alphaAZ": "Alfabético (A a Z)",
+    "alpha": "Alfabético (A → Z)",
     "mostRecent": "Mais Recente",
     "oldest": "Mais Antigo",
     "name": "Nome",
     "score": "Pontuação",
-    "nameAZ": "Nome A \u2192 Z",
-    "nameZA": "Nome Z \u2192 A",
-    "scoreDown": "Pontua\u00e7\u00e3o \u2193",
-    "scoreUp": "Pontua\u00e7\u00e3o \u2191"
+    "nameAZ": "Nome A → Z",
+    "nameZA": "Nome Z → A",
+    "scoreDown": "Pontuação ↓",
+    "scoreUp": "Pontuação ↑"
   },
   "group": {
     "status": "Status",
@@ -80,16 +89,16 @@
     "selectTags": "Selecionar tags...",
     "tagsSelected_one": "{{count}} tag selecionada",
     "tagsSelected_other": "{{count}} tags selecionadas",
-    "scoreRange": "Faixa de Pontua\u00e7\u00e3o",
+    "scoreRange": "Faixa de Pontuação",
     "priority": "Prioridade",
     "allPriorities": "Todas as prioridades",
-    "createdDateRange": "Per\u00edodo de Cria\u00e7\u00e3o",
+    "createdDateRange": "Período de Criação",
     "from": "De",
-    "to": "At\u00e9",
+    "to": "Até",
     "clearDates": "Limpar datas",
     "filtersActive_one": "{{count}} filtro ativo",
     "filtersActive_other": "{{count}} filtros ativos",
-    "highScore": "Pontua\u00e7\u00e3o Alta (70+)",
+    "highScore": "Pontuação Alta (70+)",
     "hasPhone": "Tem Telefone",
     "hasEmail": "Tem E-mail",
     "allAccounts": "Todas as Contas",
@@ -97,41 +106,41 @@
   },
   "fold": {
     "foldColumns": "Recolher colunas",
-    "foldDescription": "Recolher colunas com este n\u00famero de leads ou menos.",
+    "foldDescription": "Recolher colunas com este número de leads ou menos.",
     "leads": "leads",
     "apply": "Aplicar"
   },
   "tagsToggle": {
-    "alwaysVisible": "Tags sempre vis\u00edveis \u2014 clique para mostrar ao passar o mouse",
-    "hoverOnly": "Tags vis\u00edveis ao passar o mouse \u2014 clique para sempre mostrar"
+    "alwaysVisible": "Tags sempre visíveis — clique para mostrar ao passar o mouse",
+    "hoverOnly": "Tags visíveis ao passar o mouse — clique para sempre mostrar"
   },
   "table": {
     "columns": {
       "name": "Nome",
       "status": "Status",
-      "score": "Pontua\u00e7\u00e3o",
+      "score": "Pontuação",
       "phone": "Telefone",
       "email": "E-mail",
       "campaign": "Campanha",
       "tags": "Tags",
-      "lastActivity": "\u00daltima Atividade",
-      "notes": "Observa\u00e7\u00f5es",
+      "lastActivity": "Última Atividade",
+      "notes": "Observações",
       "account": "Conta",
       "source": "Origem",
       "company": "Empresa",
       "bumpStage": "Etapa de Follow-up",
       "created": "Criado",
-      "assignedTo": "Atribu\u00eddo a"
+      "assignedTo": "Atribuído a"
     },
     "empty": {
-      "noResults": "Nenhum lead corresponde \u00e0 sua busca",
+      "noResults": "Nenhum lead corresponde à sua busca",
       "noLeads": "Nenhum lead encontrado"
     },
     "pagination": {
       "prev": "Anterior",
-      "next": "Pr\u00f3ximo"
+      "next": "Próximo"
     },
-    "saveFailed": "Falha ao salvar \u2014 clique para tentar novamente",
+    "saveFailed": "Falha ao salvar — clique para tentar novamente",
     "selectAll": "Selecionar todos",
     "deselectAll": "Desmarcar todos"
   },
@@ -140,30 +149,30 @@
       "New": "Novo",
       "Contacted": "Contatado",
       "Responded": "Respondeu",
-      "MultipleResponses": "M\u00faltiplas Respostas",
+      "MultipleResponses": "Múltiplas Respostas",
       "Qualified": "Qualificado",
       "Booked": "Chamada Agendada",
       "Closed": "Fechado",
       "Lost": "Perdido",
-      "DND": "N\u00e3o Perturbe",
+      "DND": "Não Perturbe",
       "Unknown": "Desconhecido"
     },
     "emptyStates": {
       "New": {
         "message": "Nenhum lead novo ainda",
-        "hint": "Importe contatos ou adicione um lead para come\u00e7ar"
+        "hint": "Importe contatos ou adicione um lead para começar"
       },
       "Contacted": {
         "message": "Nenhum lead contatado",
-        "hint": "Entre em contato com novos leads para mov\u00ea-los para c\u00e1"
+        "hint": "Entre em contato com novos leads para movê-los para cá"
       },
       "Responded": {
         "message": "Nenhum lead respondeu",
-        "hint": "Continue acompanhando \u2014 as respostas aparecer\u00e3o aqui"
+        "hint": "Continue acompanhando — as respostas aparecerão aqui"
       },
       "MultipleResponses": {
         "message": "Nenhuma conversa ativa",
-        "hint": "Engaje com seus leads contatados para construir di\u00e1logo"
+        "hint": "Engaje com seus leads contatados para construir diálogo"
       },
       "Qualified": {
         "message": "Nenhum lead qualificado ainda",
@@ -171,23 +180,23 @@
       },
       "Booked": {
         "message": "Nenhuma chamada agendada ainda",
-        "hint": "Este \u00e9 o seu objetivo principal \u2014 continue focado!"
+        "hint": "Este é o seu objetivo principal — continue focado!"
       },
       "Closed": {
-        "message": "Nenhum neg\u00f3cio fechado ainda",
-        "hint": "Agendamentos conclu\u00eddos aparecer\u00e3o aqui"
+        "message": "Nenhum negócio fechado ainda",
+        "hint": "Agendamentos concluídos aparecerão aqui"
       },
       "Lost": {
         "message": "Nenhum lead perdido",
-        "hint": "\u00d3timo! Todos os seus leads ainda est\u00e3o no pipeline"
+        "hint": "Ótimo! Todos os seus leads ainda estão no pipeline"
       },
       "DND": {
-        "message": "Nenhum lead em N\u00e3o Perturbe",
-        "hint": "Leads que optarem por sair aparecer\u00e3o aqui"
+        "message": "Nenhum lead em Não Perturbe",
+        "hint": "Leads que optarem por sair aparecerão aqui"
       },
       "default": {
         "message": "Nenhum lead nesta etapa",
-        "hint": "Arraste leads aqui para mov\u00ea-los para esta etapa"
+        "hint": "Arraste leads aqui para movê-los para esta etapa"
       }
     },
     "dropHere": "Soltar aqui",
@@ -196,30 +205,30 @@
     "leadMoved": "Lead movido",
     "movedTo": "Movido para {{stage}}",
     "undo": "Desfazer",
-    "moveFailed": "N\u00e3o foi poss\u00edvel mover o lead",
-    "moveFailedDescription": "Status revertido \u2014 verifique sua conex\u00e3o",
-    "leadScore": "Pontua\u00e7\u00e3o do lead: {{score}}"
+    "moveFailed": "Não foi possível mover o lead",
+    "moveFailedDescription": "Status revertido — verifique sua conexão",
+    "leadScore": "Pontuação do lead: {{score}}"
   },
   "detail": {
     "title": "Detalhes do Lead",
-    "leadsOverview": "Vis\u00e3o Geral dos Leads",
+    "leadsOverview": "Visão Geral dos Leads",
     "leadsCount": "{{count}} leads",
     "clickRowToView": "Clique em uma linha para ver os detalhes do lead aqui.",
     "expandPanel": "Expandir painel",
     "collapsePanel": "Recolher painel",
     "deselectLead": "Desselecionar lead",
-    "openFullPage": "Abrir p\u00e1gina completa do contato",
+    "openFullPage": "Abrir página completa do contato",
     "sections": {
       "contact": "Contato",
-      "scores": "Pontua\u00e7\u00f5es",
+      "scores": "Pontuações",
       "status": "Status",
-      "doNotContact": "N\u00e3o Contatar",
+      "doNotContact": "Não Contatar",
       "bumpProgress": "Progresso de Follow-up",
       "activity": "Atividade",
       "booking": "Agendamento",
       "aiInsights": "Insights de IA",
       "tags": "Tags",
-      "notes": "Observa\u00e7\u00f5es",
+      "notes": "Observações",
       "conversations": "Conversas"
     },
     "fields": {
@@ -228,11 +237,11 @@
       "email": "E-mail",
       "priority": "Prioridade",
       "language": "Idioma",
-      "leadScore": "Pontua\u00e7\u00e3o do Lead",
+      "leadScore": "Pontuação do Lead",
       "engagement": "Engajamento",
       "activityScore": "Atividade",
       "pipelineStage": "Etapa do Pipeline",
-      "automation": "Automa\u00e7\u00e3o",
+      "automation": "Automação",
       "manualTakeover": "Controle Manual",
       "aiPaused": "IA pausada",
       "optedOutDnc": "Optou por Sair / DNC",
@@ -242,31 +251,31 @@
       "dncReasonLabel": "Motivo",
       "currentStage": "Etapa Atual",
       "leadCreated": "Lead Criado",
-      "lastUpdated": "\u00daltima Atualiza\u00e7\u00e3o",
-      "lastInteraction": "\u00daltima Intera\u00e7\u00e3o",
-      "lastSent": "\u00daltimo Envio",
-      "lastReceived": "\u00daltimo Recebido",
+      "lastUpdated": "Última Atualização",
+      "lastInteraction": "Última Interação",
+      "lastSent": "Último Envio",
+      "lastReceived": "Último Recebido",
       "sentCount": "Enviados",
       "receivedCount": "Recebidos",
       "responseRate": "Taxa de Resposta",
       "daysInactive": "Dias Inativo",
       "firstContacted": "Primeiro Contato",
-      "nextAction": "Pr\u00f3xima A\u00e7\u00e3o",
+      "nextAction": "Próxima Ação",
       "whatTheyDid": "O Que Fizeram",
       "callDate": "Data da Chamada",
       "previousCallDate": "Anterior",
       "confirmedAt": "Confirmado Em",
-      "noShow": "N\u00e3o Compareceu",
+      "noShow": "Não Compareceu",
       "rescheduled": "Reagendado",
-      "duration": "Dura\u00e7\u00e3o",
+      "duration": "Duração",
       "durationMinutes": "{{minutes}} min",
       "source": "Origem",
-      "lastActive": "\u00daltima atividade",
+      "lastActive": "Última atividade",
       "account": "Conta",
       "changePlaceholder": "Alterar...",
       "bump": "Bump {{n}}",
       "aiSentiment": "Sentimento",
-      "aiMemory": "Mem\u00f3ria da IA",
+      "aiMemory": "Memória da IA",
       "aiSummary": "Resumo",
       "campaign": "Campanha"
     },
@@ -278,7 +287,7 @@
       "resetLead": "Resetar Lead",
       "leadReset": "Lead resetado!",
       "resetFailed": "Reset falhou",
-      "demoResetTitle": "Demo Reset \u2014 limpar hist\u00f3rico e enviar primeira mensagem",
+      "demoResetTitle": "Demo Reset — limpar histórico e enviar primeira mensagem",
       "demoReset": "Demo Reset",
       "demoStarted": "Demo iniciada!",
       "demoFailed": "Demo reset falhou",
@@ -292,9 +301,14 @@
       "negative": "Negativo",
       "neutral": "Neutro"
     },
-    "notScored": "Sem pontua\u00e7\u00e3o",
+    "notScored": "Sem pontuação",
     "aiSummary": "Resumo da IA",
-    "noAiSummary": "Nenhum resumo da IA gerado ainda"
+    "noAiSummary": "Nenhum resumo da IA gerado ainda",
+    "summaryLocked": "O resumo será gerado quando a conversa terminar",
+    "summaryLockedHint": "Aparece aqui quando o lead agenda ou o chat é encerrado",
+    "outcome": "Resultado",
+    "keyPoints": "Pontos principais",
+    "gradientTester": "Testador de gradiente"
   },
   "contact": {
     "title": "Contato",
@@ -307,35 +321,35 @@
     "created": "Criado"
   },
   "score": {
-    "title": "Pontua\u00e7\u00e3o do Lead",
-    "notScored": "Sem pontua\u00e7\u00e3o",
+    "title": "Pontuação do Lead",
+    "notScored": "Sem pontuação",
     "insights": {
       "callBooked": "Chamada agendada com sucesso",
-      "leadQualified": "Lead est\u00e1 qualificado",
-      "multipleResponses": "M\u00faltiplas respostas recebidas",
+      "leadQualified": "Lead está qualificado",
+      "multipleResponses": "Múltiplas respostas recebidas",
       "leadResponded": "Lead respondeu",
       "leadOptedOut": "Lead optou por sair",
-      "dndStatus": "Status de n\u00e3o perturbe",
+      "dndStatus": "Status de não perturbe",
       "leadLost": "Lead marcado como perdido",
       "positiveSentiment": "Sentimento positivo detectado",
       "negativeSentiment": "Sentimento negativo detectado",
       "neutralSentiment": "Sentimento neutro detectado",
-      "repliedLast24h": "Respondeu nas \u00faltimas 24h",
+      "repliedLast24h": "Respondeu nas últimas 24h",
       "repliedWithin48h": "Respondeu em 48h",
       "repliedThisWeek": "Respondeu esta semana",
       "noReply30Days": "Sem resposta em 30+ dias",
       "quiet2Weeks": "Sem atividade por 2+ semanas",
-      "noReplyYet": "Lead ainda n\u00e3o respondeu",
+      "noReplyYet": "Lead ainda não respondeu",
       "highActivity": "Alta atividade de mensagens",
-      "repliedMultiple": "Respondeu m\u00faltiplas vezes",
-      "repliesMoreThanPinged": "Responde mais do que \u00e9 contatado",
+      "repliedMultiple": "Respondeu múltiplas vezes",
+      "repliesMoreThanPinged": "Responde mais do que é contatado",
       "manyFollowUps": "Muitos follow-ups enviados",
-      "pipelineStageIs": "Etapa do pipeline \u00e9",
-      "lastInteractionWas": "\u00daltima intera\u00e7\u00e3o foi",
-      "leadSourceIs": "Origem do lead \u00e9",
-      "activeCampaignIs": "Campanha ativa \u00e9",
-      "bumpSequenceAtStage": "Sequ\u00eancia de follow-up na etapa",
-      "leadPotentialIs": "Potencial do lead \u00e9",
+      "pipelineStageIs": "Etapa do pipeline é",
+      "lastInteractionWas": "Última interação foi",
+      "leadSourceIs": "Origem do lead é",
+      "activeCampaignIs": "Campanha ativa é",
+      "bumpSequenceAtStage": "Sequência de follow-up na etapa",
+      "leadPotentialIs": "Potencial do lead é",
       "highPotential": "alto potencial",
       "moderate": "moderado",
       "needsNurturing": "precisa de nurturing"
@@ -343,25 +357,25 @@
   },
   "csvImport": {
     "title": "Importar Leads do CSV",
-    "description": "Fa\u00e7a upload de um arquivo CSV e mapeie suas colunas para campos de lead.",
+    "description": "Faça upload de um arquivo CSV e mapeie suas colunas para campos de lead.",
     "steps": {
       "upload": "Upload",
       "mapFields": "Mapear Campos",
-      "preview": "Pr\u00e9-visualizar",
+      "preview": "Pré-visualizar",
       "results": "Resultados"
     },
     "upload": {
       "dragAndDrop": "Arraste e solte um arquivo CSV aqui, ou",
       "browse": "procure",
-      "fileInfo": "Suporta arquivos .csv at\u00e9 10 MB \u00b7 M\u00e1x 5.000 leads por importa\u00e7\u00e3o",
+      "fileInfo": "Suporta arquivos .csv até 10 MB · Máx 5.000 leads por importação",
       "formatTips": "Dicas de Formato CSV",
-      "tip1": "A primeira linha deve conter cabe\u00e7alhos de colunas",
+      "tip1": "A primeira linha deve conter cabeçalhos de colunas",
       "tip2": "Colunas recomendadas: Nome, Sobrenome, Telefone, E-mail",
-      "tip3": "N\u00fameros de telefone devem incluir c\u00f3digo do pa\u00eds (ex: +55 11 91234-5678)",
-      "tip4": "Separado por v\u00edrgulas; campos entre aspas s\u00e3o suportados",
+      "tip3": "Números de telefone devem incluir código do país (ex: +55 11 91234-5678)",
+      "tip4": "Separado por vírgulas; campos entre aspas são suportados",
       "csvOnly": "Por favor, selecione um arquivo CSV (.csv).",
-      "tooLarge": "O arquivo \u00e9 muito grande. Tamanho m\u00e1ximo \u00e9 10 MB.",
-      "emptyFile": "O CSV parece vazio ou n\u00e3o tem cabe\u00e7alhos.",
+      "tooLarge": "O arquivo é muito grande. Tamanho máximo é 10 MB.",
+      "emptyFile": "O CSV parece vazio ou não tem cabeçalhos.",
       "parseFailed": "Falha ao analisar o CSV. Verifique o formato do arquivo."
     },
     "mapping": {
@@ -370,13 +384,13 @@
       "dataRows_other": "{{count}} linhas de dados",
       "columnsDetected": "{{count}} colunas detectadas",
       "duplicateMappings": "Mapeamentos duplicados",
-      "phoneNotMapped": "Telefone n\u00e3o mapeado",
+      "phoneNotMapped": "Telefone não mapeado",
       "csvColumn": "Coluna CSV",
       "mapsToField": "Mapeia para Campo do Lead",
       "columnsMapped_one": "{{mapped}} de {{total}} coluna mapeada",
       "columnsMapped_other": "{{mapped}} de {{total}} colunas mapeadas",
       "selectField": "Selecionar campo...",
-      "skipColumn": "\u2014 Pular esta coluna \u2014"
+      "skipColumn": "— Pular esta coluna —"
     },
     "targetFields": {
       "firstName": "Nome",
@@ -385,29 +399,29 @@
       "email": "E-mail",
       "pipelineStage": "Etapa do Pipeline",
       "priority": "Prioridade",
-      "automationStatus": "Status da Automa\u00e7\u00e3o",
+      "automationStatus": "Status da Automação",
       "accountId": "ID da Conta",
       "campaignId": "ID da Campanha",
       "leadSource": "Origem do Lead",
-      "notes": "Observa\u00e7\u00f5es",
+      "notes": "Observações",
       "language": "Idioma",
-      "timezone": "Fuso Hor\u00e1rio",
+      "timezone": "Fuso Horário",
       "aiSentiment": "Sentimento da IA",
       "dncReason": "Motivo DNC"
     },
     "preview": {
-      "title": "Pr\u00e9-visualiza\u00e7\u00e3o da importa\u00e7\u00e3o",
+      "title": "Pré-visualização da importação",
       "showing_one": "Mostrando primeiro {{shown}} de {{total}} linha",
       "showing_other": "Mostrando primeiros {{shown}} de {{total}} linhas",
       "fieldsMapped_one": "{{count}} campo mapeado",
       "fieldsMapped_other": "{{count}} campos mapeados",
       "readyToImport": "Pronto para importar",
-      "leadsWillBeCreated_one": "{{count}} lead ser\u00e1 criado",
-      "leadsWillBeCreated_other": "{{count}} leads ser\u00e3o criados",
+      "leadsWillBeCreated_one": "{{count}} lead será criado",
+      "leadsWillBeCreated_other": "{{count}} leads serão criados",
       "fieldsPerLead_one": "{{count}} campo mapeado por lead",
       "fieldsPerLead_other": "{{count}} campos mapeados por lead",
-      "assignedToAccount": "Leads ser\u00e3o atribu\u00eddos \u00e0 conta #{{id}}",
-      "previewImport": "Pr\u00e9-visualizar Importa\u00e7\u00e3o"
+      "assignedToAccount": "Leads serão atribuídos à conta #{{id}}",
+      "previewImport": "Pré-visualizar Importação"
     },
     "importing": "Importando...",
     "importButton_one": "Importar {{count}} Lead",
@@ -432,7 +446,7 @@
     "conversationNumber": "Conversa {{number}}"
   },
   "toast": {
-    "transcriptionFailed": "Falha na transcri\u00e7\u00e3o",
+    "transcriptionFailed": "Falha na transcrição",
     "networkError": "Erro de rede. Tente novamente.",
     "microphoneDenied": "Acesso ao microfone negado",
     "microphoneDescription": "Permita o acesso ao microfone para gravar memos de voz."
@@ -443,28 +457,28 @@
     "today": "Hoje",
     "yesterday": "Ontem",
     "thisWeek": "Esta Semana",
-    "thisMonth": "Este M\u00eas",
-    "last3Months": "\u00daltimos 3 Meses",
+    "thisMonth": "Este Mês",
+    "last3Months": "Últimos 3 Meses",
     "older": "Mais Antigo",
     "noActivity": "Sem Atividade"
   },
   "confirm": {
     "yes": "Sim",
-    "no": "N\u00e3o"
+    "no": "Não"
   },
   "tags": {
     "addTag": "Adicionar tag",
-    "noTagsAvailable": "Nenhuma tag dispon\u00edvel",
-    "allTagsAssigned": "Todas as tags j\u00e1 atribu\u00eddas",
-    "noTagsAssigned": "Nenhuma tag atribu\u00edda",
-    "loadingTags": "Carregando tags\u2026",
+    "noTagsAvailable": "Nenhuma tag disponível",
+    "allTagsAssigned": "Todas as tags já atribuídas",
+    "noTagsAssigned": "Nenhuma tag atribuída",
+    "loadingTags": "Carregando tags…",
     "removeTag": "Remover tag {{name}}"
   },
   "timeline": {
     "title": "Linha do Tempo",
     "titleWithCount": "Linha do Tempo ({{count}})",
-    "noInteractions": "Nenhuma intera\u00e7\u00e3o ainda",
-    "noInteractionsHint": "Mensagens aparecer\u00e3o aqui conforme o lead interagir com suas campanhas.",
+    "noInteractions": "Nenhuma interação ainda",
+    "noInteractionsHint": "Mensagens aparecerão aqui conforme o lead interagir com suas campanhas.",
     "aiSent": "IA enviou",
     "agentSent": "Agente enviou",
     "sent": "Enviado",
@@ -473,28 +487,28 @@
     "via": "via {{who}}"
   },
   "notes": {
-    "placeholder": "Adicionar notas sobre este lead\u2026",
+    "placeholder": "Adicionar notas sobre este lead…",
     "saveNotes": "Salvar notas",
-    "stopRecording": "Parar grava\u00e7\u00e3o",
+    "stopRecording": "Parar gravação",
     "recordVoiceMemo": "Gravar memo de voz (transcrever para texto)",
-    "transcribing": "Transcrevendo\u2026",
+    "transcribing": "Transcrevendo…",
     "saved": "Salvo",
     "save": "Salvar"
   },
   "relativeTime": {
     "justNow": "Agora mesmo",
-    "minutesAgo": "{{count}}min atr\u00e1s",
-    "hoursAgo": "{{count}}h atr\u00e1s",
+    "minutesAgo": "{{count}}min atrás",
+    "hoursAgo": "{{count}}h atrás",
     "yesterday": "Ontem",
-    "daysAgo": "{{count}}d atr\u00e1s",
-    "weeksAgo": "{{count}}sem atr\u00e1s",
-    "monthsAgo": "{{count}}m atr\u00e1s"
+    "daysAgo": "{{count}}d atrás",
+    "weeksAgo": "{{count}}sem atrás",
+    "monthsAgo": "{{count}}m atrás"
   },
   "detailView": {
     "source": "Fonte",
-    "rating": "Classifica\u00e7\u00e3o",
+    "rating": "Classificação",
     "campaign": "Campanha",
-    "owner": "Propriet\u00e1rio",
+    "owner": "Proprietário",
     "booked": "Agendado",
     "hot": "Quente",
     "warm": "Morno",
@@ -503,44 +517,44 @@
     "delete": "Excluir",
     "deleteLead": "Excluir lead?",
     "newLead": "Novo lead",
-    "searchLeads": "Buscar leads\u2026",
-    "searchTagName": "Buscar nome da tag\u2026",
-    "previousPage": "P\u00e1gina anterior",
-    "nextPage": "Pr\u00f3xima p\u00e1gina",
+    "searchLeads": "Buscar leads…",
+    "searchTagName": "Buscar nome da tag…",
+    "previousPage": "Página anterior",
+    "nextPage": "Próxima página",
     "of": "de",
-    "assignment": "Atribui\u00e7\u00e3o"
+    "assignment": "Atribuição"
   },
   "chat": {
     "title": "Chat",
     "noMessages": "Nenhuma mensagem ainda",
-    "noMessagesHint": "Mensagens aparecer\u00e3o aqui quando o contato come\u00e7ar",
-    "typePlaceholder": "Digite uma mensagem\u2026",
+    "noMessagesHint": "Mensagens aparecerão aqui quando o contato começar",
+    "typePlaceholder": "Digite uma mensagem…",
     "letAiContinue": "Deixar IA continuar",
     "openInChats": "Abrir no Chat",
-    "transcribing": "Transcrevendo\u2026"
+    "transcribing": "Transcrevendo…"
   },
   "team": {
     "title": "Equipe",
     "addTeamMember": "Adicionar membro da equipe",
-    "noMoreUsers": "Nenhum usu\u00e1rio dispon\u00edvel"
+    "noMoreUsers": "Nenhum usuário disponível"
   },
   "activity": {
     "title": "Atividade",
     "callBooked": "Chamada Agendada",
     "scheduledFor": "Agendado para {{date}}",
-    "doNotDisturb": "N\u00e3o Perturbe",
+    "doNotDisturb": "Não Perturbe",
     "leadRequestedNoContact": "Lead solicitou sem contato",
     "optedOut": "Optou por Sair",
     "tagApplied": "Tag \"{{name}}\" aplicada",
     "clickToAddNotes": "Clique para adicionar notas...",
     "noRecentActivity": "Nenhuma atividade recente",
-    "emptyHint": "A atividade aparecer\u00e1 aqui conforme este lead interage com suas campanhas.",
-    "loadError": "N\u00e3o foi poss\u00edvel carregar a linha do tempo."
+    "emptyHint": "A atividade aparecerá aqui conforme este lead interage com suas campanhas.",
+    "loadError": "Não foi possível carregar a linha do tempo."
   },
   "kanbanDetail": {
     "chat": "Chat",
     "contact": "Contato",
-    "score": "Pontua\u00e7\u00e3o",
+    "score": "Pontuação",
     "activity": "Atividade",
     "notes": "Notas"
   },
@@ -549,12 +563,54 @@
       "info": "Info",
       "chat": "Chat",
       "activity": "Atividade",
-      "notes": "Notas"
+      "notes": "Notas",
+      "summary": "Resumo",
+      "score": "Pontuação"
     },
     "notes": {
       "addNote": "Adicionar Nota",
       "emptyTitle": "Nenhuma nota ainda",
       "emptyHint": "Toque em «Adicionar Nota» para adicionar a primeira nota deste lead."
-    }
+    },
+    "leadLabel": "Lead",
+    "activityLabel": "Atividade",
+    "stageOf": "Etapa {{current}} de {{total}}",
+    "bookCall": "Agendar ligação",
+    "viewBooking": "Ver agendamento",
+    "meetingBooked": "Reunião agendada",
+    "noSummary": "Nenhum resumo ainda",
+    "interactionFinished": "Interação concluída",
+    "aiSummary": "Resumo da IA",
+    "viewFullSummary": "Ver resumo completo",
+    "empty": "Vazio",
+    "noLeadsMatch": "Nenhum lead corresponde",
+    "messagePlaceholder": "Digite uma mensagem…"
+  },
+  "selection": {
+    "countSelected": "{{count}} selecionado(s)",
+    "clearSelection": "Limpar seleção"
+  },
+  "common": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "clear": "Limpar"
+  },
+  "addLead": {
+    "title": "Adicionar Lead",
+    "submit": "Adicionar Lead",
+    "creating": "Criando…",
+    "noCampaign": "Sem campanha",
+    "firstNameRequired": "O nome é obrigatório",
+    "phoneOrEmailRequired": "Telefone ou e-mail é obrigatório",
+    "created": "Lead criado",
+    "createFailed": "Falha ao criar lead",
+    "firstNamePlaceholder": "João",
+    "lastNamePlaceholder": "Silva",
+    "phonePlaceholder": "+55 (11) 90000-0000",
+    "emailPlaceholder": "joao@exemplo.com"
+  },
+  "emptyState": {
+    "noMatch": "Nenhum lead corresponde aos filtros",
+    "noLeads": "Nenhum lead encontrado"
   }
 }

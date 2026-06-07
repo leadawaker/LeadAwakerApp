@@ -163,12 +163,12 @@ export function CampaignDetailPanel({
             style={{
               background:
                 (campaign.status as string) === "Active"
-                  ? "linear-gradient(135deg, #10b981, #059669)"
+                  ? "linear-gradient(135deg, var(--good), #1D6B45)"
                   : (campaign.status as string) === "Paused"
-                  ? "linear-gradient(135deg, #f59e0b, #d97706)"
+                  ? "linear-gradient(135deg, var(--warn), #B07A20)"
                   : (campaign.status as string) === "Inactive" || (campaign.status as string) === "Archived"
-                  ? "linear-gradient(135deg, #94a3b8, #64748b)"
-                  : "linear-gradient(135deg, #6366f1, #4f46e5)",
+                  ? "linear-gradient(135deg, var(--mute-2), #7A6E5E)"
+                  : "linear-gradient(135deg, #6C5A8C, #4A3D6E)",
             }}
           >
             {initials || <Zap className="w-4 h-4" />}

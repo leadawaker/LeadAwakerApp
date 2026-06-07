@@ -29,8 +29,8 @@ function AgentIcon({ agent }: { agent: AiAgent }) {
 }
 
 function AgentCard({ agent }: { agent: AiAgent }) {
-  const [location, setLocation] = useLocation();
-  const prefix = location.startsWith("/agency") ? "/agency" : "/subaccount";
+  const [, setLocation] = useLocation();
+  const prefix = "/platform";
 
   const tagline =
     agent.type === "code_runner"

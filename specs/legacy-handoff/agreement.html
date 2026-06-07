@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 40px 0 40px 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #1e293b;
+  }
+  .page {
+    padding: 40px 60px 40px 60px;
+  }
+  .top-bar {
+    height: 8px;
+    background: linear-gradient(90deg, #2563EB 60%, #F59E0B 60%);
+    margin-bottom: 40px;
+  }
+  .header {
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+  }
+  .meta-grid {
+    display: flex;
+    gap: 40px;
+  }
+  .meta-item label {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .meta-item span {
+    font-size: 10.5pt;
+    color: #1e293b;
+    font-weight: 600;
+  }
+  h2 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #2563EB;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 28px 0 10px 0;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  h2:first-of-type {
+    margin-top: 0;
+  }
+  p {
+    margin-bottom: 10px;
+    color: #334155;
+  }
+  ol, ul {
+    margin: 8px 0 10px 20px;
+    color: #334155;
+  }
+  li {
+    margin-bottom: 6px;
+  }
+  strong {
+    color: #1e293b;
+  }
+  .section {
+    margin-bottom: 4px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 6px 0 6px 0;
+  }
+  .signature-block {
+    margin-top: 28px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .signature-grid {
+    display: flex;
+    gap: 60px;
+    margin-top: 16px;
+  }
+  .signature-box {
+    flex: 1;
+  }
+  .signature-box .label {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  .signature-box .name {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 32px;
+  }
+  .signature-line {
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 6px;
+  }
+  .signature-box .date-label {
+    font-size: 9pt;
+    color: #64748b;
+  }
+  .footer {
+    margin-top: 32px;
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+  .footer-bar {
+    height: 8px;
+    background: linear-gradient(90deg, #F59E0B 40%, #2563EB 40%);
+    margin-bottom: 12px;
+  }
+  .footer-text {
+    text-align: center;
+    font-size: 9pt;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Website Sale Agreement</h1>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <label>Date</label>
+        <span>June 2, 2026</span>
+      </div>
+      <div class="meta-item">
+        <label>Seller</label>
+        <span>Gabriel Fronza</span>
+      </div>
+      <div class="meta-item">
+        <label>Buyer</label>
+        <span>Mike Foroodi</span>
+      </div>
+      <div class="meta-item">
+        <label>Buyer Email</label>
+        <span>mike.foroodi@gmail.com</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Subject Matter -->
+  <div class="section">
+    <h2>1. Subject Matter</h2>
+    <p>Seller agrees to sell and Buyer agrees to purchase the complete source code of a React + Vite landing website (the "Project"), previously hosted at www.leadawaker.com, including all associated components, assets, translation files, and configuration files.</p>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 2. Payment Terms -->
+  <div class="section">
+    <h2>2. Purchase Price &amp; Payment Terms</h2>
+    <p>The total purchase price is <strong>USD $700</strong>, payable in two installments:</p>
+    <ol>
+      <li><strong>First installment — $350:</strong> due upon signing of this agreement. Upon receipt, Seller will deliver the complete project files (zip archive) and written setup guide to Buyer by email.</li>
+      <li><strong>Second installment — $350:</strong> due within fourteen (14) days of delivery of the project files, and prior to the onboarding call. Upon receipt, Seller will schedule and conduct a one-time setup call with Buyer to assist with local setup and deployment to Vercel.</li>
+    </ol>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 3. Transfer of Rights -->
+  <div class="section">
+    <h2>3. Transfer of Rights</h2>
+    <p>Full source code ownership, commercial usage rights, and license to use, modify, deploy and distribute the Project shall transfer to Buyer <strong>only upon receipt of the full purchase price (USD $700).</strong></p>
+    <p>This license is non-exclusive. Seller retains the right to use, sell, or license the Project to other parties.</p>
+    <p>Until full payment is received, the materials are provided to Buyer on an evaluation basis only. Buyer is not authorized to publish, deploy publicly, distribute, or commercially exploit the Project until full payment has been received by Seller.</p>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 4. Non-Payment -->
+  <div class="section">
+    <h2>4. Non-Payment</h2>
+    <p>If the second installment is not received within fourteen (14) days of file delivery, the evaluation license granted under this agreement terminates automatically. Buyer agrees to delete all copies of the project files. Seller reserves the right to pursue remedies for unauthorized use.</p>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 5. Delivery -->
+  <div class="section">
+    <h2>5. Delivery</h2>
+    <p>Seller will deliver the following upon receipt of the first installment:</p>
+    <ul>
+      <li>Complete project files as a zip archive</li>
+      <li>Written setup guide covering installation, local preview, customization, and Vercel deployment</li>
+    </ul>
+    <p>Seller will deliver the following upon receipt of the second installment:</p>
+    <ul>
+      <li>One-time onboarding call (max 1 hour) to walk Buyer through setup and deployment</li>
+    </ul>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 6. What Is Included -->
+  <div class="section">
+    <h2>6. What Is Included</h2>
+    <ul>
+      <li>Full React + Vite source code</li>
+      <li>All page components, section components, and UI primitives</li>
+      <li>Translation files (English, Dutch, Portuguese)</li>
+      <li>All associated images and assets used by the landing pages</li>
+      <li>Configuration files (Vite, Tailwind, i18n)</li>
+      <li>Full commercial rights to modify and rebrand for Buyer's business</li>
+    </ul>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 7. What Is Not Included -->
+  <div class="section">
+    <h2>7. What Is Not Included</h2>
+    <ul>
+      <li>Backend API, database, or server infrastructure</li>
+      <li>Ongoing support beyond the one-time onboarding call</li>
+      <li>Any third-party API keys or subscriptions (Claude Code, Vercel, domain)</li>
+    </ul>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 8. No Warranty -->
+  <div class="section">
+    <h2>8. No Warranty</h2>
+    <p>The Project is sold as-is. Seller represents that he has the right to transfer all included code, graphics, and assets. Seller represents that the delivered files are substantially the same project demonstrated at www.leadawaker.com/legacy and in the walkthrough video shared by Seller. No further guarantees are made regarding fitness for a specific purpose beyond what has been described in prior communications.</p>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 9. Governing Law -->
+  <div class="section">
+    <h2>9. Governing Law</h2>
+    <p>This agreement is governed by the laws of the Netherlands.</p>
+  </div>
+
+  <!-- Signature Block -->
+  <div class="signature-block">
+    <div class="divider"></div>
+    <div style="margin-top: 20px; font-size: 9pt; color: #64748b; margin-bottom: 16px;">By signing below, both parties agree to the terms set out in this agreement.</div>
+    <div class="signature-grid">
+      <div class="signature-box">
+        <div class="label">Seller</div>
+        <div class="name">Gabriel Fronza</div>
+        <div class="signature-line"></div>
+        <div class="date-label">Signature &amp; Date</div>
+      </div>
+      <div class="signature-box">
+        <div class="label">Buyer</div>
+        <div class="name">Mike Foroodi</div>
+        <div class="signature-line"></div>
+        <div class="date-label">Signature &amp; Date</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer" style="break-inside: avoid; page-break-inside: avoid;">
+    <div class="footer-bar"></div>
+    <div class="footer-text">leadawaker.com &mdash; gabriel@leadawaker.com</div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Camera, ChevronRight, Paintbrush } from "lucide-react";
+import { ArrowLeft, Camera, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
@@ -103,18 +103,6 @@ export function ProspectDetailHeader({
           </div>
           <div className="flex items-center gap-1">
             <ListPanelToggleButton />
-            <button
-              onClick={toggleGradientTester}
-              className={cn(
-                "h-7 w-7 rounded-md border grid place-items-center shrink-0",
-                gradientTesterOpen
-                  ? "border-indigo-200 text-indigo-600 bg-indigo-100"
-                  : "border-black/[0.125] text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
-              )}
-              title="Gradient Tester"
-            >
-              <Paintbrush className="h-3.5 w-3.5" />
-            </button>
           </div>
         </div>
 

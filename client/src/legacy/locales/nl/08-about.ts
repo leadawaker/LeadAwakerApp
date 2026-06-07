@@ -1,0 +1,126 @@
+export default {
+  "intro": {
+    "title": "Eén voor één vinden ze de weg terug",
+    "titleHighlight": "naar jou.",
+    "paragraph1": "Ze hebben ooit hun hand opgestoken. Ga ze nu halen.",
+    "paragraph2": "Wij nemen namens jou contact op, met de juiste timing, de juiste context en een bericht dat menselijk aanvoelt.",
+    "paragraph3": "Dan reageren mensen. Niet omdat je aandrong, maar omdat ze zich begrepen voelden."
+  },
+  "founder": {
+    "name": "YOUR_NAME",
+    "title": "Oprichter",
+    "tagline": "Ik bouw systemen die aandacht verdienen.",
+    "body1": "Als AI-specialist, developer, designer en digital artist, wordt mijn werk gevormd door psychologie, technologie en esthetiek.",
+    "body2": "Meditatie leerde me dat aandacht ons meest waardevolle bezit is. In het digitale tijdperk wordt het voortdurend alle kanten op getrokken, versnipperd over platforms, afleidingen en ruis. De merken die groeien zijn degenen die het met intentie weten te sturen.",
+    "body3": "Ik bouwde Lead Awaker om hen daar precies bij te helpen."
+  },
+  "credentials": {
+    "experienceLabel": "Ervaring die dit vormde",
+    "title": "Het is geen leadprobleem. Het is een lekprobleem.",
+    "subtitle": "Van Oscar-winnende studio's tot AAA-games shippen. Dezelfde discipline, toegepast op jouw leads.",
+    "resultsNode": "Echte resultaten.",
+    "items": [
+      {
+        "metric": "$136M box office",
+        "label": "Warner Bros · Framestore",
+        "logoKey": "warnerbros",
+        "description": "Digital art voor Tom & Jerry (2021), Academy Award voor Best Visual Effects. Assets komen niet door hun pipeline tenzij ze klaar zijn voor het grote scherm."
+      },
+      {
+        "metric": "3 titels · 12 maanden",
+        "label": "Sega · Creative Assembly",
+        "logoKey": "sega",
+        "description": "Digitale assets geleverd voor drie titels bij Creative Assembly, een Sega-studio van $3.1B. Ik bouw systemen die op dit tempo schalen."
+      },
+      {
+        "metric": "$52M+ omzet",
+        "label": "Embracer Group · New World Interactive",
+        "logoKey": "embracer",
+        "description": "Een team geleid, twee titels geshipped. Insurgency: Sandstorm is zeven jaar na launch nog steeds actief. Niets verloren."
+      }
+    ],
+    "recognition": "Uitgelicht werk op ZBrush Central (Pixologic) en ArtStation. Workshopspreker op Design Week, Federale Universiteit van Rio de Janeiro. Gepubliceerd profiel in een online design-magazine."
+  },
+  "cta": {
+    "title": "Zie het werken op jouw leads",
+    "quote": "Ik heb geleverd onder de strakste deadlines in de entertainmentindustrie en daarna een bedrijf gebouwd waar elke gemiste lead mij persoonlijk raakte. Die ervaring zit in elke campagne die we draaien.",
+    "button": "Chat op WhatsApp",
+    "waLink": "YOUR_WHATSAPP_LINK"
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "categories": [
+      {
+        "title": "Resultaten en starten",
+        "items": [
+          {
+            "q": "Welke resultaten kunnen we verwachten?",
+            "a": "Heractivatiepercentages liggen doorgaans tussen de 5 en 15% in de eerste 30 dagen. Het exacte cijfer hangt af van hoe vers je leads zijn, hoe relevant je aanbod nog is en hoe goed de campagne is afgestemd. We beloven geen wonderen, maar we zetten stille databases consequent om in gesprekken."
+          },
+          {
+            "q": "Hoe snel kunnen we starten?",
+            "a": "De meeste klanten zijn binnen een week live. We richten je account in, stemmen de tone of voice af, importeren je leads en draaien een testbatch voordat we opschalen. Geen lang onboardingtraject."
+          },
+          {
+            "q": "Wat als onze leads echt oud of helemaal koud zijn?",
+            "a": "Sommige van onze beste resultaten komen van leads van 6 maanden tot 2 jaar oud. Leeftijd is niet het probleem. Als de oorspronkelijke behoefte nog bestaat en de benadering persoonlijk is in plaats van generiek, reageren mensen. We zien het keer op keer."
+          },
+          {
+            "q": "Werkt dit voor onze branche?",
+            "a": "Als je een dienst of product verkoopt waarbij mensen interesse tonen en dan stil worden, ja. We hebben Lead Awaker aangepast voor B2B, klinieken, bureaus en dienstverlenende bedrijven. Tijdens de setup configureren we alles zodat het past bij jouw taal, bezwaren en verkoopproces."
+          },
+          {
+            "q": "Wat kost het?",
+            "a": "Ons voorkeursmodel is prestatiegericht: je betaalt per geboekt gesprek, zodat onze belangen gelijk lopen met die van jou. We bieden ook vaste tarieven aan, afhankelijk van je volume en setup. We lopen de opties met je door in een democall en geven je een helder bedrag. Geen verborgen kosten, geen langlopend contract."
+          }
+        ]
+      },
+      {
+        "title": "Hoe het werkt",
+        "items": [
+          {
+            "q": "Wat gebeurt er als een lead reageert?",
+            "a": "Dat hangt af van wat jij wilt. Het systeem kan direct een gesprek inplannen in je agenda, de conversatie overdragen aan je salesteam met volledige context, of blijven opvolgen tot de lead klaar is. Jij bepaalt de handoff-regels, en die kun je altijd aanpassen."
+          },
+          {
+            "q": "Is dit een vervanging voor ons salesteam?",
+            "a": "Nee. Jouw team sluit deals. Wij doen het werk daarvoor: de eerste benadering, de follow-ups, de kwalificatie. Tegen de tijd dat een lead bij je team komt, is die al warm en ge\u00efnteresseerd. Je mensen besteden minder tijd aan achtervolgen en meer aan sluiten."
+          },
+          {
+            "q": "Hoe voorkomen jullie dat het als spam overkomt?",
+            "a": "Elk bericht is gebaseerd op waar die specifieke lead is gestopt. Geen bulktemplates, geen generiek \"even checken hoe het gaat.\" Het systeem weet waarin ze ge\u00efnteresseerd waren, wanneer ze voor het laatst reageerden en wat nu logisch is om te zeggen. Mensen reageren omdat het voelt als een echte follow-up, niet als een massale verzending."
+          },
+          {
+            "q": "Moeten we scripts aanleveren?",
+            "a": "Optioneel. Als je gesprekken hebt die goed werken, deel ze en wij gebruiken dat als basis. Zo niet, dan maken wij de berichten op basis van je aanbod, je doelgroep en je tone of voice. Hoe dan ook, je beoordeelt alles voordat het live gaat."
+          },
+          {
+            "q": "Kunnen we campagnes tussentijds pauzeren of aanpassen?",
+            "a": "Ja. Pauzeer, pas de berichten aan, wijzig de targeting, update de kwalificatieregels. Allemaal zonder de context van lopende gesprekken te verliezen."
+          }
+        ]
+      },
+      {
+        "title": "Vertrouwen en compliance",
+        "items": [
+          {
+            "q": "Welke kanalen gebruiken jullie?",
+            "a": "WhatsApp, SMS, Instagram of andere messaging platforms, afhankelijk van wat logisch is voor jouw doelgroep. We helpen je het juiste kanaal te kiezen tijdens de setup en regelen de technische kant."
+          },
+          {
+            "q": "Kunnen we berichten bekijken voordat ze verstuurd worden?",
+            "a": "Absoluut. Voor elke campagnelancering zie je de berichten, de toon en de kwalificatielogica. Niets gaat live zonder jouw akkoord."
+          },
+          {
+            "q": "Hoe gaan jullie om met AVG en compliance?",
+            "a": "Afmeldingen worden direct verwerkt. Het systeem is gebouwd met consent-bewuste logica en respectvolle pacing. Jij behoudt controle over je leaddata en de juridische grondslag voor contact. Wij voeren campagnes uit volgens jouw instructies en de geldende wetgeving."
+          },
+          {
+            "q": "Waar worden onze gegevens opgeslagen?",
+            "a": "Je data staat op beveiligde, dedicated infrastructuur. We delen het niet, verkopen het niet en gebruiken het niet om modellen te trainen. Jij bent eigenaar van je leads, je gesprekken en je resultaten."
+          }
+        ]
+      }
+    ]
+  }
+};

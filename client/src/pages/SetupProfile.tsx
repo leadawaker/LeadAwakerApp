@@ -59,8 +59,8 @@ export default function SetupProfile() {
           if (profile?.timezone) {
             // Setup already completed, go to CRM
             const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-            const isAgency = role === "Admin" || role === "Operator";
-            setLocation(isAgency ? "/agency/campaigns" : "/subaccount/campaigns");
+            const isAgency = role === "Owner" || role === "Admin";
+            setLocation("/platform/campaigns");
           }
         })
         .catch(() => {});
@@ -101,8 +101,8 @@ export default function SetupProfile() {
 
       // Redirect to CRM (campaigns page where Joyride will start)
       const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-      const isAgency = role === "Admin" || role === "Operator";
-      setLocation(isAgency ? "/agency/campaigns" : "/subaccount/campaigns");
+      const isAgency = role === "Owner" || role === "Admin";
+      setLocation("/platform/campaigns");
     } catch (err: any) {
       setError(err.message || t("errors.saveFailed"));
     } finally {

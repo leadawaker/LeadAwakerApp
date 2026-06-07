@@ -38,7 +38,7 @@ const ROUTE_MAP: Array<{
   { pattern: /^\/(?:agency|subaccount)\/leads$/, pageName: "Leads", pageType: "leads" },
   { pattern: /^\/(?:agency|subaccount)\/contacts$/, pageName: "Leads", pageType: "leads" },
   { pattern: /^\/(?:agency|subaccount)\/campaigns$/, pageName: "Campaigns", pageType: "campaigns" },
-  { pattern: /^\/(?:agency|subaccount)\/conversations$/, pageName: "Conversations", pageType: "conversations" },
+  { pattern: /^\/(?:agency|subaccount)\/outreach-inbox$/, pageName: "Outreach Inbox", pageType: "conversations" },
   { pattern: /^\/(?:agency|subaccount)\/calendar$/, pageName: "Calendar", pageType: "calendar" },
   { pattern: /^\/(?:agency|subaccount)\/settings$/, pageName: "Settings", pageType: "settings" },
   { pattern: /^\/(?:agency|subaccount)\/accounts$/, pageName: "Accounts", pageType: "accounts" },

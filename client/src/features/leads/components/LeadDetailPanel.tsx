@@ -643,7 +643,7 @@ function funnelContext(lead: Record<string, any> | null): string {
 
 export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const { t } = useTranslation("leads");
-  const { accounts } = useWorkspace();
+  const { accounts, isAgencyView } = useWorkspace();
   const accountTimezone = useMemo(() => {
     if (!lead) return undefined;
     const aid = lead.account_id ?? lead.accounts_id;
@@ -880,7 +880,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   };
 
   // ── Campaigns state (filtered by lead's account, agency view only) ──
-  const isAgencyPanel = window.location.pathname.startsWith("/agency");
+  const isAgencyPanel = isAgencyView;
   const leadAccountId = Number(lead?.Accounts_id || lead?.account_id || lead?.accounts_id || 0);
   const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([]);
 
@@ -1145,7 +1145,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const email = lead.email || lead.Email || "";
   const source = lead.Source || lead.source || lead.inquiries_source || "";
   const priority = lead.priority || lead.Priority || "";
-  const isAgency = window.location.pathname.startsWith("/agency");
 
   // Demo niche context
   const demoNicheRaw = lead.demo_niche || lead.demoNiche || "";
@@ -1169,8 +1168,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
 
   const handleViewFull = () => {
     onClose();
-    const path = isAgency ? `/agency/contacts/${leadId}` : `/subaccount/contacts/${leadId}`;
-    setLocation(path);
+    setLocation(`/platform/contacts/${leadId}`);
   };
 
   return (

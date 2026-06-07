@@ -1429,7 +1429,7 @@ function SettingsContent() {
     { label: "WhatsApp",  handle: "+(55) 84 8111-8224", href: "https://wa.me/558481118224", Icon: Phone, color: "text-emerald-600" },
   ];
 
-  const routePrefix = location.startsWith("/agency") ? "/agency" : "/subaccount";
+  const routePrefix = "/platform";
 
   const renderMobileHubSectionContent = () => {
     switch (mobileSection) {
@@ -1637,7 +1637,7 @@ function SettingsContent() {
   };
 
   return (
-    <div className="h-full flex flex-col" data-testid="page-settings">
+    <div className="h-full flex flex-col pt-4" data-testid="page-settings">
       {/* Mobile: show hub or section detail */}
       {isMobile && renderMobileHub()}
 

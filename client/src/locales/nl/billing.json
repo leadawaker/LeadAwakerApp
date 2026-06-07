@@ -649,5 +649,31 @@
     "views": "Weergaven",
     "firstViewed": "Eerste Weergave",
     "paid": "Betaald"
+  },
+  "mobile": {
+    "amountDue": "Te betalen",
+    "dueToday": "Vandaag vervallen",
+    "notSent": "Niet verzonden",
+    "chips": {
+      "all": "Alle",
+      "deductible": "Aftrekbaar",
+      "nonDeductible": "Niet-aftr."
+    },
+    "groups": {
+      "outstanding": "Openstaand",
+      "drafts": "Concepten",
+      "awaitingSignature": "Wacht op handtekening"
+    },
+    "stats": {
+      "invoicesCount": "{{count}} verstuurd",
+      "itemsCount": "{{count}} items",
+      "open": "Open",
+      "pastDue": "Vervallen",
+      "collected": "Ontvangen",
+      "reclaimable": "Terugvorderbaar",
+      "inEffect": "Actief",
+      "committed": "Vastgelegd",
+      "awaiting": "In afwachting"
+    }
   }
 }

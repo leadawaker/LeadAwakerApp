@@ -26,7 +26,6 @@ import {
   STAGE_ICON,
   TERMINAL_DEFAULT_ANCHOR,
   STATUS_TO_STAGE,
-  TAG_COLOR_MAP,
   CLIENT_FUNNEL_WEIGHTS,
   LIST_RING_SIZE,
 } from "./constants";
@@ -312,9 +311,15 @@ export function PipelineProgressCompact({ status }: { status: string }) {
 
 // ── Tag pill ──────────────────────────────────────────────────────────────────
 export function TagPill({ tag }: { tag: { name: string; color: string } }) {
-  const cls = TAG_COLOR_MAP[tag.color] ?? TAG_COLOR_MAP.gray;
   return (
-    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold", cls)}>
+    <span
+      className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold"
+      style={{
+        border: '1px solid var(--line-strong)',
+        borderRadius: 'var(--r-pill)',
+        color: 'var(--mute)',
+      }}
+    >
       {tag.name}
     </span>
   );
@@ -434,17 +439,44 @@ export function ListScoreRing({ score, status, lead }: { score: number; status: 
   );
 }
 
+// ── ScoreArc donut — compact SVG ring for list cards (28px) ──────────────────
+export function ScoreArcDonut({ score }: { score: number }) {
+  const size = 28;
+  const r = 11;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(100, Math.max(0, score)) / 100;
+  const dash = circ * pct;
+
+  const color = score >= 55 ? '#10B981' : score >= 40 ? '#F59E0B' : '#3B82F6';
+
+  return (
+    <div className="flex items-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth="2.5" />
+        <circle
+          cx={cx} cy={cy} r={r} fill="none"
+          stroke={color} strokeWidth="2.5" strokeLinecap="round"
+          strokeDasharray={`${dash} ${circ - dash}`}
+          transform={`rotate(-90 ${cx} ${cy})`}
+        />
+        <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
+          fontSize="8.5" fontWeight="700" fill="var(--ink)" fontFamily="inherit">
+          {score}
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 // ── Group header ───────────────────────────────────────────────────────────────
+// Matches spec: eyebrow label with count + trailing rule
 export function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div data-group-header="true" className="sticky top-0 z-30 bg-muted px-3 pt-3 pb-3">
-      <div className="flex items-center gap-[10px]">
-        <div className="flex-1 h-px bg-foreground/15" />
-        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
-        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15" />
-      </div>
+    <div className="row" style={{ gap: 8, padding: '12px 4px 2px' }}>
+      <span className="eyebrow eyebrow-sm">{label} — {count}</span>
+      <div className="rule" style={{ flex: 1 }} />
     </div>
   );
 }

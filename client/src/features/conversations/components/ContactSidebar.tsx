@@ -233,7 +233,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
   const { toast } = useToast();
 
   const lead = selected?.lead ?? null;
-  const { accounts } = useWorkspace();
+  const { accounts, isAdmin } = useWorkspace();
   const accountTimezone = useMemo(() => {
     if (!lead) return undefined;
     const aid = (lead as any).accounts_id ?? (lead as any).account_id ?? (lead as any).Accounts_id;
@@ -360,7 +360,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <SectionHeader id="contact" label={t("contact.sections.contact")} icon={User} collapsed={collapsedSections.has("contact")} onToggle={toggleSection} />
             {!collapsedSections.has("contact") && (
               <div className="px-4 pb-5">
-                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2.5">
+                <div className="bg-card shadow-[var(--card-shadow)] rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
                     campaignName && { icon: <Megaphone className="h-4 w-4" />, label: t("contact.fields.campaign"), value: campaignName },
                     demoNicheCtx && { icon: <span className="h-4 w-4 flex items-center justify-center text-[10px] font-bold text-violet-500">✦</span>, label: "Niche", value: demoNicheCtx.niche_label || demoNicheCtx.raw || "", niche: true },
@@ -394,7 +394,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("status") && (
               <div className="px-4 pb-4">
-                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex items-center gap-3">
+                <div className="bg-card shadow-[var(--card-shadow)] rounded-xl p-3.5 flex items-center gap-3">
                   {(() => {
                     const Icon = STAGE_ICON[status] ?? CircleDot;
                     const hex = PIPELINE_HEX[status];
@@ -457,7 +457,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("score") && (
               <div className="px-4 pb-4">
-                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-3 relative" data-testid="lead-score">
+                <div className="bg-card shadow-[var(--card-shadow)] rounded-xl p-3.5 flex flex-col gap-3 relative" data-testid="lead-score">
                   {/* Score + tier + trend */}
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-black tabular-nums text-foreground leading-none">{score}</span>
@@ -502,7 +502,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                 <SectionHeader id="ai" label="AI Summary" icon={Bot} collapsed={collapsedSections.has("ai")} onToggle={toggleSection} />
                 {!collapsedSections.has("ai") && (
                   <div className="px-4 pb-4">
-                    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
+                    <div className="bg-card shadow-[var(--card-shadow)] rounded-xl p-3.5">
                       {(() => {
                         const raw = (lead as any)?.aiSummary ?? (lead as any)?.ai_summary ?? (lead as any)?.aiMemory ?? (lead as any)?.ai_memory;
                         if (!raw) {
@@ -552,7 +552,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
 
               return (
                 <div className="px-4 pb-5">
-                  <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2">
+                  <div className="bg-card shadow-[var(--card-shadow)] rounded-xl p-3.5 flex flex-col gap-2">
                     {rows.map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between gap-2">
                         <span className="text-[11px] text-muted-foreground">{label}</span>
@@ -592,7 +592,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                     {demoNicheCtx.niche_question && <div><span className="text-muted-foreground">Question:</span> <span className="text-foreground/80 italic">{demoNicheCtx.niche_question}</span></div>}
                   </div>
                 )}
-                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
+                <div className="bg-card shadow-[var(--card-shadow)] rounded-xl p-3.5">
                   {onUpdateLead ? (
                     <textarea
                       className="w-full text-[12px] text-foreground/80 leading-relaxed bg-transparent resize-none focus:outline-none min-h-[80px] placeholder:text-muted-foreground/40"
@@ -615,14 +615,14 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               </div>
             )}
 
-            {/* ── Recent Messages (optional — used on Calendar page) ── */}
-            {recentMessages !== undefined && (
+            {/* ── Recent Messages (optional — used on Calendar page) — admin/owner only ── */}
+            {recentMessages !== undefined && isAdmin && (
               <>
                 <div className="border-t border-border/20" />
                 <SectionHeader id="messages" label={t("contact.sections.recentMessages")} icon={MessageSquare} collapsed={collapsedSections.has("messages")} onToggle={toggleSection} />
                 {!collapsedSections.has("messages") && (
                   <div className="px-4 pb-5">
-                    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-hidden">
+                    <div className="bg-card shadow-[var(--card-shadow)] rounded-xl overflow-hidden">
                       <div className="h-[300px] overflow-y-auto p-3 space-y-2">
                         {recentMessagesLoading ? (
                           <div className="space-y-2">

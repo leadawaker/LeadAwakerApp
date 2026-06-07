@@ -114,9 +114,11 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isLegacy = pathWithoutLang.startsWith("/legacy");
+
   const navLinks = [
-    { href: "/", label: t("nav.home") },
-    { href: "/#try", label: t("nav.try"), isHash: true },
+    { href: isLegacy ? "/legacy" : "/", label: t("nav.home") },
+    { href: isLegacy ? "/legacy#demo" : "/#try", label: t("nav.try"), isHash: true },
     { href: "/faq", label: t("nav.about") },
   ];
 
@@ -213,7 +215,7 @@ export function Navbar() {
 
             {isLoggedIn ? (
               <>
-                <Link href="/agency/campaigns">
+                <Link href="/platform/campaigns">
                   <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
                     {t("nav.openApp")}
                   </Button>
@@ -293,7 +295,7 @@ export function Navbar() {
           </div>
 
           {[...navLinks, ...(isLoggedIn
-              ? [{ href: "/agency/campaigns", label: t("nav.openApp") }]
+              ? [{ href: "/platform/campaigns", label: t("nav.openApp") }]
               : [{ href: "/login", label: t("nav.login") }]
             )].map((link) => {
               if ((link as any).isHash) {

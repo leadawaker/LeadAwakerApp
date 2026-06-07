@@ -129,23 +129,23 @@ export function BookedCallsKpi({ variant, accountId, className }: BookedCallsKpi
     return (
       <div
         className={cn(
-          "bg-[#FCB803]/10 border border-[#FCB803]/30 rounded-2xl px-5 py-3.5 flex items-center gap-5 shrink-0",
+          "bg-[#DA9426]/10 border border-[#DA9426]/30 rounded-2xl px-5 py-3.5 flex items-center gap-5 shrink-0",
           className
         )}
         data-testid="kpi-booked-calls-hero"
       >
         {/* Icon */}
-        <div className="h-12 w-12 rounded-xl bg-[#FCB803]/20 flex items-center justify-center shrink-0">
-          <CalendarCheck className="h-6 w-6 text-[#131B49]" />
+        <div className="h-12 w-12 rounded-xl bg-[#DA9426]/20 flex items-center justify-center shrink-0">
+          <CalendarCheck className="h-6 w-6 text-[#1F1A14]" />
         </div>
 
         {/* Monthly stat */}
         <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium text-[#131B49]/70 leading-tight">
+          <span className="text-sm font-medium text-[#1F1A14]/70 leading-tight">
             Calls Booked This Month
           </span>
           <div className="flex items-baseline gap-2.5 mt-0.5">
-            <span className="text-4xl font-bold text-[#131B49] tabular-nums leading-none">
+            <span className="text-4xl font-bold text-[#1F1A14] tabular-nums leading-none">
               {isLoading ? "--" : thisMonth}
             </span>
             {/* Trend badge */}
@@ -168,24 +168,24 @@ export function BookedCallsKpi({ variant, accountId, className }: BookedCallsKpi
         </div>
 
         {/* Divider */}
-        <div className="w-px h-10 bg-[#FCB803]/25 shrink-0 hidden sm:block" />
+        <div className="w-px h-10 bg-[#DA9426]/25 shrink-0 hidden sm:block" />
 
         {/* Weekly stat */}
         <div className="flex flex-col min-w-0 hidden sm:flex">
-          <span className="text-sm font-medium text-[#131B49]/70 leading-tight">
+          <span className="text-sm font-medium text-[#1F1A14]/70 leading-tight">
             This Week
           </span>
-          <span className="text-2xl font-bold text-[#131B49] tabular-nums leading-none mt-0.5">
+          <span className="text-2xl font-bold text-[#1F1A14] tabular-nums leading-none mt-0.5">
             {isLoading ? "--" : thisWeek}
           </span>
         </div>
 
         {/* Last month comparison */}
         <div className="flex flex-col min-w-0 hidden md:flex">
-          <span className="text-sm font-medium text-[#131B49]/70 leading-tight">
+          <span className="text-sm font-medium text-[#1F1A14]/70 leading-tight">
             Last Month
           </span>
-          <span className="text-2xl font-bold text-[#131B49]/50 tabular-nums leading-none mt-0.5">
+          <span className="text-2xl font-bold text-[#1F1A14]/50 tabular-nums leading-none mt-0.5">
             {isLoading ? "--" : lastMonth}
           </span>
         </div>
@@ -201,13 +201,13 @@ export function BookedCallsKpi({ variant, accountId, className }: BookedCallsKpi
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-[#FCB803]/15 cursor-default select-none shrink-0",
+                "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-[#DA9426]/15 cursor-default select-none shrink-0",
                 className
               )}
               data-testid="kpi-booked-calls-inline"
             >
-              <CalendarCheck className="h-4 w-4 text-[#131B49]" />
-              <span className="text-[15px] font-bold tabular-nums text-[#131B49] leading-none">
+              <CalendarCheck className="h-4 w-4 text-[#1F1A14]" />
+              <span className="text-[15px] font-bold tabular-nums text-[#1F1A14] leading-none">
                 {isLoading ? "-" : thisMonth}
               </span>
               {!isLoading && (
@@ -256,10 +256,10 @@ export function BookedCallsKpi({ variant, accountId, className }: BookedCallsKpi
             data-testid="kpi-booked-calls-compact"
           >
             <span className="relative flex h-2 w-2 shrink-0">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-[#FCB803] opacity-50 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FCB803]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-[#DA9426] opacity-50 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#DA9426]" />
             </span>
-            <CalendarCheck className="h-4 w-4 text-[#131B49] dark:text-[#FCB803]" />
+            <CalendarCheck className="h-4 w-4 text-[#1F1A14] dark:text-[#DA9426]" />
             <span className="text-[13px] font-semibold tabular-nums text-foreground">
               {isLoading ? "-" : thisMonth}
             </span>
@@ -366,7 +366,7 @@ function MobileKpiStrip({
       id: "booked-calls",
       label: "Booked Calls",
       icon: CalendarCheck,
-      color: "bg-[#FCB803]",
+      color: "bg-[#DA9426]",
       value: anyLoading ? "-" : String(thisMonth),
       unit: "",
     },
@@ -457,7 +457,7 @@ function MobileKpiStrip({
             </span>
 
             {/* Icon */}
-            <IconComponent className="h-4 w-4 text-[#131B49] dark:text-[#FCB803] shrink-0" />
+            <IconComponent className="h-4 w-4 text-[#1F1A14] dark:text-[#DA9426] shrink-0" />
 
             {/* Label + value */}
             <div className="flex flex-col leading-tight min-w-0">

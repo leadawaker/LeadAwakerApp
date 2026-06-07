@@ -4,20 +4,16 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   FileText,
-  Pencil,
-  MessageSquare,
-  Phone,
-  TrendingUp,
-  ClipboardList,
-  ExternalLink,
-  X,
+  MoreHorizontal,
+  Calendar,
+  Trash2,
+  Palette,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 import { updateLead, deleteLead } from "../../api/leadsApi";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
-import { renderRichText } from "@/lib/richTextUtils";
 import {
   GradientTester,
   GradientControlPoints,
@@ -53,7 +49,15 @@ import { PipelineProgress, PipelineProgressCompact } from "./atoms";
 import { ScoreWidget } from "./ScoreWidgets";
 import { ContactWidget } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
-import { ActivityTimeline } from "./DetailWidgets";
+import { TempBadge, DetailPipelineBar } from "./designPrimitives";
+import { LeadSummaryCard } from "./LeadSummaryCard";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 // ── Alias used inside this file ──────────────────────────────────────────────
 const getStatusAvatarColor = getLeadStatusAvatarColor;
@@ -85,18 +89,36 @@ export function LeadDetailView({
 
   // ── Responsive columns ─────────────────────────────────────────────────────
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isNarrow, setIsNarrow] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(1000);
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setIsNarrow(entry.contentRect.width < 820);
-      }
+      for (const entry of entries) setPanelWidth(entry.contentRect.width);
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  const isNarrow = panelWidth < 820;
+  // The chat card always toggles between Conversations / Summary. Default to
+  // Conversations unless a real summary already exists (conversation ended —
+  // booked or lost). Mirror LeadSummaryCard's resolution so we don't flip to a
+  // locked/empty Summary just because ai_memory has unrelated data.
+  const hasSummary = (() => {
+    const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
+    if (aiSummary) return true;
+    const memoryStr = lead?.ai_memory || lead?.aiMemory || "";
+    if (!memoryStr) return false;
+    try {
+      const obj = typeof memoryStr === "string" ? JSON.parse(memoryStr) : memoryStr;
+      return Boolean(obj?.summary || obj?.notes || obj?.description);
+    } catch { return false; }
+  })();
+  const [chatTab, setChatTab] = useState<"chat" | "summary">(hasSummary ? "summary" : "chat");
+  useEffect(() => {
+    setChatTab(hasSummary ? "summary" : "chat");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadId]);
 
   // ── Tag events — fetch junction rows + full tag list, merge by ID ──────────
   const [tagEvents, setTagEvents] = useState<{ name: string; color?: string; appliedAt?: string }[]>([]);
@@ -274,54 +296,35 @@ export function LeadDetailView({
     setGradientTesterOpen(prev => !prev);
   }, [gradientTesterOpen]);
 
-  // ── Expand-on-hover button helpers ───────────────────────────────────────
-  const xBtn = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-  const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+  // Listen for the global gradient toggle dispatched by the nav menu button
+  useEffect(() => {
+    const handler = () => toggleGradientTester();
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [toggleGradientTester]);
+
+  // ── Hero data (computed once) ─────────────────────────────────────────────
+  const campName = lead.campaign_name || lead.Campaign || "";
+  const acctName = lead.account_name || lead.Account || "";
+  const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+  const bookedDate = lead.booked_call_date || lead.bookedCallDate;
+  const skipBooked = (() => {
+    const cId = lead.Campaigns_id ?? lead.campaigns_id ?? lead.campaignsId;
+    const mode = cId && campaignsById?.get(Number(cId))?.bookingMode;
+    return mode === "direct";
+  })();
+  const setRefs = (n: HTMLDivElement | null) => { panelRef.current = n; containerRef.current = n; };
+  const sep = <span style={{ color: "var(--line-strong)" }}>·</span>;
 
   return (
-    <div ref={panelRef} className="relative flex flex-col h-full overflow-hidden">
+    <div ref={setRefs} className="relative flex flex-col h-full overflow-hidden" style={{ gap: 14 }}>
 
-      {/* ── Full-height gradient ── */}
-      {gradientTesterOpen ? (
-        <>
-          {gradientLayers.map(layer => {
-            const style = layerToStyle(layer);
-            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
-          })}
-          {gradientDragMode && (
-            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-          )}
-        </>
-      ) : savedGradient ? (
-        <>
-          {savedGradient.map((layer: GradientLayer) => {
-            const style = layerToStyle(layer);
-            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
-          })}
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-popover dark:bg-background" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,102,17,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f0ffb5_5%,transparent_30%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
-        </>
-      )}
-
-      {/* ── Fixed header (stays in place) ── */}
-      <div className="relative shrink-0 z-10 px-4 pt-2 lg:pt-9 pb-3 max-w-[1386px] w-full mr-auto">
-
-          {/* Avatar + Name + Tags + Info row (merged onto one line) */}
-          <div className="relative flex items-start gap-3">
-            <EntityAvatar
-              name={name}
-              bgColor={avatarColor.bg}
-              textColor={avatarColor.text}
-              size={65}
-              className="overflow-hidden"
-            />
-
-            <div className="flex-1 min-w-0 py-1">
+      {/* ── Hero (detached, rounded) ── */}
+      <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ padding: isNarrow ? "14px 16px" : "16px 20px", display: "flex", alignItems: "center", gap: isNarrow ? 12 : 16 }}>
+          <EntityAvatar name={name} bgColor={avatarColor.bg} textColor={avatarColor.text} size={isNarrow ? 42 : 50} className="rounded-[14px] overflow-hidden shrink-0" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 5, flexWrap: "wrap" }}>
               {isEditing ? (
                 <input
                   value={editFields.full_name ?? ""}
@@ -329,201 +332,106 @@ export function LeadDetailView({
                   onBlur={handleSaveEdit}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setIsEditing(false); }}
                   autoFocus
-                  className="text-[24px] font-semibold font-heading bg-white/70 dark:bg-white/[0.07] border border-brand-indigo/30 rounded-lg px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+                  style={{ fontFamily: "var(--serif)", fontSize: isNarrow ? 22 : 27, color: "var(--ink)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", border: "none", borderRadius: "var(--r-button)", padding: "2px 8px", outline: "none" }}
                 />
               ) : (
-                <div className="group/name flex items-center gap-2 cursor-text" onClick={startEdit}>
-                  <h2 className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate">{name}</h2>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); startEdit(); }}
-                    className="opacity-0 group-hover/name:opacity-100 p-1 rounded hover:bg-muted/50 transition-opacity text-muted-foreground hover:text-foreground shrink-0"
-                    title="Edit name"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                </div>
+                <span onClick={startEdit} style={{ fontFamily: "var(--serif)", fontSize: isNarrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em", cursor: "text" }}>{name}</span>
               )}
-              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/50 text-[10px] font-medium text-muted-foreground">Lead {leadId}</span>
-                {tier && (
-                  <span
-                    className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold", TIER_COLORS[tier] ?? TIER_COLORS.Sleeping)}
-                    style={(tier === "Hot" || tier === "Awake") ? {
-                      boxShadow: `0 0 8px 2px ${tier === "Hot" ? "rgba(239,68,68,0.4)" : "rgba(16,185,129,0.4)"}`,
-                    } : undefined}
-                  >
-                    {tier}
-                  </span>
-                )}
-              </div>
+              {tier && <TempBadge temp={tier} />}
+              <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.1em", textTransform: "uppercase", border: "1px solid var(--line-strong)", borderRadius: 4, padding: "2px 6px" }}>Lead {leadId}</span>
+              {bookedDate && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--warn-tint)", border: "1px solid rgba(196,138,47,0.4)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--stage-booked)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                  <Calendar className="h-[11px] w-[11px]" />Booked · {formatBookedDate(bookedDate, accountTimezone)}
+                </span>
+              )}
             </div>
-            {/* Metachips — absolute, centered on panel 2/3 boundary (66.67%), desktop only */}
-            {(() => {
-              const campName = lead.campaign_name || lead.Campaign || "";
-              const acctName = lead.account_name || lead.Account || "";
-              const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
-              const hasAny = campName || acctName || hasActivity || lead.booked_call_date || lead.bookedCallDate;
-              if (!hasAny) return null;
-              return (
-              <div className="absolute -translate-x-1/2 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-8 whitespace-nowrap pointer-events-auto z-10" style={{ left: "66.67%" }}>
-                {hasActivity && (
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("contact.lastActivity", "Last Activity")}</div>
-                    <div className="text-[12px] font-bold text-foreground leading-none">{formatRelativeTime(hasActivity, t)}</div>
-                  </div>
-                )}
-                {(lead.booked_call_date || lead.bookedCallDate) && (
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detail.fields.callDate", "Booked Call")}</div>
-                    {(lead.previous_booked_call_date || lead.previousBookedCallDate) && Number(lead.re_scheduled_count || lead.reScheduledCount || 0) > 0 && (
-                      <div className="text-[10px] text-muted-foreground/50 line-through leading-none mb-0.5">{formatBookedDate(lead.previous_booked_call_date || lead.previousBookedCallDate, accountTimezone)}</div>
-                    )}
-                    <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate, accountTimezone)}</div>
-                  </div>
-                )}
-                {campName && (
-                  <div className="flex items-center gap-1.5">
-                    {campaignStickerUrl ? (
-                      <img src={campaignStickerUrl} alt="" className="h-[38px] w-[38px] object-contain shrink-0" />
-                    ) : (
-                      <EntityAvatar
-                        name={campName}
-                        bgColor={getCampaignAvatarColor("Active").bg}
-                        textColor={getCampaignAvatarColor("Active").text}
-                        size={38}
-                        className="shrink-0"
-                      />
-                    )}
-                    <div>
-                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Campaign{campaignNumber ? ` #${campaignNumber}` : ""}</div>
-                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[120px]">{campName}</div>
-                    </div>
-                  </div>
-                )}
-                {acctName && (
-                  <div className="flex items-center gap-1.5">
-                    {accountLogo ? (
-                      <img src={accountLogo} alt="" className="h-[25px] w-[25px] rounded-full object-cover shrink-0" />
-                    ) : (
-                      <EntityAvatar
-                        name={acctName}
-                        bgColor="rgba(0,0,0,0.08)"
-                        textColor="#374151"
-                        size={25}
-                        className="shrink-0"
-                      />
-                    )}
-                    <div>
-                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Account</div>
-                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[120px]">{acctName}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              );
-            })()}
+            <div style={{ display: "flex", gap: 12, fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", letterSpacing: "0.1em", textTransform: "uppercase", flexWrap: "wrap" }}>
+              {hasActivity && <span>{t("contact.lastActivity", "Activity")} {formatRelativeTime(hasActivity, t)}</span>}
+              {campName && <>{sep}<span>{campName}{campaignNumber ? ` #${campaignNumber}` : ""}</span></>}
+              {!isNarrow && acctName && <>{sep}<span>{acctName}</span></>}
+            </div>
           </div>
-
-          {/* Mobile metachips — shown below name row on narrow screens */}
-          {isNarrow && (() => {
-            const campName = lead.campaign_name || lead.Campaign || "";
-            const acctName = lead.account_name || lead.Account || "";
-            const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
-            const hasAny = campName || acctName || hasActivity || lead.booked_call_date || lead.bookedCallDate;
-            if (!hasAny) return null;
-            return (
-              <div className="flex flex-wrap gap-x-5 gap-y-2.5 mt-1">
-                {hasActivity && (
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("contact.lastActivity", "Last Activity")}</div>
-                    <div className="text-[12px] font-bold text-foreground leading-none">{formatRelativeTime(hasActivity, t)}</div>
-                  </div>
+          <div style={{ display: "flex", gap: 7, alignItems: "center", flexShrink: 0 }}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="la-btn la-btn--soft la-btn--icon" style={{ width: 34, height: 34 }} title={t("common.more", "More")}><MoreHorizontal className="h-3.5 w-3.5" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handlePdf}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  {t("detailView.toPdf", "Export PDF")}
+                </DropdownMenuItem>
+                {isAgencyUser && (
+                  <DropdownMenuItem onClick={toggleGradientTester}>
+                    <Palette className="h-4 w-4 mr-2" />
+                    {t("detail.gradientTester", "Gradient tester")}
+                  </DropdownMenuItem>
                 )}
-                {(lead.booked_call_date || lead.bookedCallDate) && (
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detail.fields.callDate", "Booked Call")}</div>
-                    {(lead.previous_booked_call_date || lead.previousBookedCallDate) && Number(lead.re_scheduled_count || lead.reScheduledCount || 0) > 0 && (
-                      <div className="text-[10px] text-muted-foreground/50 line-through leading-none mb-0.5">{formatBookedDate(lead.previous_booked_call_date || lead.previousBookedCallDate, accountTimezone)}</div>
-                    )}
-                    <div className="text-[12px] font-bold text-foreground leading-none">{formatBookedDate(lead.booked_call_date || lead.bookedCallDate, accountTimezone)}</div>
-                  </div>
-                )}
-                {campName && (
-                  <div className="flex items-center gap-1.5">
-                    {campaignStickerUrl ? (
-                      <img src={campaignStickerUrl} alt="" className="h-[32px] w-[32px] object-contain shrink-0" />
-                    ) : (
-                      <EntityAvatar name={campName} bgColor={getCampaignAvatarColor("Active").bg} textColor={getCampaignAvatarColor("Active").text} size={32} className="shrink-0" />
-                    )}
-                    <div>
-                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Campaign{campaignNumber ? ` #${campaignNumber}` : ""}</div>
-                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[110px]">{campName}</div>
-                    </div>
-                  </div>
-                )}
-                {acctName && (
-                  <div className="flex items-center gap-1.5">
-                    {accountLogo ? (
-                      <img src={accountLogo} alt="" className="h-[25px] w-[25px] rounded-full object-cover shrink-0" />
-                    ) : (
-                      <EntityAvatar name={acctName} bgColor="rgba(0,0,0,0.08)" textColor="#374151" size={25} className="shrink-0" />
-                    )}
-                    <div>
-                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Account</div>
-                      <div className="text-[12px] font-bold text-foreground leading-none truncate max-w-[110px]">{acctName}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Pipeline tube */}
-          {status && (
-            <div className="pt-2 pb-6">
-              <div className="hidden md:block"><PipelineProgress status={status} skipBooked={(() => { const cId = lead.Campaigns_id ?? lead.campaigns_id ?? lead.campaignsId; const mode = cId && campaignsById?.get(Number(cId))?.bookingMode; return mode === "direct"; })()} /></div>
-              <div className="md:hidden"><PipelineProgressCompact status={status} /></div>
-            </div>
-          )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (deleteConfirm) { handleDelete(); }
+                    else { setDeleteConfirm(true); }
+                  }}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {deleteConfirm ? t("confirm.yes", "Confirm delete") : t("detailView.deleteLead", "Delete lead")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
+        {status && (
+          <div style={{ padding: isNarrow ? "0 16px 14px" : "0 20px 16px" }}>
+            <DetailPipelineBar status={status} skipBooked={skipBooked} />
+          </div>
+        )}
+      </div>
 
-      {/* ── Body — fills remaining viewport, columns scroll internally ── */}
-      <div
-        className={cn("relative flex-1 -mt-[80px] pt-[83px] min-h-0", isNarrow ? "overflow-y-auto" : "overflow-hidden")}
-        style={{
-          maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
-        }}
-      >
-        <div ref={containerRef} className={cn("p-1.5 max-w-[1386px] w-full mr-auto", isNarrow ? "" : "h-full flex flex-col gap-1.5")}>
-          <div className={cn("grid gap-1.5", isNarrow ? "" : "flex-1 min-h-0")} style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
-            {/* Contact */}
-            <div className={cn("overflow-y-auto rounded-xl", isNarrow ? "min-h-[340px]" : "min-h-0")}>
-              <ContactWidget
-                lead={lead}
-                onRefresh={onRefresh}
-                accountLogo={accountLogo}
-                campaignStickerUrl={campaignStickerUrl}
-                campaignsById={campaignsById}
-                onPdf={handlePdf}
-                onDelete={handleDelete}
-                isDeleting={deleting}
-                deleteConfirm={deleteConfirm}
-                setDeleteConfirm={setDeleteConfirm}
-                onToggleGradient={toggleGradientTester}
-                gradientTesterOpen={gradientTesterOpen}
-                isAgencyUser={isAgencyUser}
-              />
-            </div>
-            {/* Chat */}
-            <div className={cn("overflow-hidden rounded-xl bg-white/60 dark:bg-white/[0.10] flex flex-col", isNarrow ? "min-h-[420px]" : "min-h-0")}>
-              <ConversationWidget lead={lead} showHeader />
-            </div>
-            {/* Lead Score */}
-            <div className={cn("overflow-y-auto rounded-xl", isNarrow ? "min-h-[340px]" : "min-h-0")}>
-              <ScoreWidget score={score} lead={lead} status={status} />
+      {/* ── Columns ── */}
+      <div style={{ flex: 1, minHeight: 0, width: "100%", display: "flex", flexDirection: isNarrow ? "column" : "row", gap: 14, overflowY: isNarrow ? "auto" : undefined, overflow: isNarrow ? "auto" : "hidden" }}>
+        {/* Contact */}
+        <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
+          <ContactWidget
+            lead={lead}
+            onRefresh={onRefresh}
+            accountLogo={accountLogo}
+            campaignStickerUrl={campaignStickerUrl}
+            campaignsById={campaignsById}
+            onPdf={handlePdf}
+            onDelete={handleDelete}
+            isDeleting={deleting}
+            deleteConfirm={deleteConfirm}
+            setDeleteConfirm={setDeleteConfirm}
+            onToggleGradient={toggleGradientTester}
+            gradientTesterOpen={gradientTesterOpen}
+            isAgencyUser={isAgencyUser}
+          />
+        </div>
+        {/* Chat with Conversations / Summary toggle — admin/owner only */}
+        {isAgencyUser && (
+          <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
+            <div className="glass-strong" style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end", padding: "8px 8px 0" }}>
+                <div className="la-seg la-seg--pill">
+                  <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
+                  <button className={`la-seg-btn${chatTab === "summary" ? " on" : ""}`} onClick={() => setChatTab("summary")}>{t("detail.aiSummary", "Summary")}</button>
+                </div>
+              </div>
+              {chatTab === "summary" ? (
+                <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+                  <LeadSummaryCard lead={lead} tier={tier} status={status} hideHeader />
+                </div>
+              ) : (
+                <ConversationWidget lead={lead} showHeader={false} />
+              )}
             </div>
           </div>
+        )}
+        {/* Lead Score */}
+        <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
+          <ScoreWidget score={score} lead={lead} status={status} />
         </div>
       </div>
 
@@ -536,135 +444,14 @@ export function LeadDetailView({
           onUpdateLayer={updateGradientLayer}
           onResetLayers={() => setGradientLayers(PAGE_DEFAULT_LAYERS)}
           dragMode={gradientDragMode}
-          onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+          onToggleDragMode={() => setGradientDragMode((prev) => !prev)}
           onSave={handleSaveGradient}
           onApply={handleApplyGradient}
         />
       )}
-
     </div>
   );
 }
 
-// ── Kanban detail panel (tabbed, compact) ─────────────────────────────────────
-type KanbanTab = "chat" | "contact" | "score" | "activity" | "notes";
-
-export function KanbanDetailPanel({
-  lead,
-  onClose,
-  leadTags,
-  onOpenFullProfile,
-}: {
-  lead: Record<string, any>;
-  onClose: () => void;
-  leadTags: { name: string; color: string }[];
-  onOpenFullProfile?: () => void;
-}) {
-  const { t } = useTranslation("leads");
-  const [activeTab, setActiveTab] = useState<KanbanTab>("chat");
-
-  const kanbanTabs: { id: KanbanTab; label: string; icon: typeof MessageSquare }[] = [
-    { id: "chat",     label: t("conversations.title"), icon: MessageSquare },
-    { id: "contact",  label: t("contact.title"),       icon: Phone },
-    { id: "score",    label: t("score.title"),          icon: TrendingUp },
-    { id: "activity", label: t("detail.sections.activity"), icon: ClipboardList },
-    { id: "notes",    label: t("detail.sections.notes"),    icon: FileText },
-  ];
-
-  const name       = getFullName(lead);
-  const status     = getStatus(lead);
-  const score      = getScore(lead);
-  const avatarColor = getStatusAvatarColor(status);
-
-  return (
-    <div className="flex flex-col h-full overflow-hidden bg-card rounded-lg">
-
-      {/* ── Header: avatar + name + X ── */}
-      <div className="shrink-0 px-4 pt-4 pb-3 border-b border-border/20">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2.5">
-            <EntityAvatar
-              name={name}
-              bgColor={avatarColor.bg}
-              textColor={avatarColor.text}
-              size={72}
-            />
-            <div>
-              <p className="text-[18px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">{name}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{status || "—"}</p>
-            </div>
-          </div>
-          {onOpenFullProfile && (
-            <button
-              onClick={onOpenFullProfile}
-              title="Open full lead profile"
-              className="flex items-center gap-1 text-[11px] font-medium text-brand-indigo/80 hover:text-brand-indigo transition-colors px-2 py-1 rounded-lg hover:bg-brand-indigo/5 shrink-0 mt-1"
-            >
-              <span>Full profile</span>
-              <ExternalLink className="h-3 w-3" />
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="icon-circle-lg icon-circle-base shrink-0"
-            title="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-      </div>
-
-      {/* ── Tabs ── */}
-      <div className="shrink-0 px-2 pt-2 pb-1 flex items-center gap-1">
-        {kanbanTabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id)}
-            className={cn(
-              "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium",
-              activeTab === id
-                ? "bg-highlight-active text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-            )}
-          >
-            <Icon className="h-3 w-3" />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Active widget ── */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        {activeTab === "chat" && <ConversationWidget lead={lead} showHeader />}
-        {activeTab === "contact" && (
-          <div className="h-full overflow-y-auto p-3">
-            <ContactWidget lead={lead} />
-          </div>
-        )}
-        {activeTab === "score" && (
-          <div className="h-full overflow-y-auto p-3">
-            <ScoreWidget score={score} lead={lead} status={status} />
-          </div>
-        )}
-        {activeTab === "activity" && (
-          <div className="h-full overflow-hidden">
-            <ActivityTimeline lead={lead} tagEvents={leadTags} />
-          </div>
-        )}
-        {activeTab === "notes" && (
-          <div className="h-full overflow-y-auto p-4">
-            <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("detail.sections.notes")}</p>
-            {lead.notes || lead.Notes ? (
-              <p className="text-[12px] text-foreground/80 leading-relaxed">
-                {renderRichText(lead.notes || lead.Notes || "")}
-              </p>
-            ) : (
-              <p className="text-[12px] text-muted-foreground/50 italic">{t("activity.clickToAddNotes")}</p>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+// Re-exported from its own module (kept here for existing import paths).
+export { KanbanDetailPanel } from "./KanbanDetailPanel";

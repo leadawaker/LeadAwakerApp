@@ -27,54 +27,107 @@
 
 ## 2. Color System
 
+> ### ⭐ Source of truth: `client/src/styles/variables.css`
+> The **token names** below are canonical. Their **values live in `variables.css`** (mirrored
+> into Tailwind via `tokens.css`) — that file is the one place colors are defined, and it is
+> what ships. Any hex written in this doc is illustrative of the *current* value and may lag the
+> CSS; when they disagree, **the CSS wins.** Never hardcode a hex in a component — reference the
+> token (`bg-primary`, `text-primary`, `hsl(var(--brand-indigo))`). This is what makes a full
+> re-skin (e.g. going neumorphic, or swapping the accent) a single-file edit.
+
+**Current palette: warm-bone neumorphic with deep wine accent.** The primary accent is deep wine
+`#5E2230` (`346 43% 25%`) on a warm bone page (`#ECE7DD`, `38 27% 88%`) with white neumorphic cards.
+The design uses directional-light neumorphic shadows (bilateral dark + light highlights) and
+frosted glass for overlays. (The earlier indigo `#4F46E5` + yellow `#FFDF3D` + wine `#8D354B`
+palettes have been retired; `--brand-indigo`/`--brand-yellow` token *names* still exist but
+resolve to deep wine for backwards-compat — see `variables.css` and `neu.css` for the full system.)
+**Dark mode is deferred** — light mode only for the current phase.
+
 ### 2.1 Brand Colors (Primary Palette)
 
-| Token | Hex | HSL | Role |
-|-------|-----|-----|------|
-| `--brand-indigo` | `#4F46E5` | `243 75% 59%` | **Primary brand color.** Buttons, links, focus rings, active nav, CTAs. |
-| `--brand-deep-blue` | `#131B49` | `231 59% 18%` | Deep accent. Text on yellow backgrounds, sidebar headers, strong emphasis. |
-| `--brand-yellow` | `#FFDF3D` | `50 100% 62%` | **KPI accent.** Call Booked highlights, badges, sparklines, Kanban Booked column. Data emphasis only. |
-| `--brand-soft-yellow` | `#FCCA47` | `43 97% 63%` | Secondary highlights, hover states, decorative warm accents. |
-| `--brand-indian-yellow` | `#FFFFFF` | `0 0% 100%` | Legacy token — currently mapped to white in CSS. Not actively used for tinting. |
+Token **roles** (exact values in `variables.css`):
 
-**CRITICAL:** `--brand-indigo` (`#4F46E5`) is the primary interactive color — it replaces the old `#5170FF` periwinkle everywhere. `--primary` and `--brand-blue` CSS variables MUST both resolve to `#4F46E5`.
+| Token | Role |
+|-------|------|
+| `--primary` / `--accent` | **Primary brand accent (wine).** Buttons, links, focus rings, active nav, CTAs. |
+| `--brand-indigo`, `--brand-blue` | Legacy accent token names — now resolve to `--primary` (wine). Prefer `--primary`. |
+| `--brand-deep-blue` | Deep accent — strong emphasis, dark wine. |
+| `--brand-yellow`, `--brand-soft-yellow` | Legacy KPI-accent names — now resolve to wine. |
+| `--foreground` / `--muted-foreground` | Text — near-black / muted gray. |
+
+**Rule:** `--primary` and `--brand-blue` resolve to the same wine accent. New code should reach
+for `--primary` (or the `primary` Tailwind color), not the legacy `--brand-*` aliases.
 
 ### 2.2 Highlight & Selection Colors
 
-These replace the old lime-yellow `#FFF375` / `#FFF6C8` system entirely.
+| Token | Usage |
+|-------|-------|
+| `--highlight-active` | Active nav pill, active tab pill, selected filter pills (light wine tint). |
+| `--highlight-selected` | Selected card background, highlighted table row, selected containers (light wine tint). |
+| `--highlight-hover` | Hover state on already-highlighted elements. |
 
-| Token | Hex | HSL | Usage |
-|-------|-----|-----|-------|
-| `--highlight-active` | `#FFF28D` | `53 100% 78%` | Active nav pill, active tab pill, detail panel bloom, selected filter pills. |
-| `--highlight-selected` | `#FFF9D9` | `51 100% 93%` | Selected card background, highlighted table row, selected containers. |
-| `--highlight-hover` | `#949BFF` | `236 100% 79%` | Hover state on already-highlighted elements (indigo-tinted, not yellow). |
+Selection/active tints are wine-derived (`--wine-tint: rgba(94,34,48,0.08)`) for hover/inactive
+and `--wine-glow: rgba(94,34,48,0.18)` for stronger emphasis — both defined in `variables.css`.
+**NEVER USE** any lime/chartreuse yellow (`#FFF375`, `#FFF6C8`, etc.) — banned.
 
-**The rule:** `#FFDF3D` = data emphasis (KPIs, badges, Call Booked). `#FFF28D` / `#FFF9D9` = UI chrome (pills, selections, nav highlights, panel bloom gradients → use `#FFF286` as the gradient base color).
+### 2.25 Surface Primitives & Layout Tokens
 
-**NEVER USE:** `#FFF375`, `#FFF6C8`, `#FFF0A0`, `#FFF7CC`, or any lime/chartreuse yellow. These are banned from the codebase.
+Recurring surfaces (list rows, group headers, panels, pills, toolbar buttons) are **not**
+hand-rolled per page. They are rendered by shared primitives in
+`client/src/components/crm/primitives/`, each of which bakes in CSS tokens from `variables.css`.
+Change the token (or the primitive) once → every page follows. This is the same single-edit
+re-skin principle as the color system, extended to dimensions/shadows/spacing.
 
-### 2.3 Surface Hierarchy (Stone-Gray System, Light Mode)
+**The rule: new list / card / panel / pill UI MUST compose a primitive. Never hand-roll
+`rounded-*`, `shadow-*`, or card padding on a list row.** Per-instance tweaks go through
+`className` (tailwind-merge lets a page override without forking the component).
 
-Depth is communicated through color stepping, NOT visible borders.
+| Primitive | Use for | Key tokens |
+|-----------|---------|-----------|
+| `<ListCard>` | Any selectable list row (Leads, Prospects, Conversations, Tasks, Campaigns) | `--list-card-radius`, `--list-card-radius-mobile`, `--list-card-pad-x/y`, `--list-card-min-h`, `--list-card-shadow`, `--list-card-shadow-hover` |
+| `<GroupHeader>` | Sticky section divider in list views | `--group-header-pad-x/y`, `--group-header-sticky-top`, `--group-header-bg` |
+| `<SectionCard>` | Larger container (kanban column, detail section, widget shell) | `--panel-radius`, `--panel-bg`, `--panel-pad`, `--panel-shadow` |
+| `<Pill>` | Status / label badge | `--pill-radius`, `--pill-pad-x/y` |
+| `<ToolbarButton>` + `toolbarButtonClasses` | Expand-on-hover toolbar filter/action buttons | (Tailwind strings; active state reads `--primary`) |
+
+`<ListCard>` props of note: `selected`, `interactive` (cursor + hover bg, default on),
+`hoverShadow` (lift on hover — **opt-in**, so pages that never had one keep parity), `padded`
+(bake the standard padding, default on; set false when a card manages its own inner padding),
+`as` (`div`/`button`/`li`), `accentColor`. Import from `@/components/crm/primitives`.
+
+All dimensional tokens live in `:root` in `variables.css`; only color-bearing ones (shadows on
+dark navy, selection tints) carry a `.dark` override. To overhaul the look of every card/panel
+in the app (radius, density, elevation, even a neumorphic pass), edit those tokens — not the pages.
+
+### 2.3 Surface Hierarchy (Warm-Bone Neumorphic System)
+
+Depth is communicated through neumorphic directional-light shadows, NOT visible borders.
 
 | Level | Token | Hex | HSL | Usage |
 |-------|-------|-----|-----|-------|
-| 1 (deepest) | `--background` | `#DEDEDE` | `0 0% 87%` | Page bg, sidebar, topbar — seamless base canvas. |
-| 2 | `--muted` | `#EDEDED` | `0 0% 93%` | Secondary panels, input backgrounds. |
-| 3 | `--card` | `#F8F8F8` | `0 0% 97%` | Interactive cards, nav items, selectable elements. |
-| 4 (highest) | `--popover` | `#FFFFFF` | `0 0% 100%` | Dropdowns, popovers, topmost elevation. |
+| 0 (page) | `--background` | `#ECE7DD` | `38 27% 88%` | Page ground, inset surface background |
+| 1 (sidebar) | `--bg-2` | `#E4DCCC` | `38 29% 85%` | Sidebar, nav rail, bottom bar |
+| 2 (muted) | `--muted` | warm near-white | `39 30% 96%` | Secondary panels, surface fills |
+| 3 (card) | `--card` | `#FFFFFF` | `0 0% 100%` | White neumorphic raised cards |
+| 4 (surface) | `--surface` | `#FBF8F2` | hex | Near-white raised chips, buttons |
 
-**Borders:** `--border: 0 0% 75%` (`#BFBFBF`) exists for system use but should be applied sparingly with opacity (e.g., `border-border/30`). Depth comes from the color stepping above, not from visible lines.
+**Shadows:** Neumorphic bilateral shadows (dark cast + light highlight) defined in `neu.css`.
+Use `.neu-raised`, `.neu-raised-crisp`, `.neu-inset`, `.neu-polished`, `.glass`, `.glass-strong`
+utility classes. See `neu.css` for the complete shadow token system.
 
-**Radius:** `--radius: 1.5rem` (24px) globally. All bordered elements use this rounded curvature.
+**Radius tiers:** Six semantic tiers (`--r-flush: 6px`, `--r-button: 8px`, `--r-surface: 11px`,
+`--r-card: 16px`, `--r-panel: 22px`, `--r-pill: 999px`). Snap all corners to these tiers —
+never use ad-hoc px values. The legacy `--radius: 1.5rem` still exists for backwards compatibility
+with existing shadcn components.
 
 ### 2.4 Text Colors
 
 | Token | Hex | HSL | Usage |
 |-------|-----|-----|-------|
-| `--foreground` | `#1F1F1F` | `0 0% 12%` | Primary text, headings, body copy. |
-| `--muted-foreground` | `#616161` | `0 0% 38%` | Secondary text, captions, icon default color. |
-| `--secondary-foreground` | `#262626` | `0 0% 15%` | Slightly muted primary text. |
+| `--foreground` | `#1F1A14` | `30 14% 10%` | Primary text, headings, body copy. |
+| `--ink-soft` | `#322B22` | hex | Softened headings, secondary text. |
+| `--muted-foreground` | `#6C6354` | `39 15% 38%` | Secondary text, captions, icon default color. |
+| `--secondary-foreground` | `#322B22` | hex | Slightly muted primary text. |
 
 ### 2.5 Pipeline Stage Colors
 
@@ -82,17 +135,17 @@ These are fixed hex values used in Kanban columns, status badges, and pipeline c
 
 | Stage | Hex | Notes |
 |-------|-----|-------|
-| New | `#6B7280` | gray-500 |
-| Contacted | `#7A73FF` | Violet |
-| Responded | `#3ACBDF` | Cyan |
-| Multiple Responses | `#31D35C` | Green |
-| Qualified | `#AED62E` | Lime |
-| Booked | `#F7BF0E` | Gold |
-| Closed | `#FFFFFF` | White |
-| Lost | `#FF0000` | Red |
-| DND | `#CB257D` | Magenta |
+| New | `#6C5A8C` | Muted purple |
+| Contacted | `#547BB0` | Steel blue |
+| Responded | `#3F8E8E` | Teal |
+| Multiple Responses | `#5E8E5E` | Sage green |
+| Qualified | `#B58F3E` | Warm gold |
+| Booked | `#C48A2F` | Amber-gold |
+| Closed | `#6E7A5E` | Muted olive |
+| Lost | `#A24B3F` | Warm red |
+| DND | `#9D8E76` | Warm taupe |
 
-> **Source of truth:** `PIPELINE_HEX` in `client/src/lib/avatarUtils.ts`. If you update stage colors, update there — docs follow code.
+> **Source of truth:** `PIPELINE_STAGE_COLORS` in `client/src/lib/avatarUtils.ts`. If you update stage colors, update there — docs follow code.
 
 ### 2.6 Status Colors (Campaigns, Accounts)
 
@@ -131,28 +184,17 @@ These are fixed hex values used in Kanban columns, status badges, and pipeline c
 
 | Chart Token | HSL | Notes |
 |-------------|-----|-------|
-| `--chart-1` | `243 75% 59%` | Brand Indigo |
-| `--chart-2` | `160 60% 45%` | Teal |
-| `--chart-3` | `44 98% 50%` | Brand Yellow |
-| `--chart-4` | `280 65% 55%` | Purple |
-| `--chart-5` | `0 72% 55%` | Red |
+| `--chart-1` | `346 43% 25%` | Deep Wine |
+| `--chart-2` | `150 52% 38%` | Emerald |
+| `--chart-3` | `37 70% 50%` | Warm Amber |
+| `--chart-4` | `260 23% 45%` | Muted Purple |
+| `--chart-5` | `10 50% 40%` | Warm Red |
 
 ### 2.9 Dark Mode
 
-Dark mode uses **brand-tinted navy surfaces**, never pure black.
-
-| Token | HSL (Dark) | Notes |
-|-------|-----------|-------|
-| `--background` | `228 35% 10%` | Deep navy page bg. |
-| `--foreground` | `220 20% 93%` | Off-white with slight warmth. |
-| `--card` | `226 32% 14%` | Elevated card surface. |
-| `--muted` | `226 28% 18%` | Hover states, subtle fills. |
-| `--border` | `226 25% 20%` | Visible but subtle. |
-| `--brand-indigo` | `243 85% 68%` | Brighter for dark bg legibility. |
-| `--brand-yellow` | `44 98% 55%` | Brighter for dark bg legibility. |
-| `--highlight-active` | `40 77% 35%` | Muted warm gold on dark. |
-| `--highlight-selected` | `40 50% 20%` | Subtle warm card tint on dark. |
-| `--sidebar-bg` | `228 40% 8%` | Sidebar background. |
+**Dark mode is deferred.** Dark-mode overrides have been removed from `variables.css` for the
+current phase. The warm-bone neumorphic system targets light mode only. Dark equivalents will
+be added as a follow-up phase after the full light-mode migration is approved.
 
 ---
 
@@ -160,15 +202,18 @@ Dark mode uses **brand-tinted navy surfaces**, never pure black.
 
 | Property | Value |
 |----------|-------|
-| Body font | `Inter` (`--font-sans`) |
-| Heading font | `Outfit` (`--font-heading`) |
+| Body font | `Manrope` (`--font-sans`) |
+| Heading font | `Playfair Display` (`--font-heading`) |
+| Mono font | `Geist Mono` — eyebrows, labels, data, status pills |
 | Headings | `font-heading font-bold tracking-tight` |
 | Body | `font-sans antialiased` |
 
 **Rules:**
-- All `<h1>` through `<h6>` use `Outfit` automatically via the base layer.
-- Never override heading font to Inter. Never use Outfit for body text.
-- No additional font imports. Inter + Outfit only.
+- All `<h1>` through `<h6>` use `Playfair Display` automatically via the base layer.
+- Never override heading font to Manrope. Never use Playfair Display for body text.
+- Geist Mono is used for eyebrows (`.eyebrow`), UI labels, status pills (`.la-status`),
+  segmented controls (`.la-seg-btn`), and compact buttons (`.la-btn`).
+- No additional font imports needed beyond Manrope + Playfair Display + Geist Mono.
 
 ---
 
@@ -215,6 +260,70 @@ There is ONE standard size for interactive circle/pill elements: **36px** (`h-9`
 
 For pills and circles: `rounded-full` (infinite radius).
 
+### 4.5 Design System Token File
+
+`client/src/styles/design-system.css` is the canonical token file for the warm-bone neumorphic system. It runs in parallel with `variables.css` — old tokens keep working, new tokens are available immediately on any page.
+
+**Border Radius Scale** (snap all corners to these — never use ad-hoc px values):
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--r-flush` | 6px | Wells, tracks, inset-crisp surfaces, tiny glyph tiles |
+| `--r-button` | 8px | Buttons, segmented controls, small action chips |
+| `--r-surface` | 11px | List rows, message balloons, mono tiles, raised chips |
+| `--r-card` | 16px | Cards and panels that carry a header |
+| `--r-panel` | 22px | Hero bands, modals, the largest floating surfaces |
+| `--r-pill` | 999px | Pills, toggles, circular icon buttons, avatars-as-pill |
+
+**Spacing Scale** (8px base unit — use these for gap and padding):
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--space-xxs` | 4px | Micro gaps |
+| `--space-xs` | 8px | Tight gaps |
+| `--space-sm` | 12px | Default inner padding |
+| `--space-md` | 16px | Standard padding |
+| `--space-lg` | 20px | Relaxed padding |
+| `--space-xl` | 24px | Section padding |
+| `--space-xxl` | 32px | Wide section padding |
+| `--space-section` | 80px | Full-bleed editorial bands only |
+
+**Breakpoints** (mirror the values used in `@media` queries and JS width checks):
+
+| Token | Value | Behavior |
+|-------|-------|----------|
+| `--bp-phone` | 768px | Below: mobile app (bottom tabs, sheets) |
+| `--bp-tablet` | 1024px | 768–1023: sidebar + stacked detail |
+| `--bp-desktop` | 1240px | Below 1240: Leads list collapses to icon rail |
+| `--bp-wide` | 1680px | 1680+: detail splits chat + summary columns |
+
+**Elevation Scale** (shadow tokens, defined in `design-system.css` `:root`):
+
+| Token | Usage |
+|-------|-------|
+| `--sh-raised-crisp` | Small raised surfaces, cards, buttons |
+| `--sh-raised-medium` | Medium depth — standard card elevation |
+| `--sh-raised-large` | Hero bands, modals, prominent floating surfaces |
+| `--sh-inset-crisp` | Inset wells, active pressed state |
+| `--sh-inset-medium` | Deeper wells |
+| `--sh-polished-medium` | Polished/hero surfaces with inner light edge |
+| `--sh-polished-large` | Large polished hero panels |
+
+**Responsive Behavior:**
+- Below `--bp-phone` (768px): mobile shell — bottom tab bar (`--bottombar-h: 64px`), full-screen panels, safe-area insets apply
+- 768–1023px: sidebar + stacked detail panel
+- 1024–1239px: full sidebar, Leads list icon rail
+- 1240–1679px: full Leads list + detail panel
+- 1680px+: detail panel splits into chat column + summary column
+
+**JSX inline style rule:** CSS vars in inline styles MUST be quoted strings:
+```jsx
+// Correct
+<div style={{ borderRadius: 'var(--r-card)', padding: 'var(--space-md)' }}>
+// Wrong (Babel syntax error)
+<div style={{ borderRadius: var(--r-card) }}>
+```
+
 ---
 
 ## 5. Component Patterns
@@ -235,14 +344,14 @@ These components live in `client/src/components/ui/` and MUST be used instead of
 
 | State | Background | Text | Example Usage |
 |-------|------------|------|---------------|
-| Active tab/pill | `--highlight-active` (`#FFF28D`) | `--foreground` | ViewTabBar active, nav active pill. |
-| Selected card | `--highlight-selected` (`#FFF9D9`) | `--foreground` | LeadsCardView selected, campaign selected. |
-| Selected row | `--highlight-selected` (`#FFF9D9`) | `--foreground` | Highlighted table row. |
-| Hover (warm) | `--highlight-hover` (`#949BFF`) | `--foreground` | Hover on already-highlighted element. |
-| Hover (neutral) | `--card` (`#F8F8F8`) | `--foreground` | Default hover on cards, rows. |
-| Focus ring | `--brand-indigo` (`#4F46E5`) | — | 2px outline, 2px offset. |
-| Primary button | `--brand-indigo` (`#4F46E5`) | white | CTA buttons, primary actions. |
-| KPI emphasis | `--brand-yellow` (`#FFDF3D`) | `--brand-deep-blue` | Call Booked badge, sparklines. |
+| Active tab/pill | `--wine-tint` (rgba wine 8%) | `--wine` | ViewTabBar active, nav active pill. |
+| Selected card | `--card` (white) + `--sh-raised-crisp` | `--foreground` | Campaign selected, leads selected. |
+| Selected row | `--wine-tint` | `--foreground` | Highlighted table row. |
+| Hover (warm) | `--wine-tint` | `--foreground` | Hover on cards, rows. |
+| Hover (neutral) | `--card-hover` (near-white) | `--foreground` | Default hover on cards, rows. |
+| Focus ring | `--primary` (deep wine #5E2230) | — | 2px outline, 2px offset. |
+| Primary button | `--wine-grad` (wine gradient) | white | CTA buttons, primary actions. |
+| KPI emphasis | `--warn` (amber #DA9426) | `--foreground` | Call Booked badge, sparklines. |
 
 ### 5.3 Cards & Panels
 
@@ -326,9 +435,16 @@ Selecting a card in a split-pane left panel **smoothly scrolls** the list to bri
 
 ---
 
-## 8. Glassmorphism — BANNED
+## 8. Glassmorphism
 
-**Never use glassmorphism anywhere.** No `backdrop-blur`, no semi-transparent backgrounds on functional UI (popovers, dialogs, dropdowns, panels, modals). All overlays and surfaces use solid white (`bg-white`) or solid `bg-popover`/`bg-card` with a clean `shadow-md` and `border border-border/60`. Use the `bg-white` tooltip-style pattern (§19).
+Glassmorphism is permitted in the neumorphic warm-bone design system. Use `.glass` (55% opacity warm white + backdrop-blur 22px + 12px radius) and `.glass-strong` (75% opacity + blur 28px + warm ambient glow + 14px radius) for:
+- Mobile bottom sheets and overlays
+- Tweak/config panels
+- Profile dropdown menus
+
+For functional UI (popovers, dialogs, dropdowns), prefer solid `.neu-raised` cards over glass.
+The old blanket ban is retired — the new glass tokens are defined in `neu.css` and use the
+warm-bone palette rather than cold transparency.
 
 ---
 
@@ -336,7 +452,8 @@ Selecting a card in a split-pane left panel **smoothly scrolls** the list to bri
 
 ### 9.1 Mandatory
 
-1. **Use CSS variables for all brand colors.** Never hardcode `#4F46E5` in component files — use `bg-brand-indigo`, `text-brand-indigo`, or `hsl(var(--brand-indigo))`.
+1. **Use CSS variables for all brand colors.** Never hardcode a hex in component files — use the token (`bg-primary`, `text-primary`, or `hsl(var(--primary))`). Values live in `variables.css`.
+1b. **Compose a surface primitive for list/card/panel/pill UI** (`ListCard`, `GroupHeader`, `SectionCard`, `Pill` from `@/components/crm/primitives`). Don't hand-roll the surface — see §2.25.
 2. **Use `apiFetch`** from `@/lib/apiUtils` for data requests. **Use `apiRequest`** from `queryClient.ts` for mutations.
 3. **Use existing shadcn/ui components.** Don't rebuild dialogs, buttons, dropdowns, etc.
 4. **Use `IconBtn`** for all icon-only buttons. Don't create custom circle buttons.
@@ -348,7 +465,8 @@ Selecting a card in a split-pane left panel **smoothly scrolls** the list to bri
 ### 9.2 Forbidden (NEVER DO)
 
 1. **NEVER** use `#FFF375`, `#FFF6C8`, or any lime/chartreuse yellow. These are banned.
-2. **NEVER** use `#5170FF` (old periwinkle blue). Use `#4F46E5` (brand indigo) instead.
+2. **NEVER** hardcode a brand hex (`#4F46E5`, `#8D354B`, `#5170FF`, …) in a component. Use the token (`primary` / `--primary`). The accent is defined once in `variables.css`.
+2b. **NEVER** hand-roll `rounded-*`, `shadow-*`, or padding on a list card / group header / panel. Compose the primitive (§2.25) so a global re-skin stays a single CSS edit.
 3. **NEVER** use `transition-all`. Specify exact properties.
 4. **NEVER** use default Tailwind palette colors (`blue-500`, `yellow-400`, etc.) for brand elements. Use CSS variable-based classes.
 5. **NEVER** add new npm packages without explicit user approval.
@@ -367,10 +485,10 @@ Selecting a card in a split-pane left panel **smoothly scrolls** the list to bri
 
 These rules prevent the UI from looking like generic AI-generated output:
 
-- No default Tailwind blue (`blue-500`/`blue-600`). Only brand indigo.
-- Layered shadows over single `shadow-md`. Use `shadow-sm` + `shadow-[0_2px_8px_rgba(0,0,0,0.06)]`.
-- Paired fonts: Outfit for headings, Inter for body. Never mix.
-- No gratuitous gradients. If you use a gradient, it must serve a purpose (e.g., brand-indigo → brand-deep-blue for a hero section).
+- No default Tailwind blue (`blue-500`/`blue-600`). Only deep wine (`#5E2230`, `--primary`).
+- Neumorphic shadows over generic `shadow-md`. Use `.neu-raised`, `.neu-inset`, `.neu-polished`, etc.
+- Paired fonts: Playfair Display for headings, Manrope for body, Geist Mono for labels/data.
+- No gratuitous gradients. If you use a gradient, use `--wine-grad` for wine or the `.neu-polished` radial overlay for hero surfaces.
 - Every clickable needs hover + focus + active states. No exceptions.
 
 ---
@@ -413,11 +531,11 @@ The Leads feature has three views managed by `LeadsTable.tsx`:
 
 ## 12. Dark Mode Notes
 
-- Brand-tinted dark surfaces, NOT pure black.
-- All brand colors get slightly brighter for legibility on dark backgrounds.
-- The stone-gray hierarchy inverts to navy-blue tinting.
-- Agency mode (`.agency-mode`) swaps `--brand-blue` to yellow globally.
-- Use CSS variables everywhere — dark mode adjustments happen automatically.
+**Dark mode is deferred.** The `.dark` overrides have been removed from `variables.css`. The
+current design system targets light mode only (warm-bone neumorphic). Dark mode equivalents
+will be added as a separate follow-up phase after the full warm-bone migration is approved
+and stabilized. The themed color variables (`bg-card`, `text-foreground`, etc.) still work —
+they just render the light-mode values regardless of user preference for now.
 
 ---
 

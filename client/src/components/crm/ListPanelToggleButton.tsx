@@ -1,4 +1,3 @@
-import { PanelLeft, Columns2, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useListPanelState } from "@/hooks/useListPanelState";
 
@@ -6,9 +5,37 @@ interface Props {
   className?: string;
 }
 
+/* ── Layout state icons (custom SVG, no border, no dots) ── */
+
+function IconFull() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+      <rect x="1" y="1" width="5" height="14" rx="1.2" />
+      <rect x="8" y="1" width="7" height="14" rx="1.2" />
+    </svg>
+  );
+}
+
+function IconCompact() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+      <rect x="1" y="1" width="2.5" height="14" rx="1" />
+      <rect x="5.5" y="1" width="9.5" height="14" rx="1.2" />
+    </svg>
+  );
+}
+
+function IconHidden() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+      <rect x="1" y="1" width="14" height="14" rx="1.2" />
+    </svg>
+  );
+}
+
 /**
- * Pill-style button that cycles the shared list-panel state:
- * full → compact → hidden → full. Same visual across Prospects/Leads/Campaigns/Chats.
+ * Icon-only button that cycles the shared list-panel state:
+ * full → compact → hidden → full. Same visual across all pages.
  */
 export function ListPanelToggleButton({ className }: Props) {
   const { state, cycle } = useListPanelState();
@@ -17,28 +44,18 @@ export function ListPanelToggleButton({ className }: Props) {
     <button
       onClick={cycle}
       className={cn(
-        "hidden lg:inline-flex items-center gap-1 h-9 pl-2 pr-2.5 rounded-full border border-black/[0.125] shrink-0 text-foreground/60 hover:text-foreground transition-colors",
+        "hidden lg:inline-flex items-center justify-center h-8 w-8 rounded-lg shrink-0",
+        "text-foreground/50 hover:text-foreground hover:bg-black/[0.06] transition-colors",
         className,
       )}
       title={
-        state === "full" ? "List: full (click for compact)"
-        : state === "compact" ? "List: compact (click to hide)"
-        : "List: hidden (click to show)"
+        state === "full" ? "Compact list panel"
+        : state === "compact" ? "Hide list panel"
+        : "Show list panel"
       }
       aria-label={`List panel: ${state}. Click to change.`}
     >
-      {state === "full" ? (
-        <PanelLeft className="h-4 w-4" />
-      ) : state === "compact" ? (
-        <Columns2 className="h-4 w-4" />
-      ) : (
-        <PanelLeftClose className="h-4 w-4" />
-      )}
-      <span className="flex items-center gap-0.5" aria-hidden="true">
-        <span className={cn("w-1 h-1 rounded-full", state === "full" ? "bg-brand-indigo" : "bg-foreground/20")} />
-        <span className={cn("w-1 h-1 rounded-full", state === "compact" ? "bg-brand-indigo" : "bg-foreground/20")} />
-        <span className={cn("w-1 h-1 rounded-full", state === "hidden" ? "bg-brand-indigo" : "bg-foreground/20")} />
-      </span>
+      {state === "full" ? <IconFull /> : state === "compact" ? <IconCompact /> : <IconHidden />}
     </button>
   );
 }

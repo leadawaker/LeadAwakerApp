@@ -1,0 +1,232 @@
+export default {
+  "hero": {
+    "badge": "For insurange companies only",
+    "title": {
+      "line1": "Stop buying new leads.",
+      "highlight": "Wake up",
+      "line2": "the ones you have."
+    },
+    "subtitle": {
+      "line1": "We turn your old contacts into booked calls without spending more on ads.",
+      "line2": "We only get paid when you do."
+    },
+    "cta": {
+      "primary": "Audit my Leads",
+      "secondary": "Try the AI"
+    },
+    "demoForm": {
+      "firstNamePlaceholder": "Your name",
+      "submit": "Try Demo",
+      "fineprint": "No sign-up. Opens WhatsApp with a live AI.",
+      "errors": {
+        "missingFields": "Please fill in both fields (min 5 chars for the niche).",
+        "rateLimited": "Too many requests. Try again in an hour.",
+        "generic": "Something went wrong. Please try again.",
+        "network": "Network error. Check your connection."
+      },
+      "nichePlaceholders": [
+        "e.g. dental clinic in Amsterdam",
+        "e.g. SaaS for accountants",
+        "e.g. real estate agency",
+        "e.g. gym in Rotterdam",
+        "e.g. law firm",
+        "e.g. mortgage broker",
+        "e.g. car dealership",
+        "e.g. insurance agency"
+      ]
+    }
+  },
+  "results": {
+    "title": "And what you get",
+    "subtitle": "Results that pay for themselves",
+    "metrics": {
+      "replyRates": {
+        "label": "Reply Rates",
+        "subtext": "vs industry 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Reactivated",
+        "subtext": "into live"
+      },
+      "hoursSaved": {
+        "label": "Hours Saved",
+        "subtext": "per rep/month"
+      }
+    },
+    "upfrontCost": {
+      "title": "Upfront Cost",
+      "titleActive": "No Upfront Cost",
+      "partnership": "No setup fees",
+      "mission": "Pay only from revenue we generate",
+      "guarantee": "30-day performance guarantee, cancel anytime"
+    },
+    "absoluteZero": {
+      "absolute": "Absolute",
+      "zero": "ZERO"
+    }
+  },
+  "compliance": {
+    "title": "We Move Fast. Your Reputation Stays Intact.",
+    "subtitle": "Every conversation follows your brand guidelines, respects opt-outs, and meets GDPR standards. No shortcuts.",
+    "gdpr": {
+      "title": "Privacy by Design",
+      "description": "Contacts who opt out are removed instantly. Data stays in EU-compliant infrastructure. Every message includes an easy exit. Your legal team will have nothing to flag."
+    },
+    "brand": {
+      "title": "Your Voice, Not Ours",
+      "description": "The AI learns your tone, your product language, and your boundaries. If a conversation goes off-topic, it gets flagged before it reaches your contact. You stay in control."
+    }
+  },
+  "calculator": {
+    "title": "Lead Awakening Audit",
+    "subtitle": "There's revenue sitting in your unclosed leads, let's unlock it",
+    "leadsLabel": "Leads You Already Paid For",
+    "dealLabel": "What Each Deal Is Worth",
+    "costLabel": "What You Paid Per Lead",
+    "closeRateLabel": "Custom close rate",
+    "scenarios": {
+      "conservative": "Frozen",
+      "expected": "Cold",
+      "optimistic": "Warm",
+      "tablistLabel": "Pick a scenario"
+    },
+    "results": {
+      "total": "Your lead amount",
+      "responded": "How many re-engage",
+      "qualified": "How many book a call with you",
+      "closed": "How many deals you close",
+      "revenue": "New Revenue with AI reactivation",
+      "profit": "New Profit with AI reactivation",
+      "revenueLtv": "New Lifetime Revenue with AI reactivation",
+      "profitLtv": "New Lifetime Profit with AI reactivation"
+    },
+    "investment": {
+      "spent": "What You Paid To Get These Leads",
+      "return": "Revenue We Unlock",
+      "returnProfit": "Profit We Unlock",
+      "returnLtv": "Lifetime Revenue We Unlock",
+      "returnProfitLtv": "Lifetime Profit We Unlock",
+      "roi": "ROI For This Scenario",
+      "freshAdsSentence1": "Fresh ads would cost {{amount}} to reach the same result.",
+      "freshAdsSentence2": "You already paid {{amount}} for these leads."
+    },
+    "charts": {
+      "tablistLabel": "Pick a chart",
+      "breakeven": "Break even",
+      "funnels": "Funnels",
+      "cac": "CAC",
+      "cacSubtitle": "Cost per acquired customer at each scenario",
+      "cacFootnote": "* CAC = your original ad spend ÷ customers closed in this scenario. Lower response rates mean each closed customer costs more.",
+      "breakevenNarrative": "You break even at deal #{{deal}}. The remaining {{profitDeals}} deals are pure profit.",
+      "breakevenNarrativeWeeks": "Break even: deal #{{deal}} · week {{week}}, {{profitDeals}} profit deals by week {{totalWeeks}}.",
+      "breakevenMiss": "Not reached within {{total}} deals.",
+      "breakevenAtDeal": "Deal #{{deal}}",
+      "breakevenAtDealWeek": "Deal #{{deal}} · W{{week}}",
+      "weekLabel": "Week {{week}}",
+      "paceLabel": "Sales pace",
+      "paceValue": "{{count}} deals/week",
+      "dealsLabel": "deals",
+      "spendLine": "Ad spend {{amount}}",
+      "cumRevenueLine": "Cumulative revenue",
+      "funnelPaid": "Paid ads",
+      "funnelManual": "Manual follow-up",
+      "funnelAI": "AI reactivation",
+      "funnelsFootnote": "* Manual follow-up typically closes 2-4% of dead leads since humans drop follow-ups. AI reactivation depends on your data and offer."
+    },
+    "step1Label": "Step 1 — Set your numbers",
+    "step2Label": "Step 2 — See what you're sitting on",
+    "step3Label": "Step 3 — Recover it",
+    "hero": {
+      "sittingOn": "You're sitting on",
+      "recoverableRevenue": "in recoverable revenue",
+      "recoverableProfit": "in recoverable profit",
+      "narrative": "Out of {{total}} leads, ~{{replied}} will reply. ~{{book}} will book a call. ~{{buy}} will buy.",
+      "spentRoi": "You spent {{spent}} · ROI {{roi}}",
+      "showTimeline": "Show timeline ›",
+      "hideTimeline": "Hide timeline"
+    },
+    "advanced": {
+      "toggle": "Advanced",
+      "basicMode": "Basic",
+      "advancedMode": "Advanced",
+      "showAdvanced": "Advanced ›",
+      "hideAdvanced": "Advanced ↑",
+      "leadTemp": "Lead Temperature",
+      "currency": "Currency",
+      "on": "On",
+      "off": "Off",
+      "showAs": "Show numbers as",
+      "revenueMode": "Revenue",
+      "profitMode": "Profit",
+      "showAsHint": "Switch to Profit to see contribution profit instead of gross revenue. Gross margin is the share of each deal left after hard costs (product, fulfillment, delivery).",
+      "grossMargin": "Gross margin per deal",
+      "dealType": "Deal type",
+      "oneShot": "One-shot",
+      "recurring": "Recurring",
+      "dealTypeHint": "Switch to Recurring for subscription or retainer models. Months retained is the average number of months a customer stays before churning. Deal value is multiplied by this to estimate lifetime value.",
+      "monthsRetained": "Avg months retained",
+      "decay": "Database decay",
+      "decayHint": "Some of your dead leads are unreachable (bounced, opted-out, duplicates). Adjust for a more honest reachable pool.",
+      "decayLabel": "Unreachable share",
+      "decayTooltip": "Typical ranges: 3-8% for fresh databases (under 6 months old), 8-12% for mixed dead databases (6-18 months, the common case), 20-30% for very old ones (2+ years). WhatsApp reach tends toward the lower end since phone numbers change less than emails.",
+      "timeline": "Breakeven Timeline",
+      "paceHint": "How many reactivated deals your team can close per week. Sets the timeline on the break-even chart."
+    },
+    "cta": {
+      "subtitle": "Want to walk through your real numbers together?",
+      "label": "Let's have a quick chat",
+      "waMessage": "Hi! I just used the ROI Calculator: I have {{leads}} dormant leads at {{dealValue}} per deal — {{revenue}} in recoverable revenue. I'd love to explore this.",
+      "waMessageProfit": "Hi! I just used the ROI Calculator: I have {{leads}} dormant leads at {{dealValue}} per deal — {{revenue}} in recoverable profit. I'd love to explore this."
+    },
+    "share": {
+      "label": "Share",
+      "copied": "Link copied"
+    }
+  },
+  "demo": {
+    "badge": "Live Demo",
+    "title": "See the platform behind the results",
+    "subtitle": "Watch how a real conversation goes from cold lead to booked call, automatically."
+  },
+  "trySixty": {
+    "title": "Try It in 60 Seconds",
+    "subtitle": "Enter your name and industry. We’ll open a live WhatsApp conversation with your AI.",
+    "mockChat": {
+      "customer1": "Hey, I stopped responding a while back but I’m interested again.",
+      "ai1": "Happy to pick up where we left off! What would be most helpful right now?",
+      "customer2": "I’d love to see the options again."
+    }
+  },
+  "bottomCta": {
+    "title": "Only 5 Active Partners at a Time",
+    "quote": "We stay intentionally hands-on with every partner. This isn't a plug-and-play AI tool. The results come from understanding your sales process, where your leads come from, and how people actually buy from you.",
+    "meta": "I reply personally. If it's not a fit, I'll tell you fast.",
+    "button": "Start on WhatsApp",
+    "waLink": "YOUR_WHATSAPP_LINK"
+  },
+  "testimonial": {
+    "sectionLabel": "What our Partners say",
+    "abdulla": {
+      "quote": "We already use a great system, so the tech isn't the issue. Gabriel re-engaged leads we'd completely lost touch with, and it never felt automated, just natural conversations.",
+      "name": "Abdulla Dilimi",
+      "role": "Growth Specialist"
+    },
+    "diederik": {
+      "quote": "Gabriel didn't just set it and walked away. He understood our contacts and tuned the tone, the results showed. Felt more like a consultant than a tool.",
+      "name": "Diederik van de Laarschot",
+      "role": "Co-Founder, FusionCraft"
+    }
+  },
+  "founderBackground": {
+    "slimLabel": "Founder previously worked with",
+    "eyebrow": "Who is behind Lead Awaker",
+    "label": "12 years building products that together did $3.3B+ in revenue",
+    "cta": "Read the full story",
+    "tooltips": {
+      "warnerbros": "Warner Bros' Tom & Jerry (2021): contributed digital art during post-production at Framestore, the Oscar-winning VFX studio behind the film. $136M global box office.",
+      "sega": "Creative Assembly (Sega, $3.1B parent): 3 titles delivered in 12 months. The same pace and standard I bring to Lead Awaker.",
+      "embracer": "New World Interactive (now an Embracer Group studio): led a team and shipped 2 titles, including Insurgency: Sandstorm ($52M revenue, still an active community 7 years later). Embracer is publicly listed in Stockholm with 100+ studios in portfolio.",
+      "valve": "Selected for Valve's invite-only VR game jam in London. Jammed with devs who now ship at Valve, Epic, and Ubisoft."
+    }
+  }
+};

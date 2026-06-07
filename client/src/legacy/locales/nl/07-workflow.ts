@@ -1,0 +1,33 @@
+export default {
+  "contact": {
+    "title": "Lead #315",
+    "name": "Jan de Vries",
+    "statusLabel": "Status",
+    "statusNotEngaged": "Niet Betrokken",
+    "statusEngaging": "Lead Betrekken",
+    "statusEngaged": "Lead Betrokken"
+  },
+  "agent": {
+    "title": "AI Agent",
+    "model": "GPT-5.5",
+    "outputLabel": "Output",
+    "message1": "Hey Jan,",
+    "message2": "staat onze call nog?"
+  },
+  "guardrails": {
+    "title": "Guardrails",
+    "subtitle": "BEVEILIGING",
+    "statusLabel": "Status",
+    "checks": [
+      "Verkoopgerelateerd",
+      "Schone inhoud",
+      "Schone taal",
+      "Geen persoonlijke gegevens",
+      "Geen inloggegevens",
+      "Geen ongeautoriseerde links",
+      "Geen datalekken"
+    ],
+    "noViolations": "Geen overtredingen",
+    "messageSent": "Bericht Verzonden"
+  }
+};

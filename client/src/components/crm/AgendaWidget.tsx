@@ -149,7 +149,7 @@ export interface AgendaWidgetProps {
 export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetProps) {
   const [, setLocation] = useLocation();
   const { isAgencyUser, accounts } = useWorkspace();
-  const prefix = isAgencyUser ? "/agency" : "/subaccount";
+  const prefix = "/platform";
 
   // ── Leads query ──────────────────────────────────────────────────────────
   const params = new URLSearchParams();
@@ -268,8 +268,12 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
   }, [prefix, setLocation]);
 
   const goToChat = useCallback((leadId: number) => {
-    try { localStorage.setItem("selected-conversation-lead-id", String(leadId)); } catch {}
-    setLocation(`${prefix}/conversations`);
+    // Lead chat now lives on the Leads page (Chats page retired)
+    try {
+      localStorage.setItem("selected-lead-id", String(leadId));
+      localStorage.setItem("leads-view-mode", "list");
+    } catch {}
+    setLocation(`${prefix}/contacts`);
   }, [prefix, setLocation]);
 
   return (
@@ -280,7 +284,7 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
             Up Next
           </span>
           {agendaCount > 0 && (
-            <span className="text-[10px] font-semibold tabular-nums min-w-[18px] h-[18px] rounded-full inline-flex items-center justify-center px-1 bg-[#FCB803]/20 text-[#131B49]">
+            <span className="text-[10px] font-semibold tabular-nums min-w-[18px] h-[18px] rounded-full inline-flex items-center justify-center px-1 bg-[#DA9426]/20 text-[#1F1A14]">
               {agendaCount}
             </span>
           )}
@@ -449,7 +453,7 @@ function ActiveCallCard({
     : item.dateLabel || "TBD";
 
   return (
-    <div className="rounded-xl px-4 pt-3.5 pb-3.5 flex flex-col gap-1" style={{ backgroundColor: "#FFF28F" }}>
+    <div className="rounded-xl px-4 pt-3.5 pb-3.5 flex flex-col gap-1" style={{ backgroundColor: "#EFE4CF" }}>
 
       {/* Row 1: "Booked Call" title + calendar icon top-right */}
       <div className="flex items-start justify-between">

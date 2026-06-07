@@ -1,0 +1,434 @@
+/* ─── Custom @font-face declarations ─────────────────────────── */
+@font-face {
+  font-family: 'LOT';
+  src: url('/fonts/LOT.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Yeseva One';
+  src: url('/fonts/YesevaOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+/* ─── Component CSS Classes ─────────────────────────────────────
+   Frozen component classes for the neumorphic warm-bone system.
+   Used alongside Tailwind utilities for layout/spacing. */
+
+/* ─── Typography primitives ──────────────────────────────────── */
+
+.eyebrow {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.eyebrow-sm { font-size: 10px; letter-spacing: 0.18em; }
+.serif { font-family: 'Playfair Display', serif; font-weight: 400; letter-spacing: -0.012em; }
+.italic { font-style: italic; }
+.wine { color: var(--wine); }
+.mute { color: var(--muted-foreground); }
+.mute-2 { color: #948A77; }
+
+/* ─── Compact action buttons ─────────────────────────────────── */
+
+.la-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--r-button);
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: transform 120ms, box-shadow 120ms, color 120ms;
+}
+
+.la-btn--wine {
+  background: var(--wine-grad);
+  color: #FFFFFF;
+  box-shadow: var(--sh-raised-crisp), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.la-btn--wine:hover { transform: translateY(-1px); }
+.la-btn--wine:active { transform: translateY(0); box-shadow: var(--sh-inset-crisp); }
+
+.la-btn--soft {
+  background: var(--surface);
+  color: var(--muted-foreground);
+  box-shadow: var(--sh-raised-crisp);
+}
+.la-btn--soft:hover { color: var(--wine); }
+
+.la-btn--inset {
+  background: hsl(var(--background));
+  color: var(--muted-foreground);
+  box-shadow: var(--sh-inset-crisp);
+}
+.la-btn--inset:hover { color: var(--wine); }
+
+.la-btn--icon { width: 32px; height: 32px; padding: 0; gap: 0; }
+.la-btn--lg { font-size: 11px; padding: 13px 22px; }
+.la-btn--pill { border-radius: var(--r-pill); }
+
+/* ─── Segmented controls ─────────────────────────────────────── */
+
+.la-seg {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: hsl(var(--background));
+  box-shadow: var(--sh-inset-crisp);
+  border-radius: var(--r-surface);
+}
+
+.la-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: none;
+  border-radius: var(--r-button);
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  transition: color 120ms, box-shadow 120ms, background 120ms;
+}
+.la-seg-btn:hover { color: var(--wine); }
+.la-seg-btn.on {
+  background: #FFFFFF;
+  box-shadow: var(--sh-raised-crisp);
+  color: var(--wine);
+  font-weight: 700;
+}
+
+.la-seg--pill,
+.la-seg--pill .la-seg-btn { border-radius: var(--r-pill); }
+.la-seg--pill .la-seg-btn { padding: 6px 15px; }
+.la-seg--fill { display: flex; }
+.la-seg--fill .la-seg-btn { flex: 1; }
+
+/* ─── Input ──────────────────────────────────────────────────── */
+
+.la-input {
+  background: hsl(var(--background));
+  box-shadow: var(--sh-inset-crisp);
+  border: none;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  width: 100%;
+}
+.la-input::placeholder { color: #948A77; }
+.la-input:focus { outline: none; }
+
+/* ─── List scroll area ──────────────────────────────────────── */
+
+.la-list-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 3px 17px;
+}
+.la-list-area > .la-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.la-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* ─── Campaign list card ─────────────────────────────────────── */
+
+.la-camp-card {
+  padding: 16px 17px;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  cursor: pointer;
+  transition: background 130ms, box-shadow 130ms;
+  position: relative;
+}
+.la-camp-card:hover { background: var(--wine-tint); }
+.la-camp-card.active,
+.la-camp-card.active:hover {
+  background: #FFFFFF;
+  box-shadow: var(--sh-raised-crisp);
+}
+.la-camp-card.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  background: var(--wine);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ─── Mono tile ──────────────────────────────────────────────── */
+
+.la-mono-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #FFFFFF;
+  box-shadow: var(--sh-raised-crisp);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: hsl(var(--foreground));
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+.la-mono-tile.wine {
+  background: var(--wine-grad);
+  color: #FFFFFF;
+  box-shadow: var(--sh-raised-crisp), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.la-mono-tile.inactive {
+  background: hsl(var(--bg-2));
+  color: var(--muted-foreground);
+  box-shadow: var(--sh-inset-crisp);
+}
+.la-camp-card:not(.active) .la-mono-tile {
+  background: hsl(var(--background));
+  box-shadow: var(--sh-inset-crisp);
+  color: var(--muted-foreground);
+}
+
+/* ─── Status pills ───────────────────────────────────────────── */
+
+.la-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: hsl(var(--background));
+  box-shadow: var(--sh-inset-crisp);
+  color: var(--muted-foreground);
+}
+.la-status.paused { color: var(--warn); }
+.la-status.paused .dot { background: var(--warn); }
+.la-status.active-s { color: var(--good); }
+.la-status.active-s .dot { background: var(--good); }
+.la-status.inactive { color: #948A77; }
+.la-status.inactive .dot { background: #948A77; }
+
+/* ─── Navigation items ───────────────────────────────────────── */
+
+.la-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 120ms;
+}
+.la-nav-item:hover { background: var(--wine-tint); }
+.la-nav-item.active {
+  background: var(--surface);
+  box-shadow: var(--sh-inset-crisp);
+  color: var(--wine);
+  font-weight: 600;
+}
+.la-nav-item .icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+}
+.la-nav-item.active .icon { color: var(--wine); }
+
+/* ─── Logo ─────────────────────────────────────────────────────── */
+
+.la-logo-tile {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: #FFFFFF;
+  box-shadow: var(--sh-raised-crisp);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.la-logo-tile svg { width: 20px; height: 20px; }
+.la-logo-type {
+  display: flex; align-items: baseline; gap: 3px;
+}
+.la-logo-type .lot {
+  font-family: 'LOT', 'Yeseva One', serif;
+  font-size: 26px;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-shadow: 1px 1px 1px rgba(126, 114, 80, 0.781);
+}
+.la-logo-type .sans {
+  font-family: 'Yeseva One', 'Playfair Display', serif;
+  font-size: 25px;
+  color: #3d0905;
+  font-weight: 400;
+  line-height: 1;
+}
+
+
+.la-nav-section {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #948A77;
+  padding: 18px 14px 8px;
+}
+
+/* ─── Account / workspace switcher ────────────────────────────── */
+
+.la-switcher {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none; cursor: pointer;
+  background: var(--bg-main);
+  box-shadow: var(--sh-inset-crisp);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-soft);
+  transition: box-shadow 120ms, color 120ms;
+}
+.la-switcher:hover { color: var(--wine); }
+
+/* ─── Utility icon row (bottom of rail) ────────────────────────── */
+
+.la-util-row {
+  display: flex; gap: 5px; justify-content: space-between;
+}
+.la-util-btn {
+  flex: 1;
+  height: 32px;
+  border: none; border-radius: 8px; cursor: pointer;
+  background: var(--bg-main);
+  box-shadow: var(--sh-inset-crisp);
+  color: var(--muted-foreground);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  transition: box-shadow 120ms, color 120ms;
+}
+.la-util-btn:hover { color: var(--wine); }
+.la-util-dot {
+  position: absolute; top: 6px; right: 7px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--wine);
+}
+
+/* ─── Profile card + menu (bottom of rail) ─────────────────────── */
+
+.la-profile {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px;
+  border-radius: 11px; border: none; cursor: pointer;
+  background: var(--surface);
+  box-shadow: var(--sh-raised-crisp);
+  transition: box-shadow 120ms, transform 120ms;
+}
+.la-profile:hover { transform: translateY(-1px); }
+.la-profile.open { box-shadow: var(--sh-inset-crisp); }
+.la-profile-av {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  background: linear-gradient(145deg, #8a6e4a, #5a4530);
+  box-shadow: var(--sh-raised-crisp);
+  display: flex; align-items: center; justify-content: center;
+  color: #FFFFFF; font-family: 'Playfair Display', serif; font-size: 13px;
+}
+.la-profile-menu {
+  position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 8px;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--sh-raised-large);
+  border: 1px solid var(--line);
+  padding: 6px;
+  display: flex; flex-direction: column; gap: 1px;
+  z-index: 30;
+}
+.la-profile-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  padding: 9px 11px;
+  border: none; background: transparent; cursor: pointer;
+  border-radius: 8px;
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px; font-weight: 500; color: var(--ink-soft);
+  transition: background 120ms;
+}
+.la-profile-menu-item:hover { background: var(--wine-tint); color: var(--wine); }
+.la-profile-menu-item svg { color: var(--muted-foreground); }
+.la-profile-menu-item:hover svg { color: var(--wine); }
+
+/* ─── Ghost button ──────────────────────────────────────────────── */
+
+.btn-ghost {
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.btn-ghost:hover { background: var(--glass-bg); }
+
+/* ─── Utility primitives ────────────────────────────────────────── */
+
+.row { display: flex; align-items: center; }
+.rule { height: 1px; background: var(--line); border: none; margin: 0; }
+.divider-v { width: 1px; background: var(--line); align-self: stretch; }
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+/* ─── Animation ──────────────────────────────────────────────── */
+
+@keyframes la-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.la-pulse { animation: la-pulse 2.4s ease-in-out infinite; }

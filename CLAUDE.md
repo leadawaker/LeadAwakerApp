@@ -21,16 +21,12 @@ Lead Reactivation CRM for WhatsApp outreach. Core features: WhatsApp inbox (conv
 | `shared/schema.ts` | Drizzle ORM schema for all DB tables |
 | `specs/<feature>/` | Feature specs: requirements.md, implementation-plan.md, action-required.md |
 
-## Before Making Changes
-
-Do not make any changes until you have 95% confidence in what you need to build. Ask follow-up questions until you reach that confidence threshold. This applies to code changes, file structure, architecture decisions, and significant refactors.
-
 ## Critical Rules
 
 ### Running the App
 - App runs via **pm2** on host — never run `npm run dev`
 - Verify changes: `pm2 logs` or check `app.leadawaker.com`
-- TypeScript hook runs after every TS edit (tsc check) — always-on, cannot be bypassed
+- **Never run tsc automatically.** Only run `npx tsc --noEmit` when Gabriel explicitly asks for a type check. Do not run it after edits, before finishing, or as a "just to be safe" check.
 
 ### i18n — No Hardcoded Strings
 Every user-facing string must go through i18n. Locale files live in `client/src/locales/{en,nl,pt}/`. Current namespace files: `leads`, `campaigns`, `conversations`, `automation`, `prompts`, `accounts`, `settings`, `billing`, `calendar`, `tags`, `users`, `about`, `crm`, `common`, `tasks`, `prospects`.
@@ -74,9 +70,3 @@ The public-facing landing page is a **static HTML/JSX site**, separate from the 
 - The page uses its own design system (CSS variables, neumorphic tokens, Google Fonts) — `UI_STANDARDS.md` does not apply here
 - Design tweaks (typography, light, depth, textures) are controlled via `config.jsx` + `app-main.jsx`
 
-## Feature Specs
-
-When working on a planned feature, check `specs/<feature-name>/` first:
-- `requirements.md` — what it does and acceptance criteria
-- `implementation-plan.md` — phased task list with file locations
-- `action-required.md` — manual steps (migrations, backfills)

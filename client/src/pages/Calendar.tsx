@@ -44,6 +44,8 @@ import {
 } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useLocation } from "wouter";
+import { DesktopCalendar } from "@/features/calendar/components/DesktopCalendar";
+import { BookAppointmentPopover } from "@/features/calendar/components/BookAppointmentPopover";
 
 const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 const FULL_MONTH_KEYS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -141,6 +143,462 @@ const APPT_FILTER_KEYS: Record<ApptFilterStatus, string> = {
   rescheduled: "filter.rescheduled",
   confirmed: "filter.confirmed",
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+//  MOBILE CALENDAR — agenda/month experience matching migration/mobile-calendar
+//  Self-contained presentation layer driven by the page's real Appointment data.
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Glyphs (kept local; sized for the mobile design) ──────────────────────────
+const MCVideoGlyph = ({ s = 15 }: { s?: number }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="13" height="12" rx="2" /><path d="m22 8-5 4 5 4z" /></svg>;
+const MCPhoneGlyph = ({ s = 14 }: { s?: number }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>;
+const MCClockGlyph = ({ s = 11 }: { s?: number }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
+const MCReschedGlyph = ({ s = 15 }: { s?: number }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 3v4h-4" /></svg>;
+const MCArrowGlyph = ({ s = 11 }: { s?: number }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+
+type MobileFilter = "all" | "noShow" | "rescheduled" | "attention";
+
+// Derive a display status from the real Appointment fields.
+function mcApptStatus(a: Appointment, t: (k: string) => string): { key: string; label: string; color: string; tint: string } {
+  if (a.no_show) return { key: "noshow", label: t("mobile.legend.noShow"), color: "var(--stage-lost)", tint: "rgba(162,75,63,0.12)" };
+  if (a.re_scheduled_count > 0) return { key: "rescheduled", label: t("mobile.legend.rescheduled"), color: "var(--warn)", tint: "var(--warn-tint)" };
+  return { key: "booked", label: t("mobile.legend.booked"), color: "var(--good)", tint: "var(--good-tint)" };
+}
+
+function mcInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function mcLocalISO(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA").format(d);
+}
+
+// ── Stage-tinted avatar ───────────────────────────────────────────────────────
+function MCAvatar({ a, size = 40, radius }: { a: Appointment; size?: number; radius?: number }) {
+  const statusKey = a.no_show ? "Lost" : (a.status || "Contacted");
+  const { bg, text } = getLeadStatusAvatarColor(statusKey);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: radius != null ? radius : Math.round(size * 0.28),
+      flexShrink: 0, background: bg,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      color: text, fontFamily: "var(--mono)", fontWeight: 600,
+      fontSize: Math.round(size * 0.34), letterSpacing: "0.01em",
+      boxShadow: "var(--sh-raised-crisp)",
+    }}>{mcInitials(a.lead_name)}</div>
+  );
+}
+
+// ── Agenda event row (full-width touch card) ──────────────────────────────────
+function MCEventRow({ a, onOpen, t }: { a: Appointment; onOpen: (a: Appointment) => void; t: (k: string) => string }) {
+  const sm = mcApptStatus(a, t);
+  const faded = a.no_show;
+  const via = a.phone ? "phone" : "video";
+  return (
+    <button onClick={() => onOpen(a)} style={{
+      width: "100%", textAlign: "left", border: "none", cursor: "pointer",
+      display: "flex", alignItems: "center", gap: 13, padding: "12px 14px",
+      borderRadius: "var(--r-card)", minHeight: 62, borderLeft: `3px solid ${sm.color}`,
+      background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)",
+      opacity: faded ? 0.7 : 1,
+    }} data-testid={`mobile-event-row-${a.id}`}>
+      <MCAvatar a={a} size={40} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: faded ? "line-through" : "none" }}>{a.lead_name}</div>
+        {a.campaign_name && <div style={{ fontSize: 11, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{a.campaign_name}</div>}
+        <div className="row" style={{ gap: 9, marginTop: 6 }}>
+          <span className="row" style={{ gap: 4, fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--ink-soft)" }}>
+            <MCClockGlyph />{a.time}
+          </span>
+          {sm.key !== "booked" && (
+            <span style={{ fontFamily: "var(--mono)", fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: sm.color, background: sm.tint, borderRadius: 4, padding: "2px 6px", fontWeight: 700 }}>{sm.label}</span>
+          )}
+        </div>
+      </div>
+      <span style={{ color: "var(--mute-2)", display: "flex", flexShrink: 0 }}>{via === "phone" ? <MCPhoneGlyph /> : <MCVideoGlyph />}</span>
+    </button>
+  );
+}
+
+// ── Day group header ──────────────────────────────────────────────────────────
+function MCDayBar({ d, count, isToday, t }: { d: Date; count: number; isToday: boolean; t: (k: string) => string }) {
+  const dow = t(`days.short.${DAY_KEYS[d.getDay()]}`);
+  const mon = t(`months.short.${MONTH_KEYS[d.getMonth()]}`);
+  return (
+    <div className="row" style={{ gap: 9, padding: "15px 2px 7px" }}>
+      <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: isToday ? "var(--wine)" : "var(--ink-soft)", fontWeight: 700 }}>
+        {dow}, {mon} {d.getDate()}
+      </span>
+      {isToday && <span style={{ fontFamily: "var(--mono)", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--paper)", background: "var(--wine)", borderRadius: "var(--r-pill)", padding: "2px 8px", fontWeight: 700 }}>{t("mobile.today")}</span>}
+      <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-pill)", padding: "1px 8px" }}>{count}</span>
+      <div className="rule" style={{ flex: 1 }} />
+    </div>
+  );
+}
+
+// ── Month grid (secondary toggle — bird's-eye, tap a day → agenda) ────────────
+function MCMonthGrid({ appts, anchorDate, todayStr, onPickDay, t }: {
+  appts: Appointment[]; anchorDate: Date; todayStr: string; onPickDay: (iso: string) => void; t: (k: string) => string;
+}) {
+  const y = anchorDate.getFullYear(), m = anchorDate.getMonth();
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay() + 6) % 7; // Monday-led
+  const gridStart = new Date(y, m, 1 - offset);
+  const cells = Array.from({ length: 42 }, (_, i) => { const x = new Date(gridStart); x.setDate(gridStart.getDate() + i); return x; });
+  const weeks: Date[][] = [];
+  for (let i = 0; i < 6; i++) {
+    const wk = cells.slice(i * 7, i * 7 + 7);
+    if (wk[0].getMonth() === m || wk[6].getMonth() === m) weeks.push(wk);
+  }
+  const byDay = (iso: string) => appts.filter((e) => e.date === iso);
+  const dowKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 90px" }} data-testid="mobile-month-grid">
+      <div className="row" style={{ gap: 9, padding: "0 2px 12px" }}>
+        <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t(`months.full.${FULL_MONTH_KEYS[m]}`)} {y}</span>
+        <div className="rule" style={{ flex: 1 }} />
+        <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)" }}>{t("mobile.tapDay")}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 6 }}>
+        {dowKeys.map((dk, i) => (
+          <div key={i} style={{ textAlign: "center", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.06em", color: "var(--mute-2)", fontWeight: 700 }}>{t(`days.short.${dk}`).charAt(0)}</div>
+        ))}
+      </div>
+      <div className="neu-inset" style={{ borderRadius: "var(--r-card)", padding: 6, background: "var(--bg-2)" }}>
+        {weeks.map((wk, wi) => (
+          <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3 }}>
+            {wk.map((d) => {
+              const iso = mcLocalISO(d), inMonth = d.getMonth() === m, isToday = iso === todayStr;
+              const items = byDay(iso);
+              const has = items.length > 0;
+              return (
+                <button key={iso} disabled={!has} onClick={() => has && onPickDay(iso)} style={{
+                  aspectRatio: "1 / 1.15", border: "none", cursor: has ? "pointer" : "default",
+                  borderRadius: "var(--r-surface)", padding: "5px 0 4px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  background: isToday ? "var(--wine-tint)" : has ? "var(--card)" : "transparent",
+                  boxShadow: isToday ? "inset 0 0 0 1.5px var(--wine-glow)" : has ? "var(--sh-raised-crisp)" : "none",
+                  opacity: inMonth ? 1 : 0.32,
+                }}>
+                  <span style={{ fontFamily: "var(--serif)", fontSize: 14, color: isToday ? "var(--wine)" : "var(--ink-soft)", fontWeight: isToday ? 700 : 400 }}>{d.getDate()}</span>
+                  <span style={{ display: "flex", gap: 2, alignItems: "center", minHeight: 5 }}>
+                    {items.slice(0, 3).map((e) => {
+                      const sm = mcApptStatus(e, t);
+                      return <span key={e.id} style={{ width: 4.5, height: 4.5, borderRadius: "50%", background: sm.color }} />;
+                    })}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div className="row" style={{ gap: 14, justifyContent: "center", padding: "16px 0 0", flexWrap: "wrap" }}>
+        {[["var(--good)", t("mobile.legend.booked")], ["var(--warn)", t("mobile.legend.rescheduled")], ["var(--stage-lost)", t("mobile.legend.noShow")]].map(([c, l]) => (
+          <span key={l} className="row" style={{ gap: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: c }} />
+            <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{l}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Detail sheet field ────────────────────────────────────────────────────────
+function MCField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+      <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mute-2)" }}>{label}</span>
+      <span style={{ fontSize: 13.5, color: "var(--ink)", wordBreak: "break-word" }}>{children}</span>
+    </div>
+  );
+}
+
+// ── Detail bottom-sheet body ──────────────────────────────────────────────────
+function MCDetailBody({ a, onClose, onOpenInLead, t }: {
+  a: Appointment; onClose: () => void; onOpenInLead: (a: Appointment) => void; t: (k: string) => string;
+}) {
+  const sm = mcApptStatus(a, t);
+  const d = new Date(a.raw_booked_call_date);
+  const via = a.phone ? "phone" : "video";
+  const dow = t(`days.short.${DAY_KEYS[d.getDay()]}`);
+  const mon = t(`months.full.${FULL_MONTH_KEYS[d.getMonth()]}`);
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: "var(--bg)" }} data-testid="mobile-detail-sheet">
+      {/* hero */}
+      <div style={{ flexShrink: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)", padding: "28px 16px 16px" }}>
+        <div className="row" style={{ justifyContent: "flex-end", marginBottom: 14 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: sm.color, background: sm.tint, borderRadius: "var(--r-pill)", padding: "4px 10px", fontWeight: 700 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: sm.color }} />{sm.label}
+          </span>
+        </div>
+        <div className="row" style={{ gap: 13, alignItems: "center" }}>
+          <MCAvatar a={a} size={46} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "var(--serif)", fontSize: 24, color: "var(--ink)", lineHeight: 1.05, letterSpacing: "-0.01em" }}>{a.lead_name}</div>
+            {a.campaign_name && <div style={{ fontSize: 12.5, color: "var(--mute)", marginTop: 3 }}>{a.campaign_name}</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px", display: "flex", flexDirection: "column", gap: 18 }}>
+        <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+          <MCField label={t("mobile.detail.date")}>{dow}<br /><span style={{ color: "var(--mute)", fontSize: 12 }}>{mon} {d.getDate()}, {d.getFullYear()}</span></MCField>
+          <MCField label={t("mobile.detail.time")}>
+            <span className="row" style={{ gap: 6 }}><MCClockGlyph s={13} />{a.time}</span>
+          </MCField>
+          <MCField label={t("mobile.detail.via")}>
+            <span className="row" style={{ gap: 7 }}>{via === "phone" ? <MCPhoneGlyph s={13} /> : <MCVideoGlyph s={14} />}{via === "phone" ? t("mobile.channel.phone") : t("mobile.channel.video")}</span>
+          </MCField>
+          <MCField label={t("mobile.detail.status")}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: sm.color, background: sm.tint, borderRadius: "var(--r-pill)", padding: "4px 10px", fontWeight: 700 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: sm.color }} />{sm.label}
+            </span>
+          </MCField>
+        </div>
+
+        {/* contact (when available) */}
+        {(a.phone || a.email) && (
+          <div>
+            <div className="eyebrow eyebrow-sm" style={{ marginBottom: 9 }}>{t("mobile.detail.contact")}</div>
+            <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              {a.phone && <MCField label={t("mobile.detail.phone")}>{a.phone}</MCField>}
+              {a.email && <MCField label={t("mobile.detail.email")}>{a.email}</MCField>}
+            </div>
+          </div>
+        )}
+
+        {/* open in lead */}
+        <button onClick={() => onOpenInLead(a)} style={{
+          alignSelf: "flex-start", textDecoration: "none", border: "none", background: "transparent", cursor: "pointer",
+          display: "inline-flex", alignItems: "center", gap: 5, fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700,
+        }} data-testid="mobile-detail-open-lead">{t("mobile.detail.openInLead")} <MCArrowGlyph /></button>
+      </div>
+
+      {/* actions */}
+      <div style={{ flexShrink: 0, borderTop: "1px solid var(--line)", padding: "14px 18px calc(14px + var(--safe-bottom))", display: "flex", gap: 10 }}>
+        <a href={via === "phone" && a.phone ? `tel:${a.phone}` : a.calendar_link} target={via === "phone" ? undefined : "_blank"} rel="noreferrer" style={{
+          flex: 1, height: 48, borderRadius: "var(--r-surface)", border: "none", cursor: "pointer", textDecoration: "none",
+          background: "var(--wine-grad)", boxShadow: "var(--sh-raised-medium)",
+          color: "var(--paper)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9,
+          fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700,
+        }} data-testid="mobile-detail-primary">
+          {via === "phone" ? <MCPhoneGlyph s={15} /> : <MCVideoGlyph s={16} />}{via === "phone" ? t("mobile.detail.callNow") : t("mobile.detail.joinMeeting")}
+        </a>
+        <button title={t("mobile.detail.reschedule")} onClick={onClose} style={{
+          width: 48, height: 48, borderRadius: "var(--r-surface)", border: "none", cursor: "pointer",
+          background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}><MCReschedGlyph s={18} /></button>
+      </div>
+    </div>
+  );
+}
+
+// ── Reusable bottom sheet (locked transition) ─────────────────────────────────
+function MCSheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+  const [render, setRender] = useState(open);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    if (open) {
+      setRender(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setVis(true)));
+    } else {
+      setVis(false);
+    }
+  }, [open]);
+  if (!render) return null;
+  const ease = "cubic-bezier(0.22, 1, 0.36, 1)";
+  return (
+    <>
+      <div onClick={onClose} style={{
+        position: "fixed", inset: 0, zIndex: 500, background: "rgba(31,26,20,0.32)",
+        opacity: vis ? 1 : 0, transition: "opacity 360ms ease", pointerEvents: vis ? "auto" : "none",
+      }} />
+      <div onTransitionEnd={() => { if (!vis) setRender(false); }} style={{
+        position: "fixed", left: 0, right: 0, top: 40, bottom: 0, zIndex: 501,
+        transform: vis ? "translateY(0)" : "translateY(100%)", transition: `transform 360ms ${ease}`,
+        borderRadius: "var(--r-panel) var(--r-panel) 0 0", overflow: "hidden", boxShadow: "0 -10px 40px rgba(60,45,25,0.20)",
+      }}>
+        <div onClick={onClose} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 26, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 6 }}>
+          <span style={{ width: 40, height: 5, borderRadius: "var(--r-pill)", background: "var(--mute-2)", opacity: 0.6 }} />
+        </div>
+        {children}
+      </div>
+    </>
+  );
+}
+
+// ── Mobile calendar orchestrator ──────────────────────────────────────────────
+function MobileCalendar({
+  appts, anchorDate, setAnchorDate, todayStr, swipeRef,
+  fab, onOpenInLead, t,
+}: {
+  appts: Appointment[];
+  anchorDate: Date;
+  setAnchorDate: (d: Date) => void;
+  todayStr: string;
+  swipeRef: React.RefObject<HTMLDivElement | null>;
+  fab: React.ReactNode;
+  onOpenInLead: (a: Appointment) => void;
+  t: (k: string) => string;
+}) {
+  const [view, setView] = useState<"agenda" | "month">("agenda");
+  const [filter, setFilter] = useState<MobileFilter>("all");
+  const [sel, setSel] = useState<Appointment | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const openEvent = (a: Appointment) => { setSel(a); requestAnimationFrame(() => requestAnimationFrame(() => setOpen(true))); };
+  const closeEvent = () => setOpen(false);
+
+  const matches = (a: Appointment, f: MobileFilter): boolean => {
+    switch (f) {
+      case "noShow": return a.no_show;
+      case "rescheduled": return a.re_scheduled_count > 0;
+      case "attention": return a.no_show || a.re_scheduled_count > 0;
+      default: return true;
+    }
+  };
+
+  // Active Mon–Sun week derived from anchorDate (week nav mutates anchorDate via setAnchorDate)
+  const weekMon = useMemo(() => {
+    const x = new Date(anchorDate);
+    const dow = (x.getDay() + 6) % 7; // 0 = Monday
+    x.setDate(x.getDate() - dow);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }, [anchorDate]);
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => { const d = new Date(weekMon); d.setDate(weekMon.getDate() + i); return d; }), [weekMon]);
+  const weekISO = useMemo(() => new Set(weekDays.map(mcLocalISO)), [weekDays]);
+  const weekEnd = weekDays[6];
+  const weekLabel = `${t(`months.short.${MONTH_KEYS[weekMon.getMonth()]}`)} ${weekMon.getDate()} – ${weekMon.getMonth() === weekEnd.getMonth() ? "" : t(`months.short.${MONTH_KEYS[weekEnd.getMonth()]}`) + " "}${weekEnd.getDate()}`;
+
+  const weekEvents = useMemo(() => appts.filter((e) => weekISO.has(e.date)), [appts, weekISO]);
+  const counts = useMemo(() => ({
+    all: weekEvents.length,
+    noShow: weekEvents.filter((e) => matches(e, "noShow")).length,
+    rescheduled: weekEvents.filter((e) => matches(e, "rescheduled")).length,
+    attention: weekEvents.filter((e) => matches(e, "attention")).length,
+  }), [weekEvents]);
+
+  const dayGroups = useMemo(() => weekDays.map((d) => {
+    const iso = mcLocalISO(d);
+    const items = weekEvents.filter((e) => e.date === iso && matches(e, filter))
+      .sort((a, b) => new Date(a.raw_booked_call_date).getTime() - new Date(b.raw_booked_call_date).getTime());
+    return { d, iso, items };
+  }).filter((g) => g.items.length), [weekDays, weekEvents, filter]);
+
+  const stats = useMemo(() => {
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const upcoming = weekEvents.filter((e) => !e.no_show && new Date(e.raw_booked_call_date) >= now).length;
+    const attention = weekEvents.filter((e) => e.no_show || e.re_scheduled_count > 0).length;
+    return [
+      { value: String(weekEvents.length), label: t("mobile.stats.meetings") },
+      { value: String(upcoming), label: t("mobile.stats.upcoming") },
+      { value: String(attention), label: t("mobile.stats.needsAttention") },
+    ];
+  }, [weekEvents, t]);
+
+  const shiftWeek = (n: number) => { const x = new Date(weekMon); x.setDate(weekMon.getDate() + n * 7); setAnchorDate(x); };
+  const pickDay = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); setAnchorDate(new Date(y, m - 1, d)); setFilter("all"); setView("agenda"); };
+
+  const chips: [MobileFilter, string, number][] = [
+    ["all", t("mobile.filters.all"), counts.all],
+    ["noShow", t("mobile.filters.noShow"), counts.noShow],
+    ["rescheduled", t("mobile.filters.rescheduled"), counts.rescheduled],
+    ["attention", t("mobile.filters.attention"), counts.attention],
+  ];
+
+  return (
+    <div ref={swipeRef} style={{ position: "relative", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--bg)" }} data-testid="mobile-calendar">
+      {/* top bar */}
+      <div style={{ flexShrink: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end", padding: "12px 18px 14px" }}>
+          <span className="serif" style={{ fontSize: 30, color: "var(--ink)", letterSpacing: "-0.02em" }}>{t("title")}</span>
+          <div className="la-seg">
+            {([["agenda", t("mobile.agenda")], ["month", t("mobile.month")]] as const).map(([k, label]) => (
+              <button key={k} onClick={() => setView(k)} className={`la-seg-btn${k === view ? " on" : ""}`} data-testid={`mobile-view-${k}`}>{label}</button>
+            ))}
+          </div>
+        </div>
+        {view === "agenda" && (
+          <div className="row" style={{ justifyContent: "space-between", padding: "0 16px 12px" }}>
+            <button onClick={() => shiftWeek(-1)} aria-label={t("navigation.previous")} style={{ width: 38, height: 38, borderRadius: "var(--r-surface)", flexShrink: 0, border: "none", cursor: "pointer", background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}><ChevronLeft size={16} /></button>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)" }}>{t("mobile.weekOf")}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginTop: 2 }}>{weekLabel}</div>
+            </div>
+            <button onClick={() => shiftWeek(1)} aria-label={t("navigation.next")} style={{ width: 38, height: 38, borderRadius: "var(--r-surface)", flexShrink: 0, border: "none", cursor: "pointer", background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}><ChevronRight size={16} /></button>
+          </div>
+        )}
+      </div>
+
+      {view === "agenda" ? (
+        <>
+          {/* stat strip + filter chips */}
+          <div style={{ flexShrink: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)", padding: "12px 0 11px" }}>
+            <div style={{ display: "flex", gap: 9, overflowX: "auto", padding: "0 16px 11px", scrollbarWidth: "none" }}>
+              {stats.map((s, i) => (
+                <div key={i} style={{ flexShrink: 0, background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-surface)", padding: "9px 13px", minWidth: 116 }}>
+                  <div className="row" style={{ gap: 7, alignItems: "baseline" }}>
+                    <span style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em", lineHeight: 1 }}>{s.value}</span>
+                  </div>
+                  <div style={{ fontFamily: "var(--mono)", fontSize: 8, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute-2)", marginTop: 5 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "0 16px", scrollbarWidth: "none" }}>
+              {chips.map(([k, label, count]) => {
+                const on = k === filter;
+                return (
+                  <button key={k} onClick={() => setFilter(k)} data-testid={`mobile-filter-${k}`} style={{
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: "var(--r-pill)", border: "none", cursor: "pointer",
+                    background: on ? "var(--wine)" : "var(--surface)", boxShadow: on ? "none" : "var(--sh-raised-crisp)",
+                    color: on ? "var(--paper)" : "var(--ink-soft)", fontSize: 12.5, fontWeight: on ? 700 : 500,
+                  }}>
+                    {label}
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, color: on ? "var(--paper)" : "var(--mute-2)", background: on ? "rgba(255,255,255,0.18)" : "var(--bg-2)", borderRadius: "var(--r-pill)", padding: "1px 7px" }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* agenda day list */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "4px 14px 90px" }} data-testid="mobile-agenda-list">
+            {dayGroups.length === 0 ? (
+              <div style={{ padding: "70px 20px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 60, height: 60, borderRadius: "var(--r-card)", background: "var(--surface)", boxShadow: "var(--sh-raised-medium)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)" }}><CalendarDays size={26} /></div>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)" }}>{t("mobile.noMeetingsWeek")}</div>
+              </div>
+            ) : dayGroups.map((g) => (
+              <div key={g.iso}>
+                <MCDayBar d={g.d} count={g.items.length} isToday={g.iso === todayStr} t={t} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                  {g.items.map((a) => <MCEventRow key={a.id} a={a} onOpen={openEvent} t={t} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <MCMonthGrid appts={appts} anchorDate={anchorDate} todayStr={todayStr} onPickDay={pickDay} t={t} />
+      )}
+
+      {/* FAB (book-a-lead trigger, injected by parent) */}
+      <div style={{ position: "absolute", right: 18, bottom: 18, zIndex: 10 }}>{fab}</div>
+
+      <MCSheet open={open} onClose={closeEvent}>
+        {sel && <MCDetailBody a={sel} onClose={closeEvent} onOpenInLead={(a) => { closeEvent(); onOpenInLead(a); }} t={t} />}
+      </MCSheet>
+    </div>
+  );
+}
 
 
 // ── Draggable Booking Card ────────────────────────────────────────────────────
@@ -250,7 +708,7 @@ const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100
 // ── Group header for appointment list ─────────────────────────────────────────
 function ApptGroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+    <div data-group-header="true" className="sticky top-0 z-20 bg-white px-3 pt-3 pb-3">
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
@@ -295,7 +753,7 @@ function AppointmentCard({
     <div
       className={cn(
         "group/card relative rounded-xl cursor-pointer",
-        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+        isActive ? "bg-highlight-selected" : "bg-white hover:bg-white"
       )}
       onClick={onSelect}
       role="button"
@@ -506,6 +964,13 @@ export default function CalendarPage() {
   const isMobile = useIsMobile();
   const isTablet = viewportWidth >= 640 && viewportWidth < 1024;
   const isNarrowDesktop = viewportWidth >= 1024 && viewportWidth < 1280;
+  const isDesktop = !isMobile && !isTablet;
+
+  // The redesigned desktop calendar offers Week/Month only — coerce the
+  // persisted "day" view to "week" so the toggle stays consistent.
+  useEffect(() => {
+    if (isDesktop && viewMode === "day") setViewMode("week");
+  }, [isDesktop, viewMode, setViewMode]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -808,10 +1273,18 @@ export default function CalendarPage() {
     setAnchorDate(next);
   };
 
-  // ── Swipe gesture: left → next, right → prev (mobile only) ─────────────────
+  // ── Swipe gesture: left → next week, right → prev week (mobile only) ───────
+  // Mobile uses the agenda/month experience, which is week-scoped off anchorDate.
+  const shiftAnchorWeek = useCallback((weeks: number) => {
+    setAnchorDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(prev.getDate() + weeks * 7);
+      return next;
+    });
+  }, []);
   const calendarSwipeRef = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft:  () => isMobile && navigate(1),
-    onSwipeRight: () => isMobile && navigate(-1),
+    onSwipeLeft:  () => isMobile && shiftAnchorWeek(1),
+    onSwipeRight: () => isMobile && shiftAnchorWeek(-1),
     threshold: 60,
     minVelocity: 0.25,
     enabled: isMobile,
@@ -929,6 +1402,18 @@ export default function CalendarPage() {
     return () => { cancelled = true; };
   }, [activePanelLeadId]);
 
+  // Open the currently-selected meeting's lead (desktop detail "Open in lead").
+  const handleOpenInLead = useCallback(() => {
+    const lead = selectedBooking?.rawLead;
+    const leadId = lead?.id ?? lead?.Id;
+    if (leadId == null) return;
+    try {
+      localStorage.setItem("selected-lead-id", String(leadId));
+      localStorage.setItem("leadawaker-returnto", "/platform/calendar");
+    } catch { /* storage may be unavailable */ }
+    goTo("/platform/contacts");
+  }, [selectedBooking, isAgencyUser, goTo]);
+
   // Update lead handler for ContactSidebar
   const handleCalendarUpdateLead = useCallback(async (leadId: number, patch: Record<string, unknown>) => {
     await apiFetch(`/api/leads/${leadId}`, {
@@ -988,7 +1473,8 @@ export default function CalendarPage() {
 
     const isTimeSlotDrop = targetHour !== undefined;
     const origDate = new Date(appt.raw_booked_call_date);
-    const [monthPart, dayPart, yearPart] = targetDateKey.split("/").map(Number);
+    // Day cells / time slots use en-CA keys ("YYYY-MM-DD").
+    const [yearPart, monthPart, dayPart] = targetDateKey.split("-").map(Number);
 
     let newDate: Date;
     if (isTimeSlotDrop) {
@@ -1114,7 +1600,7 @@ export default function CalendarPage() {
       <CrmShell>
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-[3px] p-0" data-testid="page-calendar">
           {/* Left panel */}
-          <div className="hidden lg:flex bg-muted rounded-lg flex-col overflow-hidden">
+          <div className="hidden lg:flex bg-white rounded-lg flex-col overflow-hidden">
             {/* Header */}
             <div className="px-3.5 pt-5 pb-1 flex items-center justify-between shrink-0">
               <Skeleton className="h-5 w-24 rounded bg-primary/10" />
@@ -1129,7 +1615,7 @@ export default function CalendarPage() {
             {/* Appointment list */}
             <div className="flex-1 min-h-0 overflow-hidden px-[3px] flex flex-col gap-[3px]">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 bg-card rounded-lg px-3 py-2.5">
+                <div key={i} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2.5">
                   <Skeleton className="h-9 w-9 rounded-full bg-primary/10 shrink-0" />
                   <div className="flex-1 flex flex-col gap-1.5">
                     <Skeleton className="h-3 w-3/4 rounded bg-primary/10" />
@@ -1141,7 +1627,7 @@ export default function CalendarPage() {
             </div>
           </div>
           {/* Center panel */}
-          <div className="bg-card rounded-lg flex flex-col overflow-hidden">
+          <div className="bg-white rounded-lg flex flex-col overflow-hidden">
             {/* Toolbar */}
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
               <Skeleton className="h-9 w-9 rounded-full bg-primary/10" />
@@ -1180,6 +1666,59 @@ export default function CalendarPage() {
     );
   }
 
+  // ── Mobile: dedicated agenda/month experience (matches migration design) ────
+  if (isMobile) {
+    const openInLeadFromAppt = (a: Appointment) => {
+      const lead = a.rawLead;
+      const leadId = lead?.id ?? lead?.Id;
+      if (leadId == null) return;
+      try {
+        localStorage.setItem("selected-lead-id", String(leadId));
+        localStorage.setItem("leadawaker-returnto", "/platform/calendar");
+      } catch { /* storage may be unavailable */ }
+      goTo("/platform/contacts");
+    };
+    return (
+      <CrmShell>
+        <div className="flex flex-col h-full overflow-hidden" data-testid="page-calendar">
+          <MobileCalendar
+            appts={appts}
+            anchorDate={anchorDate}
+            setAnchorDate={setAnchorDate}
+            todayStr={todayStr}
+            swipeRef={calendarSwipeRef}
+            onOpenInLead={openInLeadFromAppt}
+            t={t}
+            fab={
+              <BookAppointmentPopover
+                leads={leads}
+                refetchLeads={refetchLeads}
+                trigger={
+                  <button data-testid="mobile-calendar-fab" style={{
+                    height: 52, padding: "0 22px", borderRadius: "var(--r-card)", border: "none", cursor: "pointer",
+                    background: "var(--wine-grad)", boxShadow: "var(--sh-raised-medium)",
+                    color: "var(--paper)", display: "flex", alignItems: "center", gap: 9,
+                    fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
+                  }}>
+                    <Plus size={16} />{t("mobile.book")}
+                  </button>
+                }
+              />
+            }
+          />
+          {/* Lead full profile sheet */}
+          {fullProfileLead && (
+            <LeadDetailPanel
+              lead={fullProfileLead}
+              open={!!fullProfileLead}
+              onClose={() => setFullProfileLead(null)}
+            />
+          )}
+        </div>
+      </CrmShell>
+    );
+  }
+
   return (
     <CrmShell>
       <DndContext
@@ -1190,8 +1729,41 @@ export default function CalendarPage() {
       >
         <div className={cn(
           "flex flex-col px-0 py-0 bg-transparent",
-          isMobile || isTablet ? "h-auto overflow-y-auto" : isNarrowDesktop && (selectedBooking || selectedLead) ? "h-full overflow-y-auto" : "h-full overflow-hidden"
+          isDesktop ? "h-full overflow-hidden"
+            : isMobile || isTablet ? "h-auto overflow-y-auto"
+            : "h-full overflow-hidden"
         )} data-testid="page-calendar">
+          {isDesktop ? (
+            <DesktopCalendar
+              t={t}
+              appts={appts}
+              groupedAppts={groupedAppts}
+              weekDays={weekDays}
+              days={days}
+              month={month}
+              todayStr={todayStr}
+              viewLabel={viewLabel}
+              viewMode={(viewMode === "day" ? "week" : viewMode) as "week" | "month"}
+              setViewMode={setViewMode}
+              onNavigate={navigate}
+              onToday={() => setAnchorDate(new Date())}
+              selectedBooking={selectedBooking}
+              onSelectBooking={setSelectedBooking}
+              searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+              searchOpen={searchOpen} setSearchOpen={setSearchOpen}
+              apptSortBy={apptSortBy} setApptSortBy={setApptSortBy}
+              apptGroupBy={apptGroupBy} setApptGroupBy={setApptGroupBy}
+              apptGroupDirection={apptGroupDirection} setApptGroupDirection={setApptGroupDirection}
+              apptFilterStatuses={apptFilterStatuses} setApptFilterStatuses={setApptFilterStatuses}
+              leads={leads} refetchLeads={refetchLeads}
+              recentMessages={recentMessages} recentMessagesLoading={recentMessagesLoading}
+              onOpenInLead={handleOpenInLead}
+              onCloseDetail={() => setSelectedBooking(null)}
+              currentTime={currentTime}
+              apptListRef={apptListRef}
+            />
+          ) : (
+          <>
           {/* Hidden legacy header */}
           <div className="flex items-center gap-4 mb-6 shrink-0 hidden">
             <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">{t("title")}</h1>
@@ -1217,7 +1789,7 @@ export default function CalendarPage() {
                 RIGHT PANEL — Calendar views
                ══════════════════════════════════════════════════════════════════ */}
             <div ref={calendarSwipeRef} className={cn(
-              "bg-card overflow-hidden flex flex-col rounded-lg order-1 lg:order-2",
+              "bg-white overflow-hidden flex flex-col rounded-lg order-1 lg:order-2",
               isMobile && viewMode === "month" ? "h-[55vh] shrink-0" : "",
               isMobile && viewMode === "week" ? "h-[360px] shrink-0" : "",
               isMobile && viewMode === "day" ? "flex-1" : "",
@@ -1226,11 +1798,11 @@ export default function CalendarPage() {
             )} data-testid="calendar-main" data-onboarding="calendar-view">
 
               {/* ── Toolbar ── */}
-              <div className="px-4 pt-4 pb-3 flex flex-wrap items-center gap-2 shrink-0 bg-white dark:bg-card border-b border-black/[0.06]">
+              <div className="px-4 pt-4 pb-3 flex flex-wrap items-center gap-2 shrink-0 bg-white dark:bg-white border-b border-black/[0.06]">
                 {/* Date navigation */}
                 <div className="flex items-center gap-1.5">
                   <button
-                    className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-white inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => navigate(-1)}
                     title={t("navigation.previous")}
                     aria-label={t("navigation.previous")}
@@ -1242,7 +1814,7 @@ export default function CalendarPage() {
                     {viewLabel}
                   </div>
                   <button
-                    className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-white inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => navigate(1)}
                     title={t("navigation.next")}
                     aria-label={t("navigation.next")}
@@ -1268,7 +1840,7 @@ export default function CalendarPage() {
                           "flex items-center justify-center gap-1 px-3 text-[12px] font-medium transition-colors",
                           viewMode === tab.id
                             ? "bg-brand-indigo text-white"
-                            : "bg-transparent text-muted-foreground hover:bg-muted"
+                            : "bg-transparent text-muted-foreground hover:bg-white"
                         )}
                         data-testid={`calendar-view-btn-${tab.id}`}
                         aria-pressed={viewMode === tab.id}
@@ -1282,7 +1854,7 @@ export default function CalendarPage() {
 
                 {/* Today button */}
                 <button
-                  className="h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-[12px] font-medium hover:bg-card"
+                  className="h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-[12px] font-medium hover:bg-white"
                   onClick={() => setAnchorDate(new Date())}
                   data-testid="button-today"
                   aria-label={t("navigation.goToToday")}
@@ -1307,14 +1879,14 @@ export default function CalendarPage() {
                           placeholder={t("search.searchLeadPlaceholder")}
                           value={bookLeadSearch}
                           onChange={(e) => { setBookLeadSearch(e.target.value); setBookSelectedLead(null); }}
-                          className="w-full h-9 px-3 rounded-lg border border-border/55 bg-muted text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+                          className="w-full h-9 px-3 rounded-lg border border-border/55 bg-white text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                         />
                         {bookLeadSearch && !bookSelectedLead && bookFilteredLeads.length > 0 && (
                           <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border/55 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                             {bookFilteredLeads.map((l: any) => (
                               <button
                                 key={l.id || l.Id}
-                                className="w-full px-3 py-2 text-left text-[12px] hover:bg-muted flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-[12px] hover:bg-white flex items-center gap-2"
                                 onClick={() => { setBookSelectedLead(l); setBookLeadSearch(l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim()); }}
                               >
                                 <span className="truncate">{l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim() || t("appointment.unknownLead")}</span>
@@ -1326,13 +1898,13 @@ export default function CalendarPage() {
                       {/* Date */}
                       <div className="flex gap-2">
                         <input type="date" value={bookDate} onChange={(e) => setBookDate(e.target.value)}
-                          className="flex-1 h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                          className="flex-1 h-9 px-2 rounded-lg border border-border/55 bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                         <input type="time" value={bookTime} onChange={(e) => setBookTime(e.target.value)}
-                          className="w-24 h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                          className="w-24 h-9 px-2 rounded-lg border border-border/55 bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                       </div>
                       {/* Duration */}
                       <select value={bookDuration} onChange={(e) => setBookDuration(Number(e.target.value))}
-                        className="w-full h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none cursor-pointer">
+                        className="w-full h-9 px-2 rounded-lg border border-border/55 bg-white text-[12px] focus:outline-none cursor-pointer">
                         {[30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{t("appointment.minutes", { count: m })}</option>)}
                       </select>
                       {/* Submit */}
@@ -1372,7 +1944,7 @@ export default function CalendarPage() {
                         "min-h-[44px]",
                         isActive
                           ? "bg-brand-indigo text-white shadow-sm"
-                          : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                          : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-white"
                       )}
                     >
                       {Icon && <Icon className="h-4 w-4 shrink-0" />}
@@ -1509,7 +2081,7 @@ export default function CalendarPage() {
 
                     {/* Sticky day-header row */}
                     <div
-                      className={cn("sticky top-0 z-30 flex shrink-0 bg-muted border-b border-border/30", isWeekMobile && "min-w-max")}
+                      className={cn("sticky top-0 z-30 flex shrink-0 bg-white border-b border-border/30", isWeekMobile && "min-w-max")}
                       style={{ height: 56, ...(weekMinW ? { minWidth: weekMinW } : {}) }}
                     >
                       <div className="shrink-0 border-r border-border/20" style={{ width: LABEL_W }} />
@@ -1674,8 +2246,15 @@ export default function CalendarPage() {
                     className="flex"
                     recentMessages={recentMessages}
                     recentMessagesLoading={recentMessagesLoading}
-                    onViewConversation={() => goTo(`/conversations?leadId=${panelLeadId}`)}
-                    onNavigateToLead={(_leadId) => goTo(isAgencyUser ? `/agency/contacts` : `/subaccount/contacts`)}
+                    onViewConversation={() => {
+                      // Lead chat now lives on the Leads page (Chats page retired)
+                      try {
+                        if (panelLeadId) localStorage.setItem("selected-lead-id", String(panelLeadId));
+                        localStorage.setItem("leads-view-mode", "list");
+                      } catch {}
+                      goTo(`/platform/contacts`);
+                    }}
+                    onNavigateToLead={(_leadId) => goTo(`/platform/contacts`)}
                   />
                 </div>
               );
@@ -1685,7 +2264,7 @@ export default function CalendarPage() {
                 LEFT PANEL — My Calendar (appointment list)
                ══════════════════════════════════════════════════════════════════ */}
             <div className={cn(
-              "bg-muted flex flex-col overflow-hidden rounded-lg order-2 lg:order-1",
+              "bg-white flex flex-col overflow-hidden rounded-lg order-2 lg:order-1",
               isMobile && viewMode === "month" ? "flex-1 min-h-0" : "",
               isMobile && (viewMode === "week" || viewMode === "day") ? "hidden" : "",
               !isMobile && isTablet ? "min-h-[200px] max-h-[300px]" : "",
@@ -1717,7 +2296,7 @@ export default function CalendarPage() {
                   </span>
                   <button
                     onClick={() => setSelectedDate(null)}
-                    className="h-4 w-4 rounded-full hover:bg-card flex items-center justify-center text-muted-foreground"
+                    className="h-4 w-4 rounded-full hover:bg-white flex items-center justify-center text-muted-foreground"
                     title={t("clearDateFilter")}
                   >
                     <X className="h-3 w-3" />
@@ -1853,13 +2432,13 @@ export default function CalendarPage() {
               </div>
 
               {/* ── Appointment list ── */}
-              <div ref={apptListRef} className="flex-1 overflow-y-auto p-[3px]">
+              <div ref={apptListRef} className="la-list-area">
                 {totalApptCount === 0 ? (
                   <div data-testid="empty-appts">
                     <DataEmptyState variant="calendar" compact />
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-[3px]">
+                  <div className="la-cards">
                     {groupedAppts.map((group, gi) => (
                       <div key={gi} data-group-wrapper className="flex flex-col gap-[3px]">
                         {group.label && (
@@ -1882,6 +2461,8 @@ export default function CalendarPage() {
               </div>
             </div>
           </div>
+          </>
+          )}
 
           {/* Lead full profile sheet */}
           {fullProfileLead && (
@@ -1942,7 +2523,7 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setDragError(null)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-white shrink-0"
                 aria-label={t("common.close", "Close")}
                 data-testid="button-dismiss-drag-error"
               >
@@ -1982,7 +2563,7 @@ export default function CalendarPage() {
           style={{ background: "rgba(0,0,0,0.45)" }}
         >
           <div
-            className="bg-card rounded-2xl shadow-2xl w-full max-w-sm p-5 flex flex-col gap-4"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 flex flex-col gap-4"
             data-testid="mobile-event-popup"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1996,9 +2577,9 @@ export default function CalendarPage() {
                   setMobileEventPopup(null);
                   try {
                     localStorage.setItem("selected-lead-id", String(leadId));
-                    localStorage.setItem("leadawaker-returnto", isAgencyUser ? "/agency/calendar" : "/subaccount/calendar");
+                    localStorage.setItem("leadawaker-returnto", "/platform/calendar");
                   } catch {}
-                  goTo(isAgencyUser ? "/agency/contacts" : "/subaccount/contacts");
+                  goTo("/platform/contacts");
                 }}
               >
                 <EntityAvatar
@@ -2019,7 +2600,7 @@ export default function CalendarPage() {
                 </div>
               </button>
               <button
-                className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-white transition-colors"
                 onClick={() => setMobileEventPopup(null)}
                 aria-label="Close popup"
                 data-testid="popup-close-btn"
@@ -2054,15 +2635,15 @@ export default function CalendarPage() {
                   setMobileEventPopup(null);
                   try {
                     localStorage.setItem("selected-lead-id", String(leadId));
-                    localStorage.setItem("leadawaker-returnto", isAgencyUser ? "/agency/calendar" : "/subaccount/calendar");
+                    localStorage.setItem("leadawaker-returnto", "/platform/calendar");
                   } catch {}
-                  goTo(isAgencyUser ? "/agency/contacts" : "/subaccount/contacts");
+                  goTo("/platform/contacts");
                 }}
               >
                 View Lead
               </button>
               <button
-                className="h-10 px-4 rounded-xl bg-muted text-foreground text-sm font-medium flex items-center justify-center hover:bg-muted/80 transition-colors"
+                className="h-10 px-4 rounded-xl bg-white text-foreground text-sm font-medium flex items-center justify-center hover:bg-muted/80 transition-colors"
                 data-testid="popup-dismiss-btn"
                 onClick={() => setMobileEventPopup(null)}
               >

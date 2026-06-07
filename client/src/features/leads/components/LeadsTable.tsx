@@ -14,6 +14,7 @@ import {
 import {
   LeadsCardView,
   KanbanDetailPanel,
+  LeadDetailView,
   getLeadId as getLeadIdHelper,
   getFullName as getFullNameHelper,
   type GroupByOption,
@@ -68,9 +69,11 @@ const TABLE_COL_META = [
   { key: "phone",        label: "Phone",         defaultVisible: true  },
   { key: "email",        label: "Email",         defaultVisible: true  },
   { key: "campaign",     label: "Campaign",      defaultVisible: true  },
+  { key: "lastMessage",  label: "Last Message",  defaultVisible: true  },
   { key: "tags",         label: "Tags",          defaultVisible: true  },
   { key: "lastActivity", label: "Last Activity", defaultVisible: true  },
   { key: "notes",        label: "Notes",         defaultVisible: true  },
+  { key: "chats",        label: "Chats",         defaultVisible: false },
   { key: "account",      label: "Account",       defaultVisible: false },
   { key: "source",       label: "Source",        defaultVisible: false },
   { key: "company",      label: "Company",       defaultVisible: false },
@@ -322,7 +325,16 @@ export function LeadsTable() {
       const stored = localStorage.getItem(VISIBLE_COLS_KEY);
       if (stored) {
         const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length > 0) return new Set(arr);
+        if (Array.isArray(arr) && arr.length > 0) {
+          const set = new Set<string>(arr);
+          // One-time migration: surface the new "Last Message" column for users
+          // whose saved prefs predate it (runs once; respects later manual removal).
+          if (localStorage.getItem("leads-table-lastmsg-v1") !== "done") {
+            set.add("lastMessage");
+            try { localStorage.setItem("leads-table-lastmsg-v1", "done"); } catch {}
+          }
+          return set;
+        }
       }
     } catch {}
     return new Set(DEFAULT_VISIBLE_COLS);
@@ -1193,183 +1205,453 @@ export function LeadsTable() {
 
       {/* ── Table view ── */}
       {viewMode === "table" && (
-        <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-          {/* Left panel */}
-          <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
-
-            {/* Title + controls row */}
-            <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
-              {/* Title row: title left, tabs right (desktop only inline) */}
-              <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-                <span className="hidden md:block" data-onboarding="leads-view-tabs">
-                  <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
-                </span>
-              </div>
-              {/* Second row on mobile: tabs + divider + toolbar */}
-              <div className="flex items-center gap-3 overflow-x-auto [scrollbar-width:none] pb-2 md:pb-0 md:contents">
-                <div className="md:hidden">
-                  <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
-                </div>
-                <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-                {tableToolbar}
-              </div>
+          {/* ── Full-width flat top bar ── */}
+          <div className="shrink-0 flex items-center gap-3" style={{ height: 56, borderBottom: "1px solid var(--line)", background: "var(--bg)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
+            <div className="flex items-baseline gap-2 shrink-0">
+              <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+              <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
             </div>
-
-            {/* Table content */}
-            {viewMode === "table" && (
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <LeadsInlineTable
-                  flatItems={tableFlatItems}
-                  loading={loading}
-                  selectedLeadId={selectedLead ? (selectedLead.Id ?? selectedLead.id ?? null) : null}
-                  onSelectLead={setSelectedLead}
-                  onRefresh={handleRefresh}
-                  visibleCols={visibleCols}
-                  tableSearch={tableSearch}
-                  selectedIds={tableSelectedIds}
-                  onSelectionChange={setTableSelectedIds}
-                  showVerticalLines={showVerticalLines}
-                  fullWidthTable={fullWidthTable}
-                  groupBy={tableGroupBy}
-                  columnOrder={columnOrder}
-                  onColumnOrderChange={setColumnOrder}
-                  columnWidths={columnWidths}
-                  onColumnWidthsChange={setColumnWidths}
+            <div className="la-seg shrink-0">
+              {VIEW_TAB_KEYS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleViewSwitch(tab.id as ViewMode)}
+                  className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
+                  style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
+                >
+                  <span className="flex items-center"><tab.icon size={13} /></span>
+                  {t(tab.tKey)}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 min-w-0" />
+            <div className="shrink-0 flex items-center gap-[5px]">
+              {/* Search */}
+              <div className="relative" style={{ width: 190 }}>
+                <input
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                  placeholder={t("toolbar.searchPlaceholder")}
+                  className="la-input"
+                  style={{ padding: "7px 10px 7px 27px", fontSize: 11 }}
                 />
+                <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+                </span>
+                {tableSearch && (
+                  <button type="button" onClick={() => setTableSearch("")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              {/* Filter */}
+              <DropdownMenu>
+                <div style={{ position: "relative" }}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft la-btn--icon">
+                      <Filter className="h-4 w-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  {isTableFilterActive && (
+                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+                  )}
+                </div>
+                <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto bg-white">
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.status")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {STATUS_OPTIONS.map((s) => (
+                    <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
+                      <span className="flex-1">{t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}</span>
+                      {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    </DropdownMenuItem>
+                  ))}
+                  {availableAccounts.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.account")}</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
+                        {t("filters.allAccounts")} {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                      {availableAccounts.map((a) => (
+                        <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); if (tableFilterAccount === a.id) { setTableFilterAccount(""); } else { setTableFilterAccount(a.id); setTableFilterCampaign(""); } }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
+                          <span className="flex-1 truncate">{a.name}</span>
+                          {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {availableCampaigns.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.campaign")}</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
+                        {t("filters.allCampaigns")} {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                      {availableCampaigns.map((c) => (
+                        <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign(tableFilterCampaign === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
+                          <span className="flex-1 truncate">{c.name}</span>
+                          {tableFilterCampaign === c.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {isTableFilterActive && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Sort */}
+              <DropdownMenu>
+                <div style={{ position: "relative" }}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft la-btn--icon">
+                      <ArrowUpDown className="h-4 w-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  {tableSortBy !== "recent" && (
+                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+                  )}
+                </div>
+                <DropdownMenuContent align="start" className="w-52 bg-white">
+                  {([
+                    { key: "recent", label: t("sort.mostRecent"), asc: "oldest" as TableSortByOption, desc: "recent" as TableSortByOption },
+                    { key: "name",   label: t("sort.name"),       asc: "name_asc" as TableSortByOption, desc: "name_desc" as TableSortByOption },
+                    { key: "score",  label: t("sort.score"),      asc: "score_asc" as TableSortByOption, desc: "score_desc" as TableSortByOption },
+                  ]).map((group) => {
+                    const isActive = tableSortBy === group.asc || tableSortBy === group.desc;
+                    const activeDir: "asc" | "desc" = tableSortBy === group.asc ? "asc" : "desc";
+                    return (
+                      <DropdownMenuItem key={group.key} onSelect={(e) => { e.preventDefault(); setTableSortBy(isActive ? tableSortBy : group.desc); }} className="text-[12px] flex items-center gap-2">
+                        <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
+                        {isActive && (
+                          <>
+                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.asc); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowUp className="h-3 w-3" /></button>
+                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.desc); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowDown className="h-3 w-3" /></button>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Group */}
+              <DropdownMenu>
+                <div style={{ position: "relative" }}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft la-btn--icon">
+                      <Layers className="h-4 w-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  {tableGroupBy !== "status" && (
+                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+                  )}
+                </div>
+                <DropdownMenuContent align="start" className="w-52 bg-white">
+                  {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
+                    <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); setTableGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
+                      <span className={cn("flex-1", tableGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(TABLE_GROUP_TKEYS[opt])}</span>
+                      {tableGroupBy === opt && opt !== "none" && (
+                        <>
+                          <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowUp className="h-3 w-3" /></button>
+                          <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowDown className="h-3 w-3" /></button>
+                        </>
+                      )}
+                      {tableGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Settings ⚙ — table-specific options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="la-btn la-btn--soft la-btn--icon">
+                    <Settings className="h-4 w-4 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 max-h-[500px] overflow-y-auto bg-white">
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.fields")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {TABLE_COL_META.map((col) => {
+                    const isVisible = visibleCols.has(col.key);
+                    return (
+                      <DropdownMenuItem key={col.key} onClick={(e) => { e.preventDefault(); setVisibleCols((prev) => { const next = new Set(prev); if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); } else next.add(col.key); return next; }); }} className="flex items-center gap-2 text-[12px]">
+                        <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+                          {isVisible && <Check className="h-2 w-2 text-white" />}
+                        </div>
+                        <span className="flex-1">{t(`table.columns.${col.key}`)}</span>
+                        {!col.defaultVisible && <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.display")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowVerticalLines(!showVerticalLines); }} className="flex items-center gap-2 text-[12px]">
+                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", showVerticalLines ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+                      {showVerticalLines && <Check className="h-2 w-2 text-white" />}
+                    </div>
+                    <span className="flex-1">{t("toolbar.verticalLines")}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFullWidthTable(!fullWidthTable); }} className="flex items-center gap-2 text-[12px]">
+                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", fullWidthTable ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+                      {fullWidthTable && <Check className="h-2 w-2 text-white" />}
+                    </div>
+                    <span className="flex-1">{t("toolbar.fullWidth")}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
+                    <Upload className="h-3.5 w-3.5 mr-2" /> {t("toolbar.importCsv")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCsv} className="text-[12px]">
+                    <Download className="h-3.5 w-3.5 mr-2" /> {t("toolbar.exportCsv")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setColumnOrder([])} className="text-[12px] text-muted-foreground">{t("toolbar.resetColumnOrder")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setColumnWidths({})} className="text-[12px] text-muted-foreground">{t("toolbar.resetColumnWidths")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">{t("toolbar.resetToDefault")}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* +Add */}
+              <button onClick={handleAddLead} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
+                <Plus className="h-[14px] w-[14px] shrink-0" />
+              </button>
+            </div>{/* close controls */}
+          </div>{/* close top bar */}
+
+          {/* Body — full width */}
+          <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
+          {/* Right: table + floating selection action bar */}
+          <div className="relative flex-1 min-w-0 overflow-hidden flex flex-col">
+            {tableSelectedIds.size > 0 && (
+              <div
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5"
+                style={{
+                  background: "var(--card)",
+                  boxShadow: "var(--sh-raised-large, var(--sh-raised-tall))",
+                  borderRadius: "var(--r-pill)",
+                  padding: "8px 14px",
+                  border: "1px solid var(--line)",
+                }}
+              >
+                <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>
+                  {t("selection.countSelected", { count: tableSelectedIds.size, defaultValue: "{{count}} selected" })}
+                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft" style={{ fontSize: 11 }}>
+                      <Pencil className="h-3 w-3" />{t("toolbar.changeStage")}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" side="top" className="w-44 bg-white">
+                    <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.moveTo")}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {STATUS_OPTIONS.map((s) => (
+                      <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
+                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
+                        {t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateLeads} />
+                <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteLeads} variant="danger" />
+                <button className="la-btn la-btn--soft la-btn--icon" onClick={() => setTableSelectedIds(new Set())} title={t("toolbar.clearAllFilters", "Clear")}>
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
             )}
-
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <LeadsInlineTable
+                flatItems={tableFlatItems}
+                loading={loading}
+                selectedLeadId={selectedLead ? (selectedLead.Id ?? selectedLead.id ?? null) : null}
+                onSelectLead={setSelectedLead}
+                onRefresh={handleRefresh}
+                visibleCols={visibleCols}
+                tableSearch={tableSearch}
+                selectedIds={tableSelectedIds}
+                onSelectionChange={setTableSelectedIds}
+                showVerticalLines={showVerticalLines}
+                fullWidthTable={fullWidthTable}
+                groupBy={tableGroupBy}
+                columnOrder={columnOrder}
+                onColumnOrderChange={setColumnOrder}
+                columnWidths={columnWidths}
+                onColumnWidthsChange={setColumnWidths}
+              />
+            </div>
+          </div>
+          {/* Right detail panel — appears when a lead is selected (design split) */}
+          {selectedLead && (
+            <div className="shrink-0 overflow-hidden flex flex-col" style={{ flex: "0 0 clamp(380px, 34vw, 720px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
+              <LeadDetailView
+                lead={selectedLead}
+                onClose={handleClosePanel}
+                leadTags={leadTagsInfo.get(getLeadIdHelper(selectedLead)) || []}
+                onRefresh={handleRefresh}
+                campaignsById={campaignsById}
+              />
+            </div>
+          )}
           </div>
         </div>
       )}
 
       {/* ── Pipeline view (Kanban) ── */}
       {viewMode === "pipeline" && (
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-muted rounded-lg">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-          {/* Pipeline title + controls row */}
-          <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
-            {/* Title row */}
-            <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-              <span className="hidden md:block">
-                <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
-              </span>
+          {/* ── Full-width flat top bar ── */}
+          <div className="shrink-0 flex items-center gap-3" style={{ height: 56, borderBottom: "1px solid var(--line)", background: "var(--bg)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
+            <div className="flex items-baseline gap-2 shrink-0">
+              <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+              <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
             </div>
-            {/* Second row on mobile: tabs + divider + toolbar */}
-            <div className="flex items-center gap-3 overflow-x-auto [scrollbar-width:none] pb-2 md:pb-0 md:contents">
-              <div className="md:hidden">
-                <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
-              </div>
-              <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-
-            {/* Search — always extended, no fill */}
-            <SearchPill
-              value={kanbanSearchQuery}
-              onChange={setKanbanSearchQuery}
-              open={kanbanSearchOpen}
-              onOpenChange={setKanbanSearchOpen}
-              placeholder={t("toolbar.searchPlaceholder")}
-            />
-
-            {/* Filter button */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={cn(xBase, "hover:max-w-[110px]", isPipelineFilterActive ? xActive : xDefault)}>
-                  <Filter className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("toolbar.filter")}</span>
+            <div className="la-seg shrink-0">
+              {VIEW_TAB_KEYS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleViewSwitch(tab.id as ViewMode)}
+                  className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
+                  style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
+                >
+                  <span className="flex items-center"><tab.icon size={13} /></span>
+                  {t(tab.tKey)}
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-60 rounded-2xl">
-                <DropdownMenuItem onClick={() => setShowHighScore(!showHighScore)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <Flame className={cn("h-4 w-4 shrink-0", showHighScore ? "text-[#FCB803]" : "text-muted-foreground")} />
-                  <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>{t("filters.highScore")}</span>
-                  {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterHasPhone(!filterHasPhone)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <Phone className={cn("h-4 w-4 shrink-0", filterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
-                  <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>{t("filters.hasPhone")}</span>
-                  {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterHasEmail(!filterHasEmail)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <Mail className={cn("h-4 w-4 shrink-0", filterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
-                  <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>{t("filters.hasEmail")}</span>
-                  {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-                {isPipelineFilterActive && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={clearPipelineFilters} className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground">
-                      <X className="h-4 w-4 shrink-0" /><span className="text-sm">{t("toolbar.clearAll")}</span>
-                    </DropdownMenuItem>
-                  </>
+              ))}
+            </div>
+            <div className="flex-1 min-w-0" />
+            <div className="shrink-0 flex items-center gap-[5px]">
+              {/* Search */}
+              <div className="relative" style={{ width: 190 }}>
+                <input
+                  value={kanbanSearchQuery}
+                  onChange={(e) => setKanbanSearchQuery(e.target.value)}
+                  placeholder={t("toolbar.searchPlaceholder")}
+                  className="la-input"
+                  style={{ padding: "7px 10px 7px 27px", fontSize: 11 }}
+                />
+                <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+                </span>
+                {kanbanSearchQuery && (
+                  <button type="button" onClick={() => setKanbanSearchQuery("")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
                 )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </div>
+              {/* Filter */}
+              <DropdownMenu>
+                <div style={{ position: "relative" }}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft la-btn--icon">
+                      <Filter className="h-4 w-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  {isPipelineFilterActive && (
+                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+                  )}
+                </div>
+                <DropdownMenuContent align="start" className="w-60 rounded-2xl bg-white">
+                  <DropdownMenuItem onClick={() => setShowHighScore(!showHighScore)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <Flame className={cn("h-4 w-4 shrink-0", showHighScore ? "text-[#FCB803]" : "text-muted-foreground")} />
+                    <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>{t("filters.highScore")}</span>
+                    {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilterHasPhone(!filterHasPhone)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <Phone className={cn("h-4 w-4 shrink-0", filterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
+                    <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>{t("filters.hasPhone")}</span>
+                    {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilterHasEmail(!filterHasEmail)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <Mail className={cn("h-4 w-4 shrink-0", filterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
+                    <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>{t("filters.hasEmail")}</span>
+                    {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  {isPipelineFilterActive && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={clearPipelineFilters} className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground">
+                        <X className="h-4 w-4 shrink-0" /><span className="text-sm">{t("toolbar.clearAll")}</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Sort */}
+              <DropdownMenu>
+                <div style={{ position: "relative" }}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft la-btn--icon">
+                      <ArrowUpDown className="h-4 w-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  {isPipelineSortActive && (
+                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+                  )}
+                </div>
+                <DropdownMenuContent align="start" className="w-56 rounded-2xl bg-white">
+                  <DropdownMenuItem onClick={() => setPipelineSortBy(null)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <span className={cn("text-sm flex-1", pipelineSortBy === null && "font-semibold")}>{t("sort.default")}</span>
+                    {pipelineSortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPipelineSortBy("score-desc")} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <span className={cn("text-sm flex-1", pipelineSortBy === "score-desc" && "font-semibold")}>{t("sort.scoreHighToLow")}</span>
+                    {pipelineSortBy === "score-desc" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPipelineSortBy("recency")} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <span className={cn("text-sm flex-1", pipelineSortBy === "recency" && "font-semibold")}>{t("sort.recency")}</span>
+                    {pipelineSortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPipelineSortBy("alpha")} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                    <span className={cn("text-sm flex-1", pipelineSortBy === "alpha" && "font-semibold")}>{t("sort.alphaAZ")}</span>
+                    {pipelineSortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Settings ⚙ — pipeline-specific options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="la-btn la-btn--soft la-btn--icon">
+                    <Settings className="h-4 w-4 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 bg-white">
+                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setCompactMode((v) => !v); }} className="flex items-center gap-2 text-[12px]">
+                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", compactMode ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+                      {compactMode && <Check className="h-2 w-2 text-white" />}
+                    </div>
+                    <span className="flex-1">{t("toolbar.compactView")}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { if (hasAnyCollapsed) { setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 })); } else { setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 })); } }} className="flex items-center gap-2 text-[12px]">
+                    <Rows3 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1">{hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowTagsAlways((v) => !v); }} className="flex items-center gap-2 text-[12px]">
+                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", showTagsAlways ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
+                      {showTagsAlways && <Check className="h-2 w-2 text-white" />}
+                    </div>
+                    <span className="flex-1">{t("toolbar.tags")}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* +Add */}
+              <button onClick={handleAddLead} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
+                <Plus className="h-[14px] w-[14px] shrink-0" />
+              </button>
+            </div>{/* close controls */}
+          </div>{/* close top bar */}
 
-            {/* Sort button */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={cn(xBase, "hover:max-w-[100px]", isPipelineSortActive ? xActive : xDefault)}>
-                  <ArrowUpDown className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("toolbar.sort")}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 rounded-2xl">
-                <DropdownMenuItem onClick={() => setPipelineSortBy(null)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === null && "font-semibold")}>{t("sort.default")}</span>
-                  {pipelineSortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPipelineSortBy("score-desc")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === "score-desc" && "font-semibold")}>{t("sort.scoreHighToLow")}</span>
-                  {pipelineSortBy === "score-desc" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPipelineSortBy("recency")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === "recency" && "font-semibold")}>{t("sort.recency")}</span>
-                  {pipelineSortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPipelineSortBy("alpha")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === "alpha" && "font-semibold")}>{t("sort.alphaAZ")}</span>
-                  {pipelineSortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Compact mode toggle — hidden on mobile */}
-            <button onClick={() => setCompactMode((v) => !v)} title={compactMode ? t("toolbar.normalView") : t("toolbar.compactView")} className={cn(xBase, "hidden md:inline-flex hover:max-w-[110px]", compactMode ? xActive : xDefault)}>
-              {compactMode ? <Expand className="h-4 w-4 shrink-0" /> : <Shrink className="h-4 w-4 shrink-0" />}
-              <span className={xSpan}>{compactMode ? t("toolbar.normalView") : t("toolbar.compactView")}</span>
-            </button>
-
-            {/* Fold / Unfold empty columns — right next to compact, hidden on mobile */}
-            <button
-              onClick={() => {
-                if (hasAnyCollapsed) {
-                  setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }));
-                } else {
-                  setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 }));
-                }
-              }}
-              className={cn(xBase, "hidden md:inline-flex hover:max-w-[115px]", hasAnyCollapsed ? xActive : xDefault)}
-              title={hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
-            >
-              <Rows3 className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}</span>
-            </button>
-
-            {/* Tags always-show toggle — hidden on mobile */}
-            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? t("tagsToggle.alwaysVisible") : t("tagsToggle.hoverOnly")} className={cn(xBase, "hidden md:inline-flex hover:max-w-[100px]", showTagsAlways ? xActive : xDefault)}>
-              <Tag className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.tags")}</span>
-            </button>
-
-            </div>{/* end second row wrapper */}
-          </div>{/* end pipeline header */}
-
-          {/* Kanban board + detail panel */}
-          <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
+          {/* Body — full width */}
+          <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
+          {/* Right: kanban + optional detail panel */}
+          <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
             <div className="flex-1 min-w-0 overflow-hidden p-[6px] pt-0">
               <LeadsKanban
                 leads={filteredPipelineLeads}
@@ -1385,15 +1667,17 @@ export function LeadsTable() {
               />
             </div>
             {selectedKanbanLead && (
-              <div className="w-[380px] flex-shrink-0 flex flex-col min-w-0 overflow-hidden bg-card rounded-lg">
-                <KanbanDetailPanel
+              <div className="shrink-0 flex flex-col overflow-hidden" style={{ flex: "0 0 clamp(380px, 34vw, 720px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
+                <LeadDetailView
                   lead={selectedKanbanLead}
                   onClose={handleCloseKanbanPanel}
                   leadTags={leadTagsInfo.get(getLeadIdHelper(selectedKanbanLead)) || []}
-                  onOpenFullProfile={() => setFullProfileLead(selectedKanbanLead)}
+                  onRefresh={handleRefresh}
+                  campaignsById={campaignsById}
                 />
               </div>
             )}
+          </div>
           </div>
         </div>
       )}

@@ -12,12 +12,13 @@ import {
 export type { Task };
 
 // ─── Status ──────────────────────────────────────────────────────────
-export const TASK_STATUSES = ["todo", "in_progress", "done", "cancelled"] as const;
+export const TASK_STATUSES = ["todo", "in_progress", "waiting", "done", "cancelled"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "todo", label: "To Do" },
   { value: "in_progress", label: "In Progress" },
+  { value: "waiting", label: "Waiting" },
   { value: "done", label: "Done" },
   { value: "cancelled", label: "Cancelled" },
 ];
@@ -25,6 +26,7 @@ export const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
 export const STATUS_COLORS: Record<TaskStatus, string> = {
   todo: "#6B7280",
   in_progress: "#3B82F6",
+  waiting: "var(--warn)",
   done: "#10B981",
   cancelled: "#9CA3AF",
 };
@@ -68,16 +70,7 @@ export const TYPE_ICONS: Record<TaskType, LucideIcon> = {
 };
 
 // ─── Tags ───────────────────────────────────────────────────────
-export const TASK_TAG_PRESETS = [
-  // Development
-  "Frontend", "Backend", "Database", "API", "DevOps",
-  // Design
-  "Design", "UI/UX", "Branding",
-  // Business
-  "Marketing", "Sales", "Support", "Finance",
-  // General
-  "Bug", "Feature", "Docs", "Research", "Urgent", "Review",
-] as const;
+export const TASK_TAG_PRESETS = [] as const;
 
 export type TaskTag = (typeof TASK_TAG_PRESETS)[number];
 
@@ -145,7 +138,7 @@ export function parseTags(raw: string | null | undefined): string[] {
 }
 
 // ─── View Mode ──────────────────────────────────────────────────────
-export const VIEW_MODES = ["kanban", "table", "gantt"] as const;
+export const VIEW_MODES = ["kanban", "swimlane", "table"] as const;
 export type ViewMode = (typeof VIEW_MODES)[number];
 
 // ─── Sort / Filter / Group ───────────────────────────────────────────
@@ -180,7 +173,7 @@ export type GroupOption = (typeof GROUP_OPTIONS)[number]["value"];
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 const PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
-const STATUS_RANK: Record<string, number> = { todo: 0, in_progress: 1, done: 2, cancelled: 3 };
+const STATUS_RANK: Record<string, number> = { todo: 0, in_progress: 1, waiting: 2, done: 3, cancelled: 4 };
 
 export function sortTasks(tasks: Task[], sort: SortOption): Task[] {
   const copy = [...tasks];

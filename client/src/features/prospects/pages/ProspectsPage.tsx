@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { xBase, xDefault, xActive, xSpan } from "@/components/crm/primitives";
 import { createProspect, updateProspect } from "../api/prospectsApi";
 
 type ViewMode = "list" | "table" | "pipeline" | "followups" | "templates";
@@ -127,11 +128,7 @@ const STATUS_DOT: Record<string, string> = {
 
 const PRIORITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
-/* -- Expand-on-hover button constants -- */
-const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+/* -- Expand-on-hover button constants — shared from @/components/crm/primitives -- */
 
 // -- Inline confirmation button --
 function ConfirmToolbarButton({

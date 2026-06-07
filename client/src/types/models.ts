@@ -209,7 +209,7 @@ export type AppUser = {
   email: string;
   phone: string;
   timezone: string;
-  role: "Admin" | "Manager" | "Agent" | "Viewer";
+  role: "Admin" | "Manager" | "Viewer";
   status: "Active" | "Inactive";
   avatar_url: string;
   n8n_webhook_url: string;

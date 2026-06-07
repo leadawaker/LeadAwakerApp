@@ -30,7 +30,7 @@ interface Props {
 export function MobileExecutionCard({ group, idx, isAgencyView }: Props) {
   const { t } = useTranslation("automation");
   const [, navigate] = useLocation();
-  const base = isAgencyView ? "/agency" : "/subaccount";
+  const base = "/platform";
   const [expanded, setExpanded] = useState(false);
 
   const autoType = group.automationType;

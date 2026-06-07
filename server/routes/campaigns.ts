@@ -14,6 +14,7 @@ import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
 import { eq, count, and, gte } from "drizzle-orm";
+import { generateCampaignContext } from "../demo-session";
 
 // SYNC: keep in sync with tools/ai_service.py DEFAULT_CONVERSATION_PROMPT
 const DEFAULT_CONVERSATION_PROMPT = `You are {agent_name}, from the commercial team at {company_name}. Your job is to qualify leads via WhatsApp who showed interest in {service_name} but never followed through, and book a consultation call. If a lead drifts off topic, use your SPIN training to keep them engaged. Always stay on topic.
@@ -148,27 +149,22 @@ Booking link: {calendar_link}
 Qualification criteria: {qualification_criteria}`;
 
 // Default prompt templates (used to auto-seed the Prompt Library)
-const DEFAULT_CAMPAIGN_SUMMARY_SYSTEM = `You are an AI analyst for a WhatsApp lead reactivation agency. You write concise, data-driven campaign performance summaries. Keep the tone professional but direct. Do not simply restate the raw numbers — interpret them and draw conclusions. IMPORTANT formatting rules: use single asterisks *text* for bold (NEVER double **text**). Use _text_ for italic. Use __text__ for underline on action items. Always single * for bold, never **.`;
+const DEFAULT_CAMPAIGN_SUMMARY_SYSTEM = `You are an AI analyst for a WhatsApp lead reactivation agency. You write a single-sentence TLDR of a campaign's performance. Interpret the numbers, don't just restate them: surface the most important signal (a win, a bottleneck, or one action). Output ONE sentence only — no line breaks, no lists, no headers, no markdown formatting. Aim for under 30 words.`;
 
-const DEFAULT_CAMPAIGN_SUMMARY_PROMPT = `Write a concise (2-3 paragraphs) performance summary for this campaign.
+const DEFAULT_CAMPAIGN_SUMMARY_PROMPT = `Write a ONE-sentence TLDR of this campaign's performance. Plain text, no markdown, no line breaks.
 
 Campaign: {{campaignName}}
 Status: {{campaignStatus}}
-Description: {{campaignDescription}}
-Campaign created: {{campaignCreatedAt}}
 Report date: {{reportDate}}
 
-## Pipeline breakdown
 Total leads: {{totalLeads}}
 {{pipelineBreakdown}}
-
-## Key metrics
 Response rate: {{responseRate}}%  ({{responded}} of {{totalLeads}})
 Booking rate: {{bookingRate}}%  ({{booked}} of {{totalLeads}})
 Cost per booking: \${{costPerBooking}}
 Total cost: \${{totalCost}}
 
-Cover: overall performance highlights, what's working well, pipeline bottlenecks (where are leads stalling?), and one actionable recommendation.`;
+Lead with the single most important insight (a win, a bottleneck, or one action).`;
 
 // Interpolate {{variable}} placeholders in a template string
 function interpolateTemplate(template: string, vars: Record<string, string>): string {
@@ -601,8 +597,8 @@ export function registerCampaignsRoutes(app: Express): void {
             { role: "system", content: finalSystemMsg },
             { role: "user", content: userMsg },
           ],
-          temperature: 0.7,
-          max_tokens: 600,
+          temperature: 0.6,
+          max_tokens: 90,
         }),
       });
 
@@ -799,4 +795,61 @@ export function registerCampaignsRoutes(app: Express): void {
       res.status(500).json({ message: "Failed to fetch dashboard trends", error: err.message });
     }
   });
+
+  // POST /api/campaigns/:id/generate-demo — AI-fill demo campaign fields; preserves non-empty fields
+  app.post("/api/campaigns/:id/generate-demo", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const { niche } = req.body;
+    if (!niche || typeof niche !== "string" || !niche.trim()) {
+      return res.status(400).json({ message: "niche is required" });
+    }
+    const existing = await storage.getCampaignById(campaignId);
+    if (!existing) return res.status(404).json({ message: "Campaign not found" });
+
+    const ctx = await generateCampaignContext(niche.trim());
+    if (!ctx) return res.status(500).json({ message: "Generation failed — check OPEN_AI_API_KEY" });
+
+    const isEmpty = (v: unknown) =>
+      v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+
+    const basePatch: Record<string, unknown> = {
+      name: `${ctx.niche_label.charAt(0).toUpperCase() + ctx.niche_label.slice(1)} Demo`,
+      niche: ctx.niche_label,
+      isDemo: true,
+      language: "en",
+      bookingModeOverride: ctx.booking_mode_call ? "call" : "direct",
+      // Map to valid dropdown value — dropdown options are stages of the sales process
+      whatLeadDid: "Inquired about a quote",
+    };
+
+    const CONTENT_FIELDS: Array<{ patchKey: string; ctxValue: unknown; existingKey: string; displayName: string }> = [
+      { patchKey: "companyName",      ctxValue: ctx.company_name,           existingKey: "companyName",      displayName: "Company Name" },
+      // service_name is a dropdown with fixed options — use the most generic valid value
+      { patchKey: "serviceName",      ctxValue: "Supply and installation",  existingKey: "serviceName",      displayName: "Service" },
+      // campaign_usp is a dropdown — use a generic valid value
+      { patchKey: "campaignUsp",      ctxValue: "Dedicated designer: start to finish", existingKey: "campaignUsp", displayName: "USP" },
+      { patchKey: "aiStyleOverride",  ctxValue: "Professional & consultative", existingKey: "aiStyleOverride", displayName: "AI Style" },
+      { patchKey: "description",      ctxValue: ctx.business_description,   existingKey: "description",      displayName: "Business Description" },
+      { patchKey: "nicheQuestion",    ctxValue: ctx.niche_question,         existingKey: "nicheQuestion",    displayName: "Niche Question" },
+      { patchKey: "agentName",        ctxValue: ctx.agent_name,             existingKey: "agentName",        displayName: "Agent Name" },
+      { patchKey: "firstMessage",     ctxValue: ctx.first_message,          existingKey: "firstMessage",     displayName: "First Message" },
+      { patchKey: "bump1Template",    ctxValue: ctx.bump_1_template,        existingKey: "bump1Template",    displayName: "Bump 1" },
+      { patchKey: "bump2Template",    ctxValue: ctx.bump_2_template,        existingKey: "bump2Template",    displayName: "Bump 2" },
+      { patchKey: "kb",             ctxValue: ctx.kb,                    existingKey: "kb",               displayName: "Knowledge Base" },
+    ];
+
+    const filledFields: string[] = [];
+    const contentPatch: Record<string, unknown> = {};
+    for (const f of CONTENT_FIELDS) {
+      if (isEmpty((existing as any)[f.existingKey])) {
+        contentPatch[f.patchKey] = f.ctxValue;
+        filledFields.push(f.displayName);
+      }
+    }
+
+    const patch = insertCampaignsSchema.partial().parse({ ...basePatch, ...contentPatch });
+    const updated = await storage.updateCampaign(campaignId, patch);
+    if (!updated) return res.status(500).json({ message: "Failed to update campaign" });
+    res.json({ campaign: toDbKeys(updated as any, campaigns), filledFields });
+  }));
 }

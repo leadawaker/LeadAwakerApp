@@ -10,15 +10,11 @@ import {
   StickyNote,
   Save,
   CheckCircle2,
-  Palette,
-  FileText,
-  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { resolveColor } from "@/features/tags/types";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { updateLead } from "../../api/leadsApi";
@@ -27,7 +23,7 @@ import { getStatus } from "./leadUtils";
 import { STATUS_COLORS } from "./constants";
 import { InlineEditField } from "./atoms";
 import { formatRelativeTime } from "./formatUtils";
-import { TeamWidget } from "./DetailWidgets";
+import { Card, CardLabel } from "./designPrimitives";
 
 // ── Copy button ───────────────────────────────────────────────────────────────
 function CopyContactBtn({ value }: { value: string }) {
@@ -85,7 +81,6 @@ export function ContactWidget({
   isAgencyUser?: boolean;
 }) {
   const { t } = useTranslation("leads");
-  const { label: deleteLabel } = useDeleteAction("lead");
   const leadId      = getLeadId(lead);
   const phone       = lead.phone || lead.Phone || "";
   const email       = lead.email || lead.Email || "";
@@ -259,12 +254,12 @@ export function ContactWidget({
   ];
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
-      <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("contact.title")}</p>
+    <Card headLeft={<CardLabel>{t("contact.title")}</CardLabel>} variant="flat" style={{ flex: 1, minWidth: 0, width: "100%", height: "100%" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
       <div className="flex flex-col">
         {editableRows.map((row) => (
           <div key={row.label} className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">
               {row.label}
             </span>
             <div className="min-h-[1.125rem] flex items-center gap-1">
@@ -284,7 +279,7 @@ export function ContactWidget({
         {/* Company (read-only, show if present) */}
         {company && (
           <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">
               {t("contact.company")}
             </span>
             <span className="text-[12px] font-semibold text-foreground leading-snug">{company}</span>
@@ -293,7 +288,7 @@ export function ContactWidget({
         {/* Tags as pill badges */}
         {tags && tags.length > 0 && (
           <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0" data-testid="info-tab-tags">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">
               {t("detail.sections.tags", "Tags")}
             </span>
             <div className="flex flex-wrap gap-1.5 mt-1">
@@ -316,7 +311,7 @@ export function ContactWidget({
         {/* Created (read-only) */}
         {createdAt && (
           <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">
               {t("contact.created")}
             </span>
             <div className="min-h-[1.125rem]">
@@ -329,14 +324,14 @@ export function ContactWidget({
         {/* Meta chips — stacked vertically under Created */}
         {(lead.source || lead.Source) && (
           <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">{t("detailView.source")}</span>
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">{t("detailView.source")}</span>
             <span className="text-[12px] font-semibold text-foreground leading-snug">{lead.source || lead.Source}</span>
           </div>
         )}
         {/* Campaign assignment dropdown (agency view only) */}
         {isAgencyView && (
           <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">
               {t("detail.fields.campaign")}
             </span>
             <select
@@ -355,11 +350,6 @@ export function ContactWidget({
             </select>
           </div>
         )}
-      </div>
-
-      {/* ── Team section (inline) ─────────────────────────────────────────── */}
-      <div className="mt-4 pt-4 border-t border-border/20">
-        <TeamWidget lead={lead} onRefresh={onRefresh} inline />
       </div>
 
       {/* ── Notes section ──────────────────────────────────────────────────── */}
@@ -416,53 +406,12 @@ export function ContactWidget({
           placeholder={t("notes.placeholder", "Add notes…")}
           rows={5}
           disabled={savingNotes || transcribing}
-          className="w-full text-[12px] bg-transparent border-none px-0 py-0 resize-none focus:outline-none disabled:opacity-60 placeholder:text-foreground/25"
+          className="w-full text-[12px] resize-none focus:outline-none disabled:opacity-60 placeholder:text-foreground/25"
+          style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-button)", border: "none", padding: "9px 11px", lineHeight: 1.55 }}
         />
       </div>
-
-      {/* ── Action buttons (PDF, Delete, Gradient) — only when wired up ── */}
-      {onPdf && (
-        <div className="mt-4 pt-3 border-t border-border/20 flex items-center justify-end gap-1">
-          {isAgencyUser && onToggleGradient && (
-            <button
-              onClick={onToggleGradient}
-              className={cn(
-                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px]",
-                gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : "border-black/[0.125] text-foreground/60 hover:text-foreground"
-              )}
-              title="Gradient Tester"
-            >
-              <Palette className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Gradient</span>
-            </button>
-          )}
-          <button
-            onClick={onPdf}
-            className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px] border-black/[0.125] text-foreground/60 hover:text-foreground"
-          >
-            <span className="relative inline-flex h-4 w-4 shrink-0">
-              <FileText className="h-4 w-4" />
-              <span className="absolute bottom-[1px] left-0 right-0 flex justify-center text-[5px] font-black leading-none">PDF</span>
-            </span>
-            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("detailView.toPdf")}</span>
-          </button>
-          {deleteConfirm ? (
-            <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
-              <span className="text-[11px] text-red-600 font-medium">{t("detailView.deleteLead")}</span>
-              <button onClick={onDelete} disabled={isDeleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{isDeleting ? "…" : t("confirm.yes")}</button>
-              <button onClick={() => setDeleteConfirm?.(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">{t("confirm.no")}</button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setDeleteConfirm?.(true)}
-              className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[110px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{deleteLabel}</span>
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+      {/* Bottom action block (PDF / Delete / Gradient) moved into the hero "…" menu (item 5). */}
+      </div>
+    </Card>
   );
 }

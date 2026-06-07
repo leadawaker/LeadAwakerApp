@@ -42,6 +42,13 @@ export function getLastMessage(lead: Record<string, any>): string {
 }
 
 export function getLastMessageSender(lead: Record<string, any>): string {
+  // Preferred: direction supplied by the leads list API (LEFT JOIN LATERAL on Interactions)
+  const direction = (lead.last_message_direction || "").toString().toLowerCase();
+  if (direction) {
+    // inbound → from the lead (show their name), outbound → AI/agent
+    return direction === "inbound" ? "" : "AI";
+  }
+  // Fallback: infer from legacy fields when direction is absent
   const received = lead.last_message_received || lead.last_reply || "";
   const sent = lead.last_message_sent || "";
   const last = lead.last_message || "";
@@ -50,4 +57,8 @@ export function getLastMessageSender(lead: Record<string, any>): string {
   // Outbound → AI (most outbound in this system is AI-driven)
   if (sent || last) return "AI";
   return "";
+}
+
+export function getUnreadCount(lead: Record<string, any>): number {
+  return Number(lead.unread_count ?? lead.unread ?? lead.unread_messages ?? 0) || 0;
 }

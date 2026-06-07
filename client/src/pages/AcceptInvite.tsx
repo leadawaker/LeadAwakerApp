@@ -64,7 +64,7 @@ export default function AcceptInvite() {
   // Only redirect if there's NO invite token and the user is already logged in
   useEffect(() => {
     if (!token && !email && localStorage.getItem("leadawaker_auth")) {
-      setLocation("/subaccount/campaigns");
+      setLocation("/platform/campaigns");
     }
   }, []);
 
@@ -120,8 +120,8 @@ export default function AcceptInvite() {
       }
 
       // Redirect to CRM (tour will start automatically)
-      const isAgency = data.user?.role === "Admin" || data.user?.role === "Operator";
-      const dest = isAgency ? "/agency/campaigns" : "/subaccount/campaigns";
+      const isAgency = data.user?.role === "Owner" || data.user?.role === "Admin";
+      const dest = "/platform/campaigns";
       window.location.href = dest;
     } catch {
       setError("Network error. Please try again.");

@@ -1,0 +1,32 @@
+export default {
+  "header": {
+    "title": "Wat je ziet",
+    "subtitle": "Bekijk dode leads door je pipeline bewegen. Live."
+  },
+  "stages": {
+    "engaged": "Lead Betrokken",
+    "replied": "Lead Gereageerd",
+    "qualified": "Lead Gekwalificeerd",
+    "booked": "Lead Geboekt"
+  },
+  "timeAgo": {
+    "hoursAgo": "{{hours}}u geleden"
+  },
+  "emptyStage": "Geen leads in deze fase",
+  "leads": {
+    "l1": "Anna Bakker",
+    "l2": "Bram Jansen",
+    "l3": "Carlijn Smit",
+    "l4": "Daan van Dijk",
+    "l5": "Emma de Boer",
+    "l6": "Floris Visser"
+  },
+  "phones": {
+    "l1": "06 1234 5678",
+    "l2": "06 2345 6789",
+    "l3": "06 3456 7890",
+    "l4": "06 4567 8901",
+    "l5": "06 5678 9012",
+    "l6": "06 6789 0123"
+  }
+};

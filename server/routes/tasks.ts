@@ -1,4 +1,6 @@
 import type { Express } from "express";
+import fs from "fs";
+import path from "path";
 import { storage } from "../storage";
 import { requireAgency } from "../auth";
 import {
@@ -6,6 +8,9 @@ import {
   insertTaskSchema,
   insertTaskSubtaskSchema,
   insertTaskCategorySchema,
+  insertTaskCommentSchema,
+  insertTaskAttachmentSchema,
+  type TaskAttachment,
 } from "@shared/schema";
 import { db } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
@@ -142,6 +147,38 @@ export function registerTasksRoutes(app: Express): void {
       }
     }
 
+    // Auto-recreate recurring task when marked done
+    if (
+      updated.isRecurring &&
+      updated.recurringPeriod &&
+      updated.status === "done" &&
+      existingTask?.status !== "done"
+    ) {
+      const dueDate = updated.dueDate ? new Date(updated.dueDate) : new Date();
+      const nextDate = new Date(dueDate);
+      switch (updated.recurringPeriod) {
+        case "daily":    nextDate.setDate(nextDate.getDate() + 1); break;
+        case "weekly":   nextDate.setDate(nextDate.getDate() + 7); break;
+        case "biweekly": nextDate.setDate(nextDate.getDate() + 14); break;
+        case "monthly":  nextDate.setMonth(nextDate.getMonth() + 1); break;
+      }
+      await storage.createTask({
+        accountsId: updated.accountsId,
+        title: updated.title,
+        description: updated.description ?? undefined,
+        status: "todo",
+        priority: updated.priority,
+        taskType: updated.taskType,
+        dueDate: nextDate,
+        assignedToUserId: updated.assignedToUserId ?? undefined,
+        assigneeName: updated.assigneeName ?? undefined,
+        categoryId: updated.categoryId ?? undefined,
+        isRecurring: true,
+        recurringPeriod: updated.recurringPeriod,
+        isArchived: false,
+      });
+    }
+
     res.json(updated);
   }));
 
@@ -252,6 +289,82 @@ export function registerTasksRoutes(app: Express): void {
     if (!category) return res.status(404).json({ error: "Category not found" });
     await db.update(tasks).set({ categoryId: null }).where(eq(tasks.categoryId, id));
     await storage.deleteTaskCategory(id);
+    res.json({ success: true });
+  }));
+
+  // ─── Task Comments ──────────────────────────────────────────────────────────
+  app.get("/api/tasks/:id/comments", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    const comments = await storage.getCommentsByTaskId(taskId);
+    res.json(comments);
+  }));
+
+  app.post("/api/tasks/:id/comments", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    const parsed = insertTaskCommentSchema.safeParse({ ...req.body, taskId });
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const comment = await storage.createComment(parsed.data);
+    res.status(201).json(comment);
+  }));
+
+  app.delete("/api/task-comments/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const deleted = await storage.deleteComment(id);
+    if (!deleted) return res.status(404).json({ error: "Comment not found" });
+    res.json({ success: true });
+  }));
+
+  // ─── Task Attachments ────────────────────────────────────────────────────────
+  app.get("/api/tasks/:id/attachments", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    const attachments = await storage.getAttachmentsByTaskId(taskId);
+    res.json(attachments);
+  }));
+
+  app.post("/api/tasks/:id/attachments", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    const { fileName, fileData, mimeType, uploadedBy } = req.body;
+    if (!fileName || !fileData) return res.status(422).json({ error: "fileName and fileData required" });
+
+    const base64Match = /^data:[^;]+;base64,(.+)$/.exec(fileData);
+    const base64 = base64Match ? base64Match[1] : fileData;
+    const buffer = Buffer.from(base64, "base64");
+
+    const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "task-files", String(taskId));
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    const safeFileName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const filePath = path.join(uploadsDir, safeFileName);
+    fs.writeFileSync(filePath, buffer);
+
+    const attachment = await storage.createAttachment({
+      taskId,
+      fileName,
+      filePath,
+      fileSize: buffer.length,
+      mimeType: mimeType || null,
+      uploadedBy: uploadedBy || null,
+    });
+    res.status(201).json(attachment);
+  }));
+
+  app.get("/api/task-attachments/:id/download", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const attachment = await storage.getAttachmentById(id);
+    if (!attachment) return res.status(404).json({ error: "Attachment not found" });
+    if (!fs.existsSync(attachment.filePath)) return res.status(404).json({ error: "File not found on disk" });
+    res.setHeader("Content-Disposition", `attachment; filename="${attachment.fileName}"`);
+    if (attachment.mimeType) res.setHeader("Content-Type", attachment.mimeType);
+    fs.createReadStream(attachment.filePath).pipe(res);
+  }));
+
+  app.delete("/api/task-attachments/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const attachment = await storage.getAttachmentById(id);
+    if (!attachment) return res.status(404).json({ error: "Attachment not found" });
+    if (fs.existsSync(attachment.filePath)) {
+      try { fs.unlinkSync(attachment.filePath); } catch {}
+    }
+    await storage.deleteAttachment(id);
     res.json({ success: true });
   }));
 }

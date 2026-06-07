@@ -127,7 +127,44 @@
   },
 
   "summary": {
+    "eyebrows": {
+      "performance": "Prestaties",
+      "conversion": "Conversie",
+      "callsHandoffs": "Gesprekken & Overdrachten",
+      "live": "Live",
+      "revenue": "Omzet",
+      "aiRead": "AI-lezing",
+      "experiment": "Experiment"
+    },
+    "timeframes": {
+      "day": "Dag",
+      "week": "Week",
+      "month": "Maand",
+      "today": "Vandaag",
+      "thisWeek": "Deze week",
+      "thisMonth": "Deze maand"
+    },
+    "heatBands": {
+      "hot": "Heet",
+      "warm": "Warm",
+      "revivable": "Reactiveerbaar",
+      "cold": "Koud"
+    },
+    "aiActivity": "AI-activiteit",
+    "bumpDistribution": "Bumpverdeling van vandaag",
+    "queued": "{{count}} in wachtrij",
+    "justHappened": "Net gebeurd",
+    "noMessages": "Nog geen berichten",
+    "replied": "reageerde",
+    "sent": "bericht verzonden",
+    "next": "Volgende",
+    "todayCount": "{{count}} vandaag",
+    "noCalls": "Geen gesprekken gepland",
+    "laterThisWeek": "Later deze week",
+    "leadHeat": "Lead-temperatuur",
+    "inDatabase": "{{count}} in database",
     "keyMetrics": "Belangrijke statistieken",
+    "dailyCapacity": "Dagelijkse capaciteit",
     "leadsTargeted": "Leads bereikt",
     "messagesSent": "Berichten verzonden",
     "responsePercent": "Respons %",

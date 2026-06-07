@@ -1,0 +1,32 @@
+export default {
+  "header": {
+    "title": "O que você vê",
+    "subtitle": "Veja leads inativos avançando no seu pipeline. Ao vivo."
+  },
+  "stages": {
+    "engaged": "Lead Engajado",
+    "replied": "Lead Respondeu",
+    "qualified": "Lead Qualificado",
+    "booked": "Lead Agendado"
+  },
+  "timeAgo": {
+    "hoursAgo": "{{hours}}h atrás"
+  },
+  "emptyStage": "Nenhum lead nesta etapa",
+  "leads": {
+    "l1": "Ana Santos",
+    "l2": "Bruno Oliveira",
+    "l3": "Carla Souza",
+    "l4": "Diego Pereira",
+    "l5": "Eduarda Lima",
+    "l6": "Fernando Costa"
+  },
+  "phones": {
+    "l1": "(047) 99881-2345",
+    "l2": "(011) 98765-4321",
+    "l3": "(048) 99234-5678",
+    "l4": "(011) 97654-3210",
+    "l5": "(047) 99567-8901",
+    "l6": "(048) 98432-1098"
+  }
+};

@@ -34,7 +34,6 @@ import {
   Thermometer,
   Hash,
   Settings,
-  Paintbrush,
   ArrowLeft,
   Megaphone,
 } from "lucide-react";
@@ -719,14 +718,6 @@ function PromptDetailPanel({
         </span>
         <div className="flex items-center gap-1.5">
           <button
-            type="button"
-            onClick={onToggleGradientTester}
-            className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
-            title={t("detail.gradientTester")}
-          >
-            <Paintbrush className="h-4 w-4" />
-          </button>
-          <button
             onClick={onEdit}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 text-foreground border border-border/50 text-xs font-semibold transition-colors"
             data-testid="button-edit-selected-prompt"
@@ -834,7 +825,7 @@ function PromptDetailPanel({
                 <button
                   type="button"
                   className="text-xs px-2 py-0.5 rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors truncate max-w-[180px]"
-                  onClick={() => navigate(isAgencyView ? "/agency/campaigns" : "/subaccount/campaigns")}
+                  onClick={() => navigate("/platform/campaigns")}
                   title={t("detail.openCampaign", "Open campaigns page")}
                 >
                   {campaignName}
@@ -1007,6 +998,13 @@ export default function PromptLibraryPage() {
       return !prev;
     });
   }, [savedGradient]);
+
+  // Listen for the global gradient toggle dispatched by the nav menu button
+  useEffect(() => {
+    const handler = () => toggleGradientTester();
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [toggleGradientTester]);
 
   // Clear topbar actions (tabs are inline)
   useEffect(() => {
@@ -1249,7 +1247,7 @@ export default function PromptLibraryPage() {
             </div>
 
             {/* Prompt list */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-[3px] space-y-[3px]">
+            <div className="la-list-area">
               {error && promptLibraryData.length === 0 && !loading ? (
                 <div className="px-2">
                   <ApiErrorFallback
@@ -1301,37 +1299,7 @@ export default function PromptLibraryPage() {
           </div>
 
           {/* ── RIGHT PANEL ── prompt details ─────────────────────────── */}
-          <div className="flex flex-1 min-w-0 flex-col rounded-lg md:ml-1.5 overflow-hidden relative">
-            {/* ── Warm gradient bloom background (matching Invoices/Expenses) ── */}
-            {gradientTesterOpen ? (
-              <>
-                {gradientLayers.map(layer => {
-                  const style = layerToStyle(layer);
-                  if (!style) return null;
-                  return <div key={layer.id} className="absolute inset-0" style={style} />;
-                })}
-                {gradientDragMode && (
-                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-                )}
-              </>
-            ) : savedGradient ? (
-              <>
-                {savedGradient.map((layer: GradientLayer) => {
-                  const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
-                })}
-              </>
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-[#F8F3EB]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
-              </>
-            )}
+          <div className="flex flex-1 min-w-0 flex-col rounded-lg md:ml-[var(--panel-gap)] overflow-hidden relative">
             <div className="relative z-10 flex flex-col flex-1 min-h-0">
               {selectedPrompt ? (
                 <PromptDetailPanel
@@ -1409,9 +1377,6 @@ export default function PromptLibraryPage() {
 
           {/* Detail content */}
           <div className="flex-1 min-h-0 overflow-hidden relative">
-            <div className="absolute inset-0 bg-[#F8F3EB]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
             <div className="relative z-10 h-full overflow-y-auto">
               <PromptDetailPanel
                 prompt={selectedPrompt}

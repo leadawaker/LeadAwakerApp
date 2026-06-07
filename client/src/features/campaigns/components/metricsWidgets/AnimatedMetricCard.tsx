@@ -27,28 +27,45 @@ function useCountUp(target: number, duration = 900, trigger = 0): number {
 
 // ── AnimatedMetricCard ────────────────────────────────────────────────────────
 
-export function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger, borderColor, trendData }: {
+export function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger, borderColor, trendData, star = false }: {
   numericValue: number;
   displayValue: string;
   label: string;
   animTrigger: number;
   borderColor?: string;
   trendData?: number[];
+  /** North-star highlight — gold ring + warm gradient (matches the design's Booked card). */
+  star?: boolean;
 }) {
   const isPercent = displayValue.endsWith("%");
   const isDash = displayValue === "—";
   const animated = useCountUp(isDash ? 0 : numericValue, 900, animTrigger);
-  const display = isDash ? "—" : isPercent ? `${animated}%` : animated.toLocaleString();
+  const numberText = isDash ? "—" : isPercent ? `${animated}` : animated.toLocaleString();
   const showSparkline = trendData && trendData.length > 1;
   return (
     <div
-      className={cn("rounded-xl bg-white dark:bg-white/[0.12] p-4 md:p-8 flex flex-col items-center justify-center text-center", borderColor && "border-t-2")}
-      style={borderColor ? { borderTopColor: borderColor } : undefined}
+      className={cn("neu-raised-crisp flex flex-col")}
+      style={{
+        padding: star ? "20px 18px 16px" : "16px 18px 14px",
+        borderRadius: "var(--r-surface)",
+        position: "relative",
+        overflow: "hidden",
+        background: star ? "linear-gradient(160deg, var(--warn-tint), var(--card) 60%)" : "var(--card)",
+        boxShadow: star ? "var(--sh-raised-crisp), inset 0 0 0 1.5px rgba(196,138,47,0.5)" : undefined,
+      }}
     >
-      <div className="text-[22px] md:text-[28px] font-black text-foreground tabular-nums leading-none">{display}</div>
-      <div className="text-[10px] text-foreground/40 uppercase tracking-wider mt-1.5">{label}</div>
-      {showSparkline && (
-        <svg width="80" height="20" viewBox="0 0 80 20" className="mt-2 opacity-50">
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+        <span className="eyebrow eyebrow-sm">{label}</span>
+        {star && (
+          <span style={{ fontFamily: "var(--mono)", fontSize: 7.5, letterSpacing: "0.12em", color: "var(--stage-booked)", border: "1px solid var(--stage-booked)", borderRadius: 4, padding: "1px 5px", whiteSpace: "nowrap" }}>★ NORTH STAR</span>
+        )}
+      </div>
+      <div className="row" style={{ alignItems: "baseline", gap: 4, marginTop: 10 }}>
+        <span className="serif" style={{ fontSize: star ? 44 : 38, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{numberText}</span>
+        {isPercent && !isDash && <span style={{ fontSize: 17, color: "var(--mute)" }}>%</span>}
+      </div>
+      {showSparkline ? (
+        <svg width="100%" height="20" viewBox="0 0 80 20" preserveAspectRatio="none" style={{ marginTop: 10, color: borderColor || "var(--mute)", opacity: 0.7 }}>
           <polyline
             fill="none"
             stroke="currentColor"
@@ -69,6 +86,8 @@ export function AnimatedMetricCard({ numericValue, displayValue, label, animTrig
             })()}
           />
         </svg>
+      ) : (
+        <div style={{ marginTop: 10, height: 20 }} />
       )}
     </div>
   );

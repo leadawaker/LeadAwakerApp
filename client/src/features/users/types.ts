@@ -6,7 +6,7 @@ export interface AppUser {
   email: string | null;
   phone: string | null;
   timezone: string | null;
-  role: "Admin" | "Operator" | "Manager" | "Agent" | "Viewer" | null;
+  role: "Admin" | "Manager" | "Viewer" | null;
   status: string | null;
   avatarUrl: string | null;
   n8nWebhookUrl: string | null;

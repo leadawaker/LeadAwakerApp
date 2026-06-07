@@ -26,7 +26,28 @@
     "delete": "Delete",
     "deleteConfirm": "Delete this task?",
     "created": "Created",
-    "updated": "Updated"
+    "updated": "Updated",
+    "back": "Back",
+    "markComplete": "Mark complete",
+    "reopen": "Reopen task"
+  },
+  "relative": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday"
+  },
+  "groups": {
+    "overdue": "Overdue",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "upcoming": "Upcoming",
+    "completed": "Completed"
+  },
+  "assignee": {
+    "everyone": "Everyone"
+  },
+  "board": {
+    "empty": "Empty"
   },
   "fields": {
     "description": "Description",
@@ -46,6 +67,8 @@
     "assigneePlaceholder": "Assignee name",
     "linkedTo": "Linked To",
     "category": "Category",
+    "noCategory": "No Category",
+    "title": "Title",
     "parentTask": "Parent Task",
     "noParent": "No Parent",
     "tags": "Tags",
@@ -66,6 +89,7 @@
   "status": {
     "todo": "To Do",
     "inProgress": "In Progress",
+    "waiting": "Waiting",
     "done": "Done",
     "cancelled": "Cancelled"
   },
@@ -141,15 +165,26 @@
   },
   "views": {
     "kanban": "Kanban",
+    "swimlane": "Swimlane",
     "list": "List",
     "table": "Table",
     "simple": "Simple",
     "tree": "Tree",
     "gantt": "Gantt",
+    "schedule": "Schedule",
+    "board": "Board",
+    "agenda": "Agenda",
     "overdue": "Overdue",
     "today": "Today",
     "unscheduled": "Unscheduled",
     "noDailyTasks": "No tasks for today"
+  },
+  "filter": {
+    "all": "All",
+    "next7": "Next 7 Days",
+    "overdue": "Overdue",
+    "waiting": "Waiting",
+    "completed": "Done"
   },
   "gantt": {
     "today": "Today",

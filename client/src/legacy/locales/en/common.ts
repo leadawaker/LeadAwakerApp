@@ -1,0 +1,44 @@
+export default {
+  "nav": {
+    "home": "Home",
+    "try": "Try",
+    "about": "FAQ",
+    "login": "Login",
+    "openApp": "Open App",
+    "bookDemo": "Book a Call"
+  },
+  "footer": {
+    "company": "Company",
+    "contact": "Contact",
+    "copyright": "© {{year}} Lead Awaker. All rights reserved.",
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "cta": {
+    "bookDemo": "Book a Call",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "contactUs": "Contact Us"
+  },
+    "seo": {
+      "defaultTitle": "Lead Awaker – Wake Up Your Sales Pipeline with AI",
+      "defaultDescription": "Lead Awaker helps B2B companies reactivate cold leads and close more deals using AI-powered outreach."
+  },
+  "animation": {
+    "yourBrand": "Your Brand"
+  },
+  "bubble": {
+    "tryDemo": "Try the AI demo",
+    "chatFounder": "Speak to Gabriel",
+    "founderPrefill": "Hey Gabriel, I'd like to know more about Lead Awaker.",
+    "ariaOpen": "Open WhatsApp contact menu",
+    "ariaClose": "Close WhatsApp contact menu"
+  },
+  "deleteAction": {
+    "archive": "Archive",
+    "delete": "Delete",
+    "confirmArchive": "Archive this {{entity}}? It will be hidden from active views but can be restored later.",
+    "confirmDelete": "Permanently delete this {{entity}}? This cannot be undone."
+  }
+};

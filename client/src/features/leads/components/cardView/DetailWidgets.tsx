@@ -74,7 +74,7 @@ export function TeamWidget({ lead, onRefresh, inline }: { lead: Record<string, a
           const uAccountId = u.Accounts_id || u.accounts_id || u.account_id;
           const uid = u.id || u.Id;
           if (teamMemberIds.includes(Number(uid))) return true;
-          if (role === "Admin" || role === "Operator") return true;
+          if (role === "Admin") return true;
           if (role === "Manager" && Number(uAccountId) === Number(accountId)) return true;
           return false;
         });
@@ -103,18 +103,17 @@ export function TeamWidget({ lead, onRefresh, inline }: { lead: Record<string, a
 
   const availableToAdd = allUsers.filter((u: any) => {
     const uid = u.id || u.Id;
-    // Only users of this account (or agency-wide Admin/Operator) can be added
+    // Only users of this account (or agency-wide Admin) can be added
     const uAccountId = u.Accounts_id || u.accounts_id || u.account_id;
     const uRole = u.role || u.Role || "";
-    const isAccountMatch = Number(uAccountId) === Number(accountId) || uRole === "Admin" || uRole === "Operator";
+    const isAccountMatch = Number(uAccountId) === Number(accountId) || uRole === "Admin";
     if (!isAccountMatch) return false;
     return !users.some((existing: any) => (existing.id || existing.Id) === uid);
   });
 
   const roleColors: Record<string, { bg: string; text: string }> = {
-    Admin:    { bg: "#EDE9FE", text: "#6D28D9" },
-    Operator: { bg: "#DBEAFE", text: "#2563EB" },
-    Manager:  { bg: "#D1FAE5", text: "#065F46" },
+    Admin:   { bg: "#EDE9FE", text: "#6D28D9" },
+    Manager: { bg: "#D1FAE5", text: "#065F46" },
   };
 
   const teamContent = (
@@ -212,7 +211,7 @@ export function TeamWidget({ lead, onRefresh, inline }: { lead: Record<string, a
   if (inline) return teamContent;
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
+    <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
       {teamContent}
     </div>
   );
@@ -330,7 +329,7 @@ export function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; on
   }, []);
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 min-h-full">
+    <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-[21px] flex flex-col gap-3 min-h-full">
       {/* Header row: title + voice memo button */}
       <div className="flex items-center justify-between">
         <p className="text-[18px] font-semibold font-heading text-foreground">{t("detail.sections.notes")}</p>
@@ -479,7 +478,7 @@ export function ActivityTimeline({ lead, tagEvents }: {
   }, [interactions, tagEvents, status, lead, page]);
 
   return (
-    <div data-testid="activity-timeline" className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col h-full overflow-y-auto gap-6">
+    <div data-testid="activity-timeline" className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 md:p-8 flex flex-col h-full overflow-y-auto gap-6">
       <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">{t("activity.title")}</span>
 
       {loading ? (

@@ -67,9 +67,9 @@ export function InfoRow({
   );
 
   return (
-    <div className="flex flex-col gap-0.5 py-3 min-h-[3.5rem] border-b border-border/20 last:border-0">
-      <span className="text-[12px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-        {Icon && <Icon className="w-4 h-4 text-brand-indigo" />}
+    <div className="flex flex-col gap-1 py-3 min-h-[3.5rem] border-b border-border/20 last:border-0">
+      <span className="flex items-center gap-1.5" style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute-2)', fontWeight: 500 }}>
+        {Icon && <Icon style={{ width: 12, height: 12, color: 'var(--mute-2)', flexShrink: 0 }} />}
         {label}
       </span>
       {valueNode}

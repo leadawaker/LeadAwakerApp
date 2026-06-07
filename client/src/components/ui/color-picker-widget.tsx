@@ -202,6 +202,7 @@ function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry
         { label: "Wine — selected", id: "wine-sel",  type: "css", cssVars: ["--highlight-active", "--highlight-selected"] },
         { label: "Page Background", id: "bg",        type: "css", cssVars: ["--bg-main"] },
         { label: "Card (beige)",    id: "card",      type: "css", cssVars: ["--card", "--card-hover", "--muted", "--popover"] },
+        { label: "List Panel",      id: "panel-list", type: "css", cssVars: ["--panel-list-bg"] },
         { label: "Nav & Topbar",    id: "nav",       type: "css", cssVars: ["--sidebar-bg"] },
         { label: "Text",            id: "fg",        type: "css", cssVars: ["--foreground", "--card-foreground", "--popover-foreground", "--sidebar-foreground"] },
         { label: "Muted Text",      id: "muted-fg",  type: "css", cssVars: ["--muted-foreground"] },

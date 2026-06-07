@@ -1,0 +1,126 @@
+export default {
+  "intro": {
+    "title": "One by one, they find their way back",
+    "titleHighlight": "to you.",
+    "paragraph1": "They raised their hand once. Now go get them.",
+    "paragraph2": "We reach out on your behalf, with the right timing, the right context, and a message that feels human.",
+    "paragraph3": "That's when people respond. Not because you pushed, but because they felt understood."
+  },
+  "founder": {
+    "name": "YOUR_NAME",
+    "title": "Founder",
+    "tagline": "I build systems that earn attention.",
+    "body1": "As an AI specialist, developer, designer, and digital artist, my work is shaped by psychology, technology and aesthetics.",
+    "body2": "Meditation taught me that attention is our most valuable resource. In the digital era, it is constantly pulled in every direction, scattered across platforms, distractions, and noise. The brands that grow are the ones that know how to guide it with intention.",
+    "body3": "I built Lead Awaker to help them do exactly that."
+  },
+  "credentials": {
+    "experienceLabel": "Experience that shaped this",
+    "title": "It's not a lead problem. It's a leak problem.",
+    "subtitle": "From Oscar-winning studios to shipping AAA games. The same discipline, applied to your leads.",
+    "resultsNode": "Real results.",
+    "items": [
+      {
+        "metric": "$136M box office",
+        "label": "Warner Bros · Framestore",
+        "logoKey": "warnerbros",
+        "description": "Digital art cleared for theatrical release at an Oscar-winning VFX studio. You don't get through their pipeline unless it's ready."
+      },
+      {
+        "metric": "3 titles · 12 months",
+        "label": "Sega · Creative Assembly",
+        "logoKey": "sega",
+        "description": "Shipped three AAA games in a year at a $3.1B studio. Built systems designed to survive that pace."
+      },
+      {
+        "metric": "$52M+ revenue",
+        "label": "Embracer Group · New World Interactive",
+        "logoKey": "embracer",
+        "description": "Led the team, shipped two titles. Insurgency: Sandstorm is still active 7 years later. Nothing dropped."
+      }
+    ],
+    "recognition": "Featured artwork on ZBrush Central (Pixologic) and ArtStation. Workshop presenter at Design Week, Federal University of Rio de Janeiro. Published profile in an online design magazine."
+  },
+  "cta": {
+    "title": "See it running on your leads",
+    "quote": "I've shipped under the tightest deadlines in entertainment, then built a business where every lost lead cost me personally. That experience is baked into every campaign we run.",
+    "button": "Start on WhatsApp",
+    "waLink": "YOUR_WHATSAPP_LINK"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "categories": [
+      {
+        "title": "Results & Getting Started",
+        "items": [
+          {
+            "q": "What results can we expect?",
+            "a": "Re-engagement rates typically land between 5 and 15% in the first 30 days. The exact number depends on how fresh your leads are, how relevant your offer still is, and how well the campaign is dialed in. We don't promise miracles, but we consistently turn silent databases back into conversations."
+          },
+          {
+            "q": "How quickly can we get started?",
+            "a": "Most clients are live within a week. We set up your account, configure your messaging tone, import your leads, and run a test batch before scaling. No long onboarding process."
+          },
+          {
+            "q": "What if our leads are really old or completely cold?",
+            "a": "Some of our best results come from leads that are 6 months to 2 years old. Age isn't the problem. If the original need still exists and the outreach feels personal instead of generic, people respond. We've seen it over and over."
+          },
+          {
+            "q": "Will this work for our industry?",
+            "a": "If you sell a service or product where people express interest and then go quiet, yes. We've adapted Lead Awaker for B2B, clinics, agencies, and service businesses. During setup, we configure everything to match your terminology, your objections, and your sales process."
+          },
+          {
+            "q": "How much does it cost?",
+            "a": "Our preferred model is performance-based: you pay per booked call, so our incentives are aligned with yours. We also offer fixed-rate plans depending on your volume and setup. We'll walk you through the options on a demo call and give you a clear number. No hidden fees, no long-term lock-in."
+          }
+        ]
+      },
+      {
+        "title": "How It Works",
+        "items": [
+          {
+            "q": "What happens when a lead responds?",
+            "a": "It depends on what you want. The system can book a call straight into your calendar, hand the conversation to your sales team with full context, or keep nurturing until the lead is ready. You decide the handoff rules, and they can change anytime."
+          },
+          {
+            "q": "Is this a replacement for our sales team?",
+            "a": "No. Your team closes deals. We handle the part before that: the initial outreach, the follow-ups, the qualification. By the time a lead reaches your team, they're already warm and interested. Your people spend less time chasing and more time closing."
+          },
+          {
+            "q": "How do you avoid sounding like spam?",
+            "a": "Every message is based on where that specific lead left off. No bulk templates, no generic \"just checking in.\" The system knows what they were interested in, when they last engaged, and what makes sense to say next. People respond because it feels like a real follow-up, not a mass blast."
+          },
+          {
+            "q": "Do we need to provide scripts?",
+            "a": "Optional. If you have conversations that work well, share them and we'll use that as a foundation. If not, we'll craft the messaging based on your offer, your audience, and your tone. Either way, you review everything before it goes live."
+          },
+          {
+            "q": "Can we pause or adjust campaigns mid-run?",
+            "a": "Yes. Pause, tweak the messaging, change targeting, update qualification rules. All without losing the context of conversations already in progress."
+          }
+        ]
+      },
+      {
+        "title": "Trust & Compliance",
+        "items": [
+          {
+            "q": "What channels do you use?",
+            "a": "WhatsApp, SMS, Instagram, or other messaging platforms depending on what makes sense for your audience. We help you pick the right channel during setup and handle the technical side."
+          },
+          {
+            "q": "Can we review messages before they go out?",
+            "a": "Absolutely. Before any campaign launches, you see the messaging, the tone, the qualification logic. Nothing goes live without your sign-off."
+          },
+          {
+            "q": "How do you handle GDPR and compliance?",
+            "a": "Opt-outs are respected instantly. The system is built with consent-aware logic and respectful pacing. You remain in control of your lead data and the legal basis for contact. We execute campaigns according to your instructions and applicable regulations."
+          },
+          {
+            "q": "Where is our data stored?",
+            "a": "Your data stays on secure, dedicated infrastructure. We don't share it, sell it, or use it to train models. You own your leads, your conversations, and your results."
+          }
+        ]
+      }
+    ]
+  }
+};

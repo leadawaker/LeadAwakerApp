@@ -1,0 +1,33 @@
+export default {
+  "contact": {
+    "title": "Lead #315",
+    "name": "Jack Johnson",
+    "statusLabel": "Status",
+    "statusNotEngaged": "Not Engaged",
+    "statusEngaging": "Engaging Lead",
+    "statusEngaged": "Lead Engaged"
+  },
+  "agent": {
+    "title": "AI Agent",
+    "model": "GPT-5.5",
+    "outputLabel": "Output",
+    "message1": "So John,",
+    "message2": "Still up for the call?"
+  },
+  "guardrails": {
+    "title": "Guardrails",
+    "subtitle": "SECURITY",
+    "statusLabel": "Status",
+    "checks": [
+      "On-topic sales",
+      "Clean content",
+      "Clean language",
+      "No personal data",
+      "No credentials",
+      "No unauthorized links",
+      "No Data Leakage"
+    ],
+    "noViolations": "No violations",
+    "messageSent": "Message Sent"
+  }
+};

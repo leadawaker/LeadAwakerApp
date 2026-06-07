@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Trash2, Check, Plus, ChevronUp, ChevronDown, Smile } from "lucide-react";
+import { X, Trash2, Check, User, ChevronDown } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import {
   Popover,
@@ -8,12 +8,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn, relativeTime } from "@/lib/utils";
-import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks, useTaskCategories } from "../api/tasksApi";
-import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
+import { useTasks, useUpdateTask, useDeleteTask, useTaskCategories, useAccountUsers, useCreateTask } from "../api/tasksApi";
+import { CommentsSection, AttachmentsSection } from "./TaskDetailSections";
+import { STATUS_OPTIONS, PRIORITY_OPTIONS } from "../types";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
-import type { TaskSubtask } from "@shared/schema";
 
-// ── i18n key maps for data-as-labels ──────────────────────────────────────────
+// ── i18n key maps ─────────────────────────────────────────────────────────────
 const STATUS_I18N_KEY: Record<string, string> = {
   todo: "status.todo",
   in_progress: "status.inProgress",
@@ -28,53 +28,25 @@ const PRIORITY_I18N_KEY: Record<string, string> = {
   urgent: "priority.urgent",
 };
 
-const TYPE_I18N_KEY: Record<string, string> = {
-  follow_up: "taskType.followUp",
-  call: "taskType.call",
-  review: "taskType.review",
-  admin: "taskType.admin",
-  custom: "taskType.custom",
-};
-
-const EMOJI_OPTIONS = [
-  "📋", "📁", "📌", "⭐", "🎯", "🔥", "💡", "🚀",
-  "📊", "🎨", "🔧", "📝", "💬", "📅", "🏷️", "✅",
-  "🐛", "🔒", "📦", "🏠", "💰", "📞", "🎉", "⚡",
-  "🌐", "🛠️", "📱", "🖥️", "👤", "🤝", "📈", "🔔",
-];
-
-// ── Props ──────────────────────────────────────────────────────────────────────
-
 interface TaskDetailPanelProps {
   taskId: number;
   onClose: () => void;
 }
-
-// ── Expand-on-hover button classes (§28) ──────────────────────────────────────
-const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
-
-// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProps) {
   const { t } = useTranslation("tasks");
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
+  const createMutation = useCreateTask();
   const { data: categories = [] } = useTaskCategories();
-  const { data: subtasks = [] } = useSubtasks(taskId);
-  const createSubtaskMutation = useCreateSubtask();
-  const updateSubtaskMutation = useUpdateSubtask();
-  const deleteSubtaskMutation = useDeleteSubtask();
-  const reorderMutation = useReorderSubtasks();
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const { data: users = [] } = useAccountUsers();
 
   const task = useMemo(
     () => (tasks as any[])?.find((t: any) => t.id === taskId),
     [tasks, taskId],
   );
 
-  // ── Publish entity data for AI chat context ──────────────────────────────
   const publishEntity = usePublishEntityData();
   useEffect(() => {
     if (!task) return;
@@ -91,13 +63,12 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
         taskType: task.task_type,
         dueDate: task.due_date,
         tags: task.tags,
-        parentTaskId: task.parent_task_id,
       },
       updatedAt: Date.now(),
     });
   }, [publishEntity, task]);
 
-  // ── Local form state ────────────────────────────────────────────────────────
+  // ── Local form state ──────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("todo");
@@ -105,11 +76,12 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const [taskType, setTaskType] = useState("admin");
   const [dueDate, setDueDate] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [parentTaskId, setParentTaskId] = useState<number | null>(null);
   const [emoji, setEmoji] = useState("");
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
-  const [estimateHours, setEstimateHours] = useState("");
-  const [estimateMinutes, setEstimateMinutes] = useState("");
+  const [assigneeName, setAssigneeName] = useState<string | null>(null);
+  const [assigneeOpen, setAssigneeOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const descRef = useRef<HTMLTextAreaElement>(null);
 
   // Initialize form from task data
   useEffect(() => {
@@ -121,14 +93,19 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     setTaskType(task.taskType ?? "admin");
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "");
     setCategoryId(task.categoryId ?? null);
-    setParentTaskId(task.parentTaskId ?? null);
     setEmoji(task.emoji ?? "");
-    const te = task.timeEstimate ?? 0;
-    setEstimateHours(te >= 60 ? String(Math.floor(te / 60)) : "");
-    setEstimateMinutes(te % 60 > 0 ? String(te % 60) : "");
+    setAssigneeName(task.assigneeName ?? null);
   }, [task]);
 
-  // ── Dirty tracking ──────────────────────────────────────────────────────────
+  // Auto-resize description textarea
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(80, el.scrollHeight)}px`;
+  }, [description]);
+
+  // ── Dirty tracking ────────────────────────────────────────────────────────
   const isDirty = useMemo(() => {
     if (!task) return false;
     const origDue = task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "";
@@ -140,39 +117,10 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
       taskType !== (task.taskType ?? "admin") ||
       dueDate !== origDue ||
       categoryId !== (task.categoryId ?? null) ||
-      parentTaskId !== (task.parentTaskId ?? null) ||
       emoji !== (task.emoji ?? "") ||
-      (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) !== (task.timeEstimate ?? 0)
+      assigneeName !== (task.assigneeName ?? null)
     );
-  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId, emoji, estimateHours, estimateMinutes]);
-
-  // ── Handlers ────────────────────────────────────────────────────────────────
-
-  const handleAddSubtask = useCallback(() => {
-    const trimmed = newSubtaskTitle.trim();
-    if (!trimmed || !task) return;
-    createSubtaskMutation.mutate({ taskId: task.id, data: { title: trimmed } });
-    setNewSubtaskTitle("");
-  }, [newSubtaskTitle, task, createSubtaskMutation]);
-
-  const handleToggleSubtask = useCallback((sub: TaskSubtask) => {
-    updateSubtaskMutation.mutate({
-      id: sub.id, taskId, data: { isCompleted: !sub.isCompleted },
-    });
-  }, [taskId, updateSubtaskMutation]);
-
-  const handleDeleteSubtask = useCallback((subId: number) => {
-    deleteSubtaskMutation.mutate({ id: subId, taskId });
-  }, [taskId, deleteSubtaskMutation]);
-
-  const handleMoveSubtask = useCallback((index: number, direction: "up" | "down") => {
-    if (!subtasks.length) return;
-    const ids = subtasks.map((s) => s.id);
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= ids.length) return;
-    [ids[index], ids[target]] = [ids[target], ids[index]];
-    reorderMutation.mutate({ taskId, subtaskIds: ids });
-  }, [subtasks, taskId, reorderMutation]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId, emoji, assigneeName]);
 
   const handleSave = () => {
     if (!task) return;
@@ -186,9 +134,8 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
         taskType,
         dueDate: dueDate ? new Date(dueDate) : null,
         categoryId,
-        parentTaskId,
         emoji: emoji || null,
-        timeEstimate: (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) || null,
+        assigneeName,
       },
     });
   };
@@ -198,12 +145,27 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     deleteMutation.mutate(task.id, { onSuccess: onClose });
   };
 
-  // ── Loading / not found ─────────────────────────────────────────────────────
+  const handleClone = () => {
+    if (!task) return;
+    createMutation.mutate({
+      title: (task.title ?? t("card.newTask")) + " (copy)",
+      description: task.description ?? null,
+      accountsId: task.accountsId,
+      accountName: task.accountName ?? "",
+      campaignName: task.campaignName ?? null,
+      leadName: task.leadName ?? null,
+      status: task.status ?? "todo",
+      priority: task.priority ?? "medium",
+      taskType: task.taskType ?? "admin",
+      dueDate: task.dueDate ? new Date(task.dueDate) : null,
+      assigneeName: task.assigneeName ?? null,
+    });
+  };
 
+  // ── Not found ─────────────────────────────────────────────────────────────
   if (!task) {
     return (
       <div className="relative flex flex-col h-full overflow-hidden">
-        <div className="absolute inset-0 bg-popover dark:bg-background" />
         <div className="relative flex items-center gap-1 px-4 pt-6 pb-4 shrink-0">
           <div className="flex-1" />
           <IconBtn onClick={onClose}><X className="h-4 w-4" /></IconBtn>
@@ -215,131 +177,102 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     );
   }
 
-  // ── Shared field styles ─────────────────────────────────────────────────────
-  const inputCls = "w-full h-9 px-3 rounded-lg bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[13px] outline-none focus:border-brand-indigo/50 transition-colors";
+  // Inset fields on the bone ground — recessed neumorphic look.
+  const inputCls = "w-full h-9 px-3 rounded-md bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[13px] text-[var(--ink)] outline-none transition-shadow";
   const selectCls = inputCls;
-  const labelCls = "text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+  const labelCls = "text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--mute-2)]";
+
+  // Assignee initials for display
+  const assigneeInitials = assigneeName
+    ? assigneeName.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+    : null;
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="task-detail-panel">
 
-      {/* Warm gradient background (matches AccountDetailView) */}
-      <div className="absolute inset-0 bg-popover dark:bg-background" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_123%_at_78%_83%,rgba(219,234,254,0.7)_0%,transparent_69%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,rgba(224,231,255,0.6)_5%,transparent_30%)] dark:opacity-[0.08]" />
-
       {/* ── Header ── */}
       <div className="relative shrink-0">
-        <div className="px-4 pt-6 pb-4 space-y-3 max-w-[1386px] w-full mr-auto">
+        <div className="px-5 pt-5 pb-3">
           {/* Toolbar row */}
-          <div className="flex items-center gap-1">
-            <div className="flex-1 min-w-0" />
-            {/* Delete */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className={cn(xBase, "hover:max-w-[100px]", "border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600")} title={t("detail.delete")}>
-                  <Trash2 className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("detail.delete")}</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-3" side="bottom">
-                <p className="text-[12px] mb-2">{t("detail.deleteConfirm")}</p>
-                <div className="flex gap-2">
-                  <button onClick={handleDelete} className="px-3 h-8 rounded-lg bg-red-500 text-white text-[12px] font-medium">{t("detail.delete")}</button>
-                </div>
-              </PopoverContent>
-            </Popover>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex-1 min-w-0">
+              <input
+                className="w-full text-xl font-semibold font-heading text-foreground bg-transparent outline-none placeholder:text-foreground/30"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t("create.taskTitle")}
+              />
+            </div>
             {/* Save */}
             <button
               onClick={handleSave}
               disabled={!isDirty}
-              className={cn(xBase, "hover:max-w-[80px]", isDirty ? "border-brand-indigo text-brand-indigo" : "border-black/[0.125] text-foreground/30 cursor-not-allowed")}
               title={t("detail.save")}
+              className={cn("la-btn shrink-0", isDirty ? "la-btn--wine" : "la-btn--soft")}
+              style={!isDirty ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
             >
-              <Check className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("detail.save")}</span>
+              <Check className="h-3.5 w-3.5 shrink-0" />
+              {t("detail.save")}
             </button>
+            {/* Clone */}
+            <button onClick={handleClone} title="Clone task" className="la-btn la-btn--soft shrink-0">
+              Clone
+            </button>
+            {/* Delete */}
+            <Popover open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+              <PopoverTrigger asChild>
+                <button title={t("detail.delete")} className="la-btn la-btn--soft la-btn--icon shrink-0" style={{ color: "var(--stage-lost)" }}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3 glass-strong border-none" side="bottom">
+                <p className="text-[12px] mb-2 text-[var(--ink)]">{t("detail.deleteConfirm")}</p>
+                <button onClick={handleDelete} className="la-btn la-btn--wine" style={{ background: "var(--stage-lost)" }}>{t("detail.delete")}</button>
+              </PopoverContent>
+            </Popover>
             {/* Close */}
             <IconBtn onClick={onClose}><X className="h-4 w-4" /></IconBtn>
           </div>
-
-          {/* Title — large, editable */}
-          <input
-            className="w-full text-xl font-semibold font-heading text-foreground bg-transparent outline-none placeholder:text-foreground/30"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t("create.taskTitle")}
-          />
         </div>
       </div>
 
-      {/* ── Scrollable body ── */}
-      <div className="relative flex-1 overflow-y-auto px-4 pb-6">
-        <div className="flex flex-col gap-4 max-w-[1386px] w-full mr-auto">
+      {/* ── Two-column body ── */}
+      <div className="relative flex-1 overflow-y-auto">
+        <div className="flex gap-0 min-h-full">
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className={labelCls}>{t("fields.description")}</label>
-            <textarea
-              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[13px] resize-none outline-none focus:border-brand-indigo/50 transition-colors"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("fields.descriptionPlaceholder")}
-            />
-          </div>
+          {/* ── Left: description + comments + attachments ── */}
+          <div className="flex-1 min-w-0 px-5 pb-6 flex flex-col gap-5 border-r border-border/20">
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label className={labelCls}>{t("fields.description")}</label>
+              <textarea
+                ref={descRef}
+                className="w-full px-3 py-2.5 rounded-md bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[14px] text-[var(--ink)] resize-none outline-none transition-shadow overflow-hidden leading-relaxed"
+                style={{ minHeight: "80px" }}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("fields.descriptionPlaceholder")}
+              />
+            </div>
 
-          {/* Emoji picker */}
-          <div className="space-y-1.5">
-            <label className={labelCls}>{t("fields.emoji")}</label>
-            <div className="flex items-center gap-2">
-              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "h-9 px-3 rounded-lg border border-border/30 text-[13px] flex items-center gap-2 transition-colors hover:border-brand-indigo/50",
-                      emoji ? "bg-white/60 dark:bg-white/[0.10]" : "bg-white/60 dark:bg-white/[0.10] text-muted-foreground"
-                    )}
-                    data-testid="task-edit-emoji-trigger"
-                  >
-                    {emoji ? <span className="text-lg">{emoji}</span> : <Smile className="h-4 w-4" />}
-                    <span>{emoji ? t("fields.changeEmoji") : t("fields.pickEmoji")}</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-2" side="bottom" align="start">
-                  <div className="grid grid-cols-8 gap-1" data-testid="task-emoji-grid">
-                    {EMOJI_OPTIONS.map((e) => (
-                      <button
-                        key={e}
-                        type="button"
-                        onClick={() => { setEmoji(e); setEmojiPickerOpen(false); }}
-                        className={cn(
-                          "h-8 w-8 rounded-md flex items-center justify-center text-lg hover:bg-foreground/[0.06] transition-colors",
-                          emoji === e && "bg-brand-indigo/10 ring-1 ring-brand-indigo/30"
-                        )}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-              {emoji && (
-                <button
-                  type="button"
-                  onClick={() => setEmoji("")}
-                  className="h-9 px-2 rounded-lg text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-                  data-testid="task-edit-emoji-clear"
-                >
-                  {t("fields.clearEmoji")}
-                </button>
-              )}
+            {/* Comments */}
+            <CommentsSection taskId={taskId} />
+
+            {/* Attachments */}
+            <AttachmentsSection taskId={taskId} />
+
+            {/* Timestamps */}
+            <div className="text-[11px] text-muted-foreground pt-2 space-y-1 border-t border-border/20">
+              <p>{t("detail.created")} {relativeTime(task.createdAt as unknown as string)}</p>
+              <p>{t("detail.updated")} {relativeTime(task.updatedAt as unknown as string)}</p>
             </div>
           </div>
 
-          {/* Status + Priority — side by side */}
-          <div className="flex gap-3">
-            <div className="flex-1 space-y-1.5">
+          {/* ── Right: all controls ── */}
+          <div className="w-64 shrink-0 px-4 pt-2 pb-6 flex flex-col gap-4">
+
+            {/* Status */}
+            <div className="space-y-1.5">
               <label className={labelCls}>{t("fields.status")}</label>
               <select className={selectCls} value={status} onChange={(e) => setStatus(e.target.value)}>
                 {STATUS_OPTIONS.map((o) => (
@@ -347,7 +280,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 ))}
               </select>
             </div>
-            <div className="flex-1 space-y-1.5">
+
+            {/* Priority */}
+            <div className="space-y-1.5">
               <label className={labelCls}>{t("fields.priority")}</label>
               <select className={selectCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
                 {PRIORITY_OPTIONS.map((o) => (
@@ -355,19 +290,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 ))}
               </select>
             </div>
-          </div>
 
-          {/* Type + Due Date — side by side */}
-          <div className="flex gap-3">
-            <div className="flex-1 space-y-1.5">
-              <label className={labelCls}>{t("fields.type")}</label>
-              <select className={selectCls} value={taskType} onChange={(e) => setTaskType(e.target.value)}>
-                {TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{t(TYPE_I18N_KEY[o.value] ?? o.value)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1 space-y-1.5">
+            {/* Due Date */}
+            <div className="space-y-1.5">
               <label className={labelCls}>{t("fields.dueDate")}</label>
               <input
                 type="datetime-local"
@@ -376,223 +301,133 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
-          </div>
 
-          {/* Time estimate — hours + minutes */}
-          <div className="space-y-1.5">
-            <label className={labelCls}>{t("fields.timeEstimate")}</label>
-            <div className="flex gap-2 items-center">
-              <input
-                type="number"
-                min="0"
-                className={cn(inputCls, "w-20")}
-                value={estimateHours}
-                onChange={(e) => setEstimateHours(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="0"
-                data-testid="task-edit-estimate-hours"
-              />
-              <span className="text-[12px] text-muted-foreground">{t("fields.hours")}</span>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                className={cn(inputCls, "w-20")}
-                value={estimateMinutes}
-                onChange={(e) => setEstimateMinutes(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="0"
-                data-testid="task-edit-estimate-minutes"
-              />
-              <span className="text-[12px] text-muted-foreground">{t("fields.minutes")}</span>
+            {/* Category */}
+            <div className="space-y-1.5">
+              <label className={labelCls}>{t("fields.category")}</label>
+              <select
+                className={selectCls}
+                value={categoryId ?? ""}
+                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">{t("categories.noCategory")}</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          {/* Category */}
-          <div className="space-y-1.5">
-            <label className={labelCls}>{t("fields.category")}</label>
-            <select
-              className={selectCls}
-              value={categoryId ?? ""}
-              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
-              data-testid="task-edit-category"
-            >
-              <option value="">{t("categories.noCategory")}</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ${c.name}` : c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Parent task */}
-          <div className="space-y-1.5">
-            <label className={labelCls}>{t("fields.parentTask")}</label>
-            <select
-              className={selectCls}
-              value={parentTaskId ?? ""}
-              onChange={(e) => setParentTaskId(e.target.value ? Number(e.target.value) : null)}
-              data-testid="task-edit-parent"
-            >
-              <option value="">{t("fields.noParent")}</option>
-              {(tasks as any[])?.filter((tk: any) => tk.id !== taskId).map((tk: any) => (
-                <option key={tk.id} value={tk.id}>{tk.title}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Assignee (read-only) */}
-          {task.assigneeName && (
+            {/* Assignee — user picker */}
             <div className="space-y-1.5">
               <label className={labelCls}>{t("fields.assignee")}</label>
-              <div className="flex items-center gap-2">
-                <span className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20">
-                  {task.assigneeName.split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()}
-                </span>
-                <span className="text-[13px] text-foreground/80">{task.assigneeName}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Linked entities */}
-          {(task.accountName || task.campaignName || task.leadName) && (
-            <div className="space-y-1.5">
-              <label className={labelCls}>{t("fields.linkedTo")}</label>
-              <div className="flex flex-wrap gap-1.5">
-                {task.accountName && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-foreground/[0.04] border border-foreground/[0.06]">
-                    {t("linked.account")} {task.accountName}
-                  </span>
-                )}
-                {task.campaignName && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-foreground/[0.04] border border-foreground/[0.06]">
-                    {t("linked.campaign")} {task.campaignName}
-                  </span>
-                )}
-                {task.leadName && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-foreground/[0.04] border border-foreground/[0.06]">
-                    {t("linked.lead")} {task.leadName}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Sub-tasks checklist */}
-          <div className="space-y-2">
-            <label className={labelCls}>{t("fields.subtasks", "Sub-tasks")}</label>
-            {subtasks.length > 0 && (
-              <ul className="space-y-1" data-testid="subtask-list">
-                {subtasks.map((sub, idx) => (
-                  <li
-                    key={sub.id}
-                    className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-foreground/[0.03] transition-colors"
-                    data-testid={`subtask-${sub.id}`}
+              <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
+                <PopoverTrigger asChild>
+                  <button className={cn(inputCls, "flex items-center gap-2 cursor-pointer text-left")}>
+                    {assigneeName ? (
+                      <>
+                        <span className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 shrink-0">
+                          {assigneeInitials}
+                        </span>
+                        <span className="flex-1 truncate text-[13px]">{assigneeName}</span>
+                      </>
+                    ) : (
+                      <>
+                        <User className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                        <span className="text-muted-foreground/50 text-[13px]">Unassigned</span>
+                      </>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/40 ml-auto shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-1 glass-strong border-none" side="bottom" align="start">
+                  <button
+                    onClick={() => { setAssigneeName(null); setAssigneeOpen(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors",
+                      !assigneeName ? "bg-muted font-medium" : "hover:bg-muted/50"
+                    )}
                   >
-                    {/* Checkbox */}
-                    <button
-                      onClick={() => handleToggleSubtask(sub)}
-                      className={cn(
-                        "h-4 w-4 rounded border shrink-0 flex items-center justify-center transition-colors",
-                        sub.isCompleted
-                          ? "bg-brand-indigo border-brand-indigo text-white"
-                          : "border-foreground/20 hover:border-brand-indigo/50"
-                      )}
-                      title={sub.isCompleted ? t("subtask.uncheck", "Uncheck") : t("subtask.check", "Check")}
-                    >
-                      {sub.isCompleted && <Check className="h-3 w-3" />}
-                    </button>
-
-                    {/* Title */}
-                    <span className={cn(
-                      "flex-1 text-[13px] min-w-0 truncate",
-                      sub.isCompleted && "line-through text-muted-foreground"
-                    )}>
-                      {sub.title}
-                    </span>
-
-                    {/* Move up/down */}
-                    <button
-                      onClick={() => handleMoveSubtask(idx, "up")}
-                      disabled={idx === 0}
-                      className={cn(
-                        "h-6 w-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
-                        idx === 0 ? "text-muted-foreground/30 cursor-not-allowed" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
-                      )}
-                      title={t("subtask.moveUp", "Move up")}
-                    >
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleMoveSubtask(idx, "down")}
-                      disabled={idx === subtasks.length - 1}
-                      className={cn(
-                        "h-6 w-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
-                        idx === subtasks.length - 1 ? "text-muted-foreground/30 cursor-not-allowed" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
-                      )}
-                      title={t("subtask.moveDown", "Move down")}
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-
-                    {/* Delete */}
-                    <button
-                      onClick={() => handleDeleteSubtask(sub.id)}
-                      className="h-6 w-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      title={t("subtask.delete", "Delete sub-task")}
-                      data-testid={`delete-subtask-${sub.id}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* Add new subtask */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                className="flex-1 h-8 px-3 rounded-lg bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[13px] outline-none focus:border-brand-indigo/50 transition-colors placeholder:text-foreground/30"
-                value={newSubtaskTitle}
-                onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleAddSubtask(); }}
-                placeholder={t("subtask.addPlaceholder", "Add a sub-task...")}
-                data-testid="add-subtask-input"
-              />
-              <button
-                onClick={handleAddSubtask}
-                disabled={!newSubtaskTitle.trim()}
-                className={cn(
-                  "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                  newSubtaskTitle.trim()
-                    ? "bg-brand-indigo text-white hover:bg-brand-indigo/90"
-                    : "bg-foreground/[0.04] text-foreground/20 cursor-not-allowed"
-                )}
-                title={t("subtask.add", "Add")}
-                data-testid="add-subtask-btn"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    Unassigned
+                  </button>
+                  {users.map((u) => {
+                    const name = u.fullName1 || u.email || "";
+                    if (!name) return null;
+                    const initials = name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+                    return (
+                      <button
+                        key={u.id}
+                        onClick={() => { setAssigneeName(name); setAssigneeOpen(false); }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors",
+                          assigneeName === name ? "bg-muted font-medium" : "hover:bg-muted/50"
+                        )}
+                      >
+                        <span className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 shrink-0">
+                          {initials}
+                        </span>
+                        <span className="truncate">{name}</span>
+                      </button>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
             </div>
 
-            {/* Progress indicator */}
-            {subtasks.length > 0 && (
-              <div className="flex items-center gap-2 pt-1">
-                <div className="flex-1 h-1.5 rounded-full bg-foreground/[0.06] overflow-hidden">
-                  <div
-                    className="h-full bg-brand-indigo rounded-full transition-all duration-300"
-                    style={{ width: `${(subtasks.filter((s) => s.isCompleted).length / subtasks.length) * 100}%` }}
-                  />
+            {/* Recurring */}
+            <div className="flex items-center gap-3 py-1">
+              <span className="text-[12px] text-muted-foreground shrink-0">Recurring</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => updateMutation.mutate({ id: taskId, data: { isRecurring: !task.isRecurring } })}
+                  className={cn(
+                    "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200",
+                    task.isRecurring ? "bg-brand-indigo" : "bg-foreground/20"
+                  )}
+                >
+                  <span className={cn(
+                    "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 mt-0.5",
+                    task.isRecurring ? "translate-x-4" : "translate-x-0.5"
+                  )} />
+                </button>
+                {task.isRecurring && (
+                  <select
+                    value={task.recurringPeriod ?? "weekly"}
+                    onChange={(e) => updateMutation.mutate({ id: taskId, data: { recurringPeriod: e.target.value } })}
+                    className="text-[12px] border-none rounded-md px-2 py-1.5 bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] text-[var(--ink)] outline-none"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Every 2 weeks</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                )}
+              </div>
+            </div>
+
+            {/* Linked entities */}
+            {(task.accountName || task.campaignName || task.leadName) && (
+              <div className="space-y-1.5">
+                <label className={labelCls}>{t("fields.linkedTo")}</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {task.accountName && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-foreground/[0.04] border border-foreground/[0.06]">
+                      {t("linked.account")} {task.accountName}
+                    </span>
+                  )}
+                  {task.campaignName && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-foreground/[0.04] border border-foreground/[0.06]">
+                      {t("linked.campaign")} {task.campaignName}
+                    </span>
+                  )}
+                  {task.leadName && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-foreground/[0.04] border border-foreground/[0.06]">
+                      {t("linked.lead")} {task.leadName}
+                    </span>
+                  )}
                 </div>
-                <span className="text-[11px] text-muted-foreground shrink-0">
-                  {subtasks.filter((s) => s.isCompleted).length}/{subtasks.length}
-                </span>
               </div>
             )}
-          </div>
-
-          {/* Timestamps */}
-          <div className="text-[11px] text-muted-foreground pt-4 space-y-1 border-t border-border/20 mt-2">
-            <p>{t("detail.created")} {relativeTime(task.createdAt as unknown as string)}</p>
-            <p>{t("detail.updated")} {relativeTime(task.updatedAt as unknown as string)}</p>
           </div>
         </div>
       </div>

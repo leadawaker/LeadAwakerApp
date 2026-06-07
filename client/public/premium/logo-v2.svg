@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" width="375" height="65" viewBox="15 165 375 65">
 <defs>
+<filter id="lead-shadow" x="-10%" y="-10%" width="130%" height="130%">
+<feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#3d0905" flood-opacity="0.55"/>
+</filter>
 <clipPath id="clip_1">
 <path transform="matrix(.24,0,0,.24,0,0)" d="M0 0H1562.5V1562.5H0Z" clip-rule="evenodd"></path>
 </clipPath>
@@ -99,10 +102,10 @@
 <g clip-path="url(#clip_3)">
 <g>
 <g clip-path="url(#clip_4)">
-<use data-text="L" xlink:href="#font_5_12" transform="matrix(58.74683,0,0,-58.74683,15.281352,214.55463)" fill="#ffffff"></use>
-<use data-text="E" xlink:href="#font_5_6" transform="matrix(58.74683,0,0,-58.74683,50.584138,214.55463)" fill="#ffffff"></use>
-<use data-text="A" xlink:href="#font_5_2" transform="matrix(58.74683,0,0,-58.74683,88.0603,214.55463)" fill="#ffffff"></use>
-<use data-text="D" xlink:href="#font_5_5" transform="matrix(58.74683,0,0,-58.74683,136.52086,214.55463)" fill="#ffffff"></use>
+<use data-text="L" xlink:href="#font_5_12" transform="matrix(58.74683,0,0,-58.74683,15.281352,214.55463)" fill="#ffffff" filter="url(#lead-shadow)"></use>
+<use data-text="E" xlink:href="#font_5_6" transform="matrix(58.74683,0,0,-58.74683,50.584138,214.55463)" fill="#ffffff" filter="url(#lead-shadow)"></use>
+<use data-text="A" xlink:href="#font_5_2" transform="matrix(58.74683,0,0,-58.74683,88.0603,214.55463)" fill="#ffffff" filter="url(#lead-shadow)"></use>
+<use data-text="D" xlink:href="#font_5_5" transform="matrix(58.74683,0,0,-58.74683,136.52086,214.55463)" fill="#ffffff" filter="url(#lead-shadow)"></use>
 </g>
 </g>
 <g clip-path="url(#clip_19)">

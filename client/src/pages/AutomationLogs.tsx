@@ -66,7 +66,7 @@ export default function AutomationLogsPage() {
   const { t } = useTranslation("automation");
   const { currentAccountId, isAgencyView } = useWorkspace();
   const [, navigate] = useLocation();
-  const base = isAgencyView ? "/agency" : "/subaccount";
+  const base = "/platform";
 
   // ── Expand-on-hover button constants ─────────────────────────────────────
   const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
@@ -165,7 +165,7 @@ export default function AutomationLogsPage() {
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <CrmShell>
-      <div className="flex flex-col h-full" data-testid="page-automation-logs">
+      <div className="flex flex-col h-full pt-4" data-testid="page-automation-logs">
         <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
           <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 

@@ -29,22 +29,22 @@ import {
 
 /** Matches the hardcoded CSS fallback gradients for the campaigns detail page */
 const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
-  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
-  { id: 1, label: "Yellow corner TL", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 6, posY: 5, colorStops: [
-    { color: "#fff8c6", opacity: 1, position: 0 },
-    { color: "#fff8c6", opacity: 0, position: 30 },
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#FBF8F2", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  { id: 1, label: "Bone corner TL", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 6, posY: 5, colorStops: [
+    { color: "#F5EEE0", opacity: 1, position: 0 },
+    { color: "#F5EEE0", opacity: 0, position: 30 },
   ]},
-  { id: 2, label: "Red glow BL", enabled: true, type: "radial", ellipseW: 103, ellipseH: 130, posX: 35, posY: 85, colorStops: [
-    { color: "#ff8686", opacity: 0.4, position: 0 },
-    { color: "#ff8686", opacity: 0, position: 69 },
+  { id: 2, label: "Wine glow BL", enabled: true, type: "radial", ellipseW: 103, ellipseH: 130, posX: 35, posY: 85, colorStops: [
+    { color: "rgba(150,80,100,0.3)", opacity: 0.4, position: 0 },
+    { color: "rgba(150,80,100,0.3)", opacity: 0, position: 69 },
   ]},
-  { id: 3, label: "Gold corner TL", enabled: true, type: "radial", ellipseW: 52, ellipseH: 48, posX: 0, posY: 0, colorStops: [
-    { color: "#fff6ba", opacity: 1, position: 5 },
-    { color: "#fff6ba", opacity: 0, position: 30 },
+  { id: 3, label: "Warm corner TL", enabled: true, type: "radial", ellipseW: 52, ellipseH: 48, posX: 0, posY: 0, colorStops: [
+    { color: "#EFE4CF", opacity: 1, position: 5 },
+    { color: "#EFE4CF", opacity: 0, position: 30 },
   ]},
-  { id: 4, label: "Peach center-right", enabled: true, type: "radial", ellipseW: 80, ellipseH: 102, posX: 78, posY: 50, colorStops: [
-    { color: "#ffc2a5", opacity: 0.6, position: 0 },
-    { color: "#ffc2a5", opacity: 0, position: 66 },
+  { id: 4, label: "Warm peach center-right", enabled: true, type: "radial", ellipseW: 80, ellipseH: 102, posX: 78, posY: 50, colorStops: [
+    { color: "rgba(200,160,140,0.5)", opacity: 0.6, position: 0 },
+    { color: "rgba(200,160,140,0.5)", opacity: 0, position: 66 },
   ]},
 ];
 
@@ -82,8 +82,8 @@ export interface CampaignDetailViewProps {
   filterAccount?: string;
   onFilterAccountChange?: (a: string) => void;
   isFilterActive?: boolean;
-  showDemoCampaigns?: boolean;
-  onShowDemoCampaignsChange?: (v: boolean) => void;
+  showDemoCampaigns?: boolean | null;
+  onShowDemoCampaignsChange?: (v: boolean | null) => void;
   groupBy?: CampaignGroupBy;
   onGroupByChange?: (v: CampaignGroupBy) => void;
   isGroupNonDefault?: boolean;
@@ -279,6 +279,13 @@ export function CampaignDetailView({
     setGradientTesterOpen(prev => !prev);
   }, [gradientTesterOpen]);
 
+  // Listen for the global gradient toggle dispatched by the nav menu button
+  useEffect(() => {
+    const handler = () => toggleGradientTester();
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [toggleGradientTester]);
+
   // ── Sticker / Profile image state ─────────────────────────────────────────
   const [selectedStickerSlug, setSelectedStickerSlug] = useState<string | null>((campaign as any).campaign_sticker ?? null);
   const [hueValue, setHueValue] = useState<number>((campaign as any).campaign_hue ?? 0);
@@ -376,37 +383,18 @@ export function CampaignDetailView({
       {/* Main column */}
       <div ref={mainColumnRef} className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
 
-      {/* ── Background ── */}
-      <div className="absolute inset-0 bg-popover dark:bg-background" />
-      {gradientTesterOpen ? (
-        <>
-          {gradientLayers.map(layer => {
-            const style = layerToStyle(layer);
-            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
-          })}
-          {gradientDragMode && (
-            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-          )}
-        </>
-      ) : savedGradient ? (
-        <>
-          {savedGradient.map((layer: GradientLayer) => {
-            const style = layerToStyle(layer);
-            return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
-          })}
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
-        </>
-      )}
 
       {/* ── Header outer wrapper ── */}
-      <div className="shrink-0 relative z-10">
-        <div className="relative px-4 pt-2 md:pt-1 pb-5 space-y-3 w-full">
+      <div className="shrink-0 relative z-10" style={{ padding: 'var(--space-sm)' }}>
+        <div className="relative px-6 pt-6 pb-7 space-y-3 w-full" style={{
+          borderRadius: 'var(--r-panel)',
+          border: '1px solid var(--line)',
+          background: `
+            radial-gradient(ellipse 55% 90% at 96% -25%, rgba(255, 226, 168, 0.40), transparent 62%),
+            radial-gradient(ellipse 42% 70% at 1% 125%, rgba(94, 34, 48, 0.05), transparent 70%),
+            var(--paper)`,
+          boxShadow: 'var(--sh-raised-large)',
+        }}>
 
           {/* Header row: Avatar + Name on left, toolbar actions on right */}
           <div className="flex items-start gap-3">
@@ -478,6 +466,7 @@ export function CampaignDetailView({
         activeTab={activeTab}
         campaign={campaign}
         filteredMetrics={filteredMetrics}
+        allMetrics={campaignMetrics}
         agg={agg}
         animTrigger={animTrigger}
         dateRange={dateRange}
@@ -522,6 +511,9 @@ export function CampaignDetailView({
             <div className="flex items-center gap-2 text-[13px] font-semibold">
               <FileText className="h-4 w-4 text-muted-foreground" />
               <span>{detail.linkedPrompt?.name ?? t("toolbar.promptPanel", "Prompt Editor")}</span>
+              {detail.linkedPrompt && (
+                <span className="text-[11px] text-muted-foreground font-mono tabular-nums">#{detail.linkedPrompt.id || detail.linkedPrompt.Id}</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <button

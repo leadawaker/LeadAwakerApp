@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 
 import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
-import ConversationsPage from "@/pages/Conversations";
+import OutreachInbox from "@/pages/OutreachInbox";
 import LeadDetailPage from "@/pages/LeadDetail";
 import ProspectDetailPage from "@/pages/ProspectDetail";
 import AppCampaigns from "@/pages/AppCampaigns";
@@ -20,7 +20,9 @@ import CalendarPage from "@/pages/Calendar";
 import AutomationLogsPage from "@/pages/AutomationLogs";
 // UsersPage removed — user management now lives in Settings > Team tab
 import PromptsPage from "@/features/prompts/pages/PromptsPage";
-import BillingPage from "@/pages/Billing";
+import { InvoicesPage } from "@/features/billing/pages/InvoicesPage";
+import { ContractsPage } from "@/features/billing/pages/ContractsPage";
+import { ExpensesPage } from "@/features/billing/pages/ExpensesPage";
 import SettingsPage from "@/pages/Settings";
 import DocsPage from "@/pages/Docs";
 import TasksPage from "@/features/tasks/pages/TasksPage";
@@ -34,11 +36,10 @@ function isAuthed() {
 
 /**
  * Checks if the current user has agency-level access.
- * Only Admin and Operator roles get agency access, regardless of account ID.
  */
 function isAgencyUser(): boolean {
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  return role === "Owner" || role === "Admin" || role === "Operator";
+  return role === "Owner" || role === "Admin";
 }
 
 function Protected({ children }: { children: ReactElement }) {
@@ -77,115 +78,68 @@ export default function AppArea() {
       <BreadcrumbProvider>
       <Suspense fallback={<PageLoader />}>
         <Switch>
-          {/* Agency routes */}
-          <Route path="/agency" component={() => <Redirect to="/agency/campaigns" />} />
-          <Route path="/agency/dashboard" component={() => <Redirect to="/agency/campaigns" />} />
-          <Route path="/agency/contacts" component={AppLeads} />
-          <Route path="/agency/leads" component={AppLeads} />
-          <Route path="/agency/conversations" component={ConversationsPage} />
-          <Route path="/agency/contacts/:id" component={LeadDetailPage} />
-          <Route path="/agency/campaigns" component={AppCampaigns} />
-          <Route path="/agency/calendar" component={CalendarPage} />
-          <Route path="/agency/settings" component={SettingsPage} />
-
-          <Route path="/agency/ai-agents/:agentId">
-            <AgencyOnly prefix="/agency"><AgentChatPage /></AgencyOnly>
+          {/* Unified CRM routes — agency vs client behaviour is derived from the
+              user's role/session, no longer from the URL prefix. */}
+          <Route path="/platform" component={() => <Redirect to="/platform/campaigns" />} />
+          <Route path="/platform/dashboard" component={() => <Redirect to="/platform/campaigns" />} />
+          <Route path="/platform/contacts" component={AppLeads} />
+          <Route path="/platform/leads" component={AppLeads} />
+          {/* Chats page retired — lead chat now lives on the Leads page */}
+          <Route path="/platform/conversations" component={() => <Redirect to="/platform/contacts" />} />
+          <Route path="/platform/outreach-inbox">
+            <AgencyOnly prefix="/platform"><OutreachInbox /></AgencyOnly>
           </Route>
-          <Route path="/agency/ai-agents">
-            <AgencyOnly prefix="/agency"><AgentsPage /></AgencyOnly>
+          <Route path="/platform/contacts/:id" component={LeadDetailPage} />
+          <Route path="/platform/campaigns" component={AppCampaigns} />
+          <Route path="/platform/calendar" component={CalendarPage} />
+          <Route path="/platform/settings" component={SettingsPage} />
+
+          <Route path="/platform/ai-agents/:agentId">
+            <AgencyOnly prefix="/platform"><AgentChatPage /></AgencyOnly>
+          </Route>
+          <Route path="/platform/ai-agents">
+            <AgencyOnly prefix="/platform"><AgentsPage /></AgencyOnly>
           </Route>
 
           {/* Agency-only routes (admin pages) */}
-          <Route path="/agency/accounts">
-            <AgencyOnly prefix="/agency"><AppAccounts /></AgencyOnly>
+          <Route path="/platform/accounts">
+            <AgencyOnly prefix="/platform"><AppAccounts /></AgencyOnly>
           </Route>
-          <Route path="/agency/prospects/:id" component={ProspectDetailPage} />
-          <Route path="/agency/prospects">
-            <AgencyOnly prefix="/agency"><AppProspects /></AgencyOnly>
+          <Route path="/platform/prospects/:id" component={ProspectDetailPage} />
+          <Route path="/platform/prospects">
+            <AgencyOnly prefix="/platform"><AppProspects /></AgencyOnly>
           </Route>
-          <Route path="/agency/cadence">
-            <AgencyOnly prefix="/agency"><AppCadence /></AgencyOnly>
+          <Route path="/platform/cadence">
+            <AgencyOnly prefix="/platform"><AppCadence /></AgencyOnly>
           </Route>
-          <Route path="/agency/users">
-            <Redirect to="/agency/settings" />
+          <Route path="/platform/users">
+            <Redirect to="/platform/settings" />
           </Route>
-          <Route path="/agency/tags">
-            <Redirect to="/agency/campaigns" />
+          <Route path="/platform/tags">
+            <Redirect to="/platform/campaigns" />
           </Route>
-          <Route path="/agency/tasks">
-            <AgencyOnly prefix="/agency"><TasksPage /></AgencyOnly>
+          <Route path="/platform/tasks">
+            <AgencyOnly prefix="/platform"><TasksPage /></AgencyOnly>
           </Route>
-          <Route path="/agency/automation-logs">
-            <AgencyOnly prefix="/agency"><AutomationLogsPage /></AgencyOnly>
+          <Route path="/platform/automation-logs">
+            <AgencyOnly prefix="/platform"><AutomationLogsPage /></AgencyOnly>
           </Route>
-          <Route path="/agency/prompt-library">
-            <AgencyOnly prefix="/agency"><PromptsPage /></AgencyOnly>
+          <Route path="/platform/prompt-library">
+            <AgencyOnly prefix="/platform"><PromptsPage /></AgencyOnly>
           </Route>
-          <Route path="/agency/invoices" component={BillingPage} />
-          <Route path="/agency/expenses">
-            <AgencyOnly prefix="/agency"><BillingPage /></AgencyOnly>
+          <Route path="/platform/invoices" component={InvoicesPage} />
+          <Route path="/platform/expenses">
+            <AgencyOnly prefix="/platform"><ExpensesPage /></AgencyOnly>
           </Route>
-          <Route path="/agency/contracts" component={BillingPage} />
-          <Route path="/agency/billing">
-            <Redirect to="/agency/invoices" />
+          <Route path="/platform/contracts">
+            <AgencyOnly prefix="/platform"><ContractsPage /></AgencyOnly>
           </Route>
-          <Route path="/agency/docs" component={DocsPage} />
-          <Route path="/agency/opportunities">
-            <Redirect to="/agency/leads" />
+          <Route path="/platform/billing">
+            <Redirect to="/platform/invoices" />
           </Route>
-
-          {/* Subaccount routes */}
-          <Route path="/subaccount" component={() => <Redirect to="/subaccount/campaigns" />} />
-          <Route path="/subaccount/dashboard" component={() => <Redirect to="/subaccount/campaigns" />} />
-          <Route path="/subaccount/contacts" component={AppLeads} />
-          <Route path="/subaccount/leads" component={AppLeads} />
-          <Route path="/subaccount/conversations" component={ConversationsPage} />
-          <Route path="/subaccount/contacts/:id" component={LeadDetailPage} />
-          <Route path="/subaccount/campaigns" component={AppCampaigns} />
-          <Route path="/subaccount/calendar" component={CalendarPage} />
-          <Route path="/subaccount/settings" component={SettingsPage} />
-
-          <Route path="/subaccount/ai-agents/:agentId">
-            <AgencyOnly prefix="/subaccount"><AgentChatPage /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/ai-agents">
-            <AgencyOnly prefix="/subaccount"><AgentsPage /></AgencyOnly>
-          </Route>
-
-          {/* Subaccount agency-only routes (admin pages) */}
-          <Route path="/subaccount/accounts">
-            <AgencyOnly prefix="/subaccount"><AppAccounts /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/prospects/:id" component={ProspectDetailPage} />
-          <Route path="/subaccount/prospects">
-            <AgencyOnly prefix="/subaccount"><AppProspects /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/users">
-            <Redirect to="/subaccount/settings" />
-          </Route>
-          <Route path="/subaccount/tags">
-            <Redirect to="/subaccount/campaigns" />
-          </Route>
-          <Route path="/subaccount/tasks">
-            <AgencyOnly prefix="/subaccount"><TasksPage /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/automation-logs">
-            <AgencyOnly prefix="/subaccount"><AutomationLogsPage /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/prompt-library">
-            <AgencyOnly prefix="/subaccount"><PromptsPage /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/invoices" component={BillingPage} />
-          <Route path="/subaccount/expenses">
-            <AgencyOnly prefix="/subaccount"><BillingPage /></AgencyOnly>
-          </Route>
-          <Route path="/subaccount/contracts" component={BillingPage} />
-          <Route path="/subaccount/billing">
-            <Redirect to="/subaccount/invoices" />
-          </Route>
-          <Route path="/subaccount/docs" component={DocsPage} />
-          <Route path="/subaccount/opportunities">
-            <Redirect to="/subaccount/leads" />
+          <Route path="/platform/docs" component={DocsPage} />
+          <Route path="/platform/opportunities">
+            <Redirect to="/platform/leads" />
           </Route>
 
           <Route component={() => (

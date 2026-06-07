@@ -18,13 +18,14 @@
     "fields": "Velden",
     "csv": "CSV",
     "importCsv": "CSV importeren",
-    "exportCsv": "CSV exporteren",
+    "exportCsv": "Exporteren naar CSV",
     "fold": "Inklappen",
     "unfold": "Uitklappen",
     "tags": "Tags",
     "compactView": "Compact",
     "normalView": "Normaal",
     "changeStage": "Fase wijzigen",
+    "assignCampaign": "Campagne toewijzen",
     "duplicate": "Dupliceren",
     "clearAll": "Alles wissen",
     "clearAllFilters": "Alle filters wissen",
@@ -43,24 +44,32 @@
     "delete": "Verwijderen",
     "previous": "Vorige",
     "next": "Volgende",
-    "of": "van"
+    "of": "van",
+    "chats": "Chats",
+    "chatsPeek": "Laatste bericht voor elke lead tonen",
+    "minimizeList": "Lijst minimaliseren",
+    "expandList": "Lijst uitvouwen",
+    "filterLeads": "Leads filteren",
+    "switchToList": "Lijstweergave",
+    "switchToKanban": "Kanbanweergave",
+    "upcomingCalls": "Aankomende gesprekken"
   },
   "sort": {
     "sortBy": "Sorteren op",
     "default": "Standaard",
     "scoreHighToLow": "Score (Hoog naar Laag)",
-    "scoreDesc": "Score (Hoog \u2192 Laag)",
+    "scoreDesc": "Score (Hoog → Laag)",
     "recency": "Recent (Nieuwste eerst)",
     "alphaAZ": "Alfabetisch (A tot Z)",
-    "alpha": "Alfabetisch (A \u2192 Z)",
+    "alpha": "Alfabetisch (A → Z)",
     "mostRecent": "Meest Recent",
     "oldest": "Oudste",
     "name": "Naam",
     "score": "Score",
-    "nameAZ": "Naam A \u2192 Z",
-    "nameZA": "Naam Z \u2192 A",
-    "scoreDown": "Score \u2193",
-    "scoreUp": "Score \u2191"
+    "nameAZ": "Naam A → Z",
+    "nameZA": "Naam Z → A",
+    "scoreDown": "Score ↓",
+    "scoreUp": "Score ↑"
   },
   "group": {
     "status": "Status",
@@ -102,8 +111,8 @@
     "apply": "Toepassen"
   },
   "tagsToggle": {
-    "alwaysVisible": "Tags altijd zichtbaar \u2014 klik voor alleen bij hover",
-    "hoverOnly": "Tags alleen bij hover tonen \u2014 klik om altijd te tonen"
+    "alwaysVisible": "Tags altijd zichtbaar — klik voor alleen bij hover",
+    "hoverOnly": "Tags alleen bij hover tonen — klik om altijd te tonen"
   },
   "table": {
     "columns": {
@@ -131,7 +140,7 @@
       "prev": "Vorige",
       "next": "Volgende"
     },
-    "saveFailed": "Opslaan mislukt \u2014 klik om opnieuw te proberen",
+    "saveFailed": "Opslaan mislukt — klik om opnieuw te proberen",
     "selectAll": "Alles selecteren",
     "deselectAll": "Alles deselecteren"
   },
@@ -159,7 +168,7 @@
       },
       "Responded": {
         "message": "Geen leads hebben gereageerd",
-        "hint": "Blijf opvolgen \u2014 reacties verschijnen hier"
+        "hint": "Blijf opvolgen — reacties verschijnen hier"
       },
       "MultipleResponses": {
         "message": "Geen actieve gesprekken",
@@ -171,7 +180,7 @@
       },
       "Booked": {
         "message": "Nog geen gesprekken gepland",
-        "hint": "Dit is uw hoofddoel \u2014 blijf doorgaan!"
+        "hint": "Dit is uw hoofddoel — blijf doorgaan!"
       },
       "Closed": {
         "message": "Nog geen afgesloten deals",
@@ -197,7 +206,7 @@
     "movedTo": "Verplaatst naar {{stage}}",
     "undo": "Ongedaan maken",
     "moveFailed": "Kon lead niet verplaatsen",
-    "moveFailedDescription": "Status teruggedraaid \u2014 controleer uw verbinding",
+    "moveFailedDescription": "Status teruggedraaid — controleer uw verbinding",
     "leadScore": "Lead score: {{score}}"
   },
   "detail": {
@@ -294,7 +303,12 @@
     },
     "notScored": "Niet gescoord",
     "aiSummary": "AI Samenvatting",
-    "noAiSummary": "Nog geen AI-samenvatting gegenereerd"
+    "noAiSummary": "Nog geen AI-samenvatting gegenereerd",
+    "summaryLocked": "De samenvatting wordt gegenereerd zodra het gesprek eindigt",
+    "summaryLockedHint": "Verschijnt hier wanneer de lead boekt of de chat sluit",
+    "outcome": "Uitkomst",
+    "keyPoints": "Kernpunten",
+    "gradientTester": "Gradiënt-tester"
   },
   "contact": {
     "title": "Contact",
@@ -353,7 +367,7 @@
     "upload": {
       "dragAndDrop": "Sleep een CSV-bestand hierheen, of",
       "browse": "bladeren",
-      "fileInfo": "Ondersteunt .csv-bestanden tot 10 MB \u00b7 Max 5.000 leads per import",
+      "fileInfo": "Ondersteunt .csv-bestanden tot 10 MB · Max 5.000 leads per import",
       "formatTips": "CSV Opmaaktips",
       "tip1": "Eerste rij moet kolomkoppen bevatten",
       "tip2": "Aanbevolen kolommen: Voornaam, Achternaam, Telefoon, E-mail",
@@ -376,7 +390,7 @@
       "columnsMapped_one": "{{mapped}} van {{total}} kolom gekoppeld",
       "columnsMapped_other": "{{mapped}} van {{total}} kolommen gekoppeld",
       "selectField": "Veld selecteren...",
-      "skipColumn": "\u2014 Deze kolom overslaan \u2014"
+      "skipColumn": "— Deze kolom overslaan —"
     },
     "targetFields": {
       "firstName": "Voornaam",
@@ -413,8 +427,8 @@
     "importButton_one": "{{count}} Lead Importeren",
     "importButton_other": "{{count}} Leads Importeren",
     "results": {
-      "leadsImported_one": "Lead ge\u00efmporteerd",
-      "leadsImported_other": "Leads ge\u00efmporteerd",
+      "leadsImported_one": "Lead geïmporteerd",
+      "leadsImported_other": "Leads geïmporteerd",
       "rowsFailed_one": "Rij mislukt",
       "rowsFailed_other": "Rijen mislukt",
       "errorDetails": "Foutdetails:",
@@ -477,7 +491,7 @@
     "saveNotes": "Notities opslaan",
     "stopRecording": "Opname stoppen",
     "recordVoiceMemo": "Spraakmemo opnemen (naar tekst transcriberen)",
-    "transcribing": "Transcriberen\u2026",
+    "transcribing": "Transcriberen…",
     "saved": "Opgeslagen",
     "save": "Opslaan"
   },
@@ -503,8 +517,8 @@
     "delete": "Verwijderen",
     "deleteLead": "Lead verwijderen?",
     "newLead": "Nieuwe lead",
-    "searchLeads": "Leads zoeken\u2026",
-    "searchTagName": "Tagnaam zoeken\u2026",
+    "searchLeads": "Leads zoeken…",
+    "searchTagName": "Tagnaam zoeken…",
     "previousPage": "Vorige pagina",
     "nextPage": "Volgende pagina",
     "of": "van",
@@ -514,10 +528,10 @@
     "title": "Chat",
     "noMessages": "Nog geen berichten",
     "noMessagesHint": "Berichten verschijnen hier zodra het contact begint",
-    "typePlaceholder": "Typ een bericht\u2026",
+    "typePlaceholder": "Typ een bericht…",
     "letAiContinue": "AI laten doorgaan",
     "openInChats": "Openen in Chats",
-    "transcribing": "Transcriberen\u2026"
+    "transcribing": "Transcriberen…"
   },
   "team": {
     "title": "Team",
@@ -549,12 +563,54 @@
       "info": "Info",
       "chat": "Chat",
       "activity": "Activiteit",
-      "notes": "Notities"
+      "notes": "Notities",
+      "summary": "Samenvatting",
+      "score": "Score"
     },
     "notes": {
       "addNote": "Notitie Toevoegen",
       "emptyTitle": "Nog geen notities",
       "emptyHint": "Tik op «Notitie Toevoegen» om de eerste notitie voor deze lead toe te voegen."
-    }
+    },
+    "leadLabel": "Lead",
+    "activityLabel": "Activiteit",
+    "stageOf": "Fase {{current}} van {{total}}",
+    "bookCall": "Gesprek plannen",
+    "viewBooking": "Afspraak bekijken",
+    "meetingBooked": "Afspraak gepland",
+    "noSummary": "Nog geen samenvatting",
+    "interactionFinished": "Interactie afgerond",
+    "aiSummary": "AI-samenvatting",
+    "viewFullSummary": "Volledige samenvatting bekijken",
+    "empty": "Leeg",
+    "noLeadsMatch": "Geen leads gevonden",
+    "messagePlaceholder": "Typ een bericht…"
+  },
+  "selection": {
+    "countSelected": "{{count}} geselecteerd",
+    "clearSelection": "Selectie wissen"
+  },
+  "common": {
+    "confirm": "Bevestigen",
+    "cancel": "Annuleren",
+    "clear": "Wissen"
+  },
+  "addLead": {
+    "title": "Lead toevoegen",
+    "submit": "Lead toevoegen",
+    "creating": "Aanmaken…",
+    "noCampaign": "Geen campagne",
+    "firstNameRequired": "Voornaam is verplicht",
+    "phoneOrEmailRequired": "Telefoon of e-mail is verplicht",
+    "created": "Lead aangemaakt",
+    "createFailed": "Aanmaken van lead mislukt",
+    "firstNamePlaceholder": "Jan",
+    "lastNamePlaceholder": "Jansen",
+    "phonePlaceholder": "+31 6 00000000",
+    "emailPlaceholder": "jan@voorbeeld.nl"
+  },
+  "emptyState": {
+    "noMatch": "Geen leads komen overeen met je filters",
+    "noLeads": "Geen leads gevonden"
   }
 }

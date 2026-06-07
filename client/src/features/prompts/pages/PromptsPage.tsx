@@ -446,7 +446,7 @@ export default function PromptsPage() {
 
   return (
     <CrmShell>
-      <div className="flex flex-col h-full" data-testid="page-prompt-library">
+      <div className="flex flex-col h-full pt-4" data-testid="page-prompt-library">
         <div className="flex-1 min-h-0 overflow-hidden">
 
           {/* ── List view (D365 split-pane) ───────────────────────────────── */}

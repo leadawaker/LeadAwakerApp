@@ -1,0 +1,44 @@
+export default {
+  "nav": {
+    "home": "Home",
+    "try": "Probeer",
+    "about": "FAQ",
+    "login": "Inloggen",
+    "openApp": "Open App",
+    "bookDemo": "Gesprek Boeken"
+  },
+  "footer": {
+    "company": "Bedrijf",
+    "contact": "Contact",
+    "copyright": "© {{year}} Lead Awaker. Alle rechten voorbehouden.",
+    "rights": "Alle rechten voorbehouden.",
+    "privacy": "Privacybeleid",
+    "terms": "Servicevoorwaarden"
+  },
+  "cta": {
+    "bookDemo": "Gesprek Boeken",
+    "learnMore": "Meer Weten",
+    "getStarted": "Aan de slag",
+    "contactUs": "Neem Contact Op"
+  },
+  "seo": {
+      "defaultTitle": "Lead Awaker – Activeer Uw Verkoop Pipeline met AI",
+      "defaultDescription": "Lead Awaker helpt B2B-bedrijven koude leads opnieuw te activeren met AI."
+    },
+    "animation": {
+    "yourBrand": "Jouw Merk"
+  },
+  "bubble": {
+    "tryDemo": "Probeer de AI-demo",
+    "chatFounder": "Spreek met Gabriel",
+    "founderPrefill": "Hoi Gabriel, ik wil graag meer weten over Lead Awaker.",
+    "ariaOpen": "WhatsApp-contactmenu openen",
+    "ariaClose": "WhatsApp-contactmenu sluiten"
+  },
+  "deleteAction": {
+    "archive": "Archiveren",
+    "delete": "Verwijderen",
+    "confirmArchive": "Deze {{entity}} archiveren? Het wordt verborgen uit actieve weergaven en kan later worden hersteld.",
+    "confirmDelete": "Deze {{entity}} permanent verwijderen? Dit kan niet ongedaan worden gemaakt."
+  }
+};

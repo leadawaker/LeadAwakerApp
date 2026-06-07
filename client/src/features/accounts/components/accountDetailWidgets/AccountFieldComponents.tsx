@@ -47,7 +47,7 @@ export function EditText({ value, onChange, placeholder, type = "text" }: {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25"
     />
   );
 }
@@ -59,7 +59,7 @@ export function EditSelect({ value, onChange, options }: {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40"
     >
       {options.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -75,7 +75,7 @@ export function EditTextarea({ value, onChange, placeholder, rows = 3 }: {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25 leading-relaxed"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-blue/30 rounded-lg px-2.5 py-1 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25 leading-relaxed"
     />
   );
 }

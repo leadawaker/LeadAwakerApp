@@ -1,0 +1,40 @@
+/* ============================================================
+   BRAND THEME
+   Change these variables to fully rebrand the site.
+   All variables are scoped to .legacy-app so they don't
+   conflict with a parent application during development.
+   ============================================================ */
+.legacy-app {
+  /* Shadcn/ui token overrides — sets the "primary" button/CTA color */
+  --primary: 243.4 75.4% 58.7%;      /* #4F46E5 — primary indigo */
+  --primary-foreground: 0 0% 100%;    /* white text on primary */
+
+  /* Override --card */
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  /* Yellow accent — hero highlight, CTA hover glow, breakeven marker */
+  --brand-yellow: #FEB800;
+  --brand-yellow-glow: rgba(254, 184, 0, 0.6);
+
+  /* Primary indigo — buttons, form accents, icons */
+  --brand-indigo: #0d00ff;
+  --brand-indigo-hover: #4338ca;
+  --brand-indigo-active: #4941e9;   /* calculator tab selected state */
+  --brand-indigo-muted: #4d6e9c;    /* cold scenario, secondary UI */
+
+  /* Blue palette — results section, brand secondary */
+  --brand-blue-deep: #273887;       /* results card final state */
+  --brand-blue-mid: #3c50d6;        /* results subtitle */
+  --brand-blue-dark: #1c2973;       /* results countdown card background */
+  --brand-navy-footer: #1a3060;     /* bottom CTA dark background */
+
+  /* Text color on yellow/accent backgrounds */
+  --brand-on-yellow: #1a1a1a;
+
+  /* Page backgrounds */
+  --bg-primary: #F9FAFC;            /* hero + main page background */
+  --bg-secondary: #F4F5F9;          /* pipeline, results section */
+  --bg-tertiary: #f7f7fb;           /* compliance section, demo section */
+  --bg-wave-back: #ececf5;          /* wave divider back layer */
+}

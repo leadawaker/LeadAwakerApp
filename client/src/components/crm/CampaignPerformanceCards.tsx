@@ -111,14 +111,14 @@ function computeTrend(
  */
 function getStatusColor(status: string): string {
   switch (status) {
-    case "Active": return "#22C55E";
-    case "Draft": return "#64748B";
-    case "Paused": return "#F59E0B";
+    case "Active": return "#2F9461";
+    case "Draft": return "#9D8E76";
+    case "Paused": return "#DA9426";
     case "Completed":
-    case "Finished": return "#3B82F6";
+    case "Finished": return "#6C5A8C";
     case "Archived":
-    case "Inactive": return "#94A3B8";
-    default: return "#64748B";
+    case "Inactive": return "#9D8E76";
+    default: return "#9D8E76";
   }
 }
 
@@ -364,7 +364,7 @@ export function CampaignPerformanceCards({
                 <Sparkline
                   data={sparkData}
                   dataKey="booking_rate"
-                  color="#FCB803"
+                  color="#DA9426"
                   height={32}
                 />
               </div>

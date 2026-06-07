@@ -12,13 +12,12 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { WhatsAppBubbleProvider } from "@/components/layout/WhatsAppBubble";
 import Seo from "./Seo";
 
-import Home from "@/pages/home";
 import FAQ from "@/pages/faq";
 import BookCall from "@/pages/book-call";
 import Cases from "@/pages/cases";
 import IntakeDemo from "@/pages/intake-demo";
 import AcceptInvite from "@/pages/AcceptInvite";
-import LegacyHome from "@/pages/legacy/home";
+import LegacyHome from "@/legacy/LegacyRoute";
 
 import AppArea from "@/pages/app";
 import Canvas from "@/pages/canvas";
@@ -64,12 +63,12 @@ function getBrowserLang(): Lang | null {
 /**
  * Keep i18n language in sync.
  * For marketing pages: uses the URL-based lang.
- * For CRM pages (agency/subaccount): respects the user's stored preference.
+ * For CRM pages (/platform): respects the user's stored preference.
  */
 function useSyncLanguage(lang: Lang) {
   useEffect(() => {
     // CRM pages: use stored preference instead of URL-derived lang
-    const isCrmPage = window.location.pathname.startsWith("/agency") || window.location.pathname.startsWith("/subaccount");
+    const isCrmPage = window.location.pathname.startsWith("/platform");
     const effectiveLang = isCrmPage ? (getStoredLang() ?? lang) : lang;
 
     if (i18n.language !== effectiveLang) {
@@ -89,12 +88,22 @@ function useSyncLanguage(lang: Lang) {
 /* Routes (English, no prefix)                                         */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Redirects the retired /agency and /subaccount CRM prefixes to the unified
+ * /platform area, preserving the rest of the path and the query string.
+ */
+function LegacyAppRedirect() {
+  const [location] = useLocation();
+  const tail = location.replace(/^\/(agency|subaccount)/, "");
+  return <Redirect to={`/platform${tail}${window.location.search}`} />;
+}
+
 function AppRoutes() {
   useSyncLanguage("en");
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={() => <Redirect to="/platform" />} />
       <Route path="/legacy" component={LegacyHome} />
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
@@ -103,12 +112,15 @@ function AppRoutes() {
       <Route path="/cases" component={Cases} />
       <Route path="/intake/:token" component={IntakeDemo} />
       <Route path="/accept-invite" component={AcceptInvite} />
-      <Route path="/agency" component={AppArea} />
-      <Route path="/agency/:rest*" component={AppArea} />
-      <Route path="/subaccount" component={AppArea} />
-      <Route path="/subaccount/:rest*" component={AppArea} />
-      <Route path="/app/agency" component={() => <Redirect to="/agency/campaigns" />} />
-      <Route path="/app/subaccount" component={() => <Redirect to="/subaccount/campaigns" />} />
+      <Route path="/platform" component={AppArea} />
+      <Route path="/platform/:rest*" component={AppArea} />
+      {/* Legacy CRM prefixes — redirect to the unified /platform area */}
+      <Route path="/agency/:rest*" component={LegacyAppRedirect} />
+      <Route path="/agency" component={LegacyAppRedirect} />
+      <Route path="/subaccount/:rest*" component={LegacyAppRedirect} />
+      <Route path="/subaccount" component={LegacyAppRedirect} />
+      <Route path="/app/agency" component={() => <Redirect to="/platform/campaigns" />} />
+      <Route path="/app/subaccount" component={() => <Redirect to="/platform/campaigns" />} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
@@ -191,6 +203,7 @@ function Router() {
   }, [location, setLocation]);
 
   const isAppArea =
+    location.startsWith("/platform") ||
     location.startsWith("/agency") ||
     location.startsWith("/subaccount") ||
     location.startsWith("/intake/");
@@ -210,17 +223,19 @@ function Router() {
           {!lang && <AppRoutes />}
         </main>
       ) : (
-        /* Public pages — theme follows system preference. The provider wraps
-           everything so pages can call useWhatsAppBubble() to hide the bubble
-           (e.g. the /try success view where a stacked WA icon would be ugly). */
-        <WhatsAppBubbleProvider>
-          <Navbar />
-          <main className="flex-grow">
-            {!lang && <AppRoutes />}
-            {lang && <LanguageRouter lang={lang} />}
-          </main>
-          <Footer />
-        </WhatsAppBubbleProvider>
+        /* All public pages (/, /legacy, /faq, /cases, etc.) — wrapped in
+           legacy-app so indigo --primary applies to Navbar/Footer buttons
+           on every public page, not just the /legacy route. */
+        <div className="legacy-app flex flex-col min-h-svh">
+          <WhatsAppBubbleProvider>
+            <Navbar />
+            <main className="flex-grow">
+              {!lang && <AppRoutes />}
+              {lang && <LanguageRouter lang={lang} />}
+            </main>
+            <Footer />
+          </WhatsAppBubbleProvider>
+        </div>
       )}
     </div>
   );

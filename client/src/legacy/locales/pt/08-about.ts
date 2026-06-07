@@ -1,0 +1,128 @@
+export default {
+  "intro": {
+    "title": "Um por um, eles encontram o caminho de volta",
+    "titleHighlight": "até você.",
+    "paragraph1": "Eles levantaram a mão uma vez. Agora vá buscá-los.",
+    "paragraph2": "A gente entra em contato por você, com o timing certo, o contexto certo e uma mensagem que parece humana.",
+    "paragraph3": "É aí que as pessoas respondem. Não por insistência, mas porque se sentiram entendidas."
+  },
+  "founder": {
+    "name": "YOUR_NAME",
+    "title": "Fundador",
+    "tagline": "Construo sistemas que conquistam atenção.",
+    "body1": "Como especialista em IA, desenvolvedor, designer e artista digital, meu trabalho é moldado pela psicologia, tecnologia e estética.",
+    "body2": "A meditação me ensinou que a atenção é nosso recurso mais valioso. Na era digital, ela é constantemente puxada em todas as direções, dispersa entre plataformas, distrações e ruído. As marcas que crescem são as que sabem guiá-la com intenção.",
+    "body3": "Criei o Lead Awaker para ajudá-las a fazer exatamente isso."
+  },
+
+  "credentials": {
+    "experienceLabel": "Experiência que moldou isso",
+    "title": "Não é um problema de leads. É um problema de vazamento.",
+    "subtitle": "De estúdios vencedores do Oscar a lançar games AAA. A mesma disciplina, aplicada aos seus leads.",
+    "resultsNode": "Resultados reais.",
+    "items": [
+      {
+        "metric": "US$ 136M de bilheteria",
+        "label": "Warner Bros · Framestore",
+        "logoKey": "warnerbros",
+        "description": "Digital art para Tom & Jerry (2021), vencedor do Oscar de Melhores Efeitos Visuais. Asset não passa pela pipeline deles se não estiver pronto para cinema."
+      },
+      {
+        "metric": "3 títulos · 12 meses",
+        "label": "Sega · Creative Assembly",
+        "logoKey": "sega",
+        "description": "Entreguei assets para três títulos na Creative Assembly, um estúdio da Sega (matriz de US$ 3.1B). Construo sistemas que escalam nesse ritmo."
+      },
+      {
+        "metric": "US$ 52M+ de receita",
+        "label": "Embracer Group · New World Interactive",
+        "logoKey": "embracer",
+        "description": "Liderei um time, lancei dois títulos. Insurgency: Sandstorm segue ativo sete anos depois. Nada caiu."
+      }
+    ],
+    "recognition": "Arte em destaque no ZBrush Central (Pixologic) e no ArtStation. Palestrante no Design Week da Universidade Federal do Rio de Janeiro. Perfil publicado em revista de design online."
+  },
+  "cta": {
+    "title": "Veja funcionando nos seus leads",
+    "quote": "Entreguei sob os deadlines mais apertados da indústria de entretenimento, depois construí um negócio onde cada lead perdido me custava pessoalmente. Essa experiência está em cada campanha que rodamos.",
+    "button": "Conversar no WhatsApp",
+    "waLink": "YOUR_WHATSAPP_LINK"
+  },
+
+  "faq": {
+    "title": "Perguntas Frequentes",
+    "categories": [
+      {
+        "title": "Resultados e Come\u00e7o",
+        "items": [
+          {
+            "q": "Que resultados podemos esperar?",
+            "a": "Taxas de reengajamento costumam ficar entre 5 e 15% nos primeiros 30 dias. O n\u00famero exato depende de qu\u00e3o recentes s\u00e3o seus leads, se a oferta ainda faz sentido e de qu\u00e3o bem a campanha est\u00e1 calibrada. N\u00e3o prometemos milagres, mas transformamos bases silenciosas em conversas reais com consist\u00eancia."
+          },
+          {
+            "q": "Em quanto tempo podemos come\u00e7ar?",
+            "a": "A maioria dos clientes est\u00e1 no ar em uma semana. Configuramos sua conta, ajustamos o tom das mensagens, importamos seus leads e rodamos um lote de teste antes de escalar. Sem onboarding longo."
+          },
+          {
+            "q": "E se nossos leads forem muito antigos ou totalmente frios?",
+            "a": "Alguns dos nossos melhores resultados v\u00eam de leads de 6 meses a 2 anos. A idade n\u00e3o \u00e9 o problema. Se a necessidade original ainda existe e a abordagem \u00e9 pessoal em vez de gen\u00e9rica, as pessoas respondem. Vemos isso acontecer sempre."
+          },
+          {
+            "q": "Funciona pro nosso setor?",
+            "a": "Se voc\u00ea vende um servi\u00e7o ou produto onde as pessoas demonstram interesse e depois somem, sim. J\u00e1 adaptamos o Lead Awaker pra B2B, cl\u00ednicas, ag\u00eancias e empresas de servi\u00e7os. No setup, configuramos tudo pra combinar com sua linguagem, obje\u00e7\u00f5es e processo de vendas."
+          },
+          {
+            "q": "Quanto custa?",
+            "a": "Nosso modelo preferido \u00e9 baseado em performance: voc\u00ea paga por call agendada, ent\u00e3o nossos incentivos est\u00e3o alinhados com os seus. Tamb\u00e9m oferecemos planos com valor fixo, dependendo do seu volume e setup. Explicamos as op\u00e7\u00f5es na call de demo e damos um valor claro. Sem taxas escondidas, sem contrato longo."
+          }
+        ]
+      },
+      {
+        "title": "Como Funciona",
+        "items": [
+          {
+            "q": "O que acontece quando um lead responde?",
+            "a": "Depende do que voc\u00ea quer. O sistema pode agendar uma call direto no seu calend\u00e1rio, passar a conversa pro seu time de vendas com todo o contexto, ou continuar nutrindo at\u00e9 o lead estar pronto. Voc\u00ea define as regras de handoff, e elas podem mudar a qualquer momento."
+          },
+          {
+            "q": "Isso substitui nosso time de vendas?",
+            "a": "N\u00e3o. Seu time fecha neg\u00f3cios. A gente cuida da parte antes disso: o primeiro contato, os follow-ups, a qualifica\u00e7\u00e3o. Quando o lead chega no seu time, j\u00e1 est\u00e1 aquecido e interessado. Sua equipe gasta menos tempo correndo atr\u00e1s e mais tempo fechando."
+          },
+          {
+            "q": "Como evitam parecer spam?",
+            "a": "Cada mensagem \u00e9 baseada em onde aquele lead espec\u00edfico parou. Nada de templates em massa, nada de \"s\u00f3 passando pra ver como est\u00e1.\" O sistema sabe no que a pessoa se interessou, quando interagiu pela \u00faltima vez e o que faz sentido dizer agora. As pessoas respondem porque parece um follow-up real, n\u00e3o um dispar em massa."
+          },
+          {
+            "q": "Precisamos fornecer scripts?",
+            "a": "Opcional. Se voc\u00ea tem conversas que funcionam bem, compartilha e a gente usa como base. Se n\u00e3o, criamos a mensagem com base na sua oferta, seu p\u00fablico e seu tom. De qualquer forma, voc\u00ea revisa tudo antes de ir ao ar."
+          },
+          {
+            "q": "D\u00e1 pra pausar ou ajustar campanhas no meio?",
+            "a": "Sim. Pause, ajuste as mensagens, mude a segmenta\u00e7\u00e3o, atualize as regras de qualifica\u00e7\u00e3o. Tudo sem perder o contexto das conversas j\u00e1 em andamento."
+          }
+        ]
+      },
+      {
+        "title": "Confian\u00e7a e Compliance",
+        "items": [
+          {
+            "q": "Quais canais voc\u00eas usam?",
+            "a": "WhatsApp, SMS, Instagram ou outras plataformas de mensagens, dependendo do que faz sentido pro seu p\u00fablico. Ajudamos a escolher o canal certo no setup e cuidamos da parte t\u00e9cnica."
+          },
+          {
+            "q": "D\u00e1 pra revisar as mensagens antes de enviar?",
+            "a": "Com certeza. Antes de qualquer campanha ir ao ar, voc\u00ea v\u00ea as mensagens, o tom, a l\u00f3gica de qualifica\u00e7\u00e3o. Nada sai sem o seu OK."
+          },
+          {
+            "q": "Como lidam com LGPD e compliance?",
+            "a": "Pedidos de descadastro s\u00e3o respeitados na hora. O sistema \u00e9 constru\u00eddo com l\u00f3gica de consentimento e cad\u00eancia respeitosa. Voc\u00ea mant\u00e9m controle dos seus dados de leads e da base legal pra contato. Executamos campanhas conforme suas instru\u00e7\u00f5es e a legisla\u00e7\u00e3o aplic\u00e1vel."
+          },
+          {
+            "q": "Onde ficam nossos dados?",
+            "a": "Seus dados ficam em infraestrutura segura e dedicada. N\u00e3o compartilhamos, vendemos ou usamos pra treinar modelos. Voc\u00ea \u00e9 dono dos seus leads, das suas conversas e dos seus resultados."
+          }
+        ]
+      }
+    ]
+  }
+};

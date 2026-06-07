@@ -243,7 +243,7 @@ export function ExpenseDetailView({
             {expense.country && (
               <>
                 {expense.invoiceNumber && <span className="text-foreground/25">·</span>}
-                <span className="text-[12px] font-medium px-2 py-0.5 rounded-full bg-white/50 dark:bg-white/[0.10] text-foreground/60">
+                <span className="text-[12px] font-medium px-2 py-0.5 rounded-full bg-card shadow-[var(--card-glow)] text-foreground/60">
                   {expense.country}
                 </span>
               </>
@@ -256,7 +256,7 @@ export function ExpenseDetailView({
                 "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors",
                 expense.nlBtwDeductible
                   ? "bg-emerald-100 text-emerald-700"
-                  : "bg-white/50 dark:bg-white/[0.10] text-foreground/40"
+                  : "bg-card shadow-[var(--card-glow)] text-foreground/40"
               )}
               title={t("expenses.detail.toggleNlBtw")}
             >
@@ -281,7 +281,7 @@ export function ExpenseDetailView({
               "h-8 px-3.5 rounded-full text-[12px] font-semibold shrink-0 transition-colors",
               mobileTab === id
                 ? "bg-foreground text-background"
-                : "bg-white/60 dark:bg-white/[0.10] text-foreground/60 border border-border/40"
+                : "bg-card shadow-[var(--card-glow)] text-foreground/60 border border-border/40"
             )}
           >
             {label}
@@ -294,7 +294,7 @@ export function ExpenseDetailView({
         <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-[3px] max-w-[1386px] w-full mr-auto">
 
           {/* Left column: amounts breakdown */}
-          <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col gap-4", mobileTab !== "details" ? "hidden md:flex" : "flex")}>
+          <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl p-5 flex flex-col gap-4", mobileTab !== "details" ? "hidden md:flex" : "flex")}>
             <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">
               {t("expenses.detail.amounts")}
             </p>
@@ -386,7 +386,7 @@ export function ExpenseDetailView({
           <div className={cn("flex flex-col gap-[3px]", mobileTab === "details" ? "hidden md:flex" : "flex")}>
 
             {/* Date */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-5">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl px-5 py-5">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-3">
                 {t("expenses.detail.date")}
               </span>
@@ -413,7 +413,7 @@ export function ExpenseDetailView({
             </div>
 
             {/* PDF */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-5 flex-1">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl px-5 py-5 flex-1">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-3">
                 {t("expenses.detail.document")}
               </span>

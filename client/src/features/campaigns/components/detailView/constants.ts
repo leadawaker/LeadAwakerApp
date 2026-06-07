@@ -54,11 +54,11 @@ export const DETAIL_GROUP_LABEL_KEYS: Record<CampaignGroupBy, string> = {
 };
 export const DETAIL_STATUS_FILTER_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
 export const DETAIL_STATUS_HEX: Record<string, string> = {
-  Active:    "#22C55E",
-  Paused:    "#F59E0B",
-  Completed: "#3B82F6",
-  Finished:  "#3B82F6",
-  Inactive:  "#94A3B8",
-  Archived:  "#94A3B8",
-  Draft:     "#6B7280",
+  Active:    "var(--good)",
+  Paused:    "var(--warn)",
+  Completed: "#6C5A8C",
+  Finished:  "#6C5A8C",
+  Inactive:  "var(--mute-2)",
+  Archived:  "var(--mute-2)",
+  Draft:     "var(--mute-2)",
 };

@@ -58,7 +58,7 @@ export function EditText({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={minRows}
-        className="w-full text-[14px] bg-white dark:bg-white rounded-lg px-2.5 py-1.5 resize-none outline-none placeholder:text-foreground/30 overflow-y-auto"
+        className="la-input resize-none overflow-y-auto"
         style={{ minHeight: `${minH}px`, maxHeight: "320px" }}
       />
     );
@@ -71,7 +71,7 @@ export function EditText({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[14px] bg-white dark:bg-white rounded-lg px-2.5 py-1.5 outline-none placeholder:text-foreground/30"
+      className="la-input"
     />
   );
 }

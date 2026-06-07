@@ -36,7 +36,7 @@ export function CampaignAIColumn({
 
   if (collapsed) {
     return (
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl flex flex-col items-center pt-4 pb-4 overflow-hidden cursor-pointer group h-full" onClick={onToggle} title="Expand AI Settings">
+      <div className="bg-card shadow-[var(--card-glow)] rounded-xl flex flex-col items-center pt-4 pb-4 overflow-hidden cursor-pointer group h-full" onClick={onToggle} title="Expand AI Settings">
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
           className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors text-foreground/50 group-hover:text-foreground"
@@ -51,7 +51,7 @@ export function CampaignAIColumn({
   }
 
   return (
-    <div className="@container bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-y-auto h-full" data-testid="campaign-detail-view-ai">
+    <div className="@container bg-card shadow-[var(--card-glow)] rounded-xl overflow-y-auto h-full" data-testid="campaign-detail-view-ai">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 pb-3 bg-white/80 dark:bg-black/40 backdrop-blur-sm">
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("config.aiSettings")}</h3>
@@ -68,7 +68,7 @@ export function CampaignAIColumn({
       <div className="grid grid-cols-1 @sm:grid-cols-2 gap-x-6">
 
         {/* First Message — full width */}
-        <div className="col-span-2 space-y-1.5 py-3 min-h-[3.5rem] border-b border-border/20">
+        <div className="@sm:col-span-2 space-y-1.5 py-3 min-h-[3.5rem] border-b border-border/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[12px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
@@ -116,7 +116,7 @@ export function CampaignAIColumn({
         />
 
         {/* Linked Prompt — full width */}
-        <div className="col-span-2 space-y-1.5 py-3 min-h-[3.5rem] border-b border-border/20">
+        <div className="@sm:col-span-2 space-y-1.5 py-3 min-h-[3.5rem] border-b border-border/20">
           <p className="text-[12px] font-bold uppercase tracking-wider text-foreground">{t("config.promptLinked")}</p>
           {isEditing ? (
             <select
@@ -137,7 +137,7 @@ export function CampaignAIColumn({
                   onTogglePromptPanel();
                 } else {
                   localStorage.setItem("prompt-library-initial-id", String(linkedPrompt.id || linkedPrompt.Id));
-                  navigate(isAgencyUser ? "/agency/prompt-library" : "/subaccount/prompt-library");
+                  navigate("/platform/prompt-library");
                 }
               }}
             >
@@ -145,6 +145,7 @@ export function CampaignAIColumn({
                 <Bot className="w-4 h-4" />
               </div>
               <span className="text-sm font-medium flex-1 truncate">{linkedPrompt.name || linkedPrompt.Name}</span>
+              <span className="text-[10px] text-muted-foreground mr-1 tabular-nums">#{linkedPrompt.id || linkedPrompt.Id}</span>
               <span className={cn("text-xs px-1.5 py-0.5 rounded-full font-medium",
                 (linkedPrompt.status || linkedPrompt.Status) === "active"
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
@@ -159,7 +160,7 @@ export function CampaignAIColumn({
         </div>
 
         {/* HR separator — full width */}
-        <div className="col-span-2"><hr className="border-border/20" /></div>
+        <div className="@sm:col-span-2"><hr className="border-border/20" /></div>
 
         {/* Bumps 1–4 — each full width */}
         {[1, 2, 3, 4].map((n) => {
@@ -175,7 +176,7 @@ export function CampaignAIColumn({
           const draftDelayKey = `bump_${n}_delay_hours`;
           const draftVoiceTemplateKey = `bump_${n}_voice_template`;
           return (
-            <div key={n} className="col-span-2 space-y-2 py-3 min-h-[3.5rem] border-b border-border/20">
+            <div key={n} className="@sm:col-span-2 space-y-2 py-3 min-h-[3.5rem] border-b border-border/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[12px] font-bold uppercase tracking-wider text-foreground">Bump {n}</span>

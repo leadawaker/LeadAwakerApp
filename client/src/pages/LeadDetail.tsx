@@ -8,15 +8,14 @@ import { SkeletonLeadDetail } from "@/components/ui/skeleton";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 
 export default function LeadDetailPage() {
-  const [location, setLocation] = useLocation();
-  const isAgency = location.startsWith("/agency");
+  const [, setLocation] = useLocation();
 
-  const [, params] = useRoute(isAgency ? "/agency/contacts/:id" : "/subaccount/contacts/:id");
+  const [, params] = useRoute("/platform/contacts/:id");
   const id = Number(params?.id);
 
-  const { currentAccountId } = useWorkspace();
+  const { currentAccountId, isAgencyView } = useWorkspace();
   const { leads, interactions, isLoading } = useLeads({
-    accountId: isAgency ? null : currentAccountId,
+    accountId: isAgencyView ? null : currentAccountId,
   });
 
   const lead = useMemo(() => {
@@ -71,11 +70,11 @@ export default function LeadDetailPage() {
         </div>
       ) : (
         <LeadDetailLayout
-          mode={isAgency ? "agency" : "subaccount"}
+          mode={isAgencyView ? "agency" : "subaccount"}
           lead={lead as any}
           messages={chat as any}
           tags={tags}
-          onBack={() => setLocation(isAgency ? "/agency/contacts" : "/subaccount/contacts")}
+          onBack={() => setLocation("/platform/contacts")}
         />
       )}
     </CrmShell>

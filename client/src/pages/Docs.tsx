@@ -33,7 +33,6 @@ import {
   FileText,
   Receipt,
   User,
-  Paintbrush,
 } from "lucide-react";
 import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
@@ -47,7 +46,7 @@ import {
 
 function isOperatorRole(): boolean {
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  return role === "Admin" || role === "Operator";
+  return role === "Admin";
 }
 
 // ── Search helper ─────────────────────────────────────────────────────────────
@@ -929,6 +928,21 @@ export default function DocsPage() {
     setGradientTesterOpen(false);
   }, [gradientLayers]);
 
+  // Listen for the global gradient toggle dispatched by the nav menu button
+  useEffect(() => {
+    const handler = () => setGradientTesterOpen(prev => {
+      if (!prev) {
+        try {
+          const raw = localStorage.getItem(GRADIENT_KEY);
+          setGradientLayers(raw ? JSON.parse(raw) as GradientLayer[] : DEFAULT_LAYERS);
+        } catch { /* keep current layers */ }
+      }
+      return !prev;
+    });
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [GRADIENT_KEY]);
+
   const currentToc = tab === "operator" ? OPERATOR_TOC : CLIENT_TOC;
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -970,7 +984,7 @@ export default function DocsPage() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col" data-testid="page-docs">
+      <div className="h-full flex flex-col pt-4" data-testid="page-docs">
         <div className={cn(
           "flex-1 gap-0 min-h-0 overflow-hidden",
           isMobile ? "flex flex-col" : "flex"
@@ -1156,26 +1170,6 @@ export default function DocsPage() {
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
                   {tab === "operator" ? t("agencyDocumentation") : t("userDocumentation")}
                 </h2>
-                {/* Gradient tester toggle (agency only) */}
-                {isOperator && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!gradientTesterOpen) setGradientLayers(savedGradient ?? DEFAULT_LAYERS);
-                      setGradientTesterOpen(prev => !prev);
-                    }}
-                    className={cn(
-                      "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px]",
-                      gradientTesterOpen
-                        ? "border-indigo-200 text-indigo-600 bg-indigo-100"
-                        : "border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
-                    )}
-                    title={t("gradientTester")}
-                  >
-                    <Paintbrush className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("gradientTesterStyle")}</span>
-                  </button>
-                )}
               </div>
               <div className="px-6 pb-8">
                 {tab === "operator"

@@ -1,0 +1,58 @@
+export default {
+  "painPoints": {
+    "title": "A reativação manual",
+    "titleIs": "está",
+    "titleBroken": "quebrada",
+    "subtitle": "Você pagou por esses leads. Eles estão parados numa planilha sem fazer nada. <strong>Isso muda hoje.</strong>",
+    "bloatedCrm": "Milhares de leads\nacumulando poeira no seu CRM",
+    "wastedTime": "Sua equipe perde horas\ncorrendo atrás de quem não responde",
+    "lowReplyRates": "5-10% de taxa de resposta.\nFaça as contas.",
+    "spamCampaigns": "E-mails em massa que caem\nno spam, não na caixa de entrada"
+  },
+  "intro": {
+    "title": "Como funciona.",
+    "subtitle": "3 passos. Spoiler: você quase não levanta um dedo."
+  },
+  "steps": {
+    "step1": {
+      "number": "1",
+      "cardTitle": "1. Jogue seus leads aqui. A gente cuida do resto.",
+      "cardDescription": "CSV, exportação do CRM ou integração direta via API. 15 minutos para começar.",
+      "bulletPoints": {
+        "reawaken": "Leads dormentes, contatos ignorados, até aqueles que sua equipe já desistiu",
+        "segment": "Segmentados automaticamente por intenção, valor e última interação"
+      }
+    },
+    "step2": {
+      "number": "2",
+      "cardTitle": "2. Conversas reais, não spam.",
+      "cardDescription": "IA que lê intenção, lida com objeções e sabe quando passar para sua equipe.",
+      "overlayTitle": "Capacidade de resposta 24/7",
+      "overlayDescription": "Processamento de linguagem natural para conversas humanizadas • Transferência perfeita para equipe humana quando necessário",
+      "bulletPoints": {
+        "response": "Responde em segundos, a qualquer hora do dia",
+        "followUp": "Fala a língua deles, no seu tom",
+        "languages": "Sabe quando insistir e quando passar para sua equipe",
+        "humanTakeover": "Construído sobre metodologias de vendas comprovadas que lidam com objeções naturalmente",
+        "selling": "Follow-ups inteligentes que reengajam leads não responsivos automaticamente"
+      }
+    },
+    "step3": {
+      "number": "3",
+      "cardTitle": "3. Reuniões agendadas. Receita rastreada.",
+      "cardDescription": "Leads qualificados aparecem no seu calendário. Você vê tudo em tempo real.",
+      "bulletPoints": {
+        "calendar": "Leads qualificados aparecem direto no seu calendário",
+        "support": "Suporte para agendamentos, reservas e vendas diretas",
+        "optimization": "Otimização semanal para que os resultados melhorem continuamente",
+        "dashboard": "Painel ao vivo com cada conversa e métrica"
+      }
+    }
+  },
+  "common": {
+    "stepDetails": "Detalhes da Etapa {{number}}",
+    "prevStep": "Etapa anterior",
+    "nextStep": "Próxima etapa",
+    "goToStep": "Ir para etapa {{number}}"
+  }
+};

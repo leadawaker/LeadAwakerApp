@@ -1,12 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Columns3, Table2, GanttChart } from "lucide-react";
+import { Columns3, Table2 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import type { ViewMode } from "../types";
 
 const VIEW_TABS: { key: ViewMode; icon: typeof Columns3; tKey: string }[] = [
   { key: "kanban", icon: Columns3, tKey: "views.kanban" },
   { key: "table", icon: Table2, tKey: "views.table" },
-  { key: "gantt", icon: GanttChart, tKey: "views.gantt" },
 ];
 
 interface ViewSwitcherProps {

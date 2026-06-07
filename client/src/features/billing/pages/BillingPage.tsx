@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { MobileBillingView } from "../components/mobile/MobileBillingView";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
@@ -20,13 +22,14 @@ export function BillingPage() {
   const { t } = useTranslation("billing");
   const { currentAccountId, isAgencyUser } = useWorkspace();
   const { clearTopbarActions } = useTopbarActions();
+  const isMobile = useIsMobile();
 
-  // Tab state — derived from URL path
-  const [location, setLocation] = useLocation();
+  // Determine active tab from URL (no user-facing tabs; URL determines which page)
+  const [location] = useLocation();
   const activeTab = useMemo<BillingTab>(() => {
-    if (location.endsWith("/expenses")) return "expenses";
-    if (location.endsWith("/contracts")) return "contracts";
-    return "invoices"; // default
+    if (location.includes("/expenses")) return "expenses";
+    if (location.includes("/contracts")) return "contracts";
+    return "invoices";
   }, [location]);
 
   // View mode (persisted)
@@ -166,23 +169,44 @@ export function BillingPage() {
   // Clear topbar actions
   useEffect(() => { clearTopbarActions(); return () => clearTopbarActions(); }, [clearTopbarActions]);
 
-  // Clear selection + panel mode on tab switch (keep viewMode across tab switches)
-  const handleTabChange = useCallback((tab: string) => {
+  // Clear selection + filters when switching pages (URL changes)
+  useEffect(() => {
     setListSearch("");
     setSearchOpen(false);
     setFilterStatus([]);
     setRightPanelMode("view");
     setEditingInvoice(null);
-    // Navigate to the tab route
-    const routePrefix = location.startsWith("/subaccount") ? "/subaccount" : "/agency";
-    setLocation(`${routePrefix}/${tab}`);
-  }, [location, setLocation]);
+  }, [activeTab]);
+
+  // ── Mobile: wine/paper single-pane experience (desktop tree untouched) ──────
+  if (isMobile) {
+    return (
+      <CrmShell>
+        <MobileBillingView
+          activeTab={activeTab}
+          invoices={invoicesHook.invoices}
+          contracts={contractsHook.contracts}
+          isAgencyUser={isAgencyUser}
+          onMarkSent={invoicesHook.markSent}
+          onMarkPaid={invoicesHook.markPaid}
+          onMarkSigned={contractsHook.markSigned}
+          onDeleteInvoice={handleDeleteInvoice}
+          onDeleteContract={handleDeleteContract}
+          onEditInvoice={(inv) => { setSelectedInvoice(inv); setEditingInvoice(inv); setRightPanelMode("edit"); }}
+          onNewInvoice={() => { setEditingInvoice(null); setRightPanelMode("create"); }}
+          onNewContract={() => { setSelectedContract(null); setRightPanelMode("create"); }}
+          listSearch={listSearch}
+          setListSearch={setListSearch}
+        />
+      </CrmShell>
+    );
+  }
 
   return (
     <CrmShell>
+      <div className="h-full flex flex-col pt-4">
       <BillingListView
         activeTab={activeTab}
-        onTabChange={handleTabChange}
         // Invoice data
         invoices={invoicesHook.invoices}
         invoicesLoading={invoicesHook.loading}
@@ -234,6 +258,7 @@ export function BillingPage() {
         yearFilter={yearFilter}
         setYearFilter={setYearFilter}
       />
+      </div>
     </CrmShell>
   );
 }

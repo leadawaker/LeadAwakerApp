@@ -14,6 +14,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import type { Campaign } from "@/types/models";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { cn } from "@/lib/utils";
+import { xBase, xDefault, xSpan } from "@/components/crm/primitives";
 import { apiFetch } from "@/lib/apiUtils";
 import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -39,10 +40,7 @@ const STATUS_DOT: Record<string, string> = {
 
 const CAMPAIGN_STATUS_ORDER = ["Active", "Paused", "Draft", "Completed", "Finished", "Inactive", "Archived"];
 
-/* ── Expand-on-hover toolbar button tokens ── */
-const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+/* ── Expand-on-hover toolbar button tokens — shared from @/components/crm/primitives ── */
 
 function getCampaignName(c: Campaign): string {
   return String(c.name || "Unnamed");
@@ -120,7 +118,7 @@ function CampaignsContent() {
     sortBy: "recent" as CampaignSortBy,
     filterStatus: [] as string[],
     filterAccount: "",
-    showDemoCampaigns: false as boolean,
+    showDemoCampaigns: null as boolean | null,
   });
   const groupBy = listPrefs.groupBy;
   const sortBy = listPrefs.sortBy;
@@ -131,7 +129,7 @@ function CampaignsContent() {
   const setSortBy = useCallback((v: CampaignSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
   const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
   const setListFilterAccount = useCallback((v: string) => setListPrefs(p => ({ ...p, filterAccount: v })), [setListPrefs]);
-  const setShowDemoCampaigns = useCallback((v: boolean) => setListPrefs(p => ({ ...p, showDemoCampaigns: v })), [setListPrefs]);
+  const setShowDemoCampaigns = useCallback((v: boolean | null) => setListPrefs(p => ({ ...p, showDemoCampaigns: v })), [setListPrefs]);
 
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
@@ -268,7 +266,7 @@ function CampaignsContent() {
   // ── List-view control helpers ──────────────────────────────────────────────
   const isGroupNonDefault     = groupBy !== "status";
   const isSortNonDefault      = sortBy !== "recent";
-  const isFilterActive        = filterStatus.length > 0 || !!listFilterAccount || showDemoCampaigns;
+  const isFilterActive        = filterStatus.length > 0 || !!listFilterAccount || showDemoCampaigns !== null;
   const hasNonDefaultControls = isGroupNonDefault || isSortNonDefault || isFilterActive;
 
   const toggleFilterStatus = useCallback((s: string) =>
@@ -279,7 +277,7 @@ function CampaignsContent() {
     setGroupBy("status");
     setSortBy("recent");
     setListFilterAccount("");
-    setShowDemoCampaigns(false);
+    setShowDemoCampaigns(null);
   }, []);
 
   // ── Available accounts (for list filter dropdown) ──────────────────────────
@@ -307,6 +305,13 @@ function CampaignsContent() {
         name: `${campaign.name || "Campaign"} (Copy)`,
         status: "Draft",
         description: campaign.description || "",
+        ai_model: campaign.ai_model || "gpt-4.1",
+        bot_token: campaign.bot_token || "",
+        calendar_link: campaign.calendar_link || "",
+        agent_name: campaign.agent_name || "Sofia",
+        is_demo: campaign.is_demo ?? true,
+        type: campaign.type || "Re-engagement",
+        start_date: campaign.start_date || new Date().toISOString().slice(0, 10),
       });
       handleRefresh();
     } catch (err) { console.error("Duplicate campaign failed", err); }
@@ -323,6 +328,8 @@ function CampaignsContent() {
         is_demo: true, // Default to demo for agency campaigns
         agent_name: "Sofia", // Default agent name
         calendar_link: "https://cal.com/lead-awaker-orlfpr/demo", // Demo calendar
+        ai_model: "gpt-4.1",
+        bot_token: "8280015135:AAGqqekYPNnGHa0zSn19Irop-9Ti1AAoBe8", // Demo bot token
       };
       if (isAgencyUser) {
         payload.Accounts_id = 1; // Lead Awaker (use DB field name, gets converted by fromDbKeys)
@@ -392,7 +399,7 @@ function CampaignsContent() {
 
   return (
     <>
-      <div className="flex flex-col h-full relative" data-onboarding="campaigns-list">
+      <div className="la-page" data-onboarding="campaigns-list">
         <div className="flex-1 overflow-hidden relative">
           <CampaignListView
             campaigns={campaigns}

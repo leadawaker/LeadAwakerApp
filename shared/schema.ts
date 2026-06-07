@@ -316,7 +316,7 @@ export const campaigns = nocodb.table("Campaigns", {
   inquiryTimeframe: text("inquiry_timeframe"),
   whatLeadDid: text("what_lead_did"),
   firstMessage: text("First_Message"),
-  secondMessage: text("second_message"),
+
   agentName: text("agent_name"),
   serviceName: text("service_name"),
   typoCount: integer("typo_count").default(1),
@@ -681,6 +681,7 @@ export const users = nocodb.table("Users", {
   email: varchar("email"),
   passwordHash: text("password_hash"),
   preferences: varchar("preferences"),
+  encryptedClaudeApiKey: text("encrypted_claude_api_key"),
 }, (t) => [
   index("users_email_idx").on(t.email),
 ]);
@@ -1005,7 +1006,7 @@ export const tasks = nocodb.table("Tasks", {
   createdByUserId: integer("created_by_user_id").references(() => users.id),
   title: text("title").notNull(),
   description: text("description"),
-  status: text("status").notNull().default("todo"), // "todo" | "in_progress" | "done" | "cancelled"
+  status: text("status").notNull().default("todo"), // "todo" | "in_progress" | "waiting" | "done" | "cancelled"
   priority: text("priority").notNull().default("medium"), // "low" | "medium" | "high" | "urgent"
   taskType: text("task_type").notNull().default("admin"), // "follow_up" | "call" | "review" | "admin" | "custom"
   dueDate: timestamp("due_date", { withTimezone: true }),
@@ -1021,6 +1022,9 @@ export const tasks = nocodb.table("Tasks", {
   emoji: text("emoji"),
   timeEstimate: integer("time_estimate"), // minutes
   tags: text("tags"), // JSON string array e.g. '["Frontend","Bug"]'
+  isArchived: boolean("is_archived").notNull().default(false),
+  isRecurring: boolean("is_recurring").notNull().default(false),
+  recurringPeriod: text("recurring_period"), // "daily" | "weekly" | "biweekly" | "monthly"
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
@@ -1030,6 +1034,7 @@ export const tasks = nocodb.table("Tasks", {
   index("tasks_due_date_idx").on(t.dueDate),
   index("tasks_category_id_idx").on(t.categoryId),
   index("tasks_parent_task_id_idx").on(t.parentTaskId),
+  index("tasks_is_archived_idx").on(t.isArchived),
 ]);
 
 export const insertTaskSchema = createInsertSchema(tasks, {
@@ -1089,6 +1094,41 @@ export const insertTaskSubtaskSchema = createInsertSchema(taskSubtasks).omit({
 });
 export type TaskSubtask = typeof taskSubtasks.$inferSelect;
 export type InsertTaskSubtask = z.infer<typeof insertTaskSubtaskSchema>;
+
+
+// ─── Task Comments ───────────────────────────────────────────────────────────
+export const taskComments = nocodb.table("Task_Comments", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  userId: integer("user_id"),
+  authorName: text("author_name").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("task_comments_task_id_idx").on(t.taskId),
+]);
+
+export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({ id: true, createdAt: true });
+export type TaskComment = typeof taskComments.$inferSelect;
+export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
+
+// ─── Task Attachments ────────────────────────────────────────────────────────
+export const taskAttachments = nocodb.table("Task_Attachments", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  uploadedBy: text("uploaded_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("task_attachments_task_id_idx").on(t.taskId),
+]);
+
+export const insertTaskAttachmentSchema = createInsertSchema(taskAttachments).omit({ id: true, createdAt: true });
+export type TaskAttachment = typeof taskAttachments.$inferSelect;
+export type InsertTaskAttachment = z.infer<typeof insertTaskAttachmentSchema>;
 
 
 // ─── AI Agents ──────────────────────────────────────────────────────────────

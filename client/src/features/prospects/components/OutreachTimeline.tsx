@@ -123,7 +123,7 @@ export function OutreachTimeline({ prospectId, refreshKey }: OutreachTimelinePro
               <span className="text-[10px] text-muted-foreground/50 tabular-nums shrink-0">{relativeTime(ts)}</span>
               {/* Open in conversations */}
               <a
-                href={`${window.location.pathname.startsWith("/agency") ? "/agency" : "/subaccount"}/conversations?tab=prospects&prospectId=${prospectId}`}
+                href={`/platform/outreach-inbox?prospectId=${prospectId}`}
                 onClick={(e) => e.stopPropagation()}
                 className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-brand-indigo transition-colors shrink-0"
                 title={t("interactions.openConversations", "Open in conversations")}

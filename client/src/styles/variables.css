@@ -1,188 +1,229 @@
-/* LIGHT MODE - Brand Colors derived from Lead Awaker */
+/* Neumorphic Warm-Bone Design System — Light Mode */
+
 :root {
-  /* Safe-area insets for notched/bar devices (iOS, Android) */
+  /* Safe-area insets */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --topbar-h: calc(50px + var(--safe-top));
   --bottombar-h: calc(64px + var(--safe-bottom));
 
-  /* Palette: wine (accent), gray (page bg), beige (cards/nav), white */
-  --background: 0 0% 100%; /* White — base */
-  --foreground: 0 0% 20%; /* Near black — high contrast */
-  --bg-main: 0 0% 88%; /* #E0E0E0 — gray page background behind cards */
+  /* ── Grounds & Surfaces ── */
+  --background: 38 27% 88%;          /* #ECE7DD — warm bone page ground */
+  --foreground: 30 14% 10%;          /* #1F1A14 — warm near-black text */
+  --bg-main: 38 27% 88%;             /* matches background */
+  --bg-2: 38 29% 85%;                /* #E4DCCC — sidebar / nav rail */
 
-  --card: 0 0% 98%; /* #FAFAFA — cards */
-  --card-foreground: 0 0% 12%;
-  --card-hover: 0 0% 99%; /* slightly brighter on hover */
+  --card: 0 0% 100%;                 /* #FFFFFF — white cards */
+  --card-foreground: 30 14% 10%;
+  --card-hover: 40 43% 97%;          /* #FBF8F2 — near-white warm hover */
 
-  --popover: 0 0% 98%; /* #FAFAFA — popovers/dropdowns */
-  --popover-foreground: 0 0% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 14% 10%;
 
-  /* Primary: Wine */
-  --primary: 345 45% 38%;
+  /* Primary: Deep Wine */
+  --primary: 346 43% 25%;            /* #5E2230 */
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: light neutral gray */
-  --secondary: 0 0% 90%;
-  --secondary-foreground: 0 0% 15%;
+  /* Secondary: warm bone surface */
+  --secondary: 38 29% 85%;
+  --secondary-foreground: 30 14% 10%;
 
-  /* Muted — outer list containers / secondary panels (beige) */
-  --muted: 0 0% 98%;
-  --muted-foreground: 40 6% 42%;
+  /* Muted */
+  --muted: 39 30% 96%;               /* warm near-white */
+  --muted-foreground: 39 15% 38%;    /* #6C6354 — warm muted text */
 
   /* Accent: Wine */
-  --accent: 345 45% 38%;
+  --accent: 346 43% 25%;
   --accent-foreground: 0 0% 100%;
 
+  /* Destructive */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
 
   /* Toast semantic colors */
-  --success: 152 45% 42%;
+  --success: 150 52% 38%;            /* #2F9461 — emerald */
   --success-foreground: 0 0% 100%;
-  --info: 345 45% 38%;
+  --info: 346 43% 25%;
   --info-foreground: 0 0% 100%;
 
-  --border: 0 0% 82%; /* neutral gray border */
-  --input: 0 0% 92%; /* neutral gray for inputs */
-  --ring: 345 45% 38%;
+  /* Borders */
+  --border: 38 20% 60%;              /* warm bone border */
+  --input: 38 27% 88%;
+  --ring: 346 43% 25%;
 
-  --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
+  --radius: 1.5rem;
 
-  /* ── Layout tokens — centralized so a single edit propagates everywhere ── */
-  --panel-gap: 16px;                      /* gap between the list menu and the main panel on every page */
-  --panel-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06); /* default resting shadow on panels */
-  --card-glow: 0 0 0 1px rgb(60 40 30 / 0.04), 0 0 10px 0 rgb(40 25 15 / 0.10); /* small dark glow — bigger off-white panels */
-  --card-shadow: 0 2px 4px 0 rgb(40 25 15 / 0.12); /* small 2px-beneath shadow — small cards / contact sections (default) */
-  --panel-radius: 0.5rem;                 /* panel container corner radius */
-  --shell-corner: var(--radius);          /* rounded inner corner where navbar meets topbar — default curve */
+  /* ── Layout tokens ── */
+  --panel-gap: 16px;
+  --panel-shadow: var(--sh-raised-medium);
+  --card-glow: var(--sh-raised-crisp);
+  --card-shadow: var(--sh-raised-crisp);
+  --panel-radius: 0.5rem;
+  --shell-corner: var(--radius);
 
-  /* ── Button tokens — change button look in one place ── */
-  --btn-radius: 0.75rem;                  /* default button corner radius */
-  --btn-height: 2.25rem;                  /* default (md) button height = 36px */
-  --btn-height-sm: 2rem;                  /* small button height = 32px */
-  --btn-height-lg: 2.75rem;               /* large button height = 44px */
-  --btn-px: 1rem;                         /* default horizontal padding */
+  /* ── Button tokens ── */
+  --btn-radius: 0.75rem;
+  --btn-height: 2.25rem;
+  --btn-height-sm: 2rem;
+  --btn-height-lg: 2.75rem;
+  --btn-px: 1rem;
 
-  /* Chart colors (light mode) — brand-aligned */
-  --chart-1: 243 75% 59%;    /* Brand Indigo */
-  --chart-2: 160 60% 45%;    /* Teal */
-  --chart-3: 44 98% 50%;     /* Brand Yellow */
-  --chart-4: 280 65% 55%;    /* Purple */
-  --chart-5: 0 72% 55%;      /* Red */
+  /* ── Chart colors ── */
+  --chart-1: 346 43% 25%;
+  --chart-2: 150 52% 38%;
+  --chart-3: 37 70% 50%;
+  --chart-4: 260 23% 45%;
+  --chart-5: 10 50% 40%;
 
-  /* ── Brand Tokens (Light Mode) — all mapped to Wine ── */
-  --brand-blue: 345 45% 38%;
+  /* ── Brand tokens (all wine in light mode) ── */
+  --brand-blue: 346 43% 25%;
   --brand-blue-foreground: 0 0% 100%;
-  --brand-deep-blue: 345 50% 25%;
+  --brand-deep-blue: 346 50% 18%;
   --brand-deep-blue-foreground: 0 0% 100%;
-  --brand-yellow: 345 45% 38%;
+  --brand-yellow: 346 43% 25%;
   --brand-yellow-foreground: 0 0% 100%;
-  --brand-soft-yellow: 345 40% 55%;
+  --brand-soft-yellow: 346 40% 45%;
   --brand-soft-yellow-foreground: 0 0% 100%;
-  --brand-indigo: 345 45% 38%;
+  --brand-indigo: 346 43% 25%;
   --brand-indigo-foreground: 0 0% 100%;
-  --brand-indian-yellow: 0 0% 98%;
-  --brand-indian-yellow-foreground: 0 0% 12%;
+  --brand-indian-yellow: 39 30% 96%;
+  --brand-indian-yellow-foreground: 30 14% 10%;
+
   /* Highlight tokens — wine tints for active/selected */
-  --highlight-active: 347 40% 87%;   /* #EBD1D7 — light wine active pill/tab */
-  --highlight-selected: 347 40% 87%; /* #EBD1D7 — light wine selected card/row */
-  --highlight-hover: 345 45% 80%;    /* wine — hover on highlighted */
-  /* Input field background */
-  --input-bg: 0 0% 92%;
+  --highlight-active: 347 40% 87%;
+  --highlight-selected: 347 40% 87%;
+  --highlight-hover: 345 40% 80%;
+  --input-bg: 38 27% 88%;
 
-  /* Sidebar / nav surface (light mode) — beige #FFFBF5, shared by nav + topbar */
-  --sidebar-bg: 0 0% 96%; /* #F5F5F5 — nav & topbar */
-  --sidebar-foreground: 0 0% 25%;
-  --sidebar-active: 345 45% 38%; /* Wine — selected nav page */
+  /* Sidebar */
+  --sidebar-bg: 40 53% 97%;          /* #FBF8F2 — matches --surface (main content) */
+  --sidebar-foreground: 30 14% 10%;
+  --sidebar-active: 346 43% 25%;
   --sidebar-active-foreground: 0 0% 100%;
-}
 
-/* DARK MODE — Deep navy-indigo surfaces with proper elevation hierarchy */
-.dark {
-  /* Base surfaces — #131E30 background, stepped elevation via lightness */
-  --background: 217 43% 13%;       /* #131E30 — main page bg */
-  --foreground: 0 0% 100%;         /* #FFFFFF — primary text */
-  --bg-main: 217 43% 13%;          /* Match background */
+  /* Left list panel */
+  --panel-list-bg: 38 29% 85%;
 
-  /* Cards — #243249 elevated surface */
-  --card: 217 34% 21%;             /* #243249 — floating cards */
-  --card-foreground: 0 0% 100%;
-  --card-hover: 225 26% 32%;       /* #3D4868 — hover tint on cards */
+  /* ── Design System Tokens (used in inline styles / new components) ── */
+  --surface: #FBF8F2;                /* near-white raised chips/buttons */
+  --paper: #FFFFFF;                   /* elevated paper / hero band */
+  --card-bright: #FFFFFF;            /* polished hero card */
+  --chrome: #E4DCCC;                 /* explicit alias for nav chrome */
+  --ink-soft: #322B22;               /* secondary text */
+  --mute: #6C6354;                   /* secondary warm text */
+  --mute-2: #948A77;                 /* tertiary warm text */
+  --wine: #5E2230;                   /* brand wine hex */
+  --wine-soft: #7A2E3E;             /* wine hover */
+  --wine-tint: rgba(94, 34, 48, 0.08);
+  --wine-glow: rgba(94, 34, 48, 0.18);
+  --wine-grad: linear-gradient(145deg, #6E2638, #4B1A26);
+  --good: #2F9461;                   /* emerald status */
+  --good-tint: rgba(47, 148, 97, 0.12);
+  --warn: #DA9426;                   /* amber status */
+  --warn-tint: rgba(218, 148, 38, 0.13);
+  --line: rgba(110, 95, 65, 0.14);
+  --line-strong: rgba(110, 95, 65, 0.24);
 
-  /* Popovers — #232B38 slightly above background */
-  --popover: 217 23% 18%;          /* #232B38 — dropdowns, popovers */
-  --popover-foreground: 0 0% 100%;
+  /* ── Pipeline stage colors ── */
+  --stage-new: #6C5A8C;
+  --stage-contacted: #547BB0;
+  --stage-responded: #3F8E8E;
+  --stage-multi: #5E8E5E;
+  --stage-qualified: #B58F3E;
+  --stage-booked: #C48A2F;
+  --stage-closed: #6E7A5E;
+  --stage-lost: #A24B3F;
+  --stage-dnd: #9D8E76;
 
-  /* Primary: Brand Indigo — brighter for dark bg legibility */
-  --primary: 243 85% 68%;
-  --primary-foreground: 0 0% 100%;
+  /* ── Directional light system ── */
+  --lx: 0.94;
+  --ly: -0.34;
+  --light-x: 92%;
+  --light-y: 6%;
+  --light-intensity: 0.7;
+  --light-warm: 255, 224, 168;
+  --light-strength: 1;
+  --depth-scale: 1;
+  --depth-polished: 4;
 
-  /* Secondary: subtle navy surface */
-  --secondary: 215 44% 17%;
-  --secondary-foreground: 0 0% 95%;
+  /* ── Neumorphic shadow base colors ── */
+  --neu-dark: rgba(105, 75, 40, 0.55);
+  --neu-light: rgba(255, 253, 245, 1.0);
 
-  /* Muted — #18283E navy dark surface */
-  --muted: 215 44% 17%;            /* #18283E */
-  --muted-foreground: 225 23% 59%; /* #7E8AAE */
+  /* ── Shadow offset/blur tiers ── */
+  --d-crisp-o: 5px;
+  --d-crisp-b: 13px;
+  --d-medium-o: 10px;
+  --d-medium-b: 28px;
+  --d-large-o: 18px;
+  --d-large-b: 48px;
 
-  /* Accent: warmer gold adjusted for dark */
-  --accent: 38 90% 58%;
-  --accent-foreground: 0 0% 100%;
+  /* ── RAISED — bilateral neumorphic (extruded from surface) ── */
+  --sh-raised-crisp:
+    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
+    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) var(--neu-light);
+  --sh-raised-medium:
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) var(--neu-light);
+  --sh-raised-large:
+    calc(var(--lx) * var(--d-large-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o) * var(--light-strength) * -1) var(--d-large-b) var(--neu-dark),
+    calc(var(--lx) * var(--d-large-o) * var(--light-strength)) calc(var(--ly) * var(--d-large-o) * var(--light-strength)) var(--d-large-b) var(--neu-light);
 
-  /* Destructive: lighter red on dark for readability */
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 98%;
+  /* ── INSET — pressed in (raised inverted) ── */
+  --sh-inset-crisp:
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) var(--neu-light);
+  --sh-inset-medium:
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) var(--neu-light);
 
-  /* Toast semantic colors (dark mode) */
-  --success: 142 71% 45%;
-  --success-foreground: 0 0% 100%;
-  --info: 243 85% 68%;
-  --info-foreground: 0 0% 100%;
+  /* ── Glass tokens ── */
+  --glass-bg: rgba(255, 250, 240, 0.55);
+  --glass-bg-strong: rgba(255, 250, 240, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-edge: rgba(255, 255, 255, 0.85);
 
-  /* Borders: visible on dark surfaces */
-  --border: 237 21% 59%;           /* #8183AC */
-  --input: 237 21% 59%;
-  --ring: 0 0% 80%;
+  /* ── Radius tiers ── */
+  --r-flush: 6px;
+  --r-button: 8px;
+  --r-surface: 11px;
+  --r-card: 16px;
+  --r-panel: 22px;
+  --r-pill: 999px;
 
-  /* Chart colors adjusted for dark */
-  --chart-1: 230 80% 65%;
-  --chart-2: 160 60% 50%;
-  --chart-3: 38 90% 58%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 0 72% 55%;
+  /* ── Spacing scale ── */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
 
-  /* ── Brand Tokens (Dark Mode) ── */
-  --brand-blue: 243 85% 68%;
-  --brand-blue-foreground: 0 0% 100%;
-  --brand-deep-blue: 217 43% 13%;
-  --brand-deep-blue-foreground: 223 20% 93%;
-  --brand-yellow: 44 98% 55%;
-  --brand-yellow-foreground: 218 41% 12%;
-  --brand-soft-yellow: 43 97% 65%;
-  --brand-soft-yellow-foreground: 218 41% 12%;
-  /* Brand Indigo (dark mode) */
-  --brand-indigo: 243 85% 68%;
-  --brand-indigo-foreground: 0 0% 100%;
-  /* Indian Yellow (dark mode) */
-  --brand-indian-yellow: 35 60% 52%;
-  --brand-indian-yellow-foreground: 0 0% 100%;
-  /* Highlight tokens (dark) */
-  --highlight-active: 40 50% 24%;   /* Deep warm amber — active pill/tab */
-  --highlight-selected: 40 55% 30%; /* 25% brighter amber — selected card/row */
-  --highlight-hover: 243 40% 36%;   /* Indigo-tinted — hover on highlighted */
-  /* Input field background — #232E4D */
-  --input-bg: 224 38% 22%;
+  /* ── Density tokens ── */
+  --pad: 28px;
+  --pad-tight: 18px;
+  --gap: 18px;
 
-  /* Sidebar tokens (dark mode) — deeper than background */
-  --sidebar-bg: 217 45% 9%;
-  --sidebar-foreground: 0 0% 90%;
-  --sidebar-active: 348 50% 45%; /* Strong wine (dark mode) — selected nav page */
-  --sidebar-active-foreground: 0 0% 100%;
-}
-
-/* Agency mode: unified Brand Indigo — no swap */
-.agency-mode {
-  --brand-blue: 243 75% 59%;
-  --brand-blue-foreground: 0 0% 100%;
+  /* ── Surface primitive tokens ── */
+  --list-card-radius: 0.75rem;
+  --list-card-radius-mobile: 1.5rem;
+  --list-card-pad-x: 0.625rem;
+  --list-card-pad-y: 0.5rem;
+  --list-card-min-h: 3.5rem;
+  --list-card-gap: 3px;
+  --list-card-shadow: var(--sh-raised-crisp);
+  --list-card-shadow-hover: 0 2px 8px rgb(0 0 0 / 0.08);
+  /* Group header */
+  --group-header-pad-x: 0.75rem;
+  --group-header-pad-y: 0.75rem;
+  --group-header-sticky-top: 0px;
+  --group-header-bg: hsl(var(--muted));
+  /* Pill */
+  --pill-radius: 9999px;
+  --pill-pad-x: 0.375rem;
+  --pill-pad-y: 0.125rem;
+  /* Section panel */
+  --panel-pad: 0.75rem;
+  --panel-bg: hsl(var(--card));
 }

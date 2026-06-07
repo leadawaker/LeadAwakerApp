@@ -6,17 +6,20 @@ import {
   ChevronDown,
   ChevronRight,
   Tag as TagIcon,
+  MessageSquare,
 } from "lucide-react";
 import { updateLead } from "../api/leadsApi";
 import { resolveColor } from "@/features/tags/types";
 import type { VirtualListItem } from "./LeadsCardView";
-import { PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
-import { getLeadStatusAvatarColor, getInitials } from "@/lib/avatarUtils";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { getLeadId } from "./LeadsCardView";
+import { getInitials, PIPELINE_HEX } from "@/lib/avatarUtils";
+import { getLastMessage, getLastMessageSender } from "./cardView/leadUtils";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useLocation } from "wouter";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 /** Convert hex to a desaturated opaque tint (for group header backgrounds).
  *  Reduces saturation by 70%, then blends at 18% over white. */
@@ -37,7 +40,7 @@ function opaqueTint(hex: string): string {
 // ── Column definitions ─────────────────────────────────────────────────────────
 type ColKey =
   | "name" | "status" | "score" | "phone" | "email" | "campaign"
-  | "tags" | "lastActivity" | "notes"
+  | "tags" | "lastActivity" | "lastMessage" | "notes" | "chats"
   | "account" | "source" | "company" | "bumpStage" | "createdAt" | "assignedTo";
 
 interface ColumnDef {
@@ -55,9 +58,11 @@ const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "phone",        label: "Phone",         width: 140, editable: true,  type: "text"   },
   { key: "email",        label: "Email",         width: 180, editable: true,  type: "text"   },
   { key: "campaign",     label: "Campaign",      width: 130, editable: false, type: "text"   },
+  { key: "lastMessage",  label: "Last Message",  width: 260, editable: false, type: "text"   },
   { key: "tags",         label: "Tags",          width: 160, editable: false, type: "text"   },
   { key: "lastActivity", label: "Last Activity", width: 110, editable: false, type: "text"   },
   { key: "notes",        label: "Notes",         width: 200, editable: true,  type: "text"   },
+  { key: "chats",        label: "Chats",         width: 60,  editable: false, type: "text"   },
   // Extended (hidden by default — toggled via Fields button)
   { key: "account",      label: "Account",       width: 130, editable: false, type: "text"   },
   { key: "source",       label: "Source",        width: 110, editable: false, type: "text"   },
@@ -79,22 +84,71 @@ const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
   notes:  "notes",
 };
 
-const STATUS_DOT: Record<string, string> = {
-  New:                  "bg-gray-500",
-  Contacted:            "bg-indigo-600",
-  Responded:            "bg-teal-500",
-  "Multiple Responses": "bg-green-500",
-  Qualified:            "bg-lime-500",
-  Booked:               "bg-amber-500",
-  Closed:               "bg-emerald-500",
-  Lost:                 "bg-red-500",
-  DND:                  "bg-zinc-500",
-};
+// ── Design-system checkbox (matches `Check` in leads-views.jsx) ────────────────
+function DesignCheck({
+  on, indeterminate, onClick, title,
+}: { on: boolean; indeterminate?: boolean; onClick: (e: React.MouseEvent) => void; title?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      style={{
+        width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+        border: on || indeterminate ? "none" : "1.5px solid var(--line-strong)",
+        background: on ? "var(--wine)" : indeterminate ? "var(--wine-tint)" : "transparent",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", color: "#fff", transition: "all 120ms",
+      }}
+    >
+      {on && <Check style={{ width: 12, height: 12 }} strokeWidth={3} />}
+      {indeterminate && !on && (
+        <span style={{ width: 8, height: 2, borderRadius: 1, background: "var(--wine)" }} />
+      )}
+    </button>
+  );
+}
+
+// ── Last Message cell (matches `LastMsgCell` in leads-views.jsx) ───────────────
+function LastMessageCell({ lead, t }: { lead: Record<string, any>; t: (k: string, opts?: Record<string, any>) => string }) {
+  const text = getLastMessage(lead);
+  if (!text) return <span style={{ color: "var(--mute-2)", fontSize: 12 }}>&mdash;</span>;
+  const sender = getLastMessageSender(lead); // "" → inbound (lead), "AI" → outbound
+  const isIn = sender !== "AI";
+  const leadFirst = (getFullName(lead).split(/\s+/)[0]) || "Lead";
+  const d = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at || "";
+  const time = formatRelativeTime(d, t);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+      <span
+        style={{
+          fontFamily: "var(--mono)", fontSize: 7.5, letterSpacing: "0.1em",
+          textTransform: "uppercase", fontWeight: 700,
+          color: isIn ? "var(--good)" : "var(--wine)",
+          background: isIn ? "var(--good-tint)" : "var(--wine-tint)",
+          borderRadius: "var(--r-pill)", padding: "2px 7px", flexShrink: 0, maxWidth: 78,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}
+      >
+        {isIn ? leadFirst : "AI"}
+      </span>
+      <span
+        style={{
+          fontSize: 12, color: "var(--ink-soft)", overflow: "hidden",
+          textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0,
+        }}
+      >
+        {text}
+      </span>
+      {time && (
+        <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", flexShrink: 0 }}>
+          {time}
+        </span>
+      )}
+    </div>
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getLeadId(lead: Record<string, any>): number {
-  return lead.Id ?? lead.id ?? 0;
-}
 function getFullName(lead: Record<string, any>): string {
   return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
 }
@@ -151,11 +205,13 @@ interface EditableCellProps {
   onEditChange: (v: string) => void;
   onSave: (v: string) => void;
   onCancel: () => void;
+  /** Optional inline style applied to the read-mode display text (design tokens). */
+  displayStyle?: React.CSSProperties;
 }
 
 function EditableCell({
   value, type, isEditing, editValue, isSaving, hasError,
-  onStartEdit, onEditChange, onSave, onCancel,
+  onStartEdit, onEditChange, onSave, onCancel, displayStyle,
 }: EditableCellProps) {
   const { t } = useTranslation("leads");
   if (isEditing && type === "select") {
@@ -216,10 +272,10 @@ function EditableCell({
       onClick={(e) => { e.stopPropagation(); onStartEdit(); }}
       title={hasError ? t("table.saveFailed") : value}
     >
-      <span className="truncate flex-1">
+      <span className="truncate flex-1" style={displayStyle}>
         {value
           ? (type === "select" ? t(`kanban.stageLabels.${value.replace(/ /g, "")}`, value) : value)
-          : <span className="text-muted-foreground/35 italic not-italic">&mdash;</span>}
+          : <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
       </span>
       {isSaving && (
         <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
@@ -243,9 +299,18 @@ function SortableHeaderCell({ col, isFirst, t, onResizeStart }: { col: ColumnDef
   return (
     <th
       ref={setNodeRef}
-      style={style}
+      style={{
+        ...style,
+        fontFamily: "var(--mono)",
+        fontSize: 9,
+        letterSpacing: "0.14em",
+        textTransform: "uppercase",
+        color: "var(--mute-2)",
+        background: "var(--bg)",
+        borderBottom: "1px solid var(--line)",
+      }}
       className={cn(
-        "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
+        "px-3 py-2 text-left whitespace-nowrap select-none",
         isFirst && "sticky left-[36px] z-30",
       )}
     >
@@ -255,7 +320,10 @@ function SortableHeaderCell({ col, isFirst, t, onResizeStart }: { col: ColumnDef
       </div>
       {/* Resize handle — isolated from DnD listeners */}
       <div
-        className="absolute right-0 top-0 bottom-0 w-[6px] cursor-col-resize hover:bg-brand-indigo/30"
+        className="absolute right-0 top-0 bottom-0 w-[6px] cursor-col-resize"
+        style={{ borderRight: "2px solid transparent" }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderRight = "2px solid var(--wine)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderRight = "2px solid transparent"; }}
         onMouseDown={(e) => { e.stopPropagation(); onResizeStart(col.key, e); }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -308,6 +376,8 @@ export function LeadsInlineTable({
   groupBy,
 }: LeadsInlineTableProps) {
   const { t } = useTranslation("leads");
+  const [, setLocation] = useLocation();
+  const { isAgencyUser } = useWorkspace();
 
   // ── Editing state ─────────────────────────────────────────────────────────
   const [editingCell,    setEditingCell]    = useState<{ leadId: number; field: ColKey } | null>(null);
@@ -458,6 +528,7 @@ export function LeadsInlineTable({
         return d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
       }
       case "assignedTo":   return lead.assigned_to || lead.AssignedTo || "";
+      case "chats":        return "";
       default:             return "";
     }
   }
@@ -642,7 +713,7 @@ export function LeadsInlineTable({
         <div ref={tableScrollRef} className="flex-1 min-h-0 overflow-auto">
           <table
             className={cn("min-w-full w-full", showVerticalLines && "[&_td]:border-r [&_td]:border-border/10 [&_th]:border-r [&_th]:border-border/10")}
-            style={{ borderCollapse: "separate", borderSpacing: "0 2px", tableLayout: "fixed" }}
+            style={{ borderCollapse: "collapse", tableLayout: "fixed" }}
           >
 
             {/* Enforce column widths + trailing fill column */}
@@ -654,28 +725,22 @@ export function LeadsInlineTable({
               <col />
             </colgroup>
 
-            {/* Sticky header with select-all checkbox + boxShadow */}
-            <thead className="sticky top-0 z-40 bg-muted" style={{ boxShadow: "0 2px 0 0 hsl(var(--muted))" }}>
+            {/* Sticky header with select-all checkbox */}
+            <thead className="sticky top-0 z-40" style={{ background: "var(--bg)" }}>
               <tr>
                 {/* Select-all checkbox */}
                 <th
-                  className="sticky left-0 z-30 w-[36px] px-2 py-2 bg-muted border-b border-border/20"
+                  className="sticky left-0 z-30 w-[36px] px-2 py-2"
+                  style={{ background: "var(--bg)", borderBottom: "1px solid var(--line)" }}
                 >
-                  <button
-                    onClick={handleSelectAll}
-                    className={cn(
-                      "h-4 w-4 rounded border flex items-center justify-center transition-colors",
-                      allSelected
-                        ? "bg-brand-indigo border-brand-indigo text-white"
-                        : someSelected
-                          ? "bg-brand-indigo/30 border-brand-indigo/50"
-                          : "border-border/50 hover:border-foreground/30"
-                    )}
-                    title={allSelected ? t("table.deselectAll") : t("table.selectAll")}
-                  >
-                    {allSelected && <Check className="h-2.5 w-2.5" />}
-                    {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
-                  </button>
+                  <div className="flex items-center justify-center">
+                    <DesignCheck
+                      on={allSelected}
+                      indeterminate={someSelected}
+                      onClick={(e) => { e.stopPropagation(); handleSelectAll(); }}
+                      title={allSelected ? t("table.deselectAll") : t("table.selectAll")}
+                    />
+                  </div>
                 </th>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={visibleColumns.map(c => c.key)} strategy={horizontalListSortingStrategy}>
@@ -685,7 +750,7 @@ export function LeadsInlineTable({
                   </SortableContext>
                 </DndContext>
                 {/* Trailing fill header cell */}
-                <th className="bg-muted border-b border-border/20" />
+                <th style={{ background: "var(--bg)", borderBottom: "1px solid var(--line)" }} />
               </tr>
             </thead>
 
@@ -722,18 +787,13 @@ export function LeadsInlineTable({
                           style={{ backgroundColor: groupBg }}
                         >
                           <div className="flex items-center justify-center h-full">
-                            <div
-                              className={cn(
-                                "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                              )}
+                            <DesignCheck
+                              on={isGroupFullySelected}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleGroupCheckbox(item.label);
                               }}
-                            >
-                              {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
-                            </div>
+                            />
                           </div>
                         </td>
 
@@ -744,10 +804,10 @@ export function LeadsInlineTable({
                         >
                           <div className="flex items-center gap-2">
                             {isCollapsed
-                              ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
-                              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
-                            <span className="text-[11px] font-bold text-foreground/70">{item.label}</span>
-                            <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{item.count}</span>
+                              ? <ChevronRight className="h-3.5 w-3.5" style={{ color: "var(--mute-2)" }} />
+                              : <ChevronDown className="h-3.5 w-3.5" style={{ color: "var(--mute-2)" }} />}
+                            <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: "var(--ink-soft)" }}>{item.label}</span>
+                            <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "1px 6px", borderRadius: "var(--r-pill)" }}>{item.count}</span>
                           </div>
                         </td>
 
@@ -770,38 +830,47 @@ export function LeadsInlineTable({
                   const name             = getFullName(lead);
                   const score            = getScore(lead);
                   const leadStatus       = getStatus(lead);
-                  const avatarColor      = getLeadStatusAvatarColor(leadStatus);
-                  const bgClass          = isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover";
+                  const stageHex         = PIPELINE_HEX[leadStatus] || PIPELINE_HEX.New || "#6C5A8C";
+                  // Sticky cells need an opaque background that tracks the row state.
+                  // `--row-bg` is updated on hover via inline mouse handlers below.
+                  const rowBg            = isHighlighted ? "var(--card)" : "var(--row-bg, transparent)";
 
                   const isRowEditing = editingCell?.leadId === leadId;
                   const currentRowIdx = rowIdx++;
+                  const stickyCellStyle: React.CSSProperties = {
+                    background: rowBg,
+                    boxShadow: isHighlighted ? "inset 3px 0 0 var(--wine)" : undefined,
+                  };
                   return (
                     <tr
                       key={leadId}
                       data-lead-id={leadId}
-                      className={cn(
-                        "group/row cursor-pointer h-[52px] animate-card-enter",
-                        isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
-                      )}
+                      className="group/row cursor-pointer h-[52px] animate-card-enter"
                       style={{
                         animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms`,
+                        background: isHighlighted ? "var(--card)" : "transparent",
+                        borderBottom: "1px solid var(--line)",
+                        boxShadow: isHighlighted ? "inset 3px 0 0 var(--wine)" : undefined,
                         ...(isRowEditing ? { position: "relative" as const, zIndex: 50 } : {}),
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isHighlighted) e.currentTarget.style.setProperty("--row-bg", "var(--surface)");
+                        if (!isHighlighted) e.currentTarget.style.background = "var(--surface)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isHighlighted) e.currentTarget.style.setProperty("--row-bg", "transparent");
+                        if (!isHighlighted) e.currentTarget.style.background = "transparent";
                       }}
                       onClick={(e) => handleRowClick(lead, e)}
                     >
                       {/* Checkbox cell — opaque sticky background */}
                       <td
-                        className={cn(
-                          "sticky left-0 z-10 w-[36px] px-0",
-                          bgClass,
-                        )}
+                        className="sticky left-0 z-10 w-[36px] px-0"
+                        style={stickyCellStyle}
                       >
                         <div className="flex items-center justify-center h-full">
-                          <div
-                            className={cn(
-                              "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                              isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                            )}
+                          <DesignCheck
+                            on={isMultiSelected}
                             onClick={(e) => {
                               e.stopPropagation();
                               const next = new Set(selectedIds);
@@ -813,29 +882,37 @@ export function LeadsInlineTable({
                                 if (only) onSelectLead(only.lead);
                               }
                             }}
-                          >
-                            {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                          </div>
+                          />
                         </div>
                       </td>
                       {visibleColumns.map((col, ci) => {
                         const isFirst = ci === 0;
-                        const tdClass = cn(
-                          isFirst && "sticky left-[36px] z-10",
-                          isFirst && bgClass,
-                        );
+                        const tdClass = cn(isFirst && "sticky left-[36px] z-10");
+                        const tdStickyStyle = isFirst ? stickyCellStyle : undefined;
 
                         // ── Name ──
                         if (col.key === "name") {
                           return (
-                            <td key="name" className={cn("px-2.5", tdClass)}>
-                              <div className="flex items-center gap-2 min-w-0">
-                                <EntityAvatar
-                                  name={name}
-                                  bgColor={avatarColor.bg}
-                                  textColor={avatarColor.text}
-                                />
-                                <span className="text-[12px] font-medium truncate text-foreground">{name}</span>
+                            <td key="name" className={cn("px-2.5", tdClass)} style={tdStickyStyle}>
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div
+                                  style={{
+                                    width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                                    background: stageHex,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    color: "#fff", fontFamily: "var(--mono)", fontWeight: 600,
+                                    fontSize: 11, letterSpacing: "0.01em",
+                                    boxShadow: "var(--sh-raised-crisp)",
+                                  }}
+                                >
+                                  {getInitials(name)}
+                                </div>
+                                <span
+                                  className="truncate"
+                                  style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}
+                                >
+                                  {name}
+                                </span>
                               </div>
                             </td>
                           );
@@ -846,10 +923,13 @@ export function LeadsInlineTable({
                           const cellVal = getCellValue(lead, "status");
                           const isEdit  = editingCell?.leadId === leadId && editingCell?.field === "status";
                           return (
-                            <td key="status" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
+                            <td key="status" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : tdStickyStyle}>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {!isEdit && (
-                                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[cellVal] ?? "bg-zinc-400")} />
+                                  <span
+                                    className="shrink-0"
+                                    style={{ width: 8, height: 8, borderRadius: "50%", background: PIPELINE_HEX[cellVal] || "var(--mute-2)" }}
+                                  />
                                 )}
                                 <EditableCell
                                   value={cellVal}
@@ -862,6 +942,7 @@ export function LeadsInlineTable({
                                   onEditChange={setEditValue}
                                   onSave={(v) => handleSave(leadId, "status", v, cellVal)}
                                   onCancel={cancelEdit}
+                                  displayStyle={{ fontSize: 12.5, color: "var(--ink-soft)", fontWeight: 500 }}
                                 />
                               </div>
                             </td>
@@ -870,12 +951,18 @@ export function LeadsInlineTable({
 
                         // ── Score (read-only) ──
                         if (col.key === "score") {
+                          const scoreColor = score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)";
                           return (
                             <td key="score" className={cn("px-2.5", tdClass)}>
                               {score > 0 ? (
-                                <ListScoreRing score={score} status={leadStatus} lead={lead} />
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ fontFamily: "var(--mono)", fontSize: 12, fontWeight: 700, color: "var(--ink)", width: 20 }}>{score}</span>
+                                  <div style={{ flex: 1, height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
+                                    <div style={{ width: `${Math.min(100, score)}%`, height: "100%", background: scoreColor, borderRadius: "var(--r-pill)" }} />
+                                  </div>
+                                </div>
                               ) : (
-                                <span className="text-muted-foreground/30 text-[11px]">&mdash;</span>
+                                <span style={{ color: "var(--mute-2)" }}>&mdash;</span>
                               )}
                             </td>
                           );
@@ -885,9 +972,18 @@ export function LeadsInlineTable({
                         if (col.key === "campaign") {
                           return (
                             <td key="campaign" className={cn("px-2.5", tdClass)}>
-                              <span className="text-[11px] text-muted-foreground truncate block">
-                                {getCellValue(lead, "campaign") || <span className="text-muted-foreground/30">&mdash;</span>}
+                              <span className="truncate block" style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+                                {getCellValue(lead, "campaign") || <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
                               </span>
+                            </td>
+                          );
+                        }
+
+                        // ── Last Message (read-only) ──
+                        if (col.key === "lastMessage") {
+                          return (
+                            <td key="lastMessage" className={cn("px-2.5", tdClass)}>
+                              <LastMessageCell lead={lead} t={t} />
                             </td>
                           );
                         }
@@ -917,16 +1013,50 @@ export function LeadsInlineTable({
                           );
                         }
 
+                        // ── Chats — link to conversation ──
+                        if (col.key === "chats") {
+                          const lid = getLeadId(lead);
+                          return (
+                            <td key="chats" className={cn("px-2.5", tdClass)}>
+                              <button
+                                className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-brand-indigo/10 text-muted-foreground hover:text-brand-indigo transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Lead chat now opens inline on the Leads page (Chats page retired)
+                                  try {
+                                    localStorage.setItem("selected-lead-id", String(lid));
+                                    localStorage.setItem("leads-view-mode", "list");
+                                  } catch {}
+                                  const basePath = "/platform";
+                                  setLocation(`${basePath}/contacts`);
+                                }}
+                                title={t("conversations.title", "Chats")}
+                              >
+                                <MessageSquare className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+                          );
+                        }
+
                         // ── Last Activity (read-only) ──
                         if (col.key === "lastActivity") {
                           return (
-                            <td key="lastActivity" className={cn("px-2.5 tabular-nums", tdClass)}>
-                              <span className="text-[11px] text-muted-foreground">
-                                {getCellValue(lead, "lastActivity") || <span className="text-muted-foreground/30">&mdash;</span>}
+                            <td key="lastActivity" className={cn("px-2.5", tdClass)}>
+                              <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>
+                                {getCellValue(lead, "lastActivity") || <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
                               </span>
                             </td>
                           );
                         }
+
+                        // Per-column display style (design tokens) for read/edit text.
+                        const colDisplayStyle: React.CSSProperties =
+                          col.key === "phone"   ? { fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--ink-soft)" }
+                          : col.key === "email" ? { fontSize: 12, color: "var(--mute)" }
+                          : col.key === "notes" ? { fontSize: 12, color: "var(--ink-soft)" }
+                          : col.key === "account" || col.key === "company" || col.key === "campaign"
+                                                ? { fontSize: 12, color: "var(--ink-soft)" }
+                          :                       { fontSize: 12, color: "var(--mute)" };
 
                         // ── Editable text columns ──
                         const colDef = ALL_TABLE_COLUMNS.find((c) => c.key === col.key)!;
@@ -937,7 +1067,7 @@ export function LeadsInlineTable({
                             <td
                               key={col.key}
                               className={cn("px-1", tdClass)}
-                              style={isEdit ? { overflow: "visible" } : undefined}
+                              style={isEdit ? { overflow: "visible" } : tdStickyStyle}
                             >
                               <EditableCell
                                 value={cellVal}
@@ -950,6 +1080,7 @@ export function LeadsInlineTable({
                                 onEditChange={setEditValue}
                                 onSave={(v) => handleSave(leadId, col.key, v, cellVal)}
                                 onCancel={cancelEdit}
+                                displayStyle={colDisplayStyle}
                               />
                             </td>
                           );
@@ -957,15 +1088,15 @@ export function LeadsInlineTable({
 
                         // ── Read-only text fallback (extended columns) ──
                         return (
-                          <td key={col.key} className={cn("px-2.5", tdClass)}>
-                            <span className="text-[11px] text-muted-foreground truncate block">
-                              {getCellValue(lead, col.key) || <span className="text-muted-foreground/30">&mdash;</span>}
+                          <td key={col.key} className={cn("px-2.5", tdClass)} style={tdStickyStyle}>
+                            <span className="truncate block" style={colDisplayStyle}>
+                              {getCellValue(lead, col.key) || <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
                             </span>
                           </td>
                         );
                       })}
                       {/* Trailing fill cell — opaque background */}
-                      <td className={bgClass} />
+                      <td style={{ background: rowBg }} />
                     </tr>
                   );
                 });

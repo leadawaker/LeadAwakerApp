@@ -78,8 +78,8 @@ export function MobileAddLeadForm({
 
   const validate = () => {
     const errs: { firstName?: string; phone?: string } = {};
-    if (!firstName.trim()) errs.firstName = "First name is required";
-    if (!phone.trim() && !email.trim()) errs.phone = "Phone or email is required";
+    if (!firstName.trim()) errs.firstName = t("addLead.firstNameRequired", "First name is required");
+    if (!phone.trim() && !email.trim()) errs.phone = t("addLead.phoneOrEmailRequired", "Phone or email is required");
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -108,11 +108,11 @@ export function MobileAddLeadForm({
           }).catch(() => {});
         }
       }
-      toast({ title: "Lead created", description: `${firstName} ${lastName}`.trim() });
+      toast({ title: t("addLead.created", "Lead created"), description: `${firstName} ${lastName}`.trim() });
       onCreated(newLead);
       onClose();
     } catch {
-      toast({ title: "Failed to create lead", variant: "destructive" });
+      toast({ title: t("addLead.createFailed", "Failed to create lead"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -120,8 +120,9 @@ export function MobileAddLeadForm({
 
   if (!mounted) return null;
 
-  const inputCls = "w-full h-11 px-3 rounded-xl border border-border/50 bg-background text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/40 focus:border-brand-indigo transition-colors";
-  const labelCls = "text-[10px] font-medium uppercase tracking-wider text-foreground/50 mb-1 block";
+  const inputCls = "neu-input w-full h-11 px-3 text-[14px]";
+  const labelCls = "block mb-1";
+  const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mute-2)" };
 
   return createPortal(
     <AnimatePresence>
@@ -145,21 +146,21 @@ export function MobileAddLeadForm({
             exit={{ y: "100%" }}
             transition={{ type: "tween", duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
             data-testid="mobile-add-lead-form"
-            className="lg:hidden fixed inset-x-0 bottom-0 z-[301] bg-background rounded-t-3xl border-t border-border/30 flex flex-col max-h-[92dvh]"
-            style={{ paddingBottom: "calc(1.5rem + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))" }}
+            className="lg:hidden fixed inset-x-0 bottom-0 z-[301] flex flex-col max-h-[92dvh]"
+            style={{ paddingBottom: "calc(1.5rem + var(--safe-bottom))", background: "var(--bg)", borderTopLeftRadius: "var(--r-panel)", borderTopRightRadius: "var(--r-panel)", borderTop: "1px solid var(--line)", boxShadow: "0 -10px 40px rgba(60,45,25,0.20)" }}
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-10 h-1 rounded-full bg-foreground/20" />
+              <span style={{ width: 40, height: 5, borderRadius: "var(--r-pill)", background: "var(--mute-2)", opacity: 0.6 }} />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 shrink-0 border-b border-border/20">
-              <h3 className="text-[17px] font-semibold font-heading">{t("toolbar.add", "Add Lead")}</h3>
+            <div className="row shrink-0" style={{ justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid var(--line)" }}>
+              <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("addLead.title", "Add Lead")}</span>
               <button
                 onClick={onClose}
-                className="h-8 w-8 rounded-full bg-muted grid place-items-center text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Close"
+                style={{ width: 38, height: 38, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -169,27 +170,28 @@ export function MobileAddLeadForm({
             <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
               {/* First name */}
               <div>
-                <label className={labelCls}>{t("contact.firstName", "First Name")} <span className="text-red-500">*</span></label>
+                <label className={labelCls} style={labelStyle}>{t("contact.firstName", "First Name")} <span style={{ color: "var(--stage-lost)" }}>*</span></label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => { setFirstName(e.target.value); setErrors((p) => ({ ...p, firstName: undefined })); }}
-                  placeholder="John"
+                  placeholder={t("addLead.firstNamePlaceholder", "John")}
                   autoComplete="given-name"
-                  className={cn(inputCls, errors.firstName && "border-red-500 focus:border-red-500 focus:ring-red-500/40")}
+                  className={inputCls}
+                  style={errors.firstName ? { boxShadow: "inset 0 0 0 1.5px var(--stage-lost)" } : undefined}
                   data-testid="add-lead-first-name"
                 />
-                {errors.firstName && <p className="text-[11px] text-red-500 mt-1">{errors.firstName}</p>}
+                {errors.firstName && <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--stage-lost)" }}>{errors.firstName}</p>}
               </div>
 
               {/* Last name */}
               <div>
-                <label className={labelCls}>{t("contact.lastName", "Last Name")}</label>
+                <label className={labelCls} style={labelStyle}>{t("contact.lastName", "Last Name")}</label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Doe"
+                  placeholder={t("addLead.lastNamePlaceholder", "Doe")}
                   autoComplete="family-name"
                   className={inputCls}
                   data-testid="add-lead-last-name"
@@ -198,28 +200,29 @@ export function MobileAddLeadForm({
 
               {/* Phone (tel keyboard) */}
               <div>
-                <label className={labelCls}>{t("contact.phone", "Phone")}</label>
+                <label className={labelCls} style={labelStyle}>{t("contact.phone", "Phone")}</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => { setPhone(e.target.value); setErrors((p) => ({ ...p, phone: undefined })); }}
-                  placeholder="+1 (555) 000-0000"
+                  placeholder={t("addLead.phonePlaceholder", "+1 (555) 000-0000")}
                   autoComplete="tel"
                   inputMode="tel"
-                  className={cn(inputCls, errors.phone && "border-red-500 focus:border-red-500 focus:ring-red-500/40")}
+                  className={inputCls}
+                  style={errors.phone ? { boxShadow: "inset 0 0 0 1.5px var(--stage-lost)" } : undefined}
                   data-testid="add-lead-phone"
                 />
-                {errors.phone && <p className="text-[11px] text-red-500 mt-1">{errors.phone}</p>}
+                {errors.phone && <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--stage-lost)" }}>{errors.phone}</p>}
               </div>
 
               {/* Email (email keyboard) */}
               <div>
-                <label className={labelCls}>{t("contact.email", "Email")}</label>
+                <label className={labelCls} style={labelStyle}>{t("contact.email", "Email")}</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@example.com"
+                  placeholder={t("addLead.emailPlaceholder", "john@example.com")}
                   autoComplete="email"
                   inputMode="email"
                   className={inputCls}
@@ -230,14 +233,14 @@ export function MobileAddLeadForm({
               {/* Campaign selector */}
               {campaigns.length > 0 && (
                 <div>
-                  <label className={labelCls}>{t("detailView.campaign", "Campaign")}</label>
+                  <label className={labelCls} style={labelStyle}>{t("detailView.campaign", "Campaign")}</label>
                   <select
                     value={campaignId}
                     onChange={(e) => setCampaignId(e.target.value)}
-                    className={cn(inputCls, "appearance-none bg-background pr-8")}
+                    className={cn(inputCls, "appearance-none pr-8")}
                     data-testid="add-lead-campaign"
                   >
-                    <option value="">No campaign</option>
+                    <option value="">{t("addLead.noCampaign", "No campaign")}</option>
                     {campaigns.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -248,7 +251,7 @@ export function MobileAddLeadForm({
               {/* Tags multi-select (pill toggles) */}
               {availableTags.length > 0 && (
                 <div>
-                  <label className={labelCls}>{t("detail.sections.tags", "Tags")}</label>
+                  <label className={labelCls} style={labelStyle}>{t("detail.sections.tags", "Tags")}</label>
                   <div className="flex flex-wrap gap-2 mt-1" data-testid="add-lead-tags">
                     {availableTags.map((tag) => {
                       const hex = resolveColor(tag.color);
@@ -285,13 +288,17 @@ export function MobileAddLeadForm({
                 onClick={handleSubmit}
                 disabled={submitting}
                 data-testid="add-lead-submit"
-                className={cn(
-                  "w-full h-12 rounded-2xl text-[15px] font-semibold transition-opacity",
-                  "bg-brand-indigo text-white",
-                  submitting && "opacity-60 pointer-events-none"
-                )}
+                className={cn("w-full", submitting && "pointer-events-none")}
+                style={{
+                  height: 52, borderRadius: "var(--r-surface)", border: "none", cursor: "pointer",
+                  background: "var(--wine-grad)", boxShadow: "var(--sh-raised-medium)", color: "var(--paper)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  fontFamily: "var(--mono)", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700,
+                  opacity: submitting ? 0.6 : 1,
+                }}
               >
-                {submitting ? "Creating…" : t("toolbar.add", "Add Lead")}
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? t("addLead.creating", "Creating…") : t("addLead.submit", "Add Lead")}
               </button>
             </div>
           </motion.div>

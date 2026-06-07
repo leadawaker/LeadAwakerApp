@@ -123,5 +123,90 @@
     "failedToReschedule": "Falha ao reagendar: {{error}}"
   },
   "clearDateFilter": "Limpar filtro de data",
-  "selectDate": "Selecionar {{date}}"
+  "selectDate": "Selecionar {{date}}",
+  "mobile": {
+    "agenda": "Agenda",
+    "month": "Mês",
+    "weekOf": "Semana de",
+    "tapDay": "Toque em um dia",
+    "noMeetingsWeek": "Nenhuma reunião nesta semana",
+    "today": "Hoje",
+    "book": "Agendar",
+    "filters": {
+      "all": "Todas",
+      "noShow": "Faltou",
+      "rescheduled": "Reagendada",
+      "attention": "Requer atenção"
+    },
+    "stats": {
+      "meetings": "Reuniões nesta semana",
+      "upcoming": "Próximas",
+      "needsAttention": "Requer atenção"
+    },
+    "detail": {
+      "date": "Data",
+      "time": "Horário",
+      "via": "Via",
+      "status": "Status",
+      "phone": "Telefone",
+      "email": "E-mail",
+      "campaign": "Campanha",
+      "contact": "Contato",
+      "openInLead": "Abrir no lead",
+      "callNow": "Ligar agora",
+      "joinMeeting": "Entrar na reunião",
+      "reschedule": "Reagendar"
+    },
+    "channel": {
+      "phone": "Telefone",
+      "video": "Videochamada"
+    },
+    "legend": {
+      "booked": "Agendada",
+      "rescheduled": "Reagendada",
+      "noShow": "Faltou"
+    }
+  },
+  "design": {
+    "kpi": {
+      "meetings": "Reuniões esta semana",
+      "attendance": "Comparecimento médio",
+      "highIntent": "Alta intenção · 70%+"
+    },
+    "tabs": {
+      "all": "Todas",
+      "booked": "Agendadas",
+      "noshow": "Não compareceu",
+      "rescheduled": "Remarcadas"
+    },
+    "status": {
+      "booked": "Agendada",
+      "noShow": "Não compareceu",
+      "rescheduled": "Remarcada"
+    },
+    "legend": {
+      "high": "Alta intenção · 70%+",
+      "needs": "Precisa confirmar · 40–70%",
+      "risk": "Em risco · <40%"
+    },
+    "bookedByAI": "Agendado pela IA",
+    "detail": {
+      "date": "Data",
+      "channel": "Canal",
+      "time": "Horário",
+      "attendance": "Comparecimento",
+      "whyBooked": "Por que a IA agendou",
+      "recentConversation": "Conversa recente",
+      "openInLead": "Abrir no lead",
+      "selectMeeting": "Selecione uma reunião",
+      "noMeetings": "Nenhuma reunião",
+      "aiAgent": "Agente IA",
+      "googleMeet": "Google Meet",
+      "phone": "Telefone",
+      "placeholderHeadline": "Este lead vem interagindo de forma consistente e parece um forte candidato para uma chamada agendada.",
+      "placeholderReason1": "Respondeu em vários contatos com um tom positivo.",
+      "placeholderReason2": "Demonstrou interesse claro na oferta durante a conversa.",
+      "placeholderReason3": "Concordou com um horário específico sem hesitar."
+    }
+  }
 }

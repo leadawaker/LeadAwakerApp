@@ -86,11 +86,15 @@ export function TopbarUserMenu({
   );
 
   const sortedAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
-  // Non-owner accounts available as "View as real account" targets
-  const clientAccounts = sortedAccounts.filter((a) => a.id !== 1);
 
-  /** Submenu that lets an Owner impersonate a different role */
+  /** Submenu that lets Owner/Admin switch views; Owner can also impersonate roles */
   function ViewAsSubmenu() {
+    const selectedAccount = currentAccountId > 0 ? accounts.find(a => a.id === currentAccountId) : null;
+    const clientLabel = selectedAccount
+      ? t("topbar.viewAsClient", { name: selectedAccount.name })
+      : t("topbar.viewAsClientSandbox");
+    const clientAccountId = selectedAccount ? currentAccountId : undefined;
+
     return (
       <DropdownMenuSub>
         <DropdownMenuSubTrigger className="flex items-center gap-2 cursor-pointer rounded-xl mx-1">
@@ -99,45 +103,35 @@ export function TopbarUserMenu({
           <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="rounded-2xl shadow-xl border-black/[0.08] bg-white dark:bg-popover w-52">
-          <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            {t("topbar.viewAsRole")}
-          </div>
           <DropdownMenuItem
-            onClick={() => onImpersonate("Admin")}
+            onClick={() => onAccountSelect(0)}
             className="flex items-center gap-2 cursor-pointer rounded-xl mx-1"
           >
-            <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-brand-indigo text-brand-indigo-foreground">A</div>
-            {t("topbar.viewAsAdmin")}
+            <div className="h-5 w-5 rounded-md flex items-center justify-center shrink-0 bg-brand-yellow text-brand-yellow-foreground">
+              <img src="/premium/favicon.svg" alt="" className="h-3.5 w-3.5" />
+            </div>
+            {t("topbar.viewAsAgency")}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => onImpersonate("Manager")}
-            className="flex items-center gap-2 cursor-pointer rounded-xl mx-1"
-          >
-            <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-muted text-muted-foreground">C</div>
-            {t("topbar.viewAsClientSandbox")}
-          </DropdownMenuItem>
-          {clientAccounts.length > 0 && (
+          {isOwner && (
             <>
-              <DropdownMenuSeparator className="mx-2 mt-1" />
-              <div className="px-3 pt-1 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                {t("topbar.viewAsAccount")}
+              <DropdownMenuSeparator className="mx-2" />
+              <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                {t("topbar.viewAsRole")}
               </div>
-              {clientAccounts.map((acc) => (
-                <DropdownMenuItem
-                  key={acc.id}
-                  onClick={() => onImpersonate("Manager", acc.id)}
-                  className="flex items-center gap-2 cursor-pointer rounded-xl mx-1"
-                >
-                  {acc.logo_url ? (
-                    <img src={acc.logo_url} alt="" className="h-5 w-5 rounded-md object-cover shrink-0" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-muted text-muted-foreground">
-                      {acc.name?.[0] || "?"}
-                    </div>
-                  )}
-                  <span className="text-sm truncate flex-1">{acc.name}</span>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuItem
+                onClick={() => onImpersonate("Admin")}
+                className="flex items-center gap-2 cursor-pointer rounded-xl mx-1"
+              >
+                <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-brand-indigo text-brand-indigo-foreground">A</div>
+                {t("topbar.viewAsAdmin")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onImpersonate("Manager", clientAccountId)}
+                className="flex items-center gap-2 cursor-pointer rounded-xl mx-1"
+              >
+                <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-muted text-muted-foreground">C</div>
+                {clientLabel}
+              </DropdownMenuItem>
             </>
           )}
         </DropdownMenuSubContent>
@@ -243,8 +237,8 @@ export function TopbarUserMenu({
             </>
           )}
 
-          {/* View as... (Owner only) */}
-          {isOwner && !isImpersonating && (
+          {/* View as... (Owner and Admin) */}
+          {isAgencyUser && !isImpersonating && (
             <>
               <ViewAsSubmenu />
               <DropdownMenuSeparator className="mx-2 mt-1" />
@@ -359,8 +353,8 @@ export function TopbarUserMenu({
           <DropdownMenuSeparator className="mx-2" />
         </div>
 
-        {/* View as... (Owner only, not already impersonating) */}
-        {isOwner && !isImpersonating && (
+        {/* View as... (Owner and Admin, not already impersonating) */}
+        {isAgencyUser && !isImpersonating && (
           <>
             <ViewAsSubmenu />
             <DropdownMenuSeparator className="mx-2 mt-1" />

@@ -1,0 +1,46 @@
+export default {
+  "nav": {
+    "home": "Início",
+    "try": "Testar",
+    "about": "FAQ",
+    "login": "Entrar",
+    "openApp": "Abrir App",
+    "bookDemo": "Agendar Call"
+  },
+  "footer": {
+    "company": "Empresa",
+    "contact": "Contato",
+    "copyright": "© {{year}} Lead Awaker. Todos os direitos reservados.",
+    "rights": "Todos os direitos reservados.",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Serviço"
+  },
+  "cta": {
+    "bookDemo": "Agendar Call",
+    "learnMore": "Saiba Mais",
+    "getStarted": "Começar",
+    "contactUs": "Fale Conosco"
+  },
+  
+    "seo": {
+      "defaultTitle": "Lead Awaker – Desperte o Seu Funil de Vendas com IA",
+      "defaultDescription": "A Lead Awaker ajuda empresas B2B a reativar leads frios e fechar mais negócios com IA."
+    },
+  
+  "animation": {
+    "yourBrand": "Sua Marca"
+  },
+  "bubble": {
+    "tryDemo": "Experimentar a demo de IA",
+    "chatFounder": "Falar com Gabriel",
+    "founderPrefill": "Oi Gabriel, gostaria de saber mais sobre a Lead Awaker.",
+    "ariaOpen": "Abrir menu de contato WhatsApp",
+    "ariaClose": "Fechar menu de contato WhatsApp"
+  },
+  "deleteAction": {
+    "archive": "Arquivar",
+    "delete": "Excluir",
+    "confirmArchive": "Arquivar este(a) {{entity}}? Ficará oculto das visualizações ativas, mas pode ser restaurado depois.",
+    "confirmDelete": "Excluir este(a) {{entity}} permanentemente? Essa ação não pode ser desfeita."
+  }
+};

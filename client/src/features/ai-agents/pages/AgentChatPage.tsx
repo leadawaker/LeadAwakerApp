@@ -13,7 +13,7 @@ export function AgentChatPage() {
   const params = useParams<{ agentId: string }>();
   const [location, setLocation] = useLocation();
   const agentId = parseInt(params.agentId || "0", 10);
-  const prefix = location.startsWith("/agency") ? "/agency" : "/subaccount";
+  const prefix = "/platform";
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const {

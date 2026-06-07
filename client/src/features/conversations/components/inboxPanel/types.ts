@@ -77,6 +77,9 @@ export interface InboxPanelProps {
   /** Compact rail state (from parent). "hidden" fully hides the panel; "compact" renders 65px rail; "full" renders standard panel. */
   listPanelState?: "full" | "compact" | "hidden";
   onDialProspect?: (prospectId: number) => void;
+  /** Prospect-only mode (Outreach Inbox page): hides the Inbox/Unread/Prospects tab bar
+   *  and retitles the panel, since only the prospects view is shown. */
+  prospectOnly?: boolean;
 }
 
 export type { Thread, Lead, Interaction, ProspectThread };

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DonutChart } from "@/components/ui/donut-chart";
 import { useLeads } from "@/hooks/useApiData";
 import { PIPELINE_HEX } from "@/lib/avatarUtils";
+import { PanelShell, SectionHead } from "./panelPrimitives";
 
 // ── Funnel stage definitions ──────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ export function PipelineAndDonutWidget({ campaignId, mockStages }: {
     return FUNNEL_STAGES.map((s) => ({
       ...s,
       label: t(s.labelKey),
-      color: PIPELINE_HEX[s.dbValue] || "#6B7280",
+      color: PIPELINE_HEX[s.dbValue] || "#9D8E76",
       count: mockStages
         ? (mockStages.find((m) => m.key === s.key)?.count ?? 0)
         : leads.filter((l: any) => l.conversion_status === s.dbValue).length,
@@ -211,11 +212,9 @@ export function PipelineCardWrapper({ campaignId, mockStages }: {
 }) {
   const { t } = useTranslation("campaigns");
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-funnel">
-      <div className="flex items-center min-h-[36px]">
-        <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.pipeline")}</span>
-      </div>
+    <PanelShell testId="campaign-detail-view-funnel">
+      <SectionHead eyebrow={t("summary.eyebrows.conversion")} title={t("summary.pipeline")} />
       <PipelineAndDonutWidget campaignId={campaignId} mockStages={mockStages} />
-    </div>
+    </PanelShell>
   );
 }

@@ -25,6 +25,7 @@ import {
 import { registerGmailRoutes } from "./gmail";
 import { registerDemoRoutes } from "./demo";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
+import { registerUserSettingsRoutes } from "./user-settings";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -56,6 +57,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerGmailRoutes(app);
   registerDemoRoutes(app);
   registerTwilioVoiceRoutes(app);
+  registerUserSettingsRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)

@@ -1,14 +1,22 @@
 @theme inline {
-  --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Playfair Display', serif;
 
   --radius-sm: var(--radius);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
   --radius-xl: var(--radius);
 
+  /* Surface primitive radii — see styles/variables.css.
+     Padding/min-height stay as arbitrary [var(--…)] inside the primitives;
+     Tailwind 4 @theme doesn't cleanly generate spacing utilities from vars. */
+  --radius-list-card: var(--list-card-radius);
+  --radius-pill: var(--pill-radius);
+  --radius-panel: var(--panel-radius);
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
+  --color-bg-main: hsl(var(--bg-main));
 
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
@@ -72,6 +80,7 @@
 
   /* Sidebar-specific semantic tokens */
   --color-sidebar-bg: hsl(var(--sidebar-bg));
+  --color-panel-list-bg: hsl(var(--panel-list-bg));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-active: hsl(var(--sidebar-active));
   --color-sidebar-active-foreground: hsl(var(--sidebar-active-foreground));

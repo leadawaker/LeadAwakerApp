@@ -173,55 +173,55 @@ function stageKey(stage: string): string {
 /* ─────────── Infinite scroll batch size ─────────── */
 const COLUMN_BATCH_SIZE = 20;
 
-/* ─────────── Score ring — SVG progress arc ─────────── */
+/* ─────────── Score arc — mini donut (matches design ScoreArc) ─────────── */
 
-const RING_SIZE   = 34;
-const RING_STROKE = 2.5;
-const RING_RADIUS = (RING_SIZE - RING_STROKE * 2) / 2;
-const RING_CIRC   = 2 * Math.PI * RING_RADIUS;
-
-function ScoreRing({ score, status }: { score: number; status: string }) {
+function ScoreArc({ score, size = 26, sw = 2.5 }: { score: number; size?: number; sw?: number }) {
   const { t } = useTranslation("leads");
-  const color  = PIPELINE_HEX[status] || "#6B7280";
-  const offset = RING_CIRC * (1 - Math.max(0, Math.min(1, score / 100)));
-
+  const r = (size - sw) / 2;
+  const c = 2 * Math.PI * r;
+  const fill = (Math.max(0, Math.min(100, score)) / 100) * c;
+  const color = score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)";
   return (
     <div
-      className="relative shrink-0"
-      style={{ width: RING_SIZE, height: RING_SIZE }}
+      style={{ position: "relative", width: size, height: size, flexShrink: 0 }}
       data-testid="kanban-card-score"
       title={t("kanban.leadScore", { score })}
     >
-      <svg
-        width={RING_SIZE}
-        height={RING_SIZE}
-        className="absolute inset-0"
-        style={{ transform: "rotate(-90deg)" }}
-      >
-        {/* track */}
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
         <circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          fill="none"
-          stroke={color}
-          strokeOpacity={0.15}
-          strokeWidth={RING_STROKE}
-        />
-        {/* progress arc */}
-        <circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          fill="none"
-          stroke={color}
-          strokeWidth={RING_STROKE}
-          strokeDasharray={RING_CIRC}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={sw}
+          strokeDasharray={`${fill} ${c - fill}`} strokeLinecap="round"
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
-          {score}
-        </span>
+      <div
+        style={{
+          position: "absolute", inset: 0, display: "flex", alignItems: "center",
+          justifyContent: "center", fontFamily: "var(--mono)", fontSize: size < 38 ? 8 : 11,
+          fontWeight: 700, color: "var(--ink)",
+        }}
+      >
+        {score}
       </div>
+    </div>
+  );
+}
+
+/* ─────────── Stage avatar — colored rounded square with mono initials ─────────── */
+
+function StageAvatar({ name, status, size = 30, radius = 8 }: { name: string; status: string; size?: number; radius?: number }) {
+  const hex = PIPELINE_HEX[status] || "#6B7280";
+  return (
+    <div
+      style={{
+        width: size, height: size, borderRadius: radius, flexShrink: 0, background: hex,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#fff", fontFamily: "var(--mono)", fontWeight: 600,
+        fontSize: Math.round(size * 0.34), letterSpacing: "0.01em",
+        boxShadow: "var(--sh-raised-crisp)",
+      }}
+    >
+      {getInitials(name)}
     </div>
   );
 }
@@ -419,47 +419,48 @@ function KanbanCardContent({
 
   /* ── Compact card ── */
   if (compactMode) {
+    const compactAvatarPx = compactAvatarSize === "xs" ? 20 : typeof compactAvatarSize === "number" ? compactAvatarSize : null;
     return (
       <div
-        className={cn(
-          "group/card relative rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06)]",
-          isSelected
-            ? "bg-highlight-selected"
-            : "bg-white dark:bg-card hover:bg-white dark:hover:bg-card",
-          isDragging && "scale-[1.02] rotate-1 opacity-95"
-        )}
+        className={cn("group/card neu-raised-crisp relative", isDragging && "scale-[1.02] rotate-1 opacity-95")}
+        style={{
+          padding: "6px 8px",
+          borderRadius: "var(--r-surface)",
+          background: "var(--card)",
+          boxShadow: "var(--sh-raised-crisp)",
+          outline: isSelected ? "2px solid var(--wine)" : "2px solid transparent",
+          transition: "outline 120ms",
+        }}
       >
-        <div className="px-2 py-1 flex flex-col gap-0">
+        <div className="flex flex-col gap-0">
           {/* Main row: [avatar center-aligned] | name+score stacked | last interaction */}
           <div className="flex items-center gap-1.5 min-w-0">
-            {compactAvatarSize !== null && (
-              <EntityAvatar
-                name={name}
-                bgColor={status === "DND" ? "#1a1a1a" : avatarColor.bg}
-                textColor={(isClosedStatus || status === "DND") ? "#ffffff" : avatarColor.text}
-                size={compactAvatarSize}
-                className="shrink-0"
-              />
+            {compactAvatarPx !== null && (
+              <StageAvatar name={name} status={status} size={compactAvatarPx} radius={6} />
             )}
             {/* Name + score + booked date stacked, center-aligned with avatar */}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-1 min-w-0">
                 <span
-                  className="text-[12px] font-semibold leading-tight truncate text-foreground flex-1 min-w-0"
+                  className="leading-tight truncate flex-1 min-w-0"
+                  style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}
                   data-testid="kanban-card-name"
                 >
                   {name}
                 </span>
                 {lastActivity && (
-                  <span className={`text-[9px] tabular-nums leading-none shrink-0 ${getAgingTextClass(lastActivity)}`}>
+                  <span
+                    className="shrink-0"
+                    style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.06em" }}
+                  >
                     {formatRelativeDate(lastActivity, t)}
                   </span>
                 )}
               </div>
               {/* Score bar — under name */}
               {showScoreBar && (
-                <div className="h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden mt-0.5">
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, score)}%`, backgroundColor: statusHex }} />
+                <div className="mt-0.5 h-[4px] overflow-hidden" style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)" }}>
+                  <div className="h-full" style={{ width: `${Math.min(100, score)}%`, borderRadius: "var(--r-pill)", background: score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)" }} />
                 </div>
               )}
               {/* Booked date under name, action buttons right-aligned */}
@@ -497,93 +498,75 @@ function KanbanCardContent({
   /* ── Normal card ── */
   return (
     <div
-      className={cn(
-        "group/card relative mx-0.5 my-0.5 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]",
-        isSelected
-          ? "bg-highlight-selected"
-          : "bg-white dark:bg-card hover:bg-white dark:hover:bg-card",
-        isDragging && "scale-[1.02] rotate-1 opacity-95"
-      )}
+      className={cn("group/card neu-raised-crisp relative", isDragging && "scale-[1.02] rotate-1 opacity-95")}
+      style={{
+        padding: "10px 11px",
+        borderRadius: "var(--r-surface)",
+        background: "var(--card)",
+        boxShadow: "var(--sh-raised-crisp)",
+        outline: isSelected ? "2px solid var(--wine)" : "2px solid transparent",
+        transition: "outline 120ms",
+      }}
     >
-      {/* Last activity — absolute top-right (not in the name row) */}
-      {lastActivity && (
-        <span
-          className={`absolute top-2 right-2.5 text-[10px] tabular-nums leading-none ${getAgingTextClass(lastActivity)}`}
-          data-testid="kanban-card-last-activity"
-        >
-          {formatRelativeDate(lastActivity, t)}
-        </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        <StageAvatar name={name} status={status} size={30} radius={8} />
+
+        {/* Name + "{ago} ago" stacked */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            data-testid="kanban-card-name"
+          >
+            {name}
+          </div>
+          {lastActivity && (
+            <div
+              style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.06em", marginTop: 2 }}
+              data-testid="kanban-card-last-activity"
+            >
+              {formatRelativeDate(lastActivity, t)}
+            </div>
+          )}
+          {/* Booked date under name, action buttons right-aligned */}
+          {isBookedStatus && bookedDateStr && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className={cn("text-[10px] tabular-nums leading-none", isBookedToday ? "text-amber-600 font-bold" : bookedDatePassed ? "text-red-500 font-medium" : "text-muted-foreground/60")}>
+                {isBookedToday ? `Today ${new Date(bookedDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : bookedDateStr}
+              </span>
+              {bookedDatePassed && <div className="ml-auto">{actionButtons}</div>}
+            </div>
+          )}
+        </div>
+
+        {/* Score arc on the right */}
+        {showScoreBar && <ScoreArc score={score} size={26} sw={2.5} />}
+      </div>
+
+      {/* Tags — always visible when showTagsAlways is on */}
+      {showTagsAlways && visibleTags.length > 0 && (
+        <div className="flex items-center gap-1 flex-wrap mt-2">
+          {visibleTags.map((tg) => (
+            <span key={tg.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }} data-testid="kanban-card-tags">
+              {tg.name}
+            </span>
+          ))}
+        </div>
       )}
 
-      <div className="px-2.5 pt-2 pb-1.5 flex flex-col gap-0.5">
-
-        {/* Row 1: Avatar | Name+Score — center-aligned */}
-        <div className="flex items-center gap-2">
-          <EntityAvatar
-            name={name}
-            bgColor={status === "DND" ? "#1a1a1a" : avatarColor.bg}
-            textColor={(isClosedStatus || status === "DND") ? "#ffffff" : avatarColor.text}
-            className="shrink-0"
-          />
-
-          {/* Name + score stacked, center-aligned with avatar */}
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <p
-              className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground pr-12"
-              data-testid="kanban-card-name"
-            >
-              {name}
-            </p>
-            {/* Score bar — starts at first letter of name */}
-            {showScoreBar && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: statusHex }}>
-                  {score}
+      {/* Hover-expanded: tags (if not always-on) + phone + email */}
+      <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100">
+        <div className="pt-1.5 pb-0.5 flex flex-col gap-1">
+          {!showTagsAlways && visibleTags.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap">
+              {visibleTags.map((tg) => (
+                <span key={tg.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }} data-testid="kanban-card-tags">
+                  {tg.name}
                 </span>
-                <div className="flex-1 h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, score)}%`, backgroundColor: statusHex }} />
-                </div>
-              </div>
-            )}
-            {/* Booked date under name, action buttons right-aligned */}
-            {isBookedStatus && bookedDateStr && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={cn("text-[10px] tabular-nums leading-none", isBookedToday ? "text-amber-600 font-bold" : bookedDatePassed ? "text-red-500 font-medium" : "text-muted-foreground/60")}>
-                  {isBookedToday ? `Today ${new Date(bookedDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : bookedDateStr}
-                </span>
-                {bookedDatePassed && <div className="ml-auto">{actionButtons}</div>}
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
+          {contactRow}
         </div>
-
-        {/* Tags — always visible when showTagsAlways is on */}
-        {showTagsAlways && visibleTags.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap mt-0.5">
-            {visibleTags.map((tg) => (
-              <span key={tg.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }} data-testid="kanban-card-tags">
-                {tg.name}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Hover-expanded: tags (if not always-on) + phone + email */}
-        <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100">
-          <div className="pt-1 pb-0.5 flex flex-col gap-1">
-            {!showTagsAlways && visibleTags.length > 0 && (
-              <div className="flex items-center gap-1 flex-wrap">
-                {visibleTags.map((tg) => (
-                  <span key={tg.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }} data-testid="kanban-card-tags">
-                    {tg.name}
-                  </span>
-                ))}
-              </div>
-            )}
-            {contactRow}
-          </div>
-        </div>
-
       </div>
     </div>
   );
@@ -755,20 +738,15 @@ function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-lg overflow-hidden h-full",
-        isLostStage ? "bg-red-50 dark:bg-red-950/20"
-          : isClosedStage ? "bg-orange-50 dark:bg-orange-950/15"
-          : isBookedStage ? "bg-[#FFFBEB] dark:bg-[#1E1A0E]"
-          : "bg-card",
+        "flex flex-col h-full",
         compactMode
           ? "flex-1 min-w-[60px]"
           : cn(
               "flex-shrink-0",
               isBookedStage
-                ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] border-l-2 border-[#FCB803]/50 snap-start snap-always"
+                ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] snap-start snap-always"
                 : "w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] md:max-w-[300px] snap-start snap-always",
             ),
-        isOver && "ring-2 ring-inset ring-brand-indigo/50"
       )}
       data-testid={`kanban-column-${stage}`}
       data-stage={stage}
@@ -776,96 +754,108 @@ function KanbanColumn({
       data-visible-count={visibleCount}
       data-total-count={leads.length}
     >
-      {/* Column Header — icon + label */}
+      {/* Column Header — stage dot + mono uppercase label + count pill */}
       <div
-        className={cn(
-          "flex items-center shrink-0 transition-shadow duration-150",
-          useCompactCards ? "gap-1.5 px-2 py-1.5" : "gap-2 px-3 py-2.5",
-          isBookedStage && "bg-[#FCB803]/10 dark:bg-[#FCB803]/[0.06]",
-          isBodyScrolled && "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.08)]"
-        )}
+        className={cn("flex items-center shrink-0", useCompactCards ? "gap-1.5 px-1 pb-2" : "gap-2 px-1 pb-2.5")}
         data-testid={`kanban-column-header-${stage}`}
       >
-        {/* Stage icon circle */}
-        <div
-          className={cn("rounded-full flex items-center justify-center flex-shrink-0", useCompactCards ? "w-5 h-5" : "w-6 h-6")}
-          style={{ backgroundColor: iconBg, color: iconText }}
-        >
-          <StageIcon className={useCompactCards ? "h-3 w-3" : "h-3.5 w-3.5"} />
-        </div>
+        {/* Stage color dot */}
+        <span style={{ width: 9, height: 9, borderRadius: 3, background: hex, flexShrink: 0 }} />
 
-        {/* Stage label — colored text only */}
+        {/* Stage label — mono uppercase */}
         <span
-          className={cn(
-            "font-semibold truncate flex-1 flex items-center gap-1",
-            useCompactCards ? "text-[12px]" : "text-sm",
-            isBookedStage && !useCompactCards && "font-bold text-base",
-          )}
-          style={{ color: headerTextColor }}
+          className="truncate"
+          style={{
+            fontFamily: "var(--mono)",
+            fontSize: useCompactCards ? 9 : 10,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "var(--ink-soft)",
+            fontWeight: 700,
+          }}
         >
           {t(`kanban.stageLabels.${stageKey(stage)}`)}
-          {isBookedStage && !useCompactCards && (
-            <Star className="h-3.5 w-3.5 fill-[#FCB803] text-[#FCB803] shrink-0" />
-          )}
         </span>
 
-        {/* Count */}
+        {/* North star badge for Booked */}
+        {isBookedStage && !useCompactCards && (
+          <span
+            style={{
+              fontFamily: "var(--mono)",
+              fontSize: 7.5,
+              letterSpacing: "0.12em",
+              color: hex,
+              border: `1px solid ${hex}`,
+              borderRadius: 4,
+              padding: "1px 5px",
+              flexShrink: 0,
+            }}
+          >
+            ★ NORTH STAR
+          </span>
+        )}
+
+        {/* Count pill */}
         <span
-          className={cn("font-semibold text-muted-foreground/70 tabular-nums flex-shrink-0", useCompactCards ? "text-[10px]" : "text-[11px]")}
+          style={{
+            fontFamily: "var(--mono)",
+            fontSize: 9,
+            color: "var(--mute-2)",
+            background: "var(--bg)",
+            boxShadow: "var(--sh-inset-crisp)",
+            padding: "1px 7px",
+            borderRadius: "var(--r-pill)",
+            marginLeft: "auto",
+            flexShrink: 0,
+          }}
           data-testid={`kanban-column-count-${stage}`}
         >
           {leads.length}
         </span>
       </div>
 
-      {/* Column Body — drop target covers the list area */}
+      {/* Column Body — carved-in inset surface, drop target */}
       <div
-        className={cn("flex-1 overflow-y-auto min-h-0", isOver && "bg-brand-indigo/[0.04]")}
+        className={cn("flex-1 overflow-y-auto min-h-0")}
+        style={{
+          borderRadius: "var(--r-card)",
+          padding: 8,
+          background: isBookedStage ? "var(--warn-tint)" : "var(--bg)",
+          boxShadow: isBookedStage
+            ? "var(--sh-inset-crisp), inset 0 0 0 1.5px rgba(196,138,47,0.35)"
+            : "var(--sh-inset-crisp)",
+          outline: isOver ? "2px solid var(--wine)" : undefined,
+          outlineOffset: isOver ? "-2px" : undefined,
+        }}
         onScroll={(e) => setIsBodyScrolled(e.currentTarget.scrollTop > 2)}
       >
-        <div ref={setNodeRef} className="px-[3px] pb-2 min-h-[80px]">
+        <div ref={setNodeRef} className="min-h-[80px] h-full">
           {leads.length === 0 ? (
             <div
-              className={cn(
-                "flex flex-col items-center justify-center py-10 px-3 rounded-lg select-none",
-                isOver
-                  ? "bg-background/30"
-                  : "text-muted-foreground/40"
-              )}
+              className="flex items-center justify-center h-full select-none"
+              style={{ minHeight: 60 }}
               data-testid={`kanban-column-empty-${stage}`}
               aria-label={`Empty stage: ${t(`kanban.stageLabels.${stageKey(stage)}`)}`}
             >
               {isOver ? (
-                <>
-                  <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center mb-2">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground rotate-[-90deg]" />
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">{t("kanban.dropHere")}</span>
-                  <span className="text-xs text-muted-foreground/60 mt-1">
-                    {t("kanban.moveLeadTo", { stage: t(`kanban.stageLabels.${stageKey(stage)}`) })}
-                  </span>
-                </>
+                <span
+                  style={{
+                    fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em",
+                    textTransform: "uppercase", color: "var(--wine)", fontWeight: 700,
+                  }}
+                >
+                  {t("kanban.dropHere")}
+                </span>
               ) : (
-                (() => {
-                  const config = STAGE_EMPTY_STATES[stage] || DEFAULT_EMPTY_STATE;
-                  const Icon = config.icon;
-                  return (
-                    <>
-                      <div className="h-10 w-10 rounded-full bg-muted/40 flex items-center justify-center mb-3">
-                        <Icon className="h-4 w-4 text-muted-foreground/40" />
-                      </div>
-                      <span
-                        className="text-xs font-medium text-muted-foreground/60 text-center leading-snug"
-                        data-testid={`kanban-empty-message-${stage}`}
-                      >
-                        {t(`kanban.emptyStates.${stageKey(stage)}.message`, config.message)}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground/40 text-center leading-snug mt-1 max-w-[180px]">
-                        {t(`kanban.emptyStates.${stageKey(stage)}.hint`, config.hint)}
-                      </span>
-                    </>
-                  );
-                })()
+                <span
+                  data-testid={`kanban-empty-message-${stage}`}
+                  style={{
+                    fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em",
+                    textTransform: "uppercase", color: "var(--mute-2)",
+                  }}
+                >
+                  {t("kanban.empty", "Empty")}
+                </span>
               )}
             </div>
           ) : (
@@ -874,7 +864,8 @@ function KanbanColumn({
               initial="hidden"
               animate="visible"
               custom={visibleLeads.length}
-              className={useCompactCards ? "flex flex-col gap-[3px]" : undefined}
+              className="flex flex-col"
+              style={{ gap: 8 }}
             >
               {visibleLeads.map((lead) => {
                 const leadId   = Number(lead.Id || lead.id);
@@ -899,19 +890,29 @@ function KanbanColumn({
 
               {/* Load more button */}
               {hasMore && (
-                <div className="py-2 px-1">
-                  <button
-                    onClick={() =>
-                      setVisibleCount((prev) =>
-                        Math.min(prev + COLUMN_BATCH_SIZE, leads.length)
-                      )
-                    }
-                    data-testid={`kanban-column-load-more-${stage}`}
-                    className="w-full h-8 rounded-lg text-xs font-medium text-muted-foreground border border-border/50 bg-transparent hover:bg-card hover:text-foreground transition-colors"
-                  >
-                    {t("kanban.loadMore", { count: Math.min(remainingCount, COLUMN_BATCH_SIZE) })}
-                  </button>
-                </div>
+                <button
+                  onClick={() =>
+                    setVisibleCount((prev) =>
+                      Math.min(prev + COLUMN_BATCH_SIZE, leads.length)
+                    )
+                  }
+                  data-testid={`kanban-column-load-more-${stage}`}
+                  className="w-full"
+                  style={{
+                    height: 30,
+                    borderRadius: "var(--r-button)",
+                    fontFamily: "var(--mono)",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "var(--mute)",
+                    background: "var(--bg)",
+                    boxShadow: "var(--sh-inset-crisp)",
+                  }}
+                >
+                  {t("kanban.loadMore", { count: Math.min(remainingCount, COLUMN_BATCH_SIZE) })}
+                </button>
               )}
             </motion.div>
           )}
@@ -1244,10 +1245,10 @@ export function LeadsKanban({
       <div
         ref={boardCallbackRef}
         className={cn(
-          "flex h-full gap-[3px] pb-0",
+          "flex h-full pb-0",
           compactMode
-            ? "overflow-hidden"
-            : "overflow-x-auto scroll-smooth snap-x snap-mandatory md:snap-none",
+            ? "gap-[3px] overflow-hidden"
+            : "gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory md:snap-none",
         )}
         style={compactMode ? undefined : { overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-board"

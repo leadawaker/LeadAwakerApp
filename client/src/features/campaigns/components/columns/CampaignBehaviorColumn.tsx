@@ -35,7 +35,7 @@ export function CampaignBehaviorColumn({
 
   if (collapsed) {
     return (
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl flex flex-col items-center pt-4 pb-4 overflow-hidden cursor-pointer group h-full" onClick={onToggle} title="Expand Behavior">
+      <div className="bg-card shadow-[var(--card-glow)] rounded-xl flex flex-col items-center pt-4 pb-4 overflow-hidden cursor-pointer group h-full" onClick={onToggle} title="Expand Behavior">
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
           className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors text-foreground/50 group-hover:text-foreground"
@@ -50,7 +50,7 @@ export function CampaignBehaviorColumn({
   }
 
   return (
-    <div className="@container bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-y-auto h-full">
+    <div className="@container bg-card shadow-[var(--card-glow)] rounded-xl overflow-y-auto h-full">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 pb-3 bg-white/80 dark:bg-black/40 backdrop-blur-sm">
         <h3 className="text-[18px] font-semibold font-heading leading-tight text-foreground">Behavior</h3>
@@ -82,18 +82,18 @@ export function CampaignBehaviorColumn({
           editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" {...focusFor("calendar_link_override")} /> : undefined}
         />
 
+        <BoolRow icon={FlaskConical} label={t("config.isDemo")} value={campaign.is_demo ?? false}
+          {...(onStartEditField && !isEditing ? {
+            onDirectToggle: () => {
+              const newVal = !Boolean(draft.is_demo ?? campaign.is_demo);
+              onStartEditField("is_demo");
+              setDraft(d => ({ ...d, is_demo: newVal }));
+            }
+          } : {})}
+          editChild={isEditing ? <EditToggle value={Boolean(draft.is_demo ?? campaign.is_demo)} onChange={(v) => setDraft(d => ({...d, is_demo: v}))} /> : undefined}
+        />
         {isAgencyUser && (
           <>
-            <BoolRow icon={FlaskConical} label={t("config.isDemo")} value={campaign.is_demo ?? false}
-              {...(onStartEditField && !isEditing ? {
-                onDirectToggle: () => {
-                  const newVal = !Boolean(draft.is_demo ?? campaign.is_demo);
-                  onStartEditField("is_demo");
-                  setDraft(d => ({ ...d, is_demo: newVal, ...(newVal ? { prompt_linked_id: "65" } : {}) }));
-                }
-              } : {})}
-              editChild={isEditing ? <EditToggle value={Boolean(draft.is_demo ?? campaign.is_demo)} onChange={(v) => setDraft(d => ({...d, is_demo: v, ...(v ? { prompt_linked_id: "65" } : {})}))} /> : undefined}
-            />
             <InfoRow icon={Building2} label={t("config.accountId")} value={campaign.account_name || `Account ${campaign.account_id}`}
               {...editFor("accountsId")}
               editChild={isEditing ? <EditNumber value={Number(draft.accountsId ?? campaign.account_id ?? 1)} onChange={(v) => setDraft(d => ({...d, accountsId: v}))} {...focusFor("accountsId")} /> : undefined}
@@ -122,7 +122,7 @@ export function CampaignBehaviorColumn({
           ) : undefined}
         />
 
-        <div className="col-span-2 flex flex-col gap-0.5 py-2 border-b border-border/20">
+        <div className="@sm:col-span-2 flex flex-col gap-0.5 py-2 border-b border-border/20">
           <span className="text-[12px] font-bold uppercase tracking-wider text-foreground">{t("config.bookingMode")}</span>
           {isEditing ? (
             <div className="flex gap-1 flex-wrap">
@@ -246,11 +246,11 @@ export function CampaignBehaviorColumn({
           <InfoRow icon={Tag} label={t("financials.dealType")}
             value={(() => {
               const dtBadge: Record<string, { bg: string; text: string }> = {
-                retainer:      { bg: "#DBEAFE", text: "#1D4ED8" },
-                per_booking:   { bg: "#D1FAE5", text: "#065F46" },
-                fixed:         { bg: "#F3F4F6", text: "#374151" },
-                retainer_plus: { bg: "#EDE9FE", text: "#5B21B6" },
-                sale_closed:   { bg: "#FEF3C7", text: "#92400E" },
+                retainer:      { bg: "#E6E0F0", text: "#4A3D6E" },
+                per_booking:   { bg: "#D4F5E3", text: "#1A5C35" },
+                fixed:         { bg: "#F0EDE8", text: "#6E655A" },
+                retainer_plus: { bg: "#E6E0F0", text: "#4A3D6E" },
+                sale_closed:   { bg: "#FDF0D0", text: "#8B6018" },
               };
               const dtLabels: Record<string, string> = {
                 retainer:      t("financials.dealTypes.retainer"),

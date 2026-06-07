@@ -410,7 +410,7 @@ export function VoiceCloneWidget({
   }, [samples, onSave]);
 
   return (
-    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-voice">
+    <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-voice">
       <div className="flex items-center gap-2 mb-3">
         <Mic className="w-5 h-5 text-foreground/50" />
         <p className="text-[18px] font-semibold font-heading text-foreground">{t("detail.voiceClone")}</p>

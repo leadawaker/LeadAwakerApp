@@ -51,8 +51,8 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bgColor: s
   task_assigned:                { icon: ClipboardList,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
   task_due_soon:                { icon: Clock,          color: "text-amber-500",          bgColor: "bg-amber-500/10",     borderColor: "border-l-amber-500" },
   task_overdue:                 { icon: AlertTriangle,  color: "text-red-500",            bgColor: "bg-red-500/10",       borderColor: "border-l-red-500" },
-  booking_confirmed:            { icon: CalendarCheck,  color: "text-[#FCB803]",          bgColor: "bg-[#FCB803]/10",     borderColor: "border-l-[#FCB803]" },
-  booking_reminder:             { icon: Clock,          color: "text-[#FCB803]",          bgColor: "bg-[#FCB803]/10",     borderColor: "border-l-[#FCB803]" },
+  booking_confirmed:            { icon: CalendarCheck,  color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
+  booking_reminder:             { icon: Clock,          color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
   lead_responded:               { icon: MessageSquare,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
   lead_manual_takeover:         { icon: Hand,           color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
   critical_automation_failure:  { icon: AlertOctagon,   color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
@@ -61,7 +61,7 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bgColor: s
   // ── Legacy broad types (existing API) ──────────────────────────────────
   message:    { icon: MessageSquare,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
   takeover:   { icon: Hand,           color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
-  booking:    { icon: Phone,          color: "text-[#FCB803]",          bgColor: "bg-[#FCB803]/10",     borderColor: "border-l-[#FCB803]" },
+  booking:    { icon: Phone,          color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
   campaign:   { icon: Flag,           color: "text-emerald-500",        bgColor: "bg-emerald-500/10",   borderColor: "border-l-emerald-500" },
   task:       { icon: ClipboardList,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
   system:     { icon: Info,           color: "text-muted-foreground",   bgColor: "bg-muted/30",         borderColor: "border-l-muted-foreground/40" },
@@ -210,7 +210,7 @@ export function NotificationCenter({
       // Default: navigate to leads with the lead preselected
       sessionStorage.setItem("pendingLeadId", String(n.leadId));
       onClose();
-      const base = isAgencyView ? "/agency" : "/subaccount";
+      const base = "/platform";
       setLocation(`${base}/leads`);
     }
   }, [handleMarkAsRead, onClose, setLocation, isAgencyView]);

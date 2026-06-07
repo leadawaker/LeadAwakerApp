@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useListPanelState } from "@/hooks/useListPanelState";
+import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { useTranslation } from "react-i18next";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import {
@@ -269,9 +271,8 @@ export function PromptsListView({
   const { t } = useTranslation("prompts");
   const { toast } = useToast();
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(() => {
-    try { return localStorage.getItem("prompts-left-panel-collapsed") === "true"; } catch { return false; }
-  });
+  const { state: listPanelState } = useListPanelState();
+  const leftPanelCollapsed = listPanelState === "hidden";
   const [searchOpen, setSearchOpen] = useState(false);
 
   async function handleStatusChange(newStatus: string) {
@@ -673,17 +674,7 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               </button>
 
               {/* Collapse left panel (desktop only) */}
-              <button
-                onClick={() => {
-                  const next = !leftPanelCollapsed;
-                  setLeftPanelCollapsed(next);
-                  try { localStorage.setItem("prompts-left-panel-collapsed", String(next)); } catch {}
-                }}
-                className="hidden md:grid h-9 w-9 rounded-full border border-black/[0.125] bg-background place-items-center shrink-0"
-                title={leftPanelCollapsed ? "Show list" : "Hide list"}
-              >
-                {leftPanelCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-              </button>
+              <ListPanelToggleButton />
 
               {/* Inline prompt metadata — name only shown when left panel is collapsed */}
               {selectedPrompt && (

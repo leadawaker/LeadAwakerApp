@@ -4,15 +4,10 @@ import LanguageDetector from "i18next-browser-languagedetector";
 
 // Import translation files — marketing pages
 import enCommon from "./locales/en/common.json";
-import enHome from "./locales/en/home.json";
 import enServices from "./locales/en/services.json";
 import enAbout from "./locales/en/about.json";
 import enBookDemo from "./locales/en/bookDemo.json";
 import enIntakeDemo from "./locales/en/intakeDemo.json";
-import enChat3d from "./locales/en/chat3d.json";
-import enSalesRepSteps from "./locales/en/salesRepSteps.json";
-import enPipelineChart from "./locales/en/pipelineChart.json";
-import enWorkflowVisualization from "./locales/en/workflowVisualization.json";
 import enTermsOfService from "./locales/en/termsOfService.json";
 import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
 import enOnboarding from "./locales/en/onboarding.json";
@@ -39,15 +34,10 @@ import enSetup from "./locales/en/setup.json";
 
 import ptDocs from "./locales/pt/docs.json";
 import ptCommon from "./locales/pt/common.json";
-import ptHome from "./locales/pt/home.json";
 import ptServices from "./locales/pt/services.json";
 import ptAbout from "./locales/pt/about.json";
 import ptBookDemo from "./locales/pt/bookDemo.json";
 import ptIntakeDemo from "./locales/pt/intakeDemo.json";
-import ptChat3d from "./locales/pt/chat3d.json";
-import ptSalesRepSteps from "./locales/pt/salesRepSteps.json";
-import ptPipelineChart from "./locales/pt/pipelineChart.json";
-import ptWorkflowVisualization from "./locales/pt/workflowVisualization.json";
 import ptTermsOfService from "./locales/pt/termsOfService.json";
 import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
 import ptOnboarding from "./locales/pt/onboarding.json";
@@ -71,15 +61,10 @@ import ptSetup from "./locales/pt/setup.json";
 
 import nlDocs from "./locales/nl/docs.json";
 import nlCommon from "./locales/nl/common.json";
-import nlHome from "./locales/nl/home.json";
 import nlServices from "./locales/nl/services.json";
 import nlAbout from "./locales/nl/about.json";
 import nlBookDemo from "./locales/nl/bookDemo.json";
 import nlIntakeDemo from "./locales/nl/intakeDemo.json";
-import nlChat3d from "./locales/nl/chat3d.json";
-import nlSalesRepSteps from "./locales/nl/salesRepSteps.json";
-import nlPipelineChart from "./locales/nl/pipelineChart.json";
-import nlWorkflowVisualization from "./locales/nl/workflowVisualization.json";
 import nlTermsOfService from "./locales/nl/termsOfService.json";
 import nlPrivacyPolicy from "./locales/nl/privacyPolicy.json";
 import nlOnboarding from "./locales/nl/onboarding.json";
@@ -105,15 +90,10 @@ const resources = {
   en: {
     common: enCommon,
     docs: enDocs,
-    home: enHome,
     services: enServices,
     about: enAbout,
     bookDemo: enBookDemo,
     intakeDemo: enIntakeDemo,
-    chat3d: enChat3d,
-    salesRepSteps: enSalesRepSteps,
-    pipelineChart: enPipelineChart,
-    workflowVisualization: enWorkflowVisualization,
     termsOfService: enTermsOfService,
     privacyPolicy: enPrivacyPolicy,
     onboarding: enOnboarding,
@@ -137,15 +117,10 @@ const resources = {
   pt: {
     common: ptCommon,
     docs: ptDocs,
-    home: ptHome,
     services: ptServices,
     about: ptAbout,
     bookDemo: ptBookDemo,
     intakeDemo: ptIntakeDemo,
-    chat3d: ptChat3d,
-    salesRepSteps: ptSalesRepSteps,
-    pipelineChart: ptPipelineChart,
-    workflowVisualization: ptWorkflowVisualization,
     termsOfService: ptTermsOfService,
     privacyPolicy: ptPrivacyPolicy,
     onboarding: ptOnboarding,
@@ -169,15 +144,10 @@ const resources = {
   nl: {
     common: nlCommon,
     docs: nlDocs,
-    home: nlHome,
     services: nlServices,
     about: nlAbout,
     bookDemo: nlBookDemo,
     intakeDemo: nlIntakeDemo,
-    chat3d: nlChat3d,
-    salesRepSteps: nlSalesRepSteps,
-    pipelineChart: nlPipelineChart,
-    workflowVisualization: nlWorkflowVisualization,
     termsOfService: nlTermsOfService,
     privacyPolicy: nlPrivacyPolicy,
     onboarding: nlOnboarding,
@@ -212,15 +182,10 @@ i18n
     ns: [
       "common",
       "docs",
-      "home",
       "services",
       "about",
       "bookDemo",
       "intakeDemo",
-      "chat3d",
-      "salesRepSteps",
-      "pipelineChart",
-      "workflowVisualization",
       "login",
       "termsOfService",
       "privacyPolicy",

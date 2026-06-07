@@ -516,7 +516,7 @@
     const isAuthed = Boolean(localStorage.getItem('leadawaker_auth'));
     if (isAuthed) {
       const role = localStorage.getItem('leadawaker_user_role') || '';
-      const href = (role === 'Admin' || role === 'Operator') ? '/agency/campaigns' : '/subaccount/campaigns';
+      const href = (role === 'Admin' || role === 'Operator') ? '/platform/campaigns' : '/platform/campaigns';
       ['nav-login-desktop', 'nav-login-mobile'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -570,7 +570,7 @@
     if (isAuthed && remembered) {
       const role = localStorage.getItem('leadawaker_user_role') || 'Viewer';
       const isAgency = role === 'Admin' || role === 'Operator';
-      window.location.href = isAgency ? '/agency/campaigns' : '/subaccount/campaigns';
+      window.location.href = isAgency ? '/platform/campaigns' : '/platform/campaigns';
     }
   } catch (_) {}
 
@@ -626,7 +626,7 @@
       else localStorage.removeItem('leadawaker_remember_me');
 
       const isAgency = user.role === 'Admin' || user.role === 'Operator';
-      window.location.href = isAgency ? '/agency/campaigns' : '/subaccount/campaigns';
+      window.location.href = isAgency ? '/platform/campaigns' : '/platform/campaigns';
     } catch (_) {
       showError('Network error — please try again');
     } finally {

@@ -7,11 +7,10 @@ import { deleteProspect } from "@/features/prospects/api/prospectsApi";
 import { useMemo, useCallback } from "react";
 
 export default function ProspectDetailPage() {
-  const [location, setLocation] = useLocation();
-  const isAgency = location.startsWith("/agency");
-  const routePrefix = isAgency ? "/agency" : "/subaccount";
+  const [, setLocation] = useLocation();
+  const routePrefix = "/platform";
 
-  const [, params] = useRoute(isAgency ? "/agency/prospects/:id" : "/subaccount/prospects/:id");
+  const [, params] = useRoute("/platform/prospects/:id");
   const id = Number(params?.id);
 
   const { rows, loading, handleInlineUpdate } = useProspectsData(undefined);

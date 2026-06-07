@@ -33,7 +33,7 @@ interface Props {
 export function ExecutionTableRows({ groups, page, pageSize, isAgencyView }: Props) {
   const { t } = useTranslation("automation");
   const [, navigate] = useLocation();
-  const base = isAgencyView ? "/agency" : "/subaccount";
+  const base = "/platform";
 
   if (groups.length === 0) {
     return (

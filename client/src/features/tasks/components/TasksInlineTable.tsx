@@ -1,302 +1,27 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Tag as TagIcon,
-} from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useUpdateTask, useTaskCategories } from "../api/tasksApi";
-import { useTheme } from "@/hooks/useTheme";
-import { useTagVisibility } from "../context/TagVisibilityContext";
 import {
-  sortTasks,
-  groupTasks,
-  STATUS_COLORS,
+  sortTasks, groupTasks,
   STATUS_OPTIONS as STATUS_OPTS,
-  PRIORITY_OPTIONS,
-  TYPE_OPTIONS,
-  TYPE_ICONS,
-  TASK_STATUSES,
-  parseTags,
-  TAG_COLORS,
-  TAG_COLORS_DARK,
+  PRIORITY_OPTIONS, TYPE_OPTIONS, TASK_STATUSES,
 } from "../types";
 import type { Task, SortOption, GroupOption, TaskStatus, TaskPriority } from "../types";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-
-/** Convert hex to a desaturated opaque tint (for group header backgrounds). */
-function opaqueTint(hex: string): string {
-  let r = parseInt(hex.slice(1, 3), 16);
-  let g = parseInt(hex.slice(3, 5), 16);
-  let b = parseInt(hex.slice(5, 7), 16);
-  const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-  r = Math.round(r + (gray - r) * 0.7);
-  g = Math.round(g + (gray - g) * 0.7);
-  b = Math.round(b + (gray - b) * 0.7);
-  const blend = (c: number) => Math.round(c * 0.18 + 255 * 0.82);
-  return `rgb(${blend(r)}, ${blend(g)}, ${blend(b)})`;
-}
-
-// ── Status hex colors for group headers ────────────────────────────────────
-const STATUS_HEX: Record<string, string> = {
-  todo: "#6B7280",
-  in_progress: "#3B82F6",
-  done: "#10B981",
-  cancelled: "#9CA3AF",
-};
-
-const PRIORITY_HEX: Record<string, string> = {
-  low: "#9CA3AF",
-  medium: "#3B82F6",
-  high: "#F59E0B",
-  urgent: "#EF4444",
-};
-
-// ── Column definitions ─────────────────────────────────────────────────────
-type ColKey =
-  | "title" | "status" | "priority" | "category" | "tags"
-  | "taskType" | "timeEstimate" | "parentTask" | "dueDate" | "createdAt"
-  | "description" | "assignee" | "account";
-
-interface ColumnDef {
-  key: ColKey;
-  label: string;
-  width: number;
-  editable: boolean;
-  type: "text" | "select";
-}
-
-const ALL_TABLE_COLUMNS: ColumnDef[] = [
-  { key: "title",        label: "Title",        width: 240, editable: false, type: "text"   },
-  { key: "status",       label: "Status",       width: 130, editable: true,  type: "select" },
-  { key: "priority",     label: "Priority",     width: 110, editable: true,  type: "select" },
-  { key: "category",     label: "Category",     width: 130, editable: false, type: "text"   },
-  { key: "tags",         label: "Tags",         width: 160, editable: false, type: "text"   },
-  { key: "taskType",     label: "Type",         width: 110, editable: true,  type: "select" },
-  { key: "timeEstimate", label: "Estimate",     width: 90,  editable: false, type: "text"   },
-  { key: "parentTask",   label: "Parent Task",  width: 150, editable: false, type: "text"   },
-  { key: "dueDate",      label: "Due",          width: 100, editable: false, type: "text"   },
-  { key: "createdAt",    label: "Created",      width: 100, editable: false, type: "text"   },
-  // Extended (hidden by default)
-  { key: "description",  label: "Description",  width: 200, editable: false, type: "text"   },
-  { key: "assignee",     label: "Assignee",     width: 130, editable: false, type: "text"   },
-  { key: "account",      label: "Account",      width: 130, editable: false, type: "text"   },
-];
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import {
+  opaqueTint, STATUS_HEX, PRIORITY_HEX,
+  ALL_TABLE_COLUMNS, STATUS_DOT, PRIORITY_DOT,
+  SignalBars, isOverdue, formatDueDate, formatTimeEstimate,
+  formatRelativeTime, getNextStatus, TableSkeleton,
+  EditableCell, SortableHeaderCell,
+  type ColKey, type ColumnDef, type FlatRow,
+} from "./TasksTableHelpers";
 
 const STATUS_OPTIONS = TASK_STATUSES.map(s => s);
 const PRIORITY_OPTIONS_LIST = PRIORITY_OPTIONS.map(o => o.value);
-const TYPE_OPTIONS_LIST = TYPE_OPTIONS.map(o => o.value);
-
-const STATUS_DOT: Record<string, string> = {
-  todo:        "bg-gray-500",
-  in_progress: "bg-blue-500",
-  done:        "bg-emerald-500",
-  cancelled:   "bg-zinc-400",
-};
-
-const PRIORITY_DOT: Record<string, string> = {
-  low:    "bg-gray-400",
-  medium: "bg-blue-500",
-  high:   "bg-amber-500",
-  urgent: "bg-red-500",
-};
-
-// ── Signal bars for priority ────────────────────────────────────────
-const SIGNAL_FILLED: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 };
-const SIGNAL_COLOR: Record<string, string> = {
-  low: "#3B82F6", medium: "#22C55E", high: "#F97316", urgent: "#EF4444",
-};
-
-function SignalBars({ priority }: { priority: string }) {
-  const filled = SIGNAL_FILLED[priority] ?? 2;
-  const color = SIGNAL_COLOR[priority] ?? "#9CA3AF";
-  return (
-    <div className="flex items-end gap-[2px]">
-      {[5, 8, 11, 14].map((h, i) => (
-        <div
-          key={i}
-          className="w-[3px] rounded-[1px]"
-          style={{ height: `${h}px`, backgroundColor: i < filled ? color : "#D1D5DB" }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-function isOverdue(task: Task): boolean {
-  if (!task.dueDate) return false;
-  if (task.status === "done" || task.status === "cancelled") return false;
-  return new Date(task.dueDate) < new Date();
-}
-
-function formatDueDate(date: Date | string | null | undefined): string {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function formatTimeEstimate(minutes: number | null | undefined): string {
-  if (minutes == null || minutes <= 0) return "";
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h > 0 && m > 0) return `${h}h ${m}m`;
-  if (h > 0) return `${h}h`;
-  return `${m}m`;
-}
-
-function formatRelativeTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "";
-    const diffMs = Date.now() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86_400_000);
-    if (diffDays === 0) {
-      const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "just now" : `${h}h ago`;
-    }
-    if (diffDays === 1) return "yesterday";
-    if (diffDays < 7)  return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
-  } catch { return ""; }
-}
-
-function getNextStatus(current: TaskStatus): TaskStatus {
-  const idx = TASK_STATUSES.indexOf(current);
-  return TASK_STATUSES[(idx + 1) % TASK_STATUSES.length];
-}
-
-// ── Skeleton ──────────────────────────────────────────────────────────────
-function TableSkeleton() {
-  return (
-    <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} className="h-[52px] bg-card/70 rounded-xl animate-pulse" style={{ animationDelay: `${i * 35}ms` }} />
-      ))}
-    </div>
-  );
-}
-
-// ── Editable cell (textarea overlay pattern) ──────────────────────────────
-interface EditableCellProps {
-  value: string;
-  type: "text" | "select";
-  selectOptions?: string[];
-  isEditing: boolean;
-  editValue: string;
-  isSaving: boolean;
-  hasError: boolean;
-  onStartEdit: () => void;
-  onEditChange: (v: string) => void;
-  onSave: (v: string) => void;
-  onCancel: () => void;
-  renderLabel?: (v: string) => React.ReactNode;
-}
-
-function EditableCell({
-  value, type, selectOptions, isEditing, editValue, isSaving, hasError,
-  onStartEdit, onEditChange, onSave, onCancel, renderLabel,
-}: EditableCellProps) {
-  if (isEditing && type === "select" && selectOptions) {
-    return (
-      <select
-        autoFocus
-        value={editValue}
-        onChange={(e) => onSave(e.target.value)}
-        onBlur={() => onSave(editValue)}
-        onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-        className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
-      >
-        {selectOptions.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-    );
-  }
-
-  if (isEditing) {
-    return (
-      <div style={{ position: "relative" }}>
-        <div className="h-[26px]" />
-        <textarea
-          autoFocus
-          value={editValue}
-          onChange={(e) => { onEditChange(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.max(32, e.target.scrollHeight) + "px"; }}
-          onBlur={() => onSave(editValue)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.blur(); }
-            if (e.key === "Escape") onCancel();
-          }}
-          ref={(ta) => { if (!ta) return; ta.style.height = "auto"; ta.style.height = Math.max(32, ta.scrollHeight) + "px"; ta.selectionStart = ta.selectionEnd = ta.value.length; }}
-          className="absolute top-0 left-0 w-full min-h-[32px] max-h-[300px] text-[12px] leading-relaxed bg-white px-2.5 py-1.5 ring-2 ring-brand-indigo/50 shadow-[0_4px_24px_rgba(0,0,0,0.12)] outline-none resize-none rounded-none"
-          style={{ zIndex: 9999, minWidth: 240, borderRadius: 0 }}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={cn(
-        "w-full h-[28px] px-1.5 flex items-center text-[11px] truncate rounded cursor-text select-none",
-        hasError && "ring-1 ring-red-400/60 bg-red-50/30",
-        isSaving && "opacity-50",
-      )}
-      onClick={(e) => { e.stopPropagation(); onStartEdit(); }}
-      title={hasError ? "Save failed" : value}
-    >
-      <span className="truncate flex-1">
-        {value
-          ? (renderLabel ? renderLabel(value) : value)
-          : <span className="text-muted-foreground/35 italic not-italic">&mdash;</span>}
-      </span>
-      {isSaving && <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />}
-      {hasError && !isSaving && <span className="text-red-500 ml-1 shrink-0 text-[9px] font-bold">!</span>}
-    </div>
-  );
-}
-
-// ── Sortable header cell for drag-to-reorder ────────────────────────────
-function SortableHeaderCell({ col, isFirst, label, onResizeStart }: { col: ColumnDef; isFirst: boolean; label: string; onResizeStart: (colKey: string, e: React.MouseEvent) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: col.key });
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    position: "relative",
-  };
-  return (
-    <th
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "px-2.5 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
-        isFirst && "sticky left-[36px] z-30",
-      )}
-    >
-      <div className="flex items-center gap-1 cursor-grab" {...attributes} {...listeners}>
-        {label}
-      </div>
-      <div
-        className="absolute right-0 top-0 bottom-0 w-[6px] cursor-col-resize hover:bg-brand-indigo/30"
-        onMouseDown={(e) => { e.stopPropagation(); onResizeStart(col.key, e); }}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      />
-    </th>
-  );
-}
-
-// ── Flat row type ──────────────────────────────────────────────────────────
-type FlatRow =
-  | { type: "header"; label: string; count: number }
-  | { type: "task"; task: Task };
 
 // ── Props ─────────────────────────────────────────────────────────────────
 interface TasksInlineTableProps {
@@ -338,9 +63,6 @@ export default function TasksInlineTable({
   const { t } = useTranslation("tasks");
   const updateTask = useUpdateTask();
   const { data: categories } = useTaskCategories();
-  const showTags = useTagVisibility();
-  const { isDark } = useTheme();
-
   // ── Editing state ─────────────────────────────────────────────────────
   const [editingCell, setEditingCell] = useState<{ taskId: number; field: ColKey } | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -371,12 +93,6 @@ export default function TasksInlineTable({
     }
     return map;
   }, [categories]);
-
-  const parentTaskMap = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const task of tasks) map.set(task.id, task.title);
-    return map;
-  }, [tasks]);
 
   // ── Compute visible columns (with column order) ───────────────────────
   const visibleColumns = useMemo(() => {
@@ -483,13 +199,7 @@ export default function TasksInlineTable({
         const cat = (task as any).categoryId ? categoryMap.get((task as any).categoryId) : null;
         return cat?.name || "";
       }
-      case "tags":         return (task as any).tags || "";
-      case "taskType":     return task.taskType || "";
       case "timeEstimate": return formatTimeEstimate((task as any).timeEstimate);
-      case "parentTask": {
-        const pid = (task as any).parentTaskId;
-        return pid ? `#${pid} — ${parentTaskMap.get(pid) ?? "?"}` : "";
-      }
       case "dueDate":      return task.dueDate ? formatDueDate(task.dueDate) : "";
       case "createdAt":    return task.createdAt ? formatRelativeTime(task.createdAt instanceof Date ? task.createdAt.toISOString() : task.createdAt) : "";
       case "description":  return task.description || "";
@@ -519,7 +229,6 @@ export default function TasksInlineTable({
       const data: Record<string, any> = {};
       if (field === "status") data.status = newValue;
       else if (field === "priority") data.priority = newValue;
-      else if (field === "taskType") data.taskType = newValue;
       else return;
       if (field === "status" && newValue === "done") data.completedAt = new Date();
       await updateTask.mutateAsync({ id: taskId, data });
@@ -627,6 +336,7 @@ export default function TasksInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="flex-1 min-h-0 overflow-auto">
           <table
             className={cn("min-w-full w-full", showVerticalLines && "[&_td]:border-r [&_td]:border-border/10 [&_th]:border-r [&_th]:border-border/10")}
@@ -657,8 +367,7 @@ export default function TasksInlineTable({
                     {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
                   </button>
                 </th>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={visibleColumns.map(c => c.key)} strategy={horizontalListSortingStrategy}>
+                <SortableContext items={visibleColumns.map(c => c.key)} strategy={horizontalListSortingStrategy}>
                     {visibleColumns.map((col, ci) => (
                       <SortableHeaderCell
                         key={col.key}
@@ -669,7 +378,6 @@ export default function TasksInlineTable({
                       />
                     ))}
                   </SortableContext>
-                </DndContext>
                 <th className="bg-muted border-b border-border/20" />
               </tr>
             </thead>
@@ -795,7 +503,7 @@ export default function TasksInlineTable({
                         // ── Title (with emoji) ──
                         if (col.key === "title") {
                           return (
-                            <td key="title" className={cn("px-2.5", tdClass)}>
+                            <td key="title" className={cn("px-2.5 align-middle", tdClass)}>
                               <div className="flex items-center gap-2 min-w-0">
                                 {(task as any).emoji && <span className="text-[13px] shrink-0">{(task as any).emoji}</span>}
                                 <span className="text-[12px] font-medium truncate text-foreground">{task.title}</span>
@@ -809,7 +517,7 @@ export default function TasksInlineTable({
                           const cellVal = task.status;
                           const isEdit = editingCell?.taskId === taskId && editingCell?.field === "status";
                           return (
-                            <td key="status" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
+                            <td key="status" className={cn("px-1 align-middle", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {!isEdit && <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[cellVal] ?? "bg-zinc-400")} />}
                                 <EditableCell
@@ -839,7 +547,7 @@ export default function TasksInlineTable({
                           const cellVal = task.priority;
                           const isEdit = editingCell?.taskId === taskId && editingCell?.field === "priority";
                           return (
-                            <td key="priority" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
+                            <td key="priority" className={cn("px-1 align-middle", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {!isEdit && <SignalBars priority={cellVal} />}
                                 <EditableCell
@@ -864,42 +572,11 @@ export default function TasksInlineTable({
                           );
                         }
 
-                        // ── Task type (editable select) ──
-                        if (col.key === "taskType") {
-                          const cellVal = task.taskType;
-                          const isEdit = editingCell?.taskId === taskId && editingCell?.field === "taskType";
-                          const TypeIcon = TYPE_ICONS[cellVal as keyof typeof TYPE_ICONS] ?? TYPE_ICONS.custom;
-                          return (
-                            <td key="taskType" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : undefined}>
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {!isEdit && <TypeIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-                                <EditableCell
-                                  value={cellVal}
-                                  type="select"
-                                  selectOptions={TYPE_OPTIONS_LIST}
-                                  isEditing={isEdit}
-                                  editValue={isEdit ? editValue : ""}
-                                  isSaving={savingCell?.taskId === taskId && savingCell?.field === "taskType"}
-                                  hasError={saveError?.taskId === taskId && saveError?.field === "taskType"}
-                                  onStartEdit={() => startEdit(taskId, "taskType", cellVal)}
-                                  onEditChange={setEditValue}
-                                  onSave={(v) => handleSave(taskId, "taskType", v, cellVal)}
-                                  onCancel={cancelEdit}
-                                  renderLabel={(v) => {
-                                    const opt = TYPE_OPTIONS.find(o => o.value === v);
-                                    return opt?.label ?? v;
-                                  }}
-                                />
-                              </div>
-                            </td>
-                          );
-                        }
-
                         // ── Category (read-only with icon) ──
                         if (col.key === "category") {
                           const cat = (task as any).categoryId ? categoryMap.get((task as any).categoryId) : null;
                           return (
-                            <td key="category" className={cn("px-2.5", tdClass)}>
+                            <td key="category" className={cn("px-2.5 align-middle", tdClass)}>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {cat ? (
                                   <>
@@ -914,46 +591,10 @@ export default function TasksInlineTable({
                           );
                         }
 
-                        // ── Tags (read-only pills) ──
-                        if (col.key === "tags") {
-                          const tags = parseTags((task as any).tags);
-                          const colorMap = isDark ? TAG_COLORS_DARK : TAG_COLORS;
-                          const fallback = { bg: isDark ? "rgba(100,116,139,0.15)" : "#F1F5F9", text: isDark ? "#94A3B8" : "#475569" };
-                          return (
-                            <td key="tags" className={cn("px-2", tdClass)}>
-                              <div className="flex items-center gap-1 overflow-hidden">
-                                {showTags ? (
-                                  tags.length > 0 ? (
-                                    <>
-                                      {tags.slice(0, 2).map((tag) => {
-                                        const c = colorMap[tag] ?? fallback;
-                                        return (
-                                          <span
-                                            key={tag}
-                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap shrink-0"
-                                            style={{ backgroundColor: c.bg, color: c.text }}
-                                          >
-                                            <TagIcon className="h-2 w-2" />{tag}
-                                          </span>
-                                        );
-                                      })}
-                                      {tags.length > 2 && <span className="text-[9px] text-muted-foreground/40 shrink-0">+{tags.length - 2}</span>}
-                                    </>
-                                  ) : (
-                                    <span className="text-muted-foreground/30 text-[11px]">&mdash;</span>
-                                  )
-                                ) : (
-                                  <span className="text-muted-foreground/30 text-[11px]">&mdash;</span>
-                                )}
-                              </div>
-                            </td>
-                          );
-                        }
-
                         // ── Due date ──
                         if (col.key === "dueDate") {
                           return (
-                            <td key="dueDate" className={cn("px-2.5", tdClass)}>
+                            <td key="dueDate" className={cn("px-2.5 align-middle", tdClass)}>
                               <span className={cn("text-[11px]", overdue ? "text-red-500 font-medium" : "text-foreground")}>
                                 {getCellValue(task, "dueDate") || <span className="text-muted-foreground/30">&mdash;</span>}
                               </span>
@@ -963,7 +604,7 @@ export default function TasksInlineTable({
 
                         // ── Read-only text fallback ──
                         return (
-                          <td key={col.key} className={cn("px-2.5", tdClass)}>
+                          <td key={col.key} className={cn("px-2.5 align-middle", tdClass)}>
                             <span className="text-[11px] text-muted-foreground truncate block">
                               {getCellValue(task, col.key) || <span className="text-muted-foreground/30">&mdash;</span>}
                             </span>
@@ -980,6 +621,7 @@ export default function TasksInlineTable({
             </tbody>
           </table>
         </div>
+        </DndContext>
       )}
 
       {/* Pagination footer */}

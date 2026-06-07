@@ -39,9 +39,9 @@ type GroupBy = "role" | "status" | "account" | "none";
 const VISIBLE_COLS_KEY = "users-table-visible-cols";
 const DEFAULT_VISIBLE_COLS: UserColKey[] = ["name", "role", "account", "email", "lastLogin"];
 
-const ROLE_OPTIONS = ["Admin", "Operator", "Manager", "Agent", "Viewer"] as const;
+const ROLE_OPTIONS = ["Admin", "Manager", "Viewer"] as const;
 const STATUS_OPTIONS = ["Active", "Inactive", "Invited"];
-const ROLE_GROUP_ORDER = ["Admin", "Operator", "Manager", "Agent", "Viewer"];
+const ROLE_GROUP_ORDER = ["Admin", "Manager", "Viewer"];
 const STATUS_GROUP_ORDER = ["Active", "Invited", "Inactive"];
 
 const SORT_LABELS: Record<SortBy, string> = {
@@ -887,7 +887,7 @@ export function SettingsTeamSection() {
                           sessionStorage.setItem("pendingAccountId", String(viewingUser.accountsId));
                           setViewingUser(null);
                           const isAgencyView = localStorage.getItem("leadawaker_user_role") !== "Manager" && localStorage.getItem("leadawaker_user_role") !== "Viewer";
-                          setLocation(isAgencyView ? "/agency/accounts" : "/subaccount/accounts");
+                          setLocation("/platform/accounts");
                         }}
                       >
                         {accounts[viewingUser.accountsId] || `Account #${viewingUser.accountsId}`}
@@ -942,7 +942,7 @@ export function SettingsTeamSection() {
                             sessionStorage.setItem("pendingCampaignId", String(c.id));
                             setViewingUser(null);
                             const isAgencyView = localStorage.getItem("leadawaker_user_role") !== "Manager" && localStorage.getItem("leadawaker_user_role") !== "Viewer";
-                            setLocation(isAgencyView ? "/agency/campaigns" : "/subaccount/campaigns");
+                            setLocation("/platform/campaigns");
                           }}
                         >
                           <span className="w-7 h-7 rounded-full bg-brand-indigo/10 text-brand-indigo text-[10px] font-bold flex items-center justify-center shrink-0">{acronym}</span>

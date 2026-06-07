@@ -29,7 +29,6 @@ import {
   Eye,
   ListTree,
   Printer,
-  Paintbrush,
   Search,
 } from "lucide-react";
 import { SearchPill } from "@/components/ui/search-pill";
@@ -219,7 +218,6 @@ function ListSkeleton() {
 
 interface BillingListViewProps {
   activeTab: BillingTab;
-  onTabChange: (tab: string) => void;
   // Invoice data
   invoices: InvoiceRow[];
   invoicesLoading: boolean;
@@ -276,7 +274,6 @@ interface BillingListViewProps {
 
 export function BillingListView({
   activeTab,
-  onTabChange,
   // Invoice data
   invoices,
   invoicesLoading,
@@ -438,18 +435,19 @@ export function BillingListView({
     });
   }, [savedGradient]);
 
+  // Listen for the global gradient toggle dispatched by the nav menu button
+  useEffect(() => {
+    const handler = () => toggleGradientTester();
+    window.addEventListener("toggle-gradient-tester", handler);
+    return () => window.removeEventListener("toggle-gradient-tester", handler);
+  }, [toggleGradientTester]);
+
   // Accounts for filter dropdown (agency only)
   const { accounts } = useAccounts({ enabled: isAgencyUser });
 
   // Expenses data (for auto-selection of latest + available years on expenses tab)
   const { data: expensesData } = useExpensesData();
 
-  // Expenses tab is only for agency users — redirect to invoices if non-agency tries to access
-  useEffect(() => {
-    if (activeTab === "expenses" && !isAgencyUser) {
-      onTabChange("invoices");
-    }
-  }, [activeTab, isAgencyUser, onTabChange]);
 
   // ── Responsive toolbar: collapse to icon circles when narrow ───────────────
   useEffect(() => {
@@ -705,17 +703,6 @@ export function BillingListView({
     VIEW_MODE_TAB_DEFS.map(({ id, tKey, icon }) => ({ id, label: t(tKey), icon })),
     [t]
   );
-  const billingTabs = isAgencyUser ? billingTabsAgency : billingTabsClient;
-
-  /** Navigate to a billing sub-tab (parent handles URL navigation) */
-  const handleBillingTabNav = useCallback((tabId: string) => {
-    onTabChange(tabId);
-  }, [onTabChange]);
-
-  /** Inline billing sub-tab buttons */
-  const billingTabButtons = (
-    <ViewTabBar tabs={billingTabs} activeId={activeTab} onTabChange={handleBillingTabNav} variant="segment" />
-  );
 
   // ── Add button handler ─────────────────────────────────────────────────────
 
@@ -844,36 +831,206 @@ export function BillingListView({
   const xActive  = "border-brand-indigo text-brand-indigo";
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
-  // ── Left panel header (list mode) — 309px wrapper ─────────────────────────
+  // ── Unified header (both list and table modes) ──────────────────────────────
 
-  const leftPanelHeader = (
-    <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
-      <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
-        <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-        <div className="flex items-center gap-2">
-          {billingTabButtons}
-          {/* Mobile-only "+ New" button visible from list view */}
-          {isAgencyUser && (
+  const unifiedHeader = (
+    <div style={{
+      height: 60,
+      flexShrink: 0,
+      padding: '0 20px',
+      borderBottom: '1px solid #CDBCA8',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16,
+      background: '#ECE7DD',
+      overflowX: 'auto',
+    }}>
+      {/* Title - Serif, 24px (matching migration) */}
+      <span style={{
+        fontFamily: 'Georgia, serif',
+        fontSize: 24,
+        fontWeight: 500,
+        color: '#2D2622',
+        letterSpacing: '-0.01em',
+        flexShrink: 0,
+      }}>
+        {t("page.title")}
+      </span>
+
+      {/* View mode toggle (List | Table) */}
+      <ViewTabBar
+        tabs={viewModeTabs}
+        activeId={viewMode}
+        onTabChange={(m) => setViewMode(m as "list" | "table")}
+        variant="segment"
+      />
+
+      {/* Flex spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Right side controls: Search + Filter/Sort + New button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {/* Search */}
+        <div style={{
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          borderRadius: 999,
+          border: '1px solid #D4C9BD',
+          background: '#F5F1E8',
+          padding: '8px 12px',
+          flexShrink: 0,
+          position: 'relative',
+        }}>
+          <Search style={{ width: 14, height: 14, color: '#8B7F73', flexShrink: 0 }} />
+          <input
+            style={{
+              height: '100%',
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              fontSize: 12,
+              color: '#2D2622',
+              width: 180,
+              minWidth: 0,
+            }}
+            placeholder={isExpensesTab ? t("toolbar.searchExpenses") : isInvoicesTab ? t("toolbar.searchInvoices") : t("toolbar.searchContracts")}
+            value={isExpensesTab ? expenseSearch : listSearch}
+            onChange={(e) => isExpensesTab ? setExpenseSearch(e.target.value) : setListSearch(e.target.value)}
+          />
+          {(isExpensesTab ? expenseSearch : listSearch) && (
             <button
-              data-testid={isExpensesTab ? "mobile-new-expense-btn" : isInvoicesTab ? "mobile-new-invoice-btn" : "mobile-new-contract-btn"}
-              onClick={() => {
-                if (isExpensesTab) {
-                  setExpensePanelOpen(true);
-                } else {
-                  handleAddClick();
-                }
-                setMobileView("detail");
-              }}
-              className="md:hidden h-9 w-9 rounded-full bg-brand-indigo text-white grid place-items-center shrink-0 hover:bg-brand-indigo/90"
-              title={isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}
+              onClick={() => isExpensesTab ? setExpenseSearch("") : setListSearch("")}
+              style={{ background: 'none', border: 'none', color: '#8B7F73', cursor: 'pointer', padding: 0, display: 'flex' }}
             >
-              <Plus className="h-4 w-4" />
+              <X style={{ width: 12, height: 12 }} />
             </button>
           )}
         </div>
+
+        {/* Filter (Status + Account) — not on expenses */}
+        {!isExpensesTab && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                height: 36,
+                paddingLeft: 9,
+                borderRadius: 999,
+                border: isFilterActive ? '1px solid #5E2230' : '1px solid #D4C9BD',
+                color: isFilterActive ? '#5E2230' : '#8B7F73',
+                fontSize: 12,
+                fontWeight: 500,
+                background: '#ECE7DD',
+                cursor: 'pointer',
+                transition: 'all 200ms',
+                gap: 8,
+              }}>
+                <Filter style={{ width: 16, height: 16, flexShrink: 0 }} />
+                <span style={{ whiteSpace: 'nowrap', paddingLeft: 6, paddingRight: 10 }}>{t("toolbar.filter")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 max-h-80 overflow-y-auto">
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("statusFilter.status")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {statusOptions.map((s) => {
+                const color = statusColors[s];
+                return (
+                  <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color?.dot || "#94A3B8" }} />
+                    <span className="flex-1">{s}</span>
+                    {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                );
+              })}
+              {isAgencyUser && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("statusFilter.account")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setAccountFilter("all")} className={cn("text-[12px]", accountFilter === "all" && "font-semibold text-brand-indigo")}>
+                    All accounts
+                    {accountFilter === "all" && <Check className="h-3 w-3 ml-auto" />}
+                  </DropdownMenuItem>
+                  {accounts.map((acct) => (
+                    <DropdownMenuItem key={acct.id} onClick={() => setAccountFilter(acct.id)} className={cn("text-[12px]", accountFilter === acct.id && "font-semibold text-brand-indigo")}>
+                      <Building2 className="h-3 w-3 shrink-0 text-muted-foreground mr-1.5" />
+                      {acct.name}
+                      {accountFilter === acct.id && <Check className="h-3 w-3 ml-auto" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => { setFilterStatus([]); setAccountFilter("all"); }} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* New button */}
+        {isAgencyUser && (
+          <button
+            onClick={isExpensesTab ? () => { setExpensePanelOpen(true); setMobileView("detail"); } : handleAddClick}
+            title={isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              height: 36,
+              paddingLeft: 9,
+              borderRadius: 999,
+              border: 'none',
+              background: '#5E2230',
+              color: '#FFFBF7',
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: 'pointer',
+              gap: 8,
+              transition: 'all 200ms',
+              overflow: 'hidden',
+            }}
+          >
+            <Plus style={{ width: 16, height: 16, flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap', paddingLeft: 6, paddingRight: 10 }}>
+              {isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}
+            </span>
+          </button>
+        )}
       </div>
+
+      {/* Mobile-only back button (hidden on desktop) */}
+      {mobileView === "detail" && (
+        <button
+          onClick={() => setMobileView("list")}
+          style={{
+            display: 'none',
+            '@media (max-width: 768px)': { display: 'flex' },
+            height: 36,
+            width: 36,
+            borderRadius: 999,
+            border: '1px solid #D4C9BD',
+            background: '#ECE7DD',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            cursor: 'pointer',
+          }}
+          className="md:hidden"
+        >
+          <ChevronLeft style={{ width: 16, height: 16, color: '#2D2622' }} />
+        </button>
+      )}
     </div>
   );
+
+  // ── Left panel header (list mode) — 309px wrapper ─────────────────────────
+  // DEPRECATED: Replaced by unified header above, kept for reference
+  // const leftPanelHeader = (
+  //   <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+  //     ...
+  //   </div>
+  // );
 
   // ── Right panel list-mode toolbar (mobile back + view toggle + gradient) ────
 
@@ -890,21 +1047,6 @@ export function BillingListView({
       {/* View mode toggle (List | Table) */}
       <ViewTabBar tabs={viewModeTabs} activeId={viewMode} onTabChange={(m) => setViewMode(m as "list" | "table")} variant="segment" />
 
-      <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-
-      {/* Gradient tester toggle — expand-on-hover */}
-      <button
-        type="button"
-        onClick={() => {
-          if (!gradientTesterOpen) setGradientLayers(savedGradient ?? getTabLayers(activeTab));
-          setGradientTesterOpen(prev => !prev);
-        }}
-        className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
-        title="Gradient Tester"
-      >
-        <Paintbrush className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.style")}</span>
-      </button>
     </>
   );
 
@@ -912,66 +1054,6 @@ export function BillingListView({
 
   const leftPanelToolbar = (
     <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
-      {/* Search */}
-      <SearchPill
-        className="ml-[9px] max-w-[149px]"
-        value={isExpensesTab ? expenseSearch : listSearch}
-        onChange={(v) => isExpensesTab ? setExpenseSearch(v) : setListSearch(v)}
-        open={isExpensesTab ? expenseSearchOpen : searchOpen}
-        onOpenChange={(o) => isExpensesTab ? setExpenseSearchOpen(o) : setSearchOpen(o)}
-        placeholder={isExpensesTab ? t("toolbar.searchExpenses") : isInvoicesTab ? t("toolbar.searchInvoices") : t("toolbar.searchContracts")}
-      />
-
-      {/* Filter (Status + Account) — not on expenses */}
-      {!isExpensesTab && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive || (isAgencyUser && accountFilter !== "all") ? xActive : xDefault)}>
-              <Filter className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.filter")}</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("statusFilter.status")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {statusOptions.map((s) => {
-              const color = statusColors[s];
-              return (
-                <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color?.dot || "#94A3B8" }} />
-                  <span className="flex-1">{s}</span>
-                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-              );
-            })}
-            {isAgencyUser && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("statusFilter.account")}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setAccountFilter("all")} className={cn("text-[12px]", accountFilter === "all" && "font-semibold text-brand-indigo")}>
-                  {t("statusFilter.allAccounts")}
-                  {accountFilter === "all" && <Check className="h-3 w-3 ml-auto" />}
-                </DropdownMenuItem>
-                {accounts.map((acct) => (
-                  <DropdownMenuItem key={acct.id} onClick={() => setAccountFilter(acct.id)} className={cn("text-[12px]", accountFilter === acct.id && "font-semibold text-brand-indigo")}>
-                    <Building2 className="h-3 w-3 shrink-0 text-muted-foreground mr-1.5" />
-                    {acct.name}
-                    {accountFilter === acct.id && <Check className="h-3 w-3 ml-auto" />}
-                  </DropdownMenuItem>
-                ))}
-              </>
-            )}
-            {(isFilterActive || (isAgencyUser && accountFilter !== "all")) && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { setFilterStatus([]); setAccountFilter("all"); }} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1137,17 +1219,6 @@ export function BillingListView({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-
-      {/* Create button — agency only */}
-      {isAgencyUser && (
-        <button
-          onClick={isExpensesTab ? () => { setExpensePanelOpen(true); setMobileView("detail"); } : handleAddClick}
-          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className={xSpan}>{isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}</span>
-        </button>
-      )}
     </div>
   );
 
@@ -1237,486 +1308,22 @@ export function BillingListView({
     </>
   );
 
-  // ── Table mode toolbar ─────────────────────────────────────────────────────
+  // ── Render ──────────────────────────────────────────────────────────────────
+  // (Table mode toolbar is now integrated into the unified header above)
 
-  const tableToolbar = (
-    <div ref={toolbarRef} className="flex items-center gap-1.5 flex-1 min-w-0">
-
-      {/* View mode toggle (List | Table) */}
-      <ViewTabBar
-        tabs={viewModeTabs}
-        activeId={viewMode}
-        onTabChange={(m) => setViewMode(m as "list" | "table")}
-        variant="segment"
-      />
-
-      <div className="w-px h-5 bg-border/40 mx-1 shrink-0" />
-
-      {/* ── Expenses: add + search ── */}
-      {isExpensesTab && isAgencyUser && (
-        <button
-          title={t("toolbar.newExpense")}
-          onClick={() => { setExpensePanelOpen(true); setMobileView("detail"); }}
-          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className={xSpan}>{t("toolbar.newExpense")}</span>
-        </button>
-      )}
-      {isExpensesTab && (
-        <>
-          <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-          <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
-            <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-            <input
-              className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-              placeholder={t("toolbar.searchExpenses")}
-              value={expenseSearch}
-              onChange={(e) => setExpenseSearch(e.target.value)}
-            />
-            {expenseSearch && (
-              <button onClick={() => setExpenseSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* ── + New invoice/contract (agency, non-expenses) ── */}
-      {!isExpensesTab && isAgencyUser && (
-        <button
-          title={isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}
-          onClick={handleAddClick}
-          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className={xSpan}>{isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}</span>
-        </button>
-      )}
-
-      {/* Separator + search */}
-      {!isExpensesTab && (
-        <>
-          {isAgencyUser && <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />}
-          <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
-            <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-            <input
-              className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-              placeholder={isInvoicesTab ? t("toolbar.searchInvoices") : t("toolbar.searchContracts")}
-              value={listSearch}
-              onChange={(e) => setListSearch(e.target.value)}
-            />
-            {listSearch && (
-              <button onClick={() => setListSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Sort — expand-on-hover */}
-      <Popover open={toolbarSortOpen} onOpenChange={setToolbarSortOpen}>
-        <PopoverTrigger asChild>
-          <button
-            title={t("toolbar.sort")}
-            className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)}
-          >
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent side="bottom" align="start" className="w-44 p-1">
-          {(Object.keys(SORT_TKEYS) as SortBy[]).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => { setSortBy(opt); setToolbarSortOpen(false); }}
-              className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", sortBy === opt && "font-semibold text-brand-indigo")}
-            >
-              <span className="flex-1 text-left">{t(SORT_TKEYS[opt])}</span>
-              {sortBy === opt && <Check className="h-3 w-3 shrink-0" />}
-            </button>
-          ))}
-        </PopoverContent>
-      </Popover>
-
-      {/* Date — expand-on-hover (combined Quarter + Year) */}
-      <Popover open={toolbarDateOpen} onOpenChange={setToolbarDateOpen}>
-        <PopoverTrigger asChild>
-          <button
-            title={t("toolbar.date")}
-            className={cn(xBase, "hover:max-w-[80px]", isDateActive ? xActive : xDefault)}
-          >
-            <CalendarDays className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.date")}</span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent side="bottom" align="start" className="w-48 p-1">
-          {/* Year section first */}
-          {availableYears.length > 0 && (
-            <>
-              <div className="px-2 pt-2 pb-1">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{t("dateFilter.year")}</span>
-              </div>
-              {availableYears.map((year) => (
-                <button
-                  key={year}
-                  onClick={() => setYearFilter(yearFilter === year ? null : year)}
-                  className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", yearFilter === year && "font-semibold text-brand-indigo")}
-                >
-                  <span className="flex-1 text-left">{year}</span>
-                  {yearFilter === year && <Check className="h-3 w-3 shrink-0" />}
-                </button>
-              ))}
-              <div className="h-px bg-border/40 mx-1 my-1" />
-            </>
-          )}
-          {/* Quarter section below */}
-          <div className="px-2 pt-1 pb-1">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{t("dateFilter.quarter")}</span>
-          </div>
-          {[
-            { id: "Q1", monthsKey: "dateFilter.q1Months" },
-            { id: "Q2", monthsKey: "dateFilter.q2Months" },
-            { id: "Q3", monthsKey: "dateFilter.q3Months" },
-            { id: "Q4", monthsKey: "dateFilter.q4Months" },
-          ].map(({ id, monthsKey }) => (
-            <button
-              key={id}
-              onClick={() => setQuarterFilter(quarterFilter === id ? null : id)}
-              className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", quarterFilter === id && "font-semibold text-brand-indigo")}
-            >
-              <span className="flex-1 text-left flex items-center gap-2">
-                <span className="font-medium text-foreground">{id}</span>
-                <span className="text-muted-foreground">{t(monthsKey)}</span>
-              </span>
-              {quarterFilter === id && <Check className="h-3 w-3 shrink-0" />}
-            </button>
-          ))}
-          {isDateActive && (
-            <>
-              <div className="h-px bg-border/40 my-1" />
-              <button
-                onClick={() => { setQuarterFilter(null); setYearFilter(null); setToolbarDateOpen(false); }}
-                className="w-full px-2 py-1.5 text-[11px] text-destructive hover:bg-muted rounded-md text-left"
-              >
-                {t("toolbar.clearDates")}
-              </button>
-            </>
-          )}
-        </PopoverContent>
-      </Popover>
-
-      {/* Group — expand-on-hover (year+quarter grouping for invoices and expenses) */}
-      <Popover open={toolbarGroupOpen} onOpenChange={setToolbarGroupOpen}>
-        <PopoverTrigger asChild>
-          <button
-            title={t("toolbar.group")}
-            className={cn(xBase, "hover:max-w-[100px]", currentGroupBy !== "none" ? xActive : xDefault)}
-          >
-            <ListTree className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent side="bottom" align="start" className="w-44 p-1">
-          {([
-            { key: "none" as const, tKey: "groupOptions.noneFlatLabel" },
-            { key: "year_quarter" as const, tKey: "groupOptions.yearPlusQuarter" },
-          ] as const).map(({ key, tKey }) => (
-            <button
-              key={key}
-              onClick={() => { setCurrentGroupBy(key); setToolbarGroupOpen(false); }}
-              className={cn(
-                "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                currentGroupBy === key && "font-semibold text-brand-indigo"
-              )}
-            >
-              <span className="flex-1 text-left">{t(tKey)}</span>
-              {currentGroupBy === key && <Check className="h-3 w-3 shrink-0" />}
-            </button>
-          ))}
-        </PopoverContent>
-      </Popover>
-
-      {/* Filter — expand-on-hover (combined Status + Account) */}
-      {!isExpensesTab && (
-        <Popover open={toolbarFilterOpen} onOpenChange={setToolbarFilterOpen}>
-          <PopoverTrigger asChild>
-            <button
-              title={t("toolbar.filter")}
-              className={cn(xBase, "hover:max-w-[100px]", isTableFilterActive ? xActive : xDefault)}
-            >
-              <Filter className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.filter")}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="w-48 p-1">
-            {/* Status section */}
-            <div className="px-2 pt-2 pb-1 flex items-center justify-between">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{t("statusFilter.status")}</span>
-              {filterStatus.length > 0 && (
-                <button onClick={() => setFilterStatus([])} className="text-[9px] text-destructive hover:underline font-semibold">{t("toolbar.clearAllFilters")}</button>
-              )}
-            </div>
-            {statusOptions.map((s) => {
-              const color = statusColors[s];
-              return (
-                <button
-                  key={s}
-                  onClick={() => toggleFilterStatus(s)}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color?.dot || "#94A3B8" }} />
-                  <span className="flex-1 text-left">{s}</span>
-                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </button>
-              );
-            })}
-            {/* Account section (agency only) */}
-            {isAgencyUser && (
-              <>
-                <div className="h-px bg-border/40 mx-1 my-1" />
-                <div className="px-2 pt-1 pb-1 flex items-center justify-between">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{t("statusFilter.account")}</span>
-                  {accountFilter !== "all" && (
-                    <button onClick={() => setAccountFilter("all")} className="text-[9px] text-destructive hover:underline font-semibold">{t("toolbar.clearAllFilters")}</button>
-                  )}
-                </div>
-                <div className="max-h-40 overflow-y-auto">
-                  <button
-                    onClick={() => setAccountFilter("all")}
-                    className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", accountFilter === "all" && "font-semibold text-brand-indigo")}
-                  >
-                    <span className="flex-1 text-left">{t("statusFilter.allAccounts")}</span>
-                    {accountFilter === "all" && <Check className="h-3 w-3 shrink-0" />}
-                  </button>
-                  {accounts.map((acct) => (
-                    <button
-                      key={acct.id}
-                      onClick={() => setAccountFilter(acct.id)}
-                      className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", accountFilter === acct.id && "font-semibold text-brand-indigo")}
-                    >
-                      <Building2 className="h-3 w-3 shrink-0 text-muted-foreground" />
-                      <span className="flex-1 text-left truncate">{acct.name}</span>
-                      {accountFilter === acct.id && <Check className="h-3 w-3 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </PopoverContent>
-        </Popover>
-      )}
-
-      {/* Fields — expand-on-hover (column visibility, invoices + contracts tabs only) */}
-      {!isExpensesTab && (
-        <Popover open={toolbarFieldsOpen} onOpenChange={setToolbarFieldsOpen}>
-          <PopoverTrigger asChild>
-            <button
-              title={t("toolbar.fields")}
-              className={cn(xBase, "hover:max-w-[100px]", xDefault)}
-            >
-              <Eye className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.fields")}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="w-48 p-1">
-            {(isInvoicesTab ? INVOICE_FIELD_DEFS : CONTRACT_FIELD_DEFS).map((col) => {
-              const visSet = isInvoicesTab ? visibleInvoiceColumns : visibleContractColumns;
-              const setter = isInvoicesTab ? setVisibleInvoiceColumns : setVisibleContractColumns;
-              const isVisible = visSet.has(col.key);
-              return (
-                <button
-                  key={col.key}
-                  onClick={() => {
-                    const next = new Set(visSet);
-                    if (isVisible) {
-                      if (next.size > 1) next.delete(col.key);
-                    } else {
-                      next.add(col.key);
-                    }
-                    setter(next);
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted"
-                >
-                  <span className={cn(
-                    "w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0",
-                    isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border"
-                  )}>
-                    {isVisible && <Check className="h-2.5 w-2.5 text-white" />}
-                  </span>
-                  <span className="flex-1 text-left">{t(col.tKey)}</span>
-                </button>
-              );
-            })}
-            <div className="h-px bg-border/40 my-1" />
-            <button
-              onClick={() => {
-                if (isInvoicesTab) setVisibleInvoiceColumns(new Set(ALL_INVOICE_COLS));
-                else setVisibleContractColumns(new Set(ALL_CONTRACT_COLS));
-                setToolbarFieldsOpen(false);
-              }}
-              className="w-full px-2 py-1.5 text-[11px] text-brand-indigo hover:bg-muted rounded-md text-left"
-            >
-              {t("toolbar.showAllFields")}
-            </button>
-          </PopoverContent>
-        </Popover>
-      )}
-
-      {/* ── Right side: action buttons (visible only when items selected) + search ── */}
-      <div className="ml-auto flex items-center gap-1">
-
-        {/* Print button (expenses only) — expand-on-hover */}
-        {isExpensesTab && (
-          <button
-            onClick={() => setExpenseExportTrigger((prev) => prev + 1)}
-            title={t("toolbar.export")}
-            className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-          >
-            <Printer className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.export")}</span>
-          </button>
-        )}
-
-        {/* Invoice action buttons — only when selected */}
-        {isInvoicesTab && invoiceSelectedIds.size > 0 && isAgencyUser && (
-          <>
-            <button
-              title={t("toolbar.edit")}
-              onClick={handleTableEdit}
-              disabled={invoiceSelectedIds.size !== 1}
-              className={cn(xBase, "hover:max-w-[80px]", xDefault, "disabled:opacity-40 disabled:pointer-events-none")}
-            >
-              <Pencil className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.edit")}</span>
-            </button>
-            <button
-              title={t("toolbar.copy")}
-              onClick={handleTableDuplicate}
-              disabled={invoiceSelectedIds.size !== 1}
-              className={cn(xBase, "hover:max-w-[80px]", xDefault, "disabled:opacity-40 disabled:pointer-events-none")}
-            >
-              <Copy className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.copy")}</span>
-            </button>
-            <button
-              title={t("toolbar.delete")}
-              onClick={handleTableDeleteInvoices}
-              className={cn(xBase, "hover:max-w-[100px]", xDefault, "hover:text-red-600")}
-            >
-              <Trash2 className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.delete")}</span>
-            </button>
-            <button
-              title={invoiceSendPaidAction === "paid" ? t("toolbar.markPaid") : t("toolbar.send")}
-              onClick={() => invoiceSendPaidAction === "paid" ? handleTableMarkPaid() : handleTableMarkSent()}
-              className={cn(xBase, "hover:max-w-[80px]", xDefault, invoiceSendPaidAction === "paid" && "hover:text-emerald-700")}
-            >
-              {invoiceSendPaidAction === "paid" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <SendHorizontal className="h-4 w-4 shrink-0" />}
-              <span className={xSpan}>{invoiceSendPaidAction === "paid" ? t("toolbar.paid") : t("toolbar.send")}</span>
-            </button>
-            <button
-              onClick={() => setInvoiceSelectedIds(new Set())}
-              title={t("toolbar.clearSelection")}
-              className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-            >
-              <X className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.selected", { count: invoiceSelectedIds.size })}</span>
-            </button>
-          </>
-        )}
-
-        {/* Contract action buttons — only when selected */}
-        {!isInvoicesTab && !isExpensesTab && contractSelectedIds.size > 0 && isAgencyUser && (
-          <>
-            <button
-              title={t("toolbar.delete")}
-              onClick={handleTableDeleteContracts}
-              className={cn(xBase, "hover:max-w-[100px]", xDefault, "hover:text-red-600")}
-            >
-              <Trash2 className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.delete")}</span>
-            </button>
-            <button
-              title={t("toolbar.sign")}
-              onClick={handleTableMarkSigned}
-              disabled={contractSelectedIds.size !== 1}
-              className={cn(xBase, "hover:max-w-[80px]", xDefault, "hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none")}
-            >
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.sign")}</span>
-            </button>
-            <button
-              onClick={() => setContractSelectedIds(new Set())}
-              title={t("toolbar.clearSelection")}
-              className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-            >
-              <X className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.selected", { count: contractSelectedIds.size })}</span>
-            </button>
-          </>
-        )}
-
-        {/* Expense action buttons — only when selected */}
-        {isExpensesTab && expenseSelectedIds.size > 0 && isAgencyUser && (
-          <>
-            <button
-              title={t("toolbar.edit")}
-              onClick={() => {
-                const id = Array.from(expenseSelectedIds)[0];
-                const exp = (expensesData ?? []).find((e) => e.id === id);
-                if (!exp) return;
-                setEditingExpense(exp);
-                setExpensePanelOpen(true);
-              }}
-              disabled={expenseSelectedIds.size !== 1}
-              className={cn(xBase, "hover:max-w-[80px]", xDefault, "disabled:opacity-40 disabled:pointer-events-none")}
-            >
-              <Pencil className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.edit")}</span>
-            </button>
-            <button
-              title={t("toolbar.delete")}
-              onClick={async () => {
-                const ids = Array.from(expenseSelectedIds);
-                if (!window.confirm(ids.length === 1 ? t("expenses.deleteConfirm", { count: ids.length }) : t("expenses.deleteConfirmPlural", { count: ids.length }))) return;
-                for (const id of ids) await deleteExpenseApi(id);
-                setExpenseSelectedIds(new Set());
-                await queryClient.invalidateQueries({ queryKey: ["expenses"] });
-              }}
-              className={cn(xBase, "hover:max-w-[100px]", xDefault, "hover:text-red-600")}
-            >
-              <Trash2 className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.delete")}</span>
-            </button>
-            <button
-              onClick={() => setExpenseSelectedIds(new Set())}
-              title={t("toolbar.clearSelection")}
-              className={cn(xBase, "hover:max-w-[130px]", xDefault)}
-            >
-              <X className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.selected", { count: expenseSelectedIds.size })}</span>
-            </button>
-          </>
-        )}
-
-      </div>
-    </div>
-  );
-
-    // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col md:flex-row h-full gap-[3px] overflow-y-auto md:overflow-y-hidden" data-testid="billing-list-view">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: '#ECE7DD' }} data-testid="billing-list-view">
+      {/* Unified header (all modes) */}
+      {unifiedHeader}
 
-      {viewMode === "list" ? (
-        /* ── LIST MODE: original split-panel layout ── */
-        <>
-          {/* Left panel */}
-          <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden min-h-[300px] md:min-h-0", mobileView === "detail" ? "hidden md:flex" : "flex")}>
-            {leftPanelHeader}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-[var(--panel-gap)]" style={{ background: '#ECE7DD' }}>
+        {viewMode === "list" ? (
+          /* ── LIST MODE: original split-panel layout ── */
+          <>
+            {/* Left panel */}
+            <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden min-h-[300px] md:min-h-0 shadow-[var(--card-glow)]", mobileView === "detail" ? "hidden md:flex" : "flex")}>
+              {/* No header here anymore - using unified header above */}
 
             {/* ── List toolbar: search + create + sort + filter + date + group ── */}
             {leftPanelToolbar}
@@ -1744,33 +1351,8 @@ export function BillingListView({
           </div>
 
           {/* Right panel */}
-          <div className={cn("relative flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg bg-card min-h-[400px] md:min-h-0", mobileView === "list" ? "hidden md:flex" : "flex")}>
-            {/* Gradient background — renders across all right-panel states */}
-            {gradientTesterOpen ? (
-              <>
-                {gradientLayers.map(layer => {
-                  const style = layerToStyle(layer);
-                  if (!style) return null;
-                  return <div key={layer.id} className="absolute inset-0" style={style} />;
-                })}
-                {gradientDragMode && (
-                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-                )}
-              </>
-            ) : savedGradient ? (
-              <>
-                {savedGradient.map((layer: GradientLayer) => {
-                  const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0" style={style} /> : null;
-                })}
-              </>
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-[#F8F3EB] dark:bg-background" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)] dark:opacity-[0.08]" />
-              </>
-            )}
-            {/* Content — relative so it renders above gradient */}
+          <div className={cn("relative flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg min-h-[400px] md:min-h-0", mobileView === "list" ? "hidden md:flex" : "flex")}>
+            {/* Content */}
             <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden">
             {isExpensesTab ? (
               expensePanelOpen ? (
@@ -1886,22 +1468,14 @@ export function BillingListView({
             </div>
           </div>
         </>
-      ) : (
-        /* ── TABLE MODE: full-width, with optional inline right panel ── */
-        <>
-          {/* Left: table area */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-muted">
+        ) : (
+          /* ── TABLE MODE: full-width, with optional inline right panel ── */
+          <>
+            {/* Left: table area */}
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-muted">
+              {/* No header here - using unified header above */}
 
-            {/* Title + billing tabs (same 309px wrapper as list mode) + table toolbar */}
-            <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-              <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-                {billingTabButtons}
-              </div>
-              {tableToolbar}
-            </div>
-
-            {/* Table content — edge-to-edge, no side margins */}
+              {/* Table content — edge-to-edge, no side margins */}
             <div className="flex-1 min-h-0 overflow-hidden bg-card">
               {isExpensesTab ? (
                 <ExpensesView
@@ -1991,8 +1565,9 @@ export function BillingListView({
               />
             </div>
           )}
-        </>
-      )}
+          </>
+        )}
+      </div>
 
       {/* ── Contract upload dialog ── */}
       <ContractUploadDialog
@@ -2013,7 +1588,6 @@ export function BillingListView({
         onToggleDragMode={() => setGradientDragMode(prev => !prev)}
         onApply={handleApplyGradient}
       />
-
     </div>
   );
 }

@@ -12,8 +12,8 @@ function Nav({ logoVariant }) {
   const appHref = React.useMemo(() => {
     try {
       const role = localStorage.getItem('leadawaker_user_role') || '';
-      return (role === 'Admin' || role === 'Operator') ? '/agency/campaigns' : '/subaccount/campaigns';
-    } catch (_) { return '/subaccount/campaigns'; }
+      return (role === 'Admin' || role === 'Operator') ? '/platform/campaigns' : '/platform/campaigns';
+    } catch (_) { return '/platform/campaigns'; }
   }, []);
 
   const NAV_ITEMS = [

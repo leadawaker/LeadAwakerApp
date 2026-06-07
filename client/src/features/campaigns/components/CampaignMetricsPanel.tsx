@@ -1,56 +1,29 @@
 /**
  * CampaignMetricsPanel
  *
- * The "Summary" tab content of CampaignDetailView.
- * Contains: Pipeline/Donut widget, Key Metrics cards, Performance Trends chart,
- * Agenda, Activity Feed, Financials, ROI Trend chart, AI Summary, A/B Test card.
+ * The "Summary" tab content of CampaignDetailView, rebuilt to match the Claude
+ * design's CampaignMonitor dashboard:
+ *   · AI Read strip (single line) on top, under the header
+ *   · Performance panel (Day/Week/Month seg, inset surface)
+ *   · Pipeline panel (donut + bars + Lead Heat, flat) + optional A/B panel (flat)
+ *   · AI Activity panel (bump distribution + last-20-messages feed, raised)
+ *   · Next panel (calls today / later this week, raised white card)
  *
- * Sub-components live in ./metricsWidgets/
+ * Sub-components live in ./metricsWidgets/ and ./metricsWidgets/dashboard/
  */
 import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
-import { DateRangeFilter, type DateRangeValue } from "@/components/crm/DateRangeFilter";
-import { AgendaWidget } from "@/components/crm/AgendaWidget";
-import { ActivityFeed } from "@/components/crm/ActivityFeed";
-import type { ContractFinancials } from "./useCampaignDetail";
-import { getCampaignMetrics } from "./useCampaignDetail";
-import {
-  PipelineCardWrapper,
-  AnimatedMetricCard,
-  FinancialsWidget,
-  AISummaryWidget,
-  ABTestCard,
-} from "./metricsWidgets";
+import { useLeads } from "@/hooks/useApiData";
+import { AISummaryWidget } from "./metricsWidgets";
+import { ABTestCard } from "./metricsWidgets";
+import { PerformancePanel } from "./metricsWidgets/dashboard/PerformancePanel";
+import { PipelinePanel } from "./metricsWidgets/dashboard/PipelinePanel";
+import { AIActivityPanel } from "./metricsWidgets/dashboard/AIActivityPanel";
+import { NextPanel } from "./metricsWidgets/dashboard/NextPanel";
 
 // ── Demo mode ─────────────────────────────────────────────────────────────────
-// Inject mock data for specific campaigns shown to prospects (no real leads needed)
-
 const DEMO_CAMPAIGN_IDS = new Set([36]);
-
-const DEMO_PIPELINE_STAGES = [
-  { key: "new",       count: 412 },
-  { key: "contacted", count: 247 },
-  { key: "responded", count: 387 },
-  { key: "multi",     count: 89  },
-  { key: "qualified", count: 63  },
-  { key: "booked",    count: 31  },
-  { key: "closed",    count: 12  },
-  { key: "lost",      count: 6   },
-];
-
 const DEMO_AB_STATS = {
   split_ratio: 50,
   winner: "B",
@@ -63,223 +36,70 @@ const DEMO_AB_STATS = {
 };
 
 // ── Props ─────────────────────────────────────────────────────────────────────
-
 export interface CampaignMetricsPanelProps {
   campaign: Campaign;
-  filteredMetrics: CampaignMetricsHistory[];
-  agg: ReturnType<typeof getCampaignMetrics>;
+  /** Full (unfiltered) metrics history for this campaign — timeframe is chosen inside the Performance panel. */
+  allMetrics: CampaignMetricsHistory[];
   animTrigger: number;
-  dateRange: DateRangeValue;
-  onDateRangeChange: (v: DateRangeValue) => void;
-  campaignCreatedAt: string | null;
-  dailyStats: { sentToday: number; dailyLimit: number; channel: string } | null;
-  linkedContract: ContractFinancials | null;
-  contractLoading: boolean;
-  aiCosts: { aiTokens: number; aiCostUsd: number } | null;
   localAiSummary: string | null;
   localAiSummaryAt: string | null;
-  onAiSummaryRefreshed: (summary: string, generatedAt: string) => void;
-  isAgencyUser: boolean;
-  onGoToConfig: () => void;
   compact?: boolean;
 }
 
 // ── CampaignMetricsPanel ──────────────────────────────────────────────────────
-
 export function CampaignMetricsPanel({
   campaign,
-  filteredMetrics,
-  agg,
+  allMetrics,
   animTrigger,
-  dateRange,
-  onDateRangeChange,
-  campaignCreatedAt,
-  dailyStats,
-  linkedContract,
-  contractLoading,
-  aiCosts,
   localAiSummary,
   localAiSummaryAt,
-  onAiSummaryRefreshed,
-  isAgencyUser,
-  onGoToConfig,
   compact = false,
 }: CampaignMetricsPanelProps) {
-  const { t } = useTranslation("campaigns");
-
-  const sortedMetrics = useMemo(() =>
-    [...filteredMetrics].sort((a, b) => (a.metric_date || "").localeCompare(b.metric_date || ""))
-  , [filteredMetrics]);
-
-  const leadsTrend    = sortedMetrics.map((m) => Number(m.total_leads_targeted)  || 0);
-  const messagesTrend = sortedMetrics.map((m) => Number(m.total_messages_sent)    || 0);
-  const responseTrend = sortedMetrics.map((m) => Number(m.response_rate_percent)  || 0);
-  const bookingTrend  = sortedMetrics.map((m) => Number(m.booking_rate_percent)   || 0);
-
   const campaignId = campaign.id || (campaign as any).Id;
   const accountId = campaign.account_id || (campaign as any).Accounts_id;
   const isDemoMode = DEMO_CAMPAIGN_IDS.has(campaignId);
+  const abEnabled = Boolean((campaign as any).ab_enabled ?? (campaign as any).abEnabled);
+
+  // Leads loaded once here, shared by Pipeline + Next (AI Activity loads its own
+  // via the conversations hook since it also needs interactions).
+  const { leads } = useLeads(undefined, campaignId);
+  const leadList = useMemo(() => leads as Record<string, any>[], [leads]);
 
   return (
-    <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 gap-[3px]", "w-full")} style={compact ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}>
+    <div className={cn("summary-root w-full flex flex-col")}>
 
-      {/* Row 1, Col 1: Pipeline + Donut */}
-      <PipelineCardWrapper campaignId={campaignId} mockStages={isDemoMode ? DEMO_PIPELINE_STAGES : undefined} />
+      {/* AI Read strip — top, flat, full width */}
+      <AISummaryWidget summary={localAiSummary} generatedAt={localAiSummaryAt} />
 
-      {/* Row 1, Col 2: Key Metrics + Performance Trends */}
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-metrics">
-        <div className="flex items-center justify-between gap-2 min-h-[36px]">
-          <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.keyMetrics")}</span>
-          <DateRangeFilter
-            value={dateRange}
-            onChange={onDateRangeChange}
-            allFrom={campaignCreatedAt ? new Date(campaignCreatedAt) : undefined}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <AnimatedMetricCard numericValue={agg.totalLeadsTargeted} displayValue={agg.totalLeadsTargeted.toLocaleString()} label={t("summary.leadsTargeted")} animTrigger={animTrigger} borderColor="#6366F1" trendData={leadsTrend} />
-          <AnimatedMetricCard numericValue={agg.totalMessagesSent}  displayValue={agg.totalMessagesSent.toLocaleString()}  label={t("summary.messagesSent")}  animTrigger={animTrigger} borderColor="#22D3EE" trendData={messagesTrend} />
-          <AnimatedMetricCard numericValue={agg.responseRate ?? 0}  displayValue={agg.responseRate != null ? `${agg.responseRate}%` : "—"} label={t("summary.responsePercent")} animTrigger={animTrigger} borderColor="#FBBF24" trendData={responseTrend} />
-          <AnimatedMetricCard numericValue={agg.bookingRate  ?? 0}  displayValue={agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—"} label={t("summary.bookingPercent")}  animTrigger={animTrigger} borderColor="#34D399" trendData={bookingTrend} />
+      {/*
+        Responsive dashboard grid (container-query driven, see design-system.css):
+          · narrow      → everything stacked
+          · ≥900px      → Performance full-width on top, then 3 equal panels in a row
+          · ≥1400px     → all 4 panels side by side, equal height; Performance goes
+                          vertical (metrics over a taller chart)
+      */}
+      <div className="summary-grid">
+        <div className="summary-perf">
+          <PerformancePanel metrics={allMetrics} animTrigger={animTrigger} />
         </div>
 
-        {/* Performance Trends chart */}
-        <div className="mt-auto pt-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("summary.performanceTrends")}</span>
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span className="w-3 h-[2px] rounded-full inline-block bg-[#3ACBDF]" />
-                Response %
-              </span>
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span className="w-3 h-[2px] rounded-full inline-block bg-[#f5be0b]" />
-                Booking %
-              </span>
-            </div>
+        <div className="summary-panels">
+          <div className="summary-cell">
+            <PipelinePanel leads={leadList} />
           </div>
-          <div className="h-[210px]" key={animTrigger} data-testid="campaign-detail-view-trends">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={sortedMetrics.map((m) => ({
-                  date: m.metric_date ? new Date(m.metric_date).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "",
-                  "Response %": Number(m.response_rate_percent) || 0,
-                  "Booking %":  Number(m.booking_rate_percent)  || 0,
-                }))}
-                margin={{ top: 15, right: 4, bottom: 0, left: -39 }}
-              >
-                <defs>
-                  <linearGradient id="fillResponse" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#9a9a9a" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#a3a3a3" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="fillBooking" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f5b70b" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#f5be0b" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", backgroundColor: "rgba(255,255,255,0.95)", color: "#111", fontSize: "11px", padding: "6px 10px" }} />
-                <Area type="monotone" dataKey="Response %" stroke="#a0a0a0" strokeWidth={2} fill="url(#fillResponse)" dot={false} activeDot={{ r: 3 }} />
-                <Area type="monotone" dataKey="Booking %"  stroke="#f5be0b" strokeWidth={2} fill="url(#fillBooking)"  dot={false} activeDot={{ r: 3 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="summary-cell summary-cell--rail">
+            <NextPanel leads={leadList} />
+          </div>
+          <div className="summary-cell summary-cell--rail">
+            <AIActivityPanel campaign={campaign} accountId={accountId} />
           </div>
         </div>
       </div>
 
-      {/* Row 1, Col 3: Up Next */}
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-agenda">
-        <div className="flex items-center min-h-[32px] shrink-0">
-          <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.upNext")}</span>
-        </div>
-        <AgendaWidget accountId={accountId} className="flex-1 min-h-0 bg-transparent" hideHeader />
-      </div>
-
-      {/* Row 2, Col 1: Activity Feed or A/B Test */}
-      {campaign.ab_enabled ? (
+      {/* A/B test panel (rare) — full width below the grid when enabled */}
+      {abEnabled && (
         <ABTestCard campaign={campaign} mockStats={isDemoMode ? DEMO_AB_STATS : undefined} />
-      ) : (
-        <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden max-h-[680px]" data-testid="campaign-detail-view-activity">
-          <div className="flex items-center min-h-[36px] shrink-0">
-            <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.activity")}</span>
-          </div>
-          {dailyStats && (
-            <div className="bg-white/90 dark:bg-white/[0.06] rounded-lg px-4 py-3 flex flex-col gap-2 shrink-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Daily Capacity</span>
-                <span className="text-[11px] text-muted-foreground tabular-nums">
-                  {dailyStats.sentToday.toLocaleString()} / {dailyStats.dailyLimit.toLocaleString()} · resets midnight
-                </span>
-              </div>
-              <div className="h-1.5 w-full bg-black/[0.07] dark:bg-white/[0.08] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min(100, (dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit)) * 100)}%`,
-                    backgroundColor:
-                      dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.9 ? "#ef4444" :
-                      dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.7 ? "#f59e0b" : "#3ACBDF",
-                  }}
-                />
-              </div>
-            </div>
-          )}
-          <ActivityFeed accountId={accountId} className="flex-1 min-h-0" />
-        </div>
       )}
-
-      {/* Row 2, Col 2: Financials + ROI Trend */}
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden max-h-[680px]" data-testid="campaign-detail-view-conversions">
-        <div className="flex items-center min-h-[36px]">
-          <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.financials")}</span>
-        </div>
-        <FinancialsWidget
-          agg={agg}
-          campaign={campaign}
-          contract={linkedContract}
-          contractLoading={contractLoading}
-          aiCosts={aiCosts}
-          isAgencyUser={isAgencyUser}
-          onGoToConfig={onGoToConfig}
-        />
-        <div className="mt-auto border-t border-border/20 pt-3">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">{t("summary.roiTrend")}</span>
-          <div className="h-[180px]" data-testid="campaign-detail-view-roi">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={sortedMetrics.map((m) => ({
-                  date: m.metric_date ? new Date(m.metric_date).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "",
-                  "ROI %": Number(m.roi_percent) || 0,
-                }))}
-                margin={{ top: 4, right: 4, bottom: 4, left: -20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", backgroundColor: "rgba(255,255,255,0.95)", color: "#111", fontSize: "11px", padding: "6px 10px" }} />
-                <Line type="monotone" dataKey="ROI %" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Row 2, Col 3: AI Summary */}
-      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden max-h-[680px]" data-testid="campaign-detail-view-ai-summary">
-        <div className="flex items-center min-h-[36px] shrink-0">
-          <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.aiAnalysis")}</span>
-        </div>
-        <AISummaryWidget
-          campaign={campaign}
-          summary={localAiSummary}
-          generatedAt={localAiSummaryAt}
-          onRefreshed={onAiSummaryRefreshed}
-        />
-      </div>
-
     </div>
   );
 }

@@ -18,13 +18,14 @@
     "fields": "Fields",
     "csv": "CSV",
     "importCsv": "Import CSV",
-    "exportCsv": "Export CSV",
+    "exportCsv": "Export to CSV",
     "fold": "Fold",
     "unfold": "Unfold",
     "tags": "Tags",
     "compactView": "Compact",
     "normalView": "Normal",
     "changeStage": "Change Stage",
+    "assignCampaign": "Assign campaign",
     "duplicate": "Duplicate",
     "clearAll": "Clear all",
     "clearAllFilters": "Clear all filters",
@@ -43,24 +44,32 @@
     "delete": "Delete",
     "previous": "Previous",
     "next": "Next",
-    "of": "of"
+    "of": "of",
+    "chats": "Chats",
+    "chatsPeek": "Show last message for every lead",
+    "minimizeList": "Minimize list",
+    "expandList": "Expand list",
+    "filterLeads": "Filter leads",
+    "switchToList": "Switch to list view",
+    "switchToKanban": "Switch to kanban view",
+    "upcomingCalls": "Upcoming calls"
   },
   "sort": {
     "sortBy": "Sort by",
     "default": "Default",
     "scoreHighToLow": "Score (High to Low)",
-    "scoreDesc": "Score (High \u2192 Low)",
+    "scoreDesc": "Score (High → Low)",
     "recency": "Recency (Newest first)",
     "alphaAZ": "Alphabetical (A to Z)",
-    "alpha": "Alphabetical (A \u2192 Z)",
+    "alpha": "Alphabetical (A → Z)",
     "mostRecent": "Most Recent",
     "oldest": "Oldest",
     "name": "Name",
     "score": "Score",
-    "nameAZ": "Name A \u2192 Z",
-    "nameZA": "Name Z \u2192 A",
-    "scoreDown": "Score \u2193",
-    "scoreUp": "Score \u2191"
+    "nameAZ": "Name A → Z",
+    "nameZA": "Name Z → A",
+    "scoreDown": "Score ↓",
+    "scoreUp": "Score ↑"
   },
   "group": {
     "status": "Status",
@@ -102,8 +111,8 @@
     "apply": "Apply"
   },
   "tagsToggle": {
-    "alwaysVisible": "Tags always visible \u2014 click to hover-only",
-    "hoverOnly": "Show tags on hover only \u2014 click to always show"
+    "alwaysVisible": "Tags always visible — click to hover-only",
+    "hoverOnly": "Show tags on hover only — click to always show"
   },
   "table": {
     "columns": {
@@ -131,7 +140,7 @@
       "prev": "Prev",
       "next": "Next"
     },
-    "saveFailed": "Save failed \u2014 click to retry",
+    "saveFailed": "Save failed — click to retry",
     "selectAll": "Select all",
     "deselectAll": "Deselect all"
   },
@@ -159,7 +168,7 @@
       },
       "Responded": {
         "message": "No leads have responded",
-        "hint": "Keep following up \u2014 responses will appear here"
+        "hint": "Keep following up — responses will appear here"
       },
       "MultipleResponses": {
         "message": "No active conversations",
@@ -171,7 +180,7 @@
       },
       "Booked": {
         "message": "No calls booked yet",
-        "hint": "This is your north-star goal \u2014 keep pushing!"
+        "hint": "This is your north-star goal — keep pushing!"
       },
       "Closed": {
         "message": "No closed deals yet",
@@ -197,7 +206,7 @@
     "movedTo": "Moved to {{stage}}",
     "undo": "Undo",
     "moveFailed": "Couldn't move lead",
-    "moveFailedDescription": "Status reverted \u2014 check your connection",
+    "moveFailedDescription": "Status reverted — check your connection",
     "leadScore": "Lead score: {{score}}"
   },
   "detail": {
@@ -294,7 +303,12 @@
     },
     "notScored": "Not scored",
     "aiSummary": "AI Summary",
-    "noAiSummary": "No AI summary generated yet"
+    "noAiSummary": "No AI summary generated yet",
+    "summaryLocked": "Summary will be generated once the conversation ends",
+    "summaryLockedHint": "It appears here when the lead books or the chat closes",
+    "outcome": "Outcome",
+    "keyPoints": "Key points",
+    "gradientTester": "Gradient tester"
   },
   "contact": {
     "title": "Contact",
@@ -353,7 +367,7 @@
     "upload": {
       "dragAndDrop": "Drag & drop a CSV file here, or",
       "browse": "browse",
-      "fileInfo": "Supports .csv files up to 10 MB \u00b7 Max 5,000 leads per import",
+      "fileInfo": "Supports .csv files up to 10 MB · Max 5,000 leads per import",
       "formatTips": "CSV Format Tips",
       "tip1": "First row must contain column headers",
       "tip2": "Recommended columns: First Name, Last Name, Phone, Email",
@@ -376,7 +390,7 @@
       "columnsMapped_one": "{{mapped}} of {{total}} column mapped",
       "columnsMapped_other": "{{mapped}} of {{total}} columns mapped",
       "selectField": "Select field...",
-      "skipColumn": "\u2014 Skip this column \u2014"
+      "skipColumn": "— Skip this column —"
     },
     "targetFields": {
       "firstName": "First Name",
@@ -549,12 +563,54 @@
       "info": "Info",
       "chat": "Chat",
       "activity": "Activity",
-      "notes": "Notes"
+      "notes": "Notes",
+      "summary": "Summary",
+      "score": "Score"
     },
     "notes": {
       "addNote": "Add Note",
       "emptyTitle": "No notes yet",
       "emptyHint": "Tap «Add Note» to add the first note for this lead."
-    }
+    },
+    "leadLabel": "Lead",
+    "activityLabel": "Activity",
+    "stageOf": "Stage {{current}} of {{total}}",
+    "bookCall": "Book call",
+    "viewBooking": "View booking",
+    "meetingBooked": "Meeting booked",
+    "noSummary": "No summary yet",
+    "interactionFinished": "Interaction finished",
+    "aiSummary": "AI Summary",
+    "viewFullSummary": "View full summary",
+    "empty": "Empty",
+    "noLeadsMatch": "No leads match",
+    "messagePlaceholder": "Type a message…"
+  },
+  "selection": {
+    "countSelected": "{{count}} selected",
+    "clearSelection": "Clear selection"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "clear": "Clear"
+  },
+  "addLead": {
+    "title": "Add Lead",
+    "submit": "Add Lead",
+    "creating": "Creating…",
+    "noCampaign": "No campaign",
+    "firstNameRequired": "First name is required",
+    "phoneOrEmailRequired": "Phone or email is required",
+    "created": "Lead created",
+    "createFailed": "Failed to create lead",
+    "firstNamePlaceholder": "John",
+    "lastNamePlaceholder": "Doe",
+    "phonePlaceholder": "+1 (555) 000-0000",
+    "emailPlaceholder": "john@example.com"
+  },
+  "emptyState": {
+    "noMatch": "No leads match your filters",
+    "noLeads": "No leads found"
   }
 }

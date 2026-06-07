@@ -198,14 +198,6 @@ export function MiniLeadRunWrapper({ msgs, metas, leadName, leadAvatarColors, is
 }) {
   return (
     <div className="flex justify-start gap-1">
-      <div className="w-8 shrink-0 self-end sticky bottom-0">
-        <EntityAvatar
-          name={leadName || "?"}
-          bgColor={leadAvatarColors.bgColor}
-          textColor={leadAvatarColors.textColor}
-          size={32}
-        />
-      </div>
       <div className="flex flex-col min-w-0 flex-1">
         {msgs.map((m, i) => (
           <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} isAgency={isAgency} suppressAvatar />
@@ -250,9 +242,6 @@ export function MiniBotRunWrapper({ msgs, metas, leadName, leadAvatarColors, isA
         {msgs.map((m, i) => (
           <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} isAgency={isAgency} suppressAvatar />
         ))}
-      </div>
-      <div className="w-8 shrink-0 self-end sticky bottom-0">
-        <MiniBotAvatar />
       </div>
     </div>
   );
@@ -457,9 +446,22 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
     ? `In: ${aiPrompt.toLocaleString()} / Out: ${aiCompletion.toLocaleString()}, $${aiCostVal.toFixed(4)}`
     : undefined;
 
-  const bubbleRadius = inbound
-    ? isLastInRun ? "rounded-sm rounded-bl-none" : "rounded-sm"
-    : isLastInRun ? "rounded-sm rounded-br-none" : "rounded-sm";
+  // Approved design (ChatMsg): outbound (our AI/agent) = white + dark text,
+  // inbound (lead) = carved-in neumorphic inset.
+  const bubbleStyle: React.CSSProperties = inbound
+    ? {
+        background: "var(--bg)",
+        boxShadow: "var(--sh-inset-crisp)",
+        borderRadius: "13px 13px 13px 3px",
+        color: "var(--ink-soft)",
+      }
+    : {
+        background: "#FFFFFF",
+        boxShadow: "var(--sh-raised-crisp)",
+        borderRadius: "13px 13px 3px 13px",
+        color: "var(--ink)",
+      };
+  const timeColor = inbound ? "var(--mute-2)" : "var(--muted-foreground)";
 
   return (
     <div
@@ -472,26 +474,12 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
       )}
       {inbound && !suppressAvatar && !isLastInRun && <div className="w-8 shrink-0" />}
 
-      {/* Bubble — 45% max-width, time-only, ChatPanel colors + hard-light outline */}
+      {/* Bubble — approved ChatMsg styling (black+cream out / inset in) */}
       <div
         title={aiCostTitle}
-        className={cn(
-          "max-w-[80%] px-2.5 pt-1.5 pb-1 text-[13px] relative",
-          bubbleRadius,
-          inbound && "bg-white dark:bg-card text-gray-900 dark:text-foreground",
-          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground",
-          humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground",
-        )}
+        className="max-w-[80%] px-2.5 pt-1.5 pb-1 text-[13px] relative"
+        style={bubbleStyle}
       >
-        {/* Light drop shadow */}
-        <div
-          className={cn("absolute inset-0 pointer-events-none", bubbleRadius)}
-          style={{
-            boxShadow: (inbound || aiMsg || humanAgentMsg)
-              ? "0 2px 2px rgba(0,0,0,0.08)"
-              : "none",
-          }}
-        />
         {(() => {
           const content = item.content || (item as any).Content || "";
           const attachRaw = item.attachment ?? (item as any).Attachment;
@@ -513,7 +501,7 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
           );
         })()}
         <div className="flex items-center justify-end gap-1 mt-0.5">
-          <span className="text-[10px] leading-none select-none" style={{ color: "#888" }}>
+          <span className="text-[10px] leading-none select-none" style={{ color: timeColor }}>
             {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
           </span>
           {outbound && <MiniStatusIcon status={statusNorm} />}

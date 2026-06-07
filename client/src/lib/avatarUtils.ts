@@ -72,15 +72,15 @@ function pastelTextDark(hex: string): string {
 
 // ── Pipeline stage hex colors ─────────────────────────────────────────────────
 export const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#7C3AED",
-  Contacted:            "#818CF8",
-  Responded:            "#3ACBDF",
-  "Multiple Responses": "#31D35C",
-  Qualified:            "#AED62E",
-  Booked:               "#FCD34D",
-  Closed:               "#10B981",
-  Lost:                 "#DC2626",
-  DND:                  "#1a1a1a",
+  New:                  "#6C5A8C",
+  Contacted:            "#547BB0",
+  Responded:            "#3F8E8E",
+  "Multiple Responses": "#5E8E5E",
+  Qualified:            "#B58F3E",
+  Booked:               "#C48A2F",
+  Closed:               "#6E7A5E",
+  Lost:                 "#A24B3F",
+  DND:                  "#9D8E76",
 };
 
 // ── Lead avatar colors — hand-picked pastels, mutable for Color Tester ───────
@@ -212,32 +212,32 @@ export function getAccountAvatarColor(status: string): { bg: string; text: strin
 
 // ── Campaign status colors — exported mutable for Color Tester ────────────────
 export const CAMPAIGN_STATUS_HEX: Record<string, string> = {
-  Active:    "#22C55E",
-  Paused:    "#F59E0B",
-  Completed: "#3B82F6",
-  Finished:  "#3B82F6",
-  Inactive:  "#94A3B8",
-  Archived:  "#94A3B8",
-  Draft:     "#6B7280",
+  Active:    "#2F9461",
+  Paused:    "#DA9426",
+  Completed: "#6C5A8C",
+  Finished:  "#6C5A8C",
+  Inactive:  "#9D8E76",
+  Archived:  "#9D8E76",
+  Draft:     "#9D8E76",
 };
 
 export const CAMPAIGN_AVATAR_BG: Record<string, string> = {
-  Active:    "#DCFCE7",
-  Paused:    "#FEF3C7",
-  Completed: "#DBEAFE",
-  Finished:  "#DBEAFE",
-  Inactive:  "#F4F4F5",
-  Archived:  "#F4F4F5",
-  Draft:     "#E5E7EB",
+  Active:    "#D4F5E3",
+  Paused:    "#FDF0D0",
+  Completed: "#E6E0F0",
+  Finished:  "#E6E0F0",
+  Inactive:  "#F0EDE8",
+  Archived:  "#F0EDE8",
+  Draft:     "#F0EDE8",
 };
 export const CAMPAIGN_AVATAR_TEXT: Record<string, string> = {
-  Active:    "#15803D",
-  Paused:    "#92400E",
-  Completed: "#1D4ED8",
-  Finished:  "#1D4ED8",
-  Inactive:  "#52525B",
-  Archived:  "#52525B",
-  Draft:     "#374151",
+  Active:    "#1A5C35",
+  Paused:    "#8B6018",
+  Completed: "#4A3D6E",
+  Finished:  "#4A3D6E",
+  Inactive:  "#6E655A",
+  Archived:  "#6E655A",
+  Draft:     "#6E655A",
 };
 
 // ── Dark mode campaign avatar colors ────────────────────────────────────────
@@ -275,20 +275,16 @@ export function getCampaignAvatarColor(status: string): { bg: string; text: stri
 
 // ── User role avatar colors ───────────────────────────────────────────────────
 export const ROLE_AVATAR: Record<string, { bg: string; text: string }> = {
-  Admin:    { bg: "#FEF9C3", text: "#854D0E" },
-  Operator: { bg: "#FFEDD5", text: "#9A3412" },
-  Manager:  { bg: "#DBEAFE", text: "#1E40AF" },
-  Agent:    { bg: "#EDE9FE", text: "#5B21B6" },
-  Viewer:   { bg: "#E5E7EB", text: "#374151" },
+  Admin:   { bg: "#FEF9C3", text: "#854D0E" },
+  Manager: { bg: "#DBEAFE", text: "#1E40AF" },
+  Viewer:  { bg: "#E5E7EB", text: "#374151" },
 };
 
 // ── Dark mode user role avatar colors ───────────────────────────────────────
 export const ROLE_AVATAR_DARK: Record<string, { bg: string; text: string }> = {
-  Admin:    { bg: "#2E2508", text: "#FCD34D" },
-  Operator: { bg: "#2E1508", text: "#FDBA74" },
-  Manager:  { bg: "#0A1A2E", text: "#93C5FD" },
-  Agent:    { bg: "#1A0A2E", text: "#C4B5FD" },
-  Viewer:   { bg: "#1F2937", text: "#9CA3AF" },
+  Admin:   { bg: "#2E2508", text: "#FCD34D" },
+  Manager: { bg: "#0A1A2E", text: "#93C5FD" },
+  Viewer:  { bg: "#1F2937", text: "#9CA3AF" },
 };
 
 export function getUserRoleAvatarColor(role: string): { bg: string; text: string } {

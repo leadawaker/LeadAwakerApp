@@ -24,6 +24,8 @@ interface DetailViewBodyProps {
   activeTab: "summary" | "configurations";
   campaign: Campaign;
   filteredMetrics: CampaignMetricsHistory[];
+  /** Full (unfiltered) metrics history for this campaign — the Summary dashboard chooses its own timeframe. */
+  allMetrics: CampaignMetricsHistory[];
   agg: ReturnType<typeof getCampaignMetrics>;
   animTrigger: number;
   dateRange: DateRangeValue;
@@ -63,16 +65,11 @@ interface DetailViewBodyProps {
 export function DetailViewBody({
   activeTab,
   campaign,
-  filteredMetrics,
-  agg,
+  allMetrics,
   animTrigger,
-  dateRange,
-  onDateRangeChange,
-  campaignCreatedAt,
   detail,
   compact,
   isAgencyUser,
-  goToConfig,
   templateDialogOpen,
   selectedTemplate,
   templateApplying,
@@ -101,29 +98,18 @@ export function DetailViewBody({
       {/* ── Body ── */}
       <div
         className="relative flex-1 px-[3px] pb-[3px] -mt-[80px] pt-[83px] overflow-y-auto flex flex-col gap-[3px]"
-        style={{
+        style={activeTab === "summary" ? {
           maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
-        }}
+        } : undefined}
       >
         {activeTab === "summary" && (
           <CampaignMetricsPanel
             campaign={campaign}
-            filteredMetrics={filteredMetrics}
-            agg={agg}
+            allMetrics={allMetrics}
             animTrigger={animTrigger}
-            dateRange={dateRange}
-            onDateRangeChange={onDateRangeChange}
-            campaignCreatedAt={campaignCreatedAt}
-            dailyStats={detail.dailyStats}
-            linkedContract={detail.linkedContract}
-            contractLoading={detail.contractLoading}
-            aiCosts={detail.aiCosts}
             localAiSummary={detail.localAiSummary}
             localAiSummaryAt={detail.localAiSummaryAt}
-            onAiSummaryRefreshed={detail.handleAiSummaryRefreshed}
-            isAgencyUser={isAgencyUser}
-            onGoToConfig={goToConfig}
             compact={compact}
           />
         )}

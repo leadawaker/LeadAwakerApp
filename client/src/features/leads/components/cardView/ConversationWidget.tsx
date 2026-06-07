@@ -24,6 +24,7 @@ import { sendMessage } from "@/features/conversations/api/conversationsApi";
 import { updateLead } from "../../api/leadsApi";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import type { Interaction } from "@/types/models";
+import { TagEventChip, StatusEventChip, canonicalStatus } from "@/features/conversations/components/chatView/atoms";
 
 import type { MiniSenderKey, MiniMsgMeta, MiniThreadGroup } from "./types";
 import { getDateKey, formatDateLabel } from "./formatUtils";
@@ -55,6 +56,18 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
   const session = useSession();
   const currentUser: SessionUser | null = session.status === "authenticated" ? session.user : null;
   const { toast } = useToast();
+
+  // ── Tag / conversion-status events for the timeline (mirrors the Chats page) ──
+  const [tagEvents, setTagEvents] = useState<any[]>([]);
+  useEffect(() => {
+    if (!leadId) { setTagEvents([]); return; }
+    let cancelled = false;
+    apiFetch(`/api/leads/${leadId}/tag-events`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => { if (!cancelled) setTagEvents(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelled) setTagEvents([]); });
+    return () => { cancelled = true; };
+  }, [leadId]);
 
   // ── Fresh manual_takeover state (prop may be stale if lead list wasn't re-fetched) ──
   const [isHumanTakeover, setIsHumanTakeover] = useState(() =>
@@ -220,11 +233,18 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
     type Token =
       | { kind: "msg"; msgIdx: number }
       | { kind: "date"; label: string; key: string }
-      | { kind: "thread"; group: MiniThreadGroup; total: number; key: string };
+      | { kind: "thread"; group: MiniThreadGroup; total: number; key: string }
+      | { kind: "tag-event"; tagName: string; tagColor: string; time: string; key: string; eventType?: "added" | "removed" }
+      | { kind: "status-event"; statusName: string; time: string; key: string };
+
+    const fmtTime = (ts?: string | null) =>
+      ts ? new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+    const existingTagNames = new Set(tagEvents.map((te: any) => (te.tag_name || "").toLowerCase()));
 
     const tokens: Token[] = [];
     let lastDateKey = "";
     let flatIdx = 0;
+    let inboundN = 0;
 
     for (let gi = 0; gi < threadGroups.length; gi++) {
       const group = threadGroups[gi];
@@ -246,11 +266,66 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
         }
 
         tokens.push({ kind: "msg", msgIdx: flatIdx });
+
+        // Synthetic conversion-status events after inbound messages (parity with Chats)
+        if (String(m.direction || "").toLowerCase() !== "outbound") {
+          inboundN++;
+          const timeStr = fmtTime(ts);
+          if (inboundN === 1 && !existingTagNames.has("responded")) {
+            tokens.push({ kind: "status-event", statusName: "Responded", time: timeStr, key: "synth-responded" });
+          }
+          if (inboundN === 2 && !existingTagNames.has("multiple responses") && !existingTagNames.has("multiple messages")) {
+            tokens.push({ kind: "status-event", statusName: "Multiple Responses", time: timeStr, key: "synth-multiple" });
+          }
+        }
+
         flatIdx++;
       }
     }
 
-    const mergedTokens: Token[] = tokens;
+    // Merge real DB tag events by timestamp — skip "removed" + bump-sequence tags;
+    // non-status tags predating the first message are dropped (stale demo resets).
+    const firstMsgTs = sorted.length > 0
+      ? new Date(sorted[0].created_at ?? sorted[0].createdAt ?? 0).getTime()
+      : 0;
+    const allTagEvents = [...tagEvents]
+      .filter((te: any) => te.event_type !== "removed")
+      .filter((te: any) => !/^bump\s*\d/i.test(te.tag_name ?? ""))
+      .filter((te: any) => canonicalStatus(te.tag_name ?? "") || !te.created_at || !firstMsgTs || new Date(te.created_at).getTime() >= firstMsgTs)
+      .sort((a: any, b: any) => {
+        if (!a.created_at && !b.created_at) return 0;
+        if (!a.created_at) return 1;
+        if (!b.created_at) return -1;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+
+    const pushEventToken = (arr: Token[], te: any) => {
+      const timeStr = fmtTime(te.created_at);
+      const canonical = canonicalStatus(te.tag_name);
+      if (canonical) {
+        arr.push({ kind: "status-event", statusName: canonical, time: timeStr, key: `status-event-${te.id}` });
+      } else {
+        arr.push({ kind: "tag-event", tagName: te.tag_name, tagColor: te.tag_color, time: timeStr, key: `tag-event-${te.id}`, eventType: te.event_type });
+      }
+    };
+
+    let mergedTokens: Token[] = tokens;
+    if (allTagEvents.length > 0) {
+      const merged: Token[] = [];
+      let tei = 0;
+      for (const tok of tokens) {
+        if (tok.kind === "msg") {
+          const msg = sorted[tok.msgIdx];
+          const msgTs = new Date(msg.created_at ?? msg.createdAt ?? 0).getTime();
+          while (tei < allTagEvents.length && allTagEvents[tei].created_at && new Date(allTagEvents[tei].created_at).getTime() <= msgTs) {
+            pushEventToken(merged, allTagEvents[tei]); tei++;
+          }
+        }
+        merged.push(tok);
+      }
+      while (tei < allTagEvents.length) { pushEventToken(merged, allTagEvents[tei]); tei++; }
+      mergedTokens = merged;
+    }
 
     // Second pass: collect same-sender runs and wrap them
     const items: React.ReactNode[] = [];
@@ -266,6 +341,16 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
       }
       if (tok.kind === "thread") {
         items.push(<MiniThreadDivider key={tok.key} group={tok.group} total={tok.total} />);
+        ti++;
+        continue;
+      }
+      if (tok.kind === "tag-event") {
+        items.push(<TagEventChip key={tok.key} tagName={tok.tagName} tagColor={tok.tagColor} time={tok.time} eventType={tok.eventType} />);
+        ti++;
+        continue;
+      }
+      if (tok.kind === "status-event") {
+        items.push(<StatusEventChip key={tok.key} statusName={tok.statusName} time={tok.time} />);
         ti++;
         continue;
       }
@@ -291,6 +376,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
           lookahead++;
           continue;
         }
+        if (lt.kind === "tag-event" || lt.kind === "status-event") break; // event chips break runs
         const m = sorted[lt.msgIdx];
         const sk: MiniSenderKey = String(m.direction || "").toLowerCase() !== "outbound"
           ? "inbound"
@@ -345,78 +431,64 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
     }
 
     return items;
-  }, [sorted, leadName, leadAvatarColors, currentUser, isAgencyView]);
+  }, [sorted, leadName, leadAvatarColors, currentUser, isAgencyView, tagEvents, t]);
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Header with refresh + open-in-chats */}
+      {/* Header with AI resume button only — open-in-chats button removed, no border */}
       {showHeader && (
-        <div className="px-[21px] pt-[21px] pb-2 flex items-center justify-between shrink-0 relative z-10">
-          <p className="text-[18px] font-semibold font-heading text-foreground">{t("chat.title")}</p>
-          <div className="flex items-center gap-1">
-            {/* Let AI continue — only when human has taken over */}
-            {isHumanTakeover && <Popover open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
-              <PopoverTrigger asChild>
+        <div className="px-3 flex items-center justify-end shrink-0 relative z-10" style={{ height: 36, paddingTop: 6 }}>
+          {/* Let AI continue — only when human has taken over */}
+          {isHumanTakeover && <Popover open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="group relative inline-flex items-center justify-center h-[34px] w-[34px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[130px]"
+                aria-label={t("chat.letAiContinue")}
+              >
+                <img src="/6. Favicon.svg" alt="AI" className="h-5 w-5 shrink-0 absolute left-[6px]" />
+                <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  {t("chat.letAiContinue")}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              side="bottom"
+              sideOffset={6}
+              className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+            >
+              <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
+                AI will resume this conversation. You can take over again anytime.
+              </p>
+              <div className="flex items-center gap-2 justify-end">
                 <button
                   type="button"
-                  className="group relative inline-flex items-center justify-center h-[34px] w-[34px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[130px]"
-                  aria-label={t("chat.letAiContinue")}
+                  onClick={() => setShowAiResumeConfirm(false)}
+                  className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
                 >
-                  <img src="/6. Favicon.svg" alt="AI" className="h-5 w-5 shrink-0 absolute left-[6px]" />
-                  <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    {t("chat.letAiContinue")}
-                  </span>
+                  Cancel
                 </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="end"
-                side="bottom"
-                sideOffset={6}
-                className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
-              >
-                <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
-                  AI will resume this conversation. You can take over again anytime.
-                </p>
-                <div className="flex items-center gap-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowAiResumeConfirm(false)}
-                    className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleAiResume}
-                    className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>}
-            <button
-              onClick={() => {
-                localStorage.setItem("selected-conversation-lead-id", String(leadId));
-                setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
-              }}
-              className="h-[34px] w-[34px] rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              title={t("chat.openInChats")}
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
+                <button
+                  type="button"
+                  onClick={handleAiResume}
+                  className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors"
+                >
+                  Confirm
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>}
         </div>
       )}
 
       {/* Messages scroll area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 pb-2 min-h-0 -mt-[12px] pt-[15px]"
+        className="flex-1 overflow-y-auto px-3 pb-2 min-h-0"
         data-testid="list-interactions"
         style={{
-          maskImage: "linear-gradient(to bottom, transparent 0px, black 15px)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 15px)",
+          paddingTop: 12,
         }}
       >
         {loading ? (
@@ -468,16 +540,15 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
             </button>
           </div>
         </div>
-      ) : !readOnly && <div className="shrink-0 px-3 pb-3 pt-1">
-        <div className="flex items-end gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] shadow-sm px-2.5 py-1.5">
-          <button
-            type="button"
-            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-            title="Emoji"
-            onClick={() => textareaRef.current?.focus()}
+      ) : !readOnly && <div className="shrink-0" style={{ padding: "10px 14px", borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <div className="flex items-end gap-1" style={{ flex: 1, minWidth: 0, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 20, padding: "3px 6px 3px 8px" }}>
+          <div
+            className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 opacity-30 cursor-not-allowed"
+            style={{ color: "var(--mute-2)" }}
+            title="Emoji (not available)"
           >
-            <Smile className="h-5 w-5" />
-          </button>
+            <Smile className="h-[18px] w-[18px]" />
+          </div>
 
           <textarea
             ref={textareaRef}
@@ -495,41 +566,44 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
             }}
             placeholder={t("chat.typePlaceholder")}
             rows={1}
-            className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5"
-            style={{ minHeight: "28px", maxHeight: "80px" }}
+            className="flex-1 bg-transparent resize-none focus:outline-none leading-5"
+            style={{ minHeight: "28px", maxHeight: "80px", fontSize: 12, fontFamily: "var(--sans)", color: "var(--ink)", paddingTop: 4 }}
             data-testid="input-message-compose"
           />
 
-          <button
-            type="button"
-            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-            title="Attach file"
+          <div
+            className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 opacity-30 cursor-not-allowed"
+            style={{ color: "var(--mute-2)" }}
+            title="Attach file (not available)"
           >
-            <Paperclip className="h-5 w-5" />
-          </button>
+            <Paperclip className="h-[17px] w-[17px]" />
+          </div>
+        </div>
 
-          <div className="relative">
+        <div className="relative shrink-0">
             {draft.trim() ? (
               <button
                 type="button"
                 onClick={() => { if (draft.trim()) setShowBypassConfirm(true); }}
                 disabled={sending}
-                className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                className="la-btn la-btn--wine la-btn--pill disabled:opacity-40"
+                style={{ width: 36, height: 36, padding: 0 }}
                 title="Send message"
                 data-testid="btn-send-message"
               >
                 {sending
                   ? <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  : <Send className="h-3.5 w-3.5 text-white" />}
+                  : <Send className="h-3.5 w-3.5" />}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={startRecording}
-                className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                className="la-btn la-btn--wine la-btn--pill"
+                style={{ width: 36, height: 36, padding: 0 }}
                 title="Record voice message"
               >
-                <Mic className="h-4 w-4 text-white" />
+                <Mic className="h-4 w-4" />
               </button>
             )}
 
@@ -554,7 +628,6 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
               </div>
             )}
           </div>
-        </div>
       </div>}
     </div>
   );

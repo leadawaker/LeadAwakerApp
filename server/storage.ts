@@ -85,6 +85,12 @@ import {
   taskCategories,
   type TaskCategory,
   type InsertTaskCategory,
+  taskComments,
+  taskAttachments,
+  type TaskComment,
+  type InsertTaskComment,
+  type TaskAttachment,
+  type InsertTaskAttachment,
   outreachTemplates,
   type OutreachTemplate,
   type InsertOutreachTemplate,
@@ -304,6 +310,17 @@ export interface IStorage {
   deleteSubtask(id: number): Promise<boolean>;
   reorderSubtasks(taskId: number, subtaskIds: number[]): Promise<TaskSubtask[]>;
   getSubtaskCounts(): Promise<{ taskId: number; total: number; completed: number }[]>;
+
+  // Task Comments
+  getCommentsByTaskId(taskId: number): Promise<TaskComment[]>;
+  createComment(data: InsertTaskComment): Promise<TaskComment>;
+  deleteComment(id: number): Promise<boolean>;
+
+  // Task Attachments
+  getAttachmentsByTaskId(taskId: number): Promise<TaskAttachment[]>;
+  getAttachmentById(id: number): Promise<TaskAttachment | undefined>;
+  createAttachment(data: InsertTaskAttachment): Promise<TaskAttachment>;
+  deleteAttachment(id: number): Promise<boolean>;
 
   // Support Chat
   createSupportSession(data: InsertSupportSession): Promise<SupportSession>;
@@ -1426,15 +1443,15 @@ export class DatabaseStorage implements IStorage {
   // ─── Tasks ────────────────────────────────────────────────────────────
 
   async getTasks(): Promise<Task[]> {
-    return db.select().from(tasks).orderBy(desc(tasks.createdAt));
+    return db.select().from(tasks).where(eq(tasks.isArchived, false)).orderBy(desc(tasks.createdAt));
   }
 
   async getTasksByAccountId(accountId: number): Promise<Task[]> {
-    return db.select().from(tasks).where(eq(tasks.accountsId, accountId)).orderBy(desc(tasks.createdAt));
+    return db.select().from(tasks).where(and(eq(tasks.accountsId, accountId), eq(tasks.isArchived, false))).orderBy(desc(tasks.createdAt));
   }
 
   async getTasksFiltered(filters: { accountId?: number; categoryId?: number | null; parentTaskId?: number | null }): Promise<Task[]> {
-    const conditions: SQL[] = [];
+    const conditions: SQL[] = [eq(tasks.isArchived, false)];
     if (filters.accountId !== undefined) {
       conditions.push(eq(tasks.accountsId, filters.accountId));
     }
@@ -1452,11 +1469,7 @@ export class DatabaseStorage implements IStorage {
         conditions.push(eq(tasks.parentTaskId, filters.parentTaskId));
       }
     }
-    const query = db.select().from(tasks);
-    if (conditions.length > 0) {
-      return query.where(and(...conditions)).orderBy(desc(tasks.createdAt));
-    }
-    return query.orderBy(desc(tasks.createdAt));
+    return db.select().from(tasks).where(and(...conditions)).orderBy(desc(tasks.createdAt));
   }
 
   async getTaskById(id: number): Promise<Task | undefined> {
@@ -1548,6 +1561,43 @@ export class DatabaseStorage implements IStorage {
       .from(taskSubtasks)
       .groupBy(taskSubtasks.taskId);
     return rows.map(r => ({ taskId: r.taskId, total: Number(r.total), completed: Number(r.completed) }));
+  }
+
+  // ─── Task Comments ─────────────────────────────────────────────────────
+
+  async getCommentsByTaskId(taskId: number): Promise<TaskComment[]> {
+    return db.select().from(taskComments).where(eq(taskComments.taskId, taskId)).orderBy(asc(taskComments.createdAt));
+  }
+
+  async createComment(data: InsertTaskComment): Promise<TaskComment> {
+    const [row] = await db.insert(taskComments).values(data as any).returning();
+    return row;
+  }
+
+  async deleteComment(id: number): Promise<boolean> {
+    const rows = await db.delete(taskComments).where(eq(taskComments.id, id)).returning();
+    return rows.length > 0;
+  }
+
+  // ─── Task Attachments ──────────────────────────────────────────────────
+
+  async getAttachmentsByTaskId(taskId: number): Promise<TaskAttachment[]> {
+    return db.select().from(taskAttachments).where(eq(taskAttachments.taskId, taskId)).orderBy(asc(taskAttachments.createdAt));
+  }
+
+  async getAttachmentById(id: number): Promise<TaskAttachment | undefined> {
+    const [row] = await db.select().from(taskAttachments).where(eq(taskAttachments.id, id));
+    return row;
+  }
+
+  async createAttachment(data: InsertTaskAttachment): Promise<TaskAttachment> {
+    const [row] = await db.insert(taskAttachments).values(data as any).returning();
+    return row;
+  }
+
+  async deleteAttachment(id: number): Promise<boolean> {
+    const rows = await db.delete(taskAttachments).where(eq(taskAttachments.id, id)).returning();
+    return rows.length > 0;
   }
 
   async cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }> {

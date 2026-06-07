@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Calendar, Trash2, Copy, Plus, ListChecks, Clock, ChevronDown } from "lucide-react";
+import { Calendar, ListChecks, Clock, User, ChevronDown, Copy, Trash2 } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
@@ -9,20 +9,14 @@ import {
 } from "@/components/ui/popover";
 import type { Task } from "@shared/schema";
 import { useTheme } from "@/hooks/useTheme";
-import { useUpdateTask, useDeleteTask, useCreateTask, useSubtaskCounts, useTaskCategories } from "../api/tasksApi";
-import { useTagVisibility } from "../context/TagVisibilityContext";
+import { useUpdateTask, useDeleteTask, useCreateTask, useSubtaskCounts, useTaskCategories, useAccountUsers } from "../api/tasksApi";
 import {
   PRIORITY_OPTIONS,
   PRIORITY_BADGE,
-  TASK_TAG_PRESETS,
-  TAG_COLORS,
-  TAG_COLORS_DARK,
-  parseTags,
   type TaskStatus,
   type TaskPriority,
 } from "../types";
 
-// ── Data-as-labels: priority i18n keys ──────────────────────────────
 const PRIORITY_I18N_KEY: Record<TaskPriority, string> = {
   low: "priority.low",
   medium: "priority.medium",
@@ -30,7 +24,6 @@ const PRIORITY_I18N_KEY: Record<TaskPriority, string> = {
   urgent: "priority.urgent",
 };
 
-// ── Status-based title colors ────────────────────────────────────────
 const STATUS_TITLE_COLOR: Record<TaskStatus, { light: string; dark: string }> = {
   todo:        { light: "#1a1a1a", dark: "#e5e5e5" },
   in_progress: { light: "#1a1a1a", dark: "#e5e5e5" },
@@ -38,7 +31,6 @@ const STATUS_TITLE_COLOR: Record<TaskStatus, { light: string; dark: string }> = 
   cancelled:   { light: "#1a1a1a", dark: "#e5e5e5" },
 };
 
-// ── Status-based card bg (Tailwind classes) ──────────────────────────
 const CARD_BG: Record<TaskStatus, string> = {
   todo:        "bg-white dark:bg-[hsl(220,15%,14%)] hover:bg-white dark:hover:bg-[hsl(220,15%,16%)]",
   in_progress: "bg-white dark:bg-[hsl(220,15%,14%)] hover:bg-white dark:hover:bg-[hsl(220,15%,16%)]",
@@ -53,7 +45,6 @@ const CARD_BORDER: Record<TaskStatus, string> = {
   cancelled:   "border-border/30",
 };
 
-// ── Priority signal bars ─────────────────────────────────────────────
 const SIGNAL_FILLED: Record<TaskPriority, number> = { low: 1, medium: 2, high: 3, urgent: 4 };
 const SIGNAL_COLOR: Record<TaskPriority, string> = {
   low:    "#9CA3AF",
@@ -83,122 +74,42 @@ function SignalBars({ priority }: { priority: TaskPriority }) {
 
 interface TaskCardProps {
   task: Task;
+  selected?: boolean;
+  onSelect?: (id: number) => void;
+  onCardClick?: (id: number) => void;
 }
 
-export default function TaskCard({ task }: TaskCardProps) {
+export default function TaskCard({ task, selected, onSelect, onCardClick }: TaskCardProps) {
   const { t } = useTranslation("tasks");
   const { isDark } = useTheme();
-  const showTags = useTagVisibility();
   const priority = (task.priority ?? "medium") as TaskPriority;
   const status = (task.status ?? "todo") as TaskStatus;
-  const tags = parseTags((task as any).tags);
 
-  // ── Pin (keep description visible even when not hovering) ────────────
-  const [expanded, setExpanded] = useState(false);
-
-  // ── Edit state ──────────────────────────────────────────────────────
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState(task.title ?? "");
-  const [editDescription, setEditDescription] = useState(task.description ?? "");
-  const [editDueDate, setEditDueDate] = useState(
-    task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""
-  );
-  const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
+  const [assigneeOpen, setAssigneeOpen] = useState(false);
 
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
   const createMutation = useCreateTask();
   const { data: subtaskCounts } = useSubtaskCounts();
   const { data: categories } = useTaskCategories();
+  const { data: users = [] } = useAccountUsers();
 
-  // Category info (color + name)
   const category = useMemo(() => {
     if (!task.categoryId || !categories) return null;
     return categories.find((c) => c.id === task.categoryId) ?? null;
   }, [task.categoryId, categories]);
+
   const subtaskCount = useMemo(() => subtaskCounts?.find((c) => c.taskId === task.id), [subtaskCounts, task.id]);
-  const titleRef = useRef<HTMLInputElement>(null);
-  const descRef = useRef<HTMLTextAreaElement>(null);
-  const dateRef = useRef<HTMLInputElement>(null);
 
-  // Sync from task prop when not editing
-  useEffect(() => {
-    if (editingField !== "title") setEditTitle(task.title ?? "");
-    if (editingField !== "description") setEditDescription(task.description ?? "");
-    if (editingField !== "dueDate")
-      setEditDueDate(
-        task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""
-      );
-  }, [task, editingField]);
-
-  // Auto-focus on edit
-  useEffect(() => {
-    if (editingField === "title") setTimeout(() => titleRef.current?.focus(), 30);
-    if (editingField === "description") setTimeout(() => descRef.current?.focus(), 30);
-    if (editingField === "dueDate")
-      setTimeout(() => {
-        dateRef.current?.showPicker?.();
-        dateRef.current?.focus();
-      }, 30);
-  }, [editingField]);
-
-  // ── Save helpers ────────────────────────────────────────────────────
   const saveField = (field: string, value: unknown) => {
     updateMutation.mutate({ id: task.id, data: { [field]: value } });
   };
 
-  const handleTitleBlur = () => {
-    setEditingField(null);
-    const trimmed = editTitle.trim() || t("card.newTask");
-    if (trimmed !== (task.title ?? "")) saveField("title", trimmed);
-  };
-
-  const handleDescBlur = () => {
-    setEditingField(null);
-    const val = editDescription.trim() || null;
-    if (val !== (task.description ?? null)) saveField("description", val);
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setEditDueDate(val);
-    saveField("dueDate", val ? new Date(val) : null);
-    setEditingField(null);
-  };
-
-  const handlePriorityChange = (p: string) => {
-    saveField("priority", p);
-    setPriorityOpen(false);
-  };
-
-  const toggleTag = (tag: string) => {
-    const current = parseTags((task as any).tags);
-    const next = current.includes(tag)
-      ? current.filter((t) => t !== tag)
-      : [...current, tag];
-    saveField("tags", next.length > 0 ? JSON.stringify(next) : null);
-  };
-
-  // Double-click delete
-  const [deleteArmed, setDeleteArmed] = useState(false);
-  const deleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (deleteArmed) {
-      if (deleteTimer.current) clearTimeout(deleteTimer.current);
-      deleteMutation.mutate(task.id);
-      setDeleteArmed(false);
-    } else {
-      setDeleteArmed(true);
-      deleteTimer.current = setTimeout(() => setDeleteArmed(false), 2000);
-    }
+    deleteMutation.mutate(task.id);
   };
-
-  useEffect(() => {
-    return () => { if (deleteTimer.current) clearTimeout(deleteTimer.current); };
-  }, []);
 
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -217,7 +128,6 @@ export default function TaskCard({ task }: TaskCardProps) {
     });
   };
 
-  // ── Derived data ────────────────────────────────────────────────────
   const isOverdue =
     task.dueDate &&
     new Date(task.dueDate) < new Date() &&
@@ -228,15 +138,12 @@ export default function TaskCard({ task }: TaskCardProps) {
     ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : null;
 
-  const colorMap = isDark ? TAG_COLORS_DARK : TAG_COLORS;
-  const fallbackTag = {
-    bg: isDark ? "rgba(100,116,139,0.15)" : "#F1F5F9",
-    text: isDark ? "#94A3B8" : "#475569",
-  };
-
   const titleColor = STATUS_TITLE_COLOR[status]?.[isDark ? "dark" : "light"];
 
-  // ── Render ──────────────────────────────────────────────────────────
+  const assigneeInitials = task.assigneeName
+    ? task.assigneeName.split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+    : null;
+
   return (
     <div
       className={cn(
@@ -245,84 +152,45 @@ export default function TaskCard({ task }: TaskCardProps) {
         "border transition-colors duration-150",
         CARD_BG[status],
         CARD_BORDER[status],
+        selected && "ring-2 ring-brand-indigo",
+        onCardClick && "cursor-pointer"
       )}
+      onClick={onCardClick ? () => onCardClick(task.id) : undefined}
     >
-      {/* Row 1: title + action buttons + priority bars */}
-      <div className="flex items-start gap-1 min-w-0">
+      {/* Row 1: checkbox + title + ID (hover) + priority bars */}
+      <div className="flex items-start gap-1.5 min-w-0">
+        {/* Bulk checkbox — always visible */}
+        <input
+          type="checkbox"
+          checked={selected ?? false}
+          onChange={() => onSelect?.(task.id)}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="h-3.5 w-3.5 shrink-0 mt-1 accent-brand-indigo cursor-pointer"
+        />
+
         {/* Title */}
-        <div className="flex-1 min-w-0">
-          {editingField === "title" ? (
-            <input
-              ref={titleRef}
-              className="w-full bg-transparent text-[15px] font-semibold outline-none cursor-text"
-              style={{ color: titleColor }}
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onBlur={handleTitleBlur}
-              onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleTitleBlur();
-                if (e.key === "Escape") { setEditTitle(task.title ?? ""); setEditingField(null); }
-              }}
-            />
-          ) : (
-            <p
-              onClick={() => setEditingField("title")}
-              className="text-[15px] font-semibold leading-snug cursor-text select-none"
-              style={{ color: titleColor }}
-            >
-              {(task as any).emoji && <span className="mr-1" data-testid="task-emoji">{(task as any).emoji}</span>}
-              {task.title || t("card.newTask")}
-            </p>
-          )}
+        <div className="flex-1 min-w-0 flex items-start gap-1.5">
+          <p
+            className="text-[15px] font-semibold leading-snug select-none flex-1 min-w-0"
+            style={{ color: titleColor }}
+          >
+            {(task as any).emoji && <span className="mr-1">{(task as any).emoji}</span>}
+            {task.title || t("card.newTask")}
+          </p>
+          {/* Task ID — fades in on hover */}
+          <span className="text-[10px] font-mono text-muted-foreground/40 shrink-0 mt-[3px] opacity-0 group-hover/card:opacity-100 transition-opacity">
+            #{task.id}
+          </span>
         </div>
 
-        {/* Delete */}
-        <button
-          onClick={handleDelete}
-          onPointerDown={(e) => e.stopPropagation()}
-          className={cn(
-            "shrink-0 p-1 rounded-md transition-all duration-150",
-            deleteArmed
-              ? "opacity-100 text-red-500 bg-red-50 dark:bg-red-500/10"
-              : "opacity-0 group-hover/card:opacity-100 text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-          )}
-          title={deleteArmed ? t("card.clickAgainToDelete") : t("detail.delete")}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-
-        {/* Expand/collapse description (down arrow) */}
-        <button
-          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className={cn(
-            "shrink-0 h-5 w-5 rounded-full border flex items-center justify-center transition-all duration-150",
-            expanded
-              ? "border-brand-indigo/50 text-brand-indigo bg-brand-indigo/8 opacity-100"
-              : "border-border/40 text-muted-foreground/40 opacity-0 group-hover/card:opacity-100 hover:border-brand-indigo/40 hover:text-brand-indigo"
-          )}
-          title={expanded ? "Collapse" : "Expand"}
-        >
-          <ChevronDown className={cn("h-3 w-3 transition-transform duration-150", expanded && "rotate-180")} />
-        </button>
-
-        {/* Duplicate */}
-        <button
-          onClick={handleDuplicate}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="shrink-0 p-1 rounded-md opacity-0 group-hover/card:opacity-100 text-muted-foreground/30 hover:text-brand-indigo hover:bg-brand-indigo/5 dark:hover:bg-brand-indigo/10 transition-all duration-150"
-          title={t("card.duplicate")}
-        >
-          <Copy className="h-3.5 w-3.5" />
-        </button>
-
-        {/* Priority signal bars — far right corner */}
+        {/* Priority signal bars */}
         <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
           <PopoverTrigger asChild>
             <button
+              onClick={(e) => { e.stopPropagation(); setPriorityOpen(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="shrink-0 mt-0.5 hover:opacity-70 transition-opacity duration-150 cursor-pointer"
+              className="shrink-0 mt-0.5 hover:opacity-70 transition-opacity cursor-pointer"
               title={t(PRIORITY_I18N_KEY[priority] ?? "priority.medium")}
             >
               <SignalBars priority={priority} />
@@ -339,7 +207,7 @@ export default function TaskCard({ task }: TaskCardProps) {
               return (
                 <button
                   key={o.value}
-                  onClick={() => handlePriorityChange(o.value)}
+                  onClick={(e) => { e.stopPropagation(); saveField("priority", o.value); setPriorityOpen(false); }}
                   className={cn(
                     "flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors duration-150",
                     priority === o.value ? "bg-muted" : "hover:bg-muted/50"
@@ -356,112 +224,78 @@ export default function TaskCard({ task }: TaskCardProps) {
         </Popover>
       </div>
 
-      {/* Description — expands on hover OR when pinned */}
-      <div
-        className={cn(
-          "overflow-hidden transition-[max-height] duration-200 ease-in-out",
-          expanded ? "max-h-40" : "max-h-0 group-hover/card:max-h-40"
-        )}
-      >
-        {editingField === "description" ? (
-          <textarea
-            ref={descRef}
-            className="w-full bg-transparent text-[13px] text-foreground outline-none resize-none min-h-[40px] leading-relaxed cursor-text"
-            value={editDescription}
-            onChange={(e) => setEditDescription(e.target.value)}
-            onBlur={handleDescBlur}
-            onPointerDown={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") { setEditDescription(task.description ?? ""); setEditingField(null); }
-            }}
-          />
-        ) : (
-          <p
-            onClick={() => setEditingField("description")}
-            className={cn(
-              "text-[13px] leading-relaxed cursor-text",
-              task.description ? "text-muted-foreground" : "text-muted-foreground/35 italic"
-            )}
-          >
-            {task.description || t("fields.addDescription")}
-          </p>
-        )}
-      </div>
-
-      {/* Bottom row: tags · date */}
+      {/* Bottom row: assignee · category · time estimate · subtasks · date */}
       <div className="flex items-center gap-1 min-w-0 flex-wrap">
-        {/* Tags (conditionally visible via TagVisibilityContext) */}
-        {showTags && tags.map((tag) => {
-          const c = colorMap[tag] ?? fallbackTag;
-          return (
-            <span
-              key={tag}
-              onClick={() => setTagPickerOpen(true)}
-              className="inline-flex items-center rounded-full px-1.5 py-[1px] text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity duration-150 shrink-0"
-              style={{ backgroundColor: c.bg, color: c.text }}
-            >
-              {tag}
-            </span>
-          );
-        })}
 
-        {/* Add tag */}
-        {showTags && (
-        <Popover open={tagPickerOpen} onOpenChange={setTagPickerOpen}>
+        {/* Assignee avatar + name — popover to assign */}
+        <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
           <PopoverTrigger asChild>
             <button
+              onClick={(e) => { e.stopPropagation(); setAssigneeOpen(true); }}
+              onPointerDown={(e) => e.stopPropagation()}
               className={cn(
-                "inline-flex items-center justify-center h-4 w-4 rounded-full transition-all duration-150",
-                "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted",
-                tags.length === 0 ? "opacity-0 group-hover/card:opacity-100" : ""
+                "inline-flex items-center gap-1 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0 transition-opacity",
+                task.assigneeName
+                  ? "bg-muted text-muted-foreground hover:bg-foreground/10"
+                  : "bg-transparent text-muted-foreground/30 opacity-0 group-hover/card:opacity-100"
               )}
             >
-              <Plus className="h-2 w-2" />
+              {assigneeInitials ? (
+                <span className="h-3.5 w-3.5 rounded-full flex items-center justify-center text-[7px] font-bold bg-brand-indigo/15 text-brand-indigo border border-brand-indigo/25 shrink-0">
+                  {assigneeInitials}
+                </span>
+              ) : (
+                <User className="h-2.5 w-2.5 shrink-0" />
+              )}
+              {task.assigneeName ?? "Assign"}
             </button>
           </PopoverTrigger>
           <PopoverContent
-            align="start"
+            className="w-48 p-1 bg-white dark:bg-popover rounded-xl border border-black/[0.08] dark:border-white/[0.08] shadow-md"
             side="bottom"
+            align="start"
             sideOffset={4}
-            className="w-[240px] p-2.5 bg-white dark:bg-popover rounded-xl border border-black/[0.08] dark:border-white/[0.08] shadow-md"
           >
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              {t("fields.tags")}
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {TASK_TAG_PRESETS.map((tag) => {
-                const isSelected = tags.includes(tag);
-                const c = colorMap[tag] ?? fallbackTag;
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className={cn(
-                      "inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-medium transition-opacity duration-150",
-                      isSelected ? "ring-1 ring-brand-indigo/40" : "opacity-50 hover:opacity-100"
-                    )}
-                    style={{ backgroundColor: c.bg, color: c.text }}
-                  >
-                    {tag}
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); saveField("assigneeName", null); setAssigneeOpen(false); }}
+              className={cn(
+                "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] transition-colors",
+                !task.assigneeName ? "bg-muted font-medium" : "hover:bg-muted/50"
+              )}
+            >
+              <User className="h-3 w-3 text-muted-foreground" />
+              Unassigned
+            </button>
+            {users.map((u) => {
+              const name = u.fullName1 || u.email || "";
+              if (!name) return null;
+              const initials = name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+              return (
+                <button
+                  key={u.id}
+                  onClick={(e) => { e.stopPropagation(); saveField("assigneeName", name); setAssigneeOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] transition-colors",
+                    task.assigneeName === name ? "bg-muted font-medium" : "hover:bg-muted/50"
+                  )}
+                >
+                  <span className="h-4 w-4 rounded-full flex items-center justify-center text-[7px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 shrink-0">
+                    {initials}
+                  </span>
+                  <span className="truncate">{name}</span>
+                </button>
+              );
+            })}
           </PopoverContent>
         </Popover>
-        )}
 
-        {/* Category name badge */}
+        {/* Category badge */}
         {category && (
           <span
             className="inline-flex items-center gap-1 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0 bg-foreground/[0.05] text-muted-foreground"
-            data-testid="task-category-badge"
           >
             {category.color && (
-              <span
-                className="inline-block h-2 w-2 rounded-sm shrink-0"
-                style={{ backgroundColor: category.color }}
-              />
+              <span className="inline-block h-2 w-2 rounded-sm shrink-0" style={{ backgroundColor: category.color }} />
             )}
             {category.icon && <span className="text-[10px]">{category.icon}</span>}
             {category.name}
@@ -470,10 +304,7 @@ export default function TaskCard({ task }: TaskCardProps) {
 
         {/* Time estimate */}
         {(task as any).timeEstimate != null && (task as any).timeEstimate > 0 && (
-          <span
-            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0 bg-foreground/[0.05] text-muted-foreground"
-            data-testid="task-time-estimate"
-          >
+          <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0 bg-foreground/[0.05] text-muted-foreground">
             <Clock className="h-2.5 w-2.5" />
             {(() => {
               const mins = (task as any).timeEstimate as number;
@@ -486,7 +317,7 @@ export default function TaskCard({ task }: TaskCardProps) {
           </span>
         )}
 
-        {/* Subtask progress indicator */}
+        {/* Subtask count */}
         {subtaskCount && subtaskCount.total > 0 && (
           <span
             className={cn(
@@ -495,66 +326,53 @@ export default function TaskCard({ task }: TaskCardProps) {
                 ? "bg-emerald-100/80 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
                 : "bg-foreground/[0.05] text-muted-foreground"
             )}
-            data-testid="subtask-progress"
           >
             <ListChecks className="h-3 w-3" />
             {subtaskCount.completed}/{subtaskCount.total}
           </span>
         )}
 
-        {/* Date — pushed to end */}
+        {/* Spacer + Date */}
         <div className="flex-1" />
-        {editingField === "dueDate" ? (
-          <input
-            ref={dateRef}
-            type="date"
-            className="h-5 w-[120px] text-[11px] bg-transparent outline-none text-foreground cursor-text"
-            value={editDueDate}
-            onChange={handleDateChange}
-            onBlur={() => setEditingField(null)}
-            onPointerDown={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <button
-            onClick={() => setEditingField("dueDate")}
-            onPointerDown={(e) => e.stopPropagation()}
-            className={cn(
-              "inline-flex items-center gap-1 text-[11px] cursor-pointer transition-opacity duration-150 shrink-0",
-              isOverdue
-                ? "text-red-500 font-semibold"
-                : dueDateStr
-                  ? "text-muted-foreground/60 hover:text-foreground"
-                  : "text-muted-foreground/25 opacity-0 group-hover/card:opacity-100"
-            )}
-          >
-            <Calendar className="h-3 w-3" />
-            {dueDateStr || t("fields.due")}
-          </button>
-        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className={cn(
+            "inline-flex items-center gap-1 text-[11px] cursor-pointer transition-opacity duration-150 shrink-0",
+            isOverdue
+              ? "text-red-500 font-semibold"
+              : dueDateStr
+                ? "text-muted-foreground/60 hover:text-foreground"
+                : "text-muted-foreground/25 opacity-0 group-hover/card:opacity-100"
+          )}
+        >
+          <Calendar className="h-3 w-3" />
+          {dueDateStr || t("fields.due")}
+        </button>
       </div>
 
-      {/* Account · Assignee — only when pinned */}
-      {expanded && (task.accountName || task.assigneeName) && (
-        <div className="flex items-center gap-2 mt-0.5 min-w-0">
-          {task.accountName && (
-            <span
-              className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium truncate max-w-[120px]"
-              style={{
-                backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
-              }}
-            >
-              {task.accountName}
-            </span>
-          )}
-          {task.assigneeName && (
-            <span
-              className="h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 bg-muted text-muted-foreground"
-              title={task.assigneeName}
-            >
-              {task.assigneeName.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()}
-            </span>
-          )}
+      {/* Clone / Delete bar — visible when selected */}
+      {selected && (
+        <div
+          className="flex items-center gap-2 pt-1.5 mt-0.5 border-t border-border/20"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleDuplicate}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground px-2 py-0.5 rounded-md hover:bg-foreground/[0.06] transition-colors"
+          >
+            <Copy className="h-3 w-3" />
+            Clone
+          </button>
+          <button
+            onClick={handleDelete}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-600 px-2 py-0.5 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 className="h-3 w-3" />
+            Delete
+          </button>
         </div>
       )}
     </div>

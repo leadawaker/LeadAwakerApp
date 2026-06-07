@@ -88,7 +88,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
   const badgeStyle = getStatusBadgeStyle(status);
   const accountId  = account.Id ?? account.id ?? 0;
   const [location] = useLocation();
-  const routePrefix = location.startsWith("/subaccount") ? "/subaccount" : "/agency";
+  const routePrefix = "/platform";
 
   // ── Publish entity data for AI chat context ──────────────────────────────
   const publishEntity = usePublishEntityData();
@@ -269,12 +269,6 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="account-detail-view">
-
-      {/* ── Full-height warm gradient ── */}
-      <div className="absolute inset-0 bg-popover dark:bg-background" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_123%_at_78%_83%,rgba(255,193,193,0.8)_0%,transparent_69%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#d0f8ff_5%,transparent_30%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_96%_80%_at_49%_51%,rgba(203,203,241,0.8)_0%,transparent_66%)] dark:opacity-[0.08]" />
 
       {/* ── Header ── */}
       <div className="shrink-0 relative z-10">
@@ -462,7 +456,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
           {/* Column 1: Overview */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-basic">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-basic">
               <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("detail.overview")}</p>
 
               <InfoRow
@@ -575,7 +569,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
           {/* Column 2: Campaigns & Contracts */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 min-h-full" data-testid="account-widget-campaigns">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 min-h-full" data-testid="account-widget-campaigns">
               <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("detail.campaignsAndContracts")}</p>
               <AccountCampaignsPanel accountId={accountId} routePrefix={routePrefix} />
             </div>
@@ -583,7 +577,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
           {/* Column 3: Users */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 min-h-full" data-testid="account-widget-users">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 min-h-full" data-testid="account-widget-users">
               <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("related.users")}</p>
               <AccountUsersPanel accountId={accountId} routePrefix={routePrefix} />
             </div>
@@ -599,14 +593,14 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
 
           {/* Bottom Col 1: Knowledge Base */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-kb">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-kb">
               <KnowledgeBasePanel accountId={accountId} />
             </div>
           </div>
 
           {/* Bottom Col 2: Integrations */}
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-twilio">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-twilio">
               <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("detail.integrations")}</p>
 
               <SectionHeader label="Twilio" icon={Globe} />

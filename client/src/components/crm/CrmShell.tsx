@@ -8,6 +8,8 @@ import { CommandPalette } from "@/components/crm/CommandPalette";
 import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
 import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
 import { SettingsPanel } from "@/components/crm/SettingsPanel";
+import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
+import { DesignTokenPanel } from "@/components/ui/design-token-panel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ImpersonationBanner } from "@/components/crm/ImpersonationBanner";
 import { cn } from "@/lib/utils";
@@ -23,8 +25,9 @@ import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { currentAccount, currentAccountId, isImpersonating, impersonation } = useWorkspace();
-  const { dockMode, dockWidth, isWideViewport, isOpen: agentOpen } = useAgentWidget();
+  const { currentAccount, currentAccountId, isImpersonating, impersonation, isAgencyUser } = useWorkspace();
+
+  const { dockMode, dockWidth, isWideViewport, isOpen: agentOpen, toggleWidget: toggleAiWidget } = useAgentWidget();
   const dockActive = dockMode && isWideViewport && agentOpen;
 
   const [viewportW, setViewportW] = useState(() => document.documentElement.clientWidth);
@@ -46,11 +49,13 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const [leadsFullWidth, setLeadsFullWidth] = useState(() => {
-    try { return localStorage.getItem("leads-full-width") === "true"; } catch { return false; }
+    // Default ON: Leads renders full-width (toolbar flush to nav, panels expand)
+    // unless the user has explicitly opted out.
+    try { return localStorage.getItem("leads-full-width") !== "false"; } catch { return true; }
   });
   useEffect(() => {
     const handler = () => {
-      try { setLeadsFullWidth(localStorage.getItem("leads-full-width") === "true"); } catch {}
+      try { setLeadsFullWidth(localStorage.getItem("leads-full-width") !== "false"); } catch {}
     };
     window.addEventListener("leads-fullwidth-change", handler);
     return () => window.removeEventListener("leads-fullwidth-change", handler);
@@ -60,13 +65,26 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const isLeadsFullWidth = leadsFullWidth && location.includes("/leads");
   const isCampaignsFullWidth = location.includes("/campaigns");
   const isAccountsFullWidth = location.includes("/accounts");
-  const isAnyFullWidth = isProspectsFullWidth || isLeadsFullWidth || isCampaignsFullWidth || isAccountsFullWidth;
-  // Use reactive wouter location (not the stale useMemo in useWorkspace) so the
-  // agency-mode class updates immediately when navigating between /agency and /subaccount routes.
-  const isAgencyView = location.startsWith("/agency");
+  const isTasksFullWidth = location.includes("/tasks");
+  const isAnyFullWidth = isProspectsFullWidth || isLeadsFullWidth || isCampaignsFullWidth || isAccountsFullWidth || isTasksFullWidth;
+  const isContactsPage = location.includes("/contacts");
+  // The redesigned desktop calendar is full-bleed: flush to the navbar and all
+  // screen edges (no centered max-width, no top/bottom/side gaps). Mobile keeps
+  // the normal padded layout.
+  const isCalendarFlush = location.includes("/calendar") && viewportW >= 1024;
+  // Agency view (all-accounts mode) is now role-derived, not URL-derived.
+  const isAgencyView = isAgencyUser;
   const { isDark, toggleTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Paint button (nav) dispatches this to open the CRM color customization tool
+  useEffect(() => {
+    const handler = () => setColorPickerOpen(prev => !prev);
+    window.addEventListener("toggle-color-picker", handler);
+    return () => window.removeEventListener("toggle-color-picker", handler);
+  }, []);
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved === "true";
@@ -197,14 +215,15 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       )}
       <Topbar
         onOpenPanel={(p) => setActivePanel(p)}
-        collapsed={collapsed}
+        collapsed={false}
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
         onLogout={handleLogout}
+        hideDesktop
       />
       <div className="fixed left-0 bottom-0 z-40" style={{ top: "var(--banner-h, 0px)" }} data-testid="wrap-left-nav">
         <RightSidebar
-          collapsed={collapsed}
+          collapsed={false}
           onCollapse={handleCollapse}
           onOpenSupport={() => setActivePanel('support')}
           onOpenSearch={() => setActivePanel('search')}
@@ -216,6 +235,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
           onLogout={handleLogout}
           unreadChatCount={unreadChatCount}
+          isDark={isDark}
+          onToggleTheme={toggleTheme}
         />
       </div>
 
@@ -246,7 +267,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             <div className="flex-grow overflow-hidden h-full">
               {activePanel === 'settings' && <SettingsPanel />}
               {activePanel === 'help' && (
-                <HelpPanelContent onNavigate={(path) => { closePanel(); setLocation(path); }} prefix={location.startsWith("/agency") ? "/agency" : "/subaccount"} />
+                <HelpPanelContent onNavigate={(path) => { closePanel(); setLocation(path); }} prefix="/platform" />
               )}
               {activePanel === 'support' && (
                 <div className="h-full">
@@ -261,16 +282,17 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-svh flex flex-col bg-background transition-[padding-left] duration-150 overflow-hidden",
-          collapsed ? "md:pl-[56px]" : "md:pl-[200px]"
+          "h-svh flex flex-col transition-[padding-left] duration-150 overflow-hidden",
+          "md:pl-[188px]",
+          "pt-[calc(var(--topbar-h)_+_var(--banner-h,_0px))] md:pt-[var(--banner-h,_0px)]"
         )}
         style={{
-          paddingTop: "calc(var(--topbar-h) + var(--banner-h, 0px))",
-          paddingBottom: "var(--bottombar-h)",
+          background: "var(--surface)",
+          paddingBottom: viewportW >= 1024 ? 0 : "var(--bottombar-h)",
           paddingRight: (() => {
             if (!dockActive) return undefined;
             if (isAnyFullWidth) return `${dockWidth - 1.5}px`;
-            const sidebar = collapsed ? 56 : 200;
+            const sidebar = 188;
             const mainArea = viewportW - sidebar;
             const freeRight = Math.max(0, (mainArea - 1729) / 2) + 20;
             return dockWidth > freeRight ? `${dockWidth - freeRight}px` : undefined;
@@ -280,7 +302,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div id="crm-content-wrapper" className={cn("h-full w-full mx-auto pt-2 pb-0 overflow-y-auto", isAnyFullWidth ? "px-1 md:px-1" : "px-3 md:pl-0 md:pr-5 max-w-[1729px]")}>
+        <div id="crm-content-wrapper" className="h-full w-full pb-0 overflow-y-auto">
           <ErrorBoundary>
             <PageTransition>
               {children}
@@ -291,6 +313,12 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       {/* Global Command Palette (Cmd+K / Ctrl+K) */}
       <CommandPalette />
+
+      {/* CRM color customization tool — dev only, opened by the nav Paint button */}
+      {import.meta.env.DEV && <ColorPickerWidget open={colorPickerOpen} onClose={() => setColorPickerOpen(false)} />}
+
+      {/* Surface token tuner — dev only, self-contained floating launcher (right edge) */}
+      {import.meta.env.DEV && <DesignTokenPanel />}
     </div>
     </TopbarActionsProvider>
   );

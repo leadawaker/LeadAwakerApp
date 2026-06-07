@@ -1,10 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
-import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask, TaskCategory, InsertTaskCategory } from "@shared/schema";
+import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask, TaskCategory, InsertTaskCategory, TaskComment, InsertTaskComment, TaskAttachment, InsertTaskAttachment } from "@shared/schema";
 
 const TASKS_KEY = ["/api/tasks"];
 const CATEGORIES_KEY = ["/api/task-categories"];
+
+export function useAccountUsers() {
+  return useQuery<Array<{ id: number; fullName1: string | null; email: string | null; avatarUrl: string | null }>>({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/users");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export function useTasks() {
   return useQuery<Task[]>({
@@ -210,5 +222,77 @@ export function useDeleteTaskCategory() {
       qc.invalidateQueries({ queryKey: CATEGORIES_KEY });
       qc.invalidateQueries({ queryKey: TASKS_KEY });
     },
+  });
+}
+
+// ─── Task Comments ────────────────────────────────────────────────────────────
+
+function commentsKey(taskId: number) {
+  return ["/api/tasks", taskId, "comments"] as const;
+}
+
+export function useTaskComments(taskId: number) {
+  return useQuery<TaskComment[]>({
+    queryKey: commentsKey(taskId),
+    queryFn: async () => {
+      const res = await apiFetch(`/api/tasks/${taskId}/comments`);
+      if (!res.ok) throw new Error("Failed to fetch comments");
+      return res.json();
+    },
+    enabled: !!taskId,
+  });
+}
+
+export function useCreateComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: number; data: { body: string; authorName: string } }) =>
+      apiRequest("POST", `/api/tasks/${taskId}/comments`, data),
+    onSuccess: (_res, { taskId }) => qc.invalidateQueries({ queryKey: commentsKey(taskId) }),
+  });
+}
+
+export function useDeleteComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, taskId }: { id: number; taskId: number }) =>
+      apiRequest("DELETE", `/api/task-comments/${id}`),
+    onSuccess: (_res, { taskId }) => qc.invalidateQueries({ queryKey: commentsKey(taskId) }),
+  });
+}
+
+// ─── Task Attachments ─────────────────────────────────────────────────────────
+
+function attachmentsKey(taskId: number) {
+  return ["/api/tasks", taskId, "attachments"] as const;
+}
+
+export function useTaskAttachments(taskId: number) {
+  return useQuery<TaskAttachment[]>({
+    queryKey: attachmentsKey(taskId),
+    queryFn: async () => {
+      const res = await apiFetch(`/api/tasks/${taskId}/attachments`);
+      if (!res.ok) throw new Error("Failed to fetch attachments");
+      return res.json();
+    },
+    enabled: !!taskId,
+  });
+}
+
+export function useUploadAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: number; data: { fileName: string; fileData: string; mimeType?: string; uploadedBy?: string } }) =>
+      apiRequest("POST", `/api/tasks/${taskId}/attachments`, data),
+    onSuccess: (_res, { taskId }) => qc.invalidateQueries({ queryKey: attachmentsKey(taskId) }),
+  });
+}
+
+export function useDeleteAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, taskId }: { id: number; taskId: number }) =>
+      apiRequest("DELETE", `/api/task-attachments/${id}`),
+    onSuccess: (_res, { taskId }) => qc.invalidateQueries({ queryKey: attachmentsKey(taskId) }),
   });
 }

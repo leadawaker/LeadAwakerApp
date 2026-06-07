@@ -2,8 +2,10 @@ import { useEffect, useState, useCallback, useRef, type PointerEvent as ReactPoi
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useElementPicker } from "../hooks/useElementPicker";
+import { useClaudeApiKey } from "@/hooks/useClaudeApiKey";
 import { ElementPickerOverlay } from "./ElementPickerOverlay";
 import { AgentSettingsSheet } from "./AgentSettingsSheet";
+import { ClaudeKeySetupModal } from "@/components/claude-api-key/ClaudeKeySetupModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +54,17 @@ export function AgentChatWidget() {
   } = useAgentWidget();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  // Claude API key management
+  const { status: keyStatus, loading: keySaving, saveKey } = useClaudeApiKey();
+  const [keySetupOpen, setKeySetupOpen] = useState(false);
+
+  // Show key setup modal on first widget open if user has no key
+  useEffect(() => {
+    if (isOpen && !keySaving && keyStatus && !keyStatus.hasKey) {
+      setKeySetupOpen(true);
+    }
+  }, [isOpen, keyStatus, keySaving]);
 
   // ── Element picker ──
   const elementPicker = useElementPicker();
@@ -362,7 +375,7 @@ export function AgentChatWidget() {
 
   // Check if user is agency user (admin)
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  const isAgency = role === "Admin" || role === "Operator";
+  const isAgency = role === "Owner" || role === "Admin";
   const isAuthed = Boolean(localStorage.getItem("leadawaker_auth"));
 
   if (!isAuthed || !isAgency) return null;
@@ -552,6 +565,14 @@ export function AgentChatWidget() {
           confirmedInfo={elementPicker.confirmedInfo}
         />
       )}
+
+      {/* Claude API Key Setup Modal */}
+      <ClaudeKeySetupModal
+        open={keySetupOpen}
+        onClose={() => setKeySetupOpen(false)}
+        onSave={saveKey}
+        loading={keySaving}
+      />
     </>
   );
 }

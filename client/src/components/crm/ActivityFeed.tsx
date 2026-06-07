@@ -250,7 +250,7 @@ export function ActivityFeed({
   const handleItemClick = useCallback(
     (item: ActivityItem) => {
       if (!item.leadId) return;
-      const prefix = isAgencyUser ? "/agency" : "/subaccount";
+      const prefix = "/platform";
       try { localStorage.setItem("selected-lead-id", String(item.leadId)); } catch {}
       setLocation(`${prefix}/leads`);
     },

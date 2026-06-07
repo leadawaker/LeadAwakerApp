@@ -1,0 +1,663 @@
+// DesktopCalendar.tsx — wine/neumorphic desktop Calendar (ports the Claude design).
+// Full-width top toolbar + three floating cards (agenda · week/month grid · detail).
+// Wired to the real CalendarPage data, drag-to-reschedule, and i18n. Mobile/tablet
+// keep the legacy layout; this renders only at the desktop breakpoint.
+import { useMemo, type CSSProperties } from "react";
+import type { TFunction } from "i18next";
+import {
+  ChevronLeft, ChevronRight, Maximize2, Clock, Video, Phone, Check, Sparkles,
+  Calendar as CalIcon, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { SearchPill } from "@/components/ui/search-pill";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { Interaction } from "@/features/conversations/hooks/useConversationsData";
+import {
+  type Appointment, CARD_STYLE, HEADER_H, HOUR0, HOUR1, SPAN,
+  intentFor, statusMetaOf, statusKeyOf, channelOf, apptHm, endClockOf, dateKeyOf,
+} from "../lib/calendarDesign";
+import { DraggableBookingCard, DroppableDay, DroppableTimeSlot } from "./CalendarDnd";
+import { BookAppointmentPopover } from "./BookAppointmentPopover";
+
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+type ApptSortBy = "time_asc" | "time_desc" | "name_asc" | "name_desc" | "campaign_asc" | "campaign_desc" | "status_asc" | "status_desc";
+type ApptGroupBy = "date" | "campaign" | "status" | "none";
+type ApptFilterStatus = "no_show" | "rescheduled" | "confirmed";
+
+const SORT_GROUPS: { key: string; label: string; asc: ApptSortBy; desc: ApptSortBy }[] = [
+  { key: "time", label: "sort.time", asc: "time_asc", desc: "time_desc" },
+  { key: "name", label: "sort.nameAZ", asc: "name_asc", desc: "name_desc" },
+  { key: "campaign", label: "sort.campaign", asc: "campaign_asc", desc: "campaign_desc" },
+  { key: "status", label: "sort.status", asc: "status_asc", desc: "status_desc" },
+];
+const GROUP_KEYS: Record<ApptGroupBy, string> = { date: "group.date", campaign: "group.campaign", status: "group.status", none: "group.none" };
+const FILTER_KEYS: Record<ApptFilterStatus, string> = { no_show: "filter.noShow", rescheduled: "filter.rescheduled", confirmed: "filter.confirmed" };
+
+const NAV_BTN: CSSProperties = {
+  width: 34, height: 34, borderRadius: "var(--r-button)", border: "none", cursor: "pointer",
+  background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", display: "flex",
+  alignItems: "center", justifyContent: "center", color: "var(--mute)",
+};
+const MONO: CSSProperties = { fontFamily: "var(--mono)" };
+const SERIF: CSSProperties = { fontFamily: "var(--serif)" };
+
+export interface DesktopCalendarProps {
+  t: TFunction;
+  appts: Appointment[];
+  groupedAppts: { label: string | null; items: Appointment[] }[];
+  weekDays: Date[];
+  days: { date: Date; count: number }[];
+  month: Date;
+  todayStr: string;
+  viewLabel: string;
+  viewMode: "week" | "month";
+  setViewMode: (v: "week" | "month") => void;
+  onNavigate: (dir: number) => void;
+  onToday: () => void;
+  selectedBooking: Appointment | null;
+  onSelectBooking: (a: Appointment | null) => void;
+  // toolbar controls
+  searchQuery: string; setSearchQuery: (v: string) => void;
+  searchOpen: boolean; setSearchOpen: (v: boolean) => void;
+  apptSortBy: ApptSortBy; setApptSortBy: (v: ApptSortBy) => void;
+  apptGroupBy: ApptGroupBy; setApptGroupBy: (v: ApptGroupBy) => void;
+  apptGroupDirection: "asc" | "desc"; setApptGroupDirection: (v: "asc" | "desc") => void;
+  apptFilterStatuses: ApptFilterStatus[]; setApptFilterStatuses: (v: ApptFilterStatus[]) => void;
+  leads: any[] | undefined; refetchLeads: () => void;
+  // detail
+  recentMessages: Interaction[]; recentMessagesLoading: boolean;
+  onOpenInLead: () => void; onCloseDetail: () => void;
+  currentTime: Date;
+  apptListRef: React.RefObject<HTMLDivElement>;
+  narrow?: boolean;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// KPI chip
+// ════════════════════════════════════════════════════════════════════════════
+function KpiChip({ value, label, delta }: { value: string; label: string; delta?: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 18px", borderLeft: "1px solid var(--line)" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+        <span style={{ ...SERIF, fontSize: 23, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</span>
+        {delta && <span style={{ ...MONO, fontSize: 9.5, color: "var(--good)", fontWeight: 700 }}>{delta}</span>}
+      </div>
+      <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", marginTop: 4 }}>{label}</div>
+    </div>
+  );
+}
+
+// Toolbar dropdown trigger (wine soft icon button)
+function toolBtnClass(active: boolean) {
+  return cn("la-btn la-btn--soft la-btn--icon", active && "!text-[var(--wine)]");
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Top toolbar (title · view toggle · search/sort/filter/group/new · KPIs)
+// ════════════════════════════════════════════════════════════════════════════
+function TopToolbar(p: DesktopCalendarProps) {
+  const { t } = p;
+  const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
+  const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
+  const highIntentThisWeek = useMemo(
+    () => p.appts.filter((a) => weekKeys.has(a.date) && intentFor(a).key === "high").length,
+    [p.appts, weekKeys],
+  );
+
+  return (
+    <div style={{ height: 60, flexShrink: 0, padding: "0 14px", display: "flex", alignItems: "center", gap: 18 }}>
+      <span style={{ ...SERIF, fontSize: 27, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("title")}</span>
+
+      {/* Week / Month */}
+      <div className="la-seg">
+        {(["week", "month"] as const).map((k) => (
+          <button key={k} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
+            {t(`views.${k}`)}
+          </button>
+        ))}
+      </div>
+
+      {/* Search / Filter / Sort / Group / New */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <SearchPill value={p.searchQuery} onChange={p.setSearchQuery} open={p.searchOpen} onOpenChange={p.setSearchOpen} placeholder={t("search.placeholder")} />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={toolBtnClass(p.apptFilterStatuses.length > 0)} title={t("filter.label")}><Filter className="h-4 w-4" /></button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
+              <DropdownMenuItem
+                key={opt}
+                onSelect={(e) => { e.preventDefault(); p.setApptFilterStatuses(p.apptFilterStatuses.includes(opt) ? p.apptFilterStatuses.filter((s) => s !== opt) : [...p.apptFilterStatuses, opt]); }}
+                className="flex items-center gap-2 text-[12px]"
+              >
+                <span className="flex-1">{t(FILTER_KEYS[opt])}</span>
+                {p.apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={toolBtnClass(p.apptSortBy !== "time_desc")} title={t("sort.label")}><ArrowUpDown className="h-4 w-4" /></button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44">
+            {SORT_GROUPS.map((g) => {
+              const isActive = p.apptSortBy === g.asc || p.apptSortBy === g.desc;
+              const dir: "asc" | "desc" = p.apptSortBy === g.asc ? "asc" : "desc";
+              return (
+                <DropdownMenuItem key={g.key} onSelect={(e) => { e.preventDefault(); p.setApptSortBy(isActive ? p.apptSortBy : g.desc); }} className="text-[12px] flex items-center gap-2">
+                  <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t(g.label)}</span>
+                  {isActive && (
+                    <>
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptSortBy(g.asc); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "asc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortAscending")}><ArrowUp className="h-3 w-3" /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptSortBy(g.desc); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "desc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortDescending")}><ArrowDown className="h-3 w-3" /></button>
+                    </>
+                  )}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={toolBtnClass(p.apptGroupBy !== "date")} title={t("group.label")}><Layers className="h-4 w-4" /></button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44">
+            {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+              <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.setApptGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
+                <span className={cn("flex-1", p.apptGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_KEYS[opt])}</span>
+                {p.apptGroupBy === opt && opt !== "none" && (
+                  <>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptGroupDirection("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.apptGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortAscending")}><ArrowUp className="h-3 w-3" /></button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptGroupDirection("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.apptGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortDescending")}><ArrowDown className="h-3 w-3" /></button>
+                  </>
+                )}
+                {p.apptGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <BookAppointmentPopover
+          leads={p.leads}
+          refetchLeads={p.refetchLeads}
+          trigger={<button className="la-btn la-btn--soft la-btn--icon" title={t("book.newAppointment")}><Plus className="h-4 w-4" /></button>}
+        />
+      </div>
+
+      <div style={{ flex: 1 }} />
+
+      {/* KPIs — span to the right edge */}
+      <div style={{ display: "flex", alignItems: "stretch", height: 44 }}>
+        <KpiChip value={String(meetingsThisWeek)} label={t("design.kpi.meetings")} delta="+3" />
+        <KpiChip value="67%" label={t("design.kpi.attendance")} delta="+8%" />
+        <KpiChip value={String(highIntentThisWeek)} label={t("design.kpi.highIntent")} delta="+2" />
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LEFT — status filter tabs + agenda list
+// ════════════════════════════════════════════════════════════════════════════
+function StatusTabs(p: DesktopCalendarProps) {
+  const { t } = p;
+  const counts = useMemo(() => ({
+    all: p.appts.length,
+    booked: p.appts.filter((a) => statusKeyOf(a) === "booked").length,
+    noshow: p.appts.filter((a) => a.no_show).length,
+    rescheduled: p.appts.filter((a) => statusKeyOf(a) === "rescheduled").length,
+  }), [p.appts]);
+
+  const active: "all" | "booked" | "noshow" | "rescheduled" =
+    p.apptFilterStatuses.length === 0 ? "all"
+    : p.apptFilterStatuses.length === 1
+      ? (p.apptFilterStatuses[0] === "no_show" ? "noshow" : p.apptFilterStatuses[0] === "rescheduled" ? "rescheduled" : "booked")
+      : "all";
+
+  const set = (k: "all" | "booked" | "noshow" | "rescheduled") => {
+    if (k === "all") p.setApptFilterStatuses([]);
+    else if (k === "booked") p.setApptFilterStatuses(["confirmed"]);
+    else if (k === "noshow") p.setApptFilterStatuses(["no_show"]);
+    else p.setApptFilterStatuses(["rescheduled"]);
+  };
+
+  const tabs: [typeof active, string, number][] = [
+    ["all", t("design.tabs.all"), counts.all],
+    ["booked", t("design.tabs.booked"), counts.booked],
+    ["noshow", t("design.tabs.noshow"), counts.noshow],
+    ["rescheduled", t("design.tabs.rescheduled"), counts.rescheduled],
+  ];
+
+  return (
+    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 10px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 3 }}>
+      {tabs.map(([k, label, count]) => {
+        const on = k === active;
+        return (
+          <button key={k} onClick={() => set(k)} style={{
+            display: "flex", alignItems: "center", gap: 5, padding: "6px 8px", borderRadius: "var(--r-button)", border: "none", cursor: "pointer",
+            background: on ? "var(--wine)" : "transparent", color: on ? "var(--paper)" : "var(--mute)",
+            ...MONO, fontSize: 8.5, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: on ? 700 : 500, whiteSpace: "nowrap", transition: "color 120ms, background 120ms",
+          }}>
+            {label}
+            <span style={{ ...MONO, fontSize: 8, fontWeight: 700, color: on ? "var(--paper)" : "var(--mute-2)", opacity: on ? 0.85 : 1 }}>{count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boolean; onClick: () => void; t: TFunction }) {
+  const sm = statusMetaOf(ev, t);
+  const intent = intentFor(ev);
+  const statusKey = ev.no_show ? "Lost" : (ev.status || "Contacted");
+  const av = getLeadStatusAvatarColor(statusKey);
+  return (
+    <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()} style={{
+      position: "relative", cursor: "pointer", borderRadius: "var(--r-surface)", padding: "11px 12px 11px 14px",
+      background: active ? "var(--card)" : "transparent", boxShadow: active ? "var(--sh-raised-crisp)" : "none",
+      transition: "box-shadow 130ms, background 130ms", display: "flex", gap: 11, alignItems: "center",
+    }}>
+      {active && <div style={{ position: "absolute", left: 0, top: 11, bottom: 11, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />}
+      <EntityAvatar name={ev.lead_name} bgColor={av.bg} textColor={av.text} size={36} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
+        {ev.campaign_name && <div style={{ fontSize: 10.5, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+          <span style={{ ...MONO, fontSize: 9.5, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 4 }}><Clock className="h-3 w-3" />{ev.time}</span>
+          {sm.key !== "booked" && <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: sm.color, background: sm.tint, borderRadius: 4, padding: "1px 5px", fontWeight: 700 }}>{sm.label}</span>}
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+        <span style={{ color: "var(--mute-2)", display: "flex" }}>{channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: intent.color }}>{intent.pct}%</span>
+          <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)" }}>{intent.label}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AgendaList(p: DesktopCalendarProps) {
+  const { t } = p;
+  if (!p.groupedAppts.length || p.groupedAppts.every((g) => g.items.length === 0)) {
+    return <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", ...MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t("design.detail.noMeetings")}</div>;
+  }
+  return (
+    <div ref={p.apptListRef} style={{ flex: 1, overflowY: "auto", padding: "6px 9px 16px" }}>
+      {p.groupedAppts.map((g, gi) => (
+        <div key={gi} data-group-wrapper style={{ marginBottom: 4 }}>
+          {g.label && (
+            <div data-group-header style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 6px 5px" }}>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-soft)", fontWeight: 700 }}>{g.label}</span>
+              <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+              <span style={{ ...MONO, fontSize: 9, color: "var(--mute-2)" }}>{g.items.length}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {g.items.map((a) => (
+              <div key={a.id} data-appt-id={a.id}>
+                <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CENTER — week / month grid + header + legend
+// ════════════════════════════════════════════════════════════════════════════
+function CenterHeader(p: DesktopCalendarProps) {
+  const { t } = p;
+  return (
+    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
+      <button onClick={p.onToday} className="la-btn la-btn--soft" style={{ position: "absolute", left: 14 }}>{t("navigation.today")}</button>
+      <button onClick={() => p.onNavigate(-1)} style={NAV_BTN} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></button>
+      <span style={{ ...SERIF, fontSize: 24, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
+      <button onClick={() => p.onNavigate(1)} style={NAV_BTN} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></button>
+    </div>
+  );
+}
+
+function Legend({ t }: { t: TFunction }) {
+  const items = [
+    { c: "var(--good)", label: t("design.legend.high") },
+    { c: "var(--warn)", label: t("design.legend.needs") },
+    { c: "var(--stage-lost)", label: t("design.legend.risk") },
+  ];
+  return (
+    <div style={{ height: 40, flexShrink: 0, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18, padding: "0 18px" }}>
+      {items.map((it, i) => (
+        <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: it.c }} />
+          <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)" }}>{it.label}</span>
+        </span>
+      ))}
+      <div style={{ flex: 1 }} />
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--wine)" }}>
+        <Sparkles className="h-3 w-3" />
+        <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase" }}>{t("design.bookedByAI")}</span>
+      </span>
+    </div>
+  );
+}
+
+function WeekEvent({ ev, dayIdx, active, onClick, t }: { ev: Appointment; dayIdx: number; active: boolean; onClick: (e: React.MouseEvent) => void; t: TFunction }) {
+  const intent = intentFor(ev);
+  const sm = statusMetaOf(ev, t);
+  const startH = Math.min(Math.max(apptHm(ev), HOUR0), HOUR1);
+  const topPct = ((startH - HOUR0) / SPAN) * 100;
+  const hPct = Math.max(((ev.callDurationMinutes || 60) / 60 / SPAN) * 100, 4.2);
+  const left = `calc(56px + (100% - 56px) * ${dayIdx} / 7 + 3px)`;
+  const width = `calc((100% - 56px) / 7 - 6px)`;
+  const faded = ev.no_show;
+  return (
+    <DraggableBookingCard
+      appt={ev}
+      onClick={onClick}
+      className="overflow-hidden"
+      style={{
+        position: "absolute", top: `${topPct}%`, height: `${hPct}%`, left, width,
+        background: active ? "var(--wine)" : "var(--card)", borderRadius: "var(--r-button)",
+        borderLeft: `3px solid ${active ? "var(--wine-soft)" : intent.color}`,
+        boxShadow: active ? "var(--sh-raised-medium)" : "var(--sh-raised-crisp)",
+        padding: "5px 8px", transition: "box-shadow 120ms", opacity: faded ? 0.62 : 1,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 600, color: active ? "var(--paper)" : "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textDecoration: faded ? "line-through" : "none" }}>{ev.lead_name}</span>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: active ? "var(--paper)" : intent.color, flexShrink: 0 }} />
+      </div>
+      {ev.campaign_name && <div style={{ fontSize: 9.5, color: active ? "rgba(255,250,240,0.82)" : "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
+      <div style={{ ...MONO, fontSize: 8, color: active ? "rgba(255,250,240,0.7)" : "var(--mute-2)", marginTop: 2 }}>{ev.time}{sm.key !== "booked" ? ` · ${sm.label}` : ""}</div>
+    </DraggableBookingCard>
+  );
+}
+
+function WeekGrid(p: DesktopCalendarProps) {
+  const { t } = p;
+  const hours: number[] = [];
+  for (let h = HOUR0; h <= HOUR1; h++) hours.push(h);
+  const gridCols = "56px repeat(7, minmax(0, 1fr))";
+  const nowH = p.currentTime.getHours() + p.currentTime.getMinutes() / 60;
+  const nowPct = nowH >= HOUR0 && nowH <= HOUR1 ? ((nowH - HOUR0) / SPAN) * 100 : null;
+  const todayIdx = p.weekDays.findIndex((d) => dateKeyOf(d) === p.todayStr);
+
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {/* Day header row */}
+      <div style={{ display: "grid", gridTemplateColumns: gridCols, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
+        <div />
+        {p.weekDays.map((d) => {
+          const iso = dateKeyOf(d), isToday = iso === p.todayStr;
+          return (
+            <div key={iso} style={{ padding: "9px 6px 11px", textAlign: "center", borderLeft: "1px solid var(--line)" }}>
+              <div style={{ ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: isToday ? "var(--wine)" : "var(--mute-2)", fontWeight: 700 }}>{t(`days.short.${DAY_KEYS[d.getDay()]}`)}</div>
+              <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 30, height: 30, borderRadius: "var(--r-button)", ...SERIF, fontSize: 18, color: isToday ? "var(--paper)" : "var(--ink)", background: isToday ? "var(--wine)" : "transparent", boxShadow: isToday ? "var(--sh-raised-crisp)" : "none" }}>{d.getDate()}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Body — % positioned events */}
+      <div style={{ flex: 1, position: "relative", minHeight: 0, overflow: "hidden" }}>
+        {/* vertical separators + today tint */}
+        <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: gridCols }}>
+          <div />
+          {p.weekDays.map((d) => {
+            const iso = dateKeyOf(d), isToday = iso === p.todayStr;
+            return <div key={iso} style={{ borderLeft: "1px solid var(--line)", background: isToday ? "rgba(94,34,48,0.022)" : "transparent" }} />;
+          })}
+        </div>
+        {/* horizontal hour lines + gutter labels */}
+        {hours.map((h, i) => {
+          const pct = (i / SPAN) * 100;
+          return (
+            <div key={h}>
+              {i > 0 && <div style={{ position: "absolute", top: `${pct}%`, left: 56, right: 0, borderTop: "1px solid var(--line)" }} />}
+              <div style={{ position: "absolute", top: `calc(${pct}% - 6px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 8.5, color: "var(--mute-2)" }}>{h <= 12 ? h : h - 12}{h < 12 ? "a" : "p"}</div>
+            </div>
+          );
+        })}
+        {/* drop targets (per hour, per day) */}
+        {p.weekDays.map((d, di) => {
+          const dateKey = dateKeyOf(d);
+          const colLeft = `calc(56px + (100% - 56px) * ${di} / 7)`;
+          const colWidth = `calc((100% - 56px) / 7)`;
+          return (
+            <div key={`drop-${dateKey}`} style={{ position: "absolute", top: 0, bottom: 0, left: colLeft, width: colWidth }}>
+              {hours.slice(0, -1).map((h, i) => (
+                <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} top={`${(i / SPAN) * 100}%`} height={`${(1 / SPAN) * 100}%`} wineHighlight />
+              ))}
+            </div>
+          );
+        })}
+        {/* events */}
+        {p.weekDays.map((d, di) => {
+          const iso = dateKeyOf(d);
+          return p.appts.filter((e) => e.date === iso).map((e) => (
+            <WeekEvent key={e.id} ev={e} dayIdx={di} active={p.selectedBooking?.id === e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} t={t} />
+          ));
+        })}
+        {/* current-time line */}
+        {nowPct != null && (
+          <div style={{ position: "absolute", top: `${nowPct}%`, left: 56, right: 0, height: 0, borderTop: "1.5px solid var(--wine)", zIndex: 5, pointerEvents: "none" }}>
+            <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px rgba(94,34,48,0.18)" }} />
+            {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc((100% - 0px) * ${todayIdx} / 7)`, top: -7, ...MONO, fontSize: 8, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "1px 5px", transform: "translateX(6px)" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MonthGrid(p: DesktopCalendarProps) {
+  const { t } = p;
+  const m = p.month.getMonth();
+  // p.days is a flat 42-cell Sun-first array; chunk into weeks of 7.
+  const weeks: { date: Date; count: number }[][] = [];
+  for (let i = 0; i < p.days.length; i += 7) weeks.push(p.days.slice(i, i + 7));
+
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
+        {DAY_KEYS.map((dk, i) => (
+          <div key={dk} style={{ padding: "10px 0", textAlign: "center", ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, borderLeft: i ? "1px solid var(--line)" : "none" }}>{t(`days.short.${dk}`)}</div>
+        ))}
+      </div>
+      <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
+        {weeks.map((wk, wi) => (
+          <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: wi < weeks.length - 1 ? "1px solid var(--line)" : "none" }}>
+            {wk.map((cell, di) => {
+              const iso = dateKeyOf(cell.date), inMonth = cell.date.getMonth() === m, isToday = iso === p.todayStr;
+              const items = p.appts.filter((e) => e.date === iso);
+              return (
+                <DroppableDay
+                  key={iso}
+                  dateKey={iso}
+                  wineHighlight
+                  aria-label={t("selectDate", { date: iso })}
+                  style={{ borderLeft: di ? "1px solid var(--line)" : "none", padding: "7px 8px", minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3, background: isToday ? "rgba(94,34,48,0.03)" : "transparent", opacity: inMonth ? 1 : 0.38 }}
+                >
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 14, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "var(--wine)" : "transparent" }}>{cell.date.getDate()}</span>
+                  </div>
+                  {items.slice(0, 4).map((e) => {
+                    const intent = intentFor(e);
+                    const active = p.selectedBooking?.id === e.id;
+                    return (
+                      <DraggableBookingCard key={e.id} appt={e} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} style={{
+                        cursor: "pointer", borderRadius: "var(--r-flush)", padding: "3px 7px", display: "flex", alignItems: "center", gap: 6,
+                        background: active ? "var(--wine)" : "var(--card)", boxShadow: "var(--sh-raised-crisp)",
+                      }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "var(--paper)" : intent.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: 10.5, color: active ? "var(--paper)" : "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.time.replace(/:00/, "")} {e.lead_name.split(" ")[0]}</span>
+                      </DraggableBookingCard>
+                    );
+                  })}
+                  {items.length > 4 && <span style={{ ...MONO, fontSize: 8.5, color: "var(--mute-2)", paddingLeft: 7 }}>{t("appointment.more", { count: items.length - 4 })}</span>}
+                </DroppableDay>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RIGHT — meeting detail
+// ════════════════════════════════════════════════════════════════════════════
+function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}><span style={{ color: "var(--mute)", display: "flex" }}>{icon}</span>{label}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)" }}>{value}</div>
+    </div>
+  );
+}
+
+function DetailPanel(p: DesktopCalendarProps) {
+  const { t } = p;
+  const ev = p.selectedBooking;
+  if (!ev) {
+    return <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", ...MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t("design.detail.selectMeeting")}</div>;
+  }
+  const intent = intentFor(ev);
+  const sm = statusMetaOf(ev, t);
+  const av = getLeadStatusAvatarColor(ev.no_show ? "Lost" : (ev.status || "Contacted"));
+  const recent = p.recentMessages.slice(-2);
+  const reasons = [t("design.detail.placeholderReason1"), t("design.detail.placeholderReason2"), t("design.detail.placeholderReason3")];
+
+  return (
+    <>
+      <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--wine-tint)", border: "1px solid var(--wine-glow)", color: "var(--wine)", borderRadius: "var(--r-pill)", padding: "3px 9px", ...MONO, fontSize: 8.5, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>
+          <Sparkles className="h-2.5 w-2.5" />{t("design.bookedByAI")}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={p.onOpenInLead} style={NAV_BTN} title={t("design.detail.openInLead")}><Maximize2 className="h-3.5 w-3.5" /></button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px 16px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* identity */}
+        <div style={{ display: "flex", gap: 13, alignItems: "center" }}>
+          <EntityAvatar name={ev.lead_name} bgColor={av.bg} textColor={av.text} size={48} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ ...SERIF, fontSize: 23, color: "var(--ink)", lineHeight: 1.1, letterSpacing: "-0.01em" }}>{ev.lead_name}</div>
+            {ev.campaign_name && <div style={{ fontSize: 12, color: "var(--mute)", marginTop: 2 }}>{ev.campaign_name}</div>}
+          </div>
+        </div>
+
+        {/* status banner */}
+        {sm.key !== "booked" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: "var(--r-surface)", background: sm.tint, border: `1px solid ${sm.color}33` }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: sm.color }} />
+            <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: sm.color, fontWeight: 700 }}>{sm.label}</span>
+          </div>
+        )}
+
+        {/* facts */}
+        <div style={{ background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-card)", padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 12, rowGap: 14 }}>
+          <Fact icon={<CalIcon className="h-3.5 w-3.5" />} label={t("design.detail.date")} value={ev.formattedDate} />
+          <Fact icon={channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />} label={t("design.detail.channel")} value={channelOf(ev) === "phone" ? t("design.detail.phone") : t("design.detail.googleMeet")} />
+          <Fact icon={<Clock className="h-3.5 w-3.5" />} label={t("design.detail.time")} value={`${ev.time} – ${endClockOf(ev)}`} />
+          <div>
+            <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("design.detail.attendance")}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <span style={{ ...SERIF, fontSize: 20, color: intent.color, lineHeight: 1 }}>{intent.pct}%</span>
+              <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{intent.label}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* why AI booked (placeholder) */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
+            <span style={{ color: "var(--wine)", display: "flex" }}><Sparkles className="h-3.5 w-3.5" /></span>
+            <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>{t("design.detail.whyBooked")}</span>
+          </div>
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>{t("design.detail.placeholderHeadline")}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {reasons.map((r, i) => (
+              <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                <span style={{ width: 16, height: 16, borderRadius: 5, flexShrink: 0, marginTop: 1, background: "var(--good-tint)", color: "var(--good)", display: "flex", alignItems: "center", justifyContent: "center" }}><Check className="h-2.5 w-2.5" /></span>
+                <span style={{ fontSize: 12, lineHeight: 1.5, color: "var(--ink-soft)" }}>{r}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* recent conversation (real messages) */}
+        {recent.length > 0 && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mute)", fontWeight: 700 }}>{t("design.detail.recentConversation")}</span>
+              <button onClick={p.onOpenInLead} style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>{t("design.detail.openInLead")}<ChevronRight className="h-2.5 w-2.5" /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {recent.map((m, i) => {
+                const isIn = (m.direction || "").toLowerCase() === "inbound";
+                return (
+                  <div key={i} style={{
+                    alignSelf: isIn ? "flex-start" : "flex-end", maxWidth: "88%",
+                    background: isIn ? "var(--surface)" : "var(--wine-tint)",
+                    border: isIn ? "1px solid var(--line)" : "1px solid var(--wine-glow)",
+                    borderRadius: isIn ? "3px 12px 12px 12px" : "12px 3px 12px 12px", padding: "8px 11px",
+                  }}>
+                    <div style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.12em", textTransform: "uppercase", color: isIn ? "var(--good)" : "var(--wine)", fontWeight: 700, marginBottom: 3 }}>{isIn ? ev.lead_name.split(" ")[0] : t("design.detail.aiAgent")}</div>
+                    <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.5, color: "var(--ink-soft)" }}>{m.content}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Composition
+// ════════════════════════════════════════════════════════════════════════════
+export function DesktopCalendar(p: DesktopCalendarProps) {
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
+      <TopToolbar {...p} />
+      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 12, padding: "2px 12px 12px", overflow: "hidden" }}>
+        {/* LEFT — agenda */}
+        <div style={{ ...CARD_STYLE, width: 318, flexShrink: 0, background: "var(--bg-2)" }}>
+          <StatusTabs {...p} />
+          <AgendaList {...p} />
+        </div>
+        {/* CENTER — calendar */}
+        <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)" }}>
+          <CenterHeader {...p} />
+          {p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
+          <Legend t={p.t} />
+        </div>
+        {/* RIGHT — detail */}
+        <div style={{ ...CARD_STYLE, width: 372, flexShrink: 0 }}>
+          <DetailPanel {...p} />
+        </div>
+      </div>
+    </div>
+  );
+}

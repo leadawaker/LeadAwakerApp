@@ -71,7 +71,7 @@ export function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[
           <Line
             type="monotone"
             dataKey="Response %"
-            stroke="#6366f1"
+            stroke="#6C5A8C"
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 3 }}
@@ -79,7 +79,7 @@ export function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[
           <Line
             type="monotone"
             dataKey="Booking %"
-            stroke="#f59e0b"
+            stroke="#DA9426"
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 3 }}
@@ -87,7 +87,7 @@ export function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[
           <Line
             type="monotone"
             dataKey="ROI %"
-            stroke="#10b981"
+            stroke="#2F9461"
             strokeWidth={1.5}
             dot={false}
             activeDot={{ r: 3 }}

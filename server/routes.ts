@@ -1146,7 +1146,6 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
       { patchKey: "nicheQuestion", ctxValue: ctx.niche_question,       existingKey: "nicheQuestion", displayName: "Niche Question" },
       { patchKey: "agentName",     ctxValue: ctx.agent_name,           existingKey: "agentName",     displayName: "Agent Name" },
       { patchKey: "firstMessage",  ctxValue: ctx.first_message,        existingKey: "firstMessage",  displayName: "First Message" },
-      { patchKey: "secondMessage", ctxValue: ctx.second_message,       existingKey: "secondMessage", displayName: "Second Message" },
       { patchKey: "bump1Template", ctxValue: ctx.bump_1_template,      existingKey: "bump1Template", displayName: "Bump 1" },
       { patchKey: "bump2Template", ctxValue: ctx.bump_2_template,      existingKey: "bump2Template", displayName: "Bump 2" },
     ];
@@ -2468,7 +2467,7 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const allUsers = await storage.getAppUsers();
     // Agency users (Admin/Operator on account 1) see all users;
     // sub-account users only see users from their own account.
-    const isAgency = sessionUser.accountsId === 1 || sessionUser.role === "Admin";
+    const isAgency = sessionUser.accountsId === 1 || sessionUser.role === "Owner" || sessionUser.role === "Admin";
     const data = isAgency
       ? allUsers
       : allUsers.filter(u => u.accountsId === sessionUser.accountsId);
@@ -4640,7 +4639,7 @@ GUARDRAILS
             userId: user.id!,
             accountId: user.accountsId ?? null,
             read: false,
-            link: "/agency/automation-logs",
+            link: "/platform/automation-logs",
           });
         }
       }
@@ -6156,7 +6155,7 @@ GUARDRAILS
     if (error) {
       console.error("[Gmail OAuth] Google returned error:", error);
       const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      return res.redirect(`${base}/agency/settings?gmail=error&reason=${encodeURIComponent(error)}`);
+      return res.redirect(`${base}/platform/settings?gmail=error&reason=${encodeURIComponent(error)}`);
     }
     const code = req.query.code as string;
     if (!code) return res.status(400).json({ message: "Missing authorization code" });
@@ -6174,11 +6173,11 @@ GUARDRAILS
 
       // Redirect to settings page with success indicator
       const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      res.redirect(`${base}/agency/settings?gmail=connected`);
+      res.redirect(`${base}/platform/settings?gmail=connected`);
     } catch (err: any) {
       console.error("[Gmail OAuth] Callback error:", err);
       const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      res.redirect(`${base}/agency/settings?gmail=error`);
+      res.redirect(`${base}/platform/settings?gmail=error`);
     }
   }));
 

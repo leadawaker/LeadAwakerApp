@@ -110,10 +110,10 @@ export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onO
             {results.map((r) => (
               <a
                 key={r.leadId}
-                href={`/agency/contacts/${r.leadId}`}
+                href={`/platform/contacts/${r.leadId}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  window.history.pushState({}, "", `/agency/contacts/${r.leadId}`);
+                  window.history.pushState({}, "", `/platform/contacts/${r.leadId}`);
                   window.dispatchEvent(new PopStateEvent("popstate"));
                   onOpenChange(false);
                 }}

@@ -38,7 +38,7 @@ interface Props {
 export function StepsTableRows({ rows, page, pageSize, expandedRows, toggleRow, executionByRow, isAgencyView }: Props) {
   const { t } = useTranslation("automation");
   const [, navigate] = useLocation();
-  const base = isAgencyView ? "/agency" : "/subaccount";
+  const base = "/platform";
 
   if (rows.length === 0) {
     return (

@@ -53,7 +53,7 @@ export function registerAccountsRoutes(app: Express): void {
     const requestedId = Number(req.params.id);
     const user = req.user!;
     // Sub-account users can only fetch their own account (agency = accountsId 1 or Admin role)
-    const isAgency = user.accountsId === 1 || user.role === "Admin";
+    const isAgency = user.accountsId === 1 || user.role === "Owner" || user.role === "Admin";
     if (!isAgency && user.accountsId !== requestedId) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -951,13 +951,12 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
   app.get("/api/users", requireAuth, wrapAsync(async (req, res) => {
     const sessionUser = req.user!;
     const allUsers = await storage.getAppUsers();
-    // Agency users (Owner/Admin/Operator on account 1) see all users;
+    // Agency users (Owner/Admin on account 1) see all users;
     // sub-account users only see users from their own account.
     const isAgency =
       sessionUser.accountsId === 1 ||
       sessionUser.role === "Owner" ||
-      sessionUser.role === "Admin" ||
-      sessionUser.role === "Operator";
+      sessionUser.role === "Admin";
     let data = isAgency
       ? allUsers
       : allUsers.filter((u: any) => u.accountsId === sessionUser.accountsId);
@@ -990,8 +989,7 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
 
       const isAdminRole =
         sessionUser.role === "Owner" ||
-        sessionUser.role === "Admin" ||
-        sessionUser.role === "Operator";
+        sessionUser.role === "Admin";
 
       // Self-edit OR admin-grade actor managing a non-Owner target.
       const selfEdit = sessionUser.id === targetId;

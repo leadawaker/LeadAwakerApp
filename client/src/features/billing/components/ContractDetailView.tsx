@@ -669,7 +669,7 @@ export function ContractDetailView({
               "h-8 px-3.5 rounded-full text-[12px] font-semibold shrink-0 transition-colors",
               mobileTab === id
                 ? "bg-foreground text-background"
-                : "bg-white/60 dark:bg-white/[0.10] text-foreground/60 border border-border/40"
+                : "bg-card shadow-[var(--card-glow)] text-foreground/60 border border-border/40"
             )}
           >
             {label}
@@ -682,7 +682,7 @@ export function ContractDetailView({
         <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px] max-w-[1386px] w-full mr-auto">
 
           {/* ── LEFT column: full-height contract widget ── */}
-          <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl flex flex-col min-h-[280px] md:min-h-0 overflow-hidden", mobileTab !== "terms" ? "hidden md:flex" : "flex")}>
+          <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl flex flex-col min-h-[280px] md:min-h-0 overflow-hidden", mobileTab !== "terms" ? "hidden md:flex" : "flex")}>
 
             {/* Contract widget header */}
             <div className="flex items-center justify-between px-4 pt-3.5 pb-3 border-b border-border/20 shrink-0">
@@ -828,7 +828,7 @@ export function ContractDetailView({
           <div className={cn("flex flex-col gap-[3px]", mobileTab === "terms" ? "hidden md:flex" : "flex")}>
 
             {/* Status widget (consolidated with tracking) */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 shrink-0">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 shrink-0">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 {t("contracts.detail.status")}
               </span>
@@ -876,7 +876,7 @@ export function ContractDetailView({
             </div>
 
             {/* Dates widget */}
-            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 shrink-0">
+            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 shrink-0">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 {t("contracts.detail.dates")}
               </span>
@@ -915,7 +915,7 @@ export function ContractDetailView({
 
             {/* Deal Structure widget */}
             {hasDealStructure && (
-              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 shrink-0">
+              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 shrink-0">
                 <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                   {t("contracts.detail.dealStructure")}
                 </span>
@@ -995,7 +995,7 @@ export function ContractDetailView({
                 <button
                   type="button"
                   onClick={() => setUploadOpen(v => !v)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-white/80 dark:hover:bg-white/[0.08] transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-card shadow-[var(--card-glow)] border border-border/30 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-white/80 dark:hover:bg-white/[0.08] transition-colors"
                 >
                   <span className="flex items-center gap-2">
                     <Upload className="h-3.5 w-3.5" />

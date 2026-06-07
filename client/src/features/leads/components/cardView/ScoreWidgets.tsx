@@ -20,6 +20,7 @@ import {
 import type { ScoreInsight } from "./types";
 import { DIMENSION_COLORS, DIMENSION_TOOLTIPS } from "./constants";
 import { buildScoreInsights, cardEngagementContext, cardActivityContext, cardFunnelContext } from "./scoreUtils";
+import { CardLabel, TempBadge, scoreColor } from "./designPrimitives";
 
 // ── Score insight tag component ───────────────────────────────────────────────
 export function ScoreInsightTag({ insight, compact }: { insight: ScoreInsight; compact?: boolean }) {
@@ -153,7 +154,7 @@ export function ScoreHistoryChart({ data, tierColor, score, leadId }: {
           />
           <RechTooltip
             contentStyle={{
-              borderRadius: "8px",
+              borderRadius: 'var(--r-button)',
               border: "1px solid rgba(0,0,0,0.08)",
               backgroundColor: "rgba(255,255,255,0.96)",
               fontSize: "11px",
@@ -308,102 +309,80 @@ export function ScoreColumnWidget({ label, value, maxPts, insights, isBooked }: 
   );
 }
 
-// ── Score widget with AI summary ──────────────────────────────────────────────
+// ── Sub-score bar (design-system styled) ───────────────────────────────────────
+function DetailScoreBar({ label, value, max, color, note }: { label: string; value: number; max: number; color: string; note?: string }) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--ink-soft)" }}>{label}</span>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)" }}>{Math.round(value)}/{max}</span>
+      </div>
+      <div style={{ height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden", marginBottom: note ? 4 : 0 }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: "var(--r-pill)", transition: "width 500ms" }} />
+      </div>
+      {note && <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.04em" }}>{note}</span>}
+    </div>
+  );
+}
+
+// ── Score widget — design-system "Lead Score" card ─────────────────────────────
 export function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<string, any>; status?: string }) {
   const { t } = useTranslation("leads");
   const leadId = lead?.Id || lead?.id;
   const { breakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
   const { history } = useScoreHistory(leadId ? Number(leadId) : null);
-  const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
-  const memoryStr = lead?.ai_memory || lead?.aiMemory || "";
-  let parsedSummary = "";
-  if (!aiSummary && memoryStr) {
-    try {
-      const obj = typeof memoryStr === "string" ? JSON.parse(memoryStr) : memoryStr;
-      parsedSummary = obj?.summary || obj?.notes || obj?.description || "";
-    } catch { parsedSummary = ""; }
-  }
-  const summaryText = aiSummary || parsedSummary;
-  const insights = lead ? buildScoreInsights(lead, t) : [];
   const tierColor = TIER_BAR_COLOR[breakdown?.tier ?? "Sleeping"];
   // Sub-scores are already pre-scaled: eng (max 30) + act (max 20) + funnel (max 50) = lead_score
   const engPts    = breakdown?.engagement_score ?? 0;
   const actPts    = breakdown?.activity_score ?? 0;
   const funnelPts = breakdown?.funnel_weight ?? 0;
-  const isBooked  = status === "Booked";
+  const sColor    = scoreColor(score);
 
   return (
-    <div className="bg-white/50 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
-      {/* Header — title + time */}
-      <div className="flex items-center justify-between shrink-0">
-        <p className="text-[18px] font-semibold font-heading text-foreground">{t("score.title")}</p>
-        {breakdown?.last_updated && (
-          <span className="text-[10px] text-muted-foreground/50">
-            {relativeTime(breakdown.last_updated)}
-          </span>
-        )}
+    // No Card wrapper — score content sits directly on the page background (item 3).
+    <div style={{ flex: 1, minWidth: 0, width: "100%", height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {/* Header row (label + timestamp) — mirrors the Card header but without the surface */}
+      <div style={{ height: 52, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, borderBottom: "1px solid var(--line)", marginBottom: 4 }}>
+        <CardLabel>{t("score.title")}</CardLabel>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)" }}>
+          {breakdown?.last_updated ? relativeTime(breakdown.last_updated) : t("score.justNow", "just now")}
+        </span>
       </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px 8px", display: "flex", flexDirection: "column", gap: 18 }}>
+        {score > 0 ? (
+          <>
+            {/* Score hero — one number only */}
+            <div>
+              {breakdown?.tier && <TempBadge temp={breakdown.tier} />}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 6 }}>
+                <span style={{ fontFamily: "var(--serif)", fontSize: 64, lineHeight: 1, color: "var(--ink)", letterSpacing: "-0.02em" }}>{score}</span>
+                <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--mute-2)" }}>/100</span>
+              </div>
+              <div style={{ height: 6, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden", marginTop: 12 }}>
+                <div style={{ width: `${score}%`, height: "100%", background: sColor, borderRadius: "var(--r-pill)", transition: "width 500ms" }} />
+              </div>
+            </div>
 
-      {/* Score hero: big number right-aligned, tier badge to its left — hidden when score=0 */}
-      {score > 0 && (
-        <div className="flex items-center justify-end gap-2.5 shrink-0 pt-10 -mb-8 pr-1">
-          {breakdown && (
-            <span
-              className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap", TIER_COLORS[breakdown.tier] ?? TIER_COLORS.Sleeping)}
-              style={(breakdown.tier === "Hot" || breakdown.tier === "Awake") ? {
-                boxShadow: `0 0 8px 2px ${breakdown.tier === "Hot" ? "rgba(239,68,68,0.4)" : "rgba(16,185,129,0.4)"}`,
-              } : undefined}
-            >
-              {breakdown.tier}
-            </span>
-          )}
-          <span className="text-5xl font-black tabular-nums leading-none">
-            {score}
-          </span>
-        </div>
-      )}
+            {/* Sparkline — real score history inside an inset well */}
+            <div>
+              <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>{t("score.trend", "Score trend")}</div>
+              <div style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-button)", padding: "6px 6px 0" }}>
+                <ScoreHistoryChart data={history} tierColor={tierColor} score={score} leadId={leadId ? Number(leadId) : null} />
+              </div>
+            </div>
 
-      {/* Score history chart + horizontal bars — hidden when score=0 */}
-      {score > 0 && (
-        <ScoreHistoryChart
-          data={history}
-          tierColor={tierColor}
-          score={score}
-          leadId={leadId ? Number(leadId) : null}
-        />
-      )}
-      {breakdown && score > 0 && (
-        <div className="flex flex-col gap-2.5 shrink-0 pt-2" style={{ marginLeft: 28, marginRight: 36 }}>
-          <ScoreBar label="Engagement" value={engPts} max={30} color="#3B82F6" context={cardEngagementContext(lead)} />
-          <ScoreBar label="Activity" value={actPts} max={20} color="#10B981" context={cardActivityContext(lead)} />
-          <ScoreBar label="Funnel" value={funnelPts} max={50} color="#F59E0B" context={cardFunnelContext(lead)} />
-        </div>
-      )}
-
-      {/* Score=0 empty state */}
-      {score === 0 && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-2 py-8 text-center">
-          <span className="text-3xl">😴</span>
-          <p className="text-[13px] font-medium text-muted-foreground/60">{t("score.noActivity", "No activity yet")}</p>
-          <p className="text-[11px] text-muted-foreground/40">{t("score.noActivityHint", "Score will update as interactions happen")}</p>
-        </div>
-      )}
-
-      {/* AI Summary — only shown for Booked status */}
-      {status === "Booked" && summaryText ? (
-        <div className="border-t border-border/20 pt-3 mt-1 flex-1 min-h-0">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Bot className="h-3 w-3 text-brand-indigo/60" />
-            <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("detail.aiSummary")}</p>
-          </div>
-          <p className="text-[12px] text-foreground/75 leading-relaxed whitespace-pre-wrap">{summaryText}</p>
-        </div>
-      ) : status === "Booked" ? (
-        <div className="border-t border-border/20 pt-3 mt-1 flex-1 min-h-0">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 mb-1.5">{t("detail.aiSummary")}</p>
-          <p className="text-[11px] text-muted-foreground/50 italic">{t("detail.noAiSummary")}</p>
-        </div>
-      ) : null}
+            {/* Sub-scores */}
+            {breakdown && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+                <DetailScoreBar label={t("score.engagement", "Engagement")} value={engPts} max={30} color="var(--stage-contacted)" note={cardEngagementContext(lead)} />
+                <DetailScoreBar label={t("score.activity", "Activity")} value={actPts} max={20} color="var(--stage-multi)" note={cardActivityContext(lead)} />
+                <DetailScoreBar label={t("score.funnel", "Funnel")} value={funnelPts} max={50} color="var(--warn)" note={cardFunnelContext(lead)} />
+              </div>
+            )}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

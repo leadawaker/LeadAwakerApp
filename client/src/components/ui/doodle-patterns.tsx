@@ -16,31 +16,31 @@ type PatternNum =
 
 export type DoodlePatternId = `doodle-${PatternNum}`;
 
+// Tile sizes tuned per pattern; uncurated ones default to 350px.
+const PATTERN_SIZES: Partial<Record<DoodlePatternId, number>> = {
+  "doodle-1":  325,
+  "doodle-6":  325,
+  "doodle-7":  325,
+  "doodle-8":  325,
+  "doodle-15": 350,
+  "doodle-19": 350,
+  "doodle-26": 400,
+  "doodle-29": 520,
+  "doodle-38": 500,
+  "doodle-42": 500,
+};
+
 export interface DoodlePattern {
   id: DoodlePatternId;
   name: string;
   url: string;
+  size: number;
 }
 
-export const DOODLE_PATTERNS: DoodlePattern[] = Array.from({ length: 42 }, (_, i) => ({
-  id: `doodle-${i + 1}` as DoodlePatternId,
-  name: `Pattern ${i + 1}`,
-  url: `/patterns/pattern-${i + 1}.svg`,
-}));
-
-/** Curated subset with hardcoded tile sizes. */
-export const CURATED_PATTERNS: { id: DoodlePatternId; size: number }[] = [
-  { id: "doodle-1",  size: 325 },
-  { id: "doodle-6",  size: 325 },
-  { id: "doodle-7",  size: 325 },
-  { id: "doodle-8",  size: 325 },
-  { id: "doodle-15", size: 350 },
-  { id: "doodle-19", size: 350 },
-  { id: "doodle-26", size: 400 },
-  { id: "doodle-29", size: 520 },
-  { id: "doodle-38", size: 500 },
-  { id: "doodle-42", size: 500 },
-];
+export const DOODLE_PATTERNS: DoodlePattern[] = Array.from({ length: 42 }, (_, i) => {
+  const id = `doodle-${i + 1}` as DoodlePatternId;
+  return { id, name: `Pattern ${i + 1}`, url: `/patterns/pattern-${i + 1}.svg`, size: PATTERN_SIZES[id] ?? 350 };
+});
 
 export interface DoodleOverlayStyle extends React.CSSProperties {
   backgroundImage: string;

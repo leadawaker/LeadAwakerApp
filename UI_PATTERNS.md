@@ -6,6 +6,139 @@
 
 ---
 
+## §0 — Page shell layout (every CRM desktop page)
+
+CrmShell's content wrapper has **no padding** (`pt-0 px-0`). Every page manages its own
+top/left spacing. The standard pattern uses two CSS classes from `design-system.css`:
+
+### `.la-page` — outer wrapper
+
+```tsx
+// Every CRM page's outermost div:
+<div className="la-page" style={{ background: 'var(--bg)' }}>
+  {/* header + content go here */}
+</div>
+```
+
+`la-page` = `height: 100%; display: flex; flex-direction: column; overflow: hidden`.
+Add `style={{ background: 'var(--bg)' }}` when the page uses the warm design-system palette.
+
+### `.la-page-header` — 60 px flush toolbar
+
+```tsx
+<div className="la-page-header">
+  {/* title, seg control, action buttons */}
+</div>
+```
+
+`la-page-header` = `height: 60px; flex-shrink: 0; border-bottom: 1px solid var(--line);
+display: flex; align-items: center; gap: 16px; padding: 0 20px`.
+
+### Wide-screen centering
+
+When content should center on very wide viewports but stay left-aligned with the toolbar,
+wrap the **inside** of both the header and the content area with the same max-width div:
+
+```tsx
+<div className="la-page-header">
+  <div style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 16 }}>
+    {/* toolbar content */}
+  </div>
+</div>
+
+<div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
+  <div style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', minHeight: 0, overflow: 'hidden' }}>
+    {/* left panel + right content */}
+  </div>
+</div>
+```
+
+Both wrappers share the same `maxWidth: 1600` so the left edges stay aligned at all widths.
+
+### Pages that previously used the negative-margin hack
+
+Old pattern (before CrmShell was simplified):
+
+```tsx
+// ❌ OLD — don't do this anymore
+<div className="md:-mt-[var(--panel-gap)] md:-ml-[var(--panel-gap)]"
+     style={{ height: 'calc(100% + var(--panel-gap))', ... }}>
+```
+
+New pattern:
+
+```tsx
+// ✅ NEW — just use .la-page
+<div className="la-page" style={{ background: 'var(--bg)' }}>
+```
+
+The negative margin existed to subtract back the shell's 16px padding. Now the shell adds
+no padding, so it's gone. `la-page` replaces `h-full flex flex-col overflow-hidden`.
+
+---
+
+## §13 — Surface Primitives (list cards, headers, panels, pills)
+
+> Canonical rules in [`UI_STANDARDS.md` §2.25](UI_STANDARDS.md). Source folder:
+> `client/src/components/crm/primitives/` (barrel: `@/components/crm/primitives`).
+
+**Rule:** never hand-roll a list row's `rounded-*` / `shadow-*` / padding. Compose `<ListCard>`.
+Tokens in `variables.css` drive every dimension, so a global re-skin is one CSS edit.
+
+### 13.1 List row — `<ListCard>`
+
+```tsx
+import { ListCard } from "@/components/crm/primitives";
+
+// Simplest: standard padded, selectable row
+<ListCard selected={isActive} onClick={onClick} role="button" tabIndex={0}>
+  {/* row content */}
+</ListCard>
+
+// Row that manages its own inner padding (variable layout, swipe trays, footers):
+<ListCard selected={isActive} padded={false} hoverShadow className="group" onClick={onClick}>
+  <div className="px-3 pt-3 pb-2.5">{/* content */}</div>
+</ListCard>
+```
+
+Props: `selected`, `interactive` (cursor + hover bg, default `true`), `hoverShadow` (lift on hover,
+**opt-in** — leave off to match a card that never lifted), `padded` (default `true`), `as`
+(`"div" | "button" | "li"`), `accentColor`. Anything else (`style`, `onClick`, `data-*`, `role`)
+forwards to the element. Overrides via `className` win through tailwind-merge.
+
+### 13.2 Group header — `<GroupHeader>`
+
+```tsx
+import { GroupHeader } from "@/components/crm/primitives";
+<GroupHeader label={item.label} count={item.count} />          // sticky by default
+<GroupHeader label="Backlog" count={12} sticky={false} />      // in-flow (e.g. virtualized)
+```
+
+Bakes the sticky offset, padding, bg, divider lines, and count badge. If a list's scroll
+container pads its edges, override the offset with `className` (e.g. `-top-[3px]`) until the
+container padding is unified — that's the only sanctioned override.
+
+### 13.3 Section panel / pill
+
+```tsx
+import { SectionCard, Pill } from "@/components/crm/primitives";
+<SectionCard>…</SectionCard>                       // padded + elevated panel (kanban col, widget)
+<SectionCard padded={false} elevated={false}>…</SectionCard>
+<Pill color="#8D354B" tone="soft">Qualified</Pill> // status badge with enforced pill dims
+```
+
+### 13.4 Toolbar buttons
+
+Import the shared strings instead of re-declaring them per page:
+
+```tsx
+import { xBase, xDefault, xActive, xSpan, ToolbarButton } from "@/components/crm/primitives";
+```
+
+The active state reads `--primary` (the global accent), so toolbar highlights follow a re-skin.
+
+---
+
 ## §14 — Interaction Patterns
 
 ### 14.1 The Panel-First Rule

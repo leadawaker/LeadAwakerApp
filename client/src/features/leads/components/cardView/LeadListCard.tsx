@@ -3,14 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
-import { Phone, Mail, MessageSquare, Building2, Tag as TagIcon, Pencil, Trash2 } from "lucide-react";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { getLeadStatusAvatarColor as getStatusAvatarColor } from "@/lib/avatarUtils";
+import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check } from "lucide-react";
 
 import { PIPELINE_HEX } from "./constants";
-import { getLeadId, getFullName, getScore, getStatus, getPhone } from "./leadUtils";
+import { getLeadId, getFullName, getInitials, getScore, getStatus, getPhone, getLastMessage, getLastMessageSender, getUnreadCount } from "./leadUtils";
 import { formatRelativeTime } from "./formatUtils";
-import { ListScoreRing } from "./atoms";
+import { ScoreArcDonut } from "./atoms";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
 const TRAY_WIDTH = 220;
@@ -20,29 +18,30 @@ export function LeadListCard({
   isActive,
   onClick,
   leadTags: _leadTags,
-  showContactAlways = false,
-  tagsColorful: _tagsColorful,
-  hideTags = false,
   campaignsById,
+  showPeek = false,
   onOpenConversation,
   onQuickChangeStatus,
   onQuickAddNote,
   onQuickDelete,
+  selected = false,
+  onToggleSelect,
 }: {
   lead: Record<string, any>;
   isActive: boolean;
   onClick: () => void;
   leadTags: { name: string; color: string }[];
-  showContactAlways?: boolean;
-  tagsColorful?: boolean;
-  hideTags?: boolean;
   campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
+  /** When true, render the lead's last message as a chat-peek bubble under the card (Feature A) */
+  showPeek?: boolean;
   /** Swipe right navigates here — navigates to Chats tab with this lead selected */
   onOpenConversation?: () => void;
   /** Swipe left quick actions (Feature #41) */
   onQuickChangeStatus?: () => void;
   onQuickAddNote?: () => void;
   onQuickDelete?: () => void;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
@@ -51,7 +50,6 @@ export function LeadListCard({
   const score       = getScore(lead);
   const phone       = getPhone(lead);
   const email       = lead.email || lead.Email || "";
-  const avatarColor = getStatusAvatarColor(status);
   const statusHex   = PIPELINE_HEX[status] || "#6B7280";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
@@ -60,11 +58,14 @@ export function LeadListCard({
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
   const isDemo = (lead.source || lead.Source) === "WhatsApp Demo" ||
     (lead.channel_identifier || lead.channelIdentifier || "").startsWith("wa-demo:");
-  const demoNicheLabel = (() => {
-    const raw = lead.demo_niche || lead.demoNiche || "";
-    if (!raw) return "";
-    try { return JSON.parse(raw)?.niche_label || JSON.parse(raw)?.raw || ""; } catch { return ""; }
-  })();
+
+  // ── Chat peek (Feature A): last message under the row when showPeek is on ──
+  const peekText   = getLastMessage(lead);
+  const peekSender = getLastMessageSender(lead);   // "" = inbound (from lead), "AI" = outbound
+  const peekIsInbound = peekSender === "";
+
+  // ── Unread badge: count of unread inbound messages on the lead's avatar ──
+  const unreadCount = getUnreadCount(lead);
 
   // ── Swipe gestures: right → inbox, left → quick actions tray ────────────────
   const cardWrapRef     = useRef<HTMLDivElement>(null);
@@ -231,7 +232,7 @@ export function LeadListCard({
   return (
     <div
       ref={cardWrapRef}
-      className="relative overflow-hidden rounded-xl max-md:rounded-[1.5rem]"
+      className="relative overflow-hidden rounded-[var(--list-card-radius)] max-md:rounded-[var(--list-card-radius-mobile)]"
       data-testid={`swipe-card-${getLeadId(lead)}`}
     >
       {/* Inbox icon revealed behind card as it slides right (Feature #40) */}
@@ -302,118 +303,179 @@ export function LeadListCard({
 
       {/* Card — translates horizontally on swipe (right → inbox, left → tray) */}
       <div
-        className={cn(
-          "relative group/card cursor-pointer transition-colors",
-          isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
-          leftFlash && "bg-muted/60"
-        )}
+        className={cn("la-camp-card group/card", isActive && "active", leftFlash && "bg-muted/60")}
         style={{
+          alignItems: 'flex-start',
           transform: `translateX(${swipeX - swipeLeft}px)`,
           transition: (isReleasing || isReleasingLeft) ? "transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)" : "none",
           zIndex: 1,
         }}
-        onClick={trayOpen ? (e) => { e.stopPropagation(); closeTray(); } : onClick}
+        onClick={trayOpen ? (e: React.MouseEvent) => { e.stopPropagation(); closeTray(); } : onClick}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter") { if (trayOpen) closeTray(); else onClick(); } }}
         data-swipe-x={swipeX > 0 ? swipeX : undefined}
       >
-      <div className={cn("px-2.5 flex flex-col gap-0.5", hideTags ? "pt-1.5 pb-1" : "pt-2 pb-1.5")}>
+        {/* Checkbox — vertically centered against the 36px avatar */}
+        <div className="shrink-0 flex items-center" style={{ height: 36 }}>
+          <button
+            className="flex items-center justify-center rounded-[5px] transition-colors"
+            style={{
+              width: 18,
+              height: 18,
+              background: selected ? 'var(--wine)' : 'transparent',
+              border: selected ? '1.5px solid var(--wine)' : '1.5px solid var(--line-strong)',
+              color: '#FFFFFF',
+            }}
+            onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
+            aria-label={selected ? "Deselect" : "Select"}
+          >
+            {selected && <Check className="h-3 w-3" />}
+          </button>
+        </div>
 
-        {/* Main layout: [avatar + text] on left, [date + score] column on right */}
-        <div className="flex items-stretch gap-2">
-          <EntityAvatar
-            name={name}
-            bgColor={avatarColor.bg}
-            textColor={avatarColor.text}
-            className={cn("self-start mt-0.5 shrink-0", isPastCall && "opacity-40 grayscale")}
-          />
+        {/* Stage-colored avatar (with unread badge) */}
+        <div className="shrink-0 relative" style={{ width: 36, height: 36 }}>
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 'var(--r-surface)',
+              background: statusHex,
+              color: '#FFFFFF',
+              fontFamily: "'Geist Mono', ui-monospace, monospace",
+              fontSize: 14,
+              fontWeight: 700,
+              opacity: isPastCall ? 0.4 : 1,
+            }}
+          >
+            {getInitials(name)}
+          </div>
+          {unreadCount > 0 && (
+            <span
+              className="absolute flex items-center justify-center"
+              style={{
+                top: -4,
+                right: -4,
+                minWidth: 16,
+                height: 16,
+                padding: '0 4px',
+                borderRadius: 9999,
+                background: 'var(--wine)',
+                color: '#FFFFFF',
+                fontSize: 9,
+                fontWeight: 700,
+                lineHeight: 1,
+                boxShadow: '0 0 0 2px var(--bg)',
+              }}
+              aria-label={`${unreadCount} unread`}
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
 
-          {/* Left: name + status */}
-          <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
-                {name}
-              </p>
-              {isDemo && (
-                <span className="inline-flex items-center shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-500/15 text-violet-500 dark:text-violet-400 border border-violet-500/25 leading-none">
-                  DEMO
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-1 mt-0.5">
-              <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", (status === "New" || status === "Responded" || status === "Multiple Responses") && "animate-status-pulse")} style={{ backgroundColor: statusHex, color: statusHex }} />
-              <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
-              {isDemo && demoNicheLabel && (
-                <span className="text-[10px] text-violet-500/70 dark:text-violet-400/60 truncate">{demoNicheLabel}</span>
-              )}
-            </div>
-            {/* Contact info — collapses when hideTags, expands on hover */}
-            <div className={cn(
-              "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
-              hideTags
-                ? "max-h-0 opacity-0 group-hover/card:max-h-24 group-hover/card:opacity-100"
-                : "max-h-24 opacity-100"
-            )}>
-              <div className={cn(
-                "overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden",
-                showContactAlways
-                  ? "max-h-12 opacity-100"
-                  : "max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100"
-              )}>
-                {(phone || email) && (
-                  <div className="pt-1 pb-0.5 flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
-                    {phone && (
-                      <span className="inline-flex items-center gap-1 truncate">
-                        <Phone className="h-3 w-3 shrink-0" />
-                        {phone}
-                      </span>
-                    )}
-                    {email && (
-                      <span className="inline-flex items-center gap-1 truncate">
-                        <Mail className="h-3 w-3 shrink-0" />
-                        {email}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Body */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 14, fontWeight: 600, color: "var(--ink)",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            marginBottom: 4,
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <span className="truncate">{name}</span>
+            {isDemo && (
+              <span className="shrink-0" style={{
+                fontSize: 9, fontWeight: 700, color: 'var(--wine)',
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                lineHeight: 1,
+              }}>demo</span>
+            )}
           </div>
 
-          {/* Right column: date on top, score ring on bottom */}
-          {(lastActivity || score > 0) && (
-            <div className="shrink-0 flex flex-col items-end justify-between">
-              {lastActivity && (
-                <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60 pt-0.5">
-                  {formatRelativeTime(lastActivity, t)}
-                </span>
-              )}
-              {score > 0 && (
-                <div className="mt-auto pt-1">
-                  <ListScoreRing score={score} status={status} isActive={isActive} lead={lead} />
+          {/* Stage + campaign — single line, matches the design leads page */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}
+            </span>
+          </div>
+
+          {/* Contact info — revealed on hover */}
+          <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-24 opacity-100">
+            <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100">
+              {(phone || email) && (
+                <div className="pt-1 pb-0.5 flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
+                  {phone && (
+                    <span className="inline-flex items-center gap-1 truncate">
+                      <Phone className="h-3 w-3 shrink-0" />
+                      {phone}
+                    </span>
+                  )}
+                  {email && (
+                    <span className="inline-flex items-center gap-1 truncate">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      {email}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Right column: date + score donut */}
+        <div className="shrink-0 flex flex-col items-end gap-1.5" style={{ paddingTop: 1 }}>
+          {lastActivity && (
+            <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60">
+              {formatRelativeTime(lastActivity, t)}
+            </span>
           )}
+          {score > 0 && <ScoreArcDonut score={score} />}
         </div>
 
       </div>
 
-      {/* ── Mobile-only footer: campaign + last activity ── */}
-      <div className="lg:hidden px-3 pb-3 pt-0 flex flex-col gap-1.5">
-        {campaignName && (
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground/70">
-            <span className="inline-flex items-center gap-1 truncate">
-              <Building2 className="h-3 w-3 shrink-0" />
-              <span className="truncate">{campaignName}</span>
-            </span>
-          </div>
-        )}
-      </div>
+      {/* ── Chat peek (Feature A) — single-line last-message snippet under the row ── */}
+      {showPeek && peekText && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, padding: '0 12px 8px 56px' }}>
+          <span
+            style={{
+              fontFamily: "'Geist Mono', ui-monospace, monospace",
+              fontSize: 7.5,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              color: peekIsInbound ? 'var(--good)' : 'var(--wine)',
+              background: peekIsInbound ? 'var(--good-tint)' : 'var(--wine-tint)',
+              borderRadius: 'var(--r-pill)',
+              padding: '2px 7px',
+              flexShrink: 0,
+              maxWidth: 78,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
+          </span>
+          <span
+            style={{
+              fontSize: 12,
+              color: 'var(--ink-soft)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            {peekText}
+          </span>
+        </div>
+      )}
 
-      </div>
     </div>
   );
 }
-

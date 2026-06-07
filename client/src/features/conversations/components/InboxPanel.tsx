@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, UserSearch, Search, X, Plus, Mail, MessageCircle, MessageSquare, Linkedin, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Paintbrush, Phone } from "lucide-react";
+import { Inbox, BellDot, UserSearch, Search, X, Plus, Mail, MessageCircle, MessageSquare, Linkedin, ArrowUpDown, Filter, Layers, Check, ArrowUp, ArrowDown, MoreVertical, Phone } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import type {
   ChatGroupBy, ChatSortBy, GroupDirection, InboxTab,
@@ -53,7 +53,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useChatDoodle, type ChatBgStyle } from "@/hooks/useChatDoodle";
-import { CURATED_PATTERNS } from "@/components/ui/doodle-patterns";
+import { DOODLE_PATTERNS } from "@/components/ui/doodle-patterns";
 import { BUBBLE_WIDTH_KEY, DEFAULT_BUBBLE_WIDTH } from "./chatView/constants";
 import {
   PIPELINE_STATUSES,
@@ -108,6 +108,7 @@ export function InboxPanel({
   filterOpen: filterOpenProp = false,
   onFilterOpenChange,
   listPanelState = "full",
+  prospectOnly = false,
 }: InboxPanelProps) {
   const { t } = useTranslation("conversations");
 
@@ -239,7 +240,7 @@ export function InboxPanel({
     return groups;
   }, [filteredProspects, prospectGroupBy]);
 
-  const prospectsPagePath = isAgencyUser ? "/agency/prospects" : "/subaccount/prospects";
+  const prospectsPagePath = "/platform/prospects";
 
   const hasNonDefaultControls =
     groupBy !== "date" ||
@@ -563,7 +564,7 @@ export function InboxPanel({
   return (
     <section
       className={cn(
-        "flex flex-col bg-muted rounded-lg overflow-hidden h-full",
+        "flex flex-col bg-panel-list-bg rounded-lg overflow-hidden h-full",
         className,
       )}
       data-testid="panel-inbox"
@@ -571,11 +572,13 @@ export function InboxPanel({
     >
       {isCompact && (
         <>
-          <CompactTabPopover
-            tabs={INBOX_TABS.map((t) => ({ id: t.id, label: t.label, icon: t.icon }))}
-            activeId={tab}
-            onChange={(id) => onTabChange(id as InboxTab)}
-          />
+          {!prospectOnly && (
+            <CompactTabPopover
+              tabs={INBOX_TABS.map((t) => ({ id: t.id, label: t.label, icon: t.icon }))}
+              activeId={tab}
+              onChange={(id) => onTabChange(id as InboxTab)}
+            />
+          )}
           <div className="flex flex-col items-center gap-1 px-1.5 pb-2 shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -871,13 +874,15 @@ export function InboxPanel({
       {/* ── Header: title + Inbox/Unread tabs on same row ── */}
       <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
         <div className="flex items-center justify-between w-full md:w-[306px] shrink-0">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Chats</h2>
-          <ViewTabBar
-            tabs={INBOX_TABS}
-            activeId={tab}
-            onTabChange={(id) => onTabChange(id as InboxTab)}
-            variant="segment"
-          />
+          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{prospectOnly ? "Inbox" : "Chats"}</h2>
+          {!prospectOnly && (
+            <ViewTabBar
+              tabs={INBOX_TABS}
+              activeId={tab}
+              onTabChange={(id) => onTabChange(id as InboxTab)}
+              variant="segment"
+            />
+          )}
         </div>
       </div>
 
@@ -1158,17 +1163,17 @@ export function InboxPanel({
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] text-muted-foreground">{t("chat.background.pattern")}</span>
                       <span className="text-[11px] font-semibold tabular-nums text-foreground/70">
-                        #{(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
+                        #{(DOODLE_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
                       </span>
                     </div>
                     <Slider
-                      value={[(CURATED_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
+                      value={[(DOODLE_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
                       onValueChange={([v]) => {
-                        const entry = CURATED_PATTERNS[v - 1];
+                        const entry = DOODLE_PATTERNS[v - 1];
                         if (entry) setDoodleConfig({ patternId: entry.id, size: entry.size });
                       }}
                       min={1}
-                      max={10}
+                      max={42}
                       step={1}
                     />
                   </div>
@@ -1203,15 +1208,6 @@ export function InboxPanel({
                 </>
               )}
 
-              {/* Gradient tester button (embedded) */}
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new Event("toggle-gradient-tester"))}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] font-medium text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors border border-black/[0.08]"
-              >
-                <Paintbrush className="h-3.5 w-3.5" />
-                {t("chat.background.gradientTester")}
-              </button>
             </PopoverContent>
           </Popover>
 
@@ -1438,7 +1434,7 @@ export function InboxPanel({
                           onClick={() => onSelectProspect?.(pt.prospect_id)}
                           onKeyDown={(e) => e.key === "Enter" && onSelectProspect?.(pt.prospect_id)}
                           className={cn(
-                            "group relative rounded-xl cursor-pointer transition-colors",
+                            "group relative rounded-xl cursor-pointer transition-colors shadow-[var(--card-shadow)]",
                             active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
                           )}
                           data-testid={`button-prospect-${pt.prospect_id}`}

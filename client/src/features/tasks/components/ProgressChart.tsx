@@ -78,7 +78,7 @@ function ChartTooltip({ active, payload, label, aggregation }: any) {
 }
 
 export default function ProgressChart() {
-  const [collapsed, setCollapsed] = useState(() => loadBool(COLLAPSED_KEY, false));
+  const [collapsed, setCollapsed] = useState(() => loadBool(COLLAPSED_KEY, true));
   const [aggregation, setAggregation] = useState<Aggregation>(() =>
     loadString(AGGREGATION_KEY, "daily")
   );

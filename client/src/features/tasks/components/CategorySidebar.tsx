@@ -5,7 +5,6 @@ import {
   ChevronRight,
   Columns3,
   FolderOpen,
-  GanttChart,
   Layers,
   Plus,
   Table2,
@@ -70,7 +69,6 @@ interface CategorySidebarProps {
 const VIEW_TABS: { key: ViewMode; icon: typeof Columns3; tKey: string }[] = [
   { key: "kanban", icon: Columns3, tKey: "views.kanban" },
   { key: "table", icon: Table2, tKey: "views.table" },
-  { key: "gantt", icon: GanttChart, tKey: "views.gantt" },
 ];
 
 export default function CategorySidebar({

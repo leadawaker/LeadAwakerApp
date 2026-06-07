@@ -1,7 +1,6 @@
 import { useRef } from "react";
-import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { getCampaignAvatarColor } from "@/lib/avatarUtils";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
+import { getInitials } from "@/lib/avatarUtils";
 
 interface Props {
   campaign: Record<string, any>;
@@ -14,10 +13,14 @@ interface Props {
 export function CompactCampaignCard({ campaign, isActive, onClick, onHover, onHoverEnd }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const name = String(campaign.name || "Unnamed");
+  const initials = getInitials(name);
   const status = String(campaign.status || "");
-  const { bg, text } = getCampaignAvatarColor(status);
   const stickerSlug = campaign.campaign_sticker ?? null;
   const sticker = stickerSlug ? CAMPAIGN_STICKERS.find((s) => s.slug === stickerSlug) : null;
+
+  const tileClass = status === "Active" || isActive ? "wine"
+    : status === "Inactive" || status === "Draft" ? "inactive"
+    : "";
 
   return (
     <div
@@ -27,23 +30,13 @@ export function CompactCampaignCard({ campaign, isActive, onClick, onHover, onHo
       onMouseEnter={() => { if (ref.current) onHover(campaign, ref.current.getBoundingClientRect()); }}
       onMouseLeave={onHoverEnd}
     >
-      <div
-        className="rounded-full"
-        style={isActive ? { boxShadow: "0 0 0 3px #ffffff, 0 0 0 4px rgba(0,0,0,0.9)" } : undefined}
-      >
-        {sticker ? (
-          <div className="h-10 w-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white dark:bg-card">
-            <img src={sticker.url} alt="" className="h-9 w-9 object-contain" />
-          </div>
-        ) : (
-          <EntityAvatar
-            name={name}
-            bgColor={bg}
-            textColor={text}
-            size={40}
-          />
-        )}
-      </div>
+      {sticker ? (
+        <div className="la-mono-tile" style={{ overflow: "hidden", padding: 0 }}>
+          <img src={sticker.url} alt="" className="h-full w-full object-contain" />
+        </div>
+      ) : (
+        <div className={`la-mono-tile ${tileClass}`}>{initials}</div>
+      )}
     </div>
   );
 }

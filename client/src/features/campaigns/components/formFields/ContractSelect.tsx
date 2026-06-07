@@ -31,7 +31,7 @@ export function ContractSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading}
-      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
+      className="w-full text-[12px] bg-card shadow-[var(--card-glow)] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
       <option value="">{"—"}</option>
       {contracts.map((c) => (

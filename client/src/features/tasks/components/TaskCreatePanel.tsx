@@ -119,7 +119,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
   const canCreate = title.trim() && accountName.trim() && !createMutation.isPending;
 
   // ── Shared field styles ─────────────────────────────────────────────────────
-  const inputCls = "w-full h-9 px-3 rounded-lg bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[13px] outline-none focus:border-brand-indigo/50 transition-colors";
+  const inputCls = "w-full h-9 px-3 rounded-lg bg-card shadow-[var(--card-glow)] border border-border/30 text-[13px] outline-none focus:border-brand-indigo/50 transition-colors";
   const selectCls = inputCls;
   const labelCls = "text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
 
@@ -177,7 +177,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
                     type="button"
                     className={cn(
                       "h-9 px-3 rounded-lg border border-border/30 text-[13px] flex items-center gap-2 transition-colors hover:border-brand-indigo/50",
-                      emoji ? "bg-white/60 dark:bg-white/[0.10]" : "bg-white/60 dark:bg-white/[0.10] text-muted-foreground"
+                      emoji ? "bg-card shadow-[var(--card-glow)]" : "bg-card shadow-[var(--card-glow)] text-muted-foreground"
                     )}
                     data-testid="task-create-emoji-trigger"
                   >
@@ -220,7 +220,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
           <div className="space-y-1.5">
             <label className={labelCls}>{t("fields.description")}</label>
             <textarea
-              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[13px] resize-none outline-none focus:border-brand-indigo/50 transition-colors"
+              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-card shadow-[var(--card-glow)] border border-border/30 text-[13px] resize-none outline-none focus:border-brand-indigo/50 transition-colors"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("fields.descriptionPlaceholder")}

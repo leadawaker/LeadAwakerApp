@@ -127,7 +127,44 @@
   },
 
   "summary": {
+    "eyebrows": {
+      "performance": "Performance",
+      "conversion": "Conversion",
+      "callsHandoffs": "Calls & Handoffs",
+      "live": "Live",
+      "revenue": "Revenue",
+      "aiRead": "AI Read",
+      "experiment": "Experiment"
+    },
+    "timeframes": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month"
+    },
+    "heatBands": {
+      "hot": "Hot",
+      "warm": "Warm",
+      "revivable": "Revivable",
+      "cold": "Cold"
+    },
+    "aiActivity": "AI Activity",
+    "bumpDistribution": "Today's bump distribution",
+    "queued": "{{count}} queued",
+    "justHappened": "Just happened",
+    "noMessages": "No messages yet",
+    "replied": "replied",
+    "sent": "message sent",
+    "next": "Next",
+    "todayCount": "{{count}} today",
+    "noCalls": "No calls scheduled",
+    "laterThisWeek": "Later this week",
+    "leadHeat": "Lead Heat",
+    "inDatabase": "{{count}} in database",
     "keyMetrics": "Key Metrics",
+    "dailyCapacity": "Daily Capacity",
     "leadsTargeted": "Leads Targeted",
     "messagesSent": "Messages Sent",
     "responsePercent": "Response %",

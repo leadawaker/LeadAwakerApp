@@ -504,7 +504,7 @@ export function InvoiceDetailView({
               "h-8 px-3.5 rounded-full text-[12px] font-semibold shrink-0 transition-colors",
               mobileTab === id
                 ? "bg-foreground text-background"
-                : "bg-white/60 dark:bg-white/[0.10] text-foreground/60 border border-border/40"
+                : "bg-card shadow-[var(--card-glow)] text-foreground/60 border border-border/40"
             )}
           >
             {label}
@@ -517,7 +517,7 @@ export function InvoiceDetailView({
         <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px] max-w-[1386px] w-full mr-auto">
 
           {/* ── Left column (wide): Line items only ── */}
-          <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col", mobileTab !== "line-items" ? "hidden md:flex" : "flex")}>
+          <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl p-5 flex flex-col", mobileTab !== "line-items" ? "hidden md:flex" : "flex")}>
             <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
               {t("invoices.detail.lineItems")}
             </p>
@@ -616,7 +616,7 @@ export function InvoiceDetailView({
           <div className={cn("flex flex-col gap-[3px]", mobileTab === "line-items" ? "hidden md:flex" : "flex")}>
 
             {/* Total Amount — top of right column, 30% taller */}
-            <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-7 min-h-[110px]", mobileTab === "payment" && "hidden md:block")}>
+            <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl px-5 py-7 min-h-[110px]", mobileTab === "payment" && "hidden md:block")}>
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-2">
                 {t("invoices.detail.totalAmount")}
               </span>
@@ -626,7 +626,7 @@ export function InvoiceDetailView({
             </div>
 
             {/* Status */}
-            <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5", mobileTab === "payment" && "hidden md:block")}>
+            <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl p-5", mobileTab === "payment" && "hidden md:block")}>
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 {t("invoices.detail.status")}
               </span>
@@ -660,7 +660,7 @@ export function InvoiceDetailView({
             </div>
 
             {/* Dates — Due Date + Sent Date */}
-            <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5", mobileTab === "payment" && "hidden md:block")}>
+            <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl p-5", mobileTab === "payment" && "hidden md:block")}>
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 {t("invoices.detail.dates")}
               </span>
@@ -702,7 +702,7 @@ export function InvoiceDetailView({
             {/* Payment Info — label-above-value with dividers, fills remaining height */}
             {/* On mobile: Payment History tab shows sent/viewed/paid timeline then payment info */}
             {mobileTab === "payment" && (
-              <div className="md:hidden bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col gap-3">
+              <div className="md:hidden bg-card shadow-[var(--card-glow)] rounded-xl p-5 flex flex-col gap-3">
                 <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block">
                   {t("mobileTabs.paymentHistory")}
                 </span>
@@ -741,7 +741,7 @@ export function InvoiceDetailView({
             {invoice.payment_info && (() => {
               const lines = parsePaymentLines(invoice.payment_info);
               return (
-                <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex-1", mobileTab !== "payment" && "hidden md:block")}>
+                <div className={cn("bg-card shadow-[var(--card-glow)] rounded-xl p-5 flex-1", mobileTab !== "payment" && "hidden md:block")}>
                   <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                     {t("invoices.detail.paymentInfo")}
                   </span>

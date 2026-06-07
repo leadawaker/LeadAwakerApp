@@ -123,5 +123,90 @@
     "failedToReschedule": "Verplaatsen mislukt: {{error}}"
   },
   "clearDateFilter": "Datumfilter wissen",
-  "selectDate": "Selecteer {{date}}"
+  "selectDate": "Selecteer {{date}}",
+  "mobile": {
+    "agenda": "Agenda",
+    "month": "Maand",
+    "weekOf": "Week van",
+    "tapDay": "Tik op een dag",
+    "noMeetingsWeek": "Geen afspraken deze week",
+    "today": "Vandaag",
+    "book": "Boeken",
+    "filters": {
+      "all": "Alle",
+      "noShow": "No-show",
+      "rescheduled": "Verzet",
+      "attention": "Vereist aandacht"
+    },
+    "stats": {
+      "meetings": "Afspraken deze week",
+      "upcoming": "Aankomend",
+      "needsAttention": "Vereist aandacht"
+    },
+    "detail": {
+      "date": "Datum",
+      "time": "Tijd",
+      "via": "Via",
+      "status": "Status",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "campaign": "Campagne",
+      "contact": "Contact",
+      "openInLead": "Openen in lead",
+      "callNow": "Nu bellen",
+      "joinMeeting": "Deelnemen aan meeting",
+      "reschedule": "Verzetten"
+    },
+    "channel": {
+      "phone": "Telefoon",
+      "video": "Videogesprek"
+    },
+    "legend": {
+      "booked": "Geboekt",
+      "rescheduled": "Verzet",
+      "noShow": "No-show"
+    }
+  },
+  "design": {
+    "kpi": {
+      "meetings": "Afspraken deze week",
+      "attendance": "Gem. opkomst",
+      "highIntent": "Hoge intentie · 70%+"
+    },
+    "tabs": {
+      "all": "Alle",
+      "booked": "Geboekt",
+      "noshow": "No-show",
+      "rescheduled": "Verzet"
+    },
+    "status": {
+      "booked": "Geboekt",
+      "noShow": "No-show",
+      "rescheduled": "Verzet"
+    },
+    "legend": {
+      "high": "Hoge intentie · 70%+",
+      "needs": "Bevestiging nodig · 40–70%",
+      "risk": "Risico · <40%"
+    },
+    "bookedByAI": "Geboekt door AI",
+    "detail": {
+      "date": "Datum",
+      "channel": "Kanaal",
+      "time": "Tijd",
+      "attendance": "Opkomst",
+      "whyBooked": "Waarom AI dit boekte",
+      "recentConversation": "Recent gesprek",
+      "openInLead": "Open in lead",
+      "selectMeeting": "Selecteer een afspraak",
+      "noMeetings": "Geen afspraken",
+      "aiAgent": "AI-agent",
+      "googleMeet": "Google Meet",
+      "phone": "Telefoon",
+      "placeholderHeadline": "Deze lead reageert consistent en lijkt een sterke kandidaat voor een geboekt gesprek.",
+      "placeholderReason1": "Reageerde via meerdere contactmomenten met een positieve toon.",
+      "placeholderReason2": "Toonde duidelijke interesse in het aanbod tijdens het gesprek.",
+      "placeholderReason3": "Stemde zonder aarzelen in met een specifiek tijdstip."
+    }
+  }
 }
