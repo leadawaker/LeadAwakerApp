@@ -129,7 +129,7 @@ export function LeadsDesktopToolbar({
 }) {
   const { t } = useTranslation("leads");
   return (
-    <div className="shrink-0 flex items-center gap-3" style={{ height: 56, borderBottom: "1px solid var(--line)", background: "var(--bg)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
+    <div className="shrink-0 flex items-center gap-3" style={{ height: 60, marginTop: "12px", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
       <div className="flex items-baseline gap-2 shrink-0">
         <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
@@ -233,7 +233,13 @@ export function LeadsDesktopToolbar({
       {/* Chats peek toggle (Feature A) — reveals last message under every lead */}
       {selectedLeadIds.size === 0 && (
         <button
-          onClick={() => setPeekOn((p) => !p)}
+          onClick={() => {
+            const newPeekState = !peekOn;
+            setPeekOn(() => newPeekState);
+            if (newPeekState && sortBy !== "latest_message") {
+              onSortByChange("latest_message");
+            }
+          }}
           className={`la-btn ${peekOn ? "la-btn--wine" : "la-btn--soft"}`}
           title={t("toolbar.chatsPeek", "Show last message for every lead")}
           style={{ fontSize: 11 }}
@@ -251,14 +257,14 @@ export function LeadsDesktopToolbar({
         {isCompact ? <PanelLeft size={13} /> : <PanelLeftClose size={13} />}
       </button>
       <div className="flex-1 min-w-0" />
-      <div className="shrink-0 flex items-center gap-[5px]">
-      <div className="relative" style={{ width: 190 }}>
+      <div className="shrink-0 flex items-center gap-[5px]" style={{ borderLeft: "1px solid var(--line)", paddingLeft: "12px" }}>
+      <div className="relative" style={{ width: 160 }}>
         <input
           value={listSearch}
           onChange={(e) => onListSearchChange(e.target.value)}
           placeholder={t("toolbar.searchPlaceholder")}
           className="la-input"
-          style={{ padding: '7px 10px 7px 27px', fontSize: 11 }}
+          style={{ paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
         />
         <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
@@ -388,9 +394,9 @@ export function LeadsDesktopToolbar({
           )}
         </div>
         <DropdownMenuContent align="start" className="w-44 bg-white">
-          {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as const).map((value) => {
+          {(["recent", "latest_message", "name_asc", "name_desc", "score_desc", "score_asc"] as const).map((value) => {
             const sortLabels: Record<string, string> = {
-              recent: t("sort.mostRecent"), name_asc: t("sort.nameAZ"), name_desc: t("sort.nameZA"),
+              recent: t("sort.mostRecent"), latest_message: t("sort.latestMessage"), name_asc: t("sort.nameAZ"), name_desc: t("sort.nameZA"),
               score_desc: t("sort.scoreDown"), score_asc: t("sort.scoreUp"),
             };
             return (

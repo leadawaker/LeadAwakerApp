@@ -7,7 +7,7 @@ export type ViewMode = "list" | "table" | "pipeline";
 
 // ── Group / sort option types ─────────────────────────────────────────────────
 export type GroupByOption = "date" | "status" | "campaign" | "tag" | "none";
-export type SortByOption  = "recent" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
+export type SortByOption  = "recent" | "latest_message" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
 
 // ── Virtual list item union type ──────────────────────────────────────────────
 export type VirtualListItem =

@@ -192,6 +192,11 @@ export function useLeadsFilters({
         case "name_desc":  return getFullNameLocal(b).localeCompare(getFullNameLocal(a));
         case "score_desc": return getScoreLocal(b) - getScoreLocal(a);
         case "score_asc":  return getScoreLocal(a) - getScoreLocal(b);
+        case "latest_message": {
+          const da = a.last_message_received_at || a.last_message_sent_at || a.last_interaction_at || a.created_at || "";
+          const db = b.last_message_received_at || b.last_message_sent_at || b.last_interaction_at || b.created_at || "";
+          return db.localeCompare(da);
+        }
         default: {
           const da = a.last_interaction_at || a.last_message_received_at || a.created_at || "";
           const db = b.last_interaction_at || b.last_message_received_at || b.created_at || "";

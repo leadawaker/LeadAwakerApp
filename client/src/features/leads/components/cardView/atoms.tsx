@@ -370,7 +370,7 @@ export function InlineEditField({ value, field, leadId, onSaved, type = "text" }
   return (
     <div className="group/edit flex items-center gap-1 min-w-0 cursor-text" onClick={() => setEditing(true)}>
       <span className={cn("text-[12px] font-semibold text-foreground leading-snug truncate", type === "tel" && "font-mono")}>
-        {value || <span className="text-foreground/25 font-normal italic">{"2014"}</span>}
+        {value || <span className="text-foreground/25 font-normal italic">{"—"}</span>}
       </span>
       {value && (
         <button
@@ -471,12 +471,12 @@ export function ScoreArcDonut({ score }: { score: number }) {
 }
 
 // ── Group header ───────────────────────────────────────────────────────────────
-// Matches spec: eyebrow label with count + trailing rule
+// Matches spec: horizontal line above + eyebrow label with count
 export function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="row" style={{ gap: 8, padding: '12px 4px 2px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 4px 2px' }}>
+      <div className="rule" />
       <span className="eyebrow eyebrow-sm">{label} — {count}</span>
-      <div className="rule" style={{ flex: 1 }} />
     </div>
   );
 }

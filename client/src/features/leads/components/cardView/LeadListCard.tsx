@@ -316,41 +316,31 @@ export function LeadListCard({
         onKeyDown={(e) => { if (e.key === "Enter") { if (trayOpen) closeTray(); else onClick(); } }}
         data-swipe-x={swipeX > 0 ? swipeX : undefined}
       >
-        {/* Checkbox — vertically centered against the 36px avatar */}
-        <div className="shrink-0 flex items-center" style={{ height: 36 }}>
-          <button
-            className="flex items-center justify-center rounded-[5px] transition-colors"
-            style={{
-              width: 18,
-              height: 18,
-              background: selected ? 'var(--wine)' : 'transparent',
-              border: selected ? '1.5px solid var(--wine)' : '1.5px solid var(--line-strong)',
-              color: '#FFFFFF',
-            }}
-            onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
-            aria-label={selected ? "Deselect" : "Select"}
-          >
-            {selected && <Check className="h-3 w-3" />}
-          </button>
-        </div>
-
-        {/* Stage-colored avatar (with unread badge) */}
-        <div className="shrink-0 relative" style={{ width: 36, height: 36 }}>
+          {/* Stage-colored avatar — click to toggle selection (with unread badge) */}
+        <div
+          className="shrink-0 relative"
+          style={{ width: 36, height: 36, cursor: 'pointer' }}
+          onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
+          role="checkbox"
+          aria-checked={selected}
+          aria-label={selected ? "Deselect" : "Select"}
+        >
           <div
             className="flex items-center justify-center"
             style={{
               width: 36,
               height: 36,
               borderRadius: 'var(--r-surface)',
-              background: statusHex,
-              color: '#FFFFFF',
+              background: selected ? '#FFFFFF' : statusHex,
+              color: selected ? 'var(--wine)' : '#FFFFFF',
+              border: selected ? '2px solid var(--wine)' : 'none',
               fontFamily: "'Geist Mono', ui-monospace, monospace",
               fontSize: 14,
               fontWeight: 700,
               opacity: isPastCall ? 0.4 : 1,
             }}
           >
-            {getInitials(name)}
+            {selected ? <Check className="h-[18px] w-[18px]" /> : getInitials(name)}
           </div>
           {unreadCount > 0 && (
             <span
@@ -379,9 +369,9 @@ export function LeadListCard({
         {/* Body */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 14, fontWeight: 600, color: "var(--ink)",
+            fontSize: 12, fontWeight: 600, color: "var(--ink)",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            marginBottom: 4,
+            marginBottom: 2,
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
             <span className="truncate">{name}</span>
@@ -397,16 +387,55 @@ export function LeadListCard({
           {/* Stage + campaign — single line, matches the design leads page */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 9, color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}
             </span>
           </div>
+
+          {/* Chat peek — 3rd line when chats mode is on */}
+          {showPeek && peekText && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1, minWidth: 0 }}>
+              <span
+                style={{
+                  fontFamily: "'Geist Mono', ui-monospace, monospace",
+                  fontSize: 7.5,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  color: peekIsInbound ? 'var(--good)' : 'var(--wine)',
+                  background: peekIsInbound ? 'var(--good-tint)' : 'var(--wine-tint)',
+                  borderRadius: 'var(--r-pill)',
+                  padding: '1px 5px',
+                  flexShrink: 0,
+                  maxWidth: 68,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
+              </span>
+              <span
+                style={{
+                  fontSize: 9,
+                  color: 'var(--ink-soft)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                {peekText}
+              </span>
+            </div>
+          )}
 
           {/* Contact info — revealed on hover */}
           <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-24 opacity-100">
             <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100">
               {(phone || email) && (
-                <div className="pt-1 pb-0.5 flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
+                <div className="pt-0.5 pb-0 flex items-center gap-2 text-[9px] text-muted-foreground/70">
                   {phone && (
                     <span className="inline-flex items-center gap-1 truncate">
                       <Phone className="h-3 w-3 shrink-0" />
@@ -437,44 +466,6 @@ export function LeadListCard({
 
       </div>
 
-      {/* ── Chat peek (Feature A) — single-line last-message snippet under the row ── */}
-      {showPeek && peekText && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, padding: '0 12px 8px 56px' }}>
-          <span
-            style={{
-              fontFamily: "'Geist Mono', ui-monospace, monospace",
-              fontSize: 7.5,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              fontWeight: 700,
-              color: peekIsInbound ? 'var(--good)' : 'var(--wine)',
-              background: peekIsInbound ? 'var(--good-tint)' : 'var(--wine-tint)',
-              borderRadius: 'var(--r-pill)',
-              padding: '2px 7px',
-              flexShrink: 0,
-              maxWidth: 78,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
-          </span>
-          <span
-            style={{
-              fontSize: 12,
-              color: 'var(--ink-soft)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {peekText}
-          </span>
-        </div>
-      )}
 
     </div>
   );

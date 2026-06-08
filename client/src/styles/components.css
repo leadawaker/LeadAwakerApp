@@ -165,12 +165,12 @@
 /* ─── Campaign list card ─────────────────────────────────────── */
 
 .la-camp-card {
-  padding: 16px 17px;
+  padding: 14px 15px;
   border-radius: 14px;
   background: transparent;
   box-shadow: none;
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
   cursor: pointer;
   transition: background 130ms, box-shadow 130ms;
