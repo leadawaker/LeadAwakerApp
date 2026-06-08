@@ -16,8 +16,8 @@ window.TRANSLATIONS.nl.convUI = {
   chat_enquired_note:  "aanvraag 6 maanden geleden",
 
   demo_msg1: "ik heb een goedkopere offerte gekregen",
-  demo_msg2: "De moeite waard om te checken wat er achter dat bedrag zit. Details en afwerking zijn doorgaans waar het verschil zit.",
-  demo_msg3: "ja, ik zie al dat er wat hoeken zijn afgesneden",
+  demo_msg2: "Het kan de moeite waard zijn om te checken wat de reden is dat het bedrag lager is. Details en afwerking zijn doorgaans waar het verschil zit.",
+  demo_msg3: "Nu je het zegt, ik zie dat er op sommige onderdelen is bezuinigd.",
 };
 
 window.TRANSLATIONS.nl.chatMessages = {

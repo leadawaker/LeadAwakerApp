@@ -9,41 +9,6 @@ function Demo() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
-  // Typing animation for eyebrow
-  const FULL_TEXT = t('demo.eyebrow_text');
-  const [typed, setTyped] = React.useState("");
-  const [cursorOn, setCursorOn] = React.useState(true);
-  const [done, setDone] = React.useState(false);
-
-  React.useEffect(() => {
-    let idx = 0;
-    const delay = setTimeout(() => {
-      const iv = setInterval(() => {
-        idx++;
-        setTyped(FULL_TEXT.slice(0, idx));
-        if (idx >= FULL_TEXT.length) {
-          clearInterval(iv);
-          setDone(true);
-        }
-      }, 75);
-      return () => clearInterval(iv);
-    }, 600);
-    return () => clearTimeout(delay);
-  }, []);
-
-  React.useEffect(() => {
-    if (done) {
-      let count = 0;
-      const blink = setInterval(() => {
-        setCursorOn((v) => !v);
-        if (++count > 6) { clearInterval(blink); setCursorOn(false); }
-      }, 400);
-      return () => clearInterval(blink);
-    } else {
-      const blink = setInterval(() => setCursorOn((v) => !v), 530);
-      return () => clearInterval(blink);
-    }
-  }, [done]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -96,14 +61,12 @@ function Demo() {
 
         {/* Left: form */}
         <div style={window.revealStyle(sectionInView, { delay: 0 })}>
-          {/* Eyebrow typing animation */}
           <div style={{ marginBottom: 12 }}>
             <span style={{
               fontFamily: "var(--mono)", fontSize: 12, fontWeight: 600,
               letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--wine)"
             }}>
-              {typed}
-              <span style={{ opacity: cursorOn ? 1 : 0, transition: "opacity 0.05s", fontWeight: 300 }}>|</span>
+              {t('demo.eyebrow_text')}
             </span>
           </div>
 
