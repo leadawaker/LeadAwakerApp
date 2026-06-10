@@ -125,7 +125,9 @@ export default function AppArea() {
           <Route path="/platform/prompt-library">
             <AgencyOnly prefix="/platform"><PromptsPage /></AgencyOnly>
           </Route>
-          <Route path="/platform/billing/:tab" component={BillingPage} />
+          <Route path="/platform/billing/invoices" component={BillingPage} />
+          <Route path="/platform/billing/expenses" component={BillingPage} />
+          <Route path="/platform/billing/contracts" component={BillingPage} />
           <Route path="/platform/billing" component={BillingPage} />
           <Route path="/platform/invoices"><Redirect to="/platform/billing/invoices" /></Route>
           <Route path="/platform/expenses"><Redirect to="/platform/billing/expenses" /></Route>
