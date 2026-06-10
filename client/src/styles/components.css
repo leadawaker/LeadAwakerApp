@@ -268,7 +268,7 @@
 .la-nav-item:hover { background: var(--wine-tint); }
 .la-nav-item.active {
   background: var(--surface);
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-polished-crisp);
   color: var(--wine);
   font-weight: 600;
   animation: la-nav-highlight 240ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;

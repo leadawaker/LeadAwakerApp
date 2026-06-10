@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "wouter";
-import { navigate } from "wouter/use-browser-location";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileBillingView } from "../components/mobile/MobileBillingView";
@@ -25,16 +23,17 @@ export function BillingPage() {
   const { clearTopbarActions } = useTopbarActions();
   const isMobile = useIsMobile();
 
-  const handleTabChange = useCallback((tab: string) => {
-    navigate(`/platform/billing/${tab}`);
-  }, []);
-
-  const [location] = useLocation();
-  const activeTab = useMemo<BillingTab>(() => {
-    if (location.includes("/expenses")) return "expenses";
-    if (location.includes("/contracts")) return "contracts";
+  const [activeTab, setActiveTab] = useState<BillingTab>(() => {
+    const saved = localStorage.getItem("billing-active-tab");
+    if (saved === "expenses" || saved === "contracts") return saved;
     return "invoices";
-  }, [location]);
+  });
+
+  const handleTabChange = useCallback((tab: string) => {
+    const newTab = tab as BillingTab;
+    setActiveTab(newTab);
+    localStorage.setItem("billing-active-tab", newTab);
+  }, []);
 
   // View mode (persisted)
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
