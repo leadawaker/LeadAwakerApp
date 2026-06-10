@@ -6,7 +6,9 @@ export const DEFAULT_HEIGHT = 560;
 export const MIN_WIDTH = 320;
 export const MIN_HEIGHT = 400;
 export const MAX_WIDTH = 800;
-export const MAX_HEIGHT = 900;
+// Allow the floating chat to grow much taller — capped just under the viewport
+// height at runtime via clampPos, so this only needs to be a generous ceiling.
+export const MAX_HEIGHT = 1400;
 
 export const WIDGET_POS_KEY = "leadawaker_widget_pos";
 export const DEFAULT_RIGHT = 24;

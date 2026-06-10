@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/popover";
 import { cn, relativeTime } from "@/lib/utils";
 import { useTasks, useUpdateTask, useDeleteTask, useTaskCategories, useAccountUsers, useCreateTask } from "../api/tasksApi";
-import { CommentsSection, AttachmentsSection } from "./TaskDetailSections";
+import { CommentsSection, AttachmentsSection, SubtaskSection } from "./TaskDetailSections";
+import { ActivitySection } from "./ActivitySection";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from "../types";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 
@@ -36,13 +37,13 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const { t } = useTranslation("tasks");
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
-  const currentUserId = Number(localStorage.getItem("leadawaker_user_id") || 0);
-  const currentUserFromList = useMemo(() => users.find(u => u.id === currentUserId), [users, currentUserId]);
-  const currentUserName = currentUserFromList?.fullName1 || localStorage.getItem("leadawaker_user_name") || "";
   const deleteMutation = useDeleteTask();
   const createMutation = useCreateTask();
   const { data: categories = [] } = useTaskCategories();
   const { data: users = [] } = useAccountUsers();
+  const currentUserId = Number(localStorage.getItem("leadawaker_user_id") || 0);
+  const currentUserFromList = useMemo(() => users.find(u => u.id === currentUserId), [users, currentUserId]);
+  const currentUserName = currentUserFromList?.fullName1 || localStorage.getItem("leadawaker_user_name") || "";
 
   const task = useMemo(
     () => (tasks as any[])?.find((t: any) => t.id === taskId),
@@ -149,6 +150,32 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     deleteMutation.mutate(task.id, { onSuccess: onClose });
   };
 
+  // Revert all form fields back to the task's persisted values.
+  const handleCancel = () => {
+    if (!task) return;
+    setTitle(task.title ?? "");
+    setDescription(task.description ?? "");
+    setStatus(task.status ?? "todo");
+    setPriority(task.priority ?? "medium");
+    setTaskType(task.taskType ?? "admin");
+    setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "");
+    setCategoryId(task.categoryId ?? null);
+    setEmoji(task.emoji ?? "");
+    setAssigneeName(task.assigneeName ?? null);
+  };
+
+  // Ctrl/Cmd+Enter saves when there are unsaved changes.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && isDirty) {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   const handleClone = () => {
     if (!task) return;
     createMutation.mutate({
@@ -209,34 +236,27 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 placeholder={t("create.taskTitle")}
               />
             </div>
-            {/* Save */}
-            <button
-              onClick={handleSave}
-              disabled={!isDirty}
-              title={t("detail.save")}
-              className={cn("la-btn shrink-0", isDirty ? "la-btn--wine" : "la-btn--soft")}
-              style={!isDirty ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
-            >
-              <Check className="h-3.5 w-3.5 shrink-0" />
-              {t("detail.save")}
-            </button>
-            {/* Clone */}
-            <button onClick={handleClone} title="Clone task" className="la-btn la-btn--soft shrink-0">
-              Clone
-            </button>
-            {/* Delete */}
-            <Popover open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-              <PopoverTrigger asChild>
-                <button title={t("detail.delete")} className="la-btn la-btn--soft la-btn--icon shrink-0" style={{ color: "var(--stage-lost)" }}>
-                  <Trash2 className="h-3.5 w-3.5" />
+            {/* Save + Cancel — only while there are unsaved changes */}
+            {isDirty && (
+              <>
+                <button
+                  onClick={handleCancel}
+                  title={t("detail.cancel")}
+                  className="la-btn la-btn--soft shrink-0"
+                >
+                  {t("detail.cancel")}
                 </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-3 glass-strong border-none" side="bottom">
-                <p className="text-[12px] mb-2 text-[var(--ink)]">{t("detail.deleteConfirm")}</p>
-                <button onClick={handleDelete} className="la-btn la-btn--wine" style={{ background: "var(--stage-lost)" }}>{t("detail.delete")}</button>
-              </PopoverContent>
-            </Popover>
-            {/* Close */}
+                <button
+                  onClick={handleSave}
+                  title={t("detail.save")}
+                  className="la-btn la-btn--wine shrink-0"
+                >
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                  {t("detail.save")}
+                </button>
+              </>
+            )}
+            {/* Close — always present */}
             <button onClick={onClose} className="la-btn la-btn--soft la-btn--icon" title="Close" style={{ width: 32, height: 32 }}>
               <X className="h-3.5 w-3.5" />
             </button>
@@ -263,8 +283,17 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
               />
             </div>
 
+            {/* Checklist */}
+            <div className="space-y-1.5">
+              <label className={labelCls}>{t("fields.checklist")}</label>
+              <SubtaskSection taskId={taskId} />
+            </div>
+
             {/* Comments */}
             <CommentsSection taskId={taskId} currentUserName={currentUserName} users={users} />
+
+            {/* Activity */}
+            <ActivitySection taskId={taskId} users={users} />
 
             {/* Attachments */}
             <AttachmentsSection taskId={taskId} />
@@ -442,6 +471,25 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── Footer: destructive / duplicate actions, bottom-left ── */}
+      <div className="relative shrink-0 flex items-center gap-2 px-5 py-3 border-t border-border/20">
+        <button onClick={handleClone} title={t("detail.clone")} className="la-btn la-btn--soft shrink-0">
+          {t("detail.clone")}
+        </button>
+        <Popover open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <PopoverTrigger asChild>
+            <button title={t("detail.delete")} className="la-btn la-btn--soft shrink-0" style={{ color: "var(--stage-lost)" }}>
+              <Trash2 className="h-3.5 w-3.5" />
+              {t("detail.delete")}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-3 glass-strong border-none" side="top" align="start">
+            <p className="text-[12px] mb-2 text-[var(--ink)]">{t("detail.deleteConfirm")}</p>
+            <button onClick={handleDelete} className="la-btn la-btn--wine" style={{ background: "var(--stage-lost)" }}>{t("detail.delete")}</button>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

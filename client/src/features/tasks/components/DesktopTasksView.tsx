@@ -144,10 +144,10 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
     return map;
   }, [baseByWho]);
 
-  // ── Ultrawide detection (≥2000px → side-by-side monthly calendar) ───
-  const [isUltrawide, setIsUltrawide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 2000);
+  // ── Wide-screen detection (≥1800px → right-rail monthly calendar) ───
+  const [isWide, setIsWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1800);
   useEffect(() => {
-    const handler = () => setIsUltrawide(window.innerWidth >= 2000);
+    const handler = () => setIsWide(window.innerWidth >= 1800);
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
@@ -225,11 +225,11 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
         {/* Calendar navigation */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={goToday} className="la-btn la-btn--soft" style={{ height: BTN_H }}>Today</button>
-          <button onClick={isUltrawide ? goPrevMonth : goPrevWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }}><ChevronLeft size={15} /></button>
-          <span style={{ fontFamily: 'var(--serif)', fontSize: 17, color: 'var(--ink)', letterSpacing: '-0.01em', minWidth: isUltrawide ? 140 : 116, textAlign: 'center' }}>
-            {isUltrawide ? monthLabel(weekStart) : weekRangeLabel(weekStart)}
+          <button onClick={isWide ? goPrevMonth : goPrevWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }}><ChevronLeft size={15} /></button>
+          <span style={{ fontFamily: 'var(--serif)', fontSize: 17, color: 'var(--ink)', letterSpacing: '-0.01em', minWidth: isWide ? 140 : 116, textAlign: 'center' }}>
+            {isWide ? monthLabel(weekStart) : weekRangeLabel(weekStart)}
           </span>
-          <button onClick={isUltrawide ? goNextMonth : goNextWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }}><ChevronRight size={15} /></button>
+          <button onClick={isWide ? goNextMonth : goNextWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }}><ChevronRight size={15} /></button>
         </div>
 
         {/* Calendar filter */}
@@ -402,12 +402,12 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
       {/* Content — merged board + calendar (responsive), one shared drag context */}
       <DndContext sensors={dndSensors} collisionDetection={pointerWithin} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
-          <div className="tasks-merged" style={{ maxWidth: isUltrawide ? 'none' : 1600, margin: '0 auto', width: '100%' }}>
+          <div className="tasks-merged" style={{ width: '100%' }}>
             <div className="tasks-merged__board">
               <TasksBoardView tasks={boardTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} users={users} />
             </div>
             <div className="tasks-merged__cal">
-              <TasksWeekCalendar tasks={calendarTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} weekStart={weekStart} compact={!isUltrawide} monthly={isUltrawide} hideWeekends={hideWeekends} />
+              <TasksWeekCalendar tasks={calendarTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} weekStart={weekStart} compact={!isWide} monthly={isWide} hideWeekends={hideWeekends} />
             </div>
           </div>
         </div>

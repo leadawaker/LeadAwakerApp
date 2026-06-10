@@ -31,7 +31,7 @@ import {
   Settings2,
 
   Bell,
-  Search,
+  Bot,
   Moon,
   Sun,
   Eye,
@@ -72,7 +72,7 @@ export function RightSidebar({
   collapsed,
   onCollapse,
   onOpenSupport,
-  onOpenSearch,
+  onOpenAi,
   onOpenNotifications,
   onToggleHelp,
   onOpenSettings,
@@ -88,7 +88,7 @@ export function RightSidebar({
   collapsed: boolean;
   onCollapse: (v: boolean) => void;
   onOpenSupport: () => void;
-  onOpenSearch: () => void;
+  onOpenAi?: () => void;
   onOpenNotifications: () => void;
   onToggleHelp: () => void;
   onOpenSettings?: () => void;
@@ -157,14 +157,18 @@ export function RightSidebar({
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [impersonationOpen, setImpersonationOpen] = useState(false);
 
   // Read current user info from localStorage
   const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
   const userEmail = localStorage.getItem("leadawaker_user_email") || "";
-  const userAvatar = localStorage.getItem("leadawaker_user_avatar") || "";
+  const [userAvatar, setUserAvatar] = useState<string>(() => localStorage.getItem("leadawaker_user_avatar") || "");
   const userRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
+  useEffect(() => {
+    const handler = () => setUserAvatar(localStorage.getItem("leadawaker_user_avatar") || "");
+    window.addEventListener("leadawaker-avatar-changed", handler);
+    return () => window.removeEventListener("leadawaker-avatar-changed", handler);
+  }, []);
   const userInitials = userName
     .split(" ")
     .map((w) => w[0])
@@ -172,6 +176,16 @@ export function RightSidebar({
     .slice(0, 2)
     .join("")
     .toUpperCase() || "U";
+
+  const formatDisplayName = (fullName: string): string => {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "User";
+    if (parts.length === 1) return parts[0];
+    const firstName = parts[0];
+    const initials = parts.slice(1).map(p => p[0].toUpperCase() + ".").join(" ");
+    return `${firstName} ${initials}`;
+  };
+  const displayName = formatDisplayName(userName);
 
   /** Switch the scoped account. The URL no longer changes — only data scope. */
   const handleAccountSelect = (id: number) => {
@@ -255,9 +269,7 @@ export function RightSidebar({
       testId: "nav-library",
       agencyOnly: true,
     },
-    { href: `${prefix}/invoices`, label: t("sidebar.invoices"), labelKey: "Invoices", icon: Receipt, testId: "nav-invoices", agencyOnly: true },
-    { href: `${prefix}/expenses`, label: t("sidebar.expenses"), labelKey: "Expenses", icon: CreditCard, testId: "nav-expenses", agencyOnly: true, ownerOnly: true },
-    { href: `${prefix}/contracts`, label: t("sidebar.contracts"), labelKey: "Contracts", icon: FileCheck, testId: "nav-contracts", agencyOnly: true },
+    { href: `${prefix}/billing`, label: t("sidebar.billing"), labelKey: "Billing", icon: Receipt, testId: "nav-billing", agencyOnly: true },
     { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true },
     { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", ownerOnly: true },
     { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", ownerOnly: true },
@@ -267,7 +279,7 @@ export function RightSidebar({
       labelKey: "Automations",
       icon: ScrollText,
       testId: "nav-automations",
-      agencyOnly: true,
+      ownerOnly: true,
     },
   ];
 
@@ -682,10 +694,7 @@ export function RightSidebar({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="la-switcher" style={{ marginBottom: 12 }}>
-                  <span className="row" style={{ gap: 8 }}>
-                    <ChevronsUpDown size={13} />
-                    <span>{currentAccountId === 0 ? "Agency View" : (currentAccount?.name || "Account")}</span>
-                  </span>
+                  <span>{currentAccountId === 0 ? "Agency View" : (currentAccount?.name || "Account")}</span>
                   <span style={{ display: "flex", transform: "rotate(90deg)", color: "var(--muted-foreground)" }}>
                     <ChevronRight size={12} />
                   </span>
@@ -721,7 +730,7 @@ export function RightSidebar({
           {(() => {
             const sections = [
               { section: "Engage", items: visibleNavItems.filter(it => ["Campaigns", "Leads", "Calendar"].includes(it.labelKey)) },
-              { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Invoices", "Expenses", "Contracts", "Tasks"].includes(it.labelKey)) },
+              { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
               { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations"].includes(it.labelKey)) },
               { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
             ];
@@ -772,58 +781,54 @@ export function RightSidebar({
           padding: "12px 12px 14px",
           borderTop: "1px solid var(--line)",
         }}>
-          <div className="la-util-row">
-            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-              <PopoverTrigger asChild>
-                <button className="la-util-btn" title={t("sidebar.search") || "Search"}
-                  data-testid="nav-search">
-                  <Search size={15} />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="right" align="end" sideOffset={8}
-                className="w-[300px] p-3 rounded-2xl shadow-xl border-border bg-background">
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl border border-border/50 bg-muted/40">
-                  <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <input autoFocus placeholder={t("sidebar.search") || "Search..."}
-                    className="flex-1 bg-transparent outline-none text-sm"
-                    onKeyDown={(e) => { if (e.key === "Escape") setSearchOpen(false); }} />
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Popover open={notifOpen} onOpenChange={setNotifOpen}>
-              <PopoverTrigger asChild>
-                <button className="la-util-btn" title={t("sidebar.notifications") || "Notifications"}
-                  data-testid="nav-notifications">
-                  <Bell size={15} />
-                  {unreadNotifCount > 0 && <span className="la-util-dot" />}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="right" align="end" sideOffset={8}
-                className="w-[380px] p-0 rounded-2xl shadow-xl border-border bg-background overflow-hidden">
-                <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
-              </PopoverContent>
-            </Popover>
-
-            <button className="la-util-btn" title="Theme" onClick={() => onToggleTheme?.()}>
-              {isDark ? <Sun size={15} /> : <Moon size={15} />}
-            </button>
-
-            <button className="la-util-btn" title={t("sidebar.help")} onClick={onToggleHelp}>
-              <HelpCircle size={15} />
-            </button>
-
-            <button className="la-util-btn" title={t("sidebar.support")} onClick={onOpenSupport}>
-              <Headphones size={15} />
-            </button>
-          </div>
+          {/* Notifications button — full-width pill with bell + label + badge */}
+          <Popover open={notifOpen} onOpenChange={setNotifOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="la-notif-btn"
+                title={t("notifications.title")}
+                data-testid="nav-notifications"
+              >
+                <Bell size={14} />
+                <span style={{ flex: 1, textAlign: "left", fontSize: 12, fontWeight: 600 }}>
+                  {t("notifications.title")}
+                </span>
+                {unreadNotifCount > 0 && (
+                  <span style={{
+                    minWidth: 18, height: 18, padding: "0 5px",
+                    borderRadius: "var(--r-pill)",
+                    background: "var(--wine-grad)",
+                    color: "#fff", fontSize: 10, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="right" align="end" sideOffset={8}
+              className="w-[380px] p-0 rounded-2xl shadow-xl border-border overflow-hidden"
+              style={{ background: "rgba(255, 250, 240, 0.65)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
+              <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
+            </PopoverContent>
+          </Popover>
 
           {/* Profile card */}
-          <div style={{ position: "relative", marginTop: 10 }}>
+          <div style={{ position: "relative", marginTop: 8 }}>
             {profileOpen && (
               <div className="la-profile-menu">
                 <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings`); }}>
                   <Settings size={14} />{t("sidebar.settings")}
+                </button>
+                {isOwner && (
+                  <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); onOpenAi?.(); }}
+                    data-testid="nav-ai">
+                    <Bot size={14} />Lead Awaker AI
+                  </button>
+                )}
+                <button className="la-profile-menu-item" onClick={() => { onToggleTheme?.(); }}>
+                  {isDark ? <Sun size={14} /> : <Moon size={14} />}
+                  {isDark ? "Light mode" : "Dark mode"}
                 </button>
                 {isOwner && !isImpersonating && (
                   <Popover open={impersonationOpen} onOpenChange={setImpersonationOpen}>
@@ -861,14 +866,19 @@ export function RightSidebar({
                 <div className="rule" style={{ margin: "6px 8px" }} />
                 <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); onLogout?.(); }}
                   style={{ color: "#A24B3F" }}>
-                  <LogOut size={14} />{t("sidebar.logout") || "Sign out"}
+                  <LogOut size={14} />{t("sidebar.logout") || "Log out"}
                 </button>
               </div>
             )}
             <button className={`la-profile ${profileOpen ? "open" : ""}`} onClick={() => setProfileOpen(o => !o)} data-testid="nav-profile">
-              <span className="la-profile-av">{userInitials}</span>
+              <span className="la-profile-av">
+                {userAvatar
+                  ? <img src={userAvatar} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 9 }} />
+                  : userInitials
+                }
+              </span>
               <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</span>
+                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</span>
                 <span style={{ display: "block", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted-foreground)" }}>{userRole}</span>
               </span>
               <span style={{ display: "flex", transform: profileOpen ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 160ms", color: "var(--muted-foreground)" }}>

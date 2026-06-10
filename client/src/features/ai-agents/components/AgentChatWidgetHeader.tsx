@@ -1,5 +1,5 @@
 import { type PointerEvent as ReactPointerEvent, useState, useCallback } from "react";
-import { Bot, X, ChevronLeft, Plus, MapPin, MapPinOff, MousePointerClick, MoreVertical, PanelRight, PanelRightClose, RefreshCw } from "lucide-react";
+import { Bot, X, ChevronLeft, Plus, MapPin, MapPinOff, MoreVertical, PanelRight, PanelRightClose, RefreshCw, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
@@ -78,7 +78,7 @@ export function AgentChatWidgetHeader({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-4 pt-4 pb-3 min-h-[81px] border-b border-border/50 bg-white dark:bg-card shrink-0",
+        "flex items-center gap-2 px-4 py-2 min-h-[52px] border-b border-border/40 bg-transparent shrink-0",
         !isMobile && "cursor-grab active:cursor-grabbing select-none",
       )}
       onPointerDown={!isMobile ? onDragPointerDown : undefined}
@@ -239,24 +239,23 @@ export function AgentChatWidgetHeader({
                         <MapPinOff className="h-3.5 w-3.5" />
                       )}
                     </button>
-                    {/* Element picker */}
+                    {/* Retry last response */}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        elementPicker.pickerActive ? elementPicker.deactivate() : elementPicker.activate();
+                        window.dispatchEvent(
+                          new CustomEvent("agent-retry-last", { detail: { agentId: activeAgentId } }),
+                        );
                       }}
+                      disabled={activeStreaming}
                       className={cn(
-                        "flex items-center justify-center rounded-lg border px-2 py-2 max-md:py-2.5 transition-colors",
-                        elementPicker.pickerActive
-                          ? "border-violet-300 dark:border-violet-700 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
-                          : elementPicker.confirmedInfo
-                            ? "border-violet-300/60 text-violet-500 hover:bg-muted/50"
-                            : "border-border/50 text-muted-foreground hover:bg-muted/50",
+                        "flex items-center justify-center rounded-lg border border-border/50 px-2 py-2 max-md:py-2.5 transition-colors",
+                        "text-muted-foreground hover:bg-muted/50 hover:border-border disabled:opacity-50 disabled:cursor-not-allowed",
                       )}
-                      title={elementPicker.pickerActive ? "Click any page element to select it" : elementPicker.confirmedInfo ? "Pick a different element" : "Select a page element"}
+                      title="Retry last response"
                     >
-                      <MousePointerClick className="h-3.5 w-3.5" />
+                      <RotateCcw className="h-3.5 w-3.5" />
                     </button>
                     {/* New conversation */}
                     <button

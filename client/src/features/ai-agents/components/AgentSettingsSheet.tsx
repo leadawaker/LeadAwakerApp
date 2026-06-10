@@ -94,7 +94,7 @@ export function AgentSettingsSheet({
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(agent.systemPromptId ?? null);
   const [promptSaving, setPromptSaving] = useState(false);
   const [promptDropdownOpen, setPromptDropdownOpen] = useState(false);
-  const [defaultModel, setDefaultModel] = useState(agent.model || "claude-sonnet-4-20250514");
+  const [defaultModel, setDefaultModel] = useState(agent.model || "claude-sonnet-4-6");
   const [defaultThinking, setDefaultThinking] = useState(agent.thinkingLevel || "medium");
   const [modelSaving, setModelSaving] = useState(false);
   const [thinkingSaving, setThinkingSaving] = useState(false);
@@ -119,7 +119,7 @@ export function AgentSettingsSheet({
   useEffect(() => {
     setPermissions(agent.permissions || DEFAULT_PERMISSIONS);
     setSelectedPromptId(agent.systemPromptId ?? null);
-    setDefaultModel(agent.model || "claude-sonnet-4-20250514");
+    setDefaultModel(agent.model || "claude-sonnet-4-6");
     setDefaultThinking(agent.thinkingLevel || "medium");
   }, [agent.id, agent.permissions, agent.systemPromptId, agent.model, agent.thinkingLevel]);
 
@@ -195,7 +195,7 @@ export function AgentSettingsSheet({
         onAgentUpdated?.(updatedAgent);
       } catch (err) {
         console.error("[AgentSettings] Model update error:", err);
-        setDefaultModel(agent.model || "claude-sonnet-4-20250514");
+        setDefaultModel(agent.model || "claude-sonnet-4-6");
       } finally {
         setModelSaving(false);
       }

@@ -31,11 +31,22 @@ export function CompactCampaignCard({ campaign, isActive, onClick, onHover, onHo
       onMouseLeave={onHoverEnd}
     >
       {sticker ? (
-        <div className="la-mono-tile" style={{ overflow: "hidden", padding: 0 }}>
+        <div
+          className="la-mono-tile"
+          style={{
+            overflow: "hidden", padding: 0,
+            boxShadow: isActive ? "var(--sh-raised-crisp), 0 0 0 2px var(--wine)" : undefined,
+          }}
+        >
           <img src={sticker.url} alt="" className="h-full w-full object-contain" />
         </div>
       ) : (
-        <div className={`la-mono-tile ${tileClass}`}>{initials}</div>
+        <div
+          className={`la-mono-tile ${tileClass}`}
+          style={isActive ? { boxShadow: "var(--sh-raised-crisp), 0 0 0 2px var(--wine)" } : undefined}
+        >
+          {initials}
+        </div>
       )}
     </div>
   );

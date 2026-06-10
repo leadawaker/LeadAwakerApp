@@ -113,6 +113,22 @@ export function registerTasksRoutes(app: Express): void {
       }
     }
 
+    // Activity log: record task creation
+    try {
+      const actor = req.user;
+      await storage.createActivity({
+        taskId: task.id,
+        actorUserId: actor?.id ?? null,
+        actorName: actor?.fullName1 || actor?.email || "System",
+        action: "created",
+        field: null,
+        oldValue: null,
+        newValue: null,
+      });
+    } catch (activityErr) {
+      console.error("[activity] Failed to log task created:", activityErr);
+    }
+
     res.status(201).json(task);
   }));
 
@@ -123,6 +139,48 @@ export function registerTasksRoutes(app: Express): void {
     if (!parsed.success) return handleZodError(res, parsed.error);
     const updated = await storage.updateTask(id, parsed.data);
     if (!updated) return res.status(404).json({ error: "Task not found" });
+
+    // Activity log: diff tracked fields and record each change
+    try {
+      const actor = req.user;
+      const actorUserId = actor?.id ?? null;
+      const actorName = actor?.fullName1 || actor?.email || "System";
+
+      const toStr = (v: unknown): string | null => {
+        if (v == null) return null;
+        if (v instanceof Date) return v.toISOString();
+        return String(v);
+      };
+
+      const trackedFields: Array<{ field: string; action: string; key: keyof typeof updated }> = [
+        { field: "status", action: "status_changed", key: "status" },
+        { field: "priority", action: "priority_changed", key: "priority" },
+        { field: "assignee", action: "assignee_changed", key: "assigneeName" },
+        { field: "due_date", action: "due_date_changed", key: "dueDate" },
+        { field: "category", action: "category_changed", key: "categoryId" },
+        { field: "title", action: "title_changed", key: "title" },
+      ];
+
+      if (existingTask) {
+        for (const { field, action, key } of trackedFields) {
+          const oldVal = toStr((existingTask as any)[key]);
+          const newVal = toStr((updated as any)[key]);
+          if (oldVal !== newVal) {
+            await storage.createActivity({
+              taskId: id,
+              actorUserId,
+              actorName,
+              action,
+              field,
+              oldValue: oldVal,
+              newValue: newVal,
+            });
+          }
+        }
+      }
+    } catch (activityErr) {
+      console.error("[activity] Failed to log task update:", activityErr);
+    }
 
     // Notification: task_assigned — when assignee changes to a new user
     if (
@@ -290,6 +348,13 @@ export function registerTasksRoutes(app: Express): void {
     await db.update(tasks).set({ categoryId: null }).where(eq(tasks.categoryId, id));
     await storage.deleteTaskCategory(id);
     res.json({ success: true });
+  }));
+
+  // ─── Task Activity ────────────────────────────────────────────────────────────
+  app.get("/api/tasks/:id/activity", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    const activity = await storage.getActivityByTaskId(taskId);
+    res.json(activity);
   }));
 
   // ─── Task Comments ──────────────────────────────────────────────────────────

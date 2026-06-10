@@ -35,6 +35,7 @@ export function useSession(): SessionState {
           setState({ status: "authenticated", user });
           // Keep localStorage in sync for backward-compat hooks
           localStorage.setItem("leadawaker_auth", "session");
+          localStorage.setItem("leadawaker_user_id", String(user.id ?? ""));
           localStorage.setItem("leadawaker_user_email", user.email ?? "");
           localStorage.setItem("leadawaker_user_role", user.role ?? "Viewer");
           if (user.fullName1) {

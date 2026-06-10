@@ -24,7 +24,6 @@ export const DETAIL_STAGES: DetailStage[] = [
 // Map any app status to an index into DETAIL_STAGES.
 export function statusToStageIdx(status: string): number {
   if (!status) return 0;
-  if (status === "Closed") return 5; // direct-booking final → sits at Booked
   const i = DETAIL_STAGES.findIndex((s) => s.key === status);
   return i >= 0 ? i : 0;
 }

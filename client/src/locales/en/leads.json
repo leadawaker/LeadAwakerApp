@@ -125,6 +125,7 @@
       "campaign": "Campaign",
       "tags": "Tags",
       "lastActivity": "Last Activity",
+      "lastMessage": "Last Message",
       "notes": "Notes",
       "account": "Account",
       "source": "Source",
@@ -473,7 +474,8 @@
     "allTagsAssigned": "All tags already assigned",
     "noTagsAssigned": "No tags assigned",
     "loadingTags": "Loading tags…",
-    "removeTag": "Remove tag {{name}}"
+    "removeTag": "Remove tag {{name}}",
+    "resumesOn": "Resuming {{date}}"
   },
   "timeline": {
     "title": "Timeline",

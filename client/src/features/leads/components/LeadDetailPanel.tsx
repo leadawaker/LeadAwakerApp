@@ -61,6 +61,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { formatBookedDate } from "@/features/leads/components/cardView/formatUtils";
+import { PipelineDashBar } from "@/features/leads/components/cardView/atoms";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -148,7 +149,6 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   "Multiple Responses": { bg: "bg-green-500/15", text: "text-green-600 dark:text-green-400" },
   Qualified: { bg: "bg-lime-500/15", text: "text-lime-600 dark:text-lime-400" },
   Booked: { bg: "bg-amber-400/20", text: "text-amber-600 dark:text-amber-400" },
-  Closed: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400" },
   Lost: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400" },
   DND: { bg: "bg-zinc-500/15", text: "text-zinc-600 dark:text-zinc-400" },
 };
@@ -601,7 +601,7 @@ function activityContext(lead: Record<string, any> | null): string {
 
 const FUNNEL_STAGE_ORDER = [
   "New", "Queued", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Closed", "DND", "Lost",
+  "Qualified", "Booked", "DND", "Lost",
 ];
 
 const FUNNEL_NEXT_ACTION: Record<string, string> = {
@@ -612,7 +612,6 @@ const FUNNEL_NEXT_ACTION: Record<string, string> = {
   "Multiple Responses": "Ready to qualify",
   Qualified: "Schedule a call",
   Booked: "Call scheduled",
-  Closed: "Deal closed",
   DND: "Do not contact",
   Lost: "Lead lost",
 };
@@ -929,7 +928,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         setTimeout(() => setStageSaved(false), 2000);
         // After booking/closing, the Python engine generates an AI summary async.
         // Refetch the lead after ~3.5s to pick it up without requiring a page refresh.
-        if (["Booked", "Closed"].includes(newStage)) {
+        if (newStage === "Booked") {
           setTimeout(async () => {
             try {
               const r = await apiFetch(`/api/leads/${leadId}`);
@@ -1213,6 +1212,13 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             {t("detail.openFullPage")}
           </button>
         </SheetHeader>
+
+        {/* Conversion pipeline bar */}
+        {convStatus && (
+          <div className="shrink-0 border-b border-border bg-background">
+            <PipelineDashBar status={convStatus} />
+          </div>
+        )}
 
         {/* Action buttons row */}
         <div className="shrink-0 px-4 py-2.5 border-b border-border flex items-center justify-center gap-1.5 md:px-5">

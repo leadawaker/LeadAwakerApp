@@ -125,6 +125,7 @@
       "campaign": "Campanha",
       "tags": "Tags",
       "lastActivity": "Última Atividade",
+      "lastMessage": "Última Mensagem",
       "notes": "Observações",
       "account": "Conta",
       "source": "Origem",
@@ -473,7 +474,8 @@
     "allTagsAssigned": "Todas as tags já atribuídas",
     "noTagsAssigned": "Nenhuma tag atribuída",
     "loadingTags": "Carregando tags…",
-    "removeTag": "Remover tag {{name}}"
+    "removeTag": "Remover tag {{name}}",
+    "resumesOn": "Retomando {{date}}"
   },
   "timeline": {
     "title": "Linha do Tempo",

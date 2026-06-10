@@ -42,6 +42,7 @@ export function GroupHeader({
         background: color
           ? `color-mix(in srgb, ${color} 12%, hsl(var(--group-header-bg)))`
           : "hsl(var(--group-header-bg))",
+        boxShadow: "0 -8px 0 8px var(--group-header-bg)",
       }}
     >
       <div className="flex items-center gap-[10px]">

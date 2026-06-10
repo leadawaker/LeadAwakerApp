@@ -61,9 +61,21 @@ function Audit() {
     requestAnimationFrame(frame);
   }, [sectionInView]);
 
-  /* ── Sync values to CTA pre-fill ── */
+  /* ── Sync values to CTA pre-fill and listen for CTA changes ── */
   React.useEffect(() => {
     window.__leadAwakerCalc = { quotes, silentPct, avgValue };
+    window.dispatchEvent(new CustomEvent('auditSliderChange', { detail: { quotes, silentPct, avgValue } }));
+  }, [quotes, silentPct, avgValue]);
+
+  React.useEffect(() => {
+    const handleCtaChange = (e) => {
+      const { quotes: q, silentPct: sp, avgValue: av } = e.detail;
+      if (q !== undefined && q !== quotes) setQuotes(q);
+      if (sp !== undefined && sp !== silentPct) setSilentPct(sp);
+      if (av !== undefined && av !== avgValue) setAvgValue(av);
+    };
+    window.addEventListener('ctaSliderChange', handleCtaChange);
+    return () => window.removeEventListener('ctaSliderChange', handleCtaChange);
   }, [quotes, silentPct, avgValue]);
 
   /* ── Click-to-type ── */

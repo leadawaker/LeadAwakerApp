@@ -51,7 +51,7 @@ export function useAutomationLogs(filters: AutomationLogsFilters) {
 
   // Auto-refresh automation logs on SSE automation_logs_changed events
   useEffect(() => {
-    const es = new EventSource("/api/interactions/stream");
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
     es.addEventListener("automation_logs_changed", () => {
       queryClient.invalidateQueries({ queryKey: ["/api/automation-logs"] });
     });
@@ -92,7 +92,7 @@ export function useAutomationHealth() {
   });
 
   useEffect(() => {
-    const es = new EventSource("/api/interactions/stream");
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
     es.addEventListener("automation_logs_changed", () => {
       queryClient.invalidateQueries({ queryKey: ["/api/automation-health"] });
     });

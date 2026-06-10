@@ -1,4 +1,5 @@
 import type { Task } from "@shared/schema";
+import { useTranslation } from "react-i18next";
 
 interface AccountUser { id: number; fullName1: string | null; email: string | null; avatarUrl: string | null; }
 
@@ -51,17 +52,18 @@ function PriorityBars({ priority }: { priority: string }) {
   );
 }
 
-function getDueInfo(dueDate: Date | string | null, todayISO: string): { label: string | null; color: string } {
-  if (!dueDate) return { label: null, color: 'var(--mute-2)' };
+type DueKind = 'overdue' | 'today' | 'tomorrow' | 'date';
+function getDueInfo(dueDate: Date | string | null, todayISO: string): { kind: DueKind; label: string | null; color: string; bold: boolean } {
+  if (!dueDate) return { kind: 'date', label: null, color: 'var(--mute-2)', bold: false };
   const due = new Date(dueDate as any);
   const [ty, tm, td] = todayISO.split('-').map(Number);
   const today = new Date(Date.UTC(ty, tm - 1, td));
   const dueUTC = new Date(Date.UTC(due.getFullYear(), due.getMonth(), due.getDate()));
   const days = Math.round((dueUTC.getTime() - today.getTime()) / 86400000);
-  if (days < 0) return { label: 'Overdue', color: 'var(--stage-lost)' };
-  if (days === 0) return { label: 'Today', color: 'var(--wine)' };
-  if (days === 1) return { label: 'Tomorrow', color: 'var(--mute-2)' };
-  return { label: `${MONTHS[due.getMonth()]} ${due.getDate()}`, color: 'var(--mute-2)' };
+  if (days < 0) return { kind: 'overdue', label: null, color: 'var(--stage-lost)', bold: true };
+  if (days === 0) return { kind: 'today', label: null, color: 'var(--warn)', bold: true };
+  if (days === 1) return { kind: 'tomorrow', label: null, color: 'var(--mute-2)', bold: false };
+  return { kind: 'date', label: `${MONTHS[due.getMonth()]} ${due.getDate()}`, color: 'var(--mute-2)', bold: false };
 }
 
 function getInitials(name: string | null | undefined): string {
@@ -78,7 +80,9 @@ function nameColor(name: string | null | undefined): string {
 }
 
 export default function TasksBoardCard({ task, active, onSelect, categoryColor, categoryName, todayISO, users = [], commentCount = 0 }: Props) {
-  const { label: dueLabel, color: dueColor } = getDueInfo(task.dueDate, todayISO);
+  const { t } = useTranslation("tasks");
+  const { kind: dueKind, label: dueDateLabel, color: dueColor, bold: dueBold } = getDueInfo(task.dueDate, todayISO);
+  const dueLabel = dueKind === 'date' ? dueDateLabel : t(`due.${dueKind}`);
   const done = task.status === 'done';
   const edgeColor = STATUS_EDGE[task.status ?? 'todo'] ?? 'var(--mute)';
 
@@ -142,7 +146,7 @@ export default function TasksBoardCard({ task, active, onSelect, categoryColor, 
             </span>
           )}
           {dueLabel && (
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: dueColor, fontWeight: dueLabel === 'Today' || dueLabel === 'Overdue' ? 700 : 400 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: dueColor, fontWeight: dueBold ? 700 : 400 }}>
               {dueLabel}
             </span>
           )}

@@ -45,7 +45,7 @@ import { getLeadStatusAvatarColor, getCampaignAvatarColor } from "@/lib/avatarUt
 
 import { getLeadId, getFullName, getStatus, getScore } from "./leadUtils";
 import { formatRelativeTime, formatBookedDate } from "./formatUtils";
-import { PipelineProgress, PipelineProgressCompact } from "./atoms";
+import { PipelineProgress, PipelineProgressCompact, PipelineDashBar } from "./atoms";
 import { ScoreWidget } from "./ScoreWidgets";
 import { ContactWidget } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
@@ -317,7 +317,7 @@ export function LeadDetailView({
   const sep = <span style={{ color: "var(--line-strong)" }}>·</span>;
 
   return (
-    <div ref={setRefs} className="relative flex flex-col h-full overflow-hidden" style={{ gap: 14, paddingTop: 14 }}>
+    <div ref={setRefs} className="relative flex flex-col h-full overflow-hidden" style={{ gap: 14, paddingTop: 14, paddingBottom: 14 }}>
 
       {/* ── Hero (detached, rounded) ── */}
       <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
@@ -382,14 +382,7 @@ export function LeadDetailView({
             </DropdownMenu>
           </div>
         </div>
-        {status && (
-          <div style={{ padding: isNarrow ? "0 16px 14px" : "0 20px 16px", display: "flex", alignItems: "center", gap: 7 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: avatarColor.bg, flexShrink: 0 }} />
-            <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, fontWeight: 600, color: "var(--mute)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              {status}
-            </span>
-          </div>
-        )}
+        {status && <PipelineDashBar status={status} />}
       </div>
 
       {/* ── Columns ── */}

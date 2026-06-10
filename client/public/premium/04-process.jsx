@@ -77,7 +77,7 @@ function ABVariantsIllus({ active = false }) {
 
   const ROWS = [
     { letter: 'A', msg: '"even inchecken over de plattegrond"', target: 12, winner: false, path: 'M0,11 L6.2,10.5 L12.4,11 L18.7,9.5 L24.9,10.5 L31.1,8.5 L37.3,9.5 L43.6,10.5 L49.8,9.5 L56,8.5' },
-    { letter: 'B', msg: '"dinsdag slot nog vrij?"',            target: 31, winner: true,  path: 'M0,11 L6.2,9.8 L12.4,8 L18.7,6 L24.9,4 L31.1,3 L37.3,1.8 L43.6,1.2 L49.8,0.8 L56,0.4' },
+    { letter: 'B', msg: '"dinsdag slot nog vrij?"',            target: 9, winner: true,  path: 'M0,11 L6.2,9.8 L12.4,8 L18.7,6 L24.9,4 L31.1,3 L37.3,1.8 L43.6,1.2 L49.8,0.8 L56,0.4' },
     { letter: 'C', msg: '"jouw notitie gezien, twee ideeën"',  target: 19, winner: false, path: 'M0,10.5 L6.2,9.5 L12.4,8.5 L18.7,9.5 L24.9,7.5 L31.1,6 L37.3,7 L43.6,5 L49.8,5 L56,4.5' },
   ];
 

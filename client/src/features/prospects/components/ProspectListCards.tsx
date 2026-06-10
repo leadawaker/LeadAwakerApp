@@ -387,7 +387,7 @@ export function CompactProspectCard({
         <OutreachProgressRing status={outreachStatus} size={ringSize} />
         <div
           className="rounded-full"
-          style={isActive ? { boxShadow: "0 0 0 3px #ffffff, 0 0 0 4px rgba(0,0,0,0.9)" } : undefined}
+          style={isActive ? { boxShadow: "0 0 0 2px #ffffff, 0 0 0 4px var(--wine)" } : undefined}
         >
           <ProspectAvatar
             name={name}

@@ -87,10 +87,13 @@ import {
   type InsertTaskCategory,
   taskComments,
   taskAttachments,
+  taskActivity,
   type TaskComment,
   type InsertTaskComment,
   type TaskAttachment,
   type InsertTaskAttachment,
+  type TaskActivity,
+  type InsertTaskActivity,
   outreachTemplates,
   type OutreachTemplate,
   type InsertOutreachTemplate,
@@ -1610,6 +1613,17 @@ export class DatabaseStorage implements IStorage {
   async deleteComment(id: number): Promise<boolean> {
     const rows = await db.delete(taskComments).where(eq(taskComments.id, id)).returning();
     return rows.length > 0;
+  }
+
+  // ─── Task Activity ─────────────────────────────────────────────────────
+
+  async getActivityByTaskId(taskId: number): Promise<TaskActivity[]> {
+    return db.select().from(taskActivity).where(eq(taskActivity.taskId, taskId)).orderBy(asc(taskActivity.createdAt));
+  }
+
+  async createActivity(data: InsertTaskActivity): Promise<TaskActivity> {
+    const [row] = await db.insert(taskActivity).values(data as any).returning();
+    return row;
   }
 
   // ─── Task Attachments ──────────────────────────────────────────────────

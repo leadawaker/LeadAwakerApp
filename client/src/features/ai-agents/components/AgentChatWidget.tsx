@@ -56,15 +56,12 @@ export function AgentChatWidget() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   // Claude API key management
-  const { status: keyStatus, loading: keySaving, saveKey } = useClaudeApiKey();
+  const { loading: keySaving, saveKey } = useClaudeApiKey();
   const [keySetupOpen, setKeySetupOpen] = useState(false);
 
-  // Show key setup modal on first widget open if user has no key
-  useEffect(() => {
-    if (isOpen && !keySaving && keyStatus && !keyStatus.hasKey) {
-      setKeySetupOpen(true);
-    }
-  }, [isOpen, keyStatus, keySaving]);
+  // The AI widget is owner-only and the agent runs on the server's Claude Code
+  // subscription (the per-user API key is never injected into the spawn), so the
+  // key-setup modal is not auto-shown. It can still be opened manually from settings.
 
   // ── Element picker ──
   const elementPicker = useElementPicker();
@@ -386,23 +383,24 @@ export function AgentChatWidget() {
       <div
         data-agent-widget
         className={cn(
-          "fixed z-[9999] flex flex-col bg-[#f5f5f5] dark:bg-[#1a1a2e] overflow-hidden",
+          "fixed z-[9999] flex flex-col glass-strong overflow-hidden",
           isMobile
             ? cn(
-                "inset-0 w-full h-full rounded-none border-0 transition-[opacity,transform] duration-300 ease-out",
+                "inset-0 w-full h-full !rounded-none border-0 transition-[opacity,transform] duration-300 ease-out",
                 isOpen
                   ? "translate-y-0 opacity-100 pointer-events-auto"
                   : "translate-y-full opacity-0 invisible pointer-events-none",
               )
             : isDocked
               ? cn(
-                  "border border-border/60 rounded-3xl transition-[opacity] duration-150",
+                  // Docked: full-height right rail, no rounded corners, sits above the topbar
+                  "border-l border-border/60 !rounded-none transition-[opacity] duration-150",
                   isOpen
                     ? "opacity-100 pointer-events-auto"
                     : "opacity-0 invisible pointer-events-none",
                 )
               : cn(
-                  "border border-border/60 shadow-2xl rounded-2xl transition-[opacity,transform] duration-200 ease-out",
+                  "border border-border/60 shadow-2xl transition-[opacity,transform] duration-200 ease-out",
                   isOpen
                     ? "opacity-100 scale-100 pointer-events-auto"
                     : "opacity-0 scale-95 invisible pointer-events-none",
@@ -412,7 +410,7 @@ export function AgentChatWidget() {
           isMobile
             ? undefined
             : isDocked
-              ? { position: "fixed", right: 3, top: "calc(var(--topbar-h) + 5px)", bottom: 0, width: dockWidth - 6 }
+              ? { position: "fixed", right: 0, top: 0, bottom: 0, width: dockWidth }
               : {
                   right: widgetPos.right,
                   bottom: widgetPos.bottom,

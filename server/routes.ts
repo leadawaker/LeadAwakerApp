@@ -4314,8 +4314,8 @@ GUARDRAILS
   // Valid thinking levels and model identifiers for agents
   const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
   const VALID_MODELS = [
-    "claude-sonnet-4-20250514",
-    "claude-opus-4-20250514",
+    "claude-sonnet-4-6",
+    "claude-opus-4-8",
     "claude-haiku-235-20241022",
   ];
 
@@ -4414,7 +4414,7 @@ GUARDRAILS
         role: "user",
         content: userContent,
         metadata: {
-          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          model: session.model || agent.model || "claude-sonnet-4-6",
           thinkingLevel: session.thinkingLevel || agent.thinkingLevel || "medium",
           skillId,
           skillName,
@@ -4470,7 +4470,7 @@ GUARDRAILS
       const cwd = getSessionCwd(sessionId, agent.type);
 
       // 9. Stream Claude response with skill context
-      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-6";
       const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
 
       streamClaudeResponse({
@@ -4577,7 +4577,7 @@ GUARDRAILS
     const { DEFAULT_SYSTEM_PROMPTS } = await import("./aiAgents");
     const { name, systemPrompt, photoUrl, model, thinkingLevel } = req.body;
     if (!name?.trim()) return res.status(400).json({ message: "name required" });
-    const resolvedModel = model || "claude-sonnet-4-20250514";
+    const resolvedModel = model || "claude-sonnet-4-6";
     if (!VALID_MODELS.includes(resolvedModel)) {
       return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
     }
@@ -4941,7 +4941,7 @@ GUARDRAILS
       }
 
       // Validate model if provided
-      const model = req.body.model || "claude-sonnet-4-20250514";
+      const model = req.body.model || "claude-sonnet-4-6";
       if (!VALID_MODELS.includes(model)) {
         return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
       }
@@ -5262,7 +5262,7 @@ GUARDRAILS
           title: req.body.title || null,
           status: "active",
           cliSessionId: null,
-          model: agent?.model || "claude-sonnet-4-20250514",
+          model: agent?.model || "claude-sonnet-4-6",
           thinkingLevel: agent?.thinkingLevel || "medium",
         });
       }
@@ -5858,7 +5858,7 @@ GUARDRAILS
         content: content.trim(),
         pageContext: pageContext || null,
         metadata: {
-          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          model: session.model || agent.model || "claude-sonnet-4-6",
           thinkingLevel: session.thinkingLevel || agent.thinkingLevel || "medium",
           ...(fileId ? { fileId: Number(fileId) } : {}),
         },
@@ -5955,7 +5955,7 @@ GUARDRAILS
       const cwd = getSessionCwd(sessionId, agent.type);
 
       // 7. Initiate Claude CLI call with structured streaming + session resume
-      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-6";
       streamClaudeResponse({
         prompt: fullPrompt,
         cwd,
@@ -6147,7 +6147,7 @@ GUARDRAILS
         metadata: {
           skillId,
           skillName,
-          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          model: session.model || agent.model || "claude-sonnet-4-6",
         },
       });
 
@@ -6187,7 +6187,7 @@ GUARDRAILS
       res.write(`data: ${JSON.stringify({ type: "skill_metadata", skillId, skillName })}\n\n`);
 
       const cwd = getSessionCwd(sessionId, agent.type);
-      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-6";
       const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
 
       streamClaudeResponse({

@@ -68,7 +68,7 @@ export function JobHealthCard({ job }: Props) {
       {/* errors badge */}
       {job.errors24h > 0 && (
         <span className="text-xs font-medium px-1.5 py-0.5 rounded border bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50 flex-shrink-0">
-          {job.errors24h}e
+          {job.errors24h} err
         </span>
       )}
 

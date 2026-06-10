@@ -103,7 +103,7 @@ export function streamClaudeResponse(opts: {
   cwd: string;
   bypassPermissions: boolean;
   res: Response;
-  /** Model override (e.g. claude-sonnet-4-20250514) */
+  /** Model override (e.g. claude-sonnet-4-6) */
   model?: string;
   /** Thinking level: none, low, medium, high */
   thinkingLevel?: string;
@@ -360,7 +360,7 @@ export function generateConversationTitle(
       const prompt = "Generate a very short title (3-6 words) for a conversation that starts with this exchange. Return ONLY the title text, nothing else. No quotes, no punctuation at the end, no explanation.\n\nUser: " + truncatedUser + "\n\nAssistant: " + truncatedAssistant;
 
       const child = spawn(CLAUDE_BIN, [
-        "--model", "claude-haiku-4-5-20251001",
+        "--model", "claude-haiku-4-5",
         "--dangerously-skip-permissions",
         "-p", prompt,
       ], {

@@ -138,6 +138,7 @@ export default function PromptsPage() {
             aiRole: c.aiRole ?? c.ai_role ?? null,
             typoCount: c.typoCount ?? c.typo_count ?? null,
             kb: c.kb ?? null,
+            accountsId: c.accountsId ?? c.Accounts_id ?? null,
           })),
         );
       }

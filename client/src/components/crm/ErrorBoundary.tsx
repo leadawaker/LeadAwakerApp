@@ -59,6 +59,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               An unexpected error occurred while loading this section.
               Please try again or contact support if the problem persists.
             </p>
+            {this.state.error && (
+              <pre className="text-left text-xs bg-muted/50 rounded p-2 max-w-full overflow-auto text-red-600 dark:text-red-400 max-h-40">
+                {this.state.error.message}
+                {"\n\n"}
+                {this.state.error.stack?.split("\n").slice(0, 8).join("\n")}
+              </pre>
+            )}
             <button
               onClick={this.handleRetry}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"

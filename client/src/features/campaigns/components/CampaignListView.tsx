@@ -422,7 +422,7 @@ export function CampaignListView({
   });
 
   return (
-    <div className={cn("flex flex-col h-full w-full", promptPanelOpen ? "max-w-[2369px]" : "max-w-[1729px]")} data-testid="campaign-list-view">
+    <div className="flex flex-col h-full w-full" data-testid="campaign-list-view">
 
       {/* ── FULL-WIDTH TOP BAR (desktop only) — always visible ──────────── */}
       <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px]" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>

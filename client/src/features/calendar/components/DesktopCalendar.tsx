@@ -1,25 +1,30 @@
-// DesktopCalendar.tsx — wine/neumorphic desktop Calendar (ports the Claude design).
-// Full-width top toolbar + three floating cards (agenda · week/month grid · detail).
-// Wired to the real CalendarPage data, drag-to-reschedule, and i18n. Mobile/tablet
-// keep the legacy layout; this renders only at the desktop breakpoint.
-import { useMemo, type CSSProperties } from "react";
+// DesktopCalendar.tsx — wine/neumorphic Calendar at all breakpoints.
+// Full-width top toolbar + three floating panels (agenda · week/month grid · detail).
+// Fabricated metrics removed; real lead score, AI summary, and full conversation shown.
+import { useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
 import type { TFunction } from "i18next";
 import {
-  ChevronLeft, ChevronRight, Maximize2, Clock, Video, Phone, Check, Sparkles,
+  ChevronLeft, ChevronRight, Maximize2, Clock, Video, Phone, Check,
   Calendar as CalIcon, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
+  PanelLeft, PanelLeftClose, X, MoreVertical, RefreshCw, XCircle,
+  Info, AlertCircle, Target, ShieldQuestion, ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import type { Interaction } from "@/features/conversations/hooks/useConversationsData";
 import {
   type Appointment, CARD_STYLE, HEADER_H, HOUR0, HOUR1, SPAN,
-  intentFor, statusMetaOf, statusKeyOf, channelOf, apptHm, endClockOf, dateKeyOf,
+  statusMetaOf, statusKeyOf, channelOf, apptHm, endClockOf, dateKeyOf,
 } from "../lib/calendarDesign";
-import { DraggableBookingCard, DroppableDay, DroppableTimeSlot } from "./CalendarDnd";
+import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
 
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -45,9 +50,38 @@ const NAV_BTN: CSSProperties = {
 const MONO: CSSProperties = { fontFamily: "var(--mono)" };
 const SERIF: CSSProperties = { fontFamily: "var(--serif)" };
 
+// AI summary section definitions
+type SummaryKey = "situation" | "pain" | "goal" | "objection" | "nextStep";
+const SUMMARY_ICONS: Record<SummaryKey, React.ReactNode> = {
+  situation: <Info className="h-3 w-3" />,
+  pain: <AlertCircle className="h-3 w-3" />,
+  goal: <Target className="h-3 w-3" />,
+  objection: <ShieldQuestion className="h-3 w-3" />,
+  nextStep: <ArrowRight className="h-3 w-3" />,
+};
+const SUMMARY_KEYS: SummaryKey[] = ["situation", "pain", "goal", "objection", "nextStep"];
+
+function parseAiSummary(raw: string | null | undefined): { key: SummaryKey; text: string }[] | string | null {
+  if (!raw || !raw.trim()) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const valid = parsed.filter((x: any) => x && typeof x.key === "string" && typeof x.text === "string");
+      if (valid.length > 0) return valid;
+    }
+    if (typeof parsed === "object" && parsed !== null) {
+      const keys: SummaryKey[] = ["situation", "pain", "goal", "objection", "nextStep"];
+      const sections = keys.map(k => ({ key: k, text: parsed[k] || "" })).filter(s => s.text);
+      if (sections.length > 0) return sections;
+    }
+  } catch {}
+  return raw; // plain text fallback
+}
+
 export interface DesktopCalendarProps {
   t: TFunction;
   appts: Appointment[];
+  apptsByDate: Map<string, Appointment[]>;
   groupedAppts: { label: string | null; items: Appointment[] }[];
   weekDays: Date[];
   days: { date: Date; count: number }[];
@@ -73,22 +107,16 @@ export interface DesktopCalendarProps {
   onOpenInLead: () => void; onCloseDetail: () => void;
   currentTime: Date;
   apptListRef: React.RefObject<HTMLDivElement>;
+  // conversation visibility gate (admin/owner only)
+  canSeeConversation: boolean;
+  // reschedule / cancel handlers
+  onReschedule: (apptId: number, newDate: Date) => Promise<void>;
+  onCancelCall: (apptId: number) => Promise<void>;
   narrow?: boolean;
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// KPI chip
-// ════════════════════════════════════════════════════════════════════════════
-function KpiChip({ value, label, delta }: { value: string; label: string; delta?: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 18px", borderLeft: "1px solid var(--line)" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-        <span style={{ ...SERIF, fontSize: 23, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</span>
-        {delta && <span style={{ ...MONO, fontSize: 9.5, color: "var(--good)", fontWeight: 700 }}>{delta}</span>}
-      </div>
-      <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", marginTop: 4 }}>{label}</div>
-    </div>
-  );
+  // panel fold (left agenda) + popup detail mode — injected by composition root
+  leftPanelState?: ListPanelState;
+  onCyclePanel?: () => void;
+  showClose?: boolean;
 }
 
 // Toolbar dropdown trigger (wine soft icon button)
@@ -97,38 +125,38 @@ function toolBtnClass(active: boolean) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Top toolbar (title · view toggle · search/sort/filter/group/new · KPIs)
+// Top toolbar (title · view toggle · collapse button · search/sort/filter/group/new)
 // ════════════════════════════════════════════════════════════════════════════
 function TopToolbar(p: DesktopCalendarProps) {
   const { t } = p;
-  const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
-  const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
-  const highIntentThisWeek = useMemo(
-    () => p.appts.filter((a) => weekKeys.has(a.date) && intentFor(a).key === "high").length,
-    [p.appts, weekKeys],
-  );
 
   return (
     <div style={{ height: 60, flexShrink: 0, padding: "0 14px", background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18 }}>
       <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("title")}</span>
 
-      {/* Week / Month */}
-      <div className="la-seg">
-        {(["week", "month"] as const).map((k) => (
-          <button key={k} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
-            {t(`views.${k}`)}
+      {/* Week / Month + collapse button immediately after */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="la-seg">
+          {(["week", "month"] as const).map((k) => (
+            <button key={k} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
+              {t(`views.${k}`)}
+            </button>
+          ))}
+        </div>
+        {p.onCyclePanel && (
+          <button
+            className="la-btn la-btn--soft la-btn--icon"
+            onClick={p.onCyclePanel}
+            title={p.leftPanelState === "full" ? t("design.panel.minimize") : p.leftPanelState === "compact" ? t("design.panel.hide") : t("design.panel.show")}
+          >
+            {p.leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
-        ))}
-      </div>
-
-      {/* KPI — meetings this week only */}
-      <div style={{ display: "flex", alignItems: "stretch", height: 44 }}>
-        <KpiChip value={String(meetingsThisWeek)} label={t("design.kpi.meetings")} />
+        )}
       </div>
 
       <div style={{ flex: 1 }} />
 
-      {/* Search / Filter / Sort / Group / New — top-right, consistent with other pages */}
+      {/* Search / Filter / Sort / Group / New — top-right */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         {/* Search */}
         <div style={{ position: "relative" }}>
@@ -216,7 +244,6 @@ function TopToolbar(p: DesktopCalendarProps) {
           trigger={<button className="la-btn la-btn--soft la-btn--icon" title={t("book.newAppointment")}><Plus className="h-4 w-4" /></button>}
         />
       </div>
-
     </div>
   );
 }
@@ -274,7 +301,6 @@ function StatusTabs(p: DesktopCalendarProps) {
 
 function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boolean; onClick: () => void; t: TFunction }) {
   const sm = statusMetaOf(ev, t);
-  const intent = intentFor(ev);
   const statusKey = ev.no_show ? "Lost" : (ev.status || "Contacted");
   const av = getLeadStatusAvatarColor(statusKey);
   const initials = ev.lead_name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
@@ -296,10 +322,7 @@ function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boole
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
         <span style={{ color: "var(--mute-2)", display: "flex" }}>{channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-          <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: intent.color }}>{intent.pct}%</span>
-          <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)" }}>{intent.label}</span>
-        </span>
+        {ev.leadScore > 0 && <ScoreArcDonut score={ev.leadScore} />}
       </div>
     </div>
   );
@@ -335,62 +358,29 @@ function AgendaList(p: DesktopCalendarProps) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// CENTER — week / month grid + header + legend
+// CENTER — week / month grid + header (with meetings-this-week KPI)
 // ════════════════════════════════════════════════════════════════════════════
 function CenterHeader(p: DesktopCalendarProps) {
   const { t } = p;
   const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
-  const attendanceRate = 67; // placeholder
-  const highIntentThisWeek = useMemo(
-    () => p.appts.filter((a) => weekKeys.has(a.date) && intentFor(a).key === "high").length,
-    [p.appts, weekKeys],
-  );
+  const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
+
   return (
     <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
       <button onClick={p.onToday} className="la-btn la-btn--soft" style={{ position: "absolute", left: 14 }}>{t("navigation.today")}</button>
       <button onClick={() => p.onNavigate(-1)} style={NAV_BTN} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></button>
       <span style={{ ...SERIF, fontSize: 24, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
       <button onClick={() => p.onNavigate(1)} style={NAV_BTN} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></button>
-      {/* Top-right stats: attendance + high intent */}
-      <div style={{ position: "absolute", right: 14, display: "flex", alignItems: "center", gap: 16, ...MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-          <span style={{ color: "var(--mute-2)" }}>{t("design.kpi.attendance")}</span>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>{attendanceRate}%</span>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-          <span style={{ color: "var(--mute-2)" }}>{t("design.kpi.highIntent")}</span>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>{highIntentThisWeek}</span>
-        </div>
+      {/* Meetings this week — right-aligned in header */}
+      <div style={{ position: "absolute", right: 14, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+        <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+        <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", lineHeight: 1.3 }}>{t("design.kpi.meetings")}</span>
       </div>
     </div>
   );
 }
 
-function Legend({ t }: { t: TFunction }) {
-  const items = [
-    { c: "var(--good)", label: t("design.legend.high") },
-    { c: "var(--warn)", label: t("design.legend.needs") },
-    { c: "var(--stage-lost)", label: t("design.legend.risk") },
-  ];
-  return (
-    <div style={{ height: 40, flexShrink: 0, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18, padding: "0 18px" }}>
-      {items.map((it, i) => (
-        <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: it.c }} />
-          <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)" }}>{it.label}</span>
-        </span>
-      ))}
-      <div style={{ flex: 1 }} />
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--wine)" }}>
-        <Sparkles className="h-3 w-3" />
-        <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase" }}>{t("design.bookedByAI")}</span>
-      </span>
-    </div>
-  );
-}
-
 function WeekEvent({ ev, dayIdx, active, onClick, t }: { ev: Appointment; dayIdx: number; active: boolean; onClick: (e: React.MouseEvent) => void; t: TFunction }) {
-  const intent = intentFor(ev);
   const sm = statusMetaOf(ev, t);
   const startH = Math.min(Math.max(apptHm(ev), HOUR0), HOUR1);
   const topPct = ((startH - HOUR0) / SPAN) * 100;
@@ -398,26 +388,27 @@ function WeekEvent({ ev, dayIdx, active, onClick, t }: { ev: Appointment; dayIdx
   const left = `calc(56px + (100% - 56px) * ${dayIdx} / 7 + 3px)`;
   const width = `calc((100% - 56px) / 7 - 6px)`;
   const faded = ev.no_show;
+  // no-show events get a pale gold border instead of wine
+  const borderColor = ev.no_show ? "var(--warn)" : "var(--wine-soft)";
   return (
-    <DraggableBookingCard
-      appt={ev}
+    <div
       onClick={onClick}
-      className="overflow-hidden"
       style={{
         position: "absolute", top: `${topPct}%`, height: `${hPct}%`, left, width,
         background: active ? "var(--wine)" : "var(--card)", borderRadius: "var(--r-button)",
-        borderLeft: `3px solid ${active ? "var(--wine-soft)" : intent.color}`,
+        borderLeft: `3px solid ${active ? "var(--wine-soft)" : borderColor}`,
         boxShadow: active ? "var(--sh-raised-medium)" : "var(--sh-raised-crisp)",
         padding: "5px 8px", transition: "box-shadow 120ms", opacity: faded ? 0.62 : 1,
+        cursor: "pointer", overflow: "hidden",
       }}
+      data-testid={`booking-card-${ev.id}`}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <span style={{ fontSize: 11.5, fontWeight: 600, color: active ? "var(--paper)" : "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textDecoration: faded ? "line-through" : "none" }}>{ev.lead_name}</span>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: active ? "var(--paper)" : intent.color, flexShrink: 0 }} />
       </div>
       {ev.campaign_name && <div style={{ fontSize: 9.5, color: active ? "rgba(255,250,240,0.82)" : "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
       <div style={{ ...MONO, fontSize: 8, color: active ? "rgba(255,250,240,0.7)" : "var(--mute-2)", marginTop: 2 }}>{ev.time}{sm.key !== "booked" ? ` · ${sm.label}` : ""}</div>
-    </DraggableBookingCard>
+    </div>
   );
 }
 
@@ -466,23 +457,10 @@ function WeekGrid(p: DesktopCalendarProps) {
             </div>
           );
         })}
-        {/* drop targets (per hour, per day) */}
-        {p.weekDays.map((d, di) => {
-          const dateKey = dateKeyOf(d);
-          const colLeft = `calc(56px + (100% - 56px) * ${di} / 7)`;
-          const colWidth = `calc((100% - 56px) / 7)`;
-          return (
-            <div key={`drop-${dateKey}`} style={{ position: "absolute", top: 0, bottom: 0, left: colLeft, width: colWidth }}>
-              {hours.slice(0, -1).map((h, i) => (
-                <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} top={`${(i / SPAN) * 100}%`} height={`${(1 / SPAN) * 100}%`} wineHighlight />
-              ))}
-            </div>
-          );
-        })}
         {/* events */}
         {p.weekDays.map((d, di) => {
           const iso = dateKeyOf(d);
-          return p.appts.filter((e) => e.date === iso).map((e) => (
+          return (p.apptsByDate.get(iso) ?? []).map((e) => (
             <WeekEvent key={e.id} ev={e} dayIdx={di} active={p.selectedBooking?.id === e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} t={t} />
           ));
         })}
@@ -501,7 +479,6 @@ function WeekGrid(p: DesktopCalendarProps) {
 function MonthGrid(p: DesktopCalendarProps) {
   const { t } = p;
   const m = p.month.getMonth();
-  // p.days is a flat 42-cell Sun-first array; chunk into weeks of 7.
   const weeks: { date: Date; count: number }[][] = [];
   for (let i = 0; i < p.days.length; i += 7) weeks.push(p.days.slice(i, i + 7));
 
@@ -517,12 +494,12 @@ function MonthGrid(p: DesktopCalendarProps) {
           <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: wi < weeks.length - 1 ? "1px solid var(--line)" : "none" }}>
             {wk.map((cell, di) => {
               const iso = dateKeyOf(cell.date), inMonth = cell.date.getMonth() === m, isToday = iso === p.todayStr;
-              const items = p.appts.filter((e) => e.date === iso);
+              const items = p.apptsByDate.get(iso) ?? [];
               return (
-                <DroppableDay
+                <div
                   key={iso}
-                  dateKey={iso}
-                  wineHighlight
+                  role="button"
+                  tabIndex={0}
                   aria-label={t("selectDate", { date: iso })}
                   style={{ borderLeft: di ? "1px solid var(--line)" : "none", padding: "7px 8px", minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3, background: isToday ? "rgba(94,34,48,0.03)" : "transparent", opacity: inMonth ? 1 : 0.38 }}
                 >
@@ -530,20 +507,21 @@ function MonthGrid(p: DesktopCalendarProps) {
                     <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 14, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "var(--wine)" : "transparent" }}>{cell.date.getDate()}</span>
                   </div>
                   {items.slice(0, 4).map((e) => {
-                    const intent = intentFor(e);
                     const active = p.selectedBooking?.id === e.id;
+                    // No-show events use a pale gold dot; normal uses wine
+                    const dotColor = e.no_show ? "var(--warn)" : active ? "var(--paper)" : "var(--wine)";
                     return (
-                      <DraggableBookingCard key={e.id} appt={e} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} style={{
+                      <div key={e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} style={{
                         cursor: "pointer", borderRadius: "var(--r-flush)", padding: "3px 7px", display: "flex", alignItems: "center", gap: 6,
                         background: active ? "var(--wine)" : "var(--card)", boxShadow: "var(--sh-raised-crisp)",
                       }}>
-                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "var(--paper)" : intent.color, flexShrink: 0 }} />
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
                         <span style={{ fontSize: 10.5, color: active ? "var(--paper)" : "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.time.replace(/:00/, "")} {e.lead_name.split(" ")[0]}</span>
-                      </DraggableBookingCard>
+                      </div>
                     );
                   })}
                   {items.length > 4 && <span style={{ ...MONO, fontSize: 8.5, color: "var(--mute-2)", paddingLeft: 7 }}>{t("appointment.more", { count: items.length - 4 })}</span>}
-                </DroppableDay>
+                </div>
               );
             })}
           </div>
@@ -565,26 +543,101 @@ function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; va
   );
 }
 
+// Reschedule popover (inline mini date/time form)
+function ReschedulePopover({ ev, onReschedule, t, trigger }: { ev: Appointment; onReschedule: (id: number, d: Date) => Promise<void>; t: TFunction; trigger: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState(ev.date);
+  const [time, setTime] = useState(ev.time);
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    setSaving(true);
+    try {
+      const [h, min] = time.split(":").map(Number);
+      const [y, mo, d] = date.split("-").map(Number);
+      const newDate = new Date(y, mo - 1, d, h, min ?? 0, 0);
+      await onReschedule(ev.id, newDate);
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-3" style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: "var(--r-card)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          <div style={{ ...MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>{t("design.detail.reschedule")}</div>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)}
+            className="neu-input" style={{ height: 32, fontSize: 12, paddingLeft: 10, paddingRight: 6 }} />
+          <input type="time" value={time} onChange={e => setTime(e.target.value)}
+            className="neu-input" style={{ height: 32, fontSize: 12, paddingLeft: 10, paddingRight: 6 }} />
+          <button
+            onClick={submit} disabled={saving}
+            style={{ height: 32, borderRadius: "var(--r-button)", border: "none", cursor: "pointer", background: "var(--wine-grad)", color: "var(--paper)", ...MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, opacity: saving ? 0.6 : 1 }}
+          >
+            {saving ? <RefreshCw className="h-3 w-3 mx-auto animate-spin" /> : t("design.detail.reschedule")}
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function DetailPanel(p: DesktopCalendarProps) {
   const { t } = p;
   const ev = p.selectedBooking;
   if (!ev) {
     return <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", ...MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t("design.detail.selectMeeting")}</div>;
   }
-  const intent = intentFor(ev);
   const sm = statusMetaOf(ev, t);
   const av = getLeadStatusAvatarColor(ev.no_show ? "Lost" : (ev.status || "Contacted"));
-  const recent = p.recentMessages.slice(-2);
-  const reasons = [t("design.detail.placeholderReason1"), t("design.detail.placeholderReason2"), t("design.detail.placeholderReason3")];
+  const aiSummaryRaw = ev.rawLead?.ai_summary ?? ev.rawLead?.aiSummary ?? null;
+  const summary = parseAiSummary(aiSummaryRaw);
 
   return (
     <>
       <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--wine-tint)", border: "1px solid var(--wine-glow)", color: "var(--wine)", borderRadius: "var(--r-pill)", padding: "3px 9px", ...MONO, fontSize: 8.5, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>
-          <Sparkles className="h-2.5 w-2.5" />{t("design.bookedByAI")}
-        </span>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {/* Kebab menu: reschedule + cancel */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={NAV_BTN} title="More actions"><MoreVertical className="h-3.5 w-3.5" /></button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {/* Reschedule — uses its own popover, so we close the dropdown and open it */}
+              <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                className="text-[12px] p-0"
+              >
+                <ReschedulePopover
+                  ev={ev}
+                  onReschedule={p.onReschedule}
+                  t={t}
+                  trigger={
+                    <button className="flex items-center gap-2 w-full px-2 py-1.5 text-[12px] text-left hover:bg-muted/50 rounded">
+                      <RefreshCw className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      {t("design.detail.reschedule")}
+                    </button>
+                  }
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => p.onCancelCall(ev.id)}
+                className="text-[12px] flex items-center gap-2 text-destructive focus:text-destructive"
+              >
+                <XCircle className="h-3.5 w-3.5 shrink-0" />
+                {t("design.detail.cancelCall")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={() => { const leadId = ev.rawLead?.id ?? ev.rawLead?.Id; if (leadId) { try { localStorage.setItem("selected-lead-id", String(leadId)); localStorage.setItem("leadawaker-returnto", "/platform/calendar"); } catch {} window.location.href = "/platform/contacts"; } }} style={NAV_BTN} title={t("design.detail.openInLead")}><Maximize2 className="h-3.5 w-3.5" /></button>
+          {p.showClose && (
+            <button onClick={() => p.onSelectBooking(null)} style={NAV_BTN} title={t("design.detail.close")} aria-label={t("design.detail.close")}><X className="h-3.5 w-3.5" /></button>
+          )}
         </div>
       </div>
 
@@ -611,41 +664,55 @@ function DetailPanel(p: DesktopCalendarProps) {
           <Fact icon={<CalIcon className="h-3.5 w-3.5" />} label={t("design.detail.date")} value={ev.formattedDate} />
           <Fact icon={channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />} label={t("design.detail.channel")} value={channelOf(ev) === "phone" ? t("design.detail.phone") : t("design.detail.googleMeet")} />
           <Fact icon={<Clock className="h-3.5 w-3.5" />} label={t("design.detail.time")} value={`${ev.time} – ${endClockOf(ev)}`} />
+          {/* Lead score replaces fake attendance */}
           <div>
-            <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("design.detail.attendance")}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ ...SERIF, fontSize: 20, color: intent.color, lineHeight: 1 }}>{intent.pct}%</span>
-              <span style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{intent.label}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* why AI booked (placeholder) */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
-            <span style={{ color: "var(--wine)", display: "flex" }}><Sparkles className="h-3.5 w-3.5" /></span>
-            <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>{t("design.detail.whyBooked")}</span>
-          </div>
-          <p style={{ margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>{t("design.detail.placeholderHeadline")}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {reasons.map((r, i) => (
-              <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-                <span style={{ width: 16, height: 16, borderRadius: 5, flexShrink: 0, marginTop: 1, background: "var(--good-tint)", color: "var(--good)", display: "flex", alignItems: "center", justifyContent: "center" }}><Check className="h-2.5 w-2.5" /></span>
-                <span style={{ fontSize: 12, lineHeight: 1.5, color: "var(--ink-soft)" }}>{r}</span>
+            <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("design.detail.leadScore")}</div>
+            {ev.leadScore > 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <ScoreArcDonut score={ev.leadScore} />
+                <span style={{ ...MONO, fontSize: 10, color: "var(--ink-soft)" }}>{ev.leadScore}</span>
               </div>
-            ))}
+            ) : (
+              <span style={{ fontSize: 12, color: "var(--mute-2)" }}>—</span>
+            )}
           </div>
         </div>
 
-        {/* recent conversation (real messages) */}
-        {recent.length > 0 && (
+        {/* AI summary — real data, JSON sections or plain text fallback */}
+        {summary && (
+          <div>
+            <div style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700, marginBottom: 9 }}>{t("design.detail.aiSummary")}</div>
+            {typeof summary === "string" ? (
+              <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>{summary}</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {summary.map((sec) => (
+                  <div key={sec.key} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                    <span style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1, background: "var(--wine-tint)", color: "var(--wine)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {SUMMARY_ICONS[sec.key as SummaryKey] ?? <Info className="h-3 w-3" />}
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ ...MONO, fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", fontWeight: 700, marginBottom: 2 }}>
+                        {t(`design.detail.summary.${sec.key}`, { defaultValue: sec.key })}
+                      </div>
+                      <span style={{ fontSize: 12, lineHeight: 1.5, color: "var(--ink-soft)" }}>{sec.text}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Full conversation thread — admin/owner only */}
+        {p.canSeeConversation && p.recentMessages.length > 0 && (
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
-              <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mute)", fontWeight: 700 }}>{t("design.detail.recentConversation")}</span>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mute)", fontWeight: 700 }}>{t("design.detail.conversation")}</span>
               <button onClick={p.onOpenInLead} style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>{t("design.detail.openInLead")}<ChevronRight className="h-2.5 w-2.5" /></button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {recent.map((m, i) => {
+              {p.recentMessages.map((m, i) => {
                 const isIn = (m.direction || "").toLowerCase() === "inbound";
                 return (
                   <div key={i} style={{
@@ -667,29 +734,93 @@ function DetailPanel(p: DesktopCalendarProps) {
   );
 }
 
+// ── Compact agenda (minimized panel — avatars only) ──────────────────────────
+function CompactAgendaList(p: DesktopCalendarProps) {
+  const items = useMemo(() => p.groupedAppts.flatMap((g) => g.items), [p.groupedAppts]);
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "8px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}>
+      {items.map((a) => {
+        const av = getLeadStatusAvatarColor(a.no_show ? "Lost" : (a.status || "Contacted"));
+        const initials = a.lead_name.split(/\s+/).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
+        const active = p.selectedBooking?.id === a.id;
+        return (
+          <button
+            key={a.id}
+            onClick={() => p.onSelectBooking(a)}
+            title={`${a.lead_name} · ${a.time}`}
+            style={{
+              width: 40, height: 40, borderRadius: "var(--r-surface)", border: "none", cursor: "pointer",
+              background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "var(--mono)", fontSize: 12, fontWeight: 700, flexShrink: 0,
+              boxShadow: active ? "var(--sh-raised-medium)" : "var(--sh-raised-crisp)",
+              outline: active ? "2px solid var(--wine)" : "none", outlineOffset: 1,
+            }}
+          >
+            {initials}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Composition
 // ════════════════════════════════════════════════════════════════════════════
+const DETAIL_W = 372;
+
 export function DesktopCalendar(p: DesktopCalendarProps) {
+  const { state: leftPanelState, cycle } = useListPanelState();
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [rootWidth, setRootWidth] = useState(0);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) setRootWidth(e.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const leftWidth = leftPanelState === "hidden" ? 0 : leftPanelState === "compact" ? 64 : 318;
+  const narrow = rootWidth > 0 && rootWidth - leftWidth - DETAIL_W < 500;
+
   return (
-    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
-      <TopToolbar {...p} />
-      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden" }}>
-        {/* LEFT — agenda (flush toolbar, matches Leads list panel) */}
-        <div style={{ ...CARD_STYLE, width: 318, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
-          <StatusTabs {...p} />
-          <AgendaList {...p} />
-        </div>
+    <div ref={rootRef} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
+      <TopToolbar {...p} leftPanelState={leftPanelState} onCyclePanel={cycle} />
+      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden", position: "relative" }}>
+        {/* LEFT — agenda (full | minimized | hidden) */}
+        {leftPanelState !== "hidden" && (
+          <div style={{ ...CARD_STYLE, width: leftWidth, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
+            {leftPanelState === "compact" ? (
+              <CompactAgendaList {...p} />
+            ) : (
+              <>
+                <StatusTabs {...p} />
+                <AgendaList {...p} />
+              </>
+            )}
+          </div>
+        )}
         {/* CENTER — calendar (no rounded corners, flush edges) */}
         <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)", borderRadius: 0 }}>
           <CenterHeader {...p} />
           {p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
-          <Legend t={p.t} />
         </div>
-        {/* RIGHT — detail (no rounded corners, equal top/bottom margin) */}
-        <div style={{ ...CARD_STYLE, width: 372, flexShrink: 0, borderRadius: 0, marginLeft: "auto" }}>
-          <DetailPanel {...p} />
-        </div>
+        {/* RIGHT — detail: inline column or floating popup when narrow */}
+        {narrow ? (
+          p.selectedBooking && (
+            <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
+              <DetailPanel {...p} showClose />
+            </div>
+          )
+        ) : (
+          <div style={{ ...CARD_STYLE, width: DETAIL_W, flexShrink: 0, borderRadius: 0, marginLeft: "auto" }}>
+            <DetailPanel {...p} />
+          </div>
+        )}
       </div>
     </div>
   );

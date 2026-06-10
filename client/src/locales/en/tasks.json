@@ -1,4 +1,18 @@
 {
+  "activity": {
+    "title": "Activity",
+    "none": "No activity yet",
+    "empty": "none",
+    "created": "created this task",
+    "cloned": "cloned this task",
+    "statusChanged": "changed status from {{old}} to {{new}}",
+    "priorityChanged": "changed priority from {{old}} to {{new}}",
+    "assigneeChanged": "changed assignee from {{old}} to {{new}}",
+    "dueDateChanged": "changed due date from {{old}} to {{new}}",
+    "categoryChanged": "changed category from {{old}} to {{new}}",
+    "titleChanged": "changed title from {{old}} to {{new}}",
+    "changed": "changed {{field}}"
+  },
   "page": {
     "title": "Tasks",
     "searchPlaceholder": "Search tasks...",
@@ -29,7 +43,9 @@
     "updated": "Updated",
     "back": "Back",
     "markComplete": "Mark complete",
-    "reopen": "Reopen task"
+    "reopen": "Reopen task",
+    "cancel": "Cancel",
+    "clone": "Clone"
   },
   "relative": {
     "today": "Today",
@@ -79,7 +95,8 @@
     "clearEmoji": "Clear",
     "timeEstimate": "Time Estimate",
     "hours": "hrs",
-    "minutes": "min"
+    "minutes": "min",
+    "checklist": "Checklist"
   },
   "linked": {
     "account": "Account:",
@@ -158,7 +175,7 @@
     "check": "Mark complete",
     "uncheck": "Mark incomplete",
     "add": "Add",
-    "addPlaceholder": "Add a sub-task...",
+    "addPlaceholder": "Add an item...",
     "delete": "Delete sub-task",
     "moveUp": "Move up",
     "moveDown": "Move down"
@@ -221,5 +238,20 @@
     "deleteDescWithTasks": "Are you sure you want to delete \"{{name}}\"? {{count}} task(s) in this category will become uncategorized.",
     "confirmDelete": "Delete",
     "cancelDelete": "Cancel"
+  },
+  "comments": {
+    "title": "Comments ({{count}})",
+    "placeholder": "Add a comment...",
+    "unknown": "Unknown"
+  },
+  "attachments": {
+    "title": "Attachments ({{count}})",
+    "add": "+ Attach file",
+    "dropHint": "Drop files here"
+  },
+  "due": {
+    "overdue": "Overdue",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
   }
 }

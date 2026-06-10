@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Brain, Terminal, Search, FileCode, Globe, MousePointerClick, Lock, LockOpen } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Brain, Terminal, Search, FileCode, Globe, MousePointerClick, Lock, LockOpen, Pencil, GitFork, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -293,12 +293,21 @@ function MessageBubble({
   agent,
   onApplyCampaign,
   isLastInStreak,
+  onEditResend,
+  onFork,
 }: {
   msg: AgentMessage;
   agent: AiAgent;
   onApplyCampaign?: (campaignId: string, fields: Record<string, string>) => void;
   isLastInStreak?: boolean;
+  onEditResend?: (messageId: number, newText: string) => void;
+  onFork?: (upToMessageId: number) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const editRef = useRef<HTMLTextAreaElement>(null);
+
   const isUser = msg.role === "user";
   const isSkill = !!(msg.metadata?.skillId);
   const isSkillError = !!(msg.metadata?.error);
@@ -312,8 +321,81 @@ function MessageBubble({
     : "";
 
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+    <div
+      className={cn("flex", isUser ? "justify-end" : "justify-start")}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="relative w-full" style={{ maxWidth: "100%" }}>
+        {/* Hover action buttons */}
+        {hovered && !editing && msg.id && (
+          <div className={cn(
+            "absolute -top-6 flex items-center gap-0.5 z-10",
+            isUser ? "right-0" : "left-0",
+          )}>
+            {onFork && (
+              <button
+                onClick={() => onFork(msg.id!)}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                title="Fork conversation from here"
+              >
+                <GitFork className="h-3 w-3" />
+                <span>Fork</span>
+              </button>
+            )}
+            {isUser && onEditResend && (
+              <button
+                onClick={() => {
+                  setEditText(displayContent);
+                  setEditing(true);
+                  setTimeout(() => editRef.current?.focus(), 50);
+                }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                title="Edit and resend"
+              >
+                <Pencil className="h-3 w-3" />
+                <span>Edit</span>
+              </button>
+            )}
+          </div>
+        )}
+        {/* Inline edit mode */}
+        {editing ? (
+          <div className="flex flex-col gap-1.5">
+            <textarea
+              ref={editRef}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (editText.trim() && msg.id && onEditResend) {
+                    onEditResend(msg.id, editText.trim());
+                    setEditing(false);
+                  }
+                }
+                if (e.key === "Escape") setEditing(false);
+              }}
+              className="w-full bg-white dark:bg-card border border-brand-indigo/40 rounded-xl px-3 py-2 text-[14px] resize-none focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
+              rows={3}
+            />
+            <div className="flex items-center gap-1.5 justify-end">
+              <button
+                onClick={() => setEditing(false)}
+                className="px-2.5 py-1 text-[11px] rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/50 transition-colors"
+              >Cancel</button>
+              <button
+                onClick={() => {
+                  if (editText.trim() && msg.id && onEditResend) {
+                    onEditResend(msg.id, editText.trim());
+                    setEditing(false);
+                  }
+                }}
+                className="px-2.5 py-1 text-[11px] rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors"
+              >Send</button>
+            </div>
+          </div>
+        ) : (
         <div
           className={cn(
             "px-3 pt-2 pb-1.5 text-[15px] relative",
@@ -413,6 +495,7 @@ function MessageBubble({
             <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
           )}
         </div>
+        )}
       </div>
     </div>
   );
@@ -453,6 +536,8 @@ export function AgentChatView({
   onConfirmDestructive,
   onCancelDestructive,
   onAbort,
+  onEditResend,
+  onFork,
   fullPage,
   selectedElement,
   onClearElement,
@@ -473,6 +558,8 @@ export function AgentChatView({
   onConfirmDestructive?: () => void;
   onCancelDestructive?: () => void;
   onAbort?: () => void;
+  onEditResend?: (messageId: number, newText: string) => void;
+  onFork?: (upToMessageId: number) => void;
   fullPage?: boolean;
   selectedElement?: SelectedElementInfo | null;
   selectionLocked?: boolean;
@@ -561,9 +648,9 @@ export function AgentChatView({
     }
     if (cmd === "/model") {
       const MODEL_MAP: Record<string, string> = {
-        sonnet: "claude-sonnet-4-20250514",
-        opus: "claude-opus-4-20250514",
-        haiku: "claude-haiku-4-5-20251001",
+        sonnet: "claude-sonnet-4-6",
+        opus: "claude-opus-4-8",
+        haiku: "claude-haiku-4-5",
       };
       const modelKey = args[0];
       const modelId = modelKey ? MODEL_MAP[modelKey] : null;
@@ -1068,7 +1155,7 @@ export function AgentChatView({
   const isCodeRunner = agent.type === "code_runner";
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#f5f5f5] dark:bg-[#1a1a2e]">
+    <div className="flex flex-col h-full overflow-hidden bg-transparent">
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain px-4 pt-4 pb-4">
         <div className="flex flex-col">
@@ -1108,6 +1195,8 @@ export function AgentChatView({
                     agent={agent}
                     isLastInStreak={isLastBeforeStreaming ? false : isLastInStreak}
                     onApplyCampaign={undefined}
+                    onEditResend={!streaming ? onEditResend : undefined}
+                    onFork={!streaming ? onFork : undefined}
                   />
                 </div>
               );

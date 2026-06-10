@@ -10,7 +10,7 @@
 
 import webpush from "web-push";
 import { storage } from "./storage";
-import { broadcast } from "./sse";
+import { broadcastToUser } from "./sse";
 import type { InsertNotifications, Notifications } from "../shared/schema";
 
 // ── VAPID setup (lazy, only if env vars are present) ───────────────────────
@@ -141,10 +141,10 @@ export async function createAndDispatchNotification(
   // 1. Create the in-app notification
   const notif = await storage.createNotification(data);
 
-  // 2. Emit SSE event so the frontend receives it in real-time
-  if (notif.accountId) {
-    broadcast(notif.accountId, "notification", notif);
-  }
+  // 2. Emit SSE event so the frontend receives it in real-time.
+  //    Target the recipient user only — notifications are private and must not
+  //    fan out to other users on the account or to agency "all accounts" watchers.
+  broadcastToUser(notif.userId, "notification", notif);
 
   // 3. Load user preferences (fire-and-forget for external channels)
   dispatchExternal(notif).catch((err) => {

@@ -191,7 +191,7 @@ export function MTDue({
 // ── Group header bar ─────────────────────────────────────────────────────────
 export function MTGroupBar({ label, count, accent }: { label: string; count: number; accent?: string | null }) {
   return (
-    <div className="row" style={{ gap: 9, padding: "14px 2px 6px" }}>
+    <div className="row" style={{ gap: 9, padding: "14px 2px 6px", position: 'sticky', top: 0, zIndex: 5, background: 'var(--bg)', boxShadow: '0 -8px 0 8px var(--bg)' }}>
       <span
         style={{
           fontFamily: "var(--mono)",

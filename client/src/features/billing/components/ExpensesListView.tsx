@@ -62,7 +62,7 @@ function ExpenseGroupHeader({ label, count }: { label: string; count: number }) 
   const { t } = useTranslation("billing");
   const displayLabel = label === "Undated" ? t("expenses.empty.undated") : label;
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3" style={{ boxShadow: '0 -8px 0 8px hsl(var(--muted))' }}>
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{displayLabel}</span>
@@ -339,10 +339,11 @@ export function ExpensesListView({
 }
 
 // ── Export raw data hook for parent to find latest ────────────────────────────
-export function useExpensesData() {
+export function useExpensesData(enabled = true) {
   return useQuery<ExpenseRow[]>({
     queryKey: ["expenses"],
     queryFn: async () => fetchExpenses(),
     staleTime: 1000 * 60 * 5,
+    enabled,
   });
 }

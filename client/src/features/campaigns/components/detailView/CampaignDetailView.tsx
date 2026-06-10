@@ -51,6 +51,7 @@ const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
 import type { SavedTemplate } from "./types";
 import { PromptEditorPanel } from "@/features/prompts/components/PromptEditorPanel";
 import { FileText, X as XIcon, Eye, EyeOff } from "lucide-react";
+import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { DetailViewToolbar } from "./DetailViewToolbar";
 import { DetailViewHeader } from "./DetailViewHeader";
@@ -106,6 +107,7 @@ export function CampaignDetailView({
 }: CampaignDetailViewProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser, isAdmin } = useWorkspace();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   // ── Delegate data fetching + edit logic to hook ───────────────────────────
@@ -216,30 +218,7 @@ export function CampaignDetailView({
   const promptPanelOpen = promptPanelOpenProp ?? false;
   const togglePromptPanel = onTogglePromptPanelProp ?? (() => {});
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
-
-  // ── Prompt panel drag-to-resize ────────────────────────────────────────────
-  const [promptPanelWidth, setPromptPanelWidth] = usePersistedState<number>("campaigns-prompt-panel-width", 520);
-  const isDraggingPrompt = useRef(false);
-  const dragStartX = useRef(0);
-  const dragStartWidth = useRef(0);
-  const onPromptDragStart = useCallback((e: React.MouseEvent) => {
-    isDraggingPrompt.current = true;
-    dragStartX.current = e.clientX;
-    dragStartWidth.current = promptPanelWidth;
-    e.preventDefault();
-    const onMove = (me: MouseEvent) => {
-      if (!isDraggingPrompt.current) return;
-      const delta = dragStartX.current - me.clientX;
-      setPromptPanelWidth(Math.max(320, Math.min(900, dragStartWidth.current + delta)));
-    };
-    const onUp = () => {
-      isDraggingPrompt.current = false;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }, [promptPanelWidth, setPromptPanelWidth]);
+  const [promptSidebarOpen, setPromptSidebarOpen] = useState(false);
 
   // ── Animation trigger on campaign change ──────────────────────────────────
   const [animTrigger, setAnimTrigger] = useState(0);
@@ -503,25 +482,40 @@ export function CampaignDetailView({
 
       {/* Prompt panel — agency only, visible when open */}
       {promptPanelOpen && isAgencyUser && (
-        <div style={{ width: promptPanelWidth }} className="shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden relative">
-          {/* Drag handle */}
-          <div onMouseDown={onPromptDragStart} className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-brand-indigo/30 transition-colors z-10" />
+        <div className="flex-1 shrink-0 flex flex-col border-l border-border bg-popover dark:bg-background overflow-hidden relative" style={{ minWidth: 320 }}>
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-2 text-[13px] font-semibold">
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <button
+                onClick={() => detail.linkedPrompt && setLocation("/platform/prompt-library")}
+                className={cn("flex items-center justify-center transition-colors rounded", detail.linkedPrompt ? "text-muted-foreground hover:text-foreground cursor-pointer" : "text-muted-foreground/40 cursor-default")}
+                title={detail.linkedPrompt ? "Open in Prompt Library" : undefined}
+                style={{ background: "none", border: "none", padding: 0 }}
+              >
+                <FileText className="h-4 w-4" />
+              </button>
               <span>{detail.linkedPrompt?.name ?? t("toolbar.promptPanel", "Prompt Editor")}</span>
               {detail.linkedPrompt && (
                 <span className="text-[11px] text-muted-foreground font-mono tabular-nums">#{detail.linkedPrompt.id || detail.linkedPrompt.Id}</span>
               )}
             </div>
             <div className="flex items-center gap-1">
+              {/* Preview toggle — text label */}
               <button
                 onClick={() => setPromptPreviewOpen(p => !p)}
-                className={cn("h-7 w-7 rounded-full flex items-center justify-center transition-colors", promptPreviewOpen ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
-                title={promptPreviewOpen ? "Hide preview" : "Preview variables"}
+                className={cn("h-7 px-2 rounded flex items-center gap-1 text-[11px] font-medium transition-colors", promptPreviewOpen ? "text-amber-600 bg-amber-500/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                title={promptPreviewOpen ? "Hide preview" : "Show preview"}
               >
-                {promptPreviewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                Preview
+              </button>
+              {/* Sidebar (sections/variables) toggle — eye icon */}
+              <button
+                onClick={() => setPromptSidebarOpen(p => !p)}
+                className={cn("h-7 w-7 rounded-full flex items-center justify-center transition-colors", promptSidebarOpen ? "text-muted-foreground bg-muted/50" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                style={promptSidebarOpen ? { color: "var(--wine)", background: "var(--wine-tint)" } : undefined}
+                title={promptSidebarOpen ? "Hide sections & variables" : "Show sections & variables"}
+              >
+                {promptSidebarOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
               <button
                 onClick={togglePromptPanel}
@@ -565,6 +559,7 @@ export function CampaignDetailView({
                 }]}
                 previewOpen={promptPreviewOpen}
                 setPreviewOpen={setPromptPreviewOpen}
+                showSidebar={promptSidebarOpen}
                 editorFontSize={13}
                 splitPreview={false}
               />

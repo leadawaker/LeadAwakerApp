@@ -107,6 +107,26 @@ export function AISectionFields({
 
       {[1, 2, 3, 4].map(n => renderBump(n))}
 
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={MessageCircle} label={t("config.reengagementBump")} value={campaign.reengagement_bump_template}
+          {...editFor("reengagement_bump_template")}
+          editChild={isEditing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+              <EditText
+                value={String(draft.reengagement_bump_template ?? campaign.reengagement_bump_template ?? "")}
+                onChange={(v) => setDraft(d => ({ ...d, reengagement_bump_template: v }))}
+                multiline
+                minRows={2}
+                placeholder={t("config.reengagementBumpPlaceholder")}
+                {...focusFor("reengagement_bump_template")}
+              />
+              <span style={{ fontSize: 11, color: 'var(--mute)' }}>{t("config.reengagementBumpHint")}</span>
+              <CopyButton value={String(draft.reengagement_bump_template || campaign.reengagement_bump_template || "")} />
+            </div>
+          ) : undefined}
+        />
+      </div>
+
       <InfoRow icon={Zap} label={t("config.model")} value={campaign.ai_model}
         {...editFor("ai_model")}
         editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={MODEL_OPTIONS} {...focusFor("ai_model")} /> : undefined}

@@ -166,11 +166,22 @@ export function CampaignListCard({
 
 export function GroupHeader({ label, count, isFirst }: { label: string; count: number; isFirst?: boolean }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: isFirst ? '8px 17px 2px' : '12px 17px 2px' }}
-      data-group-header="true">
-      {!isFirst && <div className="rule" />}
-      <span className="eyebrow eyebrow-sm">{label} — {count}</span>
-    </div>
+    <>
+      {!isFirst && <div className="rule" style={{ margin: '10px 9px 0 11px' }} />}
+      <div
+        data-group-header="true"
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 5,
+          background: 'hsl(var(--panel-list-bg))',
+          padding: isFirst ? '2px 17px 6px' : '8px 17px 6px',
+          boxShadow: '0 -8px 0 8px hsl(var(--panel-list-bg))',
+        }}
+      >
+        <span className="eyebrow eyebrow-sm">{label} — {count}</span>
+      </div>
+    </>
   );
 }
 

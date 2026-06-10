@@ -31,7 +31,6 @@ export const PIPELINE_STAGES = [
   { key: "Multiple Responses", short: "Multi" },
   { key: "Qualified",          short: "Qualified" },
   { key: "Booked",             short: "Booked ★" },
-  { key: "Closed",             short: "Closed" },
 ];
 
 export const LOST_STAGES = ["Lost", "DND"];
@@ -44,7 +43,6 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; dot: stri
   "Multiple Responses": { bg: "bg-purple-500/10",  text: "text-purple-700 dark:text-purple-400", dot: "bg-purple-500",  badge: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800" },
   Qualified:            { bg: "bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-400",dot: "bg-emerald-500", badge: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800" },
   Booked:               { bg: "bg-amber-400/15",   text: "text-amber-700 dark:text-amber-400",  dot: "bg-amber-500",   badge: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800" },
-  Closed:               { bg: "bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-400",dot: "bg-emerald-500", badge: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800" },
   Lost:                 { bg: "bg-red-500/10",     text: "text-red-700 dark:text-red-400",      dot: "bg-red-500",     badge: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" },
   DND:                  { bg: "bg-zinc-500/10",    text: "text-zinc-600 dark:text-zinc-400",    dot: "bg-zinc-500",    badge: "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/60 dark:text-zinc-400 dark:border-zinc-700" },
 };
@@ -57,7 +55,6 @@ export const STAGE_ICON: Record<string, React.ElementType> = {
   "Multiple Responses": Users,
   Qualified: Star,
   Booked: Calendar,
-  Closed: Check,
 };
 
 // ── Default anchor stage for terminal statuses ───────────────────────────────
@@ -103,7 +100,6 @@ export const CARD_FUNNEL_HINTS: Record<string, string> = {
   "Multiple Responses": "Ready to qualify",
   Qualified: "Schedule a call",
   Booked: "Call scheduled",
-  Closed: "Deal closed",
   DND: "Do not contact",
   Lost: "Lead lost",
 };
@@ -111,7 +107,7 @@ export const CARD_FUNNEL_HINTS: Record<string, string> = {
 // ── Client-side funnel weights (mirrors server scoring logic) ─────────────────
 export const CLIENT_FUNNEL_WEIGHTS: Record<string, number> = {
   New: 0, Contacted: 5, Responded: 15, "Multiple Responses": 25,
-  Qualified: 35, Booked: 45, Closed: 50, DND: 0, Lost: 0,
+  Qualified: 35, Booked: 45, DND: 0, Lost: 0,
 };
 
 // ── AI triggered-by set ───────────────────────────────────────────────────────
@@ -138,7 +134,6 @@ export const ALL_MOBILE_KANBAN_STAGES = [
   { key: "Multiple Responses", short: "Multi"   },
   { key: "Qualified",          short: "Qualify" },
   { key: "Booked",             short: "Booked ★"},
-  { key: "Closed",             short: "Closed"  },
   { key: "Lost",               short: "Lost"    },
   { key: "DND",                short: "DND"     },
 ] as const;
@@ -146,7 +141,7 @@ export const ALL_MOBILE_KANBAN_STAGES = [
 // ── All lead filter stages ────────────────────────────────────────────────────
 export const ALL_LEAD_FILTER_STAGES = [
   "New", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Closed", "Lost", "DND",
+  "Qualified", "Booked", "Lost", "DND",
 ];
 
 // ── Lead sort options ─────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { cn } from "@/lib/utils";
 import {
   Phone, Mail, Building2, MessageSquare, AlertTriangle,
-  Tag as TagIcon, Pencil, Trash2,
+  Tag as TagIcon, Pencil, Trash2, Clock,
 } from "lucide-react";
 import { resolveColor } from "@/features/tags/types";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
@@ -107,6 +107,11 @@ export function LeadCard({
   const statusHex    = PIPELINE_HEX[status] || "#6B7280";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const visibleTags  = leadTags.slice(0, 3);
+  const isContactLater = leadTags.some((tg) => tg.name === "Contact Later");
+  const resumeRaw = lead.next_action_at || lead.nextActionAt || null;
+  const resumeDate = isContactLater && resumeRaw
+    ? new Date(resumeRaw).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : "";
   const statusColors = STATUS_COLORS[status] ?? { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-zinc-400", badge: "bg-zinc-100 text-zinc-600 border-zinc-200" };
   const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
   const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
@@ -378,6 +383,15 @@ export function LeadCard({
                   style={{ backgroundColor: statusHex, color: statusHex }}
                 />
                 <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
+                {resumeDate && (
+                  <span
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0"
+                    title={t("tags.resumesOn", { date: resumeDate })}
+                  >
+                    <Clock className="h-3 w-3 shrink-0" />
+                    {resumeDate}
+                  </span>
+                )}
               </div>
 
               {isDemo && (

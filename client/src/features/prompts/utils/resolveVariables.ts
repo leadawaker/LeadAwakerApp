@@ -25,6 +25,7 @@ export interface CampaignForPreview {
   aiRole?: string | null;
   typoCount?: number | null;
   kb?: string | null;
+  accountsId?: number | null;
 }
 
 export interface LeadForPreview {
@@ -92,6 +93,22 @@ export function buildMap(
     what_has_the_lead_done: campaign?.whatLeadDid || "",
     when: "",
     service: campaign?.serviceName ?? campaign?.campaignService ?? "",
+    // ── Campaign summary snapshot variables (sample values for preview) ──
+    // The AI engine fills these with live numbers at runtime; here we show a
+    // representative snapshot so the system prompt preview is not empty.
+    campaignname: campaign?.name,
+    campaignstatus: campaign ? "Active" : undefined,
+    campaigndescription: campaign?.description,
+    campaigncreatedat: campaign ? new Date().toLocaleDateString() : undefined,
+    reportdate: new Date().toLocaleDateString(),
+    totalleads: campaign ? "320" : undefined,
+    pipelinebreakdown: campaign
+      ? "New: 120 · Contacted: 95 · Responded: 60 · Booked: 18"
+      : undefined,
+    responserate: campaign ? "24%" : undefined,
+    responded: campaign ? "76" : undefined,
+    bookingrate: campaign ? "6%" : undefined,
+    booked: campaign ? "18" : undefined,
   };
 }
 

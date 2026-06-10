@@ -26,6 +26,7 @@ export type Appointment = {
   callDurationMinutes: number;
   rawLead: Record<string, any>;
   timezone?: string;
+  leadScore: number;
 };
 
 // ── Shared card chrome ───────────────────────────────────────────────────────
@@ -40,27 +41,10 @@ export const CARD_STYLE: CSSProperties = {
   overflow: "hidden",
 };
 
-// Week-grid window (matches the design): 8am–7pm.
-export const HOUR0 = 8;
-export const HOUR1 = 19;
+// Week-grid window: 6am–9pm.
+export const HOUR0 = 6;
+export const HOUR1 = 21;
 export const SPAN = HOUR1 - HOUR0;
-
-// ── Intent (placeholder %, colour driven by REAL meeting status) ─────────────
-// Real leads have no "likelihood" score, so the % is a deterministic placeholder
-// derived from the lead id (stable per lead). The colour band, however, reflects
-// real data: no-show → at-risk, rescheduled → needs-confirmation, else high.
-export type Intent = { key: "high" | "medium" | "low"; color: string; tint: string; label: string; pct: number };
-
-export function intentFor(appt: Pick<Appointment, "id" | "no_show" | "re_scheduled_count">): Intent {
-  const id = Number(appt.id) || 0;
-  if (appt.no_show) {
-    return { key: "low", color: "var(--stage-lost)", tint: "rgba(162,75,63,0.12)", label: "Low", pct: 28 + (id % 11) };
-  }
-  if (appt.re_scheduled_count > 0) {
-    return { key: "medium", color: "var(--warn)", tint: "var(--warn-tint)", label: "Medium", pct: 48 + (id % 21) };
-  }
-  return { key: "high", color: "var(--good)", tint: "var(--good-tint)", label: "High", pct: 72 + (id % 25) };
-}
 
 // ── Meeting lifecycle status (filter dimension) ──────────────────────────────
 export type StatusKey = "booked" | "noshow" | "rescheduled";
@@ -76,7 +60,8 @@ export function statusMetaOf(
   const key = statusKeyOf(appt);
   switch (key) {
     case "noshow":
-      return { key, label: t("design.status.noShow"), color: "var(--stage-lost)", tint: "rgba(162,75,63,0.12)" };
+      // Pale gold treatment — distinct from a lost lead, visually muted
+      return { key, label: t("design.status.noShow"), color: "var(--warn)", tint: "var(--warn-tint)" };
     case "rescheduled":
       return { key, label: t("design.status.rescheduled"), color: "var(--warn)", tint: "var(--warn-tint)" };
     default:
@@ -84,7 +69,7 @@ export function statusMetaOf(
   }
 }
 
-// ── Channel (placeholder: calendar_link → video meet, else phone) ────────────
+// ── Channel (calendar_link → video meet, else phone) ─────────────────────────
 export function channelOf(appt: Pick<Appointment, "calendar_link" | "phone" | "email">): "video" | "phone" {
   if (!appt.email && appt.phone && !appt.calendar_link) return "phone";
   return "video";

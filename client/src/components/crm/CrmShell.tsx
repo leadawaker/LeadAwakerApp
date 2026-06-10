@@ -9,7 +9,6 @@ import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
 import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
 import { SettingsPanel } from "@/components/crm/SettingsPanel";
 import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
-import { DesignTokenPanel } from "@/components/ui/design-token-panel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ImpersonationBanner } from "@/components/crm/ImpersonationBanner";
 import { cn } from "@/lib/utils";
@@ -226,7 +225,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           collapsed={false}
           onCollapse={handleCollapse}
           onOpenSupport={() => setActivePanel('support')}
-          onOpenSearch={() => setActivePanel('search')}
+          onOpenAi={toggleAiWidget}
           onOpenNotifications={() => setActivePanel('notifications')}
           onToggleHelp={() => setActivePanel('help')}
           onOpenSettings={() => setActivePanel('settings')}
@@ -316,9 +315,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       {/* CRM color customization tool — dev only, opened by the nav Paint button */}
       {import.meta.env.DEV && <ColorPickerWidget open={colorPickerOpen} onClose={() => setColorPickerOpen(false)} />}
-
-      {/* Surface token tuner — dev only, self-contained floating launcher (right edge) */}
-      {import.meta.env.DEV && <DesignTokenPanel />}
     </div>
     </TopbarActionsProvider>
   );

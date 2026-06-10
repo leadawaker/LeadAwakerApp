@@ -122,15 +122,26 @@ function CTA() {
   const formHeightRef = React.useRef(null);
 
   React.useEffect(() => {
+    const handleAuditChange = (e) => {
+      const { quotes: q, silentPct: sp, avgValue: av } = e.detail;
+      if (q !== undefined && q !== quotes) setQuotes(q);
+      if (sp !== undefined && sp !== silentPct) setSilentPct(sp);
+      if (av !== undefined && av !== avgValue) setAvgValue(av);
+    };
+    window.addEventListener('auditSliderChange', handleAuditChange);
+
     const interval = setInterval(() => {
       if (window.__leadAwakerCalc) {
-        if (window.__leadAwakerCalc.quotes !== undefined) setQuotes(window.__leadAwakerCalc.quotes);
-        if (window.__leadAwakerCalc.silentPct !== undefined) setSilentPct(window.__leadAwakerCalc.silentPct);
-        if (window.__leadAwakerCalc.avgValue !== undefined) setAvgValue(window.__leadAwakerCalc.avgValue);
+        if (window.__leadAwakerCalc.quotes !== undefined && window.__leadAwakerCalc.quotes !== quotes) setQuotes(window.__leadAwakerCalc.quotes);
+        if (window.__leadAwakerCalc.silentPct !== undefined && window.__leadAwakerCalc.silentPct !== silentPct) setSilentPct(window.__leadAwakerCalc.silentPct);
+        if (window.__leadAwakerCalc.avgValue !== undefined && window.__leadAwakerCalc.avgValue !== avgValue) setAvgValue(window.__leadAwakerCalc.avgValue);
       }
     }, 100);
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('auditSliderChange', handleAuditChange);
+    };
+  }, [quotes, silentPct, avgValue]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -466,6 +477,25 @@ function CalInlineEmbed({ prefill, style }) {
 }
 
 function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, numbersAccurate, setNumbersAccurate, name }) {
+  const handleSliderChange = (setter, value) => {
+    setter(value);
+    window.__leadAwakerCalc = window.__leadAwakerCalc || {};
+    if (setter === setQuotes) {
+      window.__leadAwakerCalc.quotes = value;
+    } else if (setter === setSilentPct) {
+      window.__leadAwakerCalc.silentPct = value;
+    } else if (setter === setAvgValue) {
+      window.__leadAwakerCalc.avgValue = value;
+    }
+    window.dispatchEvent(new CustomEvent('ctaSliderChange', {
+      detail: {
+        quotes: setter === setQuotes ? value : quotes,
+        silentPct: setter === setSilentPct ? value : silentPct,
+        avgValue: setter === setAvgValue ? value : avgValue
+      }
+    }));
+  };
+
   const rows = [
     { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString('nl-NL') },
     { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
@@ -490,7 +520,7 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
               type="range" className="cta-slider"
               min={row.min} max={row.max} step={row.step}
               value={row.value}
-              onChange={(e) => row.setValue(Number(e.target.value))}
+              onChange={(e) => handleSliderChange(row.setValue, Number(e.target.value))}
               style={{
                 '--pct': (((row.value - row.min) / (row.max - row.min)) * 100).toFixed(1) + "%",
                 width: "100%", cursor: "pointer",

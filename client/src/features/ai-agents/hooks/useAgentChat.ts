@@ -712,6 +712,67 @@ export function useAgentChat() {
     }
   }, [agent]);
 
+  /** Edit a past user message and re-send — truncates history from that message onward */
+  const editAndResend = useCallback(async (messageId: number, newText: string) => {
+    if (!session || streaming) return;
+    const idx = messagesRef.current.findIndex((m) => m.id === messageId);
+    if (idx === -1) return;
+    // Truncate messages from this index (remove the edited message + everything after)
+    const kept = messagesRef.current.slice(0, idx);
+    setMessages(kept);
+    messagesRef.current = kept;
+    // Delete the truncated messages server-side
+    try {
+      await apiFetch(`/api/agents/sessions/${session.sessionId}/messages-from/${messageId}`, { method: "DELETE" });
+    } catch {
+      // ignore — optimistic truncation is fine
+    }
+    // Re-send with the new text
+    await sendMessage(newText);
+  }, [session, streaming, sendMessage]);
+
+  /** Retry the last exchange — removes the last assistant reply and re-sends the last user message */
+  const retryLast = useCallback(async () => {
+    if (!session || streaming) return;
+    const msgs = messagesRef.current;
+    // Find the last user message
+    let lastUserIdx = -1;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      if (msgs[i].role === "user") { lastUserIdx = i; break; }
+    }
+    if (lastUserIdx === -1) return;
+    const lastUserMsg = msgs[lastUserIdx];
+    // Truncate everything from that user message onward
+    const kept = msgs.slice(0, lastUserIdx);
+    setMessages(kept);
+    messagesRef.current = kept;
+    try {
+      if (lastUserMsg.id) {
+        await apiFetch(`/api/agents/sessions/${session.sessionId}/messages-from/${lastUserMsg.id}`, { method: "DELETE" });
+      }
+    } catch {
+      // ignore
+    }
+    await sendMessage(lastUserMsg.content);
+  }, [session, streaming, sendMessage]);
+
+  /** Fork the conversation up to (and including) a given message — opens the new session */
+  const forkSession = useCallback(async (upToMessageId: number): Promise<string | null> => {
+    if (!session) return null;
+    try {
+      const res = await apiFetch(`/api/agents/sessions/${session.sessionId}/fork`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ upToMessageId }),
+      });
+      if (!res.ok) return null;
+      const { sessionId } = await res.json();
+      return sessionId as string;
+    } catch {
+      return null;
+    }
+  }, [session]);
+
   /** Delete the current conversation (hard delete: files, messages, session) and start fresh */
   const deleteConversation = useCallback(async () => {
     if (!session) return;
@@ -884,6 +945,9 @@ export function useAgentChat() {
     initialize,
     sendMessage,
     executeSkill,
+    editAndResend,
+    retryLast,
+    forkSession,
     deleteConversation,
     newSession,
     loadSession,

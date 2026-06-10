@@ -169,9 +169,7 @@
   },
   "design": {
     "kpi": {
-      "meetings": "Meetings this week",
-      "attendance": "Avg. attendance",
-      "highIntent": "High intent · 70%+"
+      "meetings": "Meetings this week"
     },
     "tabs": {
       "all": "All",
@@ -184,29 +182,34 @@
       "noShow": "No-show",
       "rescheduled": "Rescheduled"
     },
-    "legend": {
-      "high": "High intent · 70%+",
-      "needs": "Needs confirmation · 40–70%",
-      "risk": "At risk · <40%"
-    },
-    "bookedByAI": "Booked by AI",
     "detail": {
       "date": "Date",
       "channel": "Channel",
       "time": "Time",
-      "attendance": "Attendance",
-      "whyBooked": "Why AI booked this",
-      "recentConversation": "Recent conversation",
+      "leadScore": "Lead Score",
+      "aiSummary": "Conversation Summary",
+      "summary": {
+        "situation": "Situation",
+        "pain": "Pain",
+        "goal": "Goal",
+        "objection": "Objection",
+        "nextStep": "Next step"
+      },
+      "conversation": "Conversation",
       "openInLead": "Open in lead",
       "selectMeeting": "Select a meeting",
       "noMeetings": "No meetings",
       "aiAgent": "AI Agent",
       "googleMeet": "Google Meet",
       "phone": "Phone",
-      "placeholderHeadline": "This lead has been engaging consistently and looks like a strong candidate for a booked call.",
-      "placeholderReason1": "Replied across multiple touchpoints with a positive tone.",
-      "placeholderReason2": "Showed clear interest in the offer during the conversation.",
-      "placeholderReason3": "Agreed to a specific time without hesitation."
+      "reschedule": "Reschedule",
+      "cancelCall": "Cancel call",
+      "close": "Close"
+    },
+    "panel": {
+      "minimize": "Minimize panel",
+      "hide": "Hide panel",
+      "show": "Show panel"
     }
   }
 }

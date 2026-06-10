@@ -309,6 +309,70 @@ export function PipelineProgressCompact({ status }: { status: string }) {
   );
 }
 
+// ── Pipeline dash bar ─────────────────────────────────────────────────────────
+// Horizontal segments: current stage taller, past stages medium, future stages flat.
+// Lost/DND: single solid bar in the terminal color.
+export function PipelineDashBar({ status }: { status: string }) {
+  const isTerminal = LOST_STAGES.includes(status);
+  const color = PIPELINE_HEX[status] ?? "#9ca3af";
+
+  if (isTerminal) {
+    return (
+      <div style={{ padding: "10px 20px 12px" }}>
+        <div style={{ height: 7, borderRadius: 9999, background: color, boxShadow: `0 2px 8px ${color}55` }} />
+        <div style={{ marginTop: 5, textAlign: "center", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color, fontWeight: 700 }}>
+          {status}
+        </div>
+      </div>
+    );
+  }
+
+  const stageIdx = PIPELINE_STAGES.findIndex((s) => s.key === status);
+
+  return (
+    <div style={{ padding: "10px 20px 12px" }}>
+      <div style={{ display: "flex", gap: 4, alignItems: "flex-end", height: 18 }}>
+        {PIPELINE_STAGES.map((s, i) => {
+          const reached = i <= stageIdx;
+          const current = i === stageIdx;
+          const hex = PIPELINE_HEX[s.key] ?? "#9ca3af";
+          return (
+            <div key={s.key} style={{
+              flex: 1, borderRadius: 9999,
+              height: current ? 16 : reached ? 9 : 5,
+              background: reached ? hex : "rgba(0,0,0,0.1)",
+              boxShadow: current ? `0 3px 10px ${hex}55` : reached ? "inset 0 1px 0 rgba(255,255,255,0.28)" : "none",
+              transition: "all 280ms",
+            }} />
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 4, marginTop: 5 }}>
+        {PIPELINE_STAGES.map((s, i) => {
+          const current = i === stageIdx;
+          const reached = i < stageIdx;
+          const hex = PIPELINE_HEX[s.key] ?? "#9ca3af";
+          return (
+            <div key={s.key} style={{ flex: 1, overflow: "hidden" }}>
+              <span style={{
+                display: "block", textAlign: "center",
+                fontFamily: "'Geist Mono', ui-monospace, monospace",
+                fontSize: current ? 8.5 : 7.5,
+                fontWeight: current ? 700 : 400,
+                color: current ? hex : reached ? "var(--muted-foreground)" : "rgba(0,0,0,0.2)",
+                letterSpacing: "0.07em", textTransform: "uppercase",
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              }}>
+                {s.key === "Multiple Responses" ? "Multi" : s.key}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Tag pill ──────────────────────────────────────────────────────────────────
 export function TagPill({ tag }: { tag: { name: string; color: string } }) {
   return (
@@ -484,6 +548,7 @@ export function GroupHeader({ label, count, isFirst }: { label: string; count: n
           zIndex: 5,
           background: 'hsl(var(--panel-list-bg))',
           padding: isFirst ? '2px 9px 6px 11px' : '8px 9px 6px 11px',
+          boxShadow: '0 -8px 0 8px hsl(var(--panel-list-bg))',
         }}
       >
         <span className="eyebrow eyebrow-sm">{label} — {count}</span>

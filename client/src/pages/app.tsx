@@ -20,9 +20,7 @@ import CalendarPage from "@/pages/Calendar";
 import AutomationLogsPage from "@/pages/AutomationLogs";
 // UsersPage removed — user management now lives in Settings > Team tab
 import PromptsPage from "@/features/prompts/pages/PromptsPage";
-import { InvoicesPage } from "@/features/billing/pages/InvoicesPage";
-import { ContractsPage } from "@/features/billing/pages/ContractsPage";
-import { ExpensesPage } from "@/features/billing/pages/ExpensesPage";
+import { BillingPage } from "@/features/billing/pages/BillingPage";
 import SettingsPage from "@/pages/Settings";
 import DocsPage from "@/pages/Docs";
 import TasksPage from "@/features/tasks/pages/TasksPage";
@@ -127,16 +125,11 @@ export default function AppArea() {
           <Route path="/platform/prompt-library">
             <AgencyOnly prefix="/platform"><PromptsPage /></AgencyOnly>
           </Route>
-          <Route path="/platform/invoices" component={InvoicesPage} />
-          <Route path="/platform/expenses">
-            <AgencyOnly prefix="/platform"><ExpensesPage /></AgencyOnly>
-          </Route>
-          <Route path="/platform/contracts">
-            <AgencyOnly prefix="/platform"><ContractsPage /></AgencyOnly>
-          </Route>
-          <Route path="/platform/billing">
-            <Redirect to="/platform/invoices" />
-          </Route>
+          <Route path="/platform/invoices"><Redirect to="/platform/billing/invoices" /></Route>
+          <Route path="/platform/expenses"><Redirect to="/platform/billing/expenses" /></Route>
+          <Route path="/platform/contracts"><Redirect to="/platform/billing/contracts" /></Route>
+          <Route path="/platform/billing/:tab" component={BillingPage} />
+          <Route path="/platform/billing" component={BillingPage} />
           <Route path="/platform/docs" component={DocsPage} />
           <Route path="/platform/opportunities">
             <Redirect to="/platform/leads" />

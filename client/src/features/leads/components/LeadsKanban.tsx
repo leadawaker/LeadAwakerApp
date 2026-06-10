@@ -54,7 +54,6 @@ import {
   CheckCircle2,
   Calendar as CalendarIcon,
   Target,
-  ShieldCheck,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -97,7 +96,6 @@ const STAGE_LABELS: Record<string, string> = {
   "Multiple Responses": "Multiple Responses",
   Qualified: "Qualified",
   Booked: "Booked",
-  Closed: "Closed",
   Lost: "Lost",
   DND: "DND",
 };
@@ -113,7 +111,6 @@ const STAGE_ICONS: Record<string, LucideIcon> = {
   "Multiple Responses": ArrowUpRight,
   Qualified:            CheckCircle2,
   Booked:               CalendarIcon,
-  Closed:               ShieldCheck,
   Lost:                 HeartCrack,
   DND:                  Target,
 };
@@ -126,14 +123,12 @@ const STAGE_ICON_BG: Record<string, string> = {
   "Multiple Responses": "#22C55E",
   Qualified:            "#84CC16",
   Booked:               "#FCB803",
-  Closed:               "#F59E0B",
   Lost:                 "#DC2626",
   DND:                  "#1a1a1a",
 };
 /** Text color on the stage icon circle */
 const STAGE_ICON_TEXT: Record<string, string> = {
   Booked: "#131B49",
-  Closed: "#1a1a1a",
   DND: "#ffffff",
 };
 const DEFAULT_ICON_TEXT = "#ffffff";
@@ -153,7 +148,6 @@ const STAGE_EMPTY_STATES: Record<string, EmptyStateConfig> = {
   "Multiple Responses": { message: "No active conversations",    hint: "Engage with your contacted leads to build dialogue",      icon: MessageSquare },
   Qualified:            { message: "No qualified leads yet",     hint: "Qualify promising conversations to fill this stage",      icon: Star         },
   Booked:               { message: "No calls booked yet",        hint: "This is your north-star goal — keep pushing!",           icon: Trophy       },
-  Closed:               { message: "No closed deals yet",        hint: "Completed bookings will appear here",                    icon: Trophy       },
   Lost:                 { message: "No lost leads",              hint: "Great! All your leads are still in the pipeline",         icon: HeartCrack   },
   DND:                  { message: "No leads on DND",            hint: "Leads who opt out will appear here",                      icon: BanIcon      },
 };
@@ -322,7 +316,7 @@ function KanbanCardContent({
   const visibleTags  = (cardTags || []).slice(0, 3);
 
   const isBookedStatus = status === "Booked";
-  const isClosedStatus = status === "Closed";
+  const isClosedStatus = false;
   const bookedDate = lead.booked_call_date || lead.bookedCallDate;
   const bookedDatePassed = bookedDate ? new Date(bookedDate) < new Date() : false;
   const bookedDateStr = bookedDate
@@ -655,7 +649,7 @@ function KanbanColumn({
   const StageIcon = STAGE_ICONS[stage] || AlertCircle;
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
   const isBookedStage = stage === "Booked";
-  const isClosedStage = stage === "Closed";
+  const isClosedStage = false;
   const isLostStage = stage === "Lost";
   const isDNDStage = stage === "DND";
   const [isBodyScrolled, setIsBodyScrolled] = useState(false);

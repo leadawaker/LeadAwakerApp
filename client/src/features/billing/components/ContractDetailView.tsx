@@ -435,8 +435,8 @@ export function ContractDetailView({
         <div className="absolute inset-0" style={{ background: "var(--bg)" }} />
       )}
 
-      {/* ── Header (BDrawerHead style) ── */}
-      <div className="relative z-10 shrink-0" style={{ borderBottom: "1px solid var(--line)" }}>
+      {/* ── Header (white panel style) ── */}
+      <div className="relative z-10 shrink-0 neu-raised" style={{ borderRadius: "var(--r-card) var(--r-card) 0 0", background: "var(--card)", borderBottom: "1px solid var(--line)", margin: "3px 3px 0" }}>
         {/* Mobile back button — hidden on desktop */}
         {toolbarSlot && (
           <div className="md:hidden px-5 pt-3 pb-1 flex items-center gap-1.5">
@@ -721,279 +721,274 @@ export function ContractDetailView({
             )}
           </div>
 
-          {/* ── RIGHT column: stacked info widgets ── */}
+          {/* ── RIGHT column: single consolidated info panel ── */}
           <div className={cn("flex flex-col gap-[3px]", mobileTab === "terms" ? "hidden md:flex" : "flex")}>
 
-            {/* Status widget (consolidated with tracking + signature timeline) */}
-            <div className="neu-raised p-4 shrink-0" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
-              <span className="eyebrow eyebrow-sm block mb-4">
-                {t("contracts.detail.status")}
-              </span>
-              {/* Status pill */}
-              <span
-                className="inline-flex items-center"
-                style={{
-                  gap: 6,
-                  padding: "4px 10px",
-                  borderRadius: "var(--r-pill)",
-                  background: statusColors.bg,
-                  color: statusColors.text,
-                  fontFamily: "var(--mono)",
-                  fontSize: 9,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: statusColors.dot, flexShrink: 0 }} />
-                {t(`contracts.statusLabels.${displayStatus}`, displayStatus)}
-              </span>
-              <div className="flex items-center gap-1.5 mt-3">
-                <Eye className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--mute-2)" }} />
-                <span className="text-[14px] font-bold tabular-nums leading-none" style={{ color: "var(--ink)" }}>
-                  {contract.viewed_count ?? 0}
+            {/* Single inset panel: Status + Dates + Deal Structure + Attach PDF */}
+            <div className="neu-raised shrink-0" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
+
+              {/* ── Status section ── */}
+              <div className="p-4">
+                <span className="eyebrow eyebrow-sm block mb-4">
+                  {t("contracts.detail.status")}
                 </span>
-                <span className="text-[11px]" style={{ color: "var(--mute)" }}>
-                  {(contract.viewed_count ?? 0) === 1 ? t("contracts.detail.view") : t("contracts.detail.views")}
+                <span
+                  className="inline-flex items-center"
+                  style={{
+                    gap: 6,
+                    padding: "4px 10px",
+                    borderRadius: "var(--r-pill)",
+                    background: statusColors.bg,
+                    color: statusColors.text,
+                    fontFamily: "var(--mono)",
+                    fontSize: 9,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: statusColors.dot, flexShrink: 0 }} />
+                  {t(`contracts.statusLabels.${displayStatus}`, displayStatus)}
                 </span>
-              </div>
-              {contract.viewed_at && (
-                <span className="text-[10px] mt-1.5 block" style={{ color: "var(--mute-2)" }}>
-                  {t("contracts.detail.firstViewed", { date: fmtDate(contract.viewed_at) })}
-                </span>
-              )}
-              {contract.signed_at && (
-                <span className="text-[10px] mt-2 block" style={{ color: "var(--good)" }}>
-                  {t("contracts.detail.signed", { date: fmtDate(contract.signed_at) })}
-                </span>
-              )}
-              {contract.sent_at && contract.status !== "Draft" && (
-                <span className="text-[10px] mt-1 block" style={{ color: "var(--mute-2)" }}>
-                  {t("contracts.detail.sent", { date: fmtDate(contract.sent_at) })}
-                </span>
-              )}
-              {/* Signature timeline */}
-              {(() => {
-                const signedOrActive = contract.status === "Signed";
-                const steps = [
-                  { label: t("contracts.timeline.drafted"),   date: contract.created_at, done: true },
-                  { label: t("contracts.timeline.sent"),      date: contract.sent_at,    done: contract.status !== "Draft" },
-                  { label: t("contracts.timeline.signed"),    date: contract.signed_at,  done: signedOrActive },
-                  { label: t("contracts.timeline.active"),    date: contract.start_date, done: signedOrActive && !!contract.start_date },
-                ];
-                return (
-                  <div style={{ marginTop: 18 }}>
-                    <span className="eyebrow eyebrow-sm block mb-3">{t("contracts.timeline.title")}</span>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      {steps.map((s, i) => (
-                        <div key={i} style={{ display: "flex", gap: 12 }}>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <span style={{
-                              width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              background: s.done ? "var(--good)" : "var(--bg)",
-                              boxShadow: s.done ? "var(--sh-raised-crisp)" : "var(--sh-inset-crisp)",
-                              color: s.done ? "#fff" : "var(--mute-2)",
-                            }}>
-                              {s.done
-                                ? <Check className="h-3 w-3" />
-                                : <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--mute-2)" }} />}
-                            </span>
-                            {i < steps.length - 1 && (
-                              <span style={{ width: 2, flex: 1, minHeight: 18, background: s.done ? "var(--good)" : "var(--line)" }} />
-                            )}
-                          </div>
-                          <div style={{ paddingBottom: 14 }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: s.done ? "var(--ink)" : "var(--mute)" }}>{s.label}</div>
-                            <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", marginTop: 1 }}>
-                              {s.date ? fmtDate(s.date) : t("contracts.timeline.pending")}
+                <div className="flex items-center gap-1.5 mt-3">
+                  <Eye className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--mute-2)" }} />
+                  <span className="text-[14px] font-bold tabular-nums leading-none" style={{ color: "var(--ink)" }}>
+                    {contract.viewed_count ?? 0}
+                  </span>
+                  <span className="text-[11px]" style={{ color: "var(--mute)" }}>
+                    {(contract.viewed_count ?? 0) === 1 ? t("contracts.detail.view") : t("contracts.detail.views")}
+                  </span>
+                </div>
+                {contract.viewed_at && (
+                  <span className="text-[10px] mt-1.5 block" style={{ color: "var(--mute-2)" }}>
+                    {t("contracts.detail.firstViewed", { date: fmtDate(contract.viewed_at) })}
+                  </span>
+                )}
+                {contract.signed_at && (
+                  <span className="text-[10px] mt-2 block" style={{ color: "var(--good)" }}>
+                    {t("contracts.detail.signed", { date: fmtDate(contract.signed_at) })}
+                  </span>
+                )}
+                {contract.sent_at && contract.status !== "Draft" && (
+                  <span className="text-[10px] mt-1 block" style={{ color: "var(--mute-2)" }}>
+                    {t("contracts.detail.sent", { date: fmtDate(contract.sent_at) })}
+                  </span>
+                )}
+                {/* Signature timeline */}
+                {(() => {
+                  const signedOrActive = contract.status === "Signed";
+                  const steps = [
+                    { label: t("contracts.timeline.drafted"),   date: contract.created_at, done: true },
+                    { label: t("contracts.timeline.sent"),      date: contract.sent_at,    done: contract.status !== "Draft" },
+                    { label: t("contracts.timeline.signed"),    date: contract.signed_at,  done: signedOrActive },
+                    { label: t("contracts.timeline.active"),    date: contract.start_date, done: signedOrActive && !!contract.start_date },
+                  ];
+                  return (
+                    <div style={{ marginTop: 18 }}>
+                      <span className="eyebrow eyebrow-sm block mb-3">{t("contracts.timeline.title")}</span>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {steps.map((s, i) => (
+                          <div key={i} style={{ display: "flex", gap: 12 }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                              <span style={{
+                                width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                background: s.done ? "var(--good)" : "var(--bg)",
+                                boxShadow: s.done ? "var(--sh-raised-crisp)" : "var(--sh-inset-crisp)",
+                                color: s.done ? "#fff" : "var(--mute-2)",
+                              }}>
+                                {s.done
+                                  ? <Check className="h-3 w-3" />
+                                  : <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--mute-2)" }} />}
+                              </span>
+                              {i < steps.length - 1 && (
+                                <span style={{ width: 2, flex: 1, minHeight: 18, background: s.done ? "var(--good)" : "var(--line)" }} />
+                              )}
+                            </div>
+                            <div style={{ paddingBottom: 14 }}>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: s.done ? "var(--ink)" : "var(--mute)" }}>{s.label}</div>
+                              <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", marginTop: 1 }}>
+                                {s.date ? fmtDate(s.date) : t("contracts.timeline.pending")}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Dates widget */}
-            <div className="neu-raised p-4 shrink-0" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
-              <span className="eyebrow eyebrow-sm block mb-4">
-                {t("contracts.detail.dates")}
-              </span>
-
-              {/* Start date */}
-              <div className="pb-3">
-                <span className="eyebrow eyebrow-sm block">
-                  {t("contracts.detail.start")}
-                </span>
-                <div className="flex items-center gap-1 mt-1">
-                  <Calendar className="h-3 w-3 shrink-0" style={{ color: "var(--mute-2)" }} />
-                  <span className="text-[12px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
-                    {fmtDate(contract.start_date)}
-                  </span>
-                </div>
+                  );
+                })()}
               </div>
 
-              {/* End date */}
-              <div className="pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-                <span className="eyebrow eyebrow-sm block">
-                  {t("contracts.detail.end")}
-                </span>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Calendar className="h-3 w-3 shrink-0" style={{ color: "var(--mute-2)" }} />
-                  <span className="text-[12px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
-                    {fmtDate(contract.end_date)}
-                  </span>
-                </div>
-                {expiry && displayStatus !== "Signed" && displayStatus !== "Cancelled" && (
-                  <span className={cn("text-[10px] font-medium mt-1 block", expiry.color)}>
-                    {expiry.label}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Deal Structure widget */}
-            {hasDealStructure && (
-              <div className="neu-raised p-4 shrink-0" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
+              {/* ── Dates section ── */}
+              <div className="p-4" style={{ borderTop: "1px solid var(--line)" }}>
                 <span className="eyebrow eyebrow-sm block mb-4">
-                  {t("contracts.detail.dealStructure")}
+                  {t("contracts.detail.dates")}
                 </span>
-
-                {contract.signer_name && (
-                  <div className="pb-3">
-                    <span className="eyebrow eyebrow-sm block">{t("contracts.detail.signer")}</span>
-                    <span className="text-[12px] font-semibold block mt-1" style={{ color: "var(--ink)" }}>{contract.signer_name}</span>
-                  </div>
-                )}
-
-                {dealTypeI18nKey && dealTypeColor && (
-                  <div className={cn("mb-3", contract.signer_name && "pt-3")} style={contract.signer_name ? { borderTop: "1px solid var(--line)" } : {}}>
-                    <span
-                      className="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold"
-                      style={{ borderRadius: "var(--r-pill)", background: dealTypeColor.bg, color: dealTypeColor.text }}
-                    >
-                      {t(dealTypeI18nKey, dealType ?? undefined)}
+                <div className="pb-3">
+                  <span className="eyebrow eyebrow-sm block">
+                    {t("contracts.detail.start")}
+                  </span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Calendar className="h-3 w-3 shrink-0" style={{ color: "var(--mute-2)" }} />
+                    <span className="text-[12px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
+                      {fmtDate(contract.start_date)}
                     </span>
                   </div>
-                )}
+                </div>
+                <div className="pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+                  <span className="eyebrow eyebrow-sm block">
+                    {t("contracts.detail.end")}
+                  </span>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Calendar className="h-3 w-3 shrink-0" style={{ color: "var(--mute-2)" }} />
+                    <span className="text-[12px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
+                      {fmtDate(contract.end_date)}
+                    </span>
+                  </div>
+                  {expiry && displayStatus !== "Signed" && displayStatus !== "Cancelled" && (
+                    <span className={cn("text-[10px] font-medium mt-1 block", expiry.color)}>
+                      {expiry.label}
+                    </span>
+                  )}
+                </div>
+              </div>
 
-                <div className="space-y-0">
-                  {contract.value_per_booking != null && (
+              {/* ── Deal Structure section (only if deal type set) ── */}
+              {hasDealStructure && (
+                <div className="p-4" style={{ borderTop: "1px solid var(--line)" }}>
+                  <span className="eyebrow eyebrow-sm block mb-4">
+                    {t("contracts.detail.dealStructure")}
+                  </span>
+
+                  {contract.signer_name && (
                     <div className="pb-3">
-                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.valuePerBooking")}</span>
-                      <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>
-                        {fmtMoney(contract.value_per_booking, contractCurrency)}
+                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.signer")}</span>
+                      <span className="text-[12px] font-semibold block mt-1" style={{ color: "var(--ink)" }}>{contract.signer_name}</span>
+                    </div>
+                  )}
+
+                  {dealTypeI18nKey && dealTypeColor && (
+                    <div className={cn("mb-3", contract.signer_name && "pt-3")} style={contract.signer_name ? { borderTop: "1px solid var(--line)" } : {}}>
+                      <span
+                        className="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold"
+                        style={{ borderRadius: "var(--r-pill)", background: dealTypeColor.bg, color: dealTypeColor.text }}
+                      >
+                        {t(dealTypeI18nKey, dealType ?? undefined)}
                       </span>
                     </div>
                   )}
-                  {paymentTriggerI18nKey && (
-                    <div className="pb-3" style={contract.value_per_booking != null ? { paddingTop: 12, borderTop: "1px solid var(--line)" } : {}}>
-                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.paymentTrigger")}</span>
-                      <span className="text-[12px] font-semibold block mt-1" style={{ color: "var(--ink)" }}>{t(paymentTriggerI18nKey, { defaultValue: paymentTrigger ?? "" })}</span>
-                    </div>
-                  )}
-                  {showCostPassthrough && contract.cost_passthrough_rate != null && (
-                    <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.costPassthrough")}</span>
-                      <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtRate(contract.cost_passthrough_rate)}</span>
-                    </div>
-                  )}
-                  {showFixedFee && contract.fixed_fee_amount != null && (
-                    <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.fixedFee")}</span>
-                      <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtMoney(contract.fixed_fee_amount, contractCurrency)}</span>
-                    </div>
-                  )}
-                  {showDeposit && contract.deposit_amount != null && (
-                    <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.deposit")}</span>
-                      <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtMoney(contract.deposit_amount, contractCurrency)}</span>
-                    </div>
-                  )}
-                  {showMonthlyFee && contract.monthly_fee != null && (
-                    <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.monthlyFee")}</span>
-                      <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtMoney(contract.monthly_fee, contractCurrency)} {t("contracts.detail.perMonth")}</span>
+
+                  <div className="space-y-0">
+                    {contract.value_per_booking != null && (
+                      <div className="pb-3">
+                        <span className="eyebrow eyebrow-sm block">{t("contracts.detail.valuePerBooking")}</span>
+                        <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>
+                          {fmtMoney(contract.value_per_booking, contractCurrency)}
+                        </span>
+                      </div>
+                    )}
+                    {paymentTriggerI18nKey && (
+                      <div className="pb-3" style={contract.value_per_booking != null ? { paddingTop: 12, borderTop: "1px solid var(--line)" } : {}}>
+                        <span className="eyebrow eyebrow-sm block">{t("contracts.detail.paymentTrigger")}</span>
+                        <span className="text-[12px] font-semibold block mt-1" style={{ color: "var(--ink)" }}>{t(paymentTriggerI18nKey, { defaultValue: paymentTrigger ?? "" })}</span>
+                      </div>
+                    )}
+                    {showCostPassthrough && contract.cost_passthrough_rate != null && (
+                      <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                        <span className="eyebrow eyebrow-sm block">{t("contracts.detail.costPassthrough")}</span>
+                        <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtRate(contract.cost_passthrough_rate)}</span>
+                      </div>
+                    )}
+                    {showFixedFee && contract.fixed_fee_amount != null && (
+                      <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                        <span className="eyebrow eyebrow-sm block">{t("contracts.detail.fixedFee")}</span>
+                        <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtMoney(contract.fixed_fee_amount, contractCurrency)}</span>
+                      </div>
+                    )}
+                    {showDeposit && contract.deposit_amount != null && (
+                      <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                        <span className="eyebrow eyebrow-sm block">{t("contracts.detail.deposit")}</span>
+                        <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtMoney(contract.deposit_amount, contractCurrency)}</span>
+                      </div>
+                    )}
+                    {showMonthlyFee && contract.monthly_fee != null && (
+                      <div className="pb-3" style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                        <span className="eyebrow eyebrow-sm block">{t("contracts.detail.monthlyFee")}</span>
+                        <span className="text-[12px] font-semibold block mt-1 tabular-nums" style={{ color: "var(--ink)" }}>{fmtMoney(contract.monthly_fee, contractCurrency)} {t("contracts.detail.perMonth")}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {contract.invoice_cadence && (
+                    <div style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                      <span className="eyebrow eyebrow-sm block">{t("contracts.detail.invoiceCadence")}</span>
+                      <span className="text-[12px] font-semibold block mt-1 capitalize" style={{ color: "var(--ink)" }}>{contract.invoice_cadence}</span>
                     </div>
                   )}
                 </div>
+              )}
 
-                {/* Invoice cadence */}
-                {contract.invoice_cadence && (
-                  <div style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-                    <span className="eyebrow eyebrow-sm block">{t("contracts.detail.invoiceCadence")}</span>
-                    <span className="text-[12px] font-semibold block mt-1 capitalize" style={{ color: "var(--ink)" }}>{contract.invoice_cadence}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Attach / Replace PDF (agency only) */}
-            {isAgencyUser && (
-              <div className="shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setUploadOpen(v => !v)}
-                  className="neu-raised w-full flex items-center justify-between px-3 py-2.5 text-[12px] font-medium transition-colors"
-                  style={{
-                    borderRadius: "var(--r-card)",
-                    background: "var(--card)",
-                    color: "var(--mute)",
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--ink)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--mute)"; }}
-                >
-                  <span className="flex items-center gap-2">
-                    <Upload className="h-3.5 w-3.5" />
-                    {contract.file_data ? t("contracts.detail.replacePdf") : t("contracts.detail.attachSignedPdf")}
-                  </span>
-                  <span style={{ fontSize: 10, color: "var(--mute-2)" }}>{uploadOpen ? "▲" : "▼"}</span>
-                </button>
-
-                {uploadOpen && (
-                  <div
-                    className="mt-[3px] p-5 text-center cursor-pointer transition-colors"
-                    style={{
-                      border: "2px dashed var(--line)",
-                      borderRadius: "var(--r-card)",
-                      background: "var(--surface)",
-                    }}
-                    onClick={() => fileInputRef.current?.click()}
-                    onDrop={handleDrop}
-                    onDragOver={e => e.preventDefault()}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--wine)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--line)"; }}
+              {/* ── Attach / Replace PDF section (agency only) ── */}
+              {isAgencyUser && (
+                <div style={{ borderTop: "1px solid var(--line)" }}>
+                  <button
+                    type="button"
+                    onClick={() => setUploadOpen(v => !v)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-[12px] font-medium transition-colors"
+                    style={{ color: "var(--mute)", background: "transparent", border: "none", cursor: "pointer" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--ink)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--mute)"; }}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="h-9 w-9 flex items-center justify-center" style={{ borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>
-                        {uploading
-                          ? <div className="h-4 w-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--wine)", borderTopColor: "transparent" }} />
-                          : <FileText className="h-4 w-4" style={{ color: "var(--mute)" } as React.CSSProperties} />}
-                      </div>
-                      <p className="text-[12px] font-medium" style={{ color: "var(--ink)" }}>
-                        {uploading ? t("contracts.detail.uploading") : t("contracts.detail.dropPdfBrowse")}
-                      </p>
-                      <p className="text-[11px]" style={{ color: "var(--mute)" }}>{t("contracts.detail.pdfOnlyMax5MB")}</p>
-                    </div>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      hidden
-                      ref={fileInputRef}
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file);
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+                    <span className="flex items-center gap-2">
+                      <Upload className="h-3.5 w-3.5" />
+                      {contract.file_data ? t("contracts.detail.replacePdf") : t("contracts.detail.attachSignedPdf")}
+                    </span>
+                    <span style={{ fontSize: 10, color: "var(--mute-2)" }}>{uploadOpen ? "▲" : "▼"}</span>
+                  </button>
 
-            {/* Bottom spacer so last widget isn't flush with edge */}
+                  {uploadOpen && (
+                    <div
+                      className="mx-4 mb-4 p-5 text-center cursor-pointer transition-colors"
+                      style={{
+                        border: "2px dashed var(--line)",
+                        borderRadius: "var(--r-surface)",
+                        background: "var(--surface)",
+                      }}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDrop={handleDrop}
+                      onDragOver={e => e.preventDefault()}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--wine)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--line)"; }}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="h-9 w-9 flex items-center justify-center" style={{ borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>
+                          {uploading
+                            ? <div className="h-4 w-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--wine)", borderTopColor: "transparent" }} />
+                            : <FileText className="h-4 w-4" style={{ color: "var(--mute)" } as React.CSSProperties} />}
+                        </div>
+                        <p className="text-[12px] font-medium" style={{ color: "var(--ink)" }}>
+                          {uploading ? t("contracts.detail.uploading") : t("contracts.detail.dropPdfBrowse")}
+                        </p>
+                        <p className="text-[11px]" style={{ color: "var(--mute)" }}>{t("contracts.detail.pdfOnlyMax5MB")}</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        hidden
+                        ref={fileInputRef}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* Bottom spacer */}
             <div className="shrink-0 h-1" />
           </div>
 

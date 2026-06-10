@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useAgentChat } from "../hooks/useAgentChat";
 import { usePageContext } from "../hooks/usePageContext";
 import { usePageEntity } from "@/contexts/PageEntityContext";
+import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { AgentChatView } from "./AgentChatView";
 import type { AiAgent, AiSession } from "../hooks/useAgentChat";
 import type { PageContext } from "../hooks/usePageContext";
@@ -153,6 +154,9 @@ export function ConversationPanelWithEvents({
     newSession,
     loadSession,
     deleteConversation,
+    editAndResend,
+    retryLast,
+    forkSession,
     updateSessionModel,
     updateSessionThinking,
     confirmDestructiveActions,
@@ -162,6 +166,21 @@ export function ConversationPanelWithEvents({
 
   const routeContext = usePageContext();
   const { entityData } = usePageEntity();
+  const { selectAgent } = useAgentWidget();
+
+  // Fork: create a new session up to a message, then open it in a new tab
+  const handleFork = useCallback(async (upToMessageId: number) => {
+    const newSessionId = await forkSession(upToMessageId);
+    if (newSessionId && agent) {
+      // Open the forked session in a new conversation tab
+      selectAgent(agent.id);
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("agent-load-session", { detail: { agentId: agent.id, sessionId: newSessionId } }),
+        );
+      }, 100);
+    }
+  }, [forkSession, agent, selectAgent]);
 
   // Per-session page awareness toggle (defaults from agent setting)
   const [pageAwarenessEnabled, setPageAwarenessEnabled] = useState(true);
@@ -257,6 +276,10 @@ export function ConversationPanelWithEvents({
       const detail = (e as CustomEvent).detail;
       if (detail.agentId === agentId && detail.sessionId) loadSession(detail.sessionId);
     };
+    const handleRetryLast = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.agentId === agentId) retryLast();
+    };
 
     window.addEventListener("agent-model-change", handleModelChange);
     window.addEventListener("agent-thinking-change", handleThinkingChange);
@@ -265,6 +288,7 @@ export function ConversationPanelWithEvents({
     window.addEventListener("agent-page-awareness-toggle", handlePageAwarenessToggle);
     window.addEventListener("agent-page-awareness-toggle-request", handlePageAwarenessToggleRequest);
     window.addEventListener("agent-load-session", handleLoadSession);
+    window.addEventListener("agent-retry-last", handleRetryLast);
     return () => {
       window.removeEventListener("agent-model-change", handleModelChange);
       window.removeEventListener("agent-thinking-change", handleThinkingChange);
@@ -273,9 +297,10 @@ export function ConversationPanelWithEvents({
       window.removeEventListener("agent-page-awareness-toggle", handlePageAwarenessToggle);
       window.removeEventListener("agent-page-awareness-toggle-request", handlePageAwarenessToggleRequest);
       window.removeEventListener("agent-load-session", handleLoadSession);
+      window.removeEventListener("agent-retry-last", handleRetryLast);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agentId, updateSessionModel, updateSessionThinking, newSession, deleteConversation, loadSession]);
+  }, [agentId, updateSessionModel, updateSessionThinking, newSession, deleteConversation, loadSession, retryLast]);
 
   if (!agent) return null;
 
@@ -300,6 +325,8 @@ export function ConversationPanelWithEvents({
         onConfirmDestructive={confirmDestructiveActions}
         onCancelDestructive={cancelDestructiveActions}
         onAbort={abortStream}
+        onEditResend={editAndResend}
+        onFork={handleFork}
         selectedElement={selectedElement}
         onClearElement={onClearElement}
         selectionLocked={selectionLocked}

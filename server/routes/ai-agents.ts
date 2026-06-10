@@ -15,7 +15,7 @@ import { db } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
 import { broadcast } from "../sse";
 import { handleZodError, wrapAsync } from "./_helpers";
-import { eq, count, desc, and, sql } from "drizzle-orm";
+import { eq, count, desc, and, sql, lte, gte } from "drizzle-orm";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -43,8 +43,8 @@ import {
 
 const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
 const VALID_MODELS = [
-  "claude-sonnet-4-20250514",
-  "claude-opus-4-20250514",
+  "claude-sonnet-4-6",
+  "claude-opus-4-8",
   "claude-haiku-235-20241022",
 ];
 
@@ -611,7 +611,7 @@ export function registerAiAgentsRoutes(app: Express): void {
     const { DEFAULT_SYSTEM_PROMPTS } = await import("../aiAgents");
     const { name, systemPrompt, photoUrl, model, thinkingLevel } = req.body;
     if (!name?.trim()) return res.status(400).json({ message: "name required" });
-    const resolvedModel = model || "claude-sonnet-4-20250514";
+    const resolvedModel = model || "claude-sonnet-4-6";
     if (!VALID_MODELS.includes(resolvedModel)) {
       return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
     }
@@ -777,7 +777,7 @@ export function registerAiAgentsRoutes(app: Express): void {
         return res.status(400).json({ message: `Invalid thinking_level. Must be one of: ${VALID_THINKING_LEVELS.join(", ")}` });
       }
 
-      const model = req.body.model || "claude-sonnet-4-20250514";
+      const model = req.body.model || "claude-sonnet-4-6";
       if (!VALID_MODELS.includes(model)) {
         return res.status(400).json({ message: `Invalid model. Must be one of: ${VALID_MODELS.join(", ")}` });
       }
@@ -1069,7 +1069,7 @@ export function registerAiAgentsRoutes(app: Express): void {
           title: req.body.title || null,
           status: "active",
           cliSessionId: null,
-          model: agent?.model || "claude-sonnet-4-20250514",
+          model: agent?.model || "claude-sonnet-4-6",
           thinkingLevel: agent?.thinkingLevel || "medium",
         });
       }
@@ -1125,6 +1125,48 @@ export function registerAiAgentsRoutes(app: Express): void {
     }
   });
 
+  // POST /api/agents/sessions/:sessionId/fork — fork a session (optionally up to a message id)
+  app.post("/api/agents/sessions/:sessionId/fork", requireAgency, async (req, res) => {
+    try {
+      const sourceSession = await storage.getAiSessionBySessionId(req.params.sessionId);
+      if (!sourceSession) return res.status(404).json({ message: "Session not found" });
+
+      const { upToMessageId } = req.body as { upToMessageId?: number };
+
+      let messages = await storage.getAiMessagesBySessionId(req.params.sessionId);
+      if (upToMessageId !== undefined) {
+        messages = messages.filter((m: any) => m.id <= upToMessageId);
+      }
+
+      const newSession = await storage.createAiSession({
+        sessionId: crypto.randomUUID(),
+        userId: sourceSession.userId,
+        agentId: sourceSession.agentId,
+        title: "Fork: " + (sourceSession.title || "Untitled"),
+        status: "active",
+        isActive: true,
+        model: sourceSession.model,
+        thinkingLevel: sourceSession.thinkingLevel,
+        cliSessionId: null,
+      });
+
+      for (const msg of messages) {
+        await storage.createAiMessage({
+          sessionId: newSession.sessionId,
+          role: msg.role,
+          content: msg.content,
+          metadata: msg.metadata ?? null,
+          attachments: msg.attachments ?? null,
+        });
+      }
+
+      res.status(201).json({ sessionId: newSession.sessionId, id: newSession.id });
+    } catch (err: any) {
+      console.error("[AI Sessions] fork error:", err);
+      res.status(500).json({ message: "Failed to fork session" });
+    }
+  });
+
   // DELETE /api/agents/sessions/:sessionId — close/delete session
   app.delete("/api/agents/sessions/:sessionId", requireAgency, async (req, res) => {
     try {
@@ -1175,6 +1217,23 @@ export function registerAiAgentsRoutes(app: Express): void {
     } catch (err: any) {
       console.error("[AI Messages] clear error:", err);
       res.status(500).json({ message: "Failed to clear messages" });
+    }
+  });
+
+  // DELETE /api/agents/sessions/:sessionId/messages-from/:messageId
+  // Deletes the given message and all messages after it (for edit-and-resend / retry)
+  app.delete("/api/agents/sessions/:sessionId/messages-from/:messageId", requireAgency, async (req, res) => {
+    try {
+      const { sessionId, messageId } = req.params;
+      const msgId = parseInt(messageId, 10);
+      if (isNaN(msgId)) return res.status(400).json({ message: "Invalid messageId" });
+      await db.delete(aiMessages).where(
+        and(eq(aiMessages.sessionId, sessionId), gte(aiMessages.id, msgId)),
+      );
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[AI Messages] messages-from delete error:", err);
+      res.status(500).json({ message: "Failed to delete messages" });
     }
   });
 
@@ -1587,7 +1646,7 @@ export function registerAiAgentsRoutes(app: Express): void {
         content: content.trim(),
         pageContext: pageContext || null,
         metadata: {
-          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          model: session.model || agent.model || "claude-sonnet-4-6",
           thinkingLevel: session.thinkingLevel || agent.thinkingLevel || "medium",
           ...(fileId ? { fileId: Number(fileId) } : {}),
         },
@@ -1666,7 +1725,7 @@ export function registerAiAgentsRoutes(app: Express): void {
       res.write(`data: ${JSON.stringify({ type: "message_id", id: userMessage.id })}\n\n`);
 
       const cwd = getSessionCwd(sessionId, agent.type);
-      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-6";
 
       // Agent loop: feed tool results back to Claude until it stops emitting tool calls.
       // Each iteration spawns a fresh Claude CLI with --resume, using the cliSessionId
@@ -1943,7 +2002,7 @@ export function registerAiAgentsRoutes(app: Express): void {
         metadata: {
           skillId,
           skillName,
-          model: session.model || agent.model || "claude-sonnet-4-20250514",
+          model: session.model || agent.model || "claude-sonnet-4-6",
         },
       });
 
@@ -1975,7 +2034,7 @@ export function registerAiAgentsRoutes(app: Express): void {
       res.write(`data: ${JSON.stringify({ type: "skill_metadata", skillId, skillName })}\n\n`);
 
       const cwd = getSessionCwd(sessionId, agent.type);
-      const sessionModel = session.model || agent.model || "claude-sonnet-4-20250514";
+      const sessionModel = session.model || agent.model || "claude-sonnet-4-6";
       const sessionThinking = session.thinkingLevel || agent.thinkingLevel || "medium";
 
       streamClaudeResponse({

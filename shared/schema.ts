@@ -272,6 +272,7 @@ export const campaigns = nocodb.table("Campaigns", {
   bump2Template: text("bump_2_template"),
   bump3Template: text("bump_3_template"),
   bump4Template: text("bump_4_template"),
+  reengagementBumpTemplate: text("reengagement_bump_template"),
   bump1DelayHours: bigint("bump_1_delay_hours", { mode: "number" }),
   bump3DelayHours: bigint("bump_3_delay_hours", { mode: "number" }),
   bump2DelayHours: bigint("bump_2_delay_hours", { mode: "number" }),
@@ -1112,6 +1113,25 @@ export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({ i
 export type TaskComment = typeof taskComments.$inferSelect;
 export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
 
+// ─── Task Activity ───────────────────────────────────────────────────────────
+export const taskActivity = nocodb.table("Task_Activity", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  actorUserId: integer("actor_user_id"),
+  actorName: text("actor_name").notNull(),
+  action: text("action").notNull(),
+  field: text("field"),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("task_activity_task_id_idx").on(t.taskId),
+]);
+
+export const insertTaskActivitySchema = createInsertSchema(taskActivity).omit({ id: true, createdAt: true });
+export type TaskActivity = typeof taskActivity.$inferSelect;
+export type InsertTaskActivity = z.infer<typeof insertTaskActivitySchema>;
+
 // ─── Task Attachments ────────────────────────────────────────────────────────
 export const taskAttachments = nocodb.table("Task_Attachments", {
   id: serial("id").primaryKey(),
@@ -1142,7 +1162,7 @@ export const aiAgents = nocodb.table("AI_Agents", {
   config: text("config"), // JSON string for extra config
   enabled: boolean("enabled").notNull().default(true),
   displayOrder: integer("display_order").notNull().default(0),
-  model: text("model").notNull().default("claude-sonnet-4-20250514"),
+  model: text("model").notNull().default("claude-sonnet-4-6"),
   thinkingLevel: text("thinking_level").notNull().default("medium"),
   permissions: json("permissions").default({}),
   pageAwarenessEnabled: boolean("page_awareness_enabled").notNull().default(true),

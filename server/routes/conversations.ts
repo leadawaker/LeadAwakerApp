@@ -38,7 +38,7 @@ export function registerConversationsRoutes(app: Express): void {
 
     console.log(`[sse] Client connected: accountId=${accountId}, userId=${user.id}, global=${isGlobal}`);
     res.write("event: connected\ndata: {}\n\n");
-    addClient(accountId, res, isGlobal);
+    addClient(accountId, res, isGlobal, user.id);
 
     const keepAlive = setInterval(() => {
       res.write("event: ping\ndata: {}\n\n");
@@ -46,7 +46,7 @@ export function registerConversationsRoutes(app: Express): void {
 
     req.on("close", () => {
       clearInterval(keepAlive);
-      removeClient(accountId, res);
+      removeClient(accountId, res, isGlobal, user.id);
       console.log(`[sse] Client disconnected: accountId=${accountId}, userId=${user.id}`);
     });
   });

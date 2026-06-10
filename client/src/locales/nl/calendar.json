@@ -169,9 +169,7 @@
   },
   "design": {
     "kpi": {
-      "meetings": "Afspraken deze week",
-      "attendance": "Gem. opkomst",
-      "highIntent": "Hoge intentie · 70%+"
+      "meetings": "Afspraken deze week"
     },
     "tabs": {
       "all": "Alle",
@@ -184,29 +182,34 @@
       "noShow": "No-show",
       "rescheduled": "Verzet"
     },
-    "legend": {
-      "high": "Hoge intentie · 70%+",
-      "needs": "Bevestiging nodig · 40–70%",
-      "risk": "Risico · <40%"
-    },
-    "bookedByAI": "Geboekt door AI",
     "detail": {
       "date": "Datum",
       "channel": "Kanaal",
       "time": "Tijd",
-      "attendance": "Opkomst",
-      "whyBooked": "Waarom AI dit boekte",
-      "recentConversation": "Recent gesprek",
+      "leadScore": "Lead Score",
+      "aiSummary": "Gesprekssamenvatting",
+      "summary": {
+        "situation": "Situatie",
+        "pain": "Pijn",
+        "goal": "Doel",
+        "objection": "Bezwaar",
+        "nextStep": "Volgende stap"
+      },
+      "conversation": "Gesprek",
       "openInLead": "Open in lead",
       "selectMeeting": "Selecteer een afspraak",
       "noMeetings": "Geen afspraken",
       "aiAgent": "AI-agent",
       "googleMeet": "Google Meet",
       "phone": "Telefoon",
-      "placeholderHeadline": "Deze lead reageert consistent en lijkt een sterke kandidaat voor een geboekt gesprek.",
-      "placeholderReason1": "Reageerde via meerdere contactmomenten met een positieve toon.",
-      "placeholderReason2": "Toonde duidelijke interesse in het aanbod tijdens het gesprek.",
-      "placeholderReason3": "Stemde zonder aarzelen in met een specifiek tijdstip."
+      "reschedule": "Verzetten",
+      "cancelCall": "Gesprek annuleren",
+      "close": "Sluiten"
+    },
+    "panel": {
+      "minimize": "Paneel minimaliseren",
+      "hide": "Paneel verbergen",
+      "show": "Paneel tonen"
     }
   }
 }

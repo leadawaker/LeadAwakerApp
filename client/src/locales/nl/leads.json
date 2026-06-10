@@ -125,6 +125,7 @@
       "campaign": "Campagne",
       "tags": "Tags",
       "lastActivity": "Laatste Activiteit",
+      "lastMessage": "Laatste Bericht",
       "notes": "Notities",
       "account": "Account",
       "source": "Bron",
@@ -473,7 +474,8 @@
     "allTagsAssigned": "Alle tags al toegewezen",
     "noTagsAssigned": "Geen tags toegewezen",
     "loadingTags": "Tags laden…",
-    "removeTag": "Tag {{name}} verwijderen"
+    "removeTag": "Tag {{name}} verwijderen",
+    "resumesOn": "Hervat op {{date}}"
   },
   "timeline": {
     "title": "Tijdlijn",

@@ -2,9 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Sparkles, Zap, Rabbit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Versionless aliases — these always point to the current snapshot of each tier
+// without a date suffix. They do NOT auto-advance across generations: when a newer
+// Opus/Sonnet/Haiku ships, bump the matching `id` here (one-line change). There is
+// no `@latest` tag on the Anthropic API; the bare alias is the closest equivalent.
 export const MODEL_OPTIONS = [
   {
-    id: "claude-sonnet-4-20250514",
+    id: "claude-sonnet-4-6",
     label: "Sonnet",
     shortLabel: "Sonnet",
     icon: Zap,
@@ -13,7 +17,7 @@ export const MODEL_OPTIONS = [
     description: "Fast & capable",
   },
   {
-    id: "claude-opus-4-20250514",
+    id: "claude-opus-4-8",
     label: "Opus",
     shortLabel: "Opus",
     icon: Sparkles,
@@ -22,7 +26,7 @@ export const MODEL_OPTIONS = [
     description: "Most intelligent",
   },
   {
-    id: "claude-haiku-4-5-20251001",
+    id: "claude-haiku-4-5",
     label: "Haiku",
     shortLabel: "Haiku",
     icon: Rabbit,

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
-import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask, TaskCategory, InsertTaskCategory, TaskComment, InsertTaskComment, TaskAttachment, InsertTaskAttachment } from "@shared/schema";
+import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask, TaskCategory, InsertTaskCategory, TaskComment, InsertTaskComment, TaskAttachment, InsertTaskAttachment, TaskActivity } from "@shared/schema";
 
 const TASKS_KEY = ["/api/tasks"];
 const CATEGORIES_KEY = ["/api/task-categories"];
@@ -287,6 +287,25 @@ export function useDeleteComment() {
     mutationFn: ({ id, taskId }: { id: number; taskId: number }) =>
       apiRequest("DELETE", `/api/task-comments/${id}`),
     onSuccess: (_res, { taskId }) => qc.invalidateQueries({ queryKey: commentsKey(taskId) }),
+  });
+}
+
+// ─── Task Activity ──────────────────────────────────────────────────────────────
+
+function activityKey(taskId: number) {
+  return ["/api/tasks", taskId, "activity"] as const;
+}
+
+export function useTaskActivity(taskId: number) {
+  return useQuery<TaskActivity[]>({
+    queryKey: activityKey(taskId),
+    queryFn: async () => {
+      const res = await apiFetch(`/api/tasks/${taskId}/activity`);
+      if (!res.ok) throw new Error("Failed to fetch activity");
+      return res.json();
+    },
+    enabled: !!taskId,
+    staleTime: 10 * 1000,
   });
 }
 

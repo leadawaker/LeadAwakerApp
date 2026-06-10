@@ -169,9 +169,7 @@
   },
   "design": {
     "kpi": {
-      "meetings": "Reuniões esta semana",
-      "attendance": "Comparecimento médio",
-      "highIntent": "Alta intenção · 70%+"
+      "meetings": "Reuniões esta semana"
     },
     "tabs": {
       "all": "Todas",
@@ -184,29 +182,34 @@
       "noShow": "Não compareceu",
       "rescheduled": "Remarcada"
     },
-    "legend": {
-      "high": "Alta intenção · 70%+",
-      "needs": "Precisa confirmar · 40–70%",
-      "risk": "Em risco · <40%"
-    },
-    "bookedByAI": "Agendado pela IA",
     "detail": {
       "date": "Data",
       "channel": "Canal",
       "time": "Horário",
-      "attendance": "Comparecimento",
-      "whyBooked": "Por que a IA agendou",
-      "recentConversation": "Conversa recente",
+      "leadScore": "Pontuação do Lead",
+      "aiSummary": "Resumo da Conversa",
+      "summary": {
+        "situation": "Situação",
+        "pain": "Dor",
+        "goal": "Objetivo",
+        "objection": "Objeção",
+        "nextStep": "Próximo passo"
+      },
+      "conversation": "Conversa",
       "openInLead": "Abrir no lead",
       "selectMeeting": "Selecione uma reunião",
       "noMeetings": "Nenhuma reunião",
       "aiAgent": "Agente IA",
       "googleMeet": "Google Meet",
       "phone": "Telefone",
-      "placeholderHeadline": "Este lead vem interagindo de forma consistente e parece um forte candidato para uma chamada agendada.",
-      "placeholderReason1": "Respondeu em vários contatos com um tom positivo.",
-      "placeholderReason2": "Demonstrou interesse claro na oferta durante a conversa.",
-      "placeholderReason3": "Concordou com um horário específico sem hesitar."
+      "reschedule": "Reagendar",
+      "cancelCall": "Cancelar chamada",
+      "close": "Fechar"
+    },
+    "panel": {
+      "minimize": "Minimizar painel",
+      "hide": "Ocultar painel",
+      "show": "Mostrar painel"
     }
   }
 }

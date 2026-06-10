@@ -1,4 +1,18 @@
 {
+  "activity": {
+    "title": "Activiteit",
+    "none": "Nog geen activiteit",
+    "empty": "geen",
+    "created": "heeft deze taak aangemaakt",
+    "cloned": "heeft deze taak gekloond",
+    "statusChanged": "wijzigde status van {{old}} naar {{new}}",
+    "priorityChanged": "wijzigde prioriteit van {{old}} naar {{new}}",
+    "assigneeChanged": "wijzigde toegewezene van {{old}} naar {{new}}",
+    "dueDateChanged": "wijzigde vervaldatum van {{old}} naar {{new}}",
+    "categoryChanged": "wijzigde categorie van {{old}} naar {{new}}",
+    "titleChanged": "wijzigde titel van {{old}} naar {{new}}",
+    "changed": "wijzigde {{field}}"
+  },
   "page": {
     "title": "Taken",
     "searchPlaceholder": "Taken zoeken...",
@@ -29,7 +43,9 @@
     "updated": "Bijgewerkt",
     "back": "Terug",
     "markComplete": "Voltooien",
-    "reopen": "Taak heropenen"
+    "reopen": "Taak heropenen",
+    "cancel": "Annuleren",
+    "clone": "Dupliceren"
   },
   "relative": {
     "today": "Vandaag",
@@ -79,7 +95,8 @@
     "clearEmoji": "Wissen",
     "timeEstimate": "Geschatte Tijd",
     "hours": "uur",
-    "minutes": "min"
+    "minutes": "min",
+    "checklist": "Checklist"
   },
   "linked": {
     "account": "Account:",
@@ -158,7 +175,7 @@
     "check": "Markeer als voltooid",
     "uncheck": "Markering opheffen",
     "add": "Toevoegen",
-    "addPlaceholder": "Subtaak toevoegen...",
+    "addPlaceholder": "Voeg een item toe...",
     "delete": "Subtaak verwijderen",
     "moveUp": "Omhoog",
     "moveDown": "Omlaag"
@@ -221,5 +238,20 @@
     "deleteDescWithTasks": "Weet je zeker dat je \"{{name}}\" wilt verwijderen? {{count}} ta(a)k(en) in deze categorie worden ongecategoriseerd.",
     "confirmDelete": "Verwijderen",
     "cancelDelete": "Annuleren"
+  },
+  "comments": {
+    "title": "Reacties ({{count}})",
+    "placeholder": "Voeg een reactie toe...",
+    "unknown": "Onbekend"
+  },
+  "attachments": {
+    "title": "Bijlagen ({{count}})",
+    "add": "+ Bestand toevoegen",
+    "dropHint": "Sleep bestanden hierheen"
+  },
+  "due": {
+    "overdue": "Te laat",
+    "today": "Vandaag",
+    "tomorrow": "Morgen"
   }
 }

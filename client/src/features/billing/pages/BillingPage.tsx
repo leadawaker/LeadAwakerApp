@@ -21,7 +21,7 @@ type ViewMode = "list" | "table";
 
 export function BillingPage() {
   const { t } = useTranslation("billing");
-  const { currentAccountId, isAgencyUser } = useWorkspace();
+  const { currentAccountId, isAgencyUser, isOwner } = useWorkspace();
   const { clearTopbarActions } = useTopbarActions();
   const isMobile = useIsMobile();
 
@@ -29,7 +29,6 @@ export function BillingPage() {
     navigate(`/platform/billing/${tab}`);
   }, []);
 
-  // Determine active tab from URL (no user-facing tabs; URL determines which page)
   const [location] = useLocation();
   const activeTab = useMemo<BillingTab>(() => {
     if (location.includes("/expenses")) return "expenses";
@@ -210,9 +209,10 @@ export function BillingPage() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col pt-4">
+      <div className="h-full flex flex-col">
       <BillingListView
         activeTab={activeTab}
+        onTabChange={handleTabChange}
         // Invoice data
         invoices={invoicesHook.invoices}
         invoicesLoading={invoicesHook.loading}
@@ -247,6 +247,7 @@ export function BillingPage() {
         accountFilter={accountFilter}
         setAccountFilter={setAccountFilter}
         isAgencyUser={isAgencyUser}
+        isOwner={isOwner}
         // Panel mode
         rightPanelMode={rightPanelMode}
         setRightPanelMode={setRightPanelMode}

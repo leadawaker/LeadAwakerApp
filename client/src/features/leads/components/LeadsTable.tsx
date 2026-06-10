@@ -360,32 +360,24 @@ export function LeadsTable() {
   const [showVerticalLines, setShowVerticalLines] = useState(() => {
     try { return localStorage.getItem("leads-vertical-lines") === "true"; } catch { return false; }
   });
-  const [fullWidthTable, setFullWidthTable] = useState(() => {
-    try { return localStorage.getItem("leads-full-width") === "true"; } catch { return false; }
-  });
   useEffect(() => { try { localStorage.setItem("leads-vertical-lines", String(showVerticalLines)); } catch {} }, [showVerticalLines]);
+  // The Leads page always renders full-width: the topbar and content sit flush to
+  // the screen edges, matching Campaigns/Calendar. We keep the shared content
+  // wrapper free of the old max-w-[1729px] cap while mounted, and strip any cap
+  // left behind by other pages so nothing leaks across navigations.
   useEffect(() => {
-    try { localStorage.setItem("leads-full-width", String(fullWidthTable)); } catch {}
-    window.dispatchEvent(new Event("leads-fullwidth-change"));
-    // Direct DOM fallback: toggle classes on CrmShell content wrapper
-    const el = document.getElementById("crm-content-wrapper");
-    if (el) {
-      if (fullWidthTable) {
+    const setFullWidth = () => {
+      const el = document.getElementById("crm-content-wrapper");
+      if (el) {
         el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
         el.classList.add("px-1", "md:px-1");
-      } else {
-        el.classList.remove("px-1", "md:px-1");
-        el.classList.add("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
       }
-    }
-  }, [fullWidthTable]);
-  // Clean up full-width on unmount (navigating away from leads)
-  useEffect(() => {
+    };
+    setFullWidth();
     return () => {
       const el = document.getElementById("crm-content-wrapper");
       if (el) {
-        el.classList.remove("px-1", "md:px-1");
-        el.classList.add("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
+        el.classList.remove("px-1", "md:px-1", "px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
       }
     };
   }, []);
@@ -1095,12 +1087,6 @@ export function LeadsTable() {
             </div>
             <span className="flex-1">{t("toolbar.verticalLines")}</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFullWidthTable(!fullWidthTable); }} className="flex items-center gap-2 text-[12px]">
-            <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", fullWidthTable ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-              {fullWidthTable && <Check className="h-2 w-2 text-white" />}
-            </div>
-            <span className="flex-1">{t("toolbar.fullWidth")}</span>
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setColumnOrder([])} className="text-[12px] text-muted-foreground">
             {t("toolbar.resetColumnOrder")}
           </DropdownMenuItem>
@@ -1398,12 +1384,6 @@ export function LeadsTable() {
                     </div>
                     <span className="flex-1">{t("toolbar.verticalLines")}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFullWidthTable(!fullWidthTable); }} className="flex items-center gap-2 text-[12px]">
-                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", fullWidthTable ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-                      {fullWidthTable && <Check className="h-2 w-2 text-white" />}
-                    </div>
-                    <span className="flex-1">{t("toolbar.fullWidth")}</span>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
                     <Upload className="h-3.5 w-3.5 mr-2" /> {t("toolbar.importCsv")}
@@ -1478,7 +1458,6 @@ export function LeadsTable() {
                 selectedIds={tableSelectedIds}
                 onSelectionChange={setTableSelectedIds}
                 showVerticalLines={showVerticalLines}
-                fullWidthTable={fullWidthTable}
                 groupBy={tableGroupBy}
                 columnOrder={columnOrder}
                 onColumnOrderChange={setColumnOrder}

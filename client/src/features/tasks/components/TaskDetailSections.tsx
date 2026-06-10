@@ -13,6 +13,7 @@ type CommentUser = { id: number; fullName1: string | null; email: string | null;
 // ── CommentsSection ───────────────────────────────────────────────────────────
 
 export function CommentsSection({ taskId, currentUserName, users = [] }: { taskId: number; currentUserName?: string; users?: CommentUser[] }) {
+  const { t } = useTranslation("tasks");
   const { data: comments = [] } = useTaskComments(taskId);
   const createComment = useCreateComment();
   const updateComment = useUpdateComment();
@@ -22,7 +23,8 @@ export function CommentsSection({ taskId, currentUserName, users = [] }: { taskI
   const [editBody, setEditBody] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const authorName = currentUserName?.trim() || localStorage.getItem("leadawaker_user_name") || "Unknown";
+  const authorName = currentUserName?.trim() || localStorage.getItem("leadawaker_user_name") || t("comments.unknown");
+  const currentUserAvatar = localStorage.getItem("leadawaker_user_avatar") || "";
 
   function handleSubmit() {
     const trimmed = body.trim();
@@ -51,14 +53,15 @@ export function CommentsSection({ taskId, currentUserName, users = [] }: { taskI
     <div className="mt-4">
       <div className="flex items-center gap-2 mb-2">
         <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[12px] font-medium text-foreground/70">Comments ({comments.length})</span>
+        <span className="text-[12px] font-medium text-foreground/70">{t("comments.title", { count: comments.length })}</span>
       </div>
       <div className="flex flex-col gap-3 mb-3">
         {comments.map((c) => {
           const name = c.authorName ?? "?";
           const initials = name.split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
           const matchedUser = users.find(u => u.fullName1 === name || u.email === name);
-          const avatarUrl = matchedUser?.avatarUrl;
+          const isOwnComment = name === authorName;
+          const avatarUrl = matchedUser?.avatarUrl || (isOwnComment ? currentUserAvatar : "");
           const isEditing = editingId === c.id;
           return (
             <div key={c.id} className="group flex gap-2.5 text-[12px]">
@@ -129,7 +132,7 @@ export function CommentsSection({ taskId, currentUserName, users = [] }: { taskI
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-          placeholder="Add a comment..."
+          placeholder={t("comments.placeholder")}
           rows={2}
           className="w-full resize-none text-[12px] rounded-[5px] border-none bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] px-3 py-2 text-[var(--ink)] placeholder:text-[var(--mute-2)] focus:outline-none"
           style={{ paddingBottom: body.trim() ? 32 : undefined }}
@@ -166,14 +169,14 @@ function formatSize(bytes: number | null | undefined) {
 }
 
 export function AttachmentsSection({ taskId }: { taskId: number }) {
+  const { t } = useTranslation("tasks");
   const { data: attachments = [] } = useTaskAttachments(taskId);
   const uploadAttachment = useUploadAttachment();
   const deleteAttachment = useDeleteAttachment();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function uploadFile(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
@@ -183,7 +186,19 @@ export function AttachmentsSection({ taskId }: { taskId: number }) {
       });
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadFile(file);
     e.target.value = "";
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    Array.from(e.dataTransfer.files).forEach(uploadFile);
   }
 
   return (
@@ -191,17 +206,31 @@ export function AttachmentsSection({ taskId }: { taskId: number }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-[12px] font-medium text-foreground/70">Attachments ({attachments.length})</span>
+          <span className="text-[12px] font-medium text-foreground/70">{t("attachments.title", { count: attachments.length })}</span>
         </div>
         <button
           onClick={() => fileInputRef.current?.click()}
           className="text-[11px] text-brand-indigo hover:underline"
         >
-          + Attach file
+          {t("attachments.add")}
         </button>
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        className={cn(
+          "flex flex-col gap-1.5 rounded-lg transition-colors",
+          isDragging && "border border-dashed border-brand-indigo bg-brand-indigo/5 p-2"
+        )}
+      >
+        {isDragging && (
+          <div className="flex items-center justify-center gap-2 py-3 text-[12px] text-brand-indigo">
+            <Paperclip className="h-3.5 w-3.5" />
+            {t("attachments.dropHint")}
+          </div>
+        )}
         {attachments.map((a) => (
           <div key={a.id} className="group flex items-center gap-2 rounded-lg border px-3 py-2 text-[12px] bg-background">
             <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" />

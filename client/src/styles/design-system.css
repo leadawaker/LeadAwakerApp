@@ -1,7 +1,6 @@
 /* Lead Awaker — Premium Design System
-   Warm-bone neumorphic, wine accent, directional light */
-
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Manrope:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Yeseva+One&display=swap');
+   Warm-bone neumorphic, wine accent, directional light
+   (Google Fonts @import lives at the top of index.css — CSS requires @import to precede all other statements) */
 
 :root {
   /* Backgrounds & Surfaces — brighter, white cards on a soft warm ground */
@@ -12,6 +11,7 @@
   --surface: #EFEAE1;    /* in-between warm cream — page bg, topbar, toolbars */
   --card: #FFFFFF;       /* white cards — the brightness lift */
   --card-bright: #FFFFFF; /* polished hero — pure white, warmth comes from the gradient overlay */
+  --bone: #F5F1E8;       /* warm bone — prompt editor + preview writing surface */
 
   /* Ink */
   --ink: #1F1A14;
@@ -69,10 +69,10 @@
   --d-large-b: 18px;
 
   /* Glass */
-  --glass-bg: rgba(255, 250, 240, 0.55);
-  --glass-bg-strong: rgba(255, 250, 240, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-edge: rgba(255, 255, 255, 0.85);
+  --glass-bg: rgba(255, 250, 240, 0.28);
+  --glass-bg-strong: rgba(255, 250, 240, 0.46);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-edge: rgba(255, 255, 255, 0.70);
 
   /* Typography */
   --serif: "Playfair Display", "Playfair Display", Georgia, serif;
@@ -588,9 +588,11 @@ body, html { margin: 0; padding: 0; }
 .la-seg--fill { display: flex; }
 .la-seg--fill .la-seg-btn { flex: 1; }
 
-/* ─── Tasks merged view — board primary + compact calendar ──────────
-   Default: calendar stacks below the board.
-   Ultrawide (>=1800px): calendar moves to a right rail. */
+/* ─── Tasks merged view — board primary + calendar ───────────────────
+   Default (< 1800px): weekly calendar stacks above the board.
+   Wide (≥ 1800px): monthly calendar moves to a right rail; kanban
+   takes the remaining space and scrolls horizontally if columns are
+   too wide — it never gets pushed behind the calendar. */
 .tasks-merged {
   display: flex;
   flex-direction: column;
@@ -600,30 +602,36 @@ body, html { margin: 0; padding: 0; }
 .tasks-merged__board {
   flex: 1 1 auto;
   min-height: 0;
-  min-width: 0;
+  min-width: 0;          /* critical: lets the board shrink, scrolls internally */
   display: flex;
   overflow: hidden;
-  order: 2;            /* board sits below the calendar when stacked */
+  order: 2;
 }
 .tasks-merged__cal {
   flex: 0 0 auto;
   display: flex;
   min-height: 0;
-  order: 1;            /* calendar on top when stacked */
-  padding: 8px 16px 6px; /* top/sides/bottom so rounded corners show */
+  order: 1;
+  padding: 8px 16px 6px;
 }
 @media (min-width: 1800px) {
-  .tasks-merged { flex-direction: row; }
-  .tasks-merged__board { order: 1; overflow: auto; overflow-y: hidden; }
+  .tasks-merged {
+    flex-direction: row;
+  }
+  .tasks-merged__board {
+    order: 1;
+    /* Board scrolls its columns instead of expanding into the calendar */
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-width: 0;
+  }
   .tasks-merged__cal {
-    flex: 0 0 clamp(700px, 40%, 1400px);
-    width: clamp(700px, 40%, 1400px);
+    flex: 0 0 clamp(640px, 36%, 900px);
+    width: clamp(640px, 36%, 900px);
     align-self: stretch;
-    border-bottom: none;
-    border-left: none;
     overflow-y: auto;
-    order: 2;                          /* calendar right rail — grows from 700px → ~50% on very wide screens */
-    padding: 16px 16px 6px 8px;        /* top/right/bottom match kanban + small left gap from board */
+    order: 2;
+    padding: 16px 16px 6px 8px;
   }
 }
 

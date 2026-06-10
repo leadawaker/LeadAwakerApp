@@ -144,7 +144,7 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
   const { t } = useTranslation("billing");
   const translatedLabel = t(DATE_GROUP_I18N_KEYS[label] ?? label, label);
   return (
-    <div className="sticky top-0 z-20 row" style={{ gap: 10, padding: "12px 4px 8px", background: "var(--bg)" }}>
+    <div className="sticky top-0 z-20 row" style={{ gap: 10, padding: "12px 4px 8px", background: "var(--bg)", boxShadow: "0 -8px 0 8px var(--bg)" }}>
       <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--ink-soft)", fontWeight: 700 }}>
         {translatedLabel}
       </span>
@@ -251,6 +251,7 @@ interface BillingListViewProps {
   accountFilter: number | "all";
   setAccountFilter: (v: number | "all") => void;
   isAgencyUser: boolean;
+  isOwner: boolean;
   // Panel mode (replaces dialogs for invoices)
   rightPanelMode: RightPanelMode;
   setRightPanelMode: (v: RightPanelMode) => void;
@@ -262,6 +263,8 @@ interface BillingListViewProps {
   // View mode
   viewMode: "list" | "table";
   setViewMode: (v: "list" | "table") => void;
+  // Tab change (for in-header tab switcher)
+  onTabChange?: (tab: BillingTab) => void;
   // Quarter/year filters
   quarterFilter: string | null;
   setQuarterFilter: (v: string | null) => void;
@@ -307,6 +310,7 @@ export function BillingListView({
   accountFilter,
   setAccountFilter,
   isAgencyUser,
+  isOwner,
   // Panel mode
   rightPanelMode,
   setRightPanelMode,
@@ -318,6 +322,8 @@ export function BillingListView({
   // View mode
   viewMode,
   setViewMode,
+  // Tab change
+  onTabChange,
   // Quarter/year filters
   quarterFilter,
   setQuarterFilter,
@@ -445,7 +451,7 @@ export function BillingListView({
   const { accounts } = useAccounts({ enabled: isAgencyUser });
 
   // Expenses data (for auto-selection of latest + available years on expenses tab)
-  const { data: expensesData } = useExpensesData();
+  const { data: expensesData } = useExpensesData(activeTab === "expenses");
 
 
   // ── Responsive toolbar: collapse to icon circles when narrow ───────────────
@@ -830,6 +836,9 @@ export function BillingListView({
   const xActive  = "border-[color:var(--wine)] text-[color:var(--wine)]";
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
+  // ── Billing tab segment options ───────────────────────────────────────────
+  const billingTabs = isOwner ? billingTabsAgency : billingTabsClient;
+
   // ── Unified header (both list and table modes) ──────────────────────────────
 
   const unifiedHeader = (
@@ -837,11 +846,10 @@ export function BillingListView({
       height: 60,
       flexShrink: 0,
       padding: '0 20px',
-      borderTop: '1px solid var(--line)',
       borderBottom: '1px solid var(--line)',
       display: 'flex',
       alignItems: 'center',
-      gap: 16,
+      gap: 12,
       background: 'var(--surface)',
       overflowX: 'auto',
     }}>
@@ -850,12 +858,31 @@ export function BillingListView({
         fontFamily: 'Georgia, serif',
         fontSize: 24,
         fontWeight: 500,
-        color: '#2D2622',
+        color: 'var(--ink)',
         letterSpacing: '-0.01em',
         flexShrink: 0,
       }}>
         {t("page.title")}
       </span>
+
+      {/* Billing section tabs (Invoices / Expenses / Contracts) */}
+      {onTabChange && (
+        <div className="la-seg" style={{ flexShrink: 0 }}>
+          {billingTabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id as BillingTab)}
+                className={`la-seg-btn${activeTab === tab.id ? ' on' : ''}`}
+              >
+                <Icon size={14} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* View mode toggle (List | Table) */}
       <ViewTabBar

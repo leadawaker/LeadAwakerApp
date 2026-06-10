@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useListPanelState } from "@/hooks/useListPanelState";
-import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { useTranslation } from "react-i18next";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import {
   Plus,
-  Star,
   ArrowUpDown,
   Layers,
   Filter,
@@ -16,6 +14,9 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  Type,
+  PanelLeft,
+  PanelLeftClose,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { type CampaignForPreview } from "../utils/resolveVariables";
@@ -32,7 +33,6 @@ import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
-import { SearchPill } from "@/components/ui/search-pill";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import {
@@ -82,6 +82,14 @@ const SORT_OPTIONS: PromptSortOption[] = [
 const GROUP_OPTIONS: PromptGroupOption[] = ["none", "status", "model", "campaign", "account"];
 const STATUS_OPTIONS = ["all", "active", "archived"] as const;
 
+const PREVIEW_FONTS: { label: string; value: string }[] = [
+  { label: "Mono", value: "var(--mono)" },
+  { label: "Serif", value: "var(--serif)" },
+  { label: "Sans", value: "system-ui, -apple-system, sans-serif" },
+  { label: "Georgia", value: "Georgia, serif" },
+  { label: "Humanist", value: "'Trebuchet MS', Helvetica, sans-serif" },
+];
+
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
 type TFn = (key: string, opts?: any) => string;
@@ -104,16 +112,20 @@ function formatRelativeTime(dateStr: string | null | undefined, t: TFn): string 
   }
 }
 
-/* ── Left panel list card (wine premium design) ──────────────────────────── */
+/* ── Left panel list card ────────────────────────────────────────────────── */
 
 function PromptListCard({
   prompt,
   isActive,
   onClick,
+  campaignName,
+  accountName,
 }: {
   prompt: any;
   isActive: boolean;
   onClick: () => void;
+  campaignName?: string;
+  accountName?: string;
 }) {
   const { t } = useTranslation("prompts");
   const name = prompt.name || t("labels.untitled");
@@ -121,6 +133,9 @@ function PromptListCard({
   const isStatusActive = normalizedStatus === "active";
   const updatedAt = prompt.updatedAt || prompt.updated_at;
   const promptId = getPromptId(prompt);
+  const isSystem = !(prompt.campaignsId || prompt.Campaigns_id);
+  const accent = isSystem ? "var(--stage-responded)" : "var(--wine)";
+  const accentTint = isSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
 
   return (
     <div
@@ -133,139 +148,171 @@ function PromptListCard({
         position: "relative",
         cursor: "pointer",
         borderRadius: "var(--r-surface)",
-        padding: "11px 13px",
+        padding: "9px 7px",
         display: "flex",
-        gap: 12,
-        alignItems: "center",
+        gap: 9,
+        alignItems: "flex-start",
         background: isActive ? "var(--card)" : "transparent",
         boxShadow: isActive ? "var(--sh-raised-crisp)" : "none",
         transition: "all 130ms",
       }}
       onMouseEnter={(e) => {
-        if (!isActive) (e.currentTarget as HTMLDivElement).style.background = "var(--wine-tint)";
+        if (!isActive) (e.currentTarget as HTMLDivElement).style.background = accentTint;
       }}
       onMouseLeave={(e) => {
         if (!isActive) (e.currentTarget as HTMLDivElement).style.background = "transparent";
       }}
     >
-      {/* Left wine accent bar */}
+      {/* Left accent bar */}
       {isActive && (
         <div style={{
-          position: "absolute", left: 0, top: 12, bottom: 12,
-          width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0",
+          position: "absolute", left: 0, top: 10, bottom: 10,
+          width: 3, background: accent, borderRadius: "0 3px 3px 0",
         }} />
       )}
       {/* Bot icon */}
       <span style={{
-        width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
+        position: "relative", width: 34, height: 34, flexShrink: 0, borderRadius: "var(--r-surface)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: isActive ? "var(--wine-tint)" : "var(--bg)",
+        background: isActive ? accentTint : "var(--bg)",
         boxShadow: isActive ? "none" : "var(--sh-inset-crisp)",
         color: isActive
-          ? "var(--wine)"
+          ? accent
           : normalizedStatus === "active"
-          ? "var(--wine)"
+          ? accent
           : normalizedStatus === "archived"
           ? "var(--mute-2)"
           : "var(--mute)",
         opacity: !isActive && normalizedStatus === "active" ? 0.55 : 1,
       }}>
-        <Bot size={19} />
+        <Bot size={17} />
+        {isActive && isStatusActive && (
+          <span style={{
+            position: "absolute", bottom: 1, right: 1,
+            width: 6, height: 6, borderRadius: "50%",
+            background: "var(--good)", border: "1.5px solid var(--card)",
+          }} />
+        )}
       </span>
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: 13.5, fontWeight: 600, color: "var(--ink)",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }}>
-          {name}
+        {/* Row 1: name + date */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 5, justifyContent: "space-between" }}>
+          <span style={{
+            fontSize: 13, fontWeight: 600, color: "var(--ink)",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            flex: 1, minWidth: 0,
+          }}>
+            {name}
+          </span>
+          <span style={{
+            fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)",
+            flexShrink: 0, marginTop: 1,
+          }}>
+            {formatRelativeTime(updatedAt, t)}
+          </span>
         </div>
-        {prompt.model && (
-          <div style={{ marginTop: 3 }}>
-            <span style={{
-              fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute-2)",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {prompt.model}
-            </span>
+        {/* Row 2: campaign + account */}
+        {(campaignName || accountName) && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3, gap: 4 }}>
+            {campaignName && (
+              <span style={{
+                fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                flex: 1, minWidth: 0,
+              }}>
+                {campaignName}
+              </span>
+            )}
+            {accountName && (
+              <span style={{
+                fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)",
+                flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                maxWidth: 72,
+              }}>
+                {accountName}
+              </span>
+            )}
           </div>
         )}
       </div>
-      {/* Active dot */}
-      {isActive && isStatusActive && (
-        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--good)", flexShrink: 0 }} title="Active" />
-      )}
-      {/* Date */}
-      <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", flexShrink: 0 }}>
-        {formatRelativeTime(updatedAt, t)}
-      </span>
     </div>
   );
 }
 
-/* ── Compact rail (65px icon column) ──────────────────────────────────────── */
+/* ── Compact rail (narrower icon column) ───────────────────────────────────── */
 
 function CompactPromptRail({
   items,
   selectedId,
   onSelect,
+  campaigns,
+  accountMap,
 }: {
   items: any[];
   selectedId: string | null;
   onSelect: (prompt: any) => void;
+  campaigns: CampaignForPreview[];
+  accountMap: Map<number, string>;
 }) {
   return (
     <div style={{
-      width: 65, flexShrink: 0, borderRight: "1px solid var(--line)",
+      width: 52, flexShrink: 0, borderRight: "1px solid var(--line)",
       background: "var(--bg)", overflow: "hidden", display: "flex", flexDirection: "column",
     }}>
       <div style={{
         flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 0", display: "flex",
-        flexDirection: "column", gap: 6, alignItems: "center", "[scrollbar-width]": "thin",
+        flexDirection: "column", gap: 6, alignItems: "center",
       }}>
         {items.map((p) => {
           const id = getPromptId(p);
           const isActive = selectedId === id;
           const pStatus = (p.status || "").toLowerCase().trim();
+          const isSystem = !(p.campaignsId || p.Campaigns_id);
+          const accent = isSystem ? "var(--stage-responded)" : "var(--wine)";
+          const accentTint = isSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
           const railColor = isActive
-            ? "var(--wine)"
+            ? accent
             : pStatus === "active"
-            ? "var(--wine)"
+            ? accent
             : pStatus === "archived"
             ? "var(--mute-2)"
             : "var(--mute)";
           const railOpacity = !isActive && pStatus === "active" ? 0.55 : 1;
-          const promptContent = p.promptText || p.prompt_text || "";
-          const previewText = promptContent.length > 100 ? promptContent.substring(0, 100) + "..." : promptContent;
+          const campaign = campaigns.find((c) => c.id === Number(p.campaignsId || p.Campaigns_id));
+          const campaignName = campaign?.name;
+          const accountName = campaign?.accountsId ? accountMap.get(campaign.accountsId) ?? undefined : undefined;
           return (
             <Tooltip key={id}>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onSelect(p)}
                   style={{
-                    width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
+                    width: 34, height: 34, flexShrink: 0, borderRadius: "var(--r-surface)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", border: "none",
-                    background: isActive ? "var(--wine-tint)" : "var(--bg)",
-                    boxShadow: isActive ? "0 0 0 2px var(--wine)" : "var(--sh-inset-crisp)",
+                    background: isActive ? accentTint : "var(--bg)",
+                    boxShadow: isActive ? `0 0 0 2px ${accent}` : "var(--sh-inset-crisp)",
                     color: railColor,
                     opacity: railOpacity,
                     transition: "all 130ms",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "var(--wine-tint)";
+                    if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = accentTint;
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "var(--bg)";
                   }}
                 >
-                  <Bot size={19} />
+                  <Bot size={17} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
-                <div className="text-xs">
+                <div className="text-xs space-y-0.5">
                   <div className="font-semibold">{p.name || "Untitled"}</div>
-                  {previewText && <div className="text-muted-foreground mt-1 whitespace-normal">{previewText}</div>}
+                  {p.model && <div className="text-muted-foreground">{p.model}</div>}
+                  {campaignName && <div className="text-muted-foreground">{campaignName}</div>}
+                  {accountName && <div className="text-muted-foreground">{accountName}</div>}
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -323,7 +370,7 @@ interface PromptsListViewProps {
   onDelete: (prompt: any) => void;
   onOpenCreate: () => void;
   campaignMap: Map<number, string>;
-  campaigns: { id: number; name: string; aiModel: string }[];
+  campaigns: CampaignForPreview[];
 }
 
 /* ── Main component ──────────────────────────────────────────────────────── */
@@ -361,10 +408,9 @@ export function PromptsListView({
   const { t } = useTranslation("prompts");
   const { toast } = useToast();
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
-  const { state: listPanelState } = useListPanelState();
+  const { state: listPanelState, cycle: cyclePanel } = useListPanelState();
   const leftPanelHidden = listPanelState === "hidden";
   const leftPanelCompact = listPanelState === "compact";
-  const [searchOpen, setSearchOpen] = useState(false);
 
   // System / Campaigns tab filter
   const [listTab, setListTab] = useState<"system" | "campaign">("campaign");
@@ -372,6 +418,11 @@ export function PromptsListView({
   // Counts from the full prompts list (not filtered by tab)
   const systemCount = useMemo(() => prompts.filter((p: any) => !(p.campaignsId || p.Campaigns_id)).length, [prompts]);
   const campaignCount = useMemo(() => prompts.filter((p: any) => !!(p.campaignsId || p.Campaigns_id)).length, [prompts]);
+
+  const accountMap = useMemo(
+    () => new Map(availableAccounts.map((a) => [a.id, a.name])),
+    [availableAccounts],
+  );
 
   // Tab-filtered prompts
   const tabFilteredPrompts = useMemo(() => {
@@ -427,7 +478,8 @@ export function PromptsListView({
   const selectedId = selectedPrompt ? getPromptId(selectedPrompt) : null;
 
   // Preview state
-  const [previewOpen, setPreviewOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [showEditorSidebar, setShowEditorSidebar] = useState(true);
   const editPanelRef = useRef<PromptEditorPanelHandle>(null);
   const [editorFontSize, setEditorFontSize] = useState(() => {
     try { const v = localStorage.getItem("prompts-editor-font-size"); return v ? Number(v) : 14; } catch { return 14; }
@@ -435,6 +487,28 @@ export function PromptsListView({
   useEffect(() => {
     try { localStorage.setItem("prompts-editor-font-size", String(editorFontSize)); } catch {}
   }, [editorFontSize]);
+  const [previewFont, setPreviewFont] = useState(() => {
+    try { return localStorage.getItem("prompts-preview-font") || "var(--mono)"; } catch { return "var(--mono)"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prompts-preview-font", previewFont); } catch {}
+  }, [previewFont]);
+  const [tokenEstimate, setTokenEstimate] = useState(0);
+  const [fontPopoverOpen, setFontPopoverOpen] = useState(false);
+
+  // System prompt = no linked campaign → blue accent (responded-lead status color)
+  const selectedIsSystem = selectedPrompt ? !(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) : false;
+  const detailAccent = selectedIsSystem ? "var(--stage-responded)" : "var(--wine)";
+  const detailAccentTint = selectedIsSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
+  const detailAccentGlow = selectedIsSystem ? "rgba(63,142,142,0.35)" : "var(--wine-glow)";
+
+  // Derived account + campaign for selected prompt header
+  const selCampaignId = selectedPrompt ? (selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) : null;
+  const selCampaignName = selCampaignId
+    ? campaignMap.get(Number(selCampaignId)) || t("labels.noCampaign", { defaultValue: "no campaign" })
+    : t("labels.noCampaign", { defaultValue: "no campaign" });
+  const selCampaignData = selCampaignId ? campaigns.find((c) => c.id === Number(selCampaignId)) : null;
+  const selAccountName = selCampaignData?.accountsId ? accountMap.get(selCampaignData.accountsId) : null;
 
   // Version history state
   const [versions, setVersions] = useState<PromptVersion[]>([]);
@@ -463,12 +537,20 @@ export function PromptsListView({
       .finally(() => setVersionsLoading(false));
   }, [selectedId]);
 
-  // Ctrl+P toggles preview
+  // Keyboard shortcuts: Ctrl+P preview, Ctrl+S save, Ctrl+Shift+S save version
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
         if (selectedPrompt) setPreviewOpen((p) => !p);
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (selectedPrompt) editPanelRef.current?.save();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (selectedPrompt) { setSaveBumpType("minor"); setSaveLabel(""); setSaveDialogOpen(true); }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -587,7 +669,15 @@ export function PromptsListView({
     return result;
   }, [tabFilteredPrompts, tabFilteredGroupedRows]);
 
-  // Topbar expand-on-hover button style helper
+  // Helper: get campaign name + account name for a prompt
+  function getCardNames(p: any): { campaignName?: string; accountName?: string } {
+    const cId = p.campaignsId || p.Campaigns_id;
+    if (!cId) return {};
+    const cName = campaignMap.get(Number(cId));
+    const campaign = campaigns.find((c) => c.id === Number(cId));
+    const aName = campaign?.accountsId ? accountMap.get(campaign.accountsId) : undefined;
+    return { campaignName: cName, accountName: aName };
+  }
 
   return (
     <div className="flex flex-col h-full" data-testid="prompts-list-view">
@@ -640,23 +730,192 @@ export function PromptsListView({
           </button>
         </div>
 
-        {/* Desktop: panel collapse toggle (right of tabs) */}
+        {/* Panel collapse toggle */}
         <div className="hidden md:flex items-center" style={{ flexShrink: 0 }}>
-          <ListPanelToggleButton />
+          <button
+            className="la-btn la-btn--soft la-btn--icon"
+            onClick={cyclePanel}
+            title={listPanelState === "full" ? "Compact panel" : listPanelState === "compact" ? "Hide panel" : "Show panel"}
+          >
+            {listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Controls: search + sort + filter + group + new */}
+        {/* Controls */}
         <div className="hidden md:flex items-center gap-1.5">
-          <SearchPill
-            value={q}
-            onChange={onQChange}
-            open={searchOpen}
-            onOpenChange={setSearchOpen}
-            placeholder={t("toolbar.searchPlaceholder")}
-          />
+
+          {/* Edit actions — left of search, only when prompt selected */}
+          {selectedPrompt && (
+            <>
+              {/* Font: size + family */}
+              <Popover open={fontPopoverOpen} onOpenChange={setFontPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="la-btn la-btn--soft la-btn--icon"
+                    style={{ width: 32, height: 32, flexShrink: 0 }}
+                    title={t("editor.fontSize", { defaultValue: "Font" })}
+                  >
+                    <Type size={14} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-[210px] p-3" style={{ background: "var(--paper)" }}>
+                  <div className="flex flex-col gap-3">
+                    {/* Font family */}
+                    <div>
+                      <label className="text-[10px] font-mono text-muted-foreground block mb-1.5">
+                        Preview font
+                      </label>
+                      <div className="flex flex-col gap-0.5">
+                        {PREVIEW_FONTS.map((f) => (
+                          <button
+                            key={f.value}
+                            onClick={() => setPreviewFont(f.value)}
+                            className={cn(
+                              "text-left text-[12px] px-2 py-1 rounded transition-colors",
+                              previewFont === f.value
+                                ? "bg-muted font-medium"
+                                : "hover:bg-muted/50",
+                            )}
+                            style={{ fontFamily: f.value }}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ height: 1, background: "var(--line)" }} />
+                    {/* Font size */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] font-mono text-muted-foreground">
+                        {t("editor.fontSize", { defaultValue: "Font size" })}: {editorFontSize}px
+                      </label>
+                      <input
+                        type="range"
+                        min={11}
+                        max={18}
+                        step={1}
+                        value={editorFontSize}
+                        onChange={(e) => setEditorFontSize(parseInt(e.target.value, 10))}
+                        style={{ width: "100%", cursor: "pointer", accentColor: detailAccent }}
+                      />
+                      <div className="flex justify-between text-[9px] font-mono text-muted-foreground">
+                        <span>11</span><span>18 px</span>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Save version — Ctrl+Shift+S */}
+              <Popover open={saveDialogOpen} onOpenChange={(open) => { if (open) { setSaveBumpType("minor"); setSaveLabel(""); } setSaveDialogOpen(open); }}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="la-btn la-btn--soft la-btn--icon"
+                    disabled={savingVersion}
+                    title={`${t("versions.saveVersion")} (Ctrl+Shift+S)`}
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="p-3 w-60 shadow-md border border-border/60" style={{ background: "var(--paper)" }}>
+                  <p className="text-xs font-medium mb-2">{t("versions.saveVersion")}</p>
+                  <div className="flex gap-2 mb-2">
+                    <button onClick={() => setSaveBumpType("minor")} className={cn("flex-1 text-xs py-1.5 rounded-lg border transition-colors", saveBumpType === "minor" ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium" : "border-border text-muted-foreground hover:border-foreground/30")}>
+                      {t("versions.minorUpdate")}
+                    </button>
+                    <button onClick={() => setSaveBumpType("major")} className={cn("flex-1 text-xs py-1.5 rounded-lg border transition-colors", saveBumpType === "major" ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium" : "border-border text-muted-foreground hover:border-foreground/30")}>
+                      {t("versions.majorUpdate")}
+                    </button>
+                  </div>
+                  <input
+                    className="w-full h-8 rounded-lg border border-border px-2.5 text-xs outline-none focus:ring-2 focus:ring-brand-indigo/30 mb-2"
+                    style={{ background: "var(--bg)" }}
+                    placeholder={t("versions.labelPlaceholder")}
+                    value={saveLabel}
+                    onChange={(e) => setSaveLabel(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); } }}
+                  />
+                  <button onClick={() => { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); }} disabled={savingVersion} className="w-full text-xs py-1.5 rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors disabled:opacity-50">
+                    {t("actions.save")}
+                  </button>
+                </PopoverContent>
+              </Popover>
+
+              {/* Version history */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="la-btn la-btn--soft text-[11px] font-mono shrink-0"
+                    style={{ height: 32, minWidth: 32, padding: "0 8px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--mute)" }}
+                    disabled={versionsLoading}
+                    title={t("versions.history", { defaultValue: "Version history" })}
+                  >
+                    {versionsLoading
+                      ? "…"
+                      : selectedVersion
+                      ? (() => {
+                          const sv = versions.find((v) => v.versionNumber === selectedVersion);
+                          return sv ? `v${sv.versionNumber}` : `v${selectedVersion}`;
+                        })()
+                      : liveSnap
+                      ? `${t("versions.current")} ●`
+                      : versions.length > 0
+                      ? `v${versions[0].versionNumber}`
+                      : selectedPrompt?.version
+                      ? `v${selectedPrompt.version}`
+                      : "v1"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="p-1 min-w-[220px] shadow-md border border-border/60" style={{ background: "var(--paper)" }}>
+                  {liveSnap && (
+                    <button onClick={revertToCurrent} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-amber-600 hover:bg-amber-50 font-medium">
+                      <RotateCcw className="h-3 w-3" />
+                      {t("versions.revertToCurrent")}
+                    </button>
+                  )}
+                  {versions.length === 0 && !liveSnap && (
+                    <p className="px-2.5 py-1.5 text-xs text-muted-foreground">{t("versions.noVersions")}</p>
+                  )}
+                  {versions.map((v) => (
+                    <div
+                      key={v.id}
+                      className={cn("px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-muted/60 group/vrow", selectedVersion === v.versionNumber && "bg-muted font-medium")}
+                      onClick={() => loadVersion(v)}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs flex-1 min-w-0 truncate">
+                          v{v.versionNumber}{v.label ? ` — ${v.label}` : ` — ${new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`}
+                        </span>
+                        <button onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }} className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0" title={t("versions.deleteVersion")}>
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </PopoverContent>
+              </Popover>
+
+              <div style={{ width: 1, height: 22, background: "var(--line)", margin: "0 2px" }} />
+            </>
+          )}
+
+          {/* Search */}
+          <div className="relative shrink-0" style={{ width: 180 }}>
+            <input
+              value={q}
+              onChange={(e) => onQChange(e.target.value)}
+              placeholder={t("toolbar.searchPlaceholder", "Search...")}
+              className="neu-input"
+              style={{ paddingLeft: 28, paddingTop: 0, paddingBottom: 0, paddingRight: 10, height: 32, fontSize: 12 }}
+            />
+            <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+            </span>
+          </div>
 
           {/* Sort */}
           <DropdownMenu>
@@ -765,6 +1024,22 @@ export function PromptsListView({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Delete — stays right of sort/filter/group */}
+          {selectedPrompt && (
+            <>
+              <div style={{ width: 1, height: 22, background: "var(--line)", margin: "0 2px" }} />
+              <button
+                onClick={() => onDelete(selectedPrompt)}
+                className="la-btn la-btn--soft la-btn--icon"
+                style={{ color: "var(--stage-lost)" }}
+                title={t("actions.delete")}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <div style={{ width: 1, height: 22, background: "var(--line)", margin: "0 2px" }} />
+            </>
+          )}
+
           {/* New prompt */}
           <button
             onClick={onOpenCreate}
@@ -789,6 +1064,8 @@ export function PromptsListView({
             items={tabFilteredPrompts}
             selectedId={selectedId}
             onSelect={(p) => { setSelectedPrompt(p); setMobileView("detail"); }}
+            campaigns={campaigns}
+            accountMap={accountMap}
           />
         ) : (
           <div
@@ -819,6 +1096,7 @@ export function PromptsListView({
                       prompt={item.prompt}
                       isActive={selectedId === getPromptId(item.prompt)}
                       onClick={() => { setSelectedPrompt(item.prompt); setMobileView("detail"); }}
+                      {...getCardNames(item.prompt)}
                     />
                   ),
                 )
@@ -833,25 +1111,26 @@ export function PromptsListView({
           mobileView === "list" ? "hidden md:flex" : "flex",
         )} style={{ background: "var(--surface)" }}>
           {selectedPrompt ? (
-            <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0">
+            <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0" style={{ padding: 8, gap: 8 }}>
 
               {/* ── Detail toolbar (MetaBar design) ────────────────────────── */}
               <div style={{
                 flexShrink: 0, minHeight: 56, padding: "10px 18px",
-                borderBottom: "1px solid var(--line)",
+                borderRadius: "var(--r-surface)",
+                boxShadow: "var(--sh-raised-crisp)",
                 display: "flex", alignItems: "center", gap: 14,
                 background: "var(--paper)",
               }}>
                 {selectedPrompt && (
                   <>
-                    {/* Left section: Bot icon + name + Active badge + #id */}
+                    {/* Left section: Bot icon + name + Active badge + campaign/account */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Icon */}
                       <span style={{
                         width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        background: "var(--wine-tint)", color: "var(--wine)",
-                        boxShadow: "0 0 0 1px var(--wine-glow)",
+                        background: detailAccentTint, color: detailAccent,
+                        boxShadow: `0 0 0 1px ${detailAccentGlow}`,
                       }}>
                         <Bot size={18} />
                       </span>
@@ -895,7 +1174,7 @@ export function PromptsListView({
                               fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute-2)",
                               marginTop: 2, cursor: "pointer", display: "inline-block",
                             }}>
-                              #{selectedId} · {campaignMap.get(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) || t("labels.noCampaign", { defaultValue: "no campaign" })}
+                              #{selectedId} · {selCampaignName}{selAccountName ? ` · ${selAccountName}` : ""}
                             </span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start" className="w-52 max-h-60 overflow-y-auto">
@@ -925,137 +1204,51 @@ export function PromptsListView({
                       </div>
                     </div>
 
-                    {/* Right section: MetaChips + divider + controls */}
-                    <div className="flex items-center gap-6 shrink-0">
-                      {/* MetaChips */}
-                      <div className="flex items-center gap-2 min-w-0">
-                        {/* Model */}
-                        <select
-                          className="text-[12px] font-mono px-2.5 py-1.5 rounded-full outline-none cursor-pointer shrink-0"
-                          style={{
-                            background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
-                            color: "var(--mute)",
-                          }}
-                          value={selectedPrompt.model || "gpt-5.5"}
-                          onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
-                        >
-                          {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                        </select>
-                      </div>
+                    {/* Right section: meta + controls */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Token estimate */}
+                      <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
+                        ~{tokenEstimate} tok
+                      </span>
+
+                      {/* Model (compact) */}
+                      <select
+                        className="text-[11px] font-mono px-2 py-1 rounded-full outline-none cursor-pointer shrink-0"
+                        style={{
+                          background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+                          color: "var(--mute)", maxWidth: 92, textOverflow: "ellipsis",
+                        }}
+                        value={selectedPrompt.model || "gpt-5.5"}
+                        onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
+                      >
+                        {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                      </select>
 
                       {/* Vertical divider */}
-                      <div style={{ width: 1, height: 26, background: "var(--line)" }} />
+                      <div style={{ width: 1, height: 22, background: "var(--line)" }} />
 
-                      {/* Preview toggle */}
+                      {/* Left panel toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setShowEditorSidebar((v) => !v)}
+                        className={cn("la-btn", showEditorSidebar ? "la-btn--surface" : "la-btn--soft")}
+                        style={{ height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12, color: showEditorSidebar ? detailAccent : undefined }}
+                        title="Toggle left panel"
+                      >
+                        {showEditorSidebar ? <Eye size={13} /> : <EyeOff size={13} />}
+                        Left Panel
+                      </button>
+
+                      {/* Preview toggle — Ctrl+P */}
                       <button
                         type="button"
                         onClick={() => setPreviewOpen((p) => !p)}
                         className={cn("la-btn", previewOpen ? "la-btn--surface" : "la-btn--soft")}
-                        style={{ height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12, color: previewOpen ? "var(--wine)" : undefined }}
+                        style={{ height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12, color: previewOpen ? detailAccent : undefined }}
+                        title="Toggle preview (Ctrl+P)"
                       >
                         {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />}
                         Preview
-                      </button>
-
-                      {/* Save version */}
-                      <Popover open={saveDialogOpen} onOpenChange={(open) => { if (open) { setSaveBumpType("minor"); setSaveLabel(""); } setSaveDialogOpen(open); }}>
-                        <PopoverTrigger asChild>
-                          <button
-                            className="la-btn la-btn--soft la-btn--icon"
-                            style={{ width: 32, height: 32, flexShrink: 0 }}
-                            disabled={savingVersion}
-                            title={t("versions.saveVersion")}
-                          >
-                            <Save size={14} />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="p-3 w-60 shadow-md border border-border/60" style={{ background: "var(--paper)" }}>
-                          <p className="text-xs font-medium mb-2">{t("versions.saveVersion")}</p>
-                          <div className="flex gap-2 mb-2">
-                            <button onClick={() => setSaveBumpType("minor")} className={cn("flex-1 text-xs py-1.5 rounded-lg border transition-colors", saveBumpType === "minor" ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium" : "border-border text-muted-foreground hover:border-foreground/30")}>
-                              {t("versions.minorUpdate")}
-                            </button>
-                            <button onClick={() => setSaveBumpType("major")} className={cn("flex-1 text-xs py-1.5 rounded-lg border transition-colors", saveBumpType === "major" ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium" : "border-border text-muted-foreground hover:border-foreground/30")}>
-                              {t("versions.majorUpdate")}
-                            </button>
-                          </div>
-                          <input
-                            className="w-full h-8 rounded-lg border border-border px-2.5 text-xs outline-none focus:ring-2 focus:ring-brand-indigo/30 mb-2"
-                            style={{ background: "var(--bg)" }}
-                            placeholder={t("versions.labelPlaceholder")}
-                            value={saveLabel}
-                            onChange={(e) => setSaveLabel(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); } }}
-                          />
-                          <button onClick={() => { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); }} disabled={savingVersion} className="w-full text-xs py-1.5 rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors disabled:opacity-50">
-                            {t("actions.save")}
-                          </button>
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Version */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            className="h-7 rounded-full px-2.5 text-[12px] font-mono outline-none cursor-pointer shrink-0"
-                            style={{
-                              background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", color: "var(--mute)",
-                            }}
-                            disabled={versionsLoading}
-                          >
-                            {versionsLoading
-                              ? "…"
-                              : selectedVersion
-                              ? (() => {
-                                  const sv = versions.find((v) => v.versionNumber === selectedVersion);
-                                  return sv ? `v${sv.versionNumber}` : `v${selectedVersion}`;
-                                })()
-                              : liveSnap
-                              ? `${t("versions.current")} ●`
-                              : versions.length > 0
-                              ? `v${versions[0].versionNumber}`
-                              : selectedPrompt?.version
-                              ? `v${selectedPrompt.version}`
-                              : "v1"}
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="p-1 min-w-[220px] shadow-md border border-border/60" style={{ background: "var(--paper)" }}>
-                          {liveSnap && (
-                            <button onClick={revertToCurrent} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-amber-600 hover:bg-amber-50 font-medium">
-                              <RotateCcw className="h-3 w-3" />
-                              {t("versions.revertToCurrent")}
-                            </button>
-                          )}
-                          {versions.length === 0 && !liveSnap && (
-                            <p className="px-2.5 py-1.5 text-xs text-muted-foreground">{t("versions.noVersions")}</p>
-                          )}
-                          {versions.map((v) => (
-                            <div
-                              key={v.id}
-                              className={cn("px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-muted/60 group/vrow", selectedVersion === v.versionNumber && "bg-muted font-medium")}
-                              onClick={() => loadVersion(v)}
-                            >
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs flex-1 min-w-0 truncate">
-                                  v{v.versionNumber}{v.label ? ` — ${v.label}` : ` — ${new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`}
-                                </span>
-                                <button onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }} className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0" title={t("versions.deleteVersion")}>
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => onDelete(selectedPrompt)}
-                        className="la-btn la-btn--soft la-btn--icon"
-                        style={{ width: 32, height: 32, color: "var(--stage-lost)", flexShrink: 0 }}
-                        title={t("actions.delete")}
-                      >
-                        <Trash2 size={14} />
                       </button>
                     </div>
                   </>
@@ -1072,7 +1265,12 @@ export function PromptsListView({
                 versionOverride={versionOverride}
                 previewOpen={previewOpen}
                 setPreviewOpen={setPreviewOpen}
+                showSidebar={showEditorSidebar}
                 editorFontSize={editorFontSize}
+                previewFont={previewFont}
+                accentColor={detailAccent}
+                accentHex={selectedIsSystem ? "#3F8E8E" : "#722F37"}
+                onTokenEstimate={setTokenEstimate}
               />
             </div>
           ) : (

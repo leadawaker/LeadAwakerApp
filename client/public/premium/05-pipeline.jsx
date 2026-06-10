@@ -55,9 +55,7 @@ function Pipeline() {
       { id: "q1", name: "Anna Visser",          lastMsg: "2h ago",  tier: "premium" },
       { id: "q2", name: "Luuk Harmsen",         lastMsg: "3h ago",  tier: "premium" },
     ],
-    booked: [
-      { id: "b1", name: "Bart Jonker",          lastMsg: "1d ago",  tier: "premium" },
-    ],
+    booked: [],
     lost: [],
   }) : ({
     engaged: [
@@ -92,18 +90,7 @@ function Pipeline() {
       { id: "q11", name: "Ruben Mulder",           lastMsg: "18h ago",  tier: "basic"   },
       { id: "q12", name: "Eline Vermeer",          lastMsg: "1d ago",   tier: "premium" },
     ],
-    booked: [
-      { id: "b1",  name: "Bart Jonker",            lastMsg: "1d ago",   tier: "premium" },
-      { id: "b2",  name: "Kelly Zwart",            lastMsg: "1d ago",   tier: "premium" },
-      { id: "b3",  name: "Paul de Graaf",          lastMsg: "2d ago",   tier: "premium" },
-      { id: "b4",  name: "Sander Hoekstra",        lastMsg: "2d ago",   tier: "basic"   },
-      { id: "b5",  name: "Nienke Koops",           lastMsg: "3d ago",   tier: "basic"   },
-      { id: "b6",  name: "Bram Willems",           lastMsg: "3d ago",   tier: "basic"   },
-      { id: "b7",  name: "Fleur de Jong",          lastMsg: "4d ago",   tier: "basic"   },
-      { id: "b8",  name: "Kevin Huizing",          lastMsg: "4d ago",   tier: "basic"   },
-      { id: "b9",  name: "Maud Peters",            lastMsg: "5d ago",   tier: "basic"   },
-      { id: "b10", name: "Joris van Leeuwen",      lastMsg: "5d ago",   tier: "basic"   },
-    ],
+    booked: [],
     lost: [
       { id: "l1", name: "Iris Bergman",            lastMsg: "3d ago",   tier: "basic"   },
       { id: "l2", name: "Daan Scholten",           lastMsg: "4d ago",   tier: "basic"   },

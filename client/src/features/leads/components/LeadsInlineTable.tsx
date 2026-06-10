@@ -109,14 +109,12 @@ function DesignCheck({
 }
 
 // ── Last Message cell (matches `LastMsgCell` in leads-views.jsx) ───────────────
-function LastMessageCell({ lead, t }: { lead: Record<string, any>; t: (k: string, opts?: Record<string, any>) => string }) {
+function LastMessageCell({ lead, t: _t }: { lead: Record<string, any>; t: (k: string, opts?: Record<string, any>) => string }) {
   const text = getLastMessage(lead);
   if (!text) return <span style={{ color: "var(--mute-2)", fontSize: 12 }}>&mdash;</span>;
   const sender = getLastMessageSender(lead); // "" → inbound (lead), "AI" → outbound
   const isIn = sender !== "AI";
   const leadFirst = (getFullName(lead).split(/\s+/)[0]) || "Lead";
-  const d = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at || "";
-  const time = formatRelativeTime(d, t);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
       <span
@@ -139,11 +137,6 @@ function LastMessageCell({ lead, t }: { lead: Record<string, any>; t: (k: string
       >
         {text}
       </span>
-      {time && (
-        <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", flexShrink: 0 }}>
-          {time}
-        </span>
-      )}
     </div>
   );
 }
