@@ -105,13 +105,16 @@ export const INVOICE_STATUS_COLORS: Record<string, { bg: string; text: string; d
   Cancelled: { bg: "#F4F4F5", text: "#52525B", dot: "#94A3B8" },
 };
 
+// Wine/paper palette (migration design). Keys keep the bg/text/dot shape so
+// existing call sites (ContractCard, ContractDetailView, ContractsInlineTable)
+// stay structurally unchanged — only the values changed to token-backed colors.
 export const CONTRACT_STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  Draft:     { bg: "#F4F4F5", text: "#52525B", dot: "#94A3B8" },
-  Sent:      { bg: "#DBEAFE", text: "#1D4ED8", dot: "#3B82F6" },
-  Viewed:    { bg: "#EDE9FE", text: "#5B21B6", dot: "#8B5CF6" },
-  Signed:    { bg: "#D1FAE5", text: "#065F46", dot: "#10B981" },
-  Expired:   { bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" },
-  Cancelled: { bg: "#F4F4F5", text: "#52525B", dot: "#94A3B8" },
+  Draft:     { bg: "var(--surface)",    text: "var(--mute)",  dot: "var(--mute-2)" },
+  Sent:      { bg: "var(--wine-tint)",  text: "var(--wine)",  dot: "var(--wine)" },
+  Viewed:    { bg: "var(--wine-tint)",  text: "var(--wine)",  dot: "var(--wine)" },
+  Signed:    { bg: "var(--good-tint)",  text: "var(--good)",  dot: "var(--good)" },
+  Expired:   { bg: "var(--warn-tint)",  text: "var(--warn)",  dot: "var(--warn)" },
+  Cancelled: { bg: "var(--surface)",    text: "var(--mute-2)", dot: "var(--mute-2)" },
 };
 
 export function parseLineItems(raw: InvoiceLineItem[] | string | null): InvoiceLineItem[] {

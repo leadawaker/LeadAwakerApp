@@ -307,6 +307,15 @@ export function registerTasksRoutes(app: Express): void {
     res.status(201).json(comment);
   }));
 
+  app.patch("/api/task-comments/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const { body } = req.body;
+    if (!body || typeof body !== "string") return res.status(422).json({ error: "body is required" });
+    const updated = await storage.updateComment(id, body.trim());
+    if (!updated) return res.status(404).json({ error: "Comment not found" });
+    res.json(updated);
+  }));
+
   app.delete("/api/task-comments/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
     const deleted = await storage.deleteComment(id);

@@ -1,10 +1,7 @@
 import React, { useState, useRef } from "react";
-import { ChevronLeft, RefreshCw, FileText, Sparkles } from "lucide-react";
-import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
+import { ChevronLeft, RefreshCw, Sparkles } from "lucide-react";
 import type { Campaign } from "@/types/models";
-import { cn } from "@/lib/utils";
 import { useCampaignDetail } from "../useCampaignDetail";
-import { ShareButton } from "./atoms";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
@@ -24,10 +21,7 @@ interface DetailViewToolbarProps {
   onRefresh?: () => void;
   onDuplicate?: (campaign: Campaign) => Promise<void>;
   onDelete?: (id: number) => Promise<void>;
-  promptPanelOpen?: boolean;
-  onTogglePromptPanel?: () => void;
   t: any;
-  // Legacy props still passed by parent (list controls moved to left panel)
   [key: string]: any;
 }
 
@@ -37,8 +31,6 @@ export function DetailViewToolbar({
   activeTab,
   onBack,
   onRefresh,
-  promptPanelOpen,
-  onTogglePromptPanel,
   t,
 }: DetailViewToolbarProps) {
   const { toast } = useToast();
@@ -78,26 +70,11 @@ export function DetailViewToolbar({
     }
   };
 
-  const isDemo = (campaign as any).is_demo || (campaign as any).isDemo;
-
   return (
     <div className="flex items-center gap-2 flex-wrap justify-end">
       {onBack && (
         <button onClick={onBack} className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0 mr-1">
           <ChevronLeft className="h-4 w-4" />
-        </button>
-      )}
-
-      {/* Utility icons — kept small, left of the prominent actions */}
-      <ListPanelToggleButton />
-
-      {onTogglePromptPanel && (
-        <button
-          onClick={onTogglePromptPanel}
-          className={cn("h-9 w-9 rounded-full border grid place-items-center shrink-0 transition-colors", promptPanelOpen ? "border-brand-indigo text-brand-indigo" : "border-black/[0.125] text-foreground/60 hover:text-foreground")}
-          title="Prompt Editor"
-        >
-          <FileText className="h-4 w-4" />
         </button>
       )}
 
@@ -108,10 +85,7 @@ export function DetailViewToolbar({
         </span>
       )}
 
-      {/* Share — WhatsApp / Telegram demo links (demo campaigns only) */}
-      {isDemo && <ShareButton campaign={campaign} />}
-
-      {/* Generate — fills only empty fields. Settings (configurations) tab only. */}
+      {/* Generate — fills only empty fields. Configurations tab only. */}
       {activeTab === "configurations" && (
       <Popover open={popoverOpen} onOpenChange={(v) => { setPopoverOpen(v); if (v) setTimeout(() => inputRef.current?.focus(), 50); }}>
         <PopoverTrigger asChild>

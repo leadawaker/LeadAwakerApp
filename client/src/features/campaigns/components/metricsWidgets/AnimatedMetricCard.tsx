@@ -46,7 +46,7 @@ export function AnimatedMetricCard({ numericValue, displayValue, label, animTrig
     <div
       className={cn("neu-raised-crisp flex flex-col")}
       style={{
-        padding: star ? "20px 18px 16px" : "16px 18px 14px",
+        padding: "10px 14px 8px",
         borderRadius: "var(--r-surface)",
         position: "relative",
         overflow: "hidden",
@@ -56,16 +56,14 @@ export function AnimatedMetricCard({ numericValue, displayValue, label, animTrig
     >
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 6 }}>
         <span className="eyebrow eyebrow-sm">{label}</span>
-        {star && (
-          <span style={{ fontFamily: "var(--mono)", fontSize: 7.5, letterSpacing: "0.12em", color: "var(--stage-booked)", border: "1px solid var(--stage-booked)", borderRadius: 4, padding: "1px 5px", whiteSpace: "nowrap" }}>★ NORTH STAR</span>
-        )}
+        {star && <span style={{ fontSize: 12, color: "var(--stage-booked)", fontWeight: 600 }}>★</span>}
       </div>
-      <div className="row" style={{ alignItems: "baseline", gap: 4, marginTop: 10 }}>
-        <span className="serif" style={{ fontSize: star ? 44 : 38, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{numberText}</span>
-        {isPercent && !isDash && <span style={{ fontSize: 17, color: "var(--mute)" }}>%</span>}
+      <div className="row" style={{ alignItems: "baseline", gap: 4, marginTop: 6 }}>
+        <span className="serif" style={{ fontSize: 32, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{numberText}</span>
+        {isPercent && !isDash && <span style={{ fontSize: 14, color: "var(--mute)" }}>%</span>}
       </div>
       {showSparkline ? (
-        <svg width="100%" height="20" viewBox="0 0 80 20" preserveAspectRatio="none" style={{ marginTop: 10, color: borderColor || "var(--mute)", opacity: 0.7 }}>
+        <svg width="100%" height="10" viewBox="0 0 80 20" preserveAspectRatio="none" style={{ marginTop: 4, color: borderColor || "var(--mute)", opacity: 0.7 }}>
           <polyline
             fill="none"
             stroke="currentColor"

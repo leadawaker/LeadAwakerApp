@@ -397,7 +397,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <PopoverTrigger asChild>
-        <button className="btn-neu" style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 16px", fontSize: 13, fontWeight: 600 }}>
+        <button className="neu-raised-crisp" style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 16px", fontSize: 13, fontWeight: 600, borderRadius: 'var(--r-button)', border: 'none', cursor: 'pointer', color: 'var(--ink)', background: 'var(--paper)', letterSpacing: '0.04em', fontFamily: 'var(--sans)', textTransform: 'uppercase' as const }}>
           <Share2 className="h-4 w-4 shrink-0" />
           {t("toolbar.share", "Share")}
         </button>

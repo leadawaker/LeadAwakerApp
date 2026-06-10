@@ -20,7 +20,7 @@ export const EMPTY_FORM: PromptFormData = {
   name: "",
   promptText: "",
   systemMessage: "",
-  model: "gpt-5.4-mini",
+  model: "gpt-5.5",
   temperature: "0.7",
   maxTokens: "1000",
   status: "active",
@@ -30,6 +30,8 @@ export const EMPTY_FORM: PromptFormData = {
 };
 
 export const MODEL_OPTIONS = [
+  "gpt-5.5",
+  "deepseek-v4",
   "gpt-5.4",
   "gpt-5.4-pro",
   "gpt-5.4-mini",

@@ -187,7 +187,7 @@ export function useInteractions(accountId?: number, leadId?: number) {
     const url = accountId
       ? `${API_BASE}/api/interactions/stream?accountId=${accountId}`
       : `${API_BASE}/api/interactions/stream`;
-    const es = new EventSource(url, { withCredentials: true });
+    const es = new EventSource(url);
 
     es.addEventListener("new_interaction", (e: MessageEvent) => {
       try {

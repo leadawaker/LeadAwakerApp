@@ -39,6 +39,10 @@ Never use `process.exit()` in Vite or server error handlers — it kills the ent
 
 ### Terminology
 - "Leads page" = `LeadsCardView.tsx` (the card/list view with chat panel), NOT `LeadDetailPanel.tsx`
+- **Layout vocabulary (use these exact terms):**
+  - **nav bar** = the app's global left navigation sidebar (logo, Menu/Engage/Outreach/Admin links, user profile at bottom). The leftmost vertical bar, shared across every page.
+  - **toolbar** = the list panel *inside a page* where the entity cards appear (e.g., the lead-cards column on the Leads page = `LeadsListPanel.tsx`). The "menu on the left" of a page's content, sitting beside the detail panel.
+  - **topbar** = the page's top header bar (e.g., "My Leads" + LIST/TABLE/PIPELINE tabs + search on the Leads page = `LeadsDesktopToolbar.tsx`). The horizontal header of the website's content area.
 
 ### Styling
 - Follow `UI_STANDARDS.md` strictly. Check it before introducing new color values, spacing, or component patterns.

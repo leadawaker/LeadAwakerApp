@@ -17,7 +17,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
-import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 import { apiFetch } from "@/lib/apiUtils";
 import { queryClient } from "@/lib/queryClient";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
@@ -29,9 +28,7 @@ import { useSupportChat } from "@/hooks/useSupportChat";
 import { useFounderChat } from "@/hooks/useFounderChat";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useQuery } from "@tanstack/react-query";
-import { TopbarSearch } from "@/components/crm/TopbarSearch";
 import { TopbarUserMenu } from "@/components/crm/TopbarUserMenu";
-import { TopbarHelp } from "@/components/crm/TopbarHelp";
 
 
 export function Topbar({
@@ -148,124 +145,6 @@ export function Topbar({
   const handleUnreadCountChange = useCallback((count: number) => {
     setUnreadCount(count);
   }, []);
-
-  // ── Search state ─────────────────────────────────────────────────────────────
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQ, setSearchQ] = useState("");
-  const [allLeads, setAllLeads] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [allCampaigns, setAllCampaigns] = useState<any[]>([]);
-  const [allProspects, setAllProspects] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!searchOpen) {
-      setSearchQ("");
-      return;
-    }
-    const params = new URLSearchParams();
-    if (currentAccountId) params.set("accountId", String(currentAccountId));
-    apiFetch(`/api/leads?${params}`).then(async (res) => {
-      if (res.ok) {
-        const data = await res.json();
-        setAllLeads(Array.isArray(data) ? data : []);
-      }
-    }).catch(() => {});
-
-    apiFetch(`/api/campaigns?${params}`).then(async (res) => {
-      if (res.ok) {
-        const data = await res.json();
-        setAllCampaigns(Array.isArray(data) ? data : data?.list || data?.data || []);
-      }
-    }).catch(() => {});
-
-    if (isAgencyUser) {
-      apiFetch('/api/users').then(async (res) => {
-        if (res.ok) { const data = await res.json(); setAllUsers(Array.isArray(data) ? data : []); }
-      }).catch(() => {});
-      apiFetch('/api/prospects?all=true').then(async (res) => {
-        if (res.ok) { const data = await res.json(); setAllProspects(Array.isArray(data) ? data : data?.items || data?.list || data?.data || []); }
-      }).catch(() => {});
-    }
-  }, [searchOpen, currentAccountId, isAgencyUser]);
-
-  const searchResults = useMemo(() => {
-    const q = searchQ.trim().toLowerCase();
-    if (!q) return [] as { id: number; displayName: string; subtitle: string }[];
-    return allLeads
-      .filter((l: any) => {
-        const first = l.first_name || "";
-        const last = l.last_name || "";
-        const full = l.full_name || l.name || "";
-        return [full, first, last, `${first} ${last}`, l.phone || "", l.email || l.Email || ""]
-          .some((v: string) => v.toLowerCase().includes(q));
-      })
-      .slice(0, 8)
-      .map((l: any) => {
-        const id = l.Id || l.id;
-        const firstName = l.first_name || "";
-        const lastName = l.last_name || "";
-        const fullName = l.full_name || l.name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : "");
-        return {
-          id,
-          displayName: fullName || `Lead #${id}`,
-          subtitle: fullName ? `Lead #${id}` : [l.phone, l.email || l.Email].filter(Boolean).join(" · "),
-        };
-      });
-  }, [searchQ, allLeads]);
-
-  const campaignResults = useMemo(() => {
-    const q = searchQ.trim().toLowerCase();
-    if (!q) return [];
-    return allCampaigns
-      .filter((c: any) => (c.name || c.title || "").toLowerCase().includes(q))
-      .slice(0, 5)
-      .map((c: any) => ({ id: c.id || c.Id, name: c.name || c.title || `Campaign #${c.id || c.Id}`, status: c.status || "" }));
-  }, [searchQ, allCampaigns]);
-
-  const prospectResults = useMemo(() => {
-    if (!isAgencyUser) return [];
-    const q = searchQ.trim().toLowerCase();
-    if (!q) return [];
-    return allProspects
-      .filter((p: any) => [p.company || "", p.name || "", p.contact_name || "", p.email || ""].some((v: string) => v.toLowerCase().includes(q)))
-      .slice(0, 5)
-      .map((p: any) => ({ id: p.id || p.Id, company: p.company || p.name || "", contact: p.contact_name || "", status: p.status || "" }));
-  }, [searchQ, allProspects, isAgencyUser]);
-
-  const accountResults = useMemo(() => {
-    if (!isAgencyUser || !searchQ.trim()) return [];
-    const q = searchQ.trim().toLowerCase();
-    return accounts.filter(a => (a.name || '').toLowerCase().includes(q)).slice(0, 5).map(a => ({ id: a.id, name: a.name || '', type: 'account' as const }));
-  }, [searchQ, accounts, isAgencyUser]);
-
-  const userResults = useMemo(() => {
-    if (!isAgencyUser || !searchQ.trim()) return [];
-    const q = searchQ.trim().toLowerCase();
-    return allUsers.filter(u => [u.name || '', u.email || ''].some((v: string) => v.toLowerCase().includes(q))).slice(0, 5).map(u => ({ id: u.id, name: u.name || u.email || `User #${u.id}`, role: u.role || '', type: 'user' as const }));
-  }, [searchQ, allUsers, isAgencyUser]);
-
-  const handleLeadClick = (leadId: number) => {
-    setSearchOpen(false);
-    setPersistedSelection("selected-lead-id", leadId);
-    setLocation(`/platform/contacts`);
-  };
-
-  const handleCampaignClick = (campaignId: number) => {
-    setSearchOpen(false);
-    setPersistedSelection("selected-campaign-id", campaignId);
-    setLocation(`/platform/campaigns`);
-  };
-  const handleProspectClick = (prospectId: number) => {
-    setSearchOpen(false);
-    setPersistedSelection("selected-prospect-id", prospectId);
-    setLocation(`/platform/prospects`);
-  };
-  const handleAccountClick = () => { setSearchOpen(false); setLocation(`/platform/accounts`); };
-  const handleUserClick = () => {
-    setSearchOpen(false);
-    sessionStorage.setItem("pendingSettingsSection", "team");
-    setLocation(`/platform/settings`);
-  };
 
   // ── Account switch ───────────────────────────────────────────────────────────
   // id=0 means "All Accounts" (agency-wide, no scoping). The URL no longer
@@ -504,24 +383,6 @@ export function Topbar({
             </div>
           )}
 
-          {/* ── Search Popover ── */}
-          <TopbarSearch
-            open={searchOpen}
-            onOpenChange={setSearchOpen}
-            searchQ={searchQ}
-            onSearchQChange={setSearchQ}
-            searchResults={searchResults}
-            campaignResults={campaignResults}
-            prospectResults={prospectResults}
-            accountResults={accountResults}
-            userResults={userResults}
-            onLeadClick={handleLeadClick}
-            onCampaignClick={handleCampaignClick}
-            onProspectClick={handleProspectClick}
-            onAccountClick={handleAccountClick}
-            onUserClick={handleUserClick}
-          />
-
           {/* Dark mode toggle — hidden on mobile */}
           <span className="hidden md:contents">
             <Tooltip>
@@ -559,12 +420,6 @@ export function Topbar({
               </Tooltip>
             </span>
           )}
-
-          {/* Help — hidden on mobile */}
-          <TopbarHelp
-            onNavigateDocs={() => setLocation(`/platform/docs`)}
-            onOpenSupport={() => setSupportOpen((v) => !v)}
-          />
 
           {/* ── Notifications ── */}
           <Popover open={notifOpen} onOpenChange={(v) => { if (!v) setNotifOpen(false); else setNotifOpen(true); }}>

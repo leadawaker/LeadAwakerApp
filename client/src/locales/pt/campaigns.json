@@ -1,11 +1,9 @@
 {
   "title": "Campanhas",
-
   "views": {
     "list": "Lista",
     "table": "Tabela"
   },
-
   "toolbar": {
     "add": "Adicionar",
     "sort": "Ordenar",
@@ -14,8 +12,8 @@
     "group": "Agrupar",
     "fields": "Campos",
     "showHideColumns": "Mostrar / Ocultar Colunas",
-    "resetToDefault": "Restaurar padr\u00e3o",
-    "searchPlaceholder": "Buscar campanhas\u2026",
+    "resetToDefault": "Restaurar padrão",
+    "searchPlaceholder": "Buscar campanhas…",
     "changeStatus": "Alterar Status",
     "duplicate": "Duplicar",
     "delete": "Excluir",
@@ -24,13 +22,12 @@
     "activate": "Ativar",
     "refresh": "Atualizar",
     "save": "Salvar",
-    "saving": "Salvando\u2026",
+    "saving": "Salvando…",
     "cancel": "Cancelar",
     "openPrompt": "Prompt",
     "closePrompt": "Fechar Prompt",
     "promptPanel": "Editor de Prompt"
   },
-
   "columns": {
     "name": "Nome",
     "status": "Status",
@@ -39,31 +36,28 @@
     "leads": "Leads",
     "responseRate": "Resposta %",
     "bookingRate": "Agendamento %",
-    "description": "Descri\u00e7\u00e3o",
+    "description": "Descrição",
     "cost": "Custo",
     "roi": "ROI %",
-    "startDate": "Data In\u00edcio",
+    "startDate": "Data Início",
     "endDate": "Data Fim",
-    "start": "In\u00edcio",
+    "start": "Início",
     "end": "Fim",
-    "lastModified": "\u00daltima Modifica\u00e7\u00e3o"
+    "lastModified": "Última Modificação"
   },
-
   "groupBy": {
     "status": "Status",
     "account": "Conta",
     "type": "Tipo",
     "none": "Nenhum"
   },
-
   "sortOptions": {
     "recent": "Mais Recente",
-    "nameAsc": "Nome A \u2192 Z",
-    "nameDesc": "Nome Z \u2192 A",
+    "nameAsc": "Nome A → Z",
+    "nameDesc": "Nome Z → A",
     "leadsDesc": "Mais Leads",
     "responseDesc": "Melhor Resposta"
   },
-
   "filter": {
     "status": "Status",
     "account": "Conta",
@@ -72,64 +66,56 @@
     "apply": "Aplicar",
     "reset": "Redefinir"
   },
-
   "statusLabels": {
     "Active": "Ativa",
     "Paused": "Pausada",
-    "Completed": "Conclu\u00edda",
-    "Finished": "Conclu\u00edda",
+    "Completed": "Concluída",
+    "Finished": "Concluída",
     "Inactive": "Inativa",
     "Archived": "Arquivada",
     "Draft": "Rascunho",
     "Unknown": "Desconhecido"
   },
-
   "confirm": {
     "yes": "Sim",
-    "no": "N\u00e3o",
+    "no": "Não",
     "deleteConfirm": "Excluir?"
   },
-
   "empty": {
     "noCampaignsFound": "Nenhuma campanha encontrada",
     "tryDifferentSearch": "Tente uma busca diferente",
-    "noMatchSearch": "Nenhuma campanha corresponde \u00e0 sua busca",
+    "noMatchSearch": "Nenhuma campanha corresponde à sua busca",
     "selectCampaign": "Selecione uma campanha",
-    "selectCampaignDesc": "Clique em qualquer campanha \u00e0 esquerda para ver seu desempenho, configura\u00e7\u00e3o e modelos de mensagem.",
-    "chooseFromList": "\u2190 Escolha da lista"
+    "selectCampaignDesc": "Clique em qualquer campanha à esquerda para ver seu desempenho, configuração e modelos de mensagem.",
+    "chooseFromList": "← Escolha da lista"
   },
-
   "pagination": {
     "previous": "Anterior",
-    "next": "Pr\u00f3ximo",
-    "rangeOf": "{{start}}\u2013{{end}} de {{total}}"
+    "next": "Próximo",
+    "rangeOf": "{{start}}–{{end}} de {{total}}"
   },
-
   "card": {
     "leads": "Leads",
     "response": "Resposta",
     "booked": "Agendados",
     "started": "Iniciada em {{date}}"
   },
-
   "detail": {
     "panelHide": "Ocultar painel de detalhes",
     "panelShow": "Mostrar painel de detalhes",
     "unnamed": "Campanha sem nome",
     "campaignNumber": "#{{number}}"
   },
-
   "tabs": {
     "summary": "Resumo",
-    "configurations": "Configura\u00e7\u00f5es",
+    "configurations": "Configurações",
     "tags": "Tags"
   },
-
   "summary": {
     "eyebrows": {
       "performance": "Desempenho",
-      "conversion": "Convers\u00e3o",
-      "callsHandoffs": "Chamadas e Transfer\u00eancias",
+      "conversion": "Conversão",
+      "callsHandoffs": "Chamadas e Transferências",
       "live": "Ao Vivo",
       "revenue": "Receita",
       "aiRead": "Leitura IA",
@@ -138,60 +124,59 @@
     "timeframes": {
       "day": "Dia",
       "week": "Semana",
-      "month": "M\u00eas",
+      "month": "Mês",
       "today": "Hoje",
       "thisWeek": "Esta Semana",
-      "thisMonth": "Este M\u00eas"
+      "thisMonth": "Este Mês"
     },
     "heatBands": {
       "hot": "Quente",
       "warm": "Morno",
-      "revivable": "Reativ\u00e1vel",
+      "revivable": "Reativável",
       "cold": "Frio"
     },
     "aiActivity": "Atividade IA",
-    "bumpDistribution": "Distribui\u00e7\u00e3o de bumps de hoje",
+    "bumpDistribution": "Distribuição de bumps de hoje",
     "queued": "{{count}} na fila",
     "justHappened": "Aconteceu agora",
     "noMessages": "Nenhuma mensagem ainda",
     "replied": "respondeu",
     "sent": "mensagem enviada",
-    "next": "Pr\u00f3ximos",
+    "next": "Próximos",
     "todayCount": "{{count}} hoje",
     "noCalls": "Nenhuma chamada agendada",
     "laterThisWeek": "Mais tarde esta semana",
     "leadHeat": "Temperatura dos Leads",
     "inDatabase": "{{count}} no banco de dados",
-    "keyMetrics": "M\u00e9tricas Principais",
-    "dailyCapacity": "Capacidade Di\u00e1ria",
-    "leadsTargeted": "Leads Alcan\u00e7ados",
+    "keyMetrics": "Métricas Principais",
+    "dailyCapacity": "Capacidade Diária",
+    "leadsTargeted": "Leads Alcançados",
     "messagesSent": "Mensagens Enviadas",
     "responsePercent": "Resposta %",
     "bookingPercent": "Agendamento %",
-    "performanceTrends": "Tend\u00eancias de Desempenho",
-    "upNext": "Pr\u00f3ximos",
+    "performanceTrends": "Tendências de Desempenho",
+    "upNext": "Próximos",
     "pipeline": "Pipeline",
     "totalLeads": "Total de Leads",
     "noPipelineData": "Sem dados de pipeline ainda",
-    "noConversionData": "Sem dados de convers\u00e3o",
-    "aiAnalysis": "An\u00e1lise IA",
-    "noAiAnalysis": "Sem an\u00e1lise de IA ainda",
+    "noConversionData": "Sem dados de conversão",
+    "aiAnalysis": "Análise IA",
+    "noAiAnalysis": "Sem análise de IA ainda",
     "aiRunsNightly": "Executa toda noite ou clique em Gerar",
-    "lastRun": "\u00daltima execu\u00e7\u00e3o: {{date}}",
-    "noAnalysisYet": "Sem an\u00e1lise ainda",
+    "lastRun": "Última execução: {{date}}",
+    "noAnalysisYet": "Sem análise ainda",
     "generate": "Gerar",
     "regenerate": "Regenerar",
-    "generating": "Gerando\u2026",
-    "groqApiKeyMissing": "Chave da API Groq n\u00e3o configurada. Adicione GROQ_API_KEY ao .env.",
+    "generating": "Gerando…",
+    "groqApiKeyMissing": "Chave da API Groq não configurada. Adicione GROQ_API_KEY ao .env.",
     "generateFailed": "Falha ao gerar resumo. Tente novamente.",
     "networkError": "Erro de rede. Tente novamente.",
     "activity": "Atividade",
     "financials": "Financeiro",
-    "roiTrend": "Tend\u00eancia de ROI"
+    "roiTrend": "Tendência de ROI"
   },
-
   "financials": {
-    "dealType": "Tipo de Neg\u00f3cio",
+    "dealType": "Tipo de Negócio",
     "totalSpend": "Gasto Total",
     "costPerBooking": "Custo / Agendamento",
     "valuePerBooking": "Valor / Agendamento",
@@ -200,7 +185,7 @@
     "returnOnInvestment": "Retorno sobre Investimento",
     "aiTokens": "Tokens de IA Usados",
     "aiCost": "Custo de IA (USD)",
-    "linkContractPrompt": "Vincular um contrato em Config \u2192",
+    "linkContractPrompt": "Vincular um contrato em Config →",
     "est": "est.",
     "dealTypes": {
       "retainer": "Retainer",
@@ -210,41 +195,40 @@
       "sale_closed": "Venda Fechada"
     },
     "paymentTriggers": {
-      "booked_call": "Liga\u00e7\u00e3o Agendada",
+      "booked_call": "Ligação Agendada",
       "sale_closed": "Venda Fechada",
-      "meeting_held": "Reuni\u00e3o Realizada"
+      "meeting_held": "Reunião Realizada"
     }
   },
-
   "config": {
-    "configuration": "Configura\u00e7\u00e3o",
+    "configuration": "Configuração",
     "campaignName": "Nome da Campanha",
     "schedule": "Agenda",
     "behavior": "Comportamento",
     "contract": "Contrato",
-    "aiSettings": "Configura\u00e7\u00f5es de IA",
+    "aiSettings": "Configurações de IA",
     "messageTemplates": "Modelos de Mensagem",
     "type": "Tipo",
-    "description": "Descri\u00e7\u00e3o",
-    "startDate": "Data de in\u00edcio",
-    "endDate": "Data de t\u00e9rmino",
-    "activeHours": "Hor\u00e1rio ativo",
-    "dailyLimit": "Limite di\u00e1rio",
+    "description": "Descrição",
+    "startDate": "Data de início",
+    "endDate": "Data de término",
+    "activeHours": "Horário ativo",
+    "dailyLimit": "Limite diário",
     "interval": "Intervalo",
     "channel": "Canal",
     "stopOnResponse": "Parar ao responder",
     "useAiBumps": "Usar bumps de IA",
-    "maxBumps": "M\u00e1x. bumps",
+    "maxBumps": "Máx. bumps",
     "buyingSignalResponse": "Resposta de sinal de compra",
-    "buyingSignalResponsePlaceholder": "Resposta personalizada da IA quando o lead mostra inten\u00e7\u00e3o de compra (ex: 'Deixa-me ver a minha agenda e j\u00e1 te ligo')",
-    "buyingSignalResponseDefault": "Padr\u00e3o: A IA dir\u00e1 que est\u00e1 a verificar a agenda e liga em breve",
-    "deal": "Neg\u00f3cio",
-    "noneLinked": "\u2014 Nenhum vinculado",
+    "buyingSignalResponsePlaceholder": "Resposta personalizada da IA quando o lead mostra intenção de compra (ex: 'Deixa-me ver a minha agenda e já te ligo')",
+    "buyingSignalResponseDefault": "Padrão: A IA dirá que está a verificar a agenda e liga em breve",
+    "deal": "Negócio",
+    "noneLinked": "— Nenhum vinculado",
     "valuePerBooking": "Valor / Agendamento",
     "model": "Modelo",
     "temperature": "Temperatura",
     "agent": "Agente",
-    "service": "Servi\u00e7o",
+    "service": "Serviço",
     "promptTemplate": "Template de Prompt",
     "firstMessage": "Primeira Mensagem",
     "noTemplateSet": "Nenhum template definido",
@@ -274,47 +258,56 @@
     "optOutNotice": "Aviso de cancelamento na primeira mensagem",
     "accountId": "Conta",
     "showDemoCampaigns": "Mostrar Campanhas de Demonstração",
-    "language": "Idioma"
+    "language": "Idioma",
+    "sections": {
+      "business": "Negócio",
+      "businessTitle": "Configuração do Negócio",
+      "businessDesc": "Identidade da campanha, nicho e dados do cliente",
+      "ai": "IA",
+      "aiTitle": "Configurações de IA",
+      "aiDesc": "Prompt, modelo, persona e estilo de conversa",
+      "behavior": "Comportamento",
+      "behaviorTitle": "Comportamento",
+      "behaviorDesc": "Agendamento, limites, canal e regras de reserva"
+    }
   },
-
   "meta": {
-    "owner": "Propriet\u00e1rio",
+    "owner": "Proprietário",
     "channel": "Canal",
     "started": "Iniciada",
     "type": "Tipo",
-    "dailyLimit": "Limite Di\u00e1rio",
+    "dailyLimit": "Limite Diário",
     "leadsUnit": "leads",
-    "activeHours": "Hor\u00e1rio Ativo",
+    "activeHours": "Horário Ativo",
     "duration": "{{count}} dia",
     "duration_plural": "{{count}} dias"
   },
-
   "panel": {
     "performance": "Desempenho",
-    "trends": "Tend\u00eancias",
-    "settings": "Configura\u00e7\u00f5es",
-    "aiConfiguration": "Configura\u00e7\u00e3o de IA",
+    "trends": "Tendências",
+    "settings": "Configurações",
+    "aiConfiguration": "Configuração de IA",
     "messageTemplates": "Modelos de Mensagem",
     "costAndRoi": "Custo & ROI",
-    "integrations": "Integra\u00e7\u00f5es",
-    "qualificationCriteria": "Crit\u00e9rios de Qualifica\u00e7\u00e3o",
-    "audienceTargeting": "P\u00fablico & Segmenta\u00e7\u00e3o",
-    "noQualificationCriteria": "Nenhum crit\u00e9rio de qualifica\u00e7\u00e3o definido",
+    "integrations": "Integrações",
+    "qualificationCriteria": "Critérios de Qualificação",
+    "audienceTargeting": "Público & Segmentação",
+    "noQualificationCriteria": "Nenhum critério de qualificação definido",
     "noPerformanceData": "Sem dados de desempenho ainda",
-    "descriptionLabel": "Descri\u00e7\u00e3o",
+    "descriptionLabel": "Descrição",
     "typeLabel": "Tipo",
-    "startDate": "Data de in\u00edcio",
-    "endDate": "Data de t\u00e9rmino",
-    "activeHours": "Hor\u00e1rio ativo",
-    "dailyLeadLimit": "Limite di\u00e1rio de leads",
+    "startDate": "Data de início",
+    "endDate": "Data de término",
+    "activeHours": "Horário ativo",
+    "dailyLeadLimit": "Limite diário de leads",
     "messageInterval": "Intervalo de mensagens",
     "stopOnResponse": "Parar ao responder",
     "useAiBumps": "Usar bumps de IA",
-    "maxBumps": "M\u00e1x. bumps",
+    "maxBumps": "Máx. bumps",
     "aiModel": "Modelo de IA",
     "aiTemperature": "Temperatura de IA",
     "agentName": "Nome do agente",
-    "serviceName": "Nome do servi\u00e7o",
+    "serviceName": "Nome do serviço",
     "aiPromptTemplate": "Template de Prompt IA",
     "firstMessage": "Primeira Mensagem",
     "totalCost": "Custo total",
@@ -322,14 +315,14 @@
     "costPerBooking": "Custo por agendamento",
     "roi": "ROI",
     "n8nWorkflowId": "ID workflow n8n",
-    "calendarLink": "Link do calend\u00e1rio",
+    "calendarLink": "Link do calendário",
     "webhookUrl": "URL do webhook",
-    "targetAudience": "P\u00fablico alvo",
+    "targetAudience": "Público alvo",
     "niche": "Nicho",
-    "serviceLabel": "Servi\u00e7o",
+    "serviceLabel": "Serviço",
     "usp": "USP",
     "kb": "Base de Conhecimento",
-    "inquiryTimeframe": "Per\u00edodo de consulta",
+    "inquiryTimeframe": "Período de consulta",
     "metrics": {
       "leads": "Leads",
       "messages": "Mensagens",
@@ -343,7 +336,6 @@
       "roi": "ROI"
     }
   },
-
   "tags": {
     "loadingTags": "Carregando tags...",
     "failedToLoadTags": "Falha ao carregar tags",
@@ -368,7 +360,6 @@
     "category": "Categoria",
     "allCategories": "Todas as Categorias",
     "clearAllFilters": "Limpar todos os filtros",
-
     "pageTitle": "Tags",
     "viewList": "Lista",
     "viewCards": "Cartões",
@@ -417,7 +408,6 @@
     "confirmYes": "Sim",
     "confirmNo": "Não"
   },
-
   "photo": {
     "dialogTitle": "Foto da Campanha",
     "hue": "Matiz",
@@ -427,28 +417,25 @@
     "removeLogo": "Remover logo",
     "clickToChange": "Clique para alterar foto"
   },
-
   "relativeTime": {
     "justNow": "Agora mesmo",
-    "hoursAgo": "{{count}}h atr\u00e1s",
+    "hoursAgo": "{{count}}h atrás",
     "yesterday": "Ontem",
-    "daysAgo": "{{count}}d atr\u00e1s",
-    "weeksAgo": "{{count}}sem atr\u00e1s",
-    "monthsAgo": "{{count}}m atr\u00e1s"
+    "daysAgo": "{{count}}d atrás",
+    "weeksAgo": "{{count}}sem atrás",
+    "monthsAgo": "{{count}}m atrás"
   },
-
   "funnelStages": {
     "new": "Novo",
     "contacted": "Contatado",
     "responded": "Respondeu",
-    "multipleResponses": "M\u00faltiplas Respostas",
+    "multipleResponses": "Múltiplas Respostas",
     "qualified": "Qualificado",
-    "callBooked": "Liga\u00e7\u00e3o Agendada",
+    "callBooked": "Ligação Agendada",
     "closed": "Fechado",
     "lost": "Perdido",
-    "dnd": "N\u00e3o Perturbe"
+    "dnd": "Não Perturbe"
   },
-
   "abTesting": {
     "title": "Teste A/B",
     "variantA": "Variante A",
@@ -468,12 +455,10 @@
     "splitRatio": "% Variante B",
     "split": "Divisão"
   },
-
   "copy": "Copiar",
-
   "tagsPage": {
     "title": "Tags",
-    "searchPlaceholder": "Buscar tags\u2026",
+    "searchPlaceholder": "Buscar tags…",
     "allCategories": "Todas as Categorias",
     "tagsInCategories": "{{tagCount}} tags em {{catCount}} categorias",
     "createTag": "Criar Tag",
@@ -487,10 +472,10 @@
       "color": "Cor",
       "category": "Categoria",
       "categoryPlaceholder": "ex. Status, Comportamento, Origem",
-      "description": "Descri\u00e7\u00e3o",
-      "descriptionPlaceholder": "Breve descri\u00e7\u00e3o desta tag\u2026",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Breve descrição desta tag…",
       "cancel": "Cancelar",
-      "creating": "Criando\u2026",
+      "creating": "Criando…",
       "create": "Criar Tag"
     },
     "editDialog": {
@@ -500,18 +485,18 @@
       "color": "Cor",
       "category": "Categoria",
       "categoryPlaceholder": "ex. Status, Comportamento, Origem",
-      "description": "Descri\u00e7\u00e3o",
-      "descriptionPlaceholder": "Breve descri\u00e7\u00e3o desta tag\u2026",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Breve descrição desta tag…",
       "cancel": "Cancelar",
-      "saving": "Salvando\u2026",
-      "saveChanges": "Salvar Altera\u00e7\u00f5es"
+      "saving": "Salvando…",
+      "saveChanges": "Salvar Alterações"
     },
     "deleteDialog": {
       "title": "Excluir Tag",
       "confirmMessage": "Tem certeza que deseja excluir a tag",
-      "warningMessage": "Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita. Leads que possuem esta tag n\u00e3o a perder\u00e3o \u2014 apenas a defini\u00e7\u00e3o da tag ser\u00e1 removida.",
+      "warningMessage": "Esta ação não pode ser desfeita. Leads que possuem esta tag não a perderão — apenas a definição da tag será removida.",
       "cancel": "Cancelar",
-      "deleting": "Excluindo\u2026",
+      "deleting": "Excluindo…",
       "delete": "Excluir Tag"
     },
     "sidePanel": {
@@ -519,8 +504,8 @@
       "tagInsights": "Insights da Tag",
       "tagInsightsDesc": "Clique em uma tag para ver os leads associados e seus detalhes.",
       "noLeadsFound": "Nenhum lead encontrado",
-      "noLeadsDesc": "Nenhum lead est\u00e1 associado a esta tag ainda.",
-      "lastMessage": "\u00daltima mensagem:",
+      "noLeadsDesc": "Nenhum lead está associado a esta tag ainda.",
+      "lastMessage": "Última mensagem:",
       "noMessages": "Sem mensagens ainda"
     },
     "empty": {
@@ -528,15 +513,15 @@
       "noMatchSearchAndCategory": "Nenhuma tag corresponde a \"{{query}}\" na categoria \"{{category}}\"",
       "noMatchSearch": "Nenhuma tag corresponde a \"{{query}}\"",
       "noMatchCategory": "Nenhuma tag na categoria \"{{category}}\"",
-      "noTagsAvailable": "Nenhuma tag dispon\u00edvel."
+      "noTagsAvailable": "Nenhuma tag disponível."
     },
     "toast": {
       "tagCreated": "Tag criada",
       "tagCreatedDesc": "\"{{name}}\" foi adicionada com sucesso.",
       "tagUpdated": "Tag atualizada",
       "tagUpdatedDesc": "\"{{name}}\" foi atualizada com sucesso.",
-      "tagDeleted": "Tag exclu\u00edda",
-      "tagDeletedDesc": "\"{{name}}\" foi exclu\u00edda com sucesso.",
+      "tagDeleted": "Tag excluída",
+      "tagDeletedDesc": "\"{{name}}\" foi excluída com sucesso.",
       "error": "Erro",
       "createFailed": "Falha ao criar tag: {{error}}",
       "updateFailed": "Falha ao atualizar tag: {{error}}",

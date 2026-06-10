@@ -42,13 +42,13 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
     <div style={{ display: 'flex', gap: 'var(--gap, 22px)', alignItems: 'flex-start' }}>
 
       {/* ── Left section nav ── */}
-      <div style={{ width: 262, flexShrink: 0, position: 'sticky', top: 0 }}>
+      <div style={{ width: 190, flexShrink: 0, position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {sections.map((s) => {
             const on = s.id === active;
             return (
               <button key={s.id} onClick={() => setActive(s.id)} style={{
-                padding: '18px 20px', border: 'none', cursor: 'pointer', textAlign: 'left' as const, width: '100%',
+                padding: '16px 24px', border: 'none', cursor: 'pointer', textAlign: 'left' as const, width: '100%',
                 borderRadius: 'var(--r-surface)', transition: 'all 150ms',
                 background: on ? 'var(--paper)' : 'transparent',
                 boxShadow: on ? 'var(--sh-raised-crisp)' : 'none',
@@ -62,25 +62,6 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
               </button>
             );
           })}
-        </div>
-
-        {/* Auto-save indicator */}
-        <div style={{
-          marginTop: 24,
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '13px 16px', borderRadius: 'var(--r-surface)',
-          background: 'var(--good-tint)',
-          border: '1px solid rgba(47,148,97,0.18)',
-        }}>
-          <span style={{
-            width: 26, height: 26, borderRadius: 'var(--r-button)', flexShrink: 0,
-            background: 'var(--card)', boxShadow: 'var(--sh-raised-crisp)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--good)',
-          }}><Check size={14} strokeWidth={3} /></span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{t("config.autoSave.saved")}</div>
-            <div style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--mute)', marginTop: 2 }}>{t("config.autoSave.justNow")}</div>
-          </div>
         </div>
       </div>
 

@@ -1,40 +1,18 @@
-// AI Activity panel — inset "Today's bump distribution" cadence ladder + a
-// "Just happened" feed of the last 20 messages (in/out). Mirrors the Claude
-// design's AIActivityCard. neu-raised surface.
+// AI Activity panel — "Just happened" feed of the last 20 messages (in/out).
+// Bumps Today section was split into a separate BumpsTodayPanel.
+// Mirrors the Claude design's AIActivityCard. neu-raised surface.
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import type { Campaign } from "@/types/models";
 import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
-import { PanelShell, SectionHead } from "../panelPrimitives";
-import { bumpDistribution, recentMessages, type CadenceRow } from "./utils";
-
-const LADDER_COLORS = ["var(--stage-new)", "var(--stage-contacted)", "var(--stage-responded)", "var(--stage-multi)", "var(--mute-2)"];
-
-function CadenceLadder({ cadence }: { cadence: CadenceRow[] }) {
-  const max = Math.max(1, ...cadence.map((c) => c.count));
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {cadence.map((c, i) => (
-        <div key={c.key} className="row" style={{ gap: 14 }}>
-          <div style={{ width: 90, fontSize: 12, color: "var(--ink-soft)", fontWeight: 500 }}>{c.label}</div>
-          <div style={{ width: 42, fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.06em" }}>{c.dayLabel}</div>
-          <div style={{ flex: 1, height: 14, background: "var(--card)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
-            <div style={{ width: `${(c.count / max) * 100}%`, height: "100%", background: LADDER_COLORS[i] || "var(--mute-2)", borderRadius: "var(--r-pill)", transition: "width 400ms" }} />
-          </div>
-          <div style={{ width: 28, textAlign: "right", fontFamily: "var(--mono)", fontSize: 13, color: "var(--ink)" }}>{c.count}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
+import { SectionHead } from "../panelPrimitives";
+import { recentMessages } from "./utils";
 
 export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; accountId: number }) {
   const { t } = useTranslation("campaigns");
   const campaignId = campaign.id || (campaign as any).Id;
   const { leads, interactions } = useConversationsData(accountId, campaignId);
-
-  const { queuedToday, cadence } = useMemo(() => bumpDistribution(leads, campaign), [leads, campaign]);
 
   const nameById = useMemo(() => {
     const m = new Map<number, string>();
@@ -51,7 +29,12 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
   );
 
   return (
-    <PanelShell variant="raised" testId="campaign-detail-view-activity" style={{ height: "100%" }}>
+    <div className="surface-panel" style={{
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      padding: "20px 18px"
+    }} data-testid="campaign-detail-view-activity">
       <SectionHead
         eyebrow={
           <span className="row" style={{ gap: 7 }}>
@@ -59,24 +42,10 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
             {t("summary.eyebrows.live")}
           </span>
         }
-        title={t("summary.aiActivity")}
+        title={t("summary.justHappened", "Just Happened")}
         titleSize={32}
         marginBottom={20}
       />
-
-      {/* Bump distribution (inset) */}
-      <div className="neu-inset" style={{ padding: "16px 18px", borderRadius: "var(--r-card)", marginBottom: 18 }}>
-        <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
-          <span className="eyebrow eyebrow-sm">{t("summary.bumpDistribution")}</span>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", color: "var(--mute)" }}>
-            {t("summary.queued", { count: queuedToday })}
-          </span>
-        </div>
-        <CadenceLadder cadence={cadence} />
-      </div>
-
-      {/* Just happened */}
-      <div className="eyebrow eyebrow-sm" style={{ marginBottom: 10 }}>{t("summary.justHappened")}</div>
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>
         {recent.length === 0 ? (
           <div style={{ fontSize: 12, color: "var(--mute)", padding: "8px 0" }}>{t("summary.noMessages")}</div>
@@ -101,6 +70,6 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
           );
         })}
       </div>
-    </PanelShell>
+    </div>
   );
 }

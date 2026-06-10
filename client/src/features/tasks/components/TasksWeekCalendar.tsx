@@ -4,6 +4,35 @@ import type { Task, TaskCategory } from "@shared/schema";
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const STATUS_EDGE: Record<string, string> = {
+  todo:        'var(--mute)',
+  in_progress: 'var(--stage-contacted)',
+  waiting:     'var(--warn)',
+  done:        'var(--good)',
+  cancelled:   'var(--stage-lost)',
+};
+
+const PRIORITY_COLOR: Record<string, string> = {
+  low:    'var(--mute)',
+  medium: 'var(--stage-contacted)',
+  high:   'var(--warn)',
+  urgent: 'var(--stage-lost)',
+};
+const PRIORITY_LEVEL: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 };
+
+function PriorityBars({ priority }: { priority: string }) {
+  const level = PRIORITY_LEVEL[priority] ?? 2;
+  const color = PRIORITY_COLOR[priority] ?? 'var(--mute)';
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 1.5, flexShrink: 0 }} title={`${priority} priority`}>
+      {[1, 2, 3, 4].map(i => (
+        <span key={i} style={{ width: 2.5, height: 3 + i * 2.5, borderRadius: 1, background: i <= level ? color : 'var(--line)', flexShrink: 0 }} />
+      ))}
+    </span>
+  );
+}
 
 export function isoToUTC(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
@@ -36,6 +65,39 @@ export function weekRangeLabel(weekStartISO: string): string {
     : `${MON[first.getUTCMonth()]} ${first.getUTCDate()} – ${MON[last.getUTCMonth()]} ${last.getUTCDate()}`;
 }
 
+// Label for the month of the given weekStartISO, e.g. "June 2026".
+export function monthLabel(weekStartISO: string): string {
+  const d = isoToUTC(weekStartISO);
+  return `${MONTH_FULL[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+// Returns the Monday-ISO of the first week to show for the month containing weekStartISO.
+function getMonthFirstWeekMonday(weekStartISO: string): string {
+  const d = isoToUTC(weekStartISO);
+  const firstOfMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  const dow = firstOfMonth.getUTCDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  return utcToISO(addDays(firstOfMonth, diff));
+}
+
+// Returns the Monday-ISO for the same weekday in the next month.
+export function nextMonthMonday(weekStartISO: string): string {
+  const d = isoToUTC(weekStartISO);
+  const nextMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  const dow = nextMonth.getUTCDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  return utcToISO(addDays(nextMonth, diff));
+}
+
+// Returns the Monday-ISO for the first week of the previous month.
+export function prevMonthMonday(weekStartISO: string): string {
+  const d = isoToUTC(weekStartISO);
+  const prevMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1));
+  const dow = prevMonth.getUTCDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  return utcToISO(addDays(prevMonth, diff));
+}
+
 export function taskDueISO(task: Task): string | null {
   if (!task.dueDate) return null;
   const d = new Date(task.dueDate as any);
@@ -61,6 +123,10 @@ interface Props {
   weekStart: string;
   /** Compact mode: day columns cap at ~2 rows then scroll; component sizes to content. */
   compact?: boolean;
+  /** Monthly mode: show 5 weeks covering the month containing weekStart. */
+  monthly?: boolean;
+  /** Hide Saturday and Sunday columns. */
+  hideWeekends?: boolean;
 }
 
 // Compact day body fits ~2 task cards, then scrolls.
@@ -68,10 +134,14 @@ const CAL_BODY_H = 112;
 
 // ── Draggable agenda card (matches the Calendar page's event cards) ────
 function AgendaCard({
-  task, catColor, catName, isActive, onSelect,
-}: { task: Task; catColor: string; catName: string; isActive: boolean; onSelect: () => void }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
+  task, catName, isActive, onSelect,
+}: { task: Task; catName: string; isActive: boolean; onSelect: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `cal:${task.id}` });
   const done = task.status === 'done';
+  const statusColor = STATUS_EDGE[task.status ?? 'todo'] ?? 'var(--mute)';
+  const leftBorder = isActive ? 'var(--wine-soft)' : statusColor;
+  const firstNameOnly = task.assigneeName ? task.assigneeName.split(' ')[0] : null;
+
   return (
     <div
       ref={setNodeRef}
@@ -81,7 +151,7 @@ function AgendaCard({
       style={{
         textAlign: 'left', width: '100%', cursor: 'grab', touchAction: 'none',
         background: isActive ? 'var(--wine)' : 'var(--card)',
-        borderLeft: `3px solid ${isActive ? 'var(--wine-soft)' : catColor}`,
+        borderLeft: `3px solid ${leftBorder}`,
         borderRadius: 'var(--r-button)',
         boxShadow: isActive ? 'var(--sh-raised-medium)' : 'var(--sh-raised-crisp)',
         padding: '5px 8px', overflow: 'hidden', flexShrink: 0,
@@ -89,7 +159,7 @@ function AgendaCard({
         opacity: isDragging ? 0.35 : done ? 0.62 : 1,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <span style={{
           flex: 1, fontSize: 11.5, fontWeight: 600,
           color: isActive ? 'var(--paper)' : 'var(--ink)',
@@ -98,16 +168,27 @@ function AgendaCard({
         }}>
           {task.title}
         </span>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? 'var(--paper)' : catColor, flexShrink: 0 }} />
+        <PriorityBars priority={task.priority ?? 'medium'} />
       </div>
-      {catName && (
-        <div style={{
-          fontFamily: 'var(--mono)', fontSize: 8, marginTop: 2,
-          color: isActive ? 'rgba(255,250,240,0.7)' : 'var(--mute-2)',
-          textTransform: 'uppercase' as const, letterSpacing: '0.06em',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {catName}
+      {(catName || firstNameOnly) && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+          <div style={{
+            fontFamily: 'var(--mono)', fontSize: 8,
+            color: isActive ? 'rgba(255,250,240,0.7)' : 'var(--mute-2)',
+            textTransform: 'uppercase' as const, letterSpacing: '0.06em',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+          }}>
+            {catName}
+          </div>
+          {firstNameOnly && (
+            <span style={{
+              fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 600, flexShrink: 0,
+              color: isActive ? 'rgba(255,250,240,0.6)' : 'var(--mute)',
+              letterSpacing: '0.04em',
+            }}>
+              {firstNameOnly}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -116,12 +197,12 @@ function AgendaCard({
 
 // ── Droppable day column ───────────────────────────────────────────────
 function DayColumn({
-  iso, isToday, isWeekend, firstCol, dow, dateNum, dayTasks, catMap, activeId, onSelect, compact,
+  iso, isToday, isWeekend, firstCol, dow, dateNum, dayTasks, catMap, activeId, onSelect, compact, dimmed,
 }: {
   iso: string; isToday: boolean; isWeekend: boolean; firstCol: boolean;
   dow: string; dateNum: number; dayTasks: Task[];
   catMap: Map<number, TaskCategory>; activeId: number | null; onSelect: (id: number) => void;
-  compact?: boolean;
+  compact?: boolean; dimmed?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: iso });
   return (
@@ -131,6 +212,7 @@ function DayColumn({
         borderLeft: firstCol ? 'none' : '1px solid var(--line)',
         background: isOver ? 'rgba(94,34,48,0.06)' : isToday ? 'rgba(94,34,48,0.022)' : isWeekend ? 'var(--bg-2)' : 'transparent',
         transition: 'background 120ms',
+        opacity: dimmed ? 0.45 : 1,
       }}
     >
       {/* Day header — compact: number + weekday side by side */}
@@ -169,7 +251,6 @@ function DayColumn({
               <AgendaCard
                 key={t.id}
                 task={t}
-                catColor={cat?.color ?? '#888888'}
                 catName={cat?.name ?? ''}
                 isActive={t.id === activeId}
                 onSelect={() => onSelect(t.id)}
@@ -183,34 +264,127 @@ function DayColumn({
 }
 
 // Presentational only — drag + week navigation are handled by TasksPage.
-export default function TasksWeekCalendar({ tasks, categories, activeId, onSelect, todayISO, weekStart, compact }: Props) {
+export default function TasksWeekCalendar({ tasks, categories, activeId, onSelect, todayISO, weekStart, compact, monthly, hideWeekends }: Props) {
   const catMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
 
+  // For monthly mode: build 5 week rows covering the month
+  const monthWeekStarts = useMemo(() => {
+    if (!monthly) return null;
+    const firstMonday = getMonthFirstWeekMonday(weekStart);
+    return Array.from({ length: 5 }, (_, i) => utcToISO(addDays(isoToUTC(firstMonday), i * 7)));
+  }, [monthly, weekStart]);
+
   const weekDays = useMemo(() => {
+    if (monthly) return []; // use monthWeekStarts instead
     const s = isoToUTC(weekStart);
     return Array.from({ length: 7 }, (_, i) => addDays(s, i));
-  }, [weekStart]);
+  }, [monthly, weekStart]);
 
-  // Group tasks by due date ISO
+  // All visible ISOs (7 for weekly, 35 for monthly)
+  const visibleISOs = useMemo(() => {
+    if (monthly && monthWeekStarts) {
+      const isos: string[] = [];
+      for (const ws of monthWeekStarts) {
+        for (let i = 0; i < 7; i++) isos.push(utcToISO(addDays(isoToUTC(ws), i)));
+      }
+      return isos;
+    }
+    return weekDays.map(d => utcToISO(d));
+  }, [monthly, monthWeekStarts, weekDays]);
+
+  const isoSet = useMemo(() => new Set(visibleISOs), [visibleISOs]);
+
+  // Expand recurring tasks across all visible days
   const tasksByDay = useMemo(() => {
     const map = new Map<string, Task[]>();
+
+    const addTo = (iso: string, t: Task) => {
+      if (!isoSet.has(iso)) return;
+      const arr = map.get(iso) ?? [];
+      arr.push(t);
+      map.set(iso, arr);
+    };
+
     for (const t of tasks) {
-      const iso = taskDueISO(t);
-      if (iso) {
-        const arr = map.get(iso) ?? [];
-        arr.push(t);
-        map.set(iso, arr);
+      const anchor = taskDueISO(t);
+
+      if (!t.isRecurring || !anchor) {
+        if (anchor) addTo(anchor, t);
+        continue;
+      }
+
+      const period = t.recurringPeriod ?? 'weekly';
+      const anchorDate = isoToUTC(anchor);
+
+      for (const iso of visibleISOs) {
+        const d = isoToUTC(iso);
+        const dow = d.getUTCDay();
+
+        if (period === 'daily') {
+          if (dow === 0 || dow === 6) continue;
+          if (d.getTime() >= anchorDate.getTime()) addTo(iso, t);
+        } else if (period === 'weekly') {
+          if (d.getUTCDay() === anchorDate.getUTCDay() && d.getTime() >= anchorDate.getTime()) addTo(iso, t);
+        } else if (period === 'biweekly') {
+          const diffDays = Math.round((d.getTime() - anchorDate.getTime()) / 86400000);
+          if (d.getUTCDay() === anchorDate.getUTCDay() && diffDays >= 0 && diffDays % 14 === 0) addTo(iso, t);
+        } else if (period === 'monthly') {
+          if (d.getUTCDate() === anchorDate.getUTCDate() && d.getTime() >= anchorDate.getTime()) addTo(iso, t);
+        }
       }
     }
+
     return map;
-  }, [tasks]);
+  }, [tasks, visibleISOs, isoSet]);
+
+  // ── Monthly view ─────────────────────────────────────────────────────
+  if (monthly && monthWeekStarts) {
+    const monthYear = isoToUTC(weekStart);
+    const currentMonth = monthYear.getUTCMonth();
+    return (
+      <div style={{ flex: 1, width: '100%', minWidth: 0, background: 'var(--bg-2)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 'var(--r-card)', border: '1px solid var(--line)' }}>
+        {monthWeekStarts.map((ws, wi) => {
+          const days = Array.from({ length: 7 }, (_, i) => addDays(isoToUTC(ws), i))
+            .filter(d => !hideWeekends || (d.getUTCDay() !== 0 && d.getUTCDay() !== 6));
+          return (
+            <div key={ws} style={{ flex: '1 1 0', minHeight: 0, display: 'flex', borderTop: wi > 0 ? '1px solid var(--line)' : 'none', overflow: 'hidden' }}>
+              {days.map((d, di) => {
+                const iso = utcToISO(d);
+                const outOfMonth = d.getUTCMonth() !== currentMonth;
+                return (
+                  <DayColumn
+                    key={iso}
+                    iso={iso}
+                    isToday={iso === todayISO}
+                    isWeekend={d.getUTCDay() === 0 || d.getUTCDay() === 6}
+                    firstCol={di === 0}
+                    dow={DOW[d.getUTCDay()]}
+                    dateNum={d.getUTCDate()}
+                    dayTasks={tasksByDay.get(iso) ?? []}
+                    catMap={catMap}
+                    activeId={activeId}
+                    onSelect={onSelect}
+                    compact={false}
+                    dimmed={outOfMonth}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ── Weekly view ──────────────────────────────────────────────────────
+  const visibleWeekDays = hideWeekends
+    ? weekDays.filter(d => d.getUTCDay() !== 0 && d.getUTCDay() !== 6)
+    : weekDays;
 
   return (
-    <div style={{ ...(compact ? { flex: '0 0 auto' } : { flex: 1 }), width: '100%', minWidth: 0, background: 'var(--bg-2)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-
-      {/* Agenda — 7 day columns, each a droppable vertical stack of tasks due that day */}
+    <div style={{ ...(compact ? { flex: '0 0 auto' } : { flex: 1 }), width: '100%', minWidth: 0, background: 'var(--bg-2)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 'var(--r-card)', border: '1px solid var(--line)' }}>
       <div style={{ ...(compact ? { flex: '0 0 auto' } : { flex: 1, minHeight: 0 }), display: 'flex', overflow: 'hidden' }}>
-        {weekDays.map((d, di) => {
+        {visibleWeekDays.map((d, di) => {
           const iso = utcToISO(d);
           return (
             <DayColumn

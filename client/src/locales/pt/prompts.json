@@ -156,6 +156,15 @@
     "deletePrompt": "Excluir prompt",
     "clickToToggle": "Clique para {{action}}"
   },
+  "tabs": {
+    "system": "Sistema",
+    "campaigns": "Campanhas"
+  },
+  "editor": {
+    "raw": "Raw",
+    "sections": "Seções",
+    "variables": "Variáveis"
+  },
   "time": {
     "justNow": "Agora",
     "hoursAgo": "{{count}}h atrás",

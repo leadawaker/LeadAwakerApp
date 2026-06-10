@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -280,10 +279,10 @@ export function ContractCreatePanel({
     <div className={cn("flex flex-col h-full overflow-hidden", compact && "")} data-testid="contract-create-panel">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border/30 shrink-0">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0" style={{ borderBottom: "1px solid var(--line)" }}>
         <div>
-          <h2 className="text-xl font-bold text-foreground font-heading">{t("contracts.form.contractBuilder")}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{t("contracts.form.contractBuilderDesc")}</p>
+          <span className="eyebrow eyebrow-sm block mb-1">{t("contracts.form.contractBuilderDesc")}</span>
+          <h2 className="serif" style={{ fontSize: 22, color: "var(--ink)" }}>{t("contracts.form.contractBuilder")}</h2>
         </div>
         <button onClick={onClose} className="icon-circle-lg icon-circle-base">
           <X className="h-4 w-4" />
@@ -376,14 +375,14 @@ export function ContractCreatePanel({
                       onKeyDown={e => { if (e.key === "Enter") handleCreateCampaign(); }}
                       className="flex-1 h-9 text-[12px]"
                     />
-                    <Button
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={handleCreateCampaign}
                       disabled={creatingCampaign || !newCampaignName.trim()}
-                      className="h-9 px-3 text-[12px] bg-brand-indigo text-white hover:bg-brand-indigo/90"
+                      className="la-btn la-btn--wine h-9 px-3 text-[12px] disabled:opacity-50"
                     >
                       {creatingCampaign ? "..." : t("contracts.form.create")}
-                    </Button>
+                    </button>
                   </div>
                 )}
               </div>
@@ -399,7 +398,7 @@ export function ContractCreatePanel({
                       className={cn(
                         "h-9 px-3 rounded-lg text-[12px] font-medium border",
                         language === lang
-                          ? "bg-highlight-active border-highlight-active text-foreground"
+                          ? "[background:var(--wine-tint)] [border-color:var(--wine)] text-[color:var(--wine)]"
                           : "bg-card border-border text-muted-foreground"
                       )}
                       onClick={() => setLanguage(lang)}>
@@ -454,7 +453,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors",
                       endDatePreset === (p.months === 0 ? "custom" : p.months)
-                        ? "bg-highlight-active border-highlight-active text-foreground"
+                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] text-[color:var(--wine)]"
                         : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
                     )}>
                     {t(p.tKey)}
@@ -477,7 +476,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "flex flex-col gap-0.5 px-2.5 py-2 text-left rounded-xl border transition-colors",
                       dealType === opt.value
-                        ? "bg-highlight-active border-highlight-active border-2"
+                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] border-2"
                         : "bg-card border-border hover:bg-muted/60"
                     )}>
                     <span className="text-[11px] font-semibold leading-tight">{t(opt.tKey)}</span>
@@ -523,7 +522,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "h-9 px-3 rounded-full border text-[12px] font-medium transition-colors",
                       paymentTrigger === opt.value
-                        ? "bg-[#FFE35B] border-yellow-400 border-2 text-foreground"
+                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] border-2 text-[color:var(--wine)]"
                         : "bg-card border-border text-foreground/70 hover:bg-muted/60"
                     )}>
                     {t(opt.tKey)}
@@ -599,7 +598,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "h-9 px-3 rounded-full border text-[12px] font-medium transition-colors",
                       invoiceCadence === opt.value
-                        ? "bg-highlight-active border-highlight-active text-foreground"
+                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] text-[color:var(--wine)]"
                         : "bg-card border-border text-foreground/70 hover:bg-muted/60"
                     )}>
                     {t(opt.tKey)}
@@ -618,7 +617,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "flex-1 flex flex-col gap-0.5 px-3 py-2 rounded-xl border text-left transition-colors",
                       paymentPreset === opt.value
-                        ? "bg-highlight-active border-highlight-active text-foreground"
+                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] text-[color:var(--wine)]"
                         : "bg-card border-border text-foreground/70 hover:bg-muted/60"
                     )}>
                     <span className="text-[12px] font-semibold">{opt.label}</span>
@@ -631,22 +630,23 @@ export function ContractCreatePanel({
           </div>
 
           {/* Footer inside left column */}
-          <div className="mt-auto px-4 py-3 border-t border-border/30 flex items-center justify-between gap-2">
+          <div className="mt-auto px-4 py-3 flex items-center justify-between gap-2" style={{ borderTop: "1px solid var(--line)" }}>
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="text-sm text-muted-foreground hover:text-foreground font-medium"
+              className="la-btn la-btn--soft h-9 px-4 text-sm"
             >
               {t("contracts.form.cancel")}
             </button>
-            <Button
+            <button
+              type="button"
               onClick={handleSubmit}
               disabled={saving || !title.trim()}
-              className="bg-brand-indigo text-white hover:bg-brand-indigo/90 h-9 px-5 text-sm"
+              className="la-btn la-btn--wine h-9 px-5 text-sm disabled:opacity-50"
             >
               {saving ? t("contracts.form.creating") : t("contracts.form.createContract")}
-            </Button>
+            </button>
           </div>
         </div>
 

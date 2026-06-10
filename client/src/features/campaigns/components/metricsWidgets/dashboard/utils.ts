@@ -119,11 +119,11 @@ export function bumpDistribution(leads: AnyRec[], campaign: AnyRec): { queuedTod
   const d3 = hrs("bump_3_delay_hours", "bump3DelayHours");
   const toDay = (h: number) => `D+${Math.max(0, Math.round(h / 24))}`;
   const rows: Array<CadenceRow & { stage: number }> = [
-    { key: "initial", label: "Initial", dayLabel: "D+0", stage: 0, count: 0 },
+    { key: "initial", label: "Message 1", dayLabel: "D+0", stage: 0, count: 0 },
     { key: "b1", label: "Bump 1", dayLabel: toDay(d1), stage: 1, count: 0 },
     { key: "b2", label: "Bump 2", dayLabel: toDay(d1 + d2), stage: 2, count: 0 },
     { key: "b3", label: "Bump 3", dayLabel: toDay(d1 + d2 + d3), stage: 3, count: 0 },
-    { key: "last", label: "Last attempt", dayLabel: "", stage: 4, count: 0 },
+    { key: "last", label: "Bump 4", dayLabel: "", stage: 4, count: 0 },
   ];
   let queuedToday = 0;
   const terminal = new Set(["Booked", "Closed", "Lost", "DND"]);

@@ -246,7 +246,6 @@ const PIPELINE_STAGES = [
   "Multiple Responses",
   "Qualified",
   "Booked",
-  "Closed",
   "Lost",
   "DND",
 ] as const;

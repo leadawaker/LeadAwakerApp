@@ -366,7 +366,7 @@ export function LeadsCardView({
       )}
 
       {/* ── Content row: list panel + detail panel ── */}
-      <div className="relative flex flex-1 min-h-0 w-full" style={{ gap: "var(--panel-gap)", paddingLeft: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
+      <div className="relative flex flex-1 min-h-0 w-full" style={{ gap: "var(--panel-gap)", paddingLeft: 0, paddingRight: "var(--panel-gap)" }}>
 
       {/* ── LEFT: Lead List ── */}
       <LeadsListPanel

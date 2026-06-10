@@ -5,11 +5,11 @@
 
 :root {
   /* Backgrounds & Surfaces — brighter, white cards on a soft warm ground */
-  --bg: #ECE7DD;         /* page ground — warm but light */
+  --bg: #f3eee5;         /* page ground — in-between warm cream (matches --surface) */
   --bg-2: #E4DCCC;       /* sidebar / nav rail — slightly deeper to frame the bright content */
   --chrome: #E4DCCC;     /* explicit alias for nav chrome */
   --paper: #FFFFFF;      /* elevated paper / hero band — clean white */
-  --surface: #FBF8F2;    /* near-white raised chips, buttons, controls */
+  --surface: #EFEAE1;    /* in-between warm cream — page bg, topbar, toolbars */
   --card: #FFFFFF;       /* white cards — the brightness lift */
   --card-bright: #FFFFFF; /* polished hero — pure white, warmth comes from the gradient overlay */
 
@@ -47,25 +47,26 @@
   --stage-dnd: #9D8E76;
 
   /* Light system */
-  --lx: 0.94;
-  --ly: -0.34;
-  --light-x: 92%;
-  --light-y: 30%;
+  --lx: 1;
+  --ly: -1;
+  --light-x: 50%;
+  --light-y: 50%;
   --light-intensity: 1;
   --light-warm: 255, 224, 168;
-  --light-strength: 1;
+  --light-strength: 0.5;
 
   /* Depth scale */
   --depth-scale: 1;
-  --depth-polished: 4;
+  --depth-polished: 1;
+  --inset-highlight-scale: 0.3                                     ;
 
   /* Offset/Blur Tiers */
-  --d-crisp-o: 5px;
-  --d-crisp-b: 13px;
-  --d-medium-o: 10px;
-  --d-medium-b: 28px;
+  --d-crisp-o: 8px;
+  --d-crisp-b: 8px;
+  --d-medium-o: 15px;
+  --d-medium-b: 15px;
   --d-large-o: 18px;
-  --d-large-b: 48px;
+  --d-large-b: 18px;
 
   /* Glass */
   --glass-bg: rgba(255, 250, 240, 0.55);
@@ -169,23 +170,23 @@ body, html { margin: 0; padding: 0; }
 :root {
   --sh-raised-crisp:
     calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) rgba(96, 78, 52, 0.15),
-    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) rgba(255, 250, 240, 0.80);
+    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) rgba(245, 245, 245, 0.80);
 
   --sh-raised-medium:
     calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) rgba(96, 78, 52, 0.17),
-    calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) rgba(255, 250, 240, 0.85);
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) rgba(245, 245, 245, 0.85);
 
   --sh-raised-large:
     calc(var(--lx) * var(--d-large-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o) * var(--light-strength) * -1) var(--d-large-b) rgba(96, 78, 52, 0.19),
-    calc(var(--lx) * var(--d-large-o) * var(--light-strength)) calc(var(--ly) * var(--d-large-o) * var(--light-strength)) var(--d-large-b) rgba(255, 250, 240, 0.85);
+    calc(var(--lx) * var(--d-large-o) * var(--light-strength)) calc(var(--ly) * var(--d-large-o) * var(--light-strength)) var(--d-large-b) rgba(245, 245, 245, 0.85);
 
   --sh-inset-crisp:
     inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) rgba(90, 65, 35, 0.28),
-    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) rgba(255, 252, 240, 0.68);
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) rgba(245, 245, 245, 0.68);
 
   --sh-inset-medium:
     inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) rgba(90, 65, 35, 0.30),
-    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) rgba(255, 252, 240, 0.68);
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) rgba(245, 245, 245, 0.68);
   --sh-polished-crisp:
     calc(var(--lx) * var(--d-crisp-o)  * 1 * var(--depth-polished) * -1)
     calc(var(--ly) * var(--d-crisp-o)  * 1 * var(--depth-polished) * -1)
@@ -193,8 +194,8 @@ body, html { margin: 0; padding: 0; }
     calc(var(--d-crisp-o)  * -0.1)
     rgba(101, 66, 24, 0.06),
 
-    inset calc(var(--lx) * var(--d-crisp-o)  *  1)
-    calc(var(--ly) * var(--d-crisp-o)  *  3)
+    inset calc(var(--lx) * var(--d-crisp-o)  *  1 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-crisp-o)  *  3 * var(--inset-highlight-scale))
     0px 0
     rgba(255,253,245,0.95),
 
@@ -222,17 +223,17 @@ body, html { margin: 0; padding: 0; }
 
   
     inset
-    calc(var(--lx) * var(--d-large-o) * 1.5)
-    calc(var(--ly) * var(--d-large-o) * 1.5)
+    calc(var(--lx) * var(--d-large-o) * 1.5 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * 1.5 * var(--inset-highlight-scale))
     1px
     0
     rgba(255,253,245,0.95),
 
 
     inset
-    calc(var(--lx) * var(--d-large-o) * -1.5)
-    calc(var(--ly) * var(--d-large-o) * -1.5)
-    10px
+    calc(var(--lx) * var(--d-large-o) * -1.5 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * -1.5 * var(--inset-highlight-scale))
+    5px
     0
     rgba(255,253,245,0.35),
 
@@ -261,17 +262,17 @@ body, html { margin: 0; padding: 0; }
 
   
     inset
-    calc(var(--lx) * var(--d-large-o) * 1.8)
-    calc(var(--ly) * var(--d-large-o) * 1.8)
+    calc(var(--lx) * var(--d-large-o) * 1.8 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * 1.8 * var(--inset-highlight-scale))
     1px
     0
     rgba(255,253,245,0.95),
 
 
     inset
-    calc(var(--lx) * var(--d-large-o) * -1.8)
-    calc(var(--ly) * var(--d-large-o) * -1.8)
-    30px
+    calc(var(--lx) * var(--d-large-o) * -1.8 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * -1.8 * var(--inset-highlight-scale))
+    12px
     0
     rgba(255,253,245,0.35),
 
@@ -300,6 +301,85 @@ body, html { margin: 0; padding: 0; }
   background: var(--card);
   box-shadow: var(--sh-raised-large);
   border-radius: 18px;
+}
+
+/* Outlined surface panel — wine border fades out, inset shadow fades in on hover */
+.surface-panel {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  border: 2px solid var(--wine);
+  box-shadow: none;
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+.surface-panel:hover {
+  border-color: transparent;
+  box-shadow: var(--sh-inset-medium);
+}
+
+/* Glass cards — play once on mount: surface outline → white raised */
+@keyframes outline-to-glass {
+  from {
+    box-shadow: 0 0 0 2px var(--wine);
+    background: var(--surface);
+  }
+  to {
+    box-shadow: var(--sh-raised-crisp);
+    background: #FFF;
+  }
+}
+.panel-glass-animate {
+  background: #FFF;
+  border-radius: var(--r-card);
+  border-top: 3px solid var(--wine);
+  box-shadow: var(--sh-raised-crisp);
+  animation: outline-to-glass 600ms ease-out both;
+}
+
+@keyframes outline-to-glass-large {
+  from {
+    box-shadow: 0 0 0 2px var(--wine);
+  }
+  to {
+    box-shadow: var(--sh-raised-large);
+  }
+}
+.panel-glass-animate-large {
+  animation: outline-to-glass-large 600ms ease-out both;
+}
+
+@keyframes outline-to-neu-raised {
+  from {
+    box-shadow: 0 0 0 2px var(--wine);
+    background: var(--surface);
+  }
+  to {
+    box-shadow: var(--sh-raised-medium);
+    background: var(--card);
+  }
+}
+.panel-neu-animate {
+  animation: outline-to-neu-raised 600ms ease-out both;
+}
+
+/* Performance panel — plays once on mount: surface outline → inset */
+@keyframes surface-to-inset {
+  from {
+    border-color: var(--wine);
+    box-shadow: none;
+    background: var(--surface);
+  }
+  to {
+    border-color: transparent;
+    box-shadow: var(--sh-inset-crisp), inset 0 0 0 1px rgba(0,0,0,0.07);
+    background: var(--bg);
+  }
+}
+.panel-inset-animate {
+  background: var(--bg);
+  border-radius: var(--r-card);
+  border: 2px solid transparent;
+  box-shadow: var(--sh-inset-crisp), inset 0 0 0 1px rgba(0,0,0,0.07);
+  animation: surface-to-inset 600ms ease-out both;
 }
 
 .neu-inset, .neu-inset-medium {
@@ -529,20 +609,21 @@ body, html { margin: 0; padding: 0; }
   flex: 0 0 auto;
   display: flex;
   min-height: 0;
-  border-bottom: 1px solid var(--line);
   order: 1;            /* calendar on top when stacked */
+  padding: 8px 16px 6px; /* top/sides/bottom so rounded corners show */
 }
 @media (min-width: 1800px) {
   .tasks-merged { flex-direction: row; }
-  .tasks-merged__board { order: 1; }   /* board left */
+  .tasks-merged__board { order: 1; overflow: auto; overflow-y: hidden; }
   .tasks-merged__cal {
-    flex: 0 0 660px;
-    width: 660px;
+    flex: 0 0 clamp(700px, 40%, 1400px);
+    width: clamp(700px, 40%, 1400px);
     align-self: stretch;
     border-bottom: none;
-    border-left: 1px solid var(--line);
+    border-left: none;
     overflow-y: auto;
-    order: 2;                          /* calendar right rail */
+    order: 2;                          /* calendar right rail — grows from 700px → ~50% on very wide screens */
+    padding: 16px 16px 6px 8px;        /* top/right/bottom match kanban + small left gap from board */
   }
 }
 
@@ -608,7 +689,7 @@ body, html { margin: 0; padding: 0; }
 /* ─── Campaign list card ─────────────────────────────────────── */
 
 .la-camp-card {
-  padding: 16px 18px;
+  padding: 10px 10px 10px 11px;
   border-radius: 14px;
   background: transparent;
   box-shadow: none;
@@ -621,11 +702,12 @@ body, html { margin: 0; padding: 0; }
 .la-camp-card.active,
 .la-camp-card.active:hover {
   background: var(--card);
-  box-shadow: var(--sh-raised-crisp);
+  box-shadow: 0 2px 4px rgba(96, 78, 52, 0.15);
 }
 .la-camp-card.active::before {
   content: '';
-  position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+  position: absolute; left: 0; top: 50%; bottom: auto; transform: translateY(-50%);
+  height: 60%; width: 3px;
   background: var(--wine); border-radius: 0 3px 3px 0;
 }
 /* Unselected cards read flat: mute the floating mono tile so only the
@@ -703,6 +785,8 @@ body, html { margin: 0; padding: 0; }
 .la-page-header {
   height: 60px;
   flex-shrink: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -809,7 +893,7 @@ body, html { margin: 0; padding: 0; }
 }
 
 /* Performance: metrics + chart side by side (default); hairline divider between */
-.bold-metrics-row { display: flex; gap: 24px; align-items: stretch; flex-wrap: wrap; }
+.bold-metrics-row { display: flex; gap: 16px; align-items: stretch; flex-wrap: nowrap; }
 .bold-metrics-rule { display: none; }
 
 /* Grid: Performance on top, then the panels row. Stacked by default. */
@@ -821,8 +905,8 @@ body, html { margin: 0; padding: 0; }
 /* When stacked (narrow), live rail cards stay bounded and scroll internally. */
 .summary-cell--rail > * { max-height: var(--summary-rail-h); }
 
-/* ≥680px: metrics and chart are genuinely side by side — show the divider. */
-@container summary (min-width: 680px) {
+/* ≥800px: metrics and chart are genuinely side by side — show the divider. */
+@container summary (min-width: 800px) {
   .bold-metrics-rule { display: block; }
 }
 
@@ -833,7 +917,8 @@ body, html { margin: 0; padding: 0; }
 }
 
 /* ≥1400px (ultrawide): all four panels side by side, equal height; Performance
-   turns vertical so its chart grows as tall as the neighbouring panels. */
+   turns vertical so its chart grows as tall as the neighbouring panels.
+   Pipeline also goes side-by-side (donut left, bars right). */
 @container summary (min-width: 1400px) {
   .summary-grid { flex-direction: row; align-items: stretch; height: var(--summary-rail-h); }
   .summary-perf { flex: 1.15 1 0; display: flex; }
@@ -843,7 +928,18 @@ body, html { margin: 0; padding: 0; }
   .summary-perf .perf-metrics { flex: 0 0 auto; }
   .summary-perf .perf-chart { flex: 1 1 auto; min-height: 0; }
   .bold-metrics-rule { display: none; }
+  .pipeline-layout { flex-direction: row !important; align-items: flex-start !important; }
+
+  /* AB Testing: switch to horizontal bars on ultrawide */
+  .ab-layout { --ab-mode: horizontal; }
+  .ab-bars-vertical { display: none !important; }
+  .ab-bars-horizontal { display: flex !important; }
 }
+
+/* AB Testing: default layout (non-ultrawide) uses vertical bars */
+.ab-layout { --ab-mode: vertical; }
+.ab-bars-horizontal { display: none; }
+.ab-bars-vertical { display: flex; }
 
 /* ─── Curvy hero panel (version B) ────────────────────────────── */
 .bold-hero {

@@ -11,17 +11,13 @@ import {
   Filter,
   Check,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
-  List,
-  Table2,
   Bot,
   Save,
   RotateCcw,
   Eye,
   EyeOff,
-  Minus,
 } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { type CampaignForPreview } from "../utils/resolveVariables";
 import { PromptEditorPanel, type PromptEditorPanelHandle } from "./PromptEditorPanel";
 import {
@@ -33,11 +29,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { getPromptIconColor } from "@/lib/avatarUtils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
-import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
@@ -76,16 +70,17 @@ const PROMPT_GROUP_TKEYS: Record<PromptGroupOption, string> = {
   account:  "labels.account",
 };
 
-const VIEW_TAB_DEFS = [
-  { id: "list",  tKey: "views.list",  icon: List   },
-  { id: "table", tKey: "views.table", icon: Table2 },
-];
+/* ── Constants ───────────────────────────────────────────────────────────── */
 
-/* ── Expand-on-hover button constants ──────────────────────────────────── */
-const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+const SORT_OPTIONS: PromptSortOption[] = [
+  "recent",
+  "name_asc",
+  "name_desc",
+  "score_desc",
+  "score_asc",
+];
+const GROUP_OPTIONS: PromptGroupOption[] = ["none", "status", "model", "campaign", "account"];
+const STATUS_OPTIONS = ["all", "active", "archived"] as const;
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -109,99 +104,194 @@ function formatRelativeTime(dateStr: string | null | undefined, t: TFn): string 
   }
 }
 
-/* ── Left panel card ─────────────────────────────────────────────────────── */
+/* ── Left panel list card (wine premium design) ──────────────────────────── */
 
 function PromptListCard({
   prompt,
   isActive,
   onClick,
-  campaignMap,
 }: {
   prompt: any;
   isActive: boolean;
   onClick: () => void;
-  campaignMap: Map<number, string>;
 }) {
   const { t } = useTranslation("prompts");
   const name = prompt.name || t("labels.untitled");
-  const aId = prompt.accountsId || prompt.Accounts_id;
-  const iconColor = getPromptIconColor(aId ? `account-${aId}` : "agency-bots");
   const normalizedStatus = (prompt.status || "").toLowerCase().trim();
-  const isInactive = normalizedStatus !== "" && normalizedStatus !== "active";
-  const cId = prompt.campaignsId || prompt.Campaigns_id;
-  const campaignName = cId ? campaignMap.get(cId) : null;
+  const isStatusActive = normalizedStatus === "active";
   const updatedAt = prompt.updatedAt || prompt.updated_at;
   const promptId = getPromptId(prompt);
 
   return (
     <div
       data-prompt-id={promptId}
-      className={cn(
-        "group mx-[3px] my-0.5 rounded-xl cursor-pointer",
-        "transition-colors duration-150 ease-out",
-        "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
-      )}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
+      style={{
+        position: "relative",
+        cursor: "pointer",
+        borderRadius: "var(--r-surface)",
+        padding: "11px 13px",
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+        background: isActive ? "var(--card)" : "transparent",
+        boxShadow: isActive ? "var(--sh-raised-crisp)" : "none",
+        transition: "all 130ms",
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) (e.currentTarget as HTMLDivElement).style.background = "var(--wine-tint)";
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) (e.currentTarget as HTMLDivElement).style.background = "transparent";
+      }}
     >
-      <div className="px-3 py-2.5 flex items-center gap-2.5">
-        {/* Avatar */}
-        <div
-          className={cn("h-9 w-9 rounded-full flex items-center justify-center shrink-0", isInactive && "bg-muted")}
-          style={isInactive ? undefined : { backgroundColor: iconColor.bg }}
-        >
-          <Bot className={cn("h-4.5 w-4.5", isInactive ? "text-muted-foreground/40" : "")} style={isInactive ? undefined : { color: iconColor.icon }} />
-        </div>
-        {/* Name */}
-        <p className="flex-1 min-w-0 text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
+      {/* Left wine accent bar */}
+      {isActive && (
+        <div style={{
+          position: "absolute", left: 0, top: 12, bottom: 12,
+          width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0",
+        }} />
+      )}
+      {/* Bot icon */}
+      <span style={{
+        width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: isActive ? "var(--wine-tint)" : "var(--bg)",
+        boxShadow: isActive ? "none" : "var(--sh-inset-crisp)",
+        color: isActive
+          ? "var(--wine)"
+          : normalizedStatus === "active"
+          ? "var(--wine)"
+          : normalizedStatus === "archived"
+          ? "var(--mute-2)"
+          : "var(--mute)",
+        opacity: !isActive && normalizedStatus === "active" ? 0.55 : 1,
+      }}>
+        <Bot size={19} />
+      </span>
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 13.5, fontWeight: 600, color: "var(--ink)",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
           {name}
-        </p>
-        {/* Date + model, right-aligned */}
-        <div className="shrink-0 flex flex-col items-end gap-0.5">
-          <span className="text-[10px] text-muted-foreground/50 tabular-nums whitespace-nowrap">
-            {formatRelativeTime(updatedAt, t)}
-          </span>
-          {prompt.model && (
-            <span className="text-[10px] text-muted-foreground/40 whitespace-nowrap">
+        </div>
+        {prompt.model && (
+          <div style={{ marginTop: 3 }}>
+            <span style={{
+              fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute-2)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
               {prompt.model}
             </span>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
+      {/* Active dot */}
+      {isActive && isStatusActive && (
+        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--good)", flexShrink: 0 }} title="Active" />
+      )}
+      {/* Date */}
+      <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", flexShrink: 0 }}>
+        {formatRelativeTime(updatedAt, t)}
+      </span>
+    </div>
+  );
+}
+
+/* ── Compact rail (65px icon column) ──────────────────────────────────────── */
+
+function CompactPromptRail({
+  items,
+  selectedId,
+  onSelect,
+}: {
+  items: any[];
+  selectedId: string | null;
+  onSelect: (prompt: any) => void;
+}) {
+  return (
+    <div style={{
+      width: 65, flexShrink: 0, borderRight: "1px solid var(--line)",
+      background: "var(--bg)", overflow: "hidden", display: "flex", flexDirection: "column",
+    }}>
+      <div style={{
+        flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 0", display: "flex",
+        flexDirection: "column", gap: 6, alignItems: "center", "[scrollbar-width]": "thin",
+      }}>
+        {items.map((p) => {
+          const id = getPromptId(p);
+          const isActive = selectedId === id;
+          const pStatus = (p.status || "").toLowerCase().trim();
+          const railColor = isActive
+            ? "var(--wine)"
+            : pStatus === "active"
+            ? "var(--wine)"
+            : pStatus === "archived"
+            ? "var(--mute-2)"
+            : "var(--mute)";
+          const railOpacity = !isActive && pStatus === "active" ? 0.55 : 1;
+          const promptContent = p.promptText || p.prompt_text || "";
+          const previewText = promptContent.length > 100 ? promptContent.substring(0, 100) + "..." : promptContent;
+          return (
+            <Tooltip key={id}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onSelect(p)}
+                  style={{
+                    width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", border: "none",
+                    background: isActive ? "var(--wine-tint)" : "var(--bg)",
+                    boxShadow: isActive ? "0 0 0 2px var(--wine)" : "var(--sh-inset-crisp)",
+                    color: railColor,
+                    opacity: railOpacity,
+                    transition: "all 130ms",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "var(--wine-tint)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "var(--bg)";
+                  }}
+                >
+                  <Bot size={19} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <div className="text-xs">
+                  <div className="font-semibold">{p.name || "Untitled"}</div>
+                  {previewText && <div className="text-muted-foreground mt-1 whitespace-normal">{previewText}</div>}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/* ── Group header ────────────────────────────────────────────────────────── */
+/* ── Group header (wine mono design) ─────────────────────────────────────── */
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
-      <div className="flex items-center gap-[10px]">
-        <div className="flex-1 h-px bg-foreground/15" />
-        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
-        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
-        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15" />
-      </div>
+    <div data-group-header="true" style={{ display: "flex", alignItems: "center", gap: 9, padding: "14px 6px 7px" }}>
+      <span style={{
+        fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em",
+        textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700,
+      }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+      <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)" }}>{count}</span>
     </div>
   );
 }
-
-/* ── Constants ───────────────────────────────────────────────────────────── */
-
-const SORT_OPTIONS: PromptSortOption[] = [
-  "recent",
-  "name_asc",
-  "name_desc",
-  "score_desc",
-  "score_asc",
-];
-const GROUP_OPTIONS: PromptGroupOption[] = ["none", "status", "model", "campaign", "account"];
-const STATUS_OPTIONS = ["all", "active", "archived"] as const;
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 
@@ -241,8 +331,8 @@ interface PromptsListViewProps {
 export function PromptsListView({
   prompts,
   groupedRows,
-  viewMode,
-  onViewModeChange,
+  viewMode: _viewMode,
+  onViewModeChange: _onViewModeChange,
   q,
   onQChange,
   sortBy,
@@ -272,8 +362,38 @@ export function PromptsListView({
   const { toast } = useToast();
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const { state: listPanelState } = useListPanelState();
-  const leftPanelCollapsed = listPanelState === "hidden";
+  const leftPanelHidden = listPanelState === "hidden";
+  const leftPanelCompact = listPanelState === "compact";
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // System / Campaigns tab filter
+  const [listTab, setListTab] = useState<"system" | "campaign">("campaign");
+
+  // Counts from the full prompts list (not filtered by tab)
+  const systemCount = useMemo(() => prompts.filter((p: any) => !(p.campaignsId || p.Campaigns_id)).length, [prompts]);
+  const campaignCount = useMemo(() => prompts.filter((p: any) => !!(p.campaignsId || p.Campaigns_id)).length, [prompts]);
+
+  // Tab-filtered prompts
+  const tabFilteredPrompts = useMemo(() => {
+    return prompts.filter((p: any) => {
+      const hasCampaign = !!(p.campaignsId || p.Campaigns_id);
+      return listTab === "campaign" ? hasCampaign : !hasCampaign;
+    });
+  }, [prompts, listTab]);
+
+  // GroupedRows also needs to be tab-filtered
+  const tabFilteredGroupedRows = useMemo<Map<string, any[]> | null>(() => {
+    if (!groupedRows) return null;
+    const result = new Map<string, any[]>();
+    groupedRows.forEach((items, key) => {
+      const filtered = items.filter((p: any) => {
+        const hasCampaign = !!(p.campaignsId || p.Campaigns_id);
+        return listTab === "campaign" ? hasCampaign : !hasCampaign;
+      });
+      if (filtered.length > 0) result.set(key, filtered);
+    });
+    return result;
+  }, [groupedRows, listTab]);
 
   async function handleStatusChange(newStatus: string) {
     if (!selectedPrompt || !selectedId) return;
@@ -290,32 +410,25 @@ export function PromptsListView({
     } catch {}
   }
 
-  // Compute VIEW_TABS from tKeys inside component (hooks requirement)
-  const VIEW_TABS = useMemo<TabDef[]>(
-    () => VIEW_TAB_DEFS.map((d) => ({ id: d.id, label: t(d.tKey), icon: d.icon })),
-    [t],
-  );
-
-  // Persisted selection — survives page navigation (same pattern as Leads, Campaigns, etc.)
+  // Persisted selection
   const [selectedPrompt, setSelectedPrompt] = usePersistedSelection(
     "prompts-selected-id",
     (p: any) => getPromptId(p),
     prompts,
   );
 
-  // Auto-select first prompt when none is selected or stored ID not found
+  // Auto-select first prompt when none is selected
   useEffect(() => {
     if (prompts.length > 0 && !selectedPrompt) {
       setSelectedPrompt(prompts[0]);
     }
   }, [prompts, selectedPrompt, setSelectedPrompt]);
 
-  // Derive selectedId from selectedPrompt
   const selectedId = selectedPrompt ? getPromptId(selectedPrompt) : null;
 
-  // Preview state — lifted to PromptsListView so button lives in sticky toolbar
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const editPanelRef = useRef<{ setField: (k: string, v: string) => void; getForm: () => any; getTokenEstimate: () => number }>(null);
+  // Preview state
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const editPanelRef = useRef<PromptEditorPanelHandle>(null);
   const [editorFontSize, setEditorFontSize] = useState(() => {
     try { const v = localStorage.getItem("prompts-editor-font-size"); return v ? Number(v) : 14; } catch { return 14; }
   });
@@ -332,7 +445,7 @@ export function PromptsListView({
   const [liveSnap, setLiveSnap] = useState<{
     promptText: string | null; systemMessage: string | null; notes: string | null;
   } | null>(null);
-const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveBumpType, setSaveBumpType] = useState<"minor" | "major">("minor");
   const [saveLabel, setSaveLabel] = useState("");
 
@@ -425,7 +538,7 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
     toast({ title: t("versions.deleted") });
   }
 
-  // Smooth scroll to selected prompt card (§29)
+  // Smooth scroll to selected prompt card
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selectedId == null || !scrollContainerRef.current) return;
@@ -449,76 +562,110 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
     return () => cancelAnimationFrame(raf);
   }, [selectedId]);
 
-  // F shortcut: scroll selected prompt into view.
   useFKeyScrollToSelected({
     containerRef: scrollContainerRef,
     selectedId: selectedId ?? null,
     getSelector: (id) => `[data-prompt-id="${id}"]`,
   });
 
-  // Build flat list: headers + cards interleaved
+  // Build flat list from tab-filtered prompts
   const listItems = useMemo<Array<
     | { kind: "header"; label: string; count: number }
     | { kind: "prompt"; prompt: any }
   >>(() => {
-    if (!groupedRows) {
-      return prompts.map((p) => ({ kind: "prompt" as const, prompt: p }));
+    if (!tabFilteredGroupedRows) {
+      return tabFilteredPrompts.map((p) => ({ kind: "prompt" as const, prompt: p }));
     }
     const result: Array<
       | { kind: "header"; label: string; count: number }
       | { kind: "prompt"; prompt: any }
     > = [];
-    groupedRows.forEach((group, label) => {
+    tabFilteredGroupedRows.forEach((group, label) => {
       result.push({ kind: "header", label, count: group.length });
       group.forEach((p) => result.push({ kind: "prompt", prompt: p }));
     });
     return result;
-  }, [prompts, groupedRows]);
+  }, [tabFilteredPrompts, tabFilteredGroupedRows]);
+
+  // Topbar expand-on-hover button style helper
 
   return (
-    <div className="flex h-full gap-[3px]" data-testid="prompts-list-view">
-      {/* ── LEFT PANEL ──────────────────────────────────────────────────── */}
-      <div className={cn(
-        "flex-col bg-muted rounded-lg overflow-hidden",
-        leftPanelCollapsed
-          ? cn(mobileView === "detail" ? "hidden" : "flex", "md:hidden")
-          : cn("w-full md:w-[340px] md:shrink-0", mobileView === "detail" ? "hidden md:flex" : "flex")
-      )}>
-        {/* Header: title + view tabs (§16 standard) */}
-        <div className="pl-[17px] pr-[17px] pt-5 pb-3 shrink-0 flex items-center justify-between">
-          <div className="flex items-center justify-between w-full md:w-[306px]">
-            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-              {t("page.title")}
-            </h2>
-            <ViewTabBar
-              tabs={VIEW_TABS}
-              activeId={viewMode}
-              onTabChange={(id) => onViewModeChange(id as PromptViewMode)}
-              variant="segment"
-            />
-          </div>
+    <div className="flex flex-col h-full" data-testid="prompts-list-view">
+
+      {/* ══════════════════════════════════════════════════════════════════
+          Full-width page topbar
+         ══════════════════════════════════════════════════════════════════ */}
+      <div style={{
+        height: 60, flexShrink: 0, padding: "0 18px",
+        borderBottom: "1px solid var(--line)", background: "var(--bg)",
+        display: "flex", alignItems: "center", gap: 12,
+      }}>
+        {/* Title */}
+        <span style={{
+          fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)",
+          letterSpacing: "-0.01em", flexShrink: 0,
+        }} className="hidden md:block">
+          {t("page.title")}
+        </span>
+
+        {/* System / Campaigns tabs */}
+        <div className="la-seg" style={{ flexShrink: 0 }}>
+          <button
+            className={`la-seg-btn${listTab === "campaign" ? " on" : ""}`}
+            onClick={() => setListTab("campaign")}
+          >
+            {t("tabs.campaigns")}
+            <span style={{
+              fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700,
+              color: listTab === "campaign" ? "var(--wine)" : "var(--mute-2)",
+              background: listTab === "campaign" ? "var(--wine-tint)" : "var(--bg)",
+              borderRadius: "var(--r-pill)", padding: "1px 7px", marginLeft: 5,
+            }}>
+              {campaignCount}
+            </span>
+          </button>
+          <button
+            className={`la-seg-btn${listTab === "system" ? " on" : ""}`}
+            onClick={() => setListTab("system")}
+          >
+            {t("tabs.system")}
+            <span style={{
+              fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700,
+              color: listTab === "system" ? "var(--wine)" : "var(--mute-2)",
+              background: listTab === "system" ? "var(--wine-tint)" : "var(--bg)",
+              borderRadius: "var(--r-pill)", padding: "1px 7px", marginLeft: 5,
+            }}>
+              {systemCount}
+            </span>
+          </button>
         </div>
 
-        {/* ── List toolbar: search + sort + filter + group + create ── */}
-        <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
+        {/* Desktop: panel collapse toggle (right of tabs) */}
+        <div className="hidden md:flex items-center" style={{ flexShrink: 0 }}>
+          <ListPanelToggleButton />
+        </div>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Controls: search + sort + filter + group + new */}
+        <div className="hidden md:flex items-center gap-1.5">
           <SearchPill
-            className="ml-[9px] max-w-[149px]"
             value={q}
             onChange={onQChange}
             open={searchOpen}
             onOpenChange={setSearchOpen}
             placeholder={t("toolbar.searchPlaceholder")}
           />
+
+          {/* Sort */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}
-              >
-                <ArrowUpDown className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.sort")}</span>
+              <button className="la-btn la-btn--soft la-btn--icon">
+                <ArrowUpDown className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
+            <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 {t("toolbar.sortBy")}
               </DropdownMenuLabel>
@@ -535,16 +682,15 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)}
-              >
-                <Filter className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.filter")}</span>
+              <button className="la-btn la-btn--soft la-btn--icon">
+                <Filter className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+            <DropdownMenuContent align="end" className="w-52 max-h-80 overflow-y-auto">
               <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.status")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {STATUS_OPTIONS.map((opt) => (
@@ -601,16 +747,15 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               </>)}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Group */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                className={cn(xBase, "hover:max-w-[100px]", groupBy !== "none" ? xActive : xDefault)}
-              >
-                <Layers className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("toolbar.group")}</span>
+              <button className="la-btn la-btn--soft la-btn--icon">
+                <Layers className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
+            <DropdownMenuContent align="end" className="w-44">
               {GROUP_OPTIONS.map((opt) => (
                 <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
                   {t(PROMPT_GROUP_TKEYS[opt])}
@@ -619,358 +764,324 @@ const [saveDialogOpen, setSaveDialogOpen] = useState(false);
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* New prompt */}
           <button
-            className={cn(xBase, "hover:max-w-[100px]", xDefault)}
             onClick={onOpenCreate}
+            className="la-btn la-btn--wine"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 32, padding: "0 14px", fontSize: 12, flexShrink: 0 }}
           >
-            <Plus className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.create")}</span>
+            <Plus size={13} /> {t("toolbar.create")}
           </button>
         </div>
+      </div>
 
-        {/* ── Prompt list ── */}
-        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto [scrollbar-width:thin]">
-          {prompts.length === 0 ? (
-            <div className="flex items-center justify-center h-full p-6">
-              <DataEmptyState variant={q || isFilterActive ? "search" : "prompts"} />
+      {/* ══════════════════════════════════════════════════════════════════
+          Split pane: left list + right editor
+         ══════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+
+        {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
+        {leftPanelHidden ? (
+          <div className="hidden md:flex md:flex-col min-h-0 overflow-hidden" />
+        ) : leftPanelCompact ? (
+          <CompactPromptRail
+            items={tabFilteredPrompts}
+            selectedId={selectedId}
+            onSelect={(p) => { setSelectedPrompt(p); setMobileView("detail"); }}
+          />
+        ) : (
+          <div
+            className={cn(
+              "min-h-0 overflow-hidden flex-col",
+              mobileView === "detail" ? "hidden md:flex" : "flex",
+              "w-full md:w-[300px] md:shrink-0",
+            )}
+            style={{ borderRight: "1px solid var(--line)", background: "var(--bg)" }}
+          >
+            {/* Scrollable list */}
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 min-h-0 overflow-y-auto [scrollbar-width:thin]"
+              style={{ padding: "8px 10px 16px", display: "flex", flexDirection: "column" }}
+            >
+              {tabFilteredPrompts.length === 0 ? (
+                <div className="flex items-center justify-center h-full p-6">
+                  <DataEmptyState variant={q || isFilterActive ? "search" : "prompts"} />
+                </div>
+              ) : (
+                listItems.map((item) =>
+                  item.kind === "header" ? (
+                    <GroupHeader key={`h-${item.label}`} label={item.label} count={item.count} />
+                  ) : (
+                    <PromptListCard
+                      key={getPromptId(item.prompt)}
+                      prompt={item.prompt}
+                      isActive={selectedId === getPromptId(item.prompt)}
+                      onClick={() => { setSelectedPrompt(item.prompt); setMobileView("detail"); }}
+                    />
+                  ),
+                )
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── RIGHT PANEL ──────────────────────────────────────────────── */}
+        <div className={cn(
+          "flex-1 min-h-0 flex flex-col overflow-hidden relative",
+          mobileView === "list" ? "hidden md:flex" : "flex",
+        )} style={{ background: "var(--surface)" }}>
+          {selectedPrompt ? (
+            <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0">
+
+              {/* ── Detail toolbar (MetaBar design) ────────────────────────── */}
+              <div style={{
+                flexShrink: 0, minHeight: 56, padding: "10px 18px",
+                borderBottom: "1px solid var(--line)",
+                display: "flex", alignItems: "center", gap: 14,
+                background: "var(--paper)",
+              }}>
+                {selectedPrompt && (
+                  <>
+                    {/* Left section: Bot icon + name + Active badge + #id */}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {/* Icon */}
+                      <span style={{
+                        width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        background: "var(--wine-tint)", color: "var(--wine)",
+                        boxShadow: "0 0 0 1px var(--wine-glow)",
+                      }}>
+                        <Bot size={18} />
+                      </span>
+
+                      {/* Name + Badge */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span style={{
+                            fontSize: 16, fontWeight: 700, color: "var(--ink)",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>
+                            {selectedPrompt.name || t("labels.untitledPrompt")}
+                          </span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <span style={{
+                                fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700,
+                                background: (selectedPrompt.status || "").toLowerCase() === "archived" ? "var(--bg)" : "var(--good-tint)",
+                                color: (selectedPrompt.status || "").toLowerCase() === "archived" ? "var(--mute-2)" : "var(--good)",
+                                borderRadius: "var(--r-pill)", padding: "2px 8px", flexShrink: 0,
+                                cursor: "pointer",
+                              }}>
+                                {(selectedPrompt.status || "active").toLowerCase() === "archived" ? t("status.archived") : t("status.active")}
+                              </span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-36">
+                              <DropdownMenuItem onClick={() => handleStatusChange("active")} className="text-[12px]">
+                                {t("status.active")}
+                                {(selectedPrompt.status || "").toLowerCase() !== "archived" && <Check className="h-3 w-3 ml-auto" />}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange("archived")} className="text-[12px]">
+                                {t("status.archived")}
+                                {(selectedPrompt.status || "").toLowerCase() === "archived" && <Check className="h-3 w-3 ml-auto" />}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <span style={{
+                              fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute-2)",
+                              marginTop: 2, cursor: "pointer", display: "inline-block",
+                            }}>
+                              #{selectedId} · {campaignMap.get(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) || t("labels.noCampaign", { defaultValue: "no campaign" })}
+                            </span>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-52 max-h-60 overflow-y-auto">
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                              {t("labels.campaign")}
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-[12px]"
+                              onClick={() => editPanelRef.current?.setField("campaignsId", "")}
+                            >
+                              {t("labels.noCampaign", { defaultValue: "No campaign" })}
+                              {!(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) && <Check className="h-3 w-3 ml-auto" />}
+                            </DropdownMenuItem>
+                            {campaigns.map((c) => (
+                              <DropdownMenuItem
+                                key={c.id}
+                                className="text-[12px]"
+                                onClick={() => editPanelRef.current?.setField("campaignsId", String(c.id))}
+                              >
+                                <span className="truncate flex-1">{c.name}</span>
+                                {String(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) === String(c.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    {/* Right section: MetaChips + divider + controls */}
+                    <div className="flex items-center gap-6 shrink-0">
+                      {/* MetaChips */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        {/* Model */}
+                        <select
+                          className="text-[12px] font-mono px-2.5 py-1.5 rounded-full outline-none cursor-pointer shrink-0"
+                          style={{
+                            background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+                            color: "var(--mute)",
+                          }}
+                          value={selectedPrompt.model || "gpt-5.5"}
+                          onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
+                        >
+                          {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                      </div>
+
+                      {/* Vertical divider */}
+                      <div style={{ width: 1, height: 26, background: "var(--line)" }} />
+
+                      {/* Preview toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setPreviewOpen((p) => !p)}
+                        className={cn("la-btn", previewOpen ? "la-btn--surface" : "la-btn--soft")}
+                        style={{ height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12, color: previewOpen ? "var(--wine)" : undefined }}
+                      >
+                        {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />}
+                        Preview
+                      </button>
+
+                      {/* Save version */}
+                      <Popover open={saveDialogOpen} onOpenChange={(open) => { if (open) { setSaveBumpType("minor"); setSaveLabel(""); } setSaveDialogOpen(open); }}>
+                        <PopoverTrigger asChild>
+                          <button
+                            className="la-btn la-btn--soft la-btn--icon"
+                            style={{ width: 32, height: 32, flexShrink: 0 }}
+                            disabled={savingVersion}
+                            title={t("versions.saveVersion")}
+                          >
+                            <Save size={14} />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="p-3 w-60 shadow-md border border-border/60" style={{ background: "var(--paper)" }}>
+                          <p className="text-xs font-medium mb-2">{t("versions.saveVersion")}</p>
+                          <div className="flex gap-2 mb-2">
+                            <button onClick={() => setSaveBumpType("minor")} className={cn("flex-1 text-xs py-1.5 rounded-lg border transition-colors", saveBumpType === "minor" ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium" : "border-border text-muted-foreground hover:border-foreground/30")}>
+                              {t("versions.minorUpdate")}
+                            </button>
+                            <button onClick={() => setSaveBumpType("major")} className={cn("flex-1 text-xs py-1.5 rounded-lg border transition-colors", saveBumpType === "major" ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium" : "border-border text-muted-foreground hover:border-foreground/30")}>
+                              {t("versions.majorUpdate")}
+                            </button>
+                          </div>
+                          <input
+                            className="w-full h-8 rounded-lg border border-border px-2.5 text-xs outline-none focus:ring-2 focus:ring-brand-indigo/30 mb-2"
+                            style={{ background: "var(--bg)" }}
+                            placeholder={t("versions.labelPlaceholder")}
+                            value={saveLabel}
+                            onChange={(e) => setSaveLabel(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); } }}
+                          />
+                          <button onClick={() => { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); }} disabled={savingVersion} className="w-full text-xs py-1.5 rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors disabled:opacity-50">
+                            {t("actions.save")}
+                          </button>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Version */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            className="h-7 rounded-full px-2.5 text-[12px] font-mono outline-none cursor-pointer shrink-0"
+                            style={{
+                              background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", color: "var(--mute)",
+                            }}
+                            disabled={versionsLoading}
+                          >
+                            {versionsLoading
+                              ? "…"
+                              : selectedVersion
+                              ? (() => {
+                                  const sv = versions.find((v) => v.versionNumber === selectedVersion);
+                                  return sv ? `v${sv.versionNumber}` : `v${selectedVersion}`;
+                                })()
+                              : liveSnap
+                              ? `${t("versions.current")} ●`
+                              : versions.length > 0
+                              ? `v${versions[0].versionNumber}`
+                              : selectedPrompt?.version
+                              ? `v${selectedPrompt.version}`
+                              : "v1"}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="p-1 min-w-[220px] shadow-md border border-border/60" style={{ background: "var(--paper)" }}>
+                          {liveSnap && (
+                            <button onClick={revertToCurrent} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-amber-600 hover:bg-amber-50 font-medium">
+                              <RotateCcw className="h-3 w-3" />
+                              {t("versions.revertToCurrent")}
+                            </button>
+                          )}
+                          {versions.length === 0 && !liveSnap && (
+                            <p className="px-2.5 py-1.5 text-xs text-muted-foreground">{t("versions.noVersions")}</p>
+                          )}
+                          {versions.map((v) => (
+                            <div
+                              key={v.id}
+                              className={cn("px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-muted/60 group/vrow", selectedVersion === v.versionNumber && "bg-muted font-medium")}
+                              onClick={() => loadVersion(v)}
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs flex-1 min-w-0 truncate">
+                                  v{v.versionNumber}{v.label ? ` — ${v.label}` : ` — ${new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`}
+                                </span>
+                                <button onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }} className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0" title={t("versions.deleteVersion")}>
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => onDelete(selectedPrompt)}
+                        className="la-btn la-btn--soft la-btn--icon"
+                        style={{ width: 32, height: 32, color: "var(--stage-lost)", flexShrink: 0 }}
+                        title={t("actions.delete")}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Body: editor */}
+              <PromptEditorPanel
+                ref={editPanelRef}
+                prompt={selectedPrompt}
+                onSaved={onSaved}
+                onDelete={onDelete}
+                campaigns={campaigns}
+                versionOverride={versionOverride}
+                previewOpen={previewOpen}
+                setPreviewOpen={setPreviewOpen}
+                editorFontSize={editorFontSize}
+              />
             </div>
           ) : (
-            listItems.map((item) =>
-              item.kind === "header" ? (
-                <GroupHeader key={`h-${item.label}`} label={item.label} count={item.count} />
-              ) : (
-                <PromptListCard
-                  key={getPromptId(item.prompt)}
-                  prompt={item.prompt}
-                  isActive={selectedId === getPromptId(item.prompt)}
-                  onClick={() => { setSelectedPrompt(item.prompt); setMobileView("detail"); }}
-                  campaignMap={campaignMap}
-                />
-              ),
-            )
+            <div className="flex-1 flex items-center justify-center p-8">
+              <DataEmptyState variant="prompts" />
+            </div>
           )}
         </div>
       </div>
-
-      {/* ── RIGHT PANEL ──────────────────────────────────────────────────── */}
-      <div className={cn("flex-1 min-h-0 flex flex-col rounded-lg overflow-hidden relative", mobileView === "list" ? "hidden md:flex" : "flex")}>
-        {/* Gradient background layers */}
-        <div className="absolute inset-0 bg-popover dark:bg-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_99%_151%_at_42%_91%,rgba(255,164,184,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f3e7ff_5%,transparent_30%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_69%_50%,rgba(255,194,165,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
-        {/* Content sits above gradient */}
-        {selectedPrompt ? (
-          <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0 relative z-10">
-
-            {/* ── Detail toolbar ──────────────────────────────────────────── */}
-            <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] shrink-0">
-              {/* Mobile back button */}
-              <button
-                onClick={() => setMobileView("list")}
-                className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-
-              {/* Collapse left panel (desktop only) */}
-              <ListPanelToggleButton />
-
-              {/* Inline prompt metadata — name only shown when left panel is collapsed */}
-              {selectedPrompt && (
-                <div className="flex items-center gap-1.5 min-w-0 shrink">
-                  {leftPanelCollapsed && (() => {
-                    const spAId = selectedPrompt.accountsId || selectedPrompt.Accounts_id;
-                    const ic = getPromptIconColor(spAId ? `account-${spAId}` : "agency-bots");
-                    return (
-                      <>
-                        <div
-                          className="h-6 w-6 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: ic.bg }}
-                        >
-                          <Bot className="h-3.5 w-3.5" style={{ color: ic.icon }} />
-                        </div>
-                        <h2 className="text-[15px] font-semibold font-heading text-foreground truncate max-w-[200px]">
-                          {selectedPrompt.name || t("labels.untitledPrompt")}
-                        </h2>
-                      </>
-                    );
-                  })()}
-                  <span className="text-[13px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground/60 font-mono shrink-0">
-                    #{selectedId}
-                  </span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className={cn(
-                        "text-[13px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full transition-opacity hover:opacity-70 cursor-pointer shrink-0",
-                        getStatusBadgeClasses(selectedPrompt.status),
-                      )}>
-                        {t(STATUS_I18N_KEY[selectedPrompt.status?.toLowerCase() ?? ""] ?? "status.unknown")}
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-36">
-                      <DropdownMenuItem
-                        className={cn("text-[12px]", selectedPrompt.status === "active" && "font-semibold text-brand-indigo")}
-                        onClick={() => handleStatusChange("active")}
-                      >
-                        {t("status.active")}
-                        {selectedPrompt.status === "active" && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className={cn("text-[12px]", selectedPrompt.status === "archived" && "font-semibold text-brand-indigo")}
-                        onClick={() => handleStatusChange("archived")}
-                      >
-                        {t("status.archived")}
-                        {selectedPrompt.status === "archived" && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <select
-                    className="text-[13px] text-foreground/50 bg-transparent outline-none hover:text-foreground cursor-pointer shrink-0"
-                    value={selectedPrompt.model || "gpt-5.1"}
-                    onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
-                  >
-                    {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                  <select
-                    className="text-[13px] text-foreground/40 bg-transparent outline-none hover:text-foreground cursor-pointer max-w-[150px] truncate shrink-0"
-                    value={String(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id || "")}
-                    onChange={(e) => editPanelRef.current?.setField("campaignsId", e.target.value)}
-                  >
-                    <option value="">No campaign</option>
-                    {campaigns.map((c: any) => (
-                      <option key={c.id} value={String(c.id)}>#{c.id} {c.name}</option>
-                    ))}
-                  </select>
-                  <span className="inline-flex items-center text-[13px] text-foreground/40 shrink-0">
-                    <input
-                      type="number" step="0.1" min="0" max="2"
-                      className="w-9 bg-transparent outline-none tabular-nums text-center text-[13px] hover:text-foreground focus:text-foreground"
-                      defaultValue={String(selectedPrompt.temperature ?? "0.7")}
-                      key={`temp-c-${selectedPrompt.id}`}
-                      onBlur={(e) => editPanelRef.current?.setField("temperature", e.target.value)}
-                    />°
-                  </span>
-                  <span className="inline-flex items-center text-[13px] text-foreground/40 shrink-0">
-                    <input
-                      type="number" min="1"
-                      className="w-14 bg-transparent outline-none tabular-nums text-center text-[13px] hover:text-foreground focus:text-foreground"
-                      defaultValue={String(selectedPrompt.maxTokens ?? "1000")}
-                      key={`tok-c-${selectedPrompt.id}`}
-                      onBlur={(e) => editPanelRef.current?.setField("maxTokens", e.target.value)}
-                    /> tokens
-                  </span>
-                </div>
-              )}
-
-              {/* Spacer */}
-              <div className="flex-1 min-w-0" />
-
-              {/* Preview toggle */}
-              {selectedPrompt && (
-                <button
-                  type="button"
-                  onClick={() => setPreviewOpen((p) => !p)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs transition-colors shrink-0",
-                    previewOpen
-                      ? "border-brand-indigo text-brand-indigo bg-brand-indigo/5"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 bg-white dark:bg-popover"
-                  )}
-                >
-                  {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  {previewOpen ? "Hide preview" : "Preview"}
-                </button>
-              )}
-
-              {/* Font size controls */}
-              {selectedPrompt && (
-                <div className="inline-flex items-center gap-0.5 h-8 rounded-lg border border-border bg-white dark:bg-popover px-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setEditorFontSize((s) => Math.max(10, s - 1))}
-                    className="px-1 py-0.5 rounded hover:bg-muted text-foreground/70 hover:text-foreground text-xs font-medium transition-colors"
-                  >
-                    A−
-                  </button>
-                  <span className="text-[11px] tabular-nums w-5 text-center text-muted-foreground">{editorFontSize}</span>
-                  <button
-                    type="button"
-                    onClick={() => setEditorFontSize((s) => Math.min(24, s + 1))}
-                    className="px-1 py-0.5 rounded hover:bg-muted text-foreground/70 hover:text-foreground text-xs font-medium transition-colors"
-                  >
-                    A+
-                  </button>
-                </div>
-              )}
-
-              {/* Version picker + save buttons */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    className="h-8 rounded-lg border border-border bg-white dark:bg-popover px-2.5 text-xs outline-none hover:border-foreground/30 transition-colors shrink-0 min-w-[80px] max-w-[220px] truncate text-left"
-                    disabled={versionsLoading}
-                  >
-                    {versionsLoading
-                      ? t("versions.loading")
-                      : selectedVersion
-                      ? (() => {
-                          const sv = versions.find((v) => v.versionNumber === selectedVersion);
-                          return sv
-                            ? `v${sv.versionNumber} — ${new Date(sv.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })} ${new Date(sv.savedAt).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}`
-                            : `v${selectedVersion}`;
-                        })()
-                      : liveSnap
-                      ? `${t("versions.current")} ●`
-                      : versions.length > 0
-                      ? `v${versions[0].versionNumber}`
-                      : selectedPrompt?.version
-                      ? `v${selectedPrompt.version}`
-                      : t("versions.noVersions")}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="p-1 min-w-[220px] bg-white dark:bg-popover shadow-md border border-border/60">
-                  {liveSnap && (
-                    <button
-                      onClick={revertToCurrent}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-medium"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      {t("versions.revertToCurrent")}
-                    </button>
-                  )}
-                  {versions.length === 0 && !liveSnap && (
-                    <p className="px-2.5 py-1.5 text-xs text-muted-foreground">{t("versions.noVersions")}</p>
-                  )}
-                  {versions.map((v) => (
-                    <div
-                      key={v.id}
-                      className={cn(
-                        "px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-muted/60 group/vrow",
-                        selectedVersion === v.versionNumber && "bg-muted font-medium"
-                      )}
-                      onClick={() => loadVersion(v)}
-                    >
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs flex-1 min-w-0 truncate">
-                          v{v.versionNumber}
-                          {v.label ? ` — ${v.label}` : ` — ${new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })} ${new Date(v.savedAt).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}`}
-                        </span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }}
-                          className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0"
-                          title={t("versions.deleteVersion")}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                      {v.notes && (
-                        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 hidden group-hover/vrow:block whitespace-pre-wrap">
-                          {v.notes}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </PopoverContent>
-              </Popover>
-              <Popover open={saveDialogOpen} onOpenChange={(open) => { if (open) { setSaveBumpType("minor"); setSaveLabel(""); } setSaveDialogOpen(open); }}>
-                <PopoverTrigger asChild>
-                  <button
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors shrink-0 disabled:opacity-50"
-                    disabled={savingVersion}
-                    title={t("versions.saveVersion")}
-                  >
-                    <Save className="h-3.5 w-3.5" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="p-3 w-64 bg-white dark:bg-popover shadow-md border border-border/60">
-                  <p className="text-xs font-medium mb-2">{t("versions.saveVersion")}</p>
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      onClick={() => setSaveBumpType("minor")}
-                      className={cn(
-                        "flex-1 text-xs py-1.5 rounded-lg border transition-colors",
-                        saveBumpType === "minor"
-                          ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium"
-                          : "border-border text-muted-foreground hover:border-foreground/30"
-                      )}
-                    >
-                      {t("versions.minorUpdate")}
-                    </button>
-                    <button
-                      onClick={() => setSaveBumpType("major")}
-                      className={cn(
-                        "flex-1 text-xs py-1.5 rounded-lg border transition-colors",
-                        saveBumpType === "major"
-                          ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo font-medium"
-                          : "border-border text-muted-foreground hover:border-foreground/30"
-                      )}
-                    >
-                      {t("versions.majorUpdate")}
-                    </button>
-                  </div>
-                  <input
-                    className="w-full h-8 rounded-lg border border-border bg-background px-2.5 text-xs outline-none focus:ring-2 focus:ring-brand-indigo/30 mb-2"
-                    placeholder={t("versions.labelPlaceholder")}
-                    value={saveLabel}
-                    onChange={(e) => setSaveLabel(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); } }}
-                  />
-                  <button
-                    onClick={() => { saveVersion(saveBumpType, saveLabel); setSaveDialogOpen(false); }}
-                    disabled={savingVersion}
-                    className="w-full text-xs py-1.5 rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors disabled:opacity-50"
-                  >
-                    {t("actions.save")}
-                  </button>
-                </PopoverContent>
-              </Popover>
-
-              {/* Score badge */}
-              {selectedPrompt.performanceScore != null && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-[11px] font-semibold shrink-0",
-                    getScoreColorClasses(selectedPrompt.performanceScore),
-                  )}
-                >
-                  <Star className="h-3.5 w-3.5 fill-current shrink-0" />
-                  {selectedPrompt.performanceScore}
-                </span>
-              )}
-
-              {/* Delete button */}
-              <button
-                onClick={() => onDelete(selectedPrompt)}
-                className={cn(xBase, "hover:max-w-[100px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600")}
-              >
-                <Trash2 className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>{t("actions.delete")}</span>
-              </button>
-            </div>
-
-
-            {/* Body: always-editable two-column panel */}
-            <PromptEditorPanel
-              ref={editPanelRef}
-              prompt={selectedPrompt}
-              onSaved={onSaved}
-              onDelete={onDelete}
-              campaigns={campaigns}
-              versionOverride={versionOverride}
-              previewOpen={previewOpen}
-              setPreviewOpen={setPreviewOpen}
-              editorFontSize={editorFontSize}
-            />
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center p-8 relative z-10">
-            <DataEmptyState variant="prompts" />
-          </div>
-        )}
-      </div>
-
-
     </div>
   );
 }

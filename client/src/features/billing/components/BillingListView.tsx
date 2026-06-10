@@ -29,9 +29,7 @@ import {
   Eye,
   ListTree,
   Printer,
-  Search,
 } from "lucide-react";
-import { SearchPill } from "@/components/ui/search-pill";
 import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
   Popover,
@@ -62,6 +60,7 @@ import { ContractCreatePanel } from "./ContractCreatePanel";
 import { ExpensesView } from "./ExpensesView";
 import { InvoicesInlineTable, INVOICE_FIELD_DEFS, ALL_INVOICE_COLS, DEFAULT_INVOICE_COLS } from "./InvoicesInlineTable";
 import { ContractsInlineTable, CONTRACT_FIELD_DEFS, ALL_CONTRACT_COLS, DEFAULT_CONTRACT_COLS } from "./ContractsInlineTable";
+import { ContractStatCards } from "./ContractStatCards";
 import { ExpensesListView, useExpensesData } from "./ExpensesListView";
 import { ExpenseDetailView, ExpenseDetailViewEmpty } from "./ExpenseDetailView";
 import { ExpenseCreatePanel } from "./ExpenseCreatePanel";
@@ -145,14 +144,14 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
   const { t } = useTranslation("billing");
   const translatedLabel = t(DATE_GROUP_I18N_KEYS[label] ?? label, label);
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
-      <div className="flex items-center gap-[10px]">
-        <div className="flex-1 h-px bg-foreground/15" />
-        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{translatedLabel}</span>
-        <span className="text-foreground/20 shrink-0">{"\u2013"}</span>
-        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15" />
-      </div>
+    <div className="sticky top-0 z-20 row" style={{ gap: 10, padding: "12px 4px 8px", background: "var(--bg)" }}>
+      <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--ink-soft)", fontWeight: 700 }}>
+        {translatedLabel}
+      </span>
+      <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-pill)", padding: "1px 8px" }}>
+        {count}
+      </span>
+      <div className="rule" style={{ flex: 1, marginLeft: 4 }} />
     </div>
   );
 }
@@ -827,8 +826,8 @@ export function BillingListView({
   // ── Toolbar button base classes ────────────────────────────────────────────
 
   const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-  const xActive  = "border-brand-indigo text-brand-indigo";
+  const xDefault = "border-[color:var(--line)] text-[color:var(--mute)] hover:text-[color:var(--ink)]";
+  const xActive  = "border-[color:var(--wine)] text-[color:var(--wine)]";
   const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
   // ── Unified header (both list and table modes) ──────────────────────────────
@@ -838,11 +837,12 @@ export function BillingListView({
       height: 60,
       flexShrink: 0,
       padding: '0 20px',
-      borderBottom: '1px solid #CDBCA8',
+      borderTop: '1px solid var(--line)',
+      borderBottom: '1px solid var(--line)',
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      background: '#ECE7DD',
+      background: 'var(--surface)',
       overflowX: 'auto',
     }}>
       {/* Title - Serif, 24px (matching migration) */}
@@ -865,46 +865,118 @@ export function BillingListView({
         variant="segment"
       />
 
+      {/* Sort + Date toolbar buttons (not on expenses) */}
+      {!isExpensesTab && (
+        <>
+          {/* Sort */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={cn("la-btn la-btn--soft shrink-0 hidden sm:inline-flex gap-1.5", isSortNonDefault && "[border-color:var(--wine)] [color:var(--wine)]")}>
+                <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px]">{t("toolbar.sort")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy("recent"); }} className="text-[12px] flex items-center gap-2">
+                <span className={cn("flex-1", sortBy === "recent" && "font-semibold text-[color:var(--wine)]")}>{t("sort.recent")}</span>
+              </DropdownMenuItem>
+              {(() => {
+                const isActive = sortBy === "amount_desc" || sortBy === "amount_asc";
+                const activeDir: "asc" | "desc" = sortBy === "amount_asc" ? "asc" : "desc";
+                return (
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy(isActive ? sortBy : "amount_desc"); }} className="text-[12px] flex items-center gap-2">
+                    <span className={cn("flex-1", isActive && "font-semibold text-[color:var(--wine)]")}>{t("sort.amountDesc").replace(" High", "")}</span>
+                    {isActive && (
+                      <>
+                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-[color:var(--wine)]" : "text-foreground/30")} title="High to Low"><ArrowDown className="h-3 w-3" /></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-[color:var(--wine)]" : "text-foreground/30")} title="Low to High"><ArrowUp className="h-3 w-3" /></button>
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })()}
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy("due_asc"); }} className="text-[12px] flex items-center gap-2">
+                <span className={cn("flex-1", sortBy === "due_asc" && "font-semibold text-[color:var(--wine)]")}>{t("sort.dueSoonest")}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy("name_asc"); }} className="text-[12px] flex items-center gap-2">
+                <span className={cn("flex-1", sortBy === "name_asc" && "font-semibold text-[color:var(--wine)]")}>{t("sort.nameAZ")}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Date */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={cn("la-btn la-btn--soft shrink-0 hidden sm:inline-flex gap-1.5", isDateActive && "[border-color:var(--wine)] [color:var(--wine)]")}>
+                <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px]">{t("toolbar.date")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {availableYears.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("dateFilter.year")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {availableYears.map((year) => (
+                    <DropdownMenuItem key={year} onClick={() => setYearFilter(yearFilter === year ? null : year)} className={cn("text-[12px]", yearFilter === year && "font-semibold text-[color:var(--wine)]")}>
+                      {year}{yearFilter === year && <Check className="h-3 w-3 ml-auto" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("dateFilter.quarter")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {[
+                { id: "Q1", monthsKey: "dateFilter.q1Months" },
+                { id: "Q2", monthsKey: "dateFilter.q2Months" },
+                { id: "Q3", monthsKey: "dateFilter.q3Months" },
+                { id: "Q4", monthsKey: "dateFilter.q4Months" },
+              ].map(({ id, monthsKey }) => (
+                <DropdownMenuItem key={id} onClick={() => setQuarterFilter(quarterFilter === id ? null : id)} className={cn("text-[12px]", quarterFilter === id && "font-semibold text-[color:var(--wine)]")}>
+                  <span className="flex-1 flex items-center gap-2">
+                    <span className="font-medium" style={{ color: "var(--ink)" }}>{id}</span>
+                    <span style={{ color: "var(--mute)" }}>{t(monthsKey)}</span>
+                  </span>
+                  {quarterFilter === id && <Check className="h-3 w-3 shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+              {isDateActive && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => { setQuarterFilter(null); setYearFilter(null); }} className="text-[12px] text-destructive">{t("toolbar.clearDates")}</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
+
       {/* Flex spacer */}
       <div style={{ flex: 1 }} />
 
-      {/* Right side controls: Search + Filter/Sort + New button */}
+      {/* Right side controls: Search + Filter + New button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         {/* Search */}
-        <div style={{
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          borderRadius: 999,
-          border: '1px solid #D4C9BD',
-          background: '#F5F1E8',
-          padding: '8px 12px',
-          flexShrink: 0,
-          position: 'relative',
-        }}>
-          <Search style={{ width: 14, height: 14, color: '#8B7F73', flexShrink: 0 }} />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
           <input
-            style={{
-              height: '100%',
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              fontSize: 12,
-              color: '#2D2622',
-              width: 180,
-              minWidth: 0,
-            }}
+            className="neu-input"
             placeholder={isExpensesTab ? t("toolbar.searchExpenses") : isInvoicesTab ? t("toolbar.searchInvoices") : t("toolbar.searchContracts")}
             value={isExpensesTab ? expenseSearch : listSearch}
             onChange={(e) => isExpensesTab ? setExpenseSearch(e.target.value) : setListSearch(e.target.value)}
+            style={{ paddingLeft: 32, paddingRight: (isExpensesTab ? expenseSearch : listSearch) ? 28 : 12, paddingTop: 0, paddingBottom: 0, height: 32, fontSize: 12, width: 190 }}
           />
+          <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--mute-2)', display: 'flex', pointerEvents: 'none' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
           {(isExpensesTab ? expenseSearch : listSearch) && (
             <button
               onClick={() => isExpensesTab ? setExpenseSearch("") : setListSearch("")}
-              style={{ background: 'none', border: 'none', color: '#8B7F73', cursor: 'pointer', padding: 0, display: 'flex' }}
+              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute-2)', display: 'flex', padding: 0 }}
             >
-              <X style={{ width: 12, height: 12 }} />
+              <X style={{ width: 10, height: 10 }} />
             </button>
           )}
         </div>
@@ -913,23 +985,9 @@ export function BillingListView({
         {!isExpensesTab && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: 36,
-                paddingLeft: 9,
-                borderRadius: 999,
-                border: isFilterActive ? '1px solid #5E2230' : '1px solid #D4C9BD',
-                color: isFilterActive ? '#5E2230' : '#8B7F73',
-                fontSize: 12,
-                fontWeight: 500,
-                background: '#ECE7DD',
-                cursor: 'pointer',
-                transition: 'all 200ms',
-                gap: 8,
-              }}>
-                <Filter style={{ width: 16, height: 16, flexShrink: 0 }} />
-                <span style={{ whiteSpace: 'nowrap', paddingLeft: 6, paddingRight: 10 }}>{t("toolbar.filter")}</span>
+              <button className={cn("la-btn la-btn--soft shrink-0 gap-1.5", isFilterActive && "[border-color:var(--wine)] [color:var(--wine)]")}>
+                <Filter className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px]">{t("toolbar.filter")}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 max-h-80 overflow-y-auto">
@@ -941,7 +999,7 @@ export function BillingListView({
                   <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color?.dot || "#94A3B8" }} />
                     <span className="flex-1">{s}</span>
-                    {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                    {filterStatus.includes(s) && <Check className="h-3 w-3 shrink-0" style={{ color: "var(--wine)" }} />}
                   </DropdownMenuItem>
                 );
               })}
@@ -950,12 +1008,12 @@ export function BillingListView({
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("statusFilter.account")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setAccountFilter("all")} className={cn("text-[12px]", accountFilter === "all" && "font-semibold text-brand-indigo")}>
+                  <DropdownMenuItem onClick={() => setAccountFilter("all")} className={cn("text-[12px]", accountFilter === "all" && "font-semibold text-[color:var(--wine)]")}>
                     All accounts
                     {accountFilter === "all" && <Check className="h-3 w-3 ml-auto" />}
                   </DropdownMenuItem>
                   {accounts.map((acct) => (
-                    <DropdownMenuItem key={acct.id} onClick={() => setAccountFilter(acct.id)} className={cn("text-[12px]", accountFilter === acct.id && "font-semibold text-brand-indigo")}>
+                    <DropdownMenuItem key={acct.id} onClick={() => setAccountFilter(acct.id)} className={cn("text-[12px]", accountFilter === acct.id && "font-semibold text-[color:var(--wine)]")}>
                       <Building2 className="h-3 w-3 shrink-0 text-muted-foreground mr-1.5" />
                       {acct.name}
                       {accountFilter === acct.id && <Check className="h-3 w-3 ml-auto" />}
@@ -974,25 +1032,10 @@ export function BillingListView({
           <button
             onClick={isExpensesTab ? () => { setExpensePanelOpen(true); setMobileView("detail"); } : handleAddClick}
             title={isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              height: 36,
-              paddingLeft: 9,
-              borderRadius: 999,
-              border: 'none',
-              background: '#5E2230',
-              color: '#FFFBF7',
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: 'pointer',
-              gap: 8,
-              transition: 'all 200ms',
-              overflow: 'hidden',
-            }}
+            className="la-btn la-btn--wine shrink-0 gap-1.5"
           >
-            <Plus style={{ width: 16, height: 16, flexShrink: 0 }} />
-            <span style={{ whiteSpace: 'nowrap', paddingLeft: 6, paddingRight: 10 }}>
+            <Plus className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px]">
               {isExpensesTab ? t("toolbar.newExpense") : isInvoicesTab ? t("toolbar.newInvoice") : t("toolbar.newContract")}
             </span>
           </button>
@@ -1003,22 +1046,10 @@ export function BillingListView({
       {mobileView === "detail" && (
         <button
           onClick={() => setMobileView("list")}
-          style={{
-            display: 'none',
-            '@media (max-width: 768px)': { display: 'flex' },
-            height: 36,
-            width: 36,
-            borderRadius: 999,
-            border: '1px solid #D4C9BD',
-            background: '#ECE7DD',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            cursor: 'pointer',
-          }}
+          style={{ display: 'flex', height: 36, width: 36, borderRadius: 999, border: '1px solid var(--line)', background: 'var(--surface)', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
           className="md:hidden"
         >
-          <ChevronLeft style={{ width: 16, height: 16, color: '#2D2622' }} />
+          <ChevronLeft style={{ width: 16, height: 16, color: 'var(--ink)' }} />
         </button>
       )}
     </div>
@@ -1035,144 +1066,22 @@ export function BillingListView({
   // ── Right panel list-mode toolbar (mobile back + view toggle + gradient) ────
 
   const toolbarControls = (
-    <>
-      {/* Mobile back button — only visible on small screens */}
-      <button
-        onClick={() => setMobileView("list")}
-        className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </button>
-
-      {/* View mode toggle (List | Table) */}
-      <ViewTabBar tabs={viewModeTabs} activeId={viewMode} onTabChange={(m) => setViewMode(m as "list" | "table")} variant="segment" />
-
-    </>
+    /* Mobile back button — only visible on small screens */
+    <button
+      onClick={() => setMobileView("list")}
+      className="md:hidden h-9 w-9 rounded-full border grid place-items-center shrink-0"
+      style={{ borderColor: "var(--line)", background: "var(--surface)" }}
+    >
+      <ChevronLeft className="h-4 w-4" style={{ color: "var(--ink)" }} />
+    </button>
   );
 
   // ── Left panel list-mode toolbar (Search + Sort + Filter + Date + Group + Create) ──
 
   const leftPanelToolbar = (
-    <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {/* Recent — flat row */}
-          <DropdownMenuItem
-            onSelect={(e) => { e.preventDefault(); setSortBy("recent"); }}
-            className="text-[12px] flex items-center gap-2"
-          >
-            <span className={cn("flex-1", sortBy === "recent" && "font-semibold !text-brand-indigo")}>{t("sort.recent")}</span>
-          </DropdownMenuItem>
-          {/* Amount — paired asc/desc row */}
-          {(() => {
-            const isActive = sortBy === "amount_desc" || sortBy === "amount_asc";
-            const activeDir: "asc" | "desc" = sortBy === "amount_asc" ? "asc" : "desc";
-            return (
-              <DropdownMenuItem
-                onSelect={(e) => { e.preventDefault(); setSortBy(isActive ? sortBy : "amount_desc"); }}
-                className="text-[12px] flex items-center gap-2"
-              >
-                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sort.amountDesc").replace(" High", "")}</span>
-                {isActive && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_desc"); }}
-                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                      title="High to Low"
-                    >
-                      <ArrowDown className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_asc"); }}
-                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                      title="Low to High"
-                    >
-                      <ArrowUp className="h-3 w-3" />
-                    </button>
-                  </>
-                )}
-              </DropdownMenuItem>
-            );
-          })()}
-          {/* Due Soonest — flat row (invoices/contracts only) */}
-          {!isExpensesTab && (
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSortBy("due_asc"); }}
-              className="text-[12px] flex items-center gap-2"
-            >
-              <span className={cn("flex-1", sortBy === "due_asc" && "font-semibold !text-brand-indigo")}>{t("sort.dueSoonest")}</span>
-            </DropdownMenuItem>
-          )}
-          {/* Name A-Z — flat row */}
-          <DropdownMenuItem
-            onSelect={(e) => { e.preventDefault(); setSortBy("name_asc"); }}
-            className="text-[12px] flex items-center gap-2"
-          >
-            <span className={cn("flex-1", sortBy === "name_asc" && "font-semibold !text-brand-indigo")}>{isExpensesTab ? t("sort.supplierAZ") : t("sort.nameAZ")}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Date (Quarter + Year) */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[80px]", isDateActive ? xActive : xDefault)}>
-            <CalendarDays className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.date")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          {availableYears.length > 0 && (
-            <>
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("dateFilter.year")}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {availableYears.map((year) => (
-                <DropdownMenuItem key={year} onClick={() => setYearFilter(yearFilter === year ? null : year)} className={cn("text-[12px]", yearFilter === year && "font-semibold text-brand-indigo")}>
-                  {year}
-                  {yearFilter === year && <Check className="h-3 w-3 ml-auto" />}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-            </>
-          )}
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("dateFilter.quarter")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {[
-            { id: "Q1", monthsKey: "dateFilter.q1Months" },
-            { id: "Q2", monthsKey: "dateFilter.q2Months" },
-            { id: "Q3", monthsKey: "dateFilter.q3Months" },
-            { id: "Q4", monthsKey: "dateFilter.q4Months" },
-          ].map(({ id, monthsKey }) => (
-            <DropdownMenuItem key={id} onClick={() => setQuarterFilter(quarterFilter === id ? null : id)} className={cn("text-[12px]", quarterFilter === id && "font-semibold text-brand-indigo")}>
-              <span className="flex-1 flex items-center gap-2">
-                <span className="font-medium text-foreground">{id}</span>
-                <span className="text-muted-foreground">{t(monthsKey)}</span>
-              </span>
-              {quarterFilter === id && <Check className="h-3 w-3 shrink-0" />}
-            </DropdownMenuItem>
-          ))}
-          {isDateActive && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => { setQuarterFilter(null); setYearFilter(null); }} className="text-[12px] text-destructive">{t("toolbar.clearDates")}</DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Group (expenses only) */}
-      {isExpensesTab && (
+    isExpensesTab ? (
+      <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
+        {/* Group — expenses only */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(xBase, "hover:max-w-[100px]", expenseGroupBy !== "none" ? xActive : xDefault)}>
@@ -1183,43 +1092,23 @@ export function BillingListView({
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.groupBy")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setExpenseGroupBy("none"); }}
-              className="text-[12px] flex items-center gap-2"
-            >
-              <span className={cn("flex-1", expenseGroupBy === "none" && "font-semibold !text-brand-indigo")}>{t("groupOptions.none")}</span>
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setExpenseGroupBy("none"); }} className="text-[12px] flex items-center gap-2">
+              <span className={cn("flex-1", expenseGroupBy === "none" && "font-semibold text-[color:var(--wine)]")}>{t("groupOptions.none")}</span>
               {expenseGroupBy === "none" && <Check className="h-3 w-3" />}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setExpenseGroupBy("year_quarter"); }}
-              className="text-[12px] flex items-center gap-2"
-            >
-              <span className={cn("flex-1", expenseGroupBy === "year_quarter" && "font-semibold !text-brand-indigo")}>{t("groupOptions.yearQuarter")}</span>
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setExpenseGroupBy("year_quarter"); }} className="text-[12px] flex items-center gap-2">
+              <span className={cn("flex-1", expenseGroupBy === "year_quarter" && "font-semibold text-[color:var(--wine)]")}>{t("groupOptions.yearQuarter")}</span>
               {expenseGroupBy === "year_quarter" && (
                 <>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("asc"); }}
-                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                    title="Ascending"
-                  >
-                    <ArrowUp className="h-3 w-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("desc"); }}
-                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                    title="Descending"
-                  >
-                    <ArrowDown className="h-3 w-3" />
-                  </button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-[color:var(--wine)]" : "text-foreground/30")} title="Ascending"><ArrowUp className="h-3 w-3" /></button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-[color:var(--wine)]" : "text-foreground/30")} title="Descending"><ArrowDown className="h-3 w-3" /></button>
                 </>
               )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )}
-    </div>
+      </div>
+    ) : null
   );
 
   // ── Card list (list mode, non-expenses tab) ────────────────────────────────
@@ -1313,20 +1202,23 @@ export function BillingListView({
 
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: '#ECE7DD' }} data-testid="billing-list-view">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--surface)' }} data-testid="billing-list-view">
       {/* Unified header (all modes) */}
       {unifiedHeader}
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-[var(--panel-gap)]" style={{ background: '#ECE7DD' }}>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-[var(--panel-gap)]" style={{ background: 'var(--surface)' }}>
         {viewMode === "list" ? (
           /* ── LIST MODE: original split-panel layout ── */
           <>
             {/* Left panel */}
-            <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden min-h-[300px] md:min-h-0 shadow-[var(--card-glow)]", mobileView === "detail" ? "hidden md:flex" : "flex")}>
+            <div className={cn("w-full md:w-[var(--toolbar-w)] md:shrink-0 flex flex-col overflow-hidden min-h-[300px] md:min-h-0", mobileView === "detail" ? "hidden md:flex" : "flex")} style={{ borderRadius: "var(--r-card)", background: "var(--card)", border: "1px solid var(--line)" }}>
               {/* No header here anymore - using unified header above */}
 
             {/* ── List toolbar: search + create + sort + filter + date + group ── */}
             {leftPanelToolbar}
+
+            {/* Stat cards for contracts tab (above card list) */}
+            {!isExpensesTab && !isInvoicesTab && <ContractStatCards contracts={filteredContracts} />}
 
             {/* Card list (invoices / contracts) */}
             {!isExpensesTab && cardList}
@@ -1456,7 +1348,7 @@ export function BillingListView({
                     {isAgencyUser && (
                       <button
                         onClick={() => { onSelectContract(null); setRightPanelMode("create"); }}
-                        className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90"
+                        className="la-btn la-btn--wine mt-4 text-[12px]"
                       >
                         {t("contracts.form.uploadContract")}
                       </button>

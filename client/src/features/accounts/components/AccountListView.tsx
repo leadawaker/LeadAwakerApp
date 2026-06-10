@@ -326,13 +326,13 @@ export function AccountListView({
         "flex-col bg-muted rounded-lg overflow-hidden shadow-[var(--card-glow)]",
         leftPanelCollapsed
           ? cn(isMobile ? "flex" : "hidden")
-          : cn("w-full md:w-[340px] md:shrink-0 min-h-[300px] md:min-h-0",
+          : cn("w-full md:w-[var(--toolbar-w)] md:shrink-0 min-h-[300px] md:min-h-0",
               isMobile && selectedAccount ? "hidden" : "flex")
       )}>
 
         {/* Header: title + 309px wrapper with ViewTabBar */}
         <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
-          <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
+          <div className="flex items-center justify-between w-full">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
             <ViewTabBar
               tabs={viewTabs}

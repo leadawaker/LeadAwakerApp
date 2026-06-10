@@ -5,7 +5,7 @@ const NICHE_IMAGES = {
   flooring:    '/premium/hero-images/flooring.webp',
   wellness:    '/premium/hero-images/sauna final.webp',
   landscaping: '/premium/hero-images/garden8.webp',
-  roofing:     '/premium/hero-images/roof6.webp',
+  roofing:     '/premium/hero-images/roof.webp',
 };
 
 const NICHE_IMAGE_STYLE = {
@@ -13,7 +13,7 @@ const NICHE_IMAGE_STYLE = {
   flooring:    { objectFit: "contain", objectPosition: "center 90%",  transformOrigin: "center center", defaultAdj: { scale: 0.8,  tx: -17, ty: 4,   rot: 0 } },
   wellness:    { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.5,  tx: -12, ty: 6,   rot: 0 } },
   landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.65, tx: -12, ty: 4,   rot: 0 } },
-  roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -10, ty: 12,  rot: 0 } },
+  roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.6,  tx: -11, ty: 6,   rot: 0 } },
 };
 
 const DEFAULT_ADJUST = { scale: 1, tx: 0, ty: 0, rot: 0 };

@@ -34,7 +34,6 @@ export const HEADER_H = 60; // aligned column-header height across the 3 cards
 export const CARD_STYLE: CSSProperties = {
   background: "var(--card)",
   borderRadius: "var(--r-card)",
-  boxShadow: "var(--sh-raised-large)",
   display: "flex",
   flexDirection: "column",
   minHeight: 0,

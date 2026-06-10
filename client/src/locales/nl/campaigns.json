@@ -1,11 +1,9 @@
 {
   "title": "Campagnes",
-
   "views": {
     "list": "Lijst",
     "table": "Tabel"
   },
-
   "toolbar": {
     "add": "Toevoegen",
     "sort": "Sorteren",
@@ -15,7 +13,7 @@
     "fields": "Velden",
     "showHideColumns": "Kolommen tonen / verbergen",
     "resetToDefault": "Standaard herstellen",
-    "searchPlaceholder": "Campagnes zoeken\u2026",
+    "searchPlaceholder": "Campagnes zoeken…",
     "changeStatus": "Status wijzigen",
     "duplicate": "Dupliceren",
     "delete": "Verwijderen",
@@ -24,14 +22,13 @@
     "activate": "Activeren",
     "refresh": "Vernieuwen",
     "save": "Opslaan",
-    "saving": "Opslaan\u2026",
+    "saving": "Opslaan…",
     "cancel": "Annuleren",
     "close": "Sluiten",
     "openPrompt": "Prompt",
     "closePrompt": "Prompt Sluiten",
     "promptPanel": "Prompt Editor"
   },
-
   "columns": {
     "name": "Naam",
     "status": "Status",
@@ -49,22 +46,19 @@
     "end": "Einde",
     "lastModified": "Laatst gewijzigd"
   },
-
   "groupBy": {
     "status": "Status",
     "account": "Account",
     "type": "Type",
     "none": "Geen"
   },
-
   "sortOptions": {
     "recent": "Meest recent",
-    "nameAsc": "Naam A \u2192 Z",
-    "nameDesc": "Naam Z \u2192 A",
+    "nameAsc": "Naam A → Z",
+    "nameDesc": "Naam Z → A",
     "leadsDesc": "Meeste leads",
     "responseDesc": "Beste respons"
   },
-
   "filter": {
     "status": "Status",
     "account": "Account",
@@ -73,7 +67,6 @@
     "apply": "Toepassen",
     "reset": "Resetten"
   },
-
   "statusLabels": {
     "Active": "Actief",
     "Paused": "Gepauzeerd",
@@ -84,48 +77,41 @@
     "Draft": "Concept",
     "Unknown": "Onbekend"
   },
-
   "confirm": {
     "yes": "Ja",
     "no": "Nee",
     "deleteConfirm": "Verwijderen?"
   },
-
   "empty": {
     "noCampaignsFound": "Geen campagnes gevonden",
     "tryDifferentSearch": "Probeer een andere zoekopdracht",
     "noMatchSearch": "Geen campagnes komen overeen met uw zoekopdracht",
     "selectCampaign": "Selecteer een campagne",
     "selectCampaignDesc": "Klik op een campagne aan de linkerkant om de prestaties, configuratie en berichtsjablonen te bekijken.",
-    "chooseFromList": "\u2190 Kies uit de lijst"
+    "chooseFromList": "← Kies uit de lijst"
   },
-
   "pagination": {
     "previous": "Vorige",
     "next": "Volgende",
-    "rangeOf": "{{start}}\u2013{{end}} van {{total}}"
+    "rangeOf": "{{start}}–{{end}} van {{total}}"
   },
-
   "card": {
     "leads": "Leads",
     "response": "Respons",
     "booked": "Geboekt",
     "started": "Gestart {{date}}"
   },
-
   "detail": {
     "panelHide": "Detailpaneel verbergen",
     "panelShow": "Detailpaneel tonen",
     "unnamed": "Naamloze campagne",
     "campaignNumber": "#{{number}}"
   },
-
   "tabs": {
     "summary": "Samenvatting",
     "configurations": "Instellingen",
     "tags": "Tags"
   },
-
   "summary": {
     "eyebrows": {
       "performance": "Prestaties",
@@ -182,15 +168,14 @@
     "noAnalysisYet": "Nog geen analyse",
     "generate": "Genereren",
     "regenerate": "Opnieuw genereren",
-    "generating": "Genereren\u2026",
+    "generating": "Genereren…",
     "groqApiKeyMissing": "Groq API-sleutel niet geconfigureerd. Voeg GROQ_API_KEY toe aan .env.",
     "generateFailed": "Samenvatting genereren mislukt. Probeer opnieuw.",
     "networkError": "Netwerkfout. Probeer opnieuw.",
     "activity": "Activiteit",
-    "financials": "Financi\u00ebn",
+    "financials": "Financiën",
     "roiTrend": "ROI-trend"
   },
-
   "financials": {
     "dealType": "Dealtype",
     "totalSpend": "Totale uitgaven",
@@ -201,7 +186,7 @@
     "returnOnInvestment": "Rendement op investering",
     "aiTokens": "AI Tokens Gebruikt",
     "aiCost": "AI Kosten (USD)",
-    "linkContractPrompt": "Koppel een contract in Config \u2192",
+    "linkContractPrompt": "Koppel een contract in Config →",
     "est": "gesch.",
     "dealTypes": {
       "retainer": "Retainer",
@@ -216,7 +201,6 @@
       "meeting_held": "Vergadering gehouden"
     }
   },
-
   "config": {
     "configuration": "Configuratie",
     "campaignName": "Campagnenaam",
@@ -240,7 +224,7 @@
     "buyingSignalResponsePlaceholder": "Aangepaste AI-reactie wanneer een lead koopintentie toont (bijv. 'Laat me even mijn agenda checken, ik bel je zo terug')",
     "buyingSignalResponseDefault": "Standaard: AI zal zeggen dat het de agenda controleert en snel terugbelt",
     "deal": "Deal",
-    "noneLinked": "\u2014 Geen gekoppeld",
+    "noneLinked": "— Geen gekoppeld",
     "valuePerBooking": "Waarde / Boeking",
     "model": "Model",
     "temperature": "Temperatuur",
@@ -287,9 +271,19 @@
     "optOutNotice": "Afmeldoptie in eerste bericht",
     "accountId": "Account",
     "showDemoCampaigns": "Toon democampagnes",
-    "language": "Taal"
+    "language": "Taal",
+    "sections": {
+      "business": "Zakelijk",
+      "businessTitle": "Zakelijke Instellingen",
+      "businessDesc": "Campagne-identiteit, niche en klantgegevens",
+      "ai": "AI",
+      "aiTitle": "AI-instellingen",
+      "aiDesc": "Prompt, model, persona en gespreksstijl",
+      "behavior": "Gedrag",
+      "behaviorTitle": "Gedrag",
+      "behaviorDesc": "Planning, limieten, kanaal en boekingsregels"
+    }
   },
-
   "meta": {
     "owner": "Eigenaar",
     "channel": "Kanaal",
@@ -301,7 +295,6 @@
     "duration": "{{count}} dag",
     "duration_plural": "{{count}} dagen"
   },
-
   "panel": {
     "performance": "Prestaties",
     "trends": "Trends",
@@ -355,7 +348,6 @@
       "roi": "ROI"
     }
   },
-
   "tags": {
     "loadingTags": "Tags laden...",
     "failedToLoadTags": "Tags laden mislukt",
@@ -378,9 +370,8 @@
     "yes": "Ja",
     "no": "Nee",
     "category": "Categorie",
-    "allCategories": "Alle categorie\u00ebn",
+    "allCategories": "Alle categorieën",
     "clearAllFilters": "Alle filters wissen",
-
     "pageTitle": "Tags",
     "viewList": "Lijst",
     "viewCards": "Kaarten",
@@ -411,8 +402,8 @@
     "deleteTags": "Tags Verwijderen",
     "deleteConfirmSingle": "Weet je zeker dat je de tag wilt verwijderen",
     "deleteConfirmBulk": "Weet je zeker dat je {{count}} tags wilt verwijderen?",
-    "deleteCannotUndoSingle": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tag hebben zullen deze niet verliezen \u2014 alleen de tagdefinitie wordt verwijderd.",
-    "deleteCannotUndoBulk": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tags hebben zullen deze niet verliezen \u2014 alleen de tagdefinities worden verwijderd.",
+    "deleteCannotUndoSingle": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tag hebben zullen deze niet verliezen — alleen de tagdefinitie wordt verwijderd.",
+    "deleteCannotUndoBulk": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tags hebben zullen deze niet verliezen — alleen de tagdefinities worden verwijderd.",
     "deleting": "Verwijderen...",
     "deleteCountTags": "{{count}} Tags Verwijderen",
     "none": "Geen",
@@ -429,7 +420,6 @@
     "confirmYes": "Ja",
     "confirmNo": "Nee"
   },
-
   "photo": {
     "dialogTitle": "Campagnefoto",
     "hue": "Tint",
@@ -439,7 +429,6 @@
     "removeLogo": "Logo verwijderen",
     "clickToChange": "Klik om foto te wijzigen"
   },
-
   "relativeTime": {
     "justNow": "Zojuist",
     "hoursAgo": "{{count}}u geleden",
@@ -448,7 +437,6 @@
     "weeksAgo": "{{count}}w geleden",
     "monthsAgo": "{{count}}ma geleden"
   },
-
   "funnelStages": {
     "new": "Nieuw",
     "contacted": "Gecontacteerd",
@@ -460,7 +448,6 @@
     "lost": "Verloren",
     "dnd": "Niet storen"
   },
-
   "abTesting": {
     "title": "A/B Test",
     "variantA": "Variant A",
@@ -480,14 +467,12 @@
     "splitRatio": "% Variant B",
     "split": "Verdeling"
   },
-
-  "copy": "Kopi\u00ebren",
-
+  "copy": "Kopiëren",
   "tagsPage": {
     "title": "Tags",
-    "searchPlaceholder": "Tags zoeken\u2026",
-    "allCategories": "Alle Categorie\u00ebn",
-    "tagsInCategories": "{{tagCount}} tags in {{catCount}} categorie\u00ebn",
+    "searchPlaceholder": "Tags zoeken…",
+    "allCategories": "Alle Categorieën",
+    "tagsInCategories": "{{tagCount}} tags in {{catCount}} categorieën",
     "createTag": "Tag Aanmaken",
     "uncategorized": "Ongecategoriseerd",
     "auto": "Auto",
@@ -500,9 +485,9 @@
       "category": "Categorie",
       "categoryPlaceholder": "bijv. Status, Gedrag, Bron",
       "description": "Beschrijving",
-      "descriptionPlaceholder": "Korte beschrijving van deze tag\u2026",
+      "descriptionPlaceholder": "Korte beschrijving van deze tag…",
       "cancel": "Annuleren",
-      "creating": "Aanmaken\u2026",
+      "creating": "Aanmaken…",
       "create": "Tag Aanmaken"
     },
     "editDialog": {
@@ -513,17 +498,17 @@
       "category": "Categorie",
       "categoryPlaceholder": "bijv. Status, Gedrag, Bron",
       "description": "Beschrijving",
-      "descriptionPlaceholder": "Korte beschrijving van deze tag\u2026",
+      "descriptionPlaceholder": "Korte beschrijving van deze tag…",
       "cancel": "Annuleren",
-      "saving": "Opslaan\u2026",
+      "saving": "Opslaan…",
       "saveChanges": "Wijzigingen Opslaan"
     },
     "deleteDialog": {
       "title": "Tag Verwijderen",
       "confirmMessage": "Weet je zeker dat je de tag wilt verwijderen",
-      "warningMessage": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tag hebben zullen deze niet verliezen \u2014 alleen de tagdefinitie wordt verwijderd.",
+      "warningMessage": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tag hebben zullen deze niet verliezen — alleen de tagdefinitie wordt verwijderd.",
       "cancel": "Annuleren",
-      "deleting": "Verwijderen\u2026",
+      "deleting": "Verwijderen…",
       "delete": "Tag Verwijderen"
     },
     "sidePanel": {

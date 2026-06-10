@@ -1,6 +1,9 @@
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import type { Task, TaskCategory } from "@shared/schema";
 import TasksBoardCard from "./TasksBoardCard";
+import { useCommentCounts } from "../api/tasksApi";
+
+type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl: string | null };
 
 interface Props {
   tasks: Task[];
@@ -8,6 +11,7 @@ interface Props {
   activeId: number | null;
   onSelect: (id: number) => void;
   todayISO: string;
+  users?: AccountUser[];
 }
 
 export const BOARD_COLS = [
@@ -19,12 +23,13 @@ export const BOARD_COLS = [
 
 // ── Draggable card ─────────────────────────────────────────────────────
 function DraggableCard({
-  task, active, onSelect, categoryColor, categoryName, todayISO,
+  task, active, onSelect, categoryColor, categoryName, todayISO, users, commentCount,
 }: {
   task: Task; active: boolean; onSelect: () => void;
   categoryColor: string; categoryName: string; todayISO: string;
+  users: AccountUser[]; commentCount: number;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `board:${task.id}` });
   return (
     <div
       ref={setNodeRef}
@@ -39,6 +44,8 @@ function DraggableCard({
         categoryColor={categoryColor}
         categoryName={categoryName}
         todayISO={todayISO}
+        users={users}
+        commentCount={commentCount}
       />
     </div>
   );
@@ -46,10 +53,11 @@ function DraggableCard({
 
 // ── Droppable column ───────────────────────────────────────────────────
 function Column({
-  col, items, categories, activeId, onSelect, todayISO,
+  col, items, categories, activeId, onSelect, todayISO, users, commentMap,
 }: {
   col: (typeof BOARD_COLS)[number]; items: Task[]; categories: TaskCategory[];
   activeId: number | null; onSelect: (id: number) => void; todayISO: string;
+  users: AccountUser[]; commentMap: Map<number, number>;
 }) {
   const catMap = new Map(categories.map(c => [c.id, c]));
   const { setNodeRef, isOver } = useDroppable({ id: `col-${col.key}`, data: { status: col.key } });
@@ -60,13 +68,13 @@ function Column({
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '0 6px 12px', flexShrink: 0 }}>
         <span style={{ width: 9, height: 9, borderRadius: '50%', background: col.color }} />
         <span style={{
-          fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em',
+          fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em',
           textTransform: 'uppercase' as const, color: 'var(--ink-soft)', fontWeight: 700,
         }}>
           {col.label}
         </span>
         <span style={{
-          fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--mute-2)',
+          fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--mute-2)',
           background: 'var(--card)', boxShadow: 'var(--sh-raised-crisp)',
           borderRadius: 'var(--r-pill)', padding: '1px 8px', marginLeft: 'auto',
         }}>
@@ -81,7 +89,7 @@ function Column({
         style={{
           flex: 1, minHeight: 0, borderRadius: 'var(--r-card)', padding: 10,
           overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10,
-          background: 'var(--bg-2)',
+          background: 'var(--bg)',
           boxShadow: isOver ? 'inset 0 0 0 1.5px var(--wine)' : undefined,
           transition: 'box-shadow 120ms',
         }}
@@ -106,6 +114,8 @@ function Column({
                 categoryColor={cat?.color ?? 'var(--mute-2)'}
                 categoryName={cat?.name ?? ''}
                 todayISO={todayISO}
+                users={users}
+                commentCount={commentMap.get(t.id) ?? 0}
               />
             );
           })
@@ -116,9 +126,12 @@ function Column({
 }
 
 // Presentational only — drag is handled by the shared DndContext in TasksPage.
-export default function TasksBoardView({ tasks, categories, activeId, onSelect, todayISO }: Props) {
+export default function TasksBoardView({ tasks, categories, activeId, onSelect, todayISO, users = [] }: Props) {
+  const { data: commentCounts = [] } = useCommentCounts();
+  const commentMap = new Map(commentCounts.map(c => [c.taskId, c.count]));
+
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 14, padding: '16px 16px 6px', overflowX: 'auto' }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 14, padding: '16px 16px 6px', overflowX: 'auto', background: 'var(--sidebar-bg)' }}>
       {BOARD_COLS.map(col => (
         <Column
           key={col.key}
@@ -128,6 +141,8 @@ export default function TasksBoardView({ tasks, categories, activeId, onSelect, 
           activeId={activeId}
           onSelect={onSelect}
           todayISO={todayISO}
+          users={users}
+          commentMap={commentMap}
         />
       ))}
     </div>

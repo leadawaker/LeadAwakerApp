@@ -1637,7 +1637,7 @@ function SettingsContent() {
   };
 
   return (
-    <div className="h-full flex flex-col pt-4" data-testid="page-settings">
+    <div className="h-full flex flex-col" data-testid="page-settings">
       {/* Mobile: show hub or section detail */}
       {isMobile && renderMobileHub()}
 
@@ -1656,7 +1656,7 @@ function SettingsContent() {
           data-testid="settings-nav"
         >
           {!isMobile && (
-            <div className="pl-[17px] pr-[3px] pt-10 pb-3">
+            <div className="pl-[17px] pr-[3px] pt-3 pb-3">
               <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h1>
             </div>
           )}

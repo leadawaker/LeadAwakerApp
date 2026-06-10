@@ -151,7 +151,7 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/legacy`} component={LegacyHome} />
 
       {/* Home MUST be last */}
-      <Route path={`/${lang}`} component={Home} />
+      <Route path={`/${lang}`} component={() => <Redirect to={`/${lang}/faq`} />} />
 
       <Route component={NotFound} />
     </Switch>

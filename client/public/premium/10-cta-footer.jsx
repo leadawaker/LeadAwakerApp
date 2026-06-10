@@ -121,6 +121,17 @@ function CTA() {
   const [prefill, setPrefill] = React.useState(null);
   const formHeightRef = React.useRef(null);
 
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.__leadAwakerCalc) {
+        if (window.__leadAwakerCalc.quotes !== undefined) setQuotes(window.__leadAwakerCalc.quotes);
+        if (window.__leadAwakerCalc.silentPct !== undefined) setSilentPct(window.__leadAwakerCalc.silentPct);
+        if (window.__leadAwakerCalc.avgValue !== undefined) setAvgValue(window.__leadAwakerCalc.avgValue);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const n = name.trim();
@@ -302,6 +313,7 @@ function CTA() {
                         silentPct={silentPct} setSilentPct={setSilentPct}
                         avgValue={avgValue} setAvgValue={setAvgValue}
                         numbersAccurate={numbersAccurate} setNumbersAccurate={setNumbersAccurate}
+                        name={name}
                       />
                       {formState === "error" && (
                         <p style={{ margin: 0, fontSize: 12, color: "#7A2E3E", fontFamily: "var(--mono)" }}>
@@ -453,16 +465,16 @@ function CalInlineEmbed({ prefill, style }) {
   );
 }
 
-function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, numbersAccurate, setNumbersAccurate }) {
+function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, numbersAccurate, setNumbersAccurate, name }) {
   const rows = [
     { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString('nl-NL') },
     { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
     { label: t('cta.q_value'),  min: 1000, max: 100000, step: 1000, value: avgValue,  setValue: setAvgValue,  fmt: (v) => "€" + v.toLocaleString('nl-NL') },
   ];
+  const hasName = name && name.trim().length > 0;
   return (
     <div style={{
       borderRadius: 8,
-      
       overflow: "hidden",
     }}>
       <div style={{ padding: "16px 16px 14px", display: "grid", gap: 16 }}>
@@ -470,7 +482,7 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
           <div key={row.label}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <span style={{ fontSize: 14, color: "var(--ink)", fontFamily: "var(--sans)" }}>{row.label}</span>
-              <span style={{ fontFamily: "var(--mono)", fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 16, fontWeight: hasName ? 800 : 700, color: hasName ? "var(--wine)" : "var(--ink)" }}>
                 {row.fmt(row.value)}
               </span>
             </div>
@@ -489,7 +501,7 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
       </div>
       <label style={{
         display: "flex", alignItems: "flex-start", gap: 10,
-        padding: "12px 16px",
+        padding: "12px 3px",
         cursor: "pointer",
       }}>
         <input
@@ -497,8 +509,18 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
           checked={numbersAccurate}
           onChange={(e) => setNumbersAccurate(e.target.checked)}
           className="cta-checkbox"
+          style={hasName ? {
+            boxShadow: "0 0 0 2px var(--wine)",
+            borderRadius: "4px"
+          } : {}}
         />
-        <span style={{ fontSize: 14, fontFamily: "var(--sans)", color: "rgba(28,24,16,0.75)", lineHeight: 1.45 }}>
+        <span style={{
+          fontSize: 14,
+          fontFamily: "var(--sans)",
+          color: hasName ? "var(--wine)" : "rgba(28,24,16,0.75)",
+          lineHeight: 1.45,
+          fontWeight: hasName ? 700 : 400
+        }}>
           {t('cta.checkbox_confirm')}
         </span>
       </label>

@@ -70,6 +70,20 @@
     "prev": "Anterior",
     "next": "Próxima"
   },
+  "health": {
+    "pageTitle": "Saúde da Automação",
+    "lastRun": "Última execução",
+    "nextRun": "Próxima execução",
+    "neverRun": "Nunca",
+    "engineDown": "Motor de automação inacessível — todos os jobs indisponíveis.",
+    "attentionRequired": "{{count}} job(s) precisam de atenção.",
+    "generatedAt": "Atualizado às {{time}}",
+    "status": {
+      "healthy": "Saudável",
+      "overdue": "Atrasado",
+      "error": "Erro"
+    }
+  },
   "pipeline": {
     "executions": "Execu\u00e7\u00f5es",
     "selectExecution": "Selecione uma execu\u00e7\u00e3o para ver seu pipeline",

@@ -86,7 +86,6 @@ const PIPELINE_STAGES = [
   "Multiple Responses",
   "Qualified",
   "Booked",
-  "Closed",
   "Lost",
   "DND",
 ] as const;
@@ -333,17 +332,9 @@ function KanbanCardContent({
     ? new Date(bookedDate).toDateString() === new Date().toDateString()
     : false;
 
-  // Closed/Booked action buttons (shared between compact and normal)
+  // Booked action button — mark a passed booked call as Lost
   const actionButtons = isBookedStatus && bookedDatePassed && (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => { e.stopPropagation(); onMoveLead?.(lead.Id || lead.id, "Closed"); }}
-        onPointerDown={(e) => e.stopPropagation()}
-        className="h-5 w-5 rounded-full text-emerald-500 flex items-center justify-center hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-        title="Closed"
-      >
-        <CheckCircle2 className="h-4 w-4" />
-      </button>
       <button
         onClick={(e) => { e.stopPropagation(); onMoveLead?.(lead.Id || lead.id, "Lost"); }}
         onPointerDown={(e) => e.stopPropagation()}
@@ -686,12 +677,8 @@ function KanbanColumn({
   if (isCollapsed) {
     return (
       <div
-        className={cn(
-          "flex flex-col items-center rounded-lg w-10 min-w-[40px] flex-shrink-0 cursor-pointer select-none h-full overflow-hidden",
-          isLostStage ? "bg-red-50/80 dark:bg-red-950/15"
-            : isClosedStage ? "bg-orange-50/80 dark:bg-orange-950/10"
-            : "bg-muted"
-        )}
+        className="flex flex-col items-center rounded-lg w-10 min-w-[40px] flex-shrink-0 cursor-pointer select-none h-full overflow-hidden"
+        style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}
         data-testid={`kanban-column-${stage}`}
         data-collapsed="true"
         title={`${t(`kanban.stageLabels.${stageKey(stage)}`)} (${leads.length})`}
@@ -1251,6 +1238,12 @@ export function LeadsKanban({
             : "gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory md:snap-none",
         )}
         style={compactMode ? undefined : { overscrollBehaviorX: "contain" } as React.CSSProperties}
+        onWheel={(e) => {
+          // Shift + vertical wheel → horizontal scroll across the pipeline
+          if (e.shiftKey && !compactMode) {
+            e.currentTarget.scrollLeft += e.deltaY;
+          }
+        }}
         data-testid="kanban-board"
       >
         {PIPELINE_STAGES.map((stage) => (

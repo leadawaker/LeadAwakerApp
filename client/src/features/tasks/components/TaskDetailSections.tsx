@@ -1,27 +1,50 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { MessageSquare, Paperclip, Send, Download, Trash2, Check, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { MessageSquare, Paperclip, Send, Download, Trash2, Check, ChevronUp, ChevronDown, Plus, Pencil, X } from "lucide-react";
 import {
-  useTaskComments, useCreateComment, useDeleteComment,
+  useTaskComments, useCreateComment, useUpdateComment, useDeleteComment,
   useTaskAttachments, useUploadAttachment, useDeleteAttachment,
   useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks,
 } from "../api/tasksApi";
 
+type CommentUser = { id: number; fullName1: string | null; email: string | null; avatarUrl: string | null };
+
 // ── CommentsSection ───────────────────────────────────────────────────────────
 
-export function CommentsSection({ taskId }: { taskId: number }) {
+export function CommentsSection({ taskId, currentUserName, users = [] }: { taskId: number; currentUserName?: string; users?: CommentUser[] }) {
   const { data: comments = [] } = useTaskComments(taskId);
   const createComment = useCreateComment();
+  const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
   const [body, setBody] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editBody, setEditBody] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const authorName = currentUserName?.trim() || localStorage.getItem("leadawaker_user_name") || "Unknown";
 
   function handleSubmit() {
     const trimmed = body.trim();
     if (!trimmed) return;
-    createComment.mutate({ taskId, data: { body: trimmed, authorName: "You" } });
+    createComment.mutate({ taskId, data: { body: trimmed, authorName } });
     setBody("");
+  }
+
+  function startEdit(id: number, currentBody: string) {
+    setEditingId(id);
+    setEditBody(currentBody);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditBody("");
+  }
+
+  function saveEdit(id: number) {
+    const trimmed = editBody.trim();
+    if (!trimmed) return;
+    updateComment.mutate({ id, taskId, body: trimmed }, { onSuccess: cancelEdit });
   }
 
   return (
@@ -32,12 +55,18 @@ export function CommentsSection({ taskId }: { taskId: number }) {
       </div>
       <div className="flex flex-col gap-3 mb-3">
         {comments.map((c) => {
-          const initials = (c.authorName ?? "?").split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+          const name = c.authorName ?? "?";
+          const initials = name.split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+          const matchedUser = users.find(u => u.fullName1 === name || u.email === name);
+          const avatarUrl = matchedUser?.avatarUrl;
+          const isEditing = editingId === c.id;
           return (
             <div key={c.id} className="group flex gap-2.5 text-[12px]">
               {/* Avatar */}
-              <span className="h-6 w-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 mt-0.5">
-                {initials}
+              <span className="h-6 w-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 mt-0.5 overflow-hidden">
+                {avatarUrl
+                  ? <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : initials}
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -46,19 +75,55 @@ export function CommentsSection({ taskId }: { taskId: number }) {
                     {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
                   </span>
                 </div>
-                <p className="mt-0.5 text-foreground/80 leading-relaxed">{c.body}</p>
+                {isEditing ? (
+                  <div style={{ position: 'relative', marginTop: 4 }}>
+                    <textarea
+                      autoFocus
+                      value={editBody}
+                      onChange={(e) => setEditBody(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveEdit(c.id); }
+                        if (e.key === "Escape") cancelEdit();
+                      }}
+                      rows={2}
+                      className="w-full resize-none text-[12px] rounded-[5px] border-none bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] px-3 py-2 text-[var(--ink)] placeholder:text-[var(--mute-2)] focus:outline-none"
+                      style={{ paddingBottom: 32 }}
+                    />
+                    <div style={{ position: 'absolute', bottom: 6, right: 6, display: 'flex', gap: 4 }}>
+                      <button onClick={cancelEdit} style={{ width: 22, height: 22, borderRadius: 4, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--mute-2)' }}>
+                        <X className="h-3 w-3" />
+                      </button>
+                      <button onClick={() => saveEdit(c.id)} disabled={updateComment.isPending} style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--wine-grad)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', boxShadow: 'var(--sh-raised-crisp)' }}>
+                        <Check className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-0.5 text-foreground/80 leading-relaxed">{c.body}</p>
+                )}
               </div>
-              <button
-                onClick={() => deleteComment.mutate({ id: c.id, taskId })}
-                className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
+              {!isEditing && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 shrink-0">
+                  <button
+                    onClick={() => startEdit(c.id, c.body ?? "")}
+                    className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-brand-indigo hover:bg-brand-indigo/10"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => deleteComment.mutate({ id: c.id, taskId })}
+                    className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-      <div className="flex gap-2">
+      {/* Textarea with send button appearing inside the box only after typing */}
+      <div style={{ position: 'relative' }}>
         <textarea
           ref={inputRef}
           value={body}
@@ -66,16 +131,26 @@ export function CommentsSection({ taskId }: { taskId: number }) {
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
           placeholder="Add a comment..."
           rows={2}
-          className="flex-1 resize-none text-[12px] rounded-md border-none bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] px-3 py-2 text-[var(--ink)] placeholder:text-[var(--mute-2)] focus:outline-none"
+          className="w-full resize-none text-[12px] rounded-[5px] border-none bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] px-3 py-2 text-[var(--ink)] placeholder:text-[var(--mute-2)] focus:outline-none"
+          style={{ paddingBottom: body.trim() ? 32 : undefined }}
         />
-        <button
-          onClick={handleSubmit}
-          disabled={!body.trim() || createComment.isPending}
-          className="self-end h-9 w-9 rounded-full flex items-center justify-center text-white disabled:opacity-40 transition-transform hover:-translate-y-px"
-          style={{ background: "var(--wine-grad)" }}
-        >
-          <Send className="h-3.5 w-3.5" />
-        </button>
+        {body.trim() && (
+          <button
+            onClick={handleSubmit}
+            disabled={createComment.isPending}
+            style={{
+              position: 'absolute', bottom: 6, right: 6,
+              width: 26, height: 26, borderRadius: '50%',
+              background: 'var(--wine-grad)', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#fff',
+              boxShadow: 'var(--sh-raised-crisp)',
+              transition: 'transform 120ms',
+            }}
+          >
+            <Send className="h-3 w-3" />
+          </button>
+        )}
       </div>
     </div>
   );

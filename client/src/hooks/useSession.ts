@@ -37,8 +37,8 @@ export function useSession(): SessionState {
           localStorage.setItem("leadawaker_auth", "session");
           localStorage.setItem("leadawaker_user_email", user.email ?? "");
           localStorage.setItem("leadawaker_user_role", user.role ?? "Viewer");
-          if (user.fullName) {
-            localStorage.setItem("leadawaker_user_name", user.fullName);
+          if (user.fullName1) {
+            localStorage.setItem("leadawaker_user_name", user.fullName1);
           }
           localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
           window.dispatchEvent(new Event("leadawaker-avatar-changed"));

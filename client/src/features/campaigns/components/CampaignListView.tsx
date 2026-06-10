@@ -1,6 +1,4 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
   Megaphone,
@@ -15,8 +13,11 @@ import {
   Settings2,
   Plus,
   Layers,
-  MoreVertical,
   EyeOff,
+  PanelLeft,
+  PanelLeftClose,
+  FileText,
+  FlaskConical,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,20 +36,22 @@ import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
 import { MobileCampaignDetailPanel } from "./MobileCampaignDetailPanel";
 import { SkeletonCampaignPanel } from "@/components/ui/skeleton";
-import { getInitials, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
-import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
+import { CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import type { TabDef } from "@/components/ui/view-tab-bar";
 import { Search } from "lucide-react";
 import {
   useCompactPanelState,
   useCompactHoverCard,
-  CompactTabPopover,
   CompactHoverCardPortal,
 } from "@/components/crm/CompactEntityRail";
 import { CompactCampaignCard } from "./CompactCampaignCard";
+import { CampaignListCard, GroupHeader, ListSkeleton } from "./CampaignListCard";
+import { CampaignFilterSheet } from "./CampaignFilterSheet";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { ShareButton } from "./detailView/atoms";
 import {
   DETAIL_SORT_LABEL_KEYS,
   DETAIL_GROUP_LABEL_KEYS,
@@ -86,441 +89,6 @@ const DETAIL_TAB_DEFS = [
 type VirtualListItem =
   | { kind: "header"; label: string; count: number }
   | { kind: "campaign"; campaign: Campaign };
-
-// ── Campaign card ────────────────────────────────────────────────────────────
-// Uses la-camp-card / la-mono-tile / la-status from the warm-bone design system.
-// Default state: transparent, no shadow. Active: white surface + raised-crisp
-// shadow + wine left-edge accent bar (all via CSS classes in components.css).
-function CampaignListCard({
-  campaign,
-  isActive,
-  onClick,
-}: {
-  campaign: Campaign;
-  isActive: boolean;
-  onClick: () => void;
-}) {
-  const { t } = useTranslation("campaigns");
-  const name = String(campaign.name || t("detail.unnamed"));
-  const initials = getInitials(name);
-  const status = String(campaign.status || "");
-  const leads = getLeadCount(campaign);
-  const responseRate = getResponseRate(campaign);
-  const bookings = Number(campaign.bookings_generated ?? 0);
-  const accountName = campaign.account_name || "";
-  const cid = getCampaignId(campaign);
-
-  // Design‑system status mapping
-  const statusClass =
-    status === "Active" ? "active-s"
-    : status === "Paused" ? "paused"
-    : "inactive";
-  const statusLabel = t(`statusLabels.${status}`, status) || t("statusLabels.Unknown");
-
-  // Mono-tile variant: wine gradient when active/running, inset when inactive
-  const tileClass = status === "Active" || isActive ? "wine"
-    : status === "Inactive" || status === "Draft" ? "inactive"
-    : "";
-
-  // Campaign sticker
-  const campaignStickerSlug = campaign.campaign_sticker ?? null;
-  const campaignSticker = campaignStickerSlug
-    ? CAMPAIGN_STICKERS.find(s => s.slug === campaignStickerSlug) ?? null
-    : null;
-  const isGrayscale = status === "Inactive";
-
-  // Date label
-  const createdAt: string | null = (campaign as any).createdAt ?? (campaign as any).created_at ?? null;
-  const startAt: string | null = campaign.start_date ?? createdAt;
-  const daysRunning = (status === "Active" && startAt)
-    ? Math.max(0, Math.floor((Date.now() - new Date(startAt).getTime()) / 86_400_000))
-    : null;
-  const createdLabel = daysRunning !== null
-    ? `Running ${daysRunning}d`
-    : createdAt
-    ? new Date(createdAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
-    : null;
-
-  return (
-    <div
-      className={`la-camp-card group${isActive ? " active" : ""}`}
-      style={{ flexDirection: "column", alignItems: "stretch", gap: 'var(--space-xs)' }}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
-    >
-      {/* Top row: avatar + body */}
-      <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-        {/* Avatar — sticker or la-mono-tile initials */}
-        {campaignSticker ? (
-          <div className="la-mono-tile" style={{ overflow: "hidden", padding: 0 }}>
-            <img
-              src={campaignSticker.url}
-              alt=""
-              className="h-full w-full object-contain"
-              style={isGrayscale ? { filter: "grayscale(1) opacity(0.45)" } : undefined}
-            />
-          </div>
-        ) : (
-          <div className={`la-mono-tile ${tileClass}`}>{initials}</div>
-        )}
-
-        {/* Body */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 14, fontWeight: 600, color: "var(--ink)",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            marginBottom: 'var(--space-xxs)',
-          }}>
-            {name}
-          </div>
-
-          <div className="row" style={{ gap: 'var(--space-xs)', marginBottom: 6 }}>
-            <span className={`la-status ${statusClass}`}>
-              <span className="dot" />{statusLabel}
-            </span>
-            {cid > 0 && (
-              <span style={{
-                fontFamily: "'Geist Mono', ui-monospace, monospace",
-                fontSize: 10, color: "var(--mute-2)", letterSpacing: "0.1em",
-              }}>
-                #{cid}
-              </span>
-            )}
-          </div>
-
-          {accountName && (
-            <div className="row" style={{ gap: 5, fontSize: 11, color: "var(--mute)" }}>
-              <span className="dot" style={{ background: "var(--mute-2)" }} />
-              {accountName}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Metrics strip — always visible on mobile, hover-only on desktop */}
-      {!campaign.is_demo && (
-      <div className={cn(
-        "opacity-100 max-h-[72px] md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[72px]",
-        "transition-[opacity,max-height] duration-200 flex flex-col gap-1 overflow-hidden"
-      )}>
-        <div style={{
-          display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
-          borderRadius: "var(--r-button)", overflow: "hidden",
-          background: isActive ? "var(--warn-tint)" : "var(--line)",
-        }}>
-          {([
-            { label: t("card.leads"),    value: leads > 0        ? leads.toLocaleString()   : "—", booked: false },
-            { label: t("card.response"), value: responseRate > 0 ? `${responseRate}%`        : "—", booked: false },
-            { label: t("card.booked"),   value: bookings > 0     ? bookings.toLocaleString() : "—", booked: true  },
-          ] as const).map((stat) => (
-            <div
-              key={stat.label}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "6px 0",
-                background: isActive ? "hsl(var(--highlight-selected))" : "var(--card)",
-              }}
-            >
-              <span style={{
-                fontWeight: 700, fontVariantNumeric: "tabular-nums", lineHeight: 1.15,
-                color: stat.booked && bookings > 0 ? "var(--good)" : "var(--ink)",
-                fontSize: stat.booked && bookings > 0 ? 15 : 13,
-              }}>{stat.value}</span>
-              <span style={{
-                fontSize: 9, color: "var(--mute)", textTransform: "uppercase",
-                letterSpacing: "0.05em", marginTop: 2,
-              }}>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {createdLabel && (
-          <div style={{ paddingLeft: 'var(--space-xxs)' }}>
-            <span style={{
-              fontSize: 10, color: "var(--mute)", fontVariantNumeric: "tabular-nums",
-            }}>
-              {daysRunning !== null ? createdLabel : t("card.started", { date: createdLabel })}
-            </span>
-          </div>
-        )}
-      </div>
-      )}
-    </div>
-  );
-}
-
-// ── Group header ─────────────────────────────────────────────────────────────
-// Matches spec: eyebrow label with count + trailing rule
-function GroupHeader({ label, count }: { label: string; count: number }) {
-  return (
-    <div className="row" style={{ gap: 'var(--space-xs)', padding: '12px 17px 2px' }}>
-      <span className="eyebrow eyebrow-sm">{label} — {count}</span>
-      <div className="rule" style={{ flex: 1 }} />
-    </div>
-  );
-}
-
-// ── Skeleton ─────────────────────────────────────────────────────────────────
-function ListSkeleton() {
-  return (
-    <div className="space-y-0 p-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 px-4 py-3.5 rounded-lg animate-pulse"
-          style={{ animationDelay: `${i * 50}ms` }}
-        >
-          <div className="h-10 w-10 rounded-full bg-foreground/10 shrink-0" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 bg-foreground/10 rounded-full w-2/3" />
-            <div className="h-2.5 bg-foreground/8 rounded-full w-1/2" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Filter bottom sheet ───────────────────────────────────────────────────────
-const SORT_FILTER_OPTIONS: { value: CampaignSortBy; optKey: string }[] = [
-  { value: "recent",        optKey: "sortOptions.recent" },
-  { value: "name_asc",      optKey: "sortOptions.nameAsc" },
-  { value: "name_desc",     optKey: "sortOptions.nameDesc" },
-  { value: "leads_desc",    optKey: "sortOptions.leadsDesc" },
-  { value: "response_desc", optKey: "sortOptions.responseDesc" },
-];
-
-const STATUS_FILTER_OPTIONS = ["Active", "Paused", "Draft", "Completed", "Inactive"];
-
-const STATUS_COLOR: Record<string, string> = {
-  Active:    "var(--good)",
-  Paused:    "var(--warn)",
-  Completed: "#6C5A8C",
-  Draft:     "var(--mute-2)",
-  Inactive:  "var(--mute-2)",
-};
-
-interface CampaignFilterBottomSheetProps {
-  open: boolean;
-  onClose: () => void;
-  sortBy: CampaignSortBy;
-  onSortByChange: (v: CampaignSortBy) => void;
-  filterStatus: string[];
-  onFilterStatusSet: (v: string[]) => void;
-  onReset: () => void;
-}
-
-function CampaignFilterBottomSheet({
-  open,
-  onClose,
-  sortBy,
-  onSortByChange,
-  filterStatus,
-  onFilterStatusSet,
-  onReset,
-}: CampaignFilterBottomSheetProps) {
-  const { t } = useTranslation("campaigns");
-  const [mounted, setMounted] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-
-  // Pending state — only commits when Apply is pressed
-  const [pendingSortBy, setPendingSortBy] = useState<CampaignSortBy>(sortBy);
-  const [pendingStatus, setPendingStatus] = useState<string[]>([...filterStatus]);
-
-  // Sync pending state when sheet opens
-  useEffect(() => {
-    if (open) {
-      setPendingSortBy(sortBy);
-      setPendingStatus([...filterStatus]);
-      setExpandedSection(null);
-    }
-  }, [open, sortBy, filterStatus]);
-
-  useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return null;
-
-  const toggleStatus = (s: string) => {
-    setPendingStatus((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
-  };
-
-  const toggleSection = (name: string) =>
-    setExpandedSection((prev) => (prev === name ? null : name));
-
-  const handleApply = () => {
-    onSortByChange(pendingSortBy);
-    onFilterStatusSet(pendingStatus);
-    onClose();
-  };
-
-  const handleReset = () => {
-    setPendingSortBy("recent");
-    setPendingStatus([]);
-    onReset();
-    onClose();
-  };
-
-  const isModified = pendingStatus.length > 0 || pendingSortBy !== "recent";
-
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="campaign-filter-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden fixed inset-0 z-[300] bg-black/50"
-            onClick={onClose}
-          />
-
-          {/* Bottom sheet panel */}
-          <motion.div
-            key="campaign-filter-sheet"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "tween", duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
-            data-testid="campaign-filter-sheet"
-            className="md:hidden fixed inset-x-0 bottom-0 z-[301] bg-background rounded-t-3xl border-t border-border/30 flex flex-col max-h-[85dvh]"
-            style={{ paddingBottom: "calc(1.5rem + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))" }}
-          >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-10 h-1 rounded-full bg-foreground/20" />
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pb-3 pt-1 shrink-0">
-              <h2 className="text-[17px] font-semibold text-foreground">
-                {t("toolbar.filter")}
-                {isModified && (
-                  <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-brand-indigo text-white text-[10px] font-bold">
-                    {pendingStatus.length + (pendingSortBy !== "recent" ? 1 : 0)}
-                  </span>
-                )}
-              </h2>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                aria-label={t("toolbar.cancel")}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-5 space-y-2 min-h-0">
-
-              {/* Sort section — collapsible */}
-              <div className="rounded-2xl overflow-hidden border border-border/40">
-                <button
-                  onClick={() => toggleSection("sort")}
-                  className="w-full flex items-center justify-between min-h-[48px] px-4 bg-card text-foreground/80 hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-[13px] font-semibold">{t("toolbar.sortBy")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {pendingSortBy !== "recent" && (
-                      <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">1</span>
-                    )}
-                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expandedSection === "sort" && "rotate-180")} />
-                  </div>
-                </button>
-                {expandedSection === "sort" && (
-                  <div className="px-2 pb-2 space-y-1 bg-card border-t border-border/30">
-                    {SORT_FILTER_OPTIONS.map(({ value, optKey }) => (
-                      <button
-                        key={value}
-                        onClick={() => setPendingSortBy(value)}
-                        className={cn(
-                          "w-full flex items-center justify-between min-h-[44px] px-4 rounded-xl text-[14px] font-medium transition-colors",
-                          pendingSortBy === value
-                            ? "bg-brand-indigo/10 text-brand-indigo"
-                            : "text-foreground/80 hover:bg-muted"
-                        )}
-                      >
-                        <span>{t(optKey)}</span>
-                        {pendingSortBy === value && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Status section — collapsible */}
-              <div className="rounded-2xl overflow-hidden border border-border/40">
-                <button
-                  onClick={() => toggleSection("status")}
-                  className="w-full flex items-center justify-between min-h-[48px] px-4 bg-card text-foreground/80 hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-[13px] font-semibold">{t("filter.status")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {pendingStatus.length > 0 && (
-                      <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center">{pendingStatus.length}</span>
-                    )}
-                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expandedSection === "status" && "rotate-180")} />
-                  </div>
-                </button>
-                {expandedSection === "status" && (
-                  <div className="px-2 pb-2 space-y-1 bg-card border-t border-border/30">
-                    {STATUS_FILTER_OPTIONS.map((status) => {
-                      const active = pendingStatus.includes(status);
-                      return (
-                        <button
-                          key={status}
-                          onClick={() => toggleStatus(status)}
-                          className={cn(
-                            "w-full flex items-center gap-3 min-h-[44px] px-4 rounded-xl text-[14px] font-medium transition-colors",
-                            active ? "bg-brand-indigo/10 text-brand-indigo" : "text-foreground/80 hover:bg-muted"
-                          )}
-                        >
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLOR[status] ?? "var(--mute-2)" }} />
-                          <span className="flex-1 text-left">{t(`statusLabels.${status}`, status)}</span>
-                          {active && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Type section — collapsible */}
-            </div>
-
-            {/* Footer: Reset + Apply */}
-            <div className="px-5 pt-4 flex items-center gap-3 shrink-0">
-              <button
-                onClick={handleReset}
-                className="flex-1 min-h-[44px] rounded-2xl border border-border/50 text-[14px] font-semibold text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
-              >
-                {t("filter.reset")}
-              </button>
-              <button
-                onClick={handleApply}
-                className="flex-1 min-h-[44px] rounded-2xl bg-brand-indigo text-white text-[14px] font-semibold hover:opacity-90 transition-opacity"
-              >
-                {t("filter.apply")}
-              </button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
 
 // ── Props ────────────────────────────────────────────────────────────────────
 interface CampaignListViewProps {
@@ -604,6 +172,7 @@ export function CampaignListView({
   onDelete,
 }: CampaignListViewProps) {
   const { t } = useTranslation("campaigns");
+  const { isAgencyUser } = useWorkspace();
   const isMobile768 = useIsMobile(768);
   const isNarrow = useIsMobile(1024);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -616,7 +185,7 @@ export function CampaignListView({
   const PAGE_SIZE = 20;
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const { state: leftPanelState } = useListPanelState();
+  const { state: leftPanelState, cycle } = useListPanelState();
   const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
     try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
   });
@@ -855,9 +424,8 @@ export function CampaignListView({
   return (
     <div className={cn("flex flex-col h-full w-full", promptPanelOpen ? "max-w-[2369px]" : "max-w-[1729px]")} data-testid="campaign-list-view">
 
-      {/* ── FULL-WIDTH TOP BAR (desktop only) ─────────────────────────── */}
-      {!isListCompact && (
-        <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px] border-b border-[var(--line)] bg-panel-list-bg" style={{ height: 52 }}>
+      {/* ── FULL-WIDTH TOP BAR (desktop only) — always visible ──────────── */}
+      <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px]" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
           {/* Left: title + count + tabs */}
           <span className="serif" style={{ fontSize: 20, color: 'var(--ink)', letterSpacing: '-0.01em' }}>{t("title")}</span>
           <span className="eyebrow eyebrow-sm" style={{ color: 'var(--mute-2)', marginLeft: 4 }}>#{totalCampaigns}</span>
@@ -874,15 +442,35 @@ export function CampaignListView({
               </button>
             ))}
           </div>
+          {/* Fold/expand left panel */}
+          <button
+            className="la-btn la-btn--soft la-btn--icon"
+            onClick={cycle}
+            title={leftPanelState === "full" ? "Compact panel" : leftPanelState === "compact" ? "Hide panel" : "Show panel"}
+          >
+            {leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
           <div className="flex-1" />
+          {/* Share — demo campaigns only */}
+          {selectedCampaign?.is_demo && <ShareButton campaign={selectedCampaign} />}
+          {/* Prompt panel — agency only */}
+          {isAgencyUser && (
+            <button
+              className={cn("la-btn la-btn--soft la-btn--icon", promptPanelOpen && "!text-brand-indigo !bg-brand-indigo/10")}
+              onClick={togglePromptPanel}
+              title="Prompt panel"
+            >
+              <FileText className="h-4 w-4" />
+            </button>
+          )}
           {/* Search */}
           <div className="relative shrink-0" style={{ width: 180 }}>
             <input
               value={listSearch}
               onChange={(e) => onListSearchChange(e.target.value)}
               placeholder={t("toolbar.searchPlaceholder", "Search...")}
-              className="la-input"
-              style={{ padding: '7px 10px 7px 28px', fontSize: 12 }}
+              className="neu-input"
+              style={{ paddingLeft: 28, paddingTop: 0, paddingBottom: 0, paddingRight: 10, height: 32, fontSize: 12 }}
             />
             <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1009,7 +597,6 @@ export function CampaignListView({
             <Plus className="h-4 w-4" />
           </button>
         </div>
-      )}
 
       {/* ── CONTENT ROW: left panel + right panel ─────────────────────── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -1021,170 +608,11 @@ export function CampaignListView({
           ? cn(isNarrow && selectedCampaign ? "hidden" : "flex", "lg:hidden")
           : isListCompact
             ? cn("w-[65px] shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
-            : cn("w-full lg:w-[356px] lg:shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
+            : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedCampaign ? "hidden" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
         {isListCompact && (
           <>
-            <CompactTabPopover
-              tabs={DETAIL_TABS.map((tab) => ({ id: tab.id, label: tab.label, icon: tab.icon }))}
-              activeId={detailTab}
-              onChange={(id) => onDetailTabChange(id as CampaignDetailTab)}
-            />
-            <div className="flex flex-col items-center gap-1 px-1.5 pb-2 shrink-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={cn(
-                      "h-9 w-9 rounded-full flex items-center justify-center transition-colors",
-                      (isFilterActive || isSortNonDefault || isGroupNonDefault || listSearch)
-                        ? "bg-brand-indigo/10 text-brand-indigo"
-                        : "text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
-                    )}
-                    title={t("toolbar.more", "More")}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start" className="w-56 max-h-[500px] overflow-y-auto">
-                  {/* Inline search */}
-                  <div className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-                    <div className={cn(
-                      "flex items-center h-8 px-2.5 gap-1.5 rounded-full border",
-                      listSearch ? "border-brand-indigo/40 bg-brand-indigo/5" : "border-black/[0.08] bg-muted/40"
-                    )}>
-                      <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <input
-                        value={listSearch}
-                        onChange={(e) => onListSearchChange(e.target.value)}
-                        placeholder={t("toolbar.searchPlaceholder", "Search campaigns...")}
-                        onKeyDown={(e) => { if (e.key === "Escape") onListSearchChange(""); }}
-                        className="flex-1 min-w-0 bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60"
-                      />
-                      {listSearch && (
-                        <button type="button" onClick={() => onListSearchChange("")} className="shrink-0 text-muted-foreground hover:text-foreground">
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-
-                  {/* Filter submenu */}
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                      <Filter className="h-3.5 w-3.5 shrink-0" />
-                      <span className="flex-1">{t("toolbar.filter")}</span>
-                      {isFilterActive && (
-                        <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                          {filterStatus.length + (filterAccount ? 1 : 0)}
-                        </span>
-                      )}
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-48 max-h-[400px] overflow-y-auto">
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[12px]">
-                          <span className="flex-1">{t("filter.status")}</span>
-                          {filterStatus.length > 0 && (
-                            <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>
-                          )}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-44">
-                          {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
-                            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "var(--mute-2)" }} />
-                              <span className="flex-1">{t(`statusLabels.${s}`, s)}</span>
-                              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                      {availableAccounts.length > 0 && (
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="text-[12px]">
-                            <span className="flex-1">{t("filter.account", "Account")}</span>
-                            {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="w-48 max-h-64 overflow-y-auto">
-                            <DropdownMenuItem onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }} className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}>
-                              <span className="flex-1">{t("filter.allAccounts", "All accounts")}</span>
-                              {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {availableAccounts.map((a) => (
-                              <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }} className={cn("text-[12px]", filterAccount === a && "font-semibold text-brand-indigo")}>
-                                <span className="flex-1 truncate">{a}</span>
-                                {filterAccount === a && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                      )}
-                      {isFilterActive && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">{t("filter.clearAllFilters", "Clear all filters")}</DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-
-                  {/* Sort submenu */}
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                      <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
-                      <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.sort")}</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-52">
-                      {(["recent", "name_asc", "name_desc", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
-                        <DropdownMenuItem key={s} onClick={() => onSortByChange(s)} className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}>
-                          {t(DETAIL_SORT_LABEL_KEYS[s])}
-                          {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-
-                  {/* Group submenu */}
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                      <Layers className="h-3.5 w-3.5 shrink-0" />
-                      <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.group", "Group")}</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-44">
-                      {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
-                        <DropdownMenuItem key={g} onClick={() => onGroupByChange(g)} className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}>
-                          {t(DETAIL_GROUP_LABEL_KEYS[g])}
-                          {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-
-                  {onShowDemoCampaignsChange && (
-                    <DropdownMenuItem
-                      onClick={(e) => { e.preventDefault(); onShowDemoCampaignsChange(showDemoCampaigns === null ? true : showDemoCampaigns === true ? false : null); }}
-                      className="flex items-center gap-2 text-[12px]"
-                    >
-                      <span className={cn("flex-1", showDemoCampaigns !== null && "text-brand-indigo font-semibold")}>
-                        {showDemoCampaigns === true ? "Demo only" : showDemoCampaigns === false ? "Hide demos" : t("config.showDemoCampaigns")}
-                      </span>
-                      {showDemoCampaigns === true && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      {showDemoCampaigns === false && <EyeOff className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  )}
-
-                  <DropdownMenuSeparator />
-
-                  {/* +Add */}
-                  <DropdownMenuItem onClick={onCreateCampaign} className="flex items-center gap-2 text-[12px]">
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    <span>{t("toolbar.add", "New campaign")}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
             <div ref={scrollContainerRef} className="flex-1 overflow-y-auto la-list-area">
               {loading ? (
                 <div className="flex items-center justify-center py-6"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
@@ -1215,6 +643,7 @@ export function CampaignListView({
             </div>
           </>
         )}
+
 
         {!isListCompact && <>
 
@@ -1558,9 +987,10 @@ export function CampaignListView({
             >
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
+                  const isFirstHeader = paginatedItems.findIndex((i) => i.kind === "header") === idx;
                   return (
                     <div key={`h-${item.label}`}>
-                      <GroupHeader label={item.label} count={item.count} />
+                      <GroupHeader label={item.label} count={item.count} isFirst={isFirstHeader} />
                     </div>
                   );
                 }
@@ -1623,7 +1053,7 @@ export function CampaignListView({
       />
 
       {/* ── MOBILE FILTER BOTTOM SHEET (< 768px) ────────────────────── */}
-      <CampaignFilterBottomSheet
+      <CampaignFilterSheet
         open={filterSheetOpen}
         onClose={() => setFilterSheetOpen(false)}
         sortBy={sortBy}
@@ -1638,7 +1068,7 @@ export function CampaignListView({
         onReset={onResetControls}
       />
 
-      {/* ── RIGHT PANEL: toolbar + detail view (desktop only) ───────── */}
+      {/* ── RIGHT PANEL ───────────────────────────────────────────────── */}
       <div ref={rightPanelRef} className={cn(
         "flex-1 flex-col overflow-hidden",
         mobileView === "list" ? "hidden md:flex" : "flex mobile-panel-enter"

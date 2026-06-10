@@ -115,14 +115,17 @@ export function LeadsListPanel({
   const { t } = useTranslation("leads");
   const filterOn = isFilterActive || filterStatus.length > 0 || filterTags.length > 0;
   return (
-    <div className={cn(
-      "flex flex-col bg-panel-list-bg rounded-b-lg overflow-hidden shadow-[var(--card-glow)]",
-      isHidden
-        ? "hidden"
-        : isCompact
-          ? "w-[65px] shrink-0"
-          : "w-full lg:w-[356px] lg:shrink-0"
-    )}>
+    <div
+      className={cn(
+        "flex flex-col bg-panel-list-bg overflow-hidden",
+        isHidden
+          ? "hidden"
+          : isCompact
+            ? "w-[65px] shrink-0"
+            : "w-full lg:w-[var(--toolbar-w)] lg:shrink-0"
+      )}
+      style={{ borderRight: "1px solid var(--line)" }}
+    >
 
       {isCompact && (
         <>
@@ -298,7 +301,7 @@ export function LeadsListPanel({
         </div>
       )}
       {/* Lead list — card list (pagination inside scroll area, below last card) */}
-      <div ref={scrollContainerRef} className={cn("la-list-area", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")}>
+      <div ref={scrollContainerRef} className={cn("la-list-area", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")} style={{ padding: "3px 6px" }}>
         {/* Pull-to-refresh indicator — mobile only */}
         <PullToRefreshIndicator pullDistance={leadsPullDistance} isRefreshing={leadsIsRefreshing} />
         {loading ? (
@@ -318,11 +321,11 @@ export function LeadsListPanel({
                 .map((item, i) => {
                   const selectedId = selectedLead ? getLeadId(selectedLead) : null;
                   return item.kind === "header" ? (
-                    <GroupHeader key={`h-${item.label}-${i}`} label={item.label} count={item.count} />
+                    <GroupHeader key={`h-${item.label}-${i}`} label={item.label} count={item.count} isFirst={i === 0} />
                   ) : (() => {
                     const lid = getLeadId(item.lead);
                     return (
-                    <div key={lid} data-lead-id={lid} className={i < 15 ? "animate-card-enter" : undefined} style={i < 15 ? { animationDelay: `${Math.min(i, 15) * 30}ms` } : undefined}>
+                    <div key={lid} data-lead-id={lid} className={i < 15 ? "animate-card-enter" : undefined} style={{ scrollMarginTop: 44, ...(i < 15 ? { animationDelay: `${Math.min(i, 15) * 30}ms` } : {}) }}>
                       <LeadListCard
                         lead={item.lead}
                         isActive={selectedId === getLeadId(item.lead)}

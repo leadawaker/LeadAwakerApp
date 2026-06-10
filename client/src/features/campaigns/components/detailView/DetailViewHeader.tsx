@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Zap, X, Camera, ImageIcon } from "lucide-react";
+import { Zap, X, Camera, ImageIcon, MessageCircle, Instagram, Mail, MessageSquare, Phone } from "lucide-react";
 import type { Campaign } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/avatarUtils";
@@ -142,20 +142,34 @@ export function DetailViewHeader({
     </div>
   );
 
-  const channelIcon = (campaign as any).channel && (
-    <img
-      src={`/logos/${(({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com")}.svg`}
-      alt={(campaign as any).channel}
-      className="h-[26px] w-[26px] object-contain shrink-0"
-    />
+  const CHANNEL_ICON_MAP: Record<string, React.ElementType> = {
+    whatsapp: MessageCircle,
+    instagram: Instagram,
+    email: Mail,
+    sms: MessageSquare,
+    phone: Phone,
+    voice: Phone,
+  };
+  const CHANNEL_LABEL_MAP: Record<string, string> = {
+    whatsapp: "WhatsApp",
+    instagram: "Instagram",
+    email: "Email",
+    sms: "SMS",
+    phone: "Phone",
+    voice: "Voice",
+  };
+  const rawChannel = (campaign as any).channel || (campaign as any).type;
+  // Normalize: "whatsapp_outbound" → "whatsapp"
+  const channelBase = rawChannel ? rawChannel.toLowerCase().replace(/_(outbound|inbound)$/, "") : null;
+  const ChannelIconComponent = channelBase ? (CHANNEL_ICON_MAP[channelBase] ?? null) : null;
+  const channelLabel = channelBase ? (CHANNEL_LABEL_MAP[channelBase] ?? channelBase) : null;
+
+  const channelIcon = ChannelIconComponent && (
+    <ChannelIconComponent className="h-[18px] w-[18px] shrink-0" style={{ color: "var(--ink-soft)" }} />
   );
 
-  const mobileChannelIcon = (campaign as any).channel && (
-    <img
-      src={`/logos/${(({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com")}.svg`}
-      alt={(campaign as any).channel}
-      className="h-[24px] w-[24px] object-contain shrink-0"
-    />
+  const mobileChannelIcon = ChannelIconComponent && (
+    <ChannelIconComponent className="h-[16px] w-[16px] shrink-0" style={{ color: "var(--ink-soft)" }} />
   );
 
   return (
@@ -318,7 +332,7 @@ export function DetailViewHeader({
 
       {/* Meta chips — always below title, spaced like the reference hero */}
       <div className="flex flex-wrap items-start" style={{ gap: 32, marginTop: 22 }}>
-        {(campaign as any).channel && renderMetaChip(t("meta.channel"), <span className="capitalize">{(campaign as any).channel}</span>, mobileChannelIcon)}
+        {channelLabel && renderMetaChip(t("meta.channel"), <span>{channelLabel}</span>, mobileChannelIcon)}
         {campaign.daily_lead_limit != null && renderMetaChip(t("meta.dailyLimit"),
           dailyStats != null ? `${dailyStats.sentToday} / ${campaign.daily_lead_limit}` : `${campaign.daily_lead_limit}`
         )}

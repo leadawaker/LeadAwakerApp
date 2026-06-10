@@ -345,7 +345,7 @@ export function ContactWidget({
               }}
               className="text-[12px] bg-transparent border border-dashed border-border/60 rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50 text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
             >
-              <option value="">{"2014"}</option>
+              <option value="">{"—"}</option>
               {accountCampaigns.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
             </select>
           </div>

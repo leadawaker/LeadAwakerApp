@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CONTRACT_STATUS_COLORS, formatCurrency } from "../types";
@@ -15,16 +14,25 @@ export function ContractCard({ contract, isSelected, onClick }: ContractCardProp
   const status = contract.status || "Draft";
   const colors = CONTRACT_STATUS_COLORS[status] || CONTRACT_STATUS_COLORS.Draft;
 
-  const formatFileSize = (bytes: number | null) => {
-    if (!bytes) return "";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const startDate = contract.start_date ? new Date(contract.start_date) : null;
   const endDate = contract.end_date ? new Date(contract.end_date) : null;
-  const formatShortDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+  const fmtShort = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+
+  // Date shown bottom-right: prefer signed date, else created date
+  const stampDate = contract.signed_at
+    ? new Date(contract.signed_at)
+    : contract.created_at
+      ? new Date(contract.created_at)
+      : null;
+
+  // Term sub-label (date range) shown in the middle row
+  const termLabel = startDate && endDate
+    ? `${fmtShort(startDate)} → ${fmtShort(endDate)}`
+    : startDate
+      ? t("contracts.card.from", { date: fmtShort(startDate) })
+      : endDate
+        ? t("contracts.card.until", { date: fmtShort(endDate) })
+        : null;
 
   // Derive contract value from deal_type / monetary fields
   const contractValue = (() => {
@@ -48,64 +56,92 @@ export function ContractCard({ contract, isSelected, onClick }: ContractCardProp
     <button
       type="button"
       onClick={onClick}
-      className={cn(
-        "w-full text-left rounded-xl px-2.5 pt-2.5 pb-2 transition-colors cursor-pointer",
-        isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-      )}
+      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.transform = "translateY(-1px)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+      className="w-full text-left flex items-center gap-3 cursor-pointer"
+      style={{
+        padding: "13px 16px",
+        borderRadius: "var(--r-card)",
+        background: "var(--card)",
+        boxShadow: isSelected
+          ? "var(--sh-raised-medium), 0 0 0 1.5px var(--wine)"
+          : "var(--sh-raised-crisp)",
+        transition: "box-shadow 130ms, transform 130ms",
+      }}
     >
-      <div className="flex items-start gap-2.5">
-        {/* File icon avatar */}
+      {/* Status-tinted file tile */}
+      <span
+        className="shrink-0 flex items-center justify-center"
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: "var(--r-surface)",
+          background: colors.bg,
+          color: colors.text,
+        }}
+      >
+        <FileText className="h-[18px] w-[18px]" />
+      </span>
+
+      <div className="flex-1 min-w-0">
+        {/* Title */}
         <div
-          className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center border border-black/[0.125]"
-          style={{ backgroundColor: colors.bg, color: colors.text }}
+          className="truncate"
+          style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}
         >
-          <FileText className="h-3.5 w-3.5" />
+          {contract.title || t("contracts.card.untitledContract")}
         </div>
-
-        <div className="flex-1 min-w-0">
-          {/* Row 1: Title */}
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[16px] font-semibold font-heading text-foreground truncate">
-              {contract.title || t("contracts.card.untitledContract")}
-            </span>
-            <span
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-              style={{ backgroundColor: colors.bg, color: colors.text }}
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.dot }} />
-              {t(`contracts.statusLabels.${status}`, status)}
-            </span>
-          </div>
-
-          {/* Row 2: Account + Value */}
-          <div className="flex items-center justify-between gap-1 mt-0.5">
-            <span className="text-[11px] text-muted-foreground truncate">
-              {contract.account_name || t("contracts.card.noAccount")}
-            </span>
-            {contractValue ? (
-              <span className="text-[11px] font-semibold text-foreground shrink-0 tabular-nums">
-                {contractValue}
+        {/* client • term */}
+        <div className="row mt-1" style={{ gap: 8 }}>
+          <span className="truncate" style={{ fontSize: 12, color: "var(--mute)" }}>
+            {contract.account_name || t("contracts.card.noAccount")}
+          </span>
+          {termLabel && (
+            <>
+              <span className="shrink-0" style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--mute-2)" }} />
+              <span
+                className="shrink-0"
+                style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute-2)", whiteSpace: "nowrap" }}
+              >
+                {termLabel}
               </span>
-            ) : contract.file_size ? (
-              <span className="text-[10px] text-muted-foreground/70 shrink-0">
-                {formatFileSize(contract.file_size)}
-              </span>
-            ) : null}
-          </div>
-
-          {/* Row 3: Date range */}
-          {(startDate || endDate) && (
-            <div className="text-[10px] text-muted-foreground/70 mt-1">
-              {startDate && endDate
-                ? `${formatShortDate(startDate)} → ${formatShortDate(endDate)}`
-                : startDate
-                  ? t("contracts.card.from", { date: formatShortDate(startDate) })
-                  : endDate
-                    ? t("contracts.card.until", { date: formatShortDate(endDate) })
-                    : ""
-              }
-            </div>
+            </>
           )}
+        </div>
+      </div>
+
+      {/* Right: serif value + date/status row */}
+      <div className="shrink-0 flex flex-col items-end" style={{ gap: 7 }}>
+        {contractValue && (
+          <span className="serif" style={{ fontSize: 22, color: "var(--ink)", lineHeight: 1 }}>
+            {contractValue}
+          </span>
+        )}
+        <div className="row" style={{ gap: 10 }}>
+          {stampDate && (
+            <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>
+              {fmtShort(stampDate)}
+            </span>
+          )}
+          <span
+            className="inline-flex items-center shrink-0"
+            style={{
+              gap: 6,
+              padding: "4px 10px",
+              borderRadius: "var(--r-pill)",
+              background: colors.bg,
+              color: colors.text,
+              fontFamily: "var(--mono)",
+              fontSize: 9,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: colors.dot, flexShrink: 0 }} />
+            {t(`contracts.statusLabels.${status}`, status)}
+          </span>
         </div>
       </div>
     </button>

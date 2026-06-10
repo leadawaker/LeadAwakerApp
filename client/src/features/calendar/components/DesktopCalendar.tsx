@@ -11,7 +11,6 @@ import {
 import { cn } from "@/lib/utils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
-import { SearchPill } from "@/components/ui/search-pill";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -110,8 +109,8 @@ function TopToolbar(p: DesktopCalendarProps) {
   );
 
   return (
-    <div style={{ height: 60, flexShrink: 0, padding: "0 14px", display: "flex", alignItems: "center", gap: 18 }}>
-      <span style={{ ...SERIF, fontSize: 27, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("title")}</span>
+    <div style={{ height: 60, flexShrink: 0, padding: "0 14px", background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18 }}>
+      <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("title")}</span>
 
       {/* Week / Month */}
       <div className="la-seg">
@@ -122,9 +121,33 @@ function TopToolbar(p: DesktopCalendarProps) {
         ))}
       </div>
 
-      {/* Search / Filter / Sort / Group / New */}
+      {/* KPI — meetings this week only */}
+      <div style={{ display: "flex", alignItems: "stretch", height: 44 }}>
+        <KpiChip value={String(meetingsThisWeek)} label={t("design.kpi.meetings")} />
+      </div>
+
+      <div style={{ flex: 1 }} />
+
+      {/* Search / Filter / Sort / Group / New — top-right, consistent with other pages */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <SearchPill value={p.searchQuery} onChange={p.setSearchQuery} open={p.searchOpen} onOpenChange={p.setSearchOpen} placeholder={t("search.placeholder")} />
+        {/* Search */}
+        <div style={{ position: "relative" }}>
+          <input
+            className="neu-input"
+            placeholder={t("search.placeholder")}
+            value={p.searchQuery}
+            onChange={e => p.setSearchQuery(e.target.value)}
+            style={{ paddingLeft: 32, paddingTop: 0, paddingBottom: 0, height: 32, fontSize: 12, width: 190 }}
+          />
+          <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--mute-2)", display: "flex", pointerEvents: "none" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          {p.searchQuery && (
+            <button onClick={() => p.setSearchQuery("")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--mute-2)", display: "flex", padding: 0 }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          )}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -194,14 +217,6 @@ function TopToolbar(p: DesktopCalendarProps) {
         />
       </div>
 
-      <div style={{ flex: 1 }} />
-
-      {/* KPIs — span to the right edge */}
-      <div style={{ display: "flex", alignItems: "stretch", height: 44 }}>
-        <KpiChip value={String(meetingsThisWeek)} label={t("design.kpi.meetings")} delta="+3" />
-        <KpiChip value="67%" label={t("design.kpi.attendance")} delta="+8%" />
-        <KpiChip value={String(highIntentThisWeek)} label={t("design.kpi.highIntent")} delta="+2" />
-      </div>
     </div>
   );
 }
@@ -262,6 +277,7 @@ function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boole
   const intent = intentFor(ev);
   const statusKey = ev.no_show ? "Lost" : (ev.status || "Contacted");
   const av = getLeadStatusAvatarColor(statusKey);
+  const initials = ev.lead_name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
   return (
     <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()} style={{
       position: "relative", cursor: "pointer", borderRadius: "var(--r-surface)", padding: "11px 12px 11px 14px",
@@ -269,7 +285,7 @@ function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boole
       transition: "box-shadow 130ms, background 130ms", display: "flex", gap: 11, alignItems: "center",
     }}>
       {active && <div style={{ position: "absolute", left: 0, top: 11, bottom: 11, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />}
-      <EntityAvatar name={ev.lead_name} bgColor={av.bg} textColor={av.text} size={36} />
+      <div style={{ width: 36, height: 36, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
         {ev.campaign_name && <div style={{ fontSize: 10.5, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
@@ -323,12 +339,29 @@ function AgendaList(p: DesktopCalendarProps) {
 // ════════════════════════════════════════════════════════════════════════════
 function CenterHeader(p: DesktopCalendarProps) {
   const { t } = p;
+  const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
+  const attendanceRate = 67; // placeholder
+  const highIntentThisWeek = useMemo(
+    () => p.appts.filter((a) => weekKeys.has(a.date) && intentFor(a).key === "high").length,
+    [p.appts, weekKeys],
+  );
   return (
     <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
       <button onClick={p.onToday} className="la-btn la-btn--soft" style={{ position: "absolute", left: 14 }}>{t("navigation.today")}</button>
       <button onClick={() => p.onNavigate(-1)} style={NAV_BTN} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></button>
       <span style={{ ...SERIF, fontSize: 24, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
       <button onClick={() => p.onNavigate(1)} style={NAV_BTN} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></button>
+      {/* Top-right stats: attendance + high intent */}
+      <div style={{ position: "absolute", right: 14, display: "flex", alignItems: "center", gap: 16, ...MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          <span style={{ color: "var(--mute-2)" }}>{t("design.kpi.attendance")}</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>{attendanceRate}%</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          <span style={{ color: "var(--mute-2)" }}>{t("design.kpi.highIntent")}</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>{highIntentThisWeek}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -551,14 +584,14 @@ function DetailPanel(p: DesktopCalendarProps) {
           <Sparkles className="h-2.5 w-2.5" />{t("design.bookedByAI")}
         </span>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={p.onOpenInLead} style={NAV_BTN} title={t("design.detail.openInLead")}><Maximize2 className="h-3.5 w-3.5" /></button>
+          <button onClick={() => { const leadId = ev.rawLead?.id ?? ev.rawLead?.Id; if (leadId) { try { localStorage.setItem("selected-lead-id", String(leadId)); localStorage.setItem("leadawaker-returnto", "/platform/calendar"); } catch {} window.location.href = "/platform/contacts"; } }} style={NAV_BTN} title={t("design.detail.openInLead")}><Maximize2 className="h-3.5 w-3.5" /></button>
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "18px 16px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px 16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
         {/* identity */}
         <div style={{ display: "flex", gap: 13, alignItems: "center" }}>
-          <EntityAvatar name={ev.lead_name} bgColor={av.bg} textColor={av.text} size={48} />
+          <div style={{ width: 48, height: 48, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{ev.lead_name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase()}</div>
           <div style={{ minWidth: 0 }}>
             <div style={{ ...SERIF, fontSize: 23, color: "var(--ink)", lineHeight: 1.1, letterSpacing: "-0.01em" }}>{ev.lead_name}</div>
             {ev.campaign_name && <div style={{ fontSize: 12, color: "var(--mute)", marginTop: 2 }}>{ev.campaign_name}</div>}
@@ -641,20 +674,20 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
   return (
     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
       <TopToolbar {...p} />
-      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 12, padding: "2px 12px 12px", overflow: "hidden" }}>
-        {/* LEFT — agenda */}
-        <div style={{ ...CARD_STYLE, width: 318, flexShrink: 0, background: "var(--bg-2)" }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden" }}>
+        {/* LEFT — agenda (flush toolbar, matches Leads list panel) */}
+        <div style={{ ...CARD_STYLE, width: 318, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
           <StatusTabs {...p} />
           <AgendaList {...p} />
         </div>
-        {/* CENTER — calendar */}
-        <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)" }}>
+        {/* CENTER — calendar (no rounded corners, flush edges) */}
+        <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)", borderRadius: 0 }}>
           <CenterHeader {...p} />
           {p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
           <Legend t={p.t} />
         </div>
-        {/* RIGHT — detail */}
-        <div style={{ ...CARD_STYLE, width: 372, flexShrink: 0 }}>
+        {/* RIGHT — detail (no rounded corners, equal top/bottom margin) */}
+        <div style={{ ...CARD_STYLE, width: 372, flexShrink: 0, borderRadius: 0, marginLeft: "auto" }}>
           <DetailPanel {...p} />
         </div>
       </div>

@@ -129,9 +129,9 @@ export function LeadsDesktopToolbar({
 }) {
   const { t } = useTranslation("leads");
   return (
-    <div className="shrink-0 flex items-center gap-3" style={{ height: 60, marginTop: "12px", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
+    <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
       <div className="flex items-baseline gap-2 shrink-0">
-        <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+        <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
       <div className="la-seg shrink-0">
@@ -257,14 +257,14 @@ export function LeadsDesktopToolbar({
         {isCompact ? <PanelLeft size={13} /> : <PanelLeftClose size={13} />}
       </button>
       <div className="flex-1 min-w-0" />
-      <div className="shrink-0 flex items-center gap-[5px]" style={{ borderLeft: "1px solid var(--line)", paddingLeft: "12px" }}>
+      <div className="shrink-0 flex items-center gap-[5px]">
       <div className="relative" style={{ width: 160 }}>
         <input
           value={listSearch}
           onChange={(e) => onListSearchChange(e.target.value)}
           placeholder={t("toolbar.searchPlaceholder")}
           className="la-input"
-          style={{ paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
+          style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
         />
         <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>

@@ -70,9 +70,9 @@
   --color-brand-indian-yellow: hsl(var(--brand-indian-yellow));
   --color-brand-indian-yellow-foreground: hsl(var(--brand-indian-yellow-foreground));
   /* Highlight tokens — active/selected state colors */
-  --color-highlight-active: hsl(var(--highlight-active));
-  --color-highlight-selected: hsl(var(--highlight-selected));
-  --color-highlight-hover: hsl(var(--highlight-hover));
+  --color-highlight-active: hsl(var(--highlight-active) / 0.62);
+  --color-highlight-selected: hsl(var(--highlight-selected) / 0.58);
+  --color-highlight-hover: hsl(var(--highlight-hover) / 0.70);
   /* Input field background — almost white in light, elevated in dark */
   --color-input-bg: hsl(var(--input-bg));
   /* Card hover — subtle tint when hovering non-selected cards */

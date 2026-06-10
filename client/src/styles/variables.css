@@ -8,9 +8,9 @@
   --bottombar-h: calc(64px + var(--safe-bottom));
 
   /* ── Grounds & Surfaces ── */
-  --background: 38 27% 88%;          /* #ECE7DD — warm bone page ground */
-  --foreground: 30 14% 10%;          /* #1F1A14 — warm near-black text */
-  --bg-main: 38 27% 88%;             /* matches background */
+  --background: 360 71% 99%;          /* #FEFCF9 — warm near-white page ground */
+  --foreground: 300 14% 10%;          /* #1F1A14 — warm near-black text */
+  --bg-main: 36 71% 99%;             /* matches background */
   --bg-2: 38 29% 85%;                /* #E4DCCC — sidebar / nav rail */
 
   --card: 0 0% 100%;                 /* #FFFFFF — white cards */
@@ -55,6 +55,7 @@
 
   /* ── Layout tokens ── */
   --panel-gap: 16px;
+  --toolbar-w: 300px;   /* default width of a page's list panel ("toolbar") — Leads/Campaigns/Prospects/etc. */
   --panel-shadow: var(--sh-raised-medium);
   --card-glow: var(--sh-raised-crisp);
   --card-shadow: var(--sh-raised-crisp);
@@ -89,23 +90,23 @@
   --brand-indian-yellow: 39 30% 96%;
   --brand-indian-yellow-foreground: 30 14% 10%;
 
-  /* Highlight tokens — wine tints for active/selected */
-  --highlight-active: 347 40% 87%;
-  --highlight-selected: 347 40% 87%;
-  --highlight-hover: 345 40% 80%;
+  /* Highlight tokens — warm amber tints for active/selected */
+  --highlight-active: 22 85% 88%;
+  --highlight-selected: 24 78% 90%;
+  --highlight-hover: 20 68% 83%;
   --input-bg: 38 27% 88%;
 
-  /* Sidebar */
-  --sidebar-bg: 40 53% 97%;          /* #FBF8F2 — matches --surface (main content) */
+  /* Sidebar rail (left nav) — stays dark */
+  --sidebar-bg: 38 32% 91%;          /* #EFEAE1 — topbar chrome (in-between warm cream) */
   --sidebar-foreground: 30 14% 10%;
   --sidebar-active: 346 43% 25%;
   --sidebar-active-foreground: 0 0% 100%;
 
-  /* Left list panel */
-  --panel-list-bg: 38 29% 85%;
+  /* Page toolbars (sticky header rows) — same in-between chrome */
+  --panel-list-bg: 38 32% 91%;
 
   /* ── Design System Tokens (used in inline styles / new components) ── */
-  --surface: #FBF8F2;                /* near-white raised chips/buttons */
+  --surface: #FEFCF9;                /* near-white raised chips/buttons */
   --paper: #FFFFFF;                   /* elevated paper / hero band */
   --card-bright: #FFFFFF;            /* polished hero card */
   --chrome: #E4DCCC;                 /* explicit alias for nav chrome */

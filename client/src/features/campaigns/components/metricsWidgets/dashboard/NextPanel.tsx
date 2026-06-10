@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Phone, Sparkles } from "lucide-react";
-import { PanelShell, SectionHead } from "../panelPrimitives";
+import { SectionHead } from "../panelPrimitives";
 import { upcomingCalls, type CallItem } from "./utils";
 
 function ChannelChip({ kind }: { kind: CallItem["kind"] }) {
@@ -53,7 +53,12 @@ export function NextPanel({ leads }: { leads: Record<string, any>[] }) {
   const future = calls.filter((c) => !c.isToday);
 
   return (
-    <PanelShell variant="raised" testId="campaign-detail-view-agenda" style={{ height: "100%" }}>
+    <div className="panel-glass-animate" style={{
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      padding: "20px 18px"
+    }} data-testid="campaign-detail-view-agenda">
       <SectionHead
         eyebrow={t("summary.eyebrows.callsHandoffs")}
         title={t("summary.next")}
@@ -88,6 +93,6 @@ export function NextPanel({ leads }: { leads: Record<string, any>[] }) {
           </>
         )}
       </div>
-    </PanelShell>
+    </div>
   );
 }

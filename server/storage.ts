@@ -310,10 +310,12 @@ export interface IStorage {
   deleteSubtask(id: number): Promise<boolean>;
   reorderSubtasks(taskId: number, subtaskIds: number[]): Promise<TaskSubtask[]>;
   getSubtaskCounts(): Promise<{ taskId: number; total: number; completed: number }[]>;
+  getCommentCounts(): Promise<{ taskId: number; count: number }[]>;
 
   // Task Comments
   getCommentsByTaskId(taskId: number): Promise<TaskComment[]>;
   createComment(data: InsertTaskComment): Promise<TaskComment>;
+  updateComment(id: number, body: string): Promise<TaskComment | undefined>;
   deleteComment(id: number): Promise<boolean>;
 
   // Task Attachments
@@ -829,6 +831,24 @@ export class DatabaseStorage implements IStorage {
       .from(automationLogs)
       .where(eq(automationLogs.accountsId, accountId))
       .orderBy(desc(automationLogs.createdAt));
+  }
+
+  async getSchedulerJobHealth() {
+    const result = await db.execute(sql`
+      SELECT
+        workflow_name,
+        MAX(created_at) as last_run_at,
+        (array_agg(status ORDER BY created_at DESC))[1] as last_status,
+        COUNT(*) FILTER (WHERE status = 'Failure' AND created_at > NOW() - INTERVAL '24 hours') as errors_24h
+      FROM "p2mxx34fvbf3ll6"."Automation_Logs"
+      GROUP BY workflow_name
+    `);
+    return result.rows as Array<{
+      workflow_name: string;
+      last_run_at: string | null;
+      last_status: string | null;
+      errors_24h: number;
+    }>;
   }
 
   async getAutomationLogsSummary(accountId?: number) {
@@ -1563,6 +1583,14 @@ export class DatabaseStorage implements IStorage {
     return rows.map(r => ({ taskId: r.taskId, total: Number(r.total), completed: Number(r.completed) }));
   }
 
+  async getCommentCounts(): Promise<{ taskId: number; count: number }[]> {
+    const rows = await db
+      .select({ taskId: taskComments.taskId, count: count(taskComments.id) })
+      .from(taskComments)
+      .groupBy(taskComments.taskId);
+    return rows.map(r => ({ taskId: r.taskId, count: Number(r.count) }));
+  }
+
   // ─── Task Comments ─────────────────────────────────────────────────────
 
   async getCommentsByTaskId(taskId: number): Promise<TaskComment[]> {
@@ -1571,6 +1599,11 @@ export class DatabaseStorage implements IStorage {
 
   async createComment(data: InsertTaskComment): Promise<TaskComment> {
     const [row] = await db.insert(taskComments).values(data as any).returning();
+    return row;
+  }
+
+  async updateComment(id: number, body: string): Promise<TaskComment | undefined> {
+    const [row] = await db.update(taskComments).set({ body }).where(eq(taskComments.id, id)).returning();
     return row;
   }
 

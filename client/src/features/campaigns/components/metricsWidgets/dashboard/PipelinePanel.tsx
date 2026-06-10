@@ -18,26 +18,30 @@ function Donut({ total, stages, size = 150, thickness = 20, hovered, onHover }: 
   const visible = stages.filter((s) => s.pct > 0);
   const hv = hovered ? stages.find((s) => s.key === hovered) : null;
   let offset = 0;
+  const overlapAmount = 3; // pixels of overlap to eliminate gaps
+
   return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0, margin: "0 auto" }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)", cursor: "pointer" }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg)" strokeWidth={thickness} />
-        {visible.map((s) => {
+        {visible.map((s, idx) => {
           const len = (s.pct / 100) * c;
           const active = hovered === s.key;
           const dimmed = hovered && !active;
+          // Extend segments slightly to eliminate gaps between them
+          const extendedLen = len + overlapAmount;
           const seg = (
             <circle key={s.key} cx={cx} cy={cy} r={r} fill="none"
-              stroke={s.color} strokeWidth={active ? thickness + 5 : thickness}
-              strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offset} strokeLinecap="butt"
-              opacity={dimmed ? 0.22 : 1} style={{ transition: "opacity 140ms, stroke-width 140ms" }}
+              stroke={s.color} strokeWidth={thickness}
+              strokeDasharray={`${extendedLen} ${c - extendedLen}`} strokeDashoffset={-offset}
+              opacity={dimmed ? 0.35 : 1} style={{ transition: "opacity 140ms" }}
               onMouseEnter={() => onHover(s.key)} onMouseLeave={() => onHover(null)} />
           );
-          offset += len + 2;
+          offset += len;
           return seg;
         })}
       </svg>
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "translateY(6px)" }}>
         {hv ? (
           <>
             <div className="eyebrow eyebrow-sm" style={{ color: hv.color }}>{hv.label}</div>
@@ -66,10 +70,10 @@ function Bars({ stages, hovered, onHover }: { stages: PipeStage[]; hovered: stri
           <div key={s.key}
             onMouseEnter={() => onHover(s.key)} onMouseLeave={() => onHover(null)}
             style={{
-              borderRadius: "var(--r-surface)", opacity: dimmed ? 0.25 : 1, transition: "opacity 140ms, box-shadow 140ms",
+              borderRadius: "var(--r-surface)", opacity: dimmed ? 0.25 : 1, transition: "opacity 140ms, box-shadow 140ms, background 140ms",
               ...(s.star
-                ? { background: "var(--warn-tint)", padding: "7px 10px", margin: "2px -10px", boxShadow: active ? `inset 0 0 0 1.5px ${s.color}` : "inset 0 0 0 1px rgba(196,138,47,0.28)" }
-                : { padding: "3px 6px", margin: "0 -6px", boxShadow: active ? `inset 0 0 0 1.5px ${s.color}55` : "none", background: active ? `${s.color}0f` : "transparent" }),
+                ? { background: "var(--warn-tint)", padding: "7px 10px", boxShadow: active ? `inset 0 0 0 1.5px ${s.color}` : "inset 0 0 0 1px rgba(196,138,47,0.28)" }
+                : { padding: "3px 6px", boxShadow: active ? `inset 0 0 0 1.5px ${s.color}55` : "none", background: active ? `${s.color}0f` : "transparent" }),
             }}>
             <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
               <span className="row" style={{ gap: 8, fontSize: 12, color: s.star ? "var(--ink)" : "var(--ink-soft)", fontWeight: s.star ? 700 : 400 }}>
@@ -131,10 +135,10 @@ export function PipelinePanel({ leads }: { leads: Record<string, any>[] }) {
 
   return (
     <PanelShell variant="flat" testId="campaign-detail-view-funnel" style={{ height: "100%", overflowY: "auto", minHeight: 0 }}>
-      <SectionHead eyebrow={t("summary.eyebrows.conversion")} title={t("summary.pipeline")} />
-      <div className="row" style={{ gap: 20, alignItems: "flex-start" }}>
+      <SectionHead eyebrow={t("summary.eyebrows.conversion")} title={t("summary.pipeline")} titleSize={32} />
+      <div className="pipeline-layout" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Donut total={pipe.total} stages={pipe.stages} hovered={hovered} onHover={setHovered} />
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
           <Bars stages={pipe.stages} hovered={hovered} onHover={setHovered} />
         </div>
       </div>

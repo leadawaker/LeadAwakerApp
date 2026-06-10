@@ -73,6 +73,20 @@
     "prev": "Vorige",
     "next": "Volgende"
   },
+  "health": {
+    "pageTitle": "Automatiseringsoverzicht",
+    "lastRun": "Laatste uitvoering",
+    "nextRun": "Volgende uitvoering",
+    "neverRun": "Nooit",
+    "engineDown": "Automatiseringsmotor niet bereikbaar — alle taken onbeschikbaar.",
+    "attentionRequired": "{{count}} taak/taken vereisen aandacht.",
+    "generatedAt": "Bijgewerkt om {{time}}",
+    "status": {
+      "healthy": "Actief",
+      "overdue": "Te laat",
+      "error": "Fout"
+    }
+  },
   "pipeline": {
     "executions": "Uitvoeringen",
     "selectExecution": "Selecteer een uitvoering om de pipeline te bekijken",

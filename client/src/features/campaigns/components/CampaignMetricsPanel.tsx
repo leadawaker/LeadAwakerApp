@@ -19,6 +19,7 @@ import { AISummaryWidget } from "./metricsWidgets";
 import { ABTestCard } from "./metricsWidgets";
 import { PerformancePanel } from "./metricsWidgets/dashboard/PerformancePanel";
 import { PipelinePanel } from "./metricsWidgets/dashboard/PipelinePanel";
+import { BumpsTodayPanel } from "./metricsWidgets/dashboard/BumpsTodayPanel";
 import { AIActivityPanel } from "./metricsWidgets/dashboard/AIActivityPanel";
 import { NextPanel } from "./metricsWidgets/dashboard/NextPanel";
 
@@ -44,6 +45,8 @@ export interface CampaignMetricsPanelProps {
   localAiSummary: string | null;
   localAiSummaryAt: string | null;
   compact?: boolean;
+  onRefreshSummary?: () => void;
+  isRefreshingSummary?: boolean;
 }
 
 // ── CampaignMetricsPanel ──────────────────────────────────────────────────────
@@ -54,6 +57,8 @@ export function CampaignMetricsPanel({
   localAiSummary,
   localAiSummaryAt,
   compact = false,
+  onRefreshSummary,
+  isRefreshingSummary,
 }: CampaignMetricsPanelProps) {
   const campaignId = campaign.id || (campaign as any).Id;
   const accountId = campaign.account_id || (campaign as any).Accounts_id;
@@ -69,7 +74,7 @@ export function CampaignMetricsPanel({
     <div className={cn("summary-root w-full flex flex-col")}>
 
       {/* AI Read strip — top, flat, full width */}
-      <AISummaryWidget summary={localAiSummary} generatedAt={localAiSummaryAt} />
+      <AISummaryWidget summary={localAiSummary} generatedAt={localAiSummaryAt} onRefresh={onRefreshSummary} isRefreshing={isRefreshingSummary} />
 
       {/*
         Responsive dashboard grid (container-query driven, see design-system.css):
@@ -88,18 +93,23 @@ export function CampaignMetricsPanel({
             <PipelinePanel leads={leadList} />
           </div>
           <div className="summary-cell summary-cell--rail">
-            <NextPanel leads={leadList} />
+            <AIActivityPanel campaign={campaign} accountId={accountId} />
           </div>
           <div className="summary-cell summary-cell--rail">
-            <AIActivityPanel campaign={campaign} accountId={accountId} />
+            <NextPanel leads={leadList} />
           </div>
         </div>
       </div>
 
-      {/* A/B test panel (rare) — full width below the grid when enabled */}
-      {abEnabled && (
-        <ABTestCard campaign={campaign} mockStats={isDemoMode ? DEMO_AB_STATS : undefined} />
-      )}
+      {/* Bumps Today + A/B test — full width row */}
+      <div style={{ display: "flex", gap: 16, width: "100%", marginTop: 24 }}>
+        <div style={{ flex: "1.2 1 0", minWidth: 0 }}>
+          <BumpsTodayPanel campaign={campaign} />
+        </div>
+        <div style={{ flex: "2 1 0", minWidth: 0 }}>
+          <ABTestCard campaign={campaign} mockStats={isDemoMode ? DEMO_AB_STATS : undefined} />
+        </div>
+      </div>
     </div>
   );
 }

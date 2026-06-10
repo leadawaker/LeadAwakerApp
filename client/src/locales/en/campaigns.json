@@ -1,11 +1,9 @@
 {
   "title": "Campaigns",
-
   "views": {
     "list": "List",
     "table": "Table"
   },
-
   "toolbar": {
     "add": "Add",
     "sort": "Sort",
@@ -15,7 +13,7 @@
     "fields": "Fields",
     "showHideColumns": "Show / Hide Columns",
     "resetToDefault": "Reset to default",
-    "searchPlaceholder": "Search campaigns\u2026",
+    "searchPlaceholder": "Search campaigns…",
     "changeStatus": "Change Status",
     "duplicate": "Duplicate",
     "delete": "Delete",
@@ -24,14 +22,13 @@
     "activate": "Activate",
     "refresh": "Refresh",
     "save": "Save",
-    "saving": "Saving\u2026",
+    "saving": "Saving…",
     "cancel": "Cancel",
     "close": "Close",
     "openPrompt": "Prompt",
     "closePrompt": "Close Prompt",
     "promptPanel": "Prompt Editor"
   },
-
   "columns": {
     "name": "Name",
     "status": "Status",
@@ -49,22 +46,19 @@
     "end": "End",
     "lastModified": "Last Modified"
   },
-
   "groupBy": {
     "status": "Status",
     "account": "Account",
     "type": "Type",
     "none": "None"
   },
-
   "sortOptions": {
     "recent": "Most Recent",
-    "nameAsc": "Name A \u2192 Z",
-    "nameDesc": "Name Z \u2192 A",
+    "nameAsc": "Name A → Z",
+    "nameDesc": "Name Z → A",
     "leadsDesc": "Most Leads",
     "responseDesc": "Best Response"
   },
-
   "filter": {
     "status": "Status",
     "account": "Account",
@@ -73,7 +67,6 @@
     "apply": "Apply",
     "reset": "Reset"
   },
-
   "statusLabels": {
     "Active": "Active",
     "Paused": "Paused",
@@ -84,48 +77,41 @@
     "Draft": "Draft",
     "Unknown": "Unknown"
   },
-
   "confirm": {
     "yes": "Yes",
     "no": "No",
     "deleteConfirm": "Delete?"
   },
-
   "empty": {
     "noCampaignsFound": "No campaigns found",
     "tryDifferentSearch": "Try a different search",
     "noMatchSearch": "No campaigns match your search",
     "selectCampaign": "Select a campaign",
     "selectCampaignDesc": "Click any campaign on the left to see its performance, configuration, and message templates.",
-    "chooseFromList": "\u2190 Choose from the list"
+    "chooseFromList": "← Choose from the list"
   },
-
   "pagination": {
     "previous": "Previous",
     "next": "Next",
-    "rangeOf": "{{start}}\u2013{{end}} of {{total}}"
+    "rangeOf": "{{start}}–{{end}} of {{total}}"
   },
-
   "card": {
     "leads": "Leads",
     "response": "Response",
     "booked": "Booked",
     "started": "Started {{date}}"
   },
-
   "detail": {
     "panelHide": "Hide detail panel",
     "panelShow": "Show detail panel",
     "unnamed": "Unnamed Campaign",
     "campaignNumber": "#{{number}}"
   },
-
   "tabs": {
     "summary": "Summary",
     "configurations": "Settings",
     "tags": "Tags"
   },
-
   "summary": {
     "eyebrows": {
       "performance": "Performance",
@@ -182,7 +168,7 @@
     "noAnalysisYet": "No analysis yet",
     "generate": "Generate",
     "regenerate": "Regenerate",
-    "generating": "Generating\u2026",
+    "generating": "Generating…",
     "groqApiKeyMissing": "Groq API key not configured. Add GROQ_API_KEY to .env.",
     "generateFailed": "Failed to generate summary. Try again.",
     "networkError": "Network error. Try again.",
@@ -190,7 +176,6 @@
     "financials": "Financials",
     "roiTrend": "ROI Trend"
   },
-
   "financials": {
     "dealType": "Deal Type",
     "totalSpend": "Total Spend",
@@ -201,7 +186,7 @@
     "returnOnInvestment": "Return on Investment",
     "aiTokens": "AI Tokens Used",
     "aiCost": "AI Cost (USD)",
-    "linkContractPrompt": "Link a contract in Config \u2192",
+    "linkContractPrompt": "Link a contract in Config →",
     "est": "est.",
     "dealTypes": {
       "retainer": "Retainer",
@@ -216,7 +201,6 @@
       "meeting_held": "Meeting Held"
     }
   },
-
   "config": {
     "configuration": "Configuration",
     "campaignName": "Campaign Name",
@@ -240,7 +224,7 @@
     "buyingSignalResponsePlaceholder": "Custom AI response when a lead shows buying intent (e.g. 'Let me check my schedule and call you right back')",
     "buyingSignalResponseDefault": "Default: AI will say it's checking its agenda and call back shortly",
     "deal": "Deal",
-    "noneLinked": "\u2014 None linked",
+    "noneLinked": "— None linked",
     "valuePerBooking": "Value / Booking",
     "model": "Model",
     "temperature": "Temperature",
@@ -287,9 +271,19 @@
     "optOutNotice": "Opt-out Notice in First Message",
     "accountId": "Account",
     "showDemoCampaigns": "Show Demo Campaigns",
-    "language": "Language"
+    "language": "Language",
+    "sections": {
+      "business": "Business",
+      "businessTitle": "Business Setup",
+      "businessDesc": "Campaign identity, niche, and client details",
+      "ai": "AI",
+      "aiTitle": "AI Settings",
+      "aiDesc": "Prompt, model, persona, and conversation style",
+      "behavior": "Behavior",
+      "behaviorTitle": "Behavior",
+      "behaviorDesc": "Scheduling, limits, channel, and booking rules"
+    }
   },
-
   "meta": {
     "owner": "Owner",
     "channel": "Channel",
@@ -301,7 +295,6 @@
     "duration": "{{count}} day",
     "duration_plural": "{{count}} days"
   },
-
   "panel": {
     "performance": "Performance",
     "trends": "Trends",
@@ -355,7 +348,6 @@
       "roi": "ROI"
     }
   },
-
   "tags": {
     "loadingTags": "Loading tags...",
     "failedToLoadTags": "Failed to load tags",
@@ -380,7 +372,6 @@
     "category": "Category",
     "allCategories": "All Categories",
     "clearAllFilters": "Clear all filters",
-
     "pageTitle": "Tags",
     "viewList": "List",
     "viewCards": "Cards",
@@ -429,7 +420,6 @@
     "confirmYes": "Yes",
     "confirmNo": "No"
   },
-
   "photo": {
     "dialogTitle": "Campaign Photo",
     "hue": "Hue",
@@ -439,7 +429,6 @@
     "removeLogo": "Remove logo",
     "clickToChange": "Click to change photo"
   },
-
   "relativeTime": {
     "justNow": "Just now",
     "hoursAgo": "{{count}}h ago",
@@ -448,7 +437,6 @@
     "weeksAgo": "{{count}}w ago",
     "monthsAgo": "{{count}}mo ago"
   },
-
   "funnelStages": {
     "new": "New",
     "contacted": "Contacted",
@@ -460,7 +448,6 @@
     "lost": "Lost",
     "dnd": "DND"
   },
-
   "abTesting": {
     "title": "A/B Test",
     "variantA": "Variant A",
@@ -480,12 +467,10 @@
     "splitRatio": "B Variant %",
     "split": "Split"
   },
-
   "copy": "Copy",
-
   "tagsPage": {
     "title": "Tags",
-    "searchPlaceholder": "Search tags\u2026",
+    "searchPlaceholder": "Search tags…",
     "allCategories": "All Categories",
     "tagsInCategories": "{{tagCount}} tags in {{catCount}} categories",
     "createTag": "Create Tag",
@@ -500,9 +485,9 @@
       "category": "Category",
       "categoryPlaceholder": "e.g. Status, Behavior, Source",
       "description": "Description",
-      "descriptionPlaceholder": "Brief description of this tag\u2026",
+      "descriptionPlaceholder": "Brief description of this tag…",
       "cancel": "Cancel",
-      "creating": "Creating\u2026",
+      "creating": "Creating…",
       "create": "Create Tag"
     },
     "editDialog": {
@@ -513,17 +498,17 @@
       "category": "Category",
       "categoryPlaceholder": "e.g. Status, Behavior, Source",
       "description": "Description",
-      "descriptionPlaceholder": "Brief description of this tag\u2026",
+      "descriptionPlaceholder": "Brief description of this tag…",
       "cancel": "Cancel",
-      "saving": "Saving\u2026",
+      "saving": "Saving…",
       "saveChanges": "Save Changes"
     },
     "deleteDialog": {
       "title": "Delete Tag",
       "confirmMessage": "Are you sure you want to delete the tag",
-      "warningMessage": "This action cannot be undone. Leads that currently have this tag will not lose it \u2014 only the tag definition will be removed.",
+      "warningMessage": "This action cannot be undone. Leads that currently have this tag will not lose it — only the tag definition will be removed.",
       "cancel": "Cancel",
-      "deleting": "Deleting\u2026",
+      "deleting": "Deleting…",
       "delete": "Delete Tag"
     },
     "sidePanel": {

@@ -97,11 +97,15 @@ export function DetailViewBody({
     <>
       {/* ── Body ── */}
       <div
-        className="relative flex-1 px-[3px] pb-[3px] -mt-[80px] pt-[83px] overflow-y-auto flex flex-col gap-[3px]"
-        style={activeTab === "summary" ? {
-          maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
-        } : undefined}
+        className="relative flex-1 pb-[3px] -mt-[80px] pt-[83px] overflow-y-auto flex flex-col gap-[3px]"
+        style={{
+          paddingLeft: activeTab === "configurations" ? 'var(--space-xl)' : 3,
+          paddingRight: activeTab === "configurations" ? 'var(--space-xl)' : 3,
+          ...(activeTab === "summary" ? {
+            maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+          } : {}),
+        }}
       >
         {activeTab === "summary" && (
           <CampaignMetricsPanel
@@ -111,6 +115,8 @@ export function DetailViewBody({
             localAiSummary={detail.localAiSummary}
             localAiSummaryAt={detail.localAiSummaryAt}
             compact={compact}
+            onRefreshSummary={detail.refreshAiSummary}
+            isRefreshingSummary={detail.refreshingSummary}
           />
         )}
 

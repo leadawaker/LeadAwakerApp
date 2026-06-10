@@ -477,6 +477,20 @@
     },
     "deleteConfirm": "Delete {{count}} contract? This cannot be undone.",
     "deleteConfirmPlural": "Delete {{count}} contracts? This cannot be undone.",
+    "stats": {
+      "activeValue": "Active Value",
+      "awaitingSignature": "Awaiting Signature",
+      "signed": "Signed",
+      "drafts": "Drafts"
+    },
+    "timeline": {
+      "title": "Signature status",
+      "drafted": "Drafted",
+      "sent": "Sent for signature",
+      "signed": "Signed",
+      "active": "Active",
+      "pending": "Pending"
+    },
     "signwell": {
       "sendForSignature": "Send for Signature",
       "sendViaSignWell": "Send for e-Signature via SignWell",

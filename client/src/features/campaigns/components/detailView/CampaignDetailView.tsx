@@ -385,7 +385,7 @@ export function CampaignDetailView({
 
 
       {/* ── Header outer wrapper ── */}
-      <div className="shrink-0 relative z-10" style={{ padding: 'var(--space-sm)' }}>
+      <div className="shrink-0 relative z-10" style={{ padding: 'var(--space-sm) var(--space-xl)' }}>
         <div className="relative px-6 pt-6 pb-7 space-y-3 w-full" style={{
           borderRadius: 'var(--r-panel)',
           border: '1px solid var(--line)',

@@ -305,7 +305,10 @@ export function LeadListCard({
       <div
         className={cn("la-camp-card group/card", isActive && "active", leftFlash && "bg-muted/60")}
         style={{
+          padding: '10px 10px 10px 11px',
           alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          rowGap: 5,
           transform: `translateX(${swipeX - swipeLeft}px)`,
           transition: (isReleasing || isReleasingLeft) ? "transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)" : "none",
           zIndex: 1,
@@ -392,45 +395,6 @@ export function LeadListCard({
             </span>
           </div>
 
-          {/* Chat peek — 3rd line when chats mode is on */}
-          {showPeek && peekText && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1, minWidth: 0 }}>
-              <span
-                style={{
-                  fontFamily: "'Geist Mono', ui-monospace, monospace",
-                  fontSize: 7.5,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  fontWeight: 700,
-                  color: peekIsInbound ? 'var(--good)' : 'var(--wine)',
-                  background: peekIsInbound ? 'var(--good-tint)' : 'var(--wine-tint)',
-                  borderRadius: 'var(--r-pill)',
-                  padding: '1px 5px',
-                  flexShrink: 0,
-                  maxWidth: 68,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
-              </span>
-              <span
-                style={{
-                  fontSize: 9,
-                  color: 'var(--ink-soft)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  flex: 1,
-                  minWidth: 0,
-                }}
-              >
-                {peekText}
-              </span>
-            </div>
-          )}
-
           {/* Contact info — revealed on hover */}
           <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-24 opacity-100">
             <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100">
@@ -454,15 +418,51 @@ export function LeadListCard({
           </div>
         </div>
 
-        {/* Right column: date + score donut */}
+        {/* Right column: date (top-aligned with name) + score donut */}
         <div className="shrink-0 flex flex-col items-end gap-1.5" style={{ paddingTop: 1 }}>
           {lastActivity && (
-            <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60">
+            <span className="text-[9px] tabular-nums leading-none text-muted-foreground/60">
               {formatRelativeTime(lastActivity, t)}
             </span>
           )}
           {score > 0 && <ScoreArcDonut score={score} />}
         </div>
+
+        {/* Chat peek — full-width row below, left-aligned with the avatar (chats mode) */}
+        {showPeek && peekText && (
+          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <span
+              style={{
+                fontFamily: "'Geist Mono', ui-monospace, monospace",
+                fontSize: 7.5,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                color: peekIsInbound ? 'var(--good)' : 'var(--wine)',
+                background: peekIsInbound ? 'var(--good-tint)' : 'var(--wine-tint)',
+                borderRadius: 'var(--r-pill)',
+                padding: '1px 5px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                color: 'var(--ink-soft)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {peekText}
+            </span>
+          </div>
+        )}
 
       </div>
 

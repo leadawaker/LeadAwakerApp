@@ -101,7 +101,9 @@ Read this file to locate any component without running grep/glob searches.
 | Component | File | Notes |
 |-----------|------|-------|
 | CampaignsPage | `pages/CampaignsPage.tsx` | Feature page — split-pane |
-| CampaignListView | `components/CampaignListView.tsx` | Left panel card list |
+| CampaignListView | `components/CampaignListView.tsx` | Left panel card list + top bar |
+| CampaignListCard | `components/CampaignListCard.tsx` | CampaignListCard, GroupHeader, ListSkeleton |
+| CampaignFilterSheet | `components/CampaignFilterSheet.tsx` | Mobile filter bottom sheet |
 | CampaignDetailView | `components/CampaignDetailView.tsx` | Right panel — Summary/Config/Tags tabs |
 | CampaignDetailPanel | `components/CampaignDetailPanel.tsx` | Slide-over panel variant |
 | CampaignsInlineTable | `components/CampaignsInlineTable.tsx` | Table view |
@@ -286,26 +288,20 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 
 | Component | File | Notes |
 |-----------|------|-------|
-| TasksPage | `pages/TasksPage.tsx` | Feature page — all view modes, toolbar, filters |
-| ViewSwitcher | `components/ViewSwitcher.tsx` | Tab switcher: kanban/table/tree/list/simple-daily/gantt |
-| TasksKanbanView | `components/TasksKanbanView.tsx` | Drag-drop kanban by status |
-| TasksTableView | `components/TasksTableView.tsx` | Column-based table with group headers |
-| TasksInlineTable | `components/TasksInlineTable.tsx` | Inline-editable data table |
-| TasksTreeView | `components/TasksTreeView.tsx` | Hierarchical tree with expand/collapse, category colors |
-| TasksVisualTree | `components/TasksVisualTree.tsx` | Visual tree with connector lines |
-| TasksListView | `components/TasksListView.tsx` | Simple list with category/time badges |
-| TasksGanttView | `components/TasksGanttView.tsx` | Gantt chart — left tree panel + right timeline |
-| SimpleDailyView | `components/SimpleDailyView.tsx` | Daily focus view |
-| TaskCard | `components/TaskCard.tsx` | Kanban card with emoji/category |
-| CategorySidebar | `components/CategorySidebar.tsx` | Left sidebar — category filter |
-| TaskCreatePanel | `components/TaskCreatePanel.tsx` | Task creation form (desktop) |
-| TaskDetailPanel | `components/TaskDetailPanel.tsx` | Task detail slide-over |
+| TasksPage | `pages/TasksPage.tsx` | Thin orchestrator — data/SSE, mobile vs desktop switch |
+| DesktopTasksView | `components/DesktopTasksView.tsx` | Desktop: top-bar controls + merged board/calendar + shared drag + detail modal |
+| MobileTasksView | `components/MobileTasksView.tsx` | Mobile: agenda/board views + mobile panels |
+| TasksBoardView | `components/TasksBoardView.tsx` | Kanban columns by status (droppable; drag handled by parent) |
+| TasksBoardCard | `components/TasksBoardCard.tsx` | Kanban/board task card |
+| TasksWeekCalendar | `components/TasksWeekCalendar.tsx` | Compact week agenda (droppable days); exports week date helpers |
+| TaskDetailPanel | `components/TaskDetailPanel.tsx` | Task detail (glass modal on desktop) |
+| TaskDetailSections | `components/TaskDetailSections.tsx` | Comments / attachments / subtasks sections |
 | MobileTaskCreatePanel | `components/MobileTaskCreatePanel.tsx` | Task creation (mobile) |
 | MobileTaskDetailPanel | `components/MobileTaskDetailPanel.tsx` | Task detail (mobile) |
-| MobileTaskListCard | `components/MobileTaskListCard.tsx` | Task card for mobile list |
-| ProgressChart | `components/ProgressChart.tsx` | Task completion progress chart |
+| MobileTaskListCard | `components/MobileTaskListCard.tsx` | Mobile task cards + `MTAvatar`/`MTGroupBar`/date helpers |
+| taskViewUtils | `lib/taskViewUtils.ts` | Shared `loadLocal`/`saveLocal`/`applyDesktopFilter`/`AVATAR_BG`/`DesktopFilter` |
 | TagVisibilityContext | `context/TagVisibilityContext.tsx` | Tag visibility toggle state |
-| types | `types.ts` | `Task`, `VIEW_MODES`, `ViewMode`, `STATUS_COLORS`, category types |
+| types | `types.ts` | `Task`, `ViewMode`, `STATUS_COLORS`, sort/category types |
 
 ---
 

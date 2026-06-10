@@ -160,6 +160,15 @@
     "deletePrompt": "Delete prompt",
     "clickToToggle": "Click to {{action}}"
   },
+  "tabs": {
+    "system": "System",
+    "campaigns": "Campaigns"
+  },
+  "editor": {
+    "raw": "Raw",
+    "sections": "Sections",
+    "variables": "Variables"
+  },
   "time": {
     "justNow": "Just now",
     "hoursAgo": "{{count}}h ago",

@@ -2,6 +2,7 @@
 // checkbox selection, bulk stage/delete actions, and peek/bulk UI flags.
 // Extracted from LeadsCardViewMain.tsx to keep that component focused.
 import { useState, useCallback } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { bulkUpdateLeads, bulkDeleteLeads } from "../../api/leadsApi";
 
 export function useLeadsListControls(onRefresh?: () => void) {
@@ -61,7 +62,7 @@ export function useLeadsListControls(onRefresh?: () => void) {
   }, [selectedLeadIds, onRefresh]);
 
   // ── Chats peek toggle (Feature A) + bulk UI flags ───────────────────────
-  const [peekOn, setPeekOn] = useState(false);
+  const [peekOn, setPeekOn] = usePersistedState("leads-list-peek-on", false);
   const [bulkStageOpen, setBulkStageOpen] = useState(false);
   const [bulkCampaignOpen, setBulkCampaignOpen] = useState(false);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);

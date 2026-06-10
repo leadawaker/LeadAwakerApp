@@ -472,12 +472,23 @@ export function ScoreArcDonut({ score }: { score: number }) {
 
 // ── Group header ───────────────────────────────────────────────────────────────
 // Matches spec: horizontal line above + eyebrow label with count
-export function GroupHeader({ label, count }: { label: string; count: number }) {
+export function GroupHeader({ label, count, isFirst }: { label: string; count: number; isFirst?: boolean }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 4px 2px' }}>
-      <div className="rule" />
-      <span className="eyebrow eyebrow-sm">{label} — {count}</span>
-    </div>
+    <>
+      {/* Divider stays in normal flow so it scrolls away — only the label bar pins */}
+      {!isFirst && <div className="rule" style={{ margin: '10px 9px 0 11px' }} />}
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 5,
+          background: 'hsl(var(--panel-list-bg))',
+          padding: isFirst ? '2px 9px 6px 11px' : '8px 9px 6px 11px',
+        }}
+      >
+        <span className="eyebrow eyebrow-sm">{label} — {count}</span>
+      </div>
+    </>
   );
 }
 

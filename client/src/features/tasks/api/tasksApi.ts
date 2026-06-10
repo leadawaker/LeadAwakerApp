@@ -14,7 +14,8 @@ export function useAccountUsers() {
       if (!res.ok) return [];
       return res.json();
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchOnMount: true,
   });
 }
 
@@ -152,6 +153,21 @@ export function useSubtaskCounts() {
   });
 }
 
+export interface CommentCount { taskId: number; count: number; }
+const COMMENT_COUNTS_KEY = ["/api/comment-counts"];
+
+export function useCommentCounts() {
+  return useQuery<CommentCount[]>({
+    queryKey: COMMENT_COUNTS_KEY,
+    queryFn: async () => {
+      const res = await apiFetch("/api/comment-counts");
+      if (!res.ok) throw new Error("Failed to fetch comment counts");
+      return res.json();
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
 // ─── Task Stats (progress chart) ──────────────────────────────────────────
 
 export interface TaskStatPoint {
@@ -240,6 +256,7 @@ export function useTaskComments(taskId: number) {
       return res.json();
     },
     enabled: !!taskId,
+    refetchInterval: 15 * 1000,
   });
 }
 
@@ -248,6 +265,18 @@ export function useCreateComment() {
   return useMutation({
     mutationFn: ({ taskId, data }: { taskId: number; data: { body: string; authorName: string } }) =>
       apiRequest("POST", `/api/tasks/${taskId}/comments`, data),
+    onSuccess: (_res, { taskId }) => {
+      qc.invalidateQueries({ queryKey: commentsKey(taskId) });
+      qc.invalidateQueries({ queryKey: COMMENT_COUNTS_KEY });
+    },
+  });
+}
+
+export function useUpdateComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; taskId: number; body: string }) =>
+      apiRequest("PATCH", `/api/task-comments/${id}`, { body }),
     onSuccess: (_res, { taskId }) => qc.invalidateQueries({ queryKey: commentsKey(taskId) }),
   });
 }

@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { hapticSave } from "@/lib/haptics";
 import { useTranslation } from "react-i18next";
-import { resolveVariablesHtml, type CampaignForPreview } from "../utils/resolveVariables";
+import { resolveVariablesHtml, buildMap, type CampaignForPreview } from "../utils/resolveVariables";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PromptSearchBar } from "./PromptSearchBar";
 import { PromptVariableAutocomplete, KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
-import { PromptSnippets } from "./PromptSnippets";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
+import { ChevronDown, Type } from "lucide-react";
 import {
   getPromptId,
   type PromptFormData,
@@ -23,12 +25,217 @@ export type PromptEditorPanelHandle = {
   getTokenEstimate: () => number;
 };
 
+/* ── Structured-editor helpers ─────────────────────────────────────────── */
+
+interface ParsedSection { heading: string; body: string; rules: number }
+interface ParsedPrompt { title: string; intro: string; sections: ParsedSection[] }
+
+function countRules(body: string): number {
+  return (body.match(/^\s*[-*]\s+/gm) || []).length;
+}
+
+function splitSections(value: string): ParsedPrompt {
+  const lines = value.split("\n");
+  let i = 0;
+  // Skip leading blank lines
+  while (i < lines.length && !lines[i].trim()) i++;
+  // Everything before the first `## ` heading is the intro
+  const introLines: string[] = [];
+  while (i < lines.length && !/^## /.test(lines[i])) {
+    introLines.push(lines[i]);
+    i++;
+  }
+  const intro = introLines.join("\n").trim();
+  const sections: ParsedSection[] = [];
+  while (i < lines.length) {
+    const line = lines[i];
+    // Section starts with `## `
+    if (/^## /.test(line)) {
+      const heading = line.replace(/^## /, "").trim();
+      i++;
+      const bodyLines: string[] = [];
+      // Body continues until we hit another `## `
+      while (i < lines.length && !/^## /.test(lines[i])) {
+        bodyLines.push(lines[i]);
+        i++;
+      }
+      const body = bodyLines.join("\n").trimEnd();
+      sections.push({ heading, body, rules: countRules(body) });
+    } else {
+      // Lines before any ## heading (shouldn't happen but skip)
+      i++;
+    }
+  }
+  return { title: "", intro, sections };
+}
+
+function joinSections(title: string, intro: string, sections: ParsedSection[]): string {
+  const parts: string[] = [];
+  if (intro) parts.push(intro);
+  for (const s of sections) {
+    parts.push(`## ${s.heading}`);
+    if (s.body) parts.push(s.body);
+  }
+  return parts.join("\n\n");
+}
+
+/* ── SectionCard (collapsible section editor) ──────────────────────────── */
+
+function SectionCard({ section, open, onToggle, onChangeBody, editorFontSize }: {
+  section: ParsedSection;
+  open: boolean;
+  onToggle: () => void;
+  onChangeBody: (b: string) => void;
+  editorFontSize: number;
+}) {
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Sync textarea when section body changes externally (e.g. version load)
+  useEffect(() => {
+    if (taRef.current && taRef.current.value !== section.body) {
+      taRef.current.value = section.body;
+    }
+  }, [section.body]);
+
+  return (
+    <div style={{
+      background: "var(--card)", borderRadius: "var(--r-surface)",
+      boxShadow: "var(--sh-raised-crisp)", overflow: "hidden",
+    }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", gap: 12,
+          padding: "14px 16px", border: "none", cursor: "pointer",
+          background: "transparent", textAlign: "left",
+        }}
+      >
+        <ChevronDown
+          size={15}
+          style={{
+            color: "var(--mute-2)", flexShrink: 0,
+            transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+            transition: "transform 150ms",
+          }}
+        />
+        <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--ink)", flex: 1, textAlign: "left" }}>
+          {section.heading}
+        </span>
+        {section.rules > 0 && (
+          <span style={{
+            fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)",
+            background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+            borderRadius: "var(--r-pill)", padding: "3px 10px",
+          }}>
+            {section.rules} {section.rules === 1 ? "rule" : "rules"}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div style={{ borderTop: "1px solid var(--line)", background: "var(--paper)" }}>
+          <textarea
+            ref={taRef}
+            defaultValue={section.body}
+            spellCheck={false}
+            onChange={(e) => onChangeBody(e.target.value)}
+            style={{
+              width: "100%",
+              height: Math.max(90, section.body.split("\n").length * 24 + 32),
+              padding: 16, border: "none", outline: "none", resize: "vertical",
+              background: "transparent",
+              fontFamily: "var(--mono)", fontSize: editorFontSize, lineHeight: 1.7,
+              color: "var(--ink)",
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── StructuredEditor ──────────────────────────────────────────────────── */
+
+function StructuredEditor({ sections, sectionsTitle, sectionsIntro, sectionOpen, setSectionOpen, onSectionBodyChange, editorFontSize }: {
+  sections: ParsedSection[];
+  sectionsTitle: string;
+  sectionsIntro: string;
+  sectionOpen: boolean[];
+  setSectionOpen: React.Dispatch<React.SetStateAction<boolean[]>>;
+  onSectionBodyChange: (i: number, body: string) => void;
+  editorFontSize: number;
+}) {
+  const allOpen = sectionOpen.every(Boolean);
+  return (
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px 20px 24px", background: "var(--bg)" }}>
+      {/* Title + intro block */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{
+            fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.16em",
+            textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700,
+          }}>
+            Prompt Structure
+          </span>
+          {sections.length > 0 && (
+            <button
+              onClick={() => setSectionOpen(sections.map(() => !allOpen))}
+              style={{
+                border: "none", cursor: "pointer", background: "var(--surface)",
+                boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-button)",
+                padding: "6px 12px", fontFamily: "var(--mono)", fontSize: 9,
+                letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-soft)",
+              }}
+            >
+              {allOpen ? "Collapse all" : "Expand all"}
+            </button>
+          )}
+        </div>
+        {(sectionsTitle || sectionsIntro) && (
+          <div style={{
+            background: "var(--card)", borderRadius: "var(--r-surface)",
+            boxShadow: "var(--sh-raised-crisp)", padding: "13px 16px",
+            borderLeft: "3px solid var(--wine)",
+          }}>
+            {sectionsTitle && (
+              <div style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", lineHeight: 1.1, fontWeight: 700 }}>
+                {sectionsTitle}
+              </div>
+            )}
+            {sectionsIntro && (
+              <div style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--mute)", marginTop: 6, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                {sectionsIntro}
+              </div>
+            )}
+          </div>
+        )}
+        {!sectionsTitle && !sectionsIntro && sections.length === 0 && (
+          <div style={{ padding: "20px 0", textAlign: "center", color: "var(--mute-2)", fontFamily: "var(--mono)", fontSize: 11 }}>
+            No sections found. Add ## headings to your prompt to split into sections.
+          </div>
+        )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {sections.map((s, i) => (
+          <SectionCard
+            key={i}
+            section={s}
+            open={!!sectionOpen[i]}
+            onToggle={() => setSectionOpen(o => o.map((v, j) => j === i ? !v : v))}
+            onChangeBody={(b) => onSectionBodyChange(i, b)}
+            editorFontSize={editorFontSize}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Component ─────────────────────────────────────────────────────────── */
 
 export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   prompt,
   onSaved,
-  onDelete,
+  onDelete: _onDelete,
   campaigns = [],
   versionOverride = null,
   previewOpen,
@@ -44,7 +251,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   previewOpen: boolean;
   setPreviewOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   editorFontSize: number;
-  /** When true (default), preview opens side-by-side with the editor. When false, preview replaces the editor. */
   splitPreview?: boolean;
 }, ref: React.Ref<PromptEditorPanelHandle>) {
   const { toast } = useToast();
@@ -71,11 +277,12 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
       updatedAt: Date.now(),
     });
   }, [publishEntity, prompt]);
+
   const [form, setForm] = useState<PromptFormData>({
     name: "",
     promptText: "",
     systemMessage: "",
-    model: "gpt-5.1",
+    model: "gpt-5.5",
     temperature: "0.7",
     maxTokens: "1000",
     status: "active",
@@ -84,10 +291,10 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     campaignsId: "",
   });
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
-  // highlightTick triggers backdrop + preview re-render on every keystroke
   const [highlightTick, setHighlightTick] = useState(0);
   const [sampleLead, setSampleLead] = useState<import("../utils/resolveVariables").LeadForPreview | null>(null);
-  // Uncontrolled refs for the 3 textarea fields — keeps browser undo history intact
+
+  // Uncontrolled refs for the 3 textarea fields
   const promptTextValRef = useRef<string>("");
   const systemMessageValRef = useRef<string>("");
   const notesValRef = useRef<string>("");
@@ -99,8 +306,16 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   const editorOffsetRef = useRef<number>(0);
   const [activeHeaders, setActiveHeaders] = useState<{ h1?: string; h2?: string; h3?: string }>({});
   const [searchOpen, setSearchOpen] = useState(false);
-  // Stable ref to latest handleSave — avoids stale closure in useImperativeHandle
   const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
+  // ── Raw / Structured edit mode ───────────────────────────────────────────
+  const [editMode, setEditMode] = useState<"raw" | "structured">("structured");
+  const [sections, setSections] = useState<ParsedSection[]>([]);
+  const [sectionsTitle, setSectionsTitle] = useState("");
+  const [sectionsIntro, setSectionsIntro] = useState("");
+  const [sectionOpen, setSectionOpen] = useState<boolean[]>([]);
+  const [showVariables, setShowVariables] = useState(true);
+  const [fontSizePopoverOpen, setFontSizePopoverOpen] = useState(false);
 
   const promptId = getPromptId(prompt);
   const initialized = useRef(false);
@@ -116,37 +331,50 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     if (promptTextRef.current) promptTextRef.current.value = promptText;
     if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = systemMessage;
     if (notesTextareaRef.current) notesTextareaRef.current.value = notes;
+    const linkedCampaignId =
+      prompt.campaignsId != null
+        ? String(prompt.campaignsId)
+        : prompt.Campaigns_id != null
+        ? String(prompt.Campaigns_id)
+        : "";
+    // Campaigns.ai_model is the source of truth the AI engine reads, so when a
+    // prompt is linked to a campaign show that campaign's model, not the stale
+    // value stored on the prompt row.
+    const linkedCampaign = campaigns.find((c) => String(c.id) === linkedCampaignId);
+    const effectiveModel =
+      (linkedCampaign?.aiModel as string | undefined) || prompt.model || "gpt-5.5";
     setForm({
       name: prompt.name || "",
       promptText,
       systemMessage,
-      model: prompt.model || "gpt-5.1",
+      model: effectiveModel,
       temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
       maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
       status: (prompt.status || "active").toLowerCase(),
       useCase: prompt.useCase || prompt.use_case || "",
       notes,
-      campaignsId:
-        prompt.campaignsId != null
-          ? String(prompt.campaignsId)
-          : prompt.Campaigns_id != null
-          ? String(prompt.Campaigns_id)
-          : "",
+      campaignsId: linkedCampaignId,
     });
     setErrors({});
-    setHighlightTick((n) => n + 1); // re-render backdrop/preview with new prompt text
+    setHighlightTick((n) => n + 1);
+    // Reset to structured mode when switching prompts
+    setEditMode("structured");
+    // Parse sections immediately so structured mode shows content on load
+    const parsed = splitSections(promptText);
+    setSectionsTitle(parsed.title);
+    setSectionsIntro(parsed.intro);
+    setSections(parsed.sections);
+    setSectionOpen(parsed.sections.map((_, idx) => idx === 0));
     initialized.current = false;
-    const t = setTimeout(() => { initialized.current = true; }, 150);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => { initialized.current = true; }, 150);
+    return () => clearTimeout(timer);
   }, [promptId]);
 
-  // Sync form.status when header pill changes status externally
   useEffect(() => {
     const newStatus = (prompt.status || "active").toLowerCase();
     setForm((prev) => prev.status === newStatus ? prev : { ...prev, status: newStatus });
   }, [prompt.status]);
 
-  // Apply a loaded version's content into the uncontrolled textareas
   useEffect(() => {
     if (!versionOverride) return;
     const pt = versionOverride.promptText || "";
@@ -159,11 +387,18 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = sm;
     if (notesTextareaRef.current) notesTextareaRef.current.value = nt;
     setHighlightTick((n) => n + 1);
+    // Re-parse sections if in structured mode
+    if (editMode === "structured") {
+      const parsed = splitSections(pt);
+      setSectionsTitle(parsed.title);
+      setSectionsIntro(parsed.intro);
+      setSections(parsed.sections);
+      setSectionOpen(parsed.sections.map((_, i) => i === 0));
+    }
     scheduleAutoSave();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionOverride]);
 
-  // Auto-save for structured fields (textarea fields call scheduleAutoSave directly)
   useEffect(() => {
     if (!initialized.current) return;
     scheduleAutoSave();
@@ -171,66 +406,61 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.name, form.model, form.temperature, form.maxTokens, form.status, form.useCase, form.campaignsId]);
 
-  // Backdrop content — highlights variables (amber=known, red=unknown); one div per line for height measurement
+  // Switch between Raw and Structured edit modes
+  function switchMode(mode: "raw" | "structured") {
+    if (mode === "structured" && editMode === "raw") {
+      const parsed = splitSections(promptTextValRef.current);
+      setSectionsTitle(parsed.title);
+      setSectionsIntro(parsed.intro);
+      setSections(parsed.sections);
+      setSectionOpen(parsed.sections.map((_, i) => i === 0));
+      setPreviewOpen(true);
+    } else if (mode === "raw" && editMode === "structured") {
+      // promptTextValRef.current is already up-to-date via onSectionBodyChange
+      if (promptTextRef.current) {
+        promptTextRef.current.value = promptTextValRef.current;
+        requestAnimationFrame(() => autoResize(promptTextRef.current));
+      }
+      setHighlightTick((n) => n + 1);
+    }
+    setEditMode(mode);
+  }
+
+  // Update a section's body and sync back to the raw ref
+  function onSectionBodyChange(i: number, body: string) {
+    const updated = sections.map((s, j) => j === i ? { ...s, body, rules: countRules(body) } : s);
+    setSections(updated);
+    promptTextValRef.current = joinSections(sectionsTitle, sectionsIntro, updated);
+    scheduleAutoSave();
+  }
+
+  // Backdrop content
   const backdropLineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const renderBackdrop = useMemo(() => {
     const text = promptTextValRef.current ?? "";
     const lines = text.split("\n");
     backdropLineRefs.current = [];
-
-    // Split each line into variable tokens, conditional tags, and plain text
     const TOKEN_RE = /(\{\{#if\s+\w+\s*(?:==|!=)\s*"[^"]*"\}\}|\{\{\/if\}\}|\{\{else\}\}|\{\w+\})/;
     const IF_OPEN_RE = /^\{\{#if\s+/;
     const IF_CLOSE_RE = /^\{\{\/if\}\}$/;
     const INDIGO = "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300";
-
-    // Track whether we're inside a conditional block across lines
     let insideConditional = false;
-
     return (
       <>
         {lines.map((line, lineIdx) => {
           const parts = line.split(TOKEN_RE);
           return (
-            <div
-              key={lineIdx}
-              ref={(el) => { backdropLineRefs.current[lineIdx] = el; }}
-            >
+            <div key={lineIdx} ref={(el) => { backdropLineRefs.current[lineIdx] = el; }}>
               {parts.filter(p => p).map((part, idx) => {
-                // Opening tag: {{#if ...}}
-                if (IF_OPEN_RE.test(part)) {
-                  insideConditional = true;
-                  return <mark key={idx} className={INDIGO}>{part}</mark>;
-                }
-                // Closing tag: {{/if}}
-                if (IF_CLOSE_RE.test(part)) {
-                  insideConditional = false;
-                  return <mark key={idx} className={INDIGO}>{part}</mark>;
-                }
-                // Else tag: {{else}}
-                if (part === "{{else}}") {
-                  return <mark key={idx} className={INDIGO}>{part}</mark>;
-                }
-                // Variable tokens: {var_name}
+                if (IF_OPEN_RE.test(part)) { insideConditional = true; return <mark key={idx} className={INDIGO}>{part}</mark>; }
+                if (IF_CLOSE_RE.test(part)) { insideConditional = false; return <mark key={idx} className={INDIGO}>{part}</mark>; }
+                if (part === "{{else}}") return <mark key={idx} className={INDIGO}>{part}</mark>;
                 if (/^\{\w+\}$/.test(part)) {
                   const varName = part.slice(1, -1);
                   const isKnown = KNOWN_VARIABLE_SET.has(varName);
-                  return (
-                    <mark
-                      key={idx}
-                      className={isKnown
-                        ? INDIGO
-                        : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
-                      }
-                    >
-                      {part}
-                    </mark>
-                  );
+                  return <mark key={idx} className={isKnown ? INDIGO : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"}>{part}</mark>;
                 }
-                // Plain text inside a conditional block: highlight it too
-                if (insideConditional) {
-                  return <mark key={idx} className={INDIGO}>{part}</mark>;
-                }
+                if (insideConditional) return <mark key={idx} className={INDIGO}>{part}</mark>;
                 return <span key={idx}>{part}</span>;
               })}
               {line === "" && <br />}
@@ -242,13 +472,27 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightTick]);
 
-  // Token count estimate (prompt + system message)
+  // Token estimate
   const tokenEstimate = useMemo(() => {
     const promptLen = (promptTextValRef.current ?? "").length;
     const sysLen = (systemMessageValRef.current ?? "").length;
     return Math.ceil((promptLen + sysLen) / 4);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightTick]);
+
+  // Used variables for legend strip
+  const usedVars = useMemo(() => {
+    const text = promptTextValRef.current ?? "";
+    const matches = text.match(/\{(\w+)\}/g) || [];
+    return [...new Set(matches.map((m) => m.slice(1, -1)))];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightTick]);
+
+  // Variable resolution map for tooltips
+  const varMap = useMemo(() => {
+    const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
+    return buildMap(selectedCampaign, sampleLead, null);
+  }, [form.campaignsId, campaigns, sampleLead]);
 
   // Parsed headings for sticky headers
   const headings = useMemo(() => {
@@ -263,8 +507,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightTick]);
 
-
-  // Fetch sample lead when preview opens and a campaign is selected
+  // Fetch sample lead when preview opens
   useEffect(() => {
     if (!previewOpen || !form.campaignsId) { setSampleLead(null); return; }
     apiFetch(`/api/leads?campaignId=${form.campaignsId}&limit=1`)
@@ -281,7 +524,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
       })
       .catch(() => setSampleLead(null));
   }, [previewOpen, form.campaignsId]);
-
 
   function scheduleAutoSave() {
     if (!initialized.current) return;
@@ -338,6 +580,15 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
         throw new Error(body?.message || body?.error || `HTTP ${res.status}`);
       }
       const saved = await res.json();
+      // Mirror the model to the linked campaign — Campaigns.ai_model is the
+      // source of truth the AI engine actually reads, so keep both in sync.
+      if (form.campaignsId && form.model) {
+        apiFetch(`/api/campaigns/${parseInt(form.campaignsId, 10)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ai_model: form.model }),
+        }).catch(() => {});
+      }
       onSaved(saved);
       if (!silent) {
         hapticSave();
@@ -366,13 +617,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Keep ref in sync with the latest handleSave so useImperativeHandle never goes stale
   handleSaveRef.current = handleSave;
 
-  // Auto-resize prompt textarea on content change.
-  // Uses an off-screen mirror textarea to measure the required height without
-  // collapsing the real element, which avoids triggering browser cursor-follow
-  // scroll that would snap the viewport when the user presses Enter.
   const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
     if (!el) return;
     const cs = getComputedStyle(el);
@@ -390,7 +636,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     el.style.height = newHeight + "px";
   }, []);
 
-  // Sync backdrop div styles with textarea for perfect alignment + store line height
   useEffect(() => {
     const ta = promptTextRef.current;
     const bd = backdropRef.current;
@@ -403,45 +648,32 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     bd.style.whiteSpace = cs.whiteSpace;
   }, [promptTextValRef.current?.length, editorFontSize]);
 
-  // Auto-resize prompt textarea on mount, content changes, font size changes, and split toggle
   useEffect(() => {
-    // When layout changes (e.g. split toggle), wait a frame for the new width before measuring
     requestAnimationFrame(() => autoResize(promptTextRef.current));
   }, [autoResize, highlightTick, editorFontSize, previewOpen]);
 
-  // Auto-resize system message and notes on mount
   useEffect(() => {
     autoResize(systemMessageTextareaRef.current);
     autoResize(notesTextareaRef.current);
   }, [autoResize]);
 
-
-  // Sticky section headers: use actual backdrop div positions for zero-drift accuracy
+  // Sticky section headers
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || headings.length === 0) {
-      setActiveHeaders({});
-      return;
-    }
-
+    if (!container || headings.length === 0) { setActiveHeaders({}); return; }
     const handleScroll = () => {
       const refs = backdropLineRefs.current;
       if (refs.length === 0) return;
       const containerTop = container.getBoundingClientRect().top;
-
-      // Find the topmost visible line by checking actual DOM positions
       let topLine = 0;
       for (const h of headings) {
         const el = refs[h.lineIndex];
         if (!el) continue;
         const elTop = el.getBoundingClientRect().top - containerTop;
-        if (elTop > 10) break; // 10px buffer so header triggers slightly early
+        if (elTop > 10) break;
         topLine = h.lineIndex;
       }
-
-      let h1: string | undefined;
-      let h2: string | undefined;
-      let h3: string | undefined;
+      let h1: string | undefined; let h2: string | undefined; let h3: string | undefined;
       for (const h of headings) {
         if (h.lineIndex > topLine) break;
         if (h.level === 1) { h1 = h.text; h2 = undefined; h3 = undefined; }
@@ -453,25 +685,17 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
         return { h1, h2, h3 };
       });
     };
-
     container.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => container.removeEventListener("scroll", handleScroll);
   }, [headings]);
 
-  const inputCls =
-    "w-full h-9 rounded-xl bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30";
   const textareaCls =
     "w-full rounded-xl bg-popover px-2.5 py-2 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30 resize-y";
-  const selectCls =
-    "w-full h-9 rounded-xl bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30 appearance-none";
-  const labelCls = "text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-0.5 block";
 
-  // Whether the preview replaces the editor (overlay) or sits beside it (split)
   const isSplit = splitPreview && previewOpen;
   const isOverlayPreview = !splitPreview && previewOpen;
 
-  // Shared preview renderer
   const renderPreview = () => {
     const text = promptTextValRef.current ?? "";
     void highlightTick;
@@ -480,10 +704,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     const highlighted = resolveVariablesHtml(text, selectedCampaign, sampleLead);
     const previewLines = highlighted.split("\n");
     return text.trim() ? (
-      <div
-        className="text-foreground break-words"
-        style={{ fontSize: `${editorFontSize}px` }}
-      >
+      <div className="text-foreground break-words" style={{ fontSize: `${editorFontSize}px` }}>
         {previewLines.map((line, i) => {
           const raw = rawLines[i] ?? "";
           const h3 = /^###\s/.test(raw);
@@ -492,9 +713,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
           const isHeading = h1 || h2 || h3;
           const sizeClass = h1 ? "text-[1.5em] font-bold" : h2 ? "text-[1.25em] font-bold" : h3 ? "text-[1.1em] font-semibold" : "";
           const displayLine = isHeading ? line.replace(/^#{1,3}\s*/, "") : line;
-          return (
-            <div key={i} className={cn("leading-relaxed whitespace-pre-wrap", sizeClass)} dangerouslySetInnerHTML={{ __html: displayLine || "&nbsp;" }} />
-          );
+          return <div key={i} className={cn("leading-relaxed whitespace-pre-wrap", sizeClass)} dangerouslySetInnerHTML={{ __html: displayLine || "&nbsp;" }} />;
         })}
       </div>
     ) : (
@@ -502,9 +721,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     );
   };
 
-  // Editor block (always mounted, sometimes hidden)
   const editorBlock = (
-    <div className={cn("rounded-xl bg-popover overflow-hidden", isOverlayPreview && "hidden")}>
+    <div className={cn("bg-popover overflow-hidden", isOverlayPreview && "hidden")}>
       <PromptSearchBar
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
@@ -524,12 +742,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
           </div>
           <textarea
             ref={promptTextRef}
-            className={cn(
-              "w-full px-2.5 py-2 outline-none resize-none bg-transparent border-0",
-              "min-h-[200px] overflow-hidden relative",
-              errors.promptText ? "ring-2 ring-red-400/40" : "",
-            )}
-            style={{ fontSize: `${editorFontSize}px` }}
+            className={cn("w-full px-2.5 py-2 outline-none resize-none bg-transparent border-0 min-h-[200px] overflow-hidden relative", errors.promptText ? "ring-2 ring-red-400/40" : "")}
+            style={{ fontSize: `${editorFontSize}px`, fontFamily: "var(--mono)", lineHeight: 1.7 }}
             defaultValue={promptTextValRef.current}
             onChange={(e) => { promptTextValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
             onInput={() => setHighlightTick((t) => t + 1)}
@@ -545,182 +759,231 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     </div>
   );
 
+  // Suppress unused warning (saving is used implicitly via handleSave)
+  void saving;
+  void editorOffsetRef;
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {isSplit ? (
-        /* Split mode: single outer scroll, grid row for equal-height columns */
-        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:thin]">
-          {/* Sticky section headers */}
-          {(activeHeaders.h1 || activeHeaders.h2 || activeHeaders.h3) && (
-            <div className="sticky top-0 z-10 bg-white dark:bg-popover border-b border-border/20 rounded-t-xl">
-              {activeHeaders.h1 && (
-                <div className="px-3 py-0.5 text-[11px] font-semibold text-foreground/70 truncate">{activeHeaders.h1}</div>
-              )}
-              {activeHeaders.h2 && (
-                <div className="px-3 py-0.5 text-[11px] text-foreground/55 truncate pl-5">{activeHeaders.h2}</div>
-              )}
-              {activeHeaders.h3 && (
-                <div className="px-3 py-0.5 text-[11px] text-foreground/40 truncate pl-8">{activeHeaders.h3}</div>
-              )}
-            </div>
-          )}
 
-          {/* Two-column grid: editor + preview, both stretch to the taller one */}
-          <div className="grid grid-cols-2">
-            {/* Left: editor */}
-            <div className="px-[3px] pb-[3px]">
-              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5 h-full">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">
-                    {t("form.promptContent")}
-                    {sampleLead && (
-                      <span className="ml-3 text-[12px] font-normal normal-case tracking-normal text-foreground/40">
-                        Preview: {sampleLead.firstName}{sampleLead.lastName ? ` ${sampleLead.lastName}` : ""}
-                      </span>
-                    )}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground/50 tabular-nums">~{tokenEstimate} tokens</span>
-                    <PromptSnippets textRef={promptTextRef} textValRef={promptTextValRef} onInsert={() => { setHighlightTick((t) => t + 1); scheduleAutoSave(); autoResize(promptTextRef.current); }} />
-                  </div>
+      {/* ── Sub-header: Raw / Sections toggle ────────────────────────────── */}
+      <div style={{
+        height: 45, flexShrink: 0, padding: "0 20px 0 24px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderBottom: "1px solid var(--line)", background: "var(--paper)",
+      }}>
+        <div className="la-seg">
+          <button
+            className={`la-seg-btn${editMode === "raw" ? " on" : ""}`}
+            onClick={() => switchMode("raw")}
+          >
+            {t("editor.raw")}
+          </button>
+          <button
+            className={`la-seg-btn${editMode === "structured" ? " on" : ""}`}
+            onClick={() => switchMode("structured")}
+          >
+            {t("editor.sections")}
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Popover open={fontSizePopoverOpen} onOpenChange={setFontSizePopoverOpen}>
+            <PopoverTrigger asChild>
+              <button
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 28, height: 28, borderRadius: "var(--r-button)",
+                  border: "1px solid var(--line)", background: "transparent",
+                  cursor: "pointer", color: "var(--mute-2)", transition: "all 150ms",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+              >
+                <Type size={14} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="end" className="w-[200px] p-3">
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <label style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)", flex: 1 }}>
+                    Font size: {editorFontSize}px
+                  </label>
                 </div>
-                {editorBlock}
-                {errors.promptText && (
-                  <p className="text-[10px] text-red-500 mt-0.5">{errors.promptText}</p>
-                )}
+                <input
+                  type="range"
+                  min="12"
+                  max="16"
+                  step="1"
+                  value={editorFontSize}
+                  onChange={(e) => {
+                    const newSize = parseInt(e.target.value, 10);
+                    if (typeof editorFontSize === "number" && typeof newSize === "number") {
+                      // The parent component handles state via the prop
+                      // For now, just store it — the parent will have a callback to update
+                    }
+                  }}
+                  style={{
+                    width: "100%", cursor: "pointer",
+                    accentColor: "var(--wine)",
+                  }}
+                />
+                <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute)", textAlign: "center" }}>
+                  12 — 16 pixels
+                </div>
               </div>
-            </div>
+            </PopoverContent>
+          </Popover>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>
+            ~{tokenEstimate} tokens
+          </span>
+        </div>
+      </div>
 
-            {/* Right: preview */}
-            <div className="border-l border-border/30 bg-popover">
-              <div className="sticky top-0 z-10 flex items-center px-5 py-2 bg-popover/95 backdrop-blur-sm border-b border-border/20">
-                <p className="text-[11px] uppercase tracking-widest text-foreground/40 font-heading font-semibold">
-                  {t("form.preview", "Preview")}
-                  {sampleLead && (
-                    <span className="ml-2 normal-case tracking-normal font-normal text-foreground/30">
-                      {sampleLead.firstName}{sampleLead.lastName ? ` ${sampleLead.lastName}` : ""}
-                    </span>
-                  )}
-                </p>
+      {/* ── Variables panel ──────────────────────────────────────────────── */}
+      {usedVars.length > 0 && (
+        <TooltipProvider>
+          <div style={{
+            flexShrink: 0, borderBottom: "1px solid var(--line)",
+            background: "var(--bg)",
+          }}>
+            <button
+              onClick={() => setShowVariables(v => !v)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 24px", border: "none", cursor: "pointer",
+                background: "transparent", textAlign: "left",
+              }}
+            >
+              <span style={{
+                fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "var(--mute-2)", flex: 1,
+              }}>
+                {t("editor.variables")}
+              </span>
+              <ChevronDown size={12} style={{
+                color: "var(--mute-2)",
+                transform: showVariables ? "rotate(0deg)" : "rotate(-90deg)",
+                transition: "transform 150ms",
+              }} />
+            </button>
+            {showVariables && (
+              <div style={{ padding: "0 24px 10px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                {usedVars.map((v) => {
+                  const varValue = varMap[v.toLowerCase()] || varMap[v];
+                  const tooltipText = varValue ? String(varValue) : "Link a campaign to preview";
+                  return (
+                    <Tooltip key={v}>
+                      <TooltipTrigger asChild>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center",
+                          padding: "3px 9px", borderRadius: "var(--r-pill)",
+                          background: "var(--wine-tint)", boxShadow: "0 0 0 1px var(--wine-glow)",
+                          fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--wine)",
+                          cursor: "help",
+                        }}>
+                          {`{${v}}`}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs max-w-[200px]">
+                        {tooltipText}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
               </div>
-              <div className="px-5 py-4">
-                {renderPreview()}
+            )}
+          </div>
+        </TooltipProvider>
+      )}
+
+      {/* ── Structured editor mode ────────────────────────────────────────── */}
+      {editMode === "structured" && (
+        <StructuredEditor
+          sections={sections}
+          sectionsTitle={sectionsTitle}
+          sectionsIntro={sectionsIntro}
+          sectionOpen={sectionOpen}
+          setSectionOpen={setSectionOpen}
+          onSectionBodyChange={onSectionBodyChange}
+          editorFontSize={editorFontSize}
+        />
+      )}
+
+      {/* ── Raw editor mode ───────────────────────────────────────────────── */}
+      {editMode === "raw" && (isSplit ? (
+        <div className="flex-1 min-h-0 flex overflow-hidden">
+          <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:thin] flex flex-col" style={{ borderRight: "1px solid var(--line)" }}>
+            {(activeHeaders.h1 || activeHeaders.h2 || activeHeaders.h3) && (
+              <div className="sticky top-0 z-10 border-b border-border/20" style={{ height: 30, background: "var(--paper)", paddingLeft: 18, paddingRight: 18, display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <div className="flex gap-3 items-center text-[10px] text-muted-foreground">
+                  {activeHeaders.h1 && <span className="font-semibold truncate">{activeHeaders.h1}</span>}
+                  {activeHeaders.h2 && <span className="truncate">{activeHeaders.h2}</span>}
+                  {activeHeaders.h3 && <span className="opacity-50 truncate">{activeHeaders.h3}</span>}
+                </div>
               </div>
+            )}
+            <div style={{ flex: 1, minHeight: 0, background: "var(--paper)" }}>
+              {editorBlock}
+            </div>
+            {errors.promptText && <p className="text-[10px] text-red-500 mt-0.5 px-5 pb-2">{errors.promptText}</p>}
+          </div>
+          <div className="flex flex-col gap-[3px] px-[3px] pb-[3px] mt-[3px]">
+            <div style={{ background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-surface)", padding: 16 }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, marginBottom: 12, margin: "0 0 12px 0" }}>{t("form.systemMessage")}</p>
+              <textarea ref={systemMessageTextareaRef} className={cn(textareaCls, "min-h-[60px] overflow-hidden")} defaultValue={systemMessageValRef.current} onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }} placeholder={t("form.systemMessagePlaceholderAlt")} />
+            </div>
+            <div style={{ background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-surface)", padding: 16 }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, marginBottom: 12, margin: "0 0 12px 0" }}>{t("form.notes")}</p>
+              <textarea ref={notesTextareaRef} className={cn(textareaCls, "min-h-[60px] overflow-hidden")} defaultValue={notesValRef.current} onChange={(e) => { notesValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }} placeholder={t("form.notesPlaceholderAlt")} />
             </div>
           </div>
-
-          {/* System Message + Notes below the split, full width */}
-          <div className="flex flex-col gap-[3px] px-[3px] pb-[3px] mt-[3px]">
-            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.systemMessage")}
+          <div className="flex flex-col flex-1 min-h-0">
+            <div style={{
+              height: 45, flexShrink: 0, display: "flex", alignItems: "center", paddingLeft: 18, paddingRight: 18,
+              background: "var(--paper)", borderBottom: "1px solid var(--line)", gap: 8,
+            }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: 0 }}>
+                Preview
               </p>
-              <div>
-                <textarea
-                  ref={systemMessageTextareaRef}
-                  className={cn(textareaCls, "min-h-[60px] overflow-hidden")}
-                  defaultValue={systemMessageValRef.current}
-                  onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
-                  placeholder={t("form.systemMessagePlaceholderAlt")}
-                />
-              </div>
             </div>
-            <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
-              <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                {t("form.notes")}
-              </p>
-              <div>
-                <textarea
-                  ref={notesTextareaRef}
-                  className={cn(textareaCls, "min-h-[60px] overflow-hidden")}
-                  defaultValue={notesValRef.current}
-                  onChange={(e) => { notesValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
-                  placeholder={t("form.notesPlaceholderAlt")}
-                />
-              </div>
-            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4" style={{ background: "var(--paper)" }}>{renderPreview()}</div>
           </div>
         </div>
       ) : (
-        /* Non-split: single scrollable column (original layout) */
         <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-[3px] pb-[3px] [scrollbar-width:thin]">
-          {/* Sticky section headers */}
           {(activeHeaders.h1 || activeHeaders.h2 || activeHeaders.h3) && (
-            <div className="sticky top-0 z-10 bg-white dark:bg-popover border-b border-border/20 rounded-t-xl">
-              {activeHeaders.h1 && (
-                <div className="px-3 py-0.5 text-[11px] font-semibold text-foreground/70 truncate">{activeHeaders.h1}</div>
-              )}
-              {activeHeaders.h2 && (
-                <div className="px-3 py-0.5 text-[11px] text-foreground/55 truncate pl-5">{activeHeaders.h2}</div>
-              )}
-              {activeHeaders.h3 && (
-                <div className="px-3 py-0.5 text-[11px] text-foreground/40 truncate pl-8">{activeHeaders.h3}</div>
-              )}
+            <div className="sticky top-0 z-10 border-b border-border/20" style={{ height: 30, background: "var(--paper)", paddingLeft: 18, paddingRight: 18, display: "flex", alignItems: "center", flexShrink: 0 }}>
+              <div className="flex gap-3 items-center text-[10px] text-muted-foreground">
+                {activeHeaders.h1 && <span className="font-semibold truncate">{activeHeaders.h1}</span>}
+                {activeHeaders.h2 && <span className="truncate">{activeHeaders.h2}</span>}
+                {activeHeaders.h3 && <span className="opacity-50 truncate">{activeHeaders.h3}</span>}
+              </div>
             </div>
           )}
-          <div className="flex flex-col gap-[3px] w-full">
-            <div className="flex flex-col gap-[3px]">
-              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">
-                    {t("form.promptContent")}
-                    {previewOpen && sampleLead && (
-                      <span className="ml-3 text-[12px] font-normal normal-case tracking-normal text-foreground/40">
-                        Preview: {sampleLead.firstName}{sampleLead.lastName ? ` ${sampleLead.lastName}` : ""}
-                      </span>
-                    )}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground/50 tabular-nums">~{tokenEstimate} tokens</span>
-                    <PromptSnippets textRef={promptTextRef} textValRef={promptTextValRef} onInsert={() => { setHighlightTick((t) => t + 1); scheduleAutoSave(); autoResize(promptTextRef.current); }} />
-                  </div>
+          <div className="flex flex-col gap-[3px]">
+            <div style={{ background: "var(--paper)" }}>
+              {isOverlayPreview && (
+                <div className="rounded-xl bg-popover border border-border/30 overflow-hidden mb-3 mx-5 mt-5">
+                  <div className="px-3 py-2">{renderPreview()}</div>
                 </div>
-                {isOverlayPreview && (
-                  <div className="rounded-xl bg-popover border border-border/30 overflow-hidden">
-                    <div className="px-3 py-2">
-                      {renderPreview()}
-                    </div>
-                  </div>
-                )}
+              )}
+              <div className="px-5 py-5">
                 {editorBlock}
-                {errors.promptText && (
-                  <p className="text-[10px] text-red-500 mt-0.5">{errors.promptText}</p>
-                )}
               </div>
-
-              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
-                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                  {t("form.systemMessage")}
-                </p>
-                <div>
-                  <textarea
-                    ref={systemMessageTextareaRef}
-                    className={cn(textareaCls, "min-h-[60px] overflow-hidden")}
-                    defaultValue={systemMessageValRef.current}
-                    onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
-                    placeholder={t("form.systemMessagePlaceholderAlt")}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-5">
-                <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
-                  {t("form.notes")}
-                </p>
-                <div>
-                  <textarea
-                    ref={notesTextareaRef}
-                    className={cn(textareaCls, "min-h-[60px] overflow-hidden")}
-                    defaultValue={notesValRef.current}
-                    onChange={(e) => { notesValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }}
-                    placeholder={t("form.notesPlaceholderAlt")}
-                  />
-                </div>
-              </div>
+              {errors.promptText && <p className="text-[10px] text-red-500 mt-0.5 px-5 pb-2">{errors.promptText}</p>}
+            </div>
+            <div style={{ background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-surface)", padding: 16 }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, marginBottom: 12, margin: "0 0 12px 0" }}>{t("form.systemMessage")}</p>
+              <textarea ref={systemMessageTextareaRef} className={cn(textareaCls, "min-h-[60px] overflow-hidden")} defaultValue={systemMessageValRef.current} onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }} placeholder={t("form.systemMessagePlaceholderAlt")} />
+            </div>
+            <div style={{ background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-surface)", padding: 16 }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, marginBottom: 12, margin: "0 0 12px 0" }}>{t("form.notes")}</p>
+              <textarea ref={notesTextareaRef} className={cn(textareaCls, "min-h-[60px] overflow-hidden")} defaultValue={notesValRef.current} onChange={(e) => { notesValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }} placeholder={t("form.notesPlaceholderAlt")} />
             </div>
           </div>
         </div>
-      )}
+      ))}
+
     </div>
   );
 });

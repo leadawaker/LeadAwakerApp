@@ -144,7 +144,7 @@ export function useNotificationStream(options?: {
     }
     const url = `/api/interactions/stream${params.toString() ? `?${params}` : ""}`;
 
-    const es = new EventSource(url, { withCredentials: true });
+    const es = new EventSource(url);
     sseRef.current = es;
 
     es.addEventListener("new_interaction", () => {

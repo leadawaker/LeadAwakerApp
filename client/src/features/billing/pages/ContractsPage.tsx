@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { navigate } from "wouter/use-browser-location";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileBillingView } from "../components/mobile/MobileBillingView";
@@ -21,6 +22,10 @@ export function ContractsPage() {
   const { currentAccountId, isAgencyUser } = useWorkspace();
   const { clearTopbarActions } = useTopbarActions();
   const isMobile = useIsMobile();
+
+  const handleTabChange = useCallback((tab: string) => {
+    navigate(`/platform/billing/${tab}`);
+  }, []);
 
   // View mode (persisted)
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -135,6 +140,7 @@ export function ContractsPage() {
       <CrmShell>
         <MobileBillingView
           activeTab="contracts"
+          onTabChange={handleTabChange}
           invoices={invoicesHook.invoices}
           contracts={contractsHook.contracts}
           isAgencyUser={isAgencyUser}
@@ -155,7 +161,7 @@ export function ContractsPage() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col pt-4">
+      <div className="h-full flex flex-col">
       <BillingListView
         activeTab="contracts"
         // Invoice data

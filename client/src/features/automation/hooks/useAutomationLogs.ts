@@ -51,9 +51,50 @@ export function useAutomationLogs(filters: AutomationLogsFilters) {
 
   // Auto-refresh automation logs on SSE automation_logs_changed events
   useEffect(() => {
-    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
+    const es = new EventSource("/api/interactions/stream");
     es.addEventListener("automation_logs_changed", () => {
       queryClient.invalidateQueries({ queryKey: ["/api/automation-logs"] });
+    });
+    return () => { es.close(); };
+  }, [queryClient]);
+
+  return query;
+}
+
+export interface HealthJob {
+  id: string;
+  name: string;
+  cadenceLabel: string;
+  status: "healthy" | "overdue" | "error";
+  lastRunAt: string | null;
+  lastRunStatus: string | null;
+  nextRunAt: string | null;
+  errors24h: number;
+}
+
+export interface AutomationHealthResponse {
+  engineHealthy: boolean;
+  schedulerRunning: boolean;
+  generatedAt: string;
+  jobs: HealthJob[];
+}
+
+export function useAutomationHealth() {
+  const queryClient = useQueryClient();
+  const query = useQuery<AutomationHealthResponse>({
+    queryKey: ["/api/automation-health"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/automation-health");
+      if (!res.ok) throw new Error("Failed to fetch automation health");
+      return res.json();
+    },
+    refetchInterval: 30_000,
+  });
+
+  useEffect(() => {
+    const es = new EventSource("/api/interactions/stream");
+    es.addEventListener("automation_logs_changed", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/automation-health"] });
     });
     return () => { es.close(); };
   }, [queryClient]);

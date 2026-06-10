@@ -51,10 +51,10 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Reco
   // Locked: NO glass-strong background — transparent, with the chat empty-state block near the top.
   if (locked) {
     return (
-      <div style={{ height: "100%", borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, width: "100%", height: "100%", borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
         {!hideHeader && header}
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div className="flex flex-col items-center justify-center gap-2 text-center">
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="flex flex-col items-center gap-2 text-center">
             <Sparkles className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-xs text-muted-foreground">
               {t("detail.summaryLocked", "Summary will be generated once the conversation ends")}
@@ -66,7 +66,7 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Reco
   }
 
   return (
-    <div className={hideHeader ? "" : "glass-strong"} style={{ height: "100%", borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <div className={hideHeader ? "" : "glass-strong"} style={{ flex: 1, minWidth: 0, width: "100%", height: "100%", borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
       {!hideHeader && header}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
         {structured ? (

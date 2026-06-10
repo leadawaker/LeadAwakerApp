@@ -476,6 +476,20 @@
     },
     "deleteConfirm": "{{count}} contract verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "deleteConfirmPlural": "{{count}} contracten verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "stats": {
+      "activeValue": "Actieve waarde",
+      "awaitingSignature": "Wacht op handtekening",
+      "signed": "Ondertekend",
+      "drafts": "Concepten"
+    },
+    "timeline": {
+      "title": "Handtekeningsstatus",
+      "drafted": "Opgesteld",
+      "sent": "Verzonden ter ondertekening",
+      "signed": "Ondertekend",
+      "active": "Actief",
+      "pending": "In afwachting"
+    },
     "signwell": {
       "sendForSignature": "Verstuur ter ondertekening",
       "sendViaSignWell": "Verstuur voor e-handtekening via SignWell",

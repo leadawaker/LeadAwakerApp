@@ -25,6 +25,8 @@ import {
   ClipboardList,
   LogOut,
   Receipt,
+  CreditCard,
+  FileCheck,
   Settings,
   Settings2,
 
@@ -226,6 +228,16 @@ export function RightSidebar({
     ownerOnly?: boolean;
   }[] = [
     { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
+    { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
+    {
+      href: `${prefix}/tasks`,
+      label: t("sidebar.tasks"),
+      labelKey: "Tasks",
+      icon: ClipboardList,
+      testId: "nav-tasks",
+      agencyOnly: true,
+    },
     {
       href: `${prefix}/accounts`,
       label: t("sidebar.accounts"),
@@ -235,8 +247,6 @@ export function RightSidebar({
       agencyOnly: true,
       agencyViewOnly: true,
     },
-    { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
-    { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
     {
       href: `${prefix}/prompt-library`,
       label: t("sidebar.promptLibrary"),
@@ -246,16 +256,8 @@ export function RightSidebar({
       agencyOnly: true,
     },
     { href: `${prefix}/invoices`, label: t("sidebar.invoices"), labelKey: "Invoices", icon: Receipt, testId: "nav-invoices", agencyOnly: true },
-    { href: `${prefix}/expenses`, label: t("sidebar.expenses"), labelKey: "Expenses", icon: Receipt, testId: "nav-expenses", agencyOnly: true, ownerOnly: true },
-    { href: `${prefix}/contracts`, label: t("sidebar.contracts"), labelKey: "Contracts", icon: Receipt, testId: "nav-contracts", agencyOnly: true },
-    {
-      href: `${prefix}/tasks`,
-      label: t("sidebar.tasks"),
-      labelKey: "Tasks",
-      icon: ClipboardList,
-      testId: "nav-tasks",
-      agencyOnly: true,
-    },
+    { href: `${prefix}/expenses`, label: t("sidebar.expenses"), labelKey: "Expenses", icon: CreditCard, testId: "nav-expenses", agencyOnly: true, ownerOnly: true },
+    { href: `${prefix}/contracts`, label: t("sidebar.contracts"), labelKey: "Contracts", icon: FileCheck, testId: "nav-contracts", agencyOnly: true },
     { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true },
     { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", ownerOnly: true },
     { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", ownerOnly: true },
@@ -277,11 +279,6 @@ export function RightSidebar({
     if (it.agencyViewOnly && !isAgencyView) return false;
     return true;
   });
-
-  // Debug: Log all nav items and visible items
-  console.log("📋 All navItems:", navItems.map(it => ({ label: it.label, testId: it.testId, agencyOnly: it.agencyOnly, ownerOnly: it.ownerOnly })));
-  console.log("👁️ visibleNavItems:", visibleNavItems.map(it => ({ label: it.label, testId: it.testId })));
-  console.log("🔐 User flags - isAgencyUser:", isAgencyUser, "isOwner:", isOwner, "isAgencyView:", isAgencyView);
 
   /** Check if a nav item is active (exact match or sub-route match) */
   const isActive = (href: string) => {
@@ -655,11 +652,11 @@ export function RightSidebar({
         style={{
           width: 188,
           top: "var(--banner-h, 0px)",
-          background: "var(--color-sidebar-bg)",
+          background: "var(--chrome)",
           borderRight: "1px solid var(--line)",
           height: "100%",
           flexShrink: 0,
-          boxShadow: "4px 0 14px -4px rgba(90, 65, 35, 0.18)",
+          boxShadow: "none",
           zIndex: 46,
         }}
         data-sidebar-focus
@@ -723,11 +720,10 @@ export function RightSidebar({
           {/* Nav section groups */}
           {(() => {
             const sections = [
-              { section: "Menu", items: visibleNavItems.filter(it => it.labelKey === "Campaigns") },
-              { section: "Engage", items: visibleNavItems.filter(it => ["Leads", "Calendar"].includes(it.labelKey)) },
-              { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
-              { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
+              { section: "Engage", items: visibleNavItems.filter(it => ["Campaigns", "Leads", "Calendar"].includes(it.labelKey)) },
+              { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Invoices", "Expenses", "Contracts", "Tasks"].includes(it.labelKey)) },
               { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations"].includes(it.labelKey)) },
+              { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
             ];
             return sections.map((g) => {
               if (g.items.length === 0) return null;

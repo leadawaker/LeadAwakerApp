@@ -8,12 +8,12 @@ import { CONTRACT_STATUS_COLORS } from "../types";
 // ── Deal type colors ────────────────────────────────────────────────────────────
 
 const DEAL_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  performance:      { bg: "#D1FAE5", text: "#065F46" },
-  cost_passthrough: { bg: "#DBEAFE", text: "#1D4ED8" },
-  fixed_fee:        { bg: "#EDE9FE", text: "#5B21B6" },
-  deposit:          { bg: "#FEF3C7", text: "#92400E" },
-  monthly_retainer: { bg: "#F0FDF4", text: "#166534" },
-  hybrid:           { bg: "#FFF7ED", text: "#9A3412" },
+  performance:      { bg: "var(--good-tint)", text: "var(--good)" },
+  cost_passthrough: { bg: "var(--wine-tint)", text: "var(--wine)" },
+  fixed_fee:        { bg: "var(--wine-tint)", text: "var(--wine)" },
+  deposit:          { bg: "var(--warn-tint)", text: "var(--warn)" },
+  monthly_retainer: { bg: "var(--good-tint)", text: "var(--good)" },
+  hybrid:           { bg: "var(--surface)",   text: "var(--mute)" },
 };
 
 function formatDealType(raw: string | null): string {
@@ -279,16 +279,18 @@ export function ContractsInlineTable({
   }
 
   const thBase =
-    "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70";
+    "px-3 py-2 text-left whitespace-nowrap select-none cursor-pointer"
+    + " border-b"
+    + " [font-family:var(--mono)] text-[9px] tracking-[0.14em] uppercase font-bold";
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
 
       {/* ── Summary stats bar (TOP, above headers) ── */}
       {!loading && (
-        <div className="h-[44px] shrink-0 px-4 flex items-center gap-6 border-b border-border/20 bg-muted/60">
-          <span className="text-[11px] text-muted-foreground">
-            <span className="font-semibold text-foreground">
+        <div className="h-[44px] shrink-0 px-4 flex items-center gap-6" style={{ borderBottom: "1px solid var(--line)", background: "var(--bg-2)" }}>
+          <span className="text-[11px]" style={{ color: "var(--mute)" }}>
+            <span className="font-semibold" style={{ color: "var(--ink)" }}>
               {summaryStats.total}
             </span>{" "}
             {summaryStats.total !== 1
@@ -296,26 +298,26 @@ export function ContractsInlineTable({
               : t("contracts.table.summary.contracts")}
           </span>
 
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px]" style={{ color: "var(--mute)" }}>
             {t("contracts.table.summary.signed")}:{" "}
             <span
               className="font-semibold"
-              style={{ color: summaryStats.signedCount > 0 ? "#065F46" : undefined }}
+              style={{ color: summaryStats.signedCount > 0 ? "var(--good)" : "var(--mute)" }}
             >
               {summaryStats.signedCount}
             </span>
           </span>
 
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px]" style={{ color: "var(--mute)" }}>
             {t("contracts.table.summary.pending")}:{" "}
-            <span className="font-semibold text-foreground">
+            <span className="font-semibold" style={{ color: "var(--ink)" }}>
               {summaryStats.pendingCount}
             </span>
           </span>
 
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px]" style={{ color: "var(--mute)" }}>
             {t("contracts.table.summary.active")}:{" "}
-            <span className="font-semibold text-foreground">
+            <span className="font-semibold" style={{ color: "var(--ink)" }}>
               {summaryStats.activeCount}
             </span>
           </span>
@@ -326,67 +328,67 @@ export function ContractsInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex-1 min-h-0 overflow-auto" style={{ background: "var(--card)" }}>
           <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 300 }}>
 
             {/* Sticky header */}
             <thead className="sticky top-0 z-20">
-              <tr>
+              <tr style={{ background: "var(--bg-2)" }}>
                 {/* Checkbox column — always visible */}
                 <th
                   className={cn(thBase, "sticky left-0 z-30 text-center cursor-default")}
-                  style={{ width: 40, minWidth: 40 }}
+                  style={{ width: 40, minWidth: 40, background: "var(--bg-2)", borderColor: "var(--line)", color: "var(--mute-2)" }}
                 >
                   {/* no label */}
                 </th>
 
                 {show("title") && (
-                  <th className={thBase} style={{ width: 200, minWidth: 200 }} onClick={() => handleHeaderClick("title")}>
+                  <th className={thBase} style={{ width: 200, minWidth: 200, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("title")}>
                     {t("contracts.table.columns.title")} <SortIcon col="title" />
                   </th>
                 )}
                 {show("account") && (
-                  <th className={thBase} style={{ width: 160, minWidth: 160 }} onClick={() => handleHeaderClick("account")}>
+                  <th className={thBase} style={{ width: 160, minWidth: 160, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("account")}>
                     {t("contracts.table.columns.account")} <SortIcon col="account" />
                   </th>
                 )}
                 {show("status") && (
-                  <th className={thBase} style={{ width: 120, minWidth: 120 }} onClick={() => handleHeaderClick("status")}>
+                  <th className={thBase} style={{ width: 120, minWidth: 120, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("status")}>
                     {t("contracts.table.columns.status")} <SortIcon col="status" />
                   </th>
                 )}
                 {show("dealType") && (
-                  <th className={thBase} style={{ width: 130, minWidth: 130 }} onClick={() => handleHeaderClick("dealType")}>
+                  <th className={thBase} style={{ width: 130, minWidth: 130, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("dealType")}>
                     {t("contracts.table.columns.dealType")} <SortIcon col="dealType" />
                   </th>
                 )}
                 {show("startDate") && (
-                  <th className={thBase} style={{ width: 110, minWidth: 110 }} onClick={() => handleHeaderClick("startDate")}>
+                  <th className={thBase} style={{ width: 110, minWidth: 110, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("startDate")}>
                     {t("contracts.table.columns.startDate")} <SortIcon col="startDate" />
                   </th>
                 )}
                 {show("endDate") && (
-                  <th className={thBase} style={{ width: 110, minWidth: 110 }} onClick={() => handleHeaderClick("endDate")}>
+                  <th className={thBase} style={{ width: 110, minWidth: 110, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("endDate")}>
                     {t("contracts.table.columns.endDate")} <SortIcon col="endDate" />
                   </th>
                 )}
                 {show("signedAt") && (
-                  <th className={thBase} style={{ width: 110, minWidth: 110 }} onClick={() => handleHeaderClick("signedAt")}>
+                  <th className={thBase} style={{ width: 110, minWidth: 110, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("signedAt")}>
                     {t("contracts.table.columns.signed")} <SortIcon col="signedAt" />
                   </th>
                 )}
                 {show("description") && (
-                  <th className={thBase} style={{ width: 220, minWidth: 220 }}>
+                  <th className={thBase} style={{ width: 220, minWidth: 220, borderColor: "var(--line)", color: "var(--mute-2)" }}>
                     {t("contracts.table.columns.description")}
                   </th>
                 )}
                 {show("sentAt") && (
-                  <th className={thBase} style={{ width: 110, minWidth: 110 }} onClick={() => handleHeaderClick("sentAt")}>
+                  <th className={thBase} style={{ width: 110, minWidth: 110, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("sentAt")}>
                     {t("contracts.table.columns.sentDate")} <SortIcon col="sentAt" />
                   </th>
                 )}
                 {show("viewedAt") && (
-                  <th className={thBase} style={{ width: 110, minWidth: 110 }} onClick={() => handleHeaderClick("viewedAt")}>
+                  <th className={thBase} style={{ width: 110, minWidth: 110, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("viewedAt")}>
                     {t("contracts.table.columns.viewedDate")} <SortIcon col="viewedAt" />
                   </th>
                 )}
@@ -396,12 +398,12 @@ export function ContractsInlineTable({
                   </th>
                 )}
                 {show("fileName") && (
-                  <th className={thBase} style={{ width: 180, minWidth: 180 }} onClick={() => handleHeaderClick("fileName")}>
+                  <th className={thBase} style={{ width: 180, minWidth: 180, borderColor: "var(--line)", color: "var(--mute-2)" }} onClick={() => handleHeaderClick("fileName")}>
                     {t("contracts.table.columns.fileName")} <SortIcon col="fileName" />
                   </th>
                 )}
                 {show("fileType") && (
-                  <th className={thBase} style={{ width: 100, minWidth: 100 }}>
+                  <th className={thBase} style={{ width: 100, minWidth: 100, borderColor: "var(--line)", color: "var(--mute-2)" }}>
                     {t("contracts.table.columns.fileType")}
                   </th>
                 )}
@@ -432,17 +434,20 @@ export function ContractsInlineTable({
                 const dealTypeColors = DEAL_TYPE_COLORS[dealTypeKey] ?? null;
                 const dealTypeLabel = formatDealType(contract.deal_type);
 
-                const rowBg = isHighlighted ? "var(--color-highlight-selected)" : "var(--color-card)";
-                const rowHoverClass = isHighlighted ? "" : "hover:bg-card-hover";
-
                 return (
                   <tr
                     key={contract.id}
-                    className={cn(
-                      "group/row cursor-pointer h-[52px] border-b border-border/15 animate-card-enter",
-                      rowHoverClass,
-                    )}
-                    style={{ backgroundColor: rowBg, animationDelay: `${Math.min(index, 15) * 30}ms` }}
+                    className="group/row cursor-pointer animate-card-enter"
+                    style={{
+                      height: 62,
+                      borderBottom: "1px solid var(--line)",
+                      background: isHighlighted ? "var(--surface)" : "transparent",
+                      boxShadow: isHighlighted ? "inset 3px 0 0 var(--wine)" : "none",
+                      transition: "background 120ms",
+                      animationDelay: `${Math.min(index, 15) * 30}ms`,
+                    }}
+                    onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = "var(--surface)"; }}
+                    onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                     onClick={(e) => handleRowClick(contract, index, e)}
                   >
                     {/* Checkbox */}
@@ -451,44 +456,61 @@ export function ContractsInlineTable({
                       style={{
                         width: 40,
                         minWidth: 40,
-                        backgroundColor: isHighlighted ? "var(--color-highlight-selected)" : undefined,
+                        background: isHighlighted ? "var(--surface)" : "var(--card)",
                       }}
                     >
                       <div
-                        className={cn(
-                          "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                          isMultiSelected
-                            ? "border-brand-indigo bg-brand-indigo"
-                            : "border-border/40 group-hover/row:border-border/60"
-                        )}
+                        className="h-4 w-4 rounded flex items-center justify-center shrink-0 cursor-pointer"
+                        style={{
+                          border: `1px solid ${isMultiSelected ? "var(--wine)" : "var(--line)"}`,
+                          background: isMultiSelected ? "var(--wine)" : "transparent",
+                        }}
                         onClick={(e) => handleCheckboxClick(contract, e)}
                       >
-                        {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                        {isMultiSelected && <Check className="h-2.5 w-2.5" style={{ color: "var(--paper)" }} />}
                       </div>
                     </td>
 
                     {show("title") && (
                       <td className="px-3" style={{ width: 200, minWidth: 200 }}>
-                        <span className="text-[12px] font-medium text-foreground truncate block">
-                          {contract.title ?? <span className="text-muted-foreground/30 font-normal">{t("contracts.table.untitled")}</span>}
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                          <span style={{
+                            width: 28, height: 28, borderRadius: "var(--r-button)", flexShrink: 0,
+                            background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "var(--mute)",
+                          }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 13c1-1.4 2.4-1.4 3 0s2 1.4 3 0"/>
+                            </svg>
+                          </span>
+                          <span className="truncate" style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+                            {contract.title ?? <span style={{ color: "var(--mute-2)", fontWeight: 400 }}>{t("contracts.table.untitled")}</span>}
+                          </span>
+                        </div>
                       </td>
                     )}
                     {show("account") && (
                       <td className="px-3" style={{ width: 160, minWidth: 160 }}>
-                        <span className="text-[11px] text-muted-foreground truncate block">
-                          {contract.account_name ?? <span className="text-muted-foreground/30">{"2014"}</span>}
+                        <span className="truncate block" style={{ fontSize: 11, color: "var(--mute)" }}>
+                          {contract.account_name ?? <span style={{ color: "var(--mute-2)" }}>{"—"}</span>}
                         </span>
                       </td>
                     )}
                     {show("status") && (
                       <td className="px-3" style={{ width: 120, minWidth: 120 }}>
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: statusColors.dot }} />
-                          <span className="text-[11px] font-medium" style={{ color: statusColors.text }}>
-                            {contract.status ?? "—"}
-                          </span>
-                        </div>
+                        <span
+                          className="inline-flex items-center"
+                          style={{
+                            gap: 5, padding: "3px 9px", borderRadius: "var(--r-pill)",
+                            background: statusColors.bg, color: statusColors.text,
+                            fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.1em",
+                            textTransform: "uppercase", fontWeight: 700, whiteSpace: "nowrap",
+                          }}
+                        >
+                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: statusColors.dot, flexShrink: 0 }} />
+                          {contract.status ?? "—"}
+                        </span>
                       </td>
                     )}
                     {show("dealType") && (
@@ -496,75 +518,80 @@ export function ContractsInlineTable({
                         {dealTypeLabel ? (
                           dealTypeColors ? (
                             <span
-                              className="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
-                              style={{ backgroundColor: dealTypeColors.bg, color: dealTypeColors.text }}
+                              className="inline-flex items-center whitespace-nowrap"
+                              style={{
+                                padding: "3px 9px", borderRadius: "var(--r-pill)",
+                                background: dealTypeColors.bg, color: dealTypeColors.text,
+                                fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.1em",
+                                textTransform: "uppercase", fontWeight: 700,
+                              }}
                             >
                               {dealTypeLabel}
                             </span>
                           ) : (
-                            <span className="text-[11px] text-muted-foreground">{dealTypeLabel}</span>
+                            <span style={{ fontSize: 11, color: "var(--mute)" }}>{dealTypeLabel}</span>
                           )
                         ) : (
-                          <span className="text-muted-foreground/30 text-[11px]">{"2014"}</span>
+                          <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{"—"}</span>
                         )}
                       </td>
                     )}
                     {show("startDate") && (
                       <td className="px-3" style={{ width: 110, minWidth: 110 }}>
-                        <span className="text-[11px] text-muted-foreground">{fmtDate(contract.start_date)}</span>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)" }}>{fmtDate(contract.start_date)}</span>
                       </td>
                     )}
                     {show("endDate") && (
                       <td className="px-3" style={{ width: 110, minWidth: 110 }}>
-                        <span className="text-[11px] text-muted-foreground">{fmtDate(contract.end_date)}</span>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)" }}>{fmtDate(contract.end_date)}</span>
                       </td>
                     )}
                     {show("signedAt") && (
                       <td className="px-3" style={{ width: 110, minWidth: 110 }}>
                         {contract.signed_at ? (
-                          <span className="text-[11px] font-medium" style={{ color: "#065F46" }}>
+                          <span style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 600, color: "var(--good)" }}>
                             {fmtDate(contract.signed_at)}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground/30 text-[11px]">{"2014"}</span>
+                          <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{"—"}</span>
                         )}
                       </td>
                     )}
                     {show("description") && (
                       <td className="px-3" style={{ width: 220, minWidth: 220 }}>
-                        <span className="text-[11px] text-muted-foreground truncate block max-w-[208px]">
-                          {contract.description ?? <span className="opacity-30">{"2014"}</span>}
+                        <span className="truncate block max-w-[208px]" style={{ fontSize: 11, color: "var(--mute)" }}>
+                          {contract.description ?? <span style={{ color: "var(--mute-2)" }}>{"—"}</span>}
                         </span>
                       </td>
                     )}
                     {show("sentAt") && (
                       <td className="px-3" style={{ width: 110, minWidth: 110 }}>
-                        <span className="text-[11px] text-muted-foreground">{fmtDate(contract.sent_at)}</span>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)" }}>{fmtDate(contract.sent_at)}</span>
                       </td>
                     )}
                     {show("viewedAt") && (
                       <td className="px-3" style={{ width: 110, minWidth: 110 }}>
-                        <span className="text-[11px] text-muted-foreground">{fmtDate(contract.viewed_at)}</span>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)" }}>{fmtDate(contract.viewed_at)}</span>
                       </td>
                     )}
                     {show("viewedCount") && (
                       <td className="px-3 text-center" style={{ width: 70, minWidth: 70 }}>
-                        <span className="text-[11px] text-muted-foreground tabular-nums">
-                          {contract.viewed_count ?? <span className="opacity-30">0</span>}
+                        <span className="tabular-nums" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)" }}>
+                          {contract.viewed_count ?? <span style={{ color: "var(--mute-2)" }}>0</span>}
                         </span>
                       </td>
                     )}
                     {show("fileName") && (
                       <td className="px-3" style={{ width: 180, minWidth: 180 }}>
-                        <span className="text-[11px] text-muted-foreground truncate block max-w-[168px]">
-                          {contract.file_name ?? <span className="opacity-30">{"2014"}</span>}
+                        <span className="truncate block max-w-[168px]" style={{ fontSize: 11, color: "var(--mute)" }}>
+                          {contract.file_name ?? <span style={{ color: "var(--mute-2)" }}>{"—"}</span>}
                         </span>
                       </td>
                     )}
                     {show("fileType") && (
                       <td className="px-3" style={{ width: 100, minWidth: 100 }}>
-                        <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
-                          {contract.file_type ?? <span className="opacity-30">{"2014"}</span>}
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--mute)" }}>
+                          {contract.file_type ?? <span style={{ color: "var(--mute-2)" }}>{"—"}</span>}
                         </span>
                       </td>
                     )}

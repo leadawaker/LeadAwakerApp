@@ -59,7 +59,7 @@ function normalizeBookingMode(raw: string | null | undefined): string | null | u
   return raw; // keep as-is for unknown values
 }
 
-function buildMap(
+export function buildMap(
   campaign?: CampaignForPreview | null,
   lead?: LeadForPreview | null,
   _account?: AccountForPreview | null,

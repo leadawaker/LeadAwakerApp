@@ -73,6 +73,20 @@
     "prev": "Previous",
     "next": "Next"
   },
+  "health": {
+    "pageTitle": "Automation Health",
+    "lastRun": "Last run",
+    "nextRun": "Next run",
+    "neverRun": "Never",
+    "engineDown": "Automation engine is unreachable — all jobs unavailable.",
+    "attentionRequired": "{{count}} job(s) need attention.",
+    "generatedAt": "Updated at {{time}}",
+    "status": {
+      "healthy": "Healthy",
+      "overdue": "Overdue",
+      "error": "Error"
+    }
+  },
   "pipeline": {
     "executions": "Executions",
     "selectExecution": "Select an execution to view its pipeline",

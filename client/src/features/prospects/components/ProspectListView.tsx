@@ -776,7 +776,7 @@ export function ProspectListView({
           ? cn(isNarrow && selectedProspect ? "hidden" : "flex", "lg:hidden")
           : isCompact
             ? cn("w-[65px] shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
-            : cn("w-full lg:w-[340px] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
+            : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
 
         {isCompact ? (
@@ -793,7 +793,7 @@ export function ProspectListView({
           /* ── FULL HEADER ─── */
           <>
             <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 flex items-center shrink-0">
-              <div className="flex items-center justify-between w-full md:w-[306px] md:shrink-0">
+              <div className="flex items-center justify-between w-full">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
                 <ViewTabBar
                   tabs={viewTabs}

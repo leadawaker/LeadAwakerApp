@@ -43,21 +43,23 @@ export function BehaviorSectionFields({
         {...editFor("niche")}
         editChild={isEditing ? <EditSelect value={String(draft.niche ?? "")} onChange={(v) => setDraft(d => ({...d, niche: v}))} options={["Kitchens", "Bathrooms", "Countertops", "Flooring", "General Contracting", "Solar Panels", "HVAC", "Roofing", "Landscaping", "Windows & Doors", "Painting", "Pest Control", "Pool Installation", "Moving Services"]} {...focusFor("niche")} /> : undefined}
       />
-      <InfoRow icon={MapPin} label={t("config.website")} value={campaign.website}
-        gridColumn="full"
-        {...editFor("website")}
-        editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://…" {...focusFor("website")} /> : undefined}
-      />
-      <InfoRow icon={Link} label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
-        gridColumn="full"
-        {...editFor("calendar_link_override")}
-        editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" {...focusFor("calendar_link_override")} /> : undefined}
-      />
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={MapPin} label={t("config.website")} value={campaign.website}
+          {...editFor("website")}
+          editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://…" {...focusFor("website")} /> : undefined}
+        />
+      </div>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={Link} label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
+          {...editFor("calendar_link_override")}
+          editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" {...focusFor("calendar_link_override")} /> : undefined}
+        />
+      </div>
 
       {/* Demo & Account */}
       <BoolRow icon={Eye} label={t("config.isDemo")} value={!!(draft.is_demo ?? campaign.is_demo)}
         {...editFor("is_demo")}
-        editChild={isEditing ? <EditToggle checked={!!draft.is_demo} onChange={(v) => setDraft(d => ({...d, is_demo: v}))} /> : undefined}
+        editChild={isEditing ? <EditToggle value={!!draft.is_demo} onChange={(v) => setDraft(d => ({...d, is_demo: v}))} /> : undefined}
       />
       {isAgency && (
         <InfoRow icon={Building2} label={t("config.accountId")} value={campaign.account_name || campaign.account_id}
@@ -81,7 +83,7 @@ export function BehaviorSectionFields({
         {...editFor("booking_mode_override")}
         editChild={isEditing ? (
           <div className="la-seg la-seg--fill">
-            {["auto", "manual", "hybrid"].map(mode => (
+            {(["Sales Call", "Direct Booking"] as const).map(mode => (
               <button key={mode} className={`la-seg-btn ${(draft.booking_mode_override ?? campaign.booking_mode_override) === mode ? 'on' : ''}`}
                 onClick={() => setDraft(d => ({...d, booking_mode_override: mode}))}
               >{mode}</button>
@@ -129,32 +131,33 @@ export function BehaviorSectionFields({
       {/* Daily Limit & Interval */}
       <InfoRow icon={BarChart3} label={t("config.dailyLimit")} value={campaign.daily_lead_limit}
         {...editFor("daily_lead_limit")}
-        editChild={isEditing ? <EditNumber value={Number(draft.daily_lead_limit ?? 0)} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} min={0} max={500} {...focusFor("daily_lead_limit")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={Number(draft.daily_lead_limit ?? 0)} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} {...focusFor("daily_lead_limit")} /> : undefined}
       />
       <InfoRow icon={MessageCircle} label={t("config.interval")} value={`${campaign.message_interval_minutes ?? 0} min`}
         {...editFor("message_interval_minutes")}
-        editChild={isEditing ? <EditNumber value={Number(draft.message_interval_minutes ?? 0)} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} min={0} max={120} {...focusFor("message_interval_minutes")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={Number(draft.message_interval_minutes ?? 0)} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} {...focusFor("message_interval_minutes")} /> : undefined}
       />
 
       {/* Channel */}
-      <InfoRow icon={Radio} label={t("config.channel")} value={campaign.channel}
-        gridColumn="full"
-        {...editFor("channel")}
-        editChild={isEditing ? <EditSelect value={String(draft.channel ?? "")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "voice"]} {...focusFor("channel")} /> : undefined}
-      />
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={Radio} label={t("config.channel")} value={campaign.channel}
+          {...editFor("channel")}
+          editChild={isEditing ? <EditSelect value={String(draft.channel ?? "")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms", "voice"]} labels={{ whatsapp: "WhatsApp", email: "Email", sms: "SMS", voice: "Voice" }} {...focusFor("channel")} /> : undefined}
+        />
+      </div>
 
       {/* BoolRows */}
       <BoolRow icon={Pause} label={t("config.stopOnResponse")} value={!!(draft.stop_on_response ?? campaign.stop_on_response)}
         {...editFor("stop_on_response")}
-        editChild={isEditing ? <EditToggle checked={!!draft.stop_on_response} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
+        editChild={isEditing ? <EditToggle value={!!draft.stop_on_response} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
       />
       <BoolRow icon={Zap} label={t("config.useAiBumps")} value={!!(draft.use_ai_bumps ?? campaign.use_ai_bumps)}
         {...editFor("use_ai_bumps")}
-        editChild={isEditing ? <EditToggle checked={!!draft.use_ai_bumps} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
+        editChild={isEditing ? <EditToggle value={!!draft.use_ai_bumps} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
       />
       <InfoRow icon={AlertTriangle} label={t("config.maxBumps")} value={campaign.max_bumps}
         {...editFor("max_bumps")}
-        editChild={isEditing ? <EditNumber value={Number(draft.max_bumps ?? 4)} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} min={0} max={10} {...focusFor("max_bumps")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={Number(draft.max_bumps ?? 4)} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} {...focusFor("max_bumps")} /> : undefined}
       />
 
       {/* Deal Info */}
@@ -180,31 +183,32 @@ export function BehaviorSectionFields({
       {/* Value Per Booking */}
       <InfoRow icon={DollarSign} label={t("config.valuePerBooking")} value={campaign.value_per_booking}
         {...editFor("value_per_booking")}
-        editChild={isEditing ? <EditNumber value={Number(draft.value_per_booking ?? 0)} onChange={(v) => setDraft(d => ({...d, value_per_booking: v}))} min={0} {...focusFor("value_per_booking")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={Number(draft.value_per_booking ?? 0)} onChange={(v) => setDraft(d => ({...d, value_per_booking: v}))} {...focusFor("value_per_booking")} /> : undefined}
       />
 
       {/* Contract */}
-      <InfoRow icon={Link} label={t("config.contract")} value={campaign.contract_name || t("config.noneLinked")}
-        gridColumn="full"
-        {...editFor("contract_id")}
-        editChild={isEditing && contracts ? <ContractSelect value={String(draft.contract_id ?? "")} onChange={(v) => setDraft(d => ({...d, contract_id: v}))} contracts={contracts} /> : undefined}
-      />
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={Link} label={t("config.contract")} value={campaign.contract_name || t("config.noneLinked")}
+          {...editFor("contract_id")}
+          editChild={isEditing ? <ContractSelect value={String(draft.contract_id ?? "")} onChange={(v) => setDraft(d => ({...d, contract_id: v}))} accountsId={campaign.account_id} /> : undefined}
+        />
+      </div>
 
       {/* Opt-out Notice */}
       <BoolRow icon={Power} label={t("config.optOutNotice")} value={!!(draft.opt_out_notice ?? campaign.opt_out_notice)}
         {...editFor("opt_out_notice")}
-        editChild={isEditing ? <EditToggle checked={!!draft.opt_out_notice} onChange={(v) => setDraft(d => ({...d, opt_out_notice: v}))} /> : undefined}
+        editChild={isEditing ? <EditToggle value={!!draft.opt_out_notice} onChange={(v) => setDraft(d => ({...d, opt_out_notice: v}))} /> : undefined}
       />
 
       {/* A/B Testing */}
       <BoolRow icon={SplitSquareVertical} label={t("abTesting.enabled")} value={!!(draft.ab_enabled ?? campaign.ab_enabled)}
         {...editFor("ab_enabled")}
-        editChild={isEditing ? <EditToggle checked={!!draft.ab_enabled} onChange={(v) => setDraft(d => ({...d, ab_enabled: v}))} /> : undefined}
+        editChild={isEditing ? <EditToggle value={!!draft.ab_enabled} onChange={(v) => setDraft(d => ({...d, ab_enabled: v}))} /> : undefined}
       />
       {(draft.ab_enabled ?? campaign.ab_enabled) && (
         <InfoRow icon={SplitSquareVertical} label={t("abTesting.splitRatio")} value={`${campaign.ab_split_ratio ?? 50}%`}
           {...editFor("ab_split_ratio")}
-          editChild={isEditing ? <EditNumber value={Number(draft.ab_split_ratio ?? 50)} onChange={(v) => setDraft(d => ({...d, ab_split_ratio: v}))} min={1} max={99} {...focusFor("ab_split_ratio")} /> : undefined}
+          editChild={isEditing ? <EditNumber value={Number(draft.ab_split_ratio ?? 50)} onChange={(v) => setDraft(d => ({...d, ab_split_ratio: v}))} {...focusFor("ab_split_ratio")} /> : undefined}
         />
       )}
     </div>

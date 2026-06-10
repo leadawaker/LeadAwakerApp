@@ -219,7 +219,7 @@ export function useAccountsData(currentAccountId?: number) {
   useEffect(() => {
     const debounceRef = { current: undefined as NodeJS.Timeout | undefined };
     const url = `/api/interactions/stream`;
-    const es = new EventSource(url, { withCredentials: true });
+    const es = new EventSource(url);
     es.addEventListener("accounts_changed", () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => fetchData(), 400);

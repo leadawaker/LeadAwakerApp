@@ -44,8 +44,7 @@ export function ListPanelToggleButton({ className }: Props) {
     <button
       onClick={cycle}
       className={cn(
-        "hidden lg:inline-flex items-center justify-center h-8 w-8 rounded-lg shrink-0",
-        "text-foreground/50 hover:text-foreground hover:bg-black/[0.06] transition-colors",
+        "hidden lg:inline-flex la-btn la-btn--soft la-btn--icon",
         className,
       )}
       title={

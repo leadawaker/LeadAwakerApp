@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
+import { navigate } from "wouter/use-browser-location";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileBillingView } from "../components/mobile/MobileBillingView";
@@ -23,6 +24,10 @@ export function BillingPage() {
   const { currentAccountId, isAgencyUser } = useWorkspace();
   const { clearTopbarActions } = useTopbarActions();
   const isMobile = useIsMobile();
+
+  const handleTabChange = useCallback((tab: string) => {
+    navigate(`/platform/billing/${tab}`);
+  }, []);
 
   // Determine active tab from URL (no user-facing tabs; URL determines which page)
   const [location] = useLocation();
@@ -184,6 +189,7 @@ export function BillingPage() {
       <CrmShell>
         <MobileBillingView
           activeTab={activeTab}
+          onTabChange={handleTabChange}
           invoices={invoicesHook.invoices}
           contracts={contractsHook.contracts}
           isAgencyUser={isAgencyUser}

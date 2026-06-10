@@ -503,10 +503,9 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
             ))}
           </div>
         ) : sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+          <div className="flex flex-col items-center justify-center gap-2 h-full text-center">
             <MessageSquare className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-xs text-muted-foreground">{t("chat.noMessages")}</p>
-            <p className="text-[11px] text-muted-foreground/60">{t("chat.noMessagesHint")}</p>
           </div>
         ) : chatItems}
       </div>

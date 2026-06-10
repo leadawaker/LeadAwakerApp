@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Trash2, Check, User, ChevronDown } from "lucide-react";
-import { IconBtn } from "@/components/ui/icon-btn";
 import {
   Popover,
   PopoverContent,
@@ -37,6 +36,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const { t } = useTranslation("tasks");
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
+  const currentUserId = Number(localStorage.getItem("leadawaker_user_id") || 0);
+  const currentUserFromList = useMemo(() => users.find(u => u.id === currentUserId), [users, currentUserId]);
+  const currentUserName = currentUserFromList?.fullName1 || localStorage.getItem("leadawaker_user_name") || "";
   const deleteMutation = useDeleteTask();
   const createMutation = useCreateTask();
   const { data: categories = [] } = useTaskCategories();
@@ -124,6 +126,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
 
   const handleSave = () => {
     if (!task) return;
+    const selectedUser = users.find(u => (u.fullName1 || u.email) === assigneeName);
     updateMutation.mutate({
       id: task.id,
       data: {
@@ -136,8 +139,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
         categoryId,
         emoji: emoji || null,
         assigneeName,
+        assignedToUserId: selectedUser?.id ?? null,
       },
-    });
+    }, { onSuccess: onClose });
   };
 
   const handleDelete = () => {
@@ -168,7 +172,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
       <div className="relative flex flex-col h-full overflow-hidden">
         <div className="relative flex items-center gap-1 px-4 pt-6 pb-4 shrink-0">
           <div className="flex-1" />
-          <IconBtn onClick={onClose}><X className="h-4 w-4" /></IconBtn>
+          <button onClick={onClose} className="la-btn la-btn--soft la-btn--icon" style={{ width: 32, height: 32 }}>
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
         <div className="relative flex-1 flex items-center justify-center text-[13px] text-muted-foreground">
           {t("page.taskNotFound")}
@@ -177,8 +183,8 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     );
   }
 
-  // Inset fields on the bone ground — recessed neumorphic look.
-  const inputCls = "w-full h-9 px-3 rounded-md bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[13px] text-[var(--ink)] outline-none transition-shadow";
+  // Inset fields — recessed neumorphic, slightly square radius.
+  const inputCls = "w-full h-9 px-3 rounded-[5px] bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[13px] text-[var(--ink)] outline-none transition-shadow";
   const selectCls = inputCls;
   const labelCls = "text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--mute-2)]";
 
@@ -231,7 +237,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
               </PopoverContent>
             </Popover>
             {/* Close */}
-            <IconBtn onClick={onClose}><X className="h-4 w-4" /></IconBtn>
+            <button onClick={onClose} className="la-btn la-btn--soft la-btn--icon" title="Close" style={{ width: 32, height: 32 }}>
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       </div>
@@ -247,7 +255,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
               <label className={labelCls}>{t("fields.description")}</label>
               <textarea
                 ref={descRef}
-                className="w-full px-3 py-2.5 rounded-md bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[14px] text-[var(--ink)] resize-none outline-none transition-shadow overflow-hidden leading-relaxed"
+                className="w-full px-3 py-2.5 rounded-[5px] bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[14px] text-[var(--ink)] resize-none outline-none transition-shadow overflow-hidden leading-relaxed"
                 style={{ minHeight: "80px" }}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -256,15 +264,15 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
             </div>
 
             {/* Comments */}
-            <CommentsSection taskId={taskId} />
+            <CommentsSection taskId={taskId} currentUserName={currentUserName} users={users} />
 
             {/* Attachments */}
             <AttachmentsSection taskId={taskId} />
 
             {/* Timestamps */}
-            <div className="text-[11px] text-muted-foreground pt-2 space-y-1 border-t border-border/20">
-              <p>{t("detail.created")} {relativeTime(task.createdAt as unknown as string)}</p>
-              <p>{t("detail.updated")} {relativeTime(task.updatedAt as unknown as string)}</p>
+            <div className="text-[11px] text-muted-foreground pt-2 border-t border-border/20 flex items-center gap-4 flex-wrap">
+              <span>{t("detail.created")} {relativeTime(task.createdAt as unknown as string)}</span>
+              <span>{t("detail.updated")} {relativeTime(task.updatedAt as unknown as string)}</span>
             </div>
           </div>
 
@@ -325,9 +333,12 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                   <button className={cn(inputCls, "flex items-center gap-2 cursor-pointer text-left")}>
                     {assigneeName ? (
                       <>
-                        <span className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 shrink-0">
-                          {assigneeInitials}
-                        </span>
+                        {(() => {
+                          const au = users.find(u => (u.fullName1 || u.email) === assigneeName);
+                          return au?.avatarUrl
+                            ? <img src={au.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
+                            : <span className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo shrink-0">{assigneeInitials}</span>;
+                        })()}
                         <span className="flex-1 truncate text-[13px]">{assigneeName}</span>
                       </>
                     ) : (
@@ -343,7 +354,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                   <button
                     onClick={() => { setAssigneeName(null); setAssigneeOpen(false); }}
                     className={cn(
-                      "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors",
+                      "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[5px] text-[12px] transition-colors",
                       !assigneeName ? "bg-muted font-medium" : "hover:bg-muted/50"
                     )}
                   >
@@ -353,19 +364,20 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                   {users.map((u) => {
                     const name = u.fullName1 || u.email || "";
                     if (!name) return null;
-                    const initials = name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+                    const inits = name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
                     return (
                       <button
                         key={u.id}
                         onClick={() => { setAssigneeName(name); setAssigneeOpen(false); }}
                         className={cn(
-                          "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors",
+                          "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[5px] text-[12px] transition-colors",
                           assigneeName === name ? "bg-muted font-medium" : "hover:bg-muted/50"
                         )}
                       >
-                        <span className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20 shrink-0">
-                          {initials}
-                        </span>
+                        {u.avatarUrl
+                          ? <img src={u.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
+                          : <span className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-brand-indigo/10 text-brand-indigo shrink-0">{inits}</span>
+                        }
                         <span className="truncate">{name}</span>
                       </button>
                     );

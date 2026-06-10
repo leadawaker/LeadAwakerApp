@@ -80,7 +80,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
           name: prompt.name || "",
           promptText: promptTextVal,
           systemMessage: systemMessageVal,
-          model: prompt.model || "gpt-5.1",
+          model: prompt.model || "gpt-5.5",
           temperature: prompt.temperature != null ? String(prompt.temperature) : "0.7",
           maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
           status: prompt.status || "active",

@@ -96,7 +96,7 @@ const VIEW_TAB_KEYS: { id: string; tKey: string; icon: typeof List }[] = [
 /* ── Status group ordering ── */
 const STATUS_GROUP_ORDER = [
   "New", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Closed", "Lost", "DND",
+  "Qualified", "Booked", "Lost", "DND",
 ];
 
 const STATUS_OPTIONS = STATUS_GROUP_ORDER;
@@ -1207,10 +1207,10 @@ export function LeadsTable() {
       {viewMode === "table" && (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-          {/* ── Full-width flat top bar ── */}
-          <div className="shrink-0 flex items-center gap-3" style={{ height: 56, borderBottom: "1px solid var(--line)", background: "var(--bg)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
+          {/* ── Full-width flat top bar (matches list view) ── */}
+          <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
             <div className="flex items-baseline gap-2 shrink-0">
-              <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+              <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
               <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
             </div>
             <div className="la-seg shrink-0">
@@ -1228,14 +1228,14 @@ export function LeadsTable() {
             </div>
             <div className="flex-1 min-w-0" />
             <div className="shrink-0 flex items-center gap-[5px]">
-              {/* Search */}
-              <div className="relative" style={{ width: 190 }}>
+              {/* Search — same as list view */}
+              <div className="relative" style={{ width: 160 }}>
                 <input
                   value={tableSearch}
                   onChange={(e) => setTableSearch(e.target.value)}
                   placeholder={t("toolbar.searchPlaceholder")}
                   className="la-input"
-                  style={{ padding: "7px 10px 7px 27px", fontSize: 11 }}
+                  style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
                 />
                 <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1489,7 +1489,7 @@ export function LeadsTable() {
           </div>
           {/* Right detail panel — appears when a lead is selected (design split) */}
           {selectedLead && (
-            <div className="shrink-0 overflow-hidden flex flex-col" style={{ flex: "0 0 clamp(380px, 34vw, 720px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
+            <div className="shrink-0 overflow-hidden flex flex-col" style={{ flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
               <LeadDetailView
                 lead={selectedLead}
                 onClose={handleClosePanel}
@@ -1507,10 +1507,10 @@ export function LeadsTable() {
       {viewMode === "pipeline" && (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-          {/* ── Full-width flat top bar ── */}
-          <div className="shrink-0 flex items-center gap-3" style={{ height: 56, borderBottom: "1px solid var(--line)", background: "var(--bg)", paddingLeft: "calc(var(--panel-gap) + 17px)", paddingRight: 17 }}>
+          {/* ── Full-width flat top bar (matches list view) ── */}
+          <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
             <div className="flex items-baseline gap-2 shrink-0">
-              <span className="serif" style={{ fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+              <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
               <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
             </div>
             <div className="la-seg shrink-0">
@@ -1528,14 +1528,14 @@ export function LeadsTable() {
             </div>
             <div className="flex-1 min-w-0" />
             <div className="shrink-0 flex items-center gap-[5px]">
-              {/* Search */}
-              <div className="relative" style={{ width: 190 }}>
+              {/* Search — same as list view */}
+              <div className="relative" style={{ width: 160 }}>
                 <input
                   value={kanbanSearchQuery}
                   onChange={(e) => setKanbanSearchQuery(e.target.value)}
                   placeholder={t("toolbar.searchPlaceholder")}
                   className="la-input"
-                  style={{ padding: "7px 10px 7px 27px", fontSize: 11 }}
+                  style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
                 />
                 <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1615,32 +1615,26 @@ export function LeadsTable() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {/* Settings ⚙ — pipeline-specific options */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="la-btn la-btn--soft la-btn--icon">
-                    <Settings className="h-4 w-4 shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 bg-white">
-                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setCompactMode((v) => !v); }} className="flex items-center gap-2 text-[12px]">
-                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", compactMode ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-                      {compactMode && <Check className="h-2 w-2 text-white" />}
-                    </div>
-                    <span className="flex-1">{t("toolbar.compactView")}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { if (hasAnyCollapsed) { setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 })); } else { setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 })); } }} className="flex items-center gap-2 text-[12px]">
-                    <Rows3 className="h-3.5 w-3.5 shrink-0" />
-                    <span className="flex-1">{hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowTagsAlways((v) => !v); }} className="flex items-center gap-2 text-[12px]">
-                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", showTagsAlways ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-                      {showTagsAlways && <Check className="h-2 w-2 text-white" />}
-                    </div>
-                    <span className="flex-1">{t("toolbar.tags")}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Compact toggle — neumorphic button */}
+              <button
+                onClick={() => setCompactMode((v) => !v)}
+                className={cn("la-btn la-btn--soft", compactMode && "on")}
+                title={t("toolbar.compactView")}
+                style={{ fontSize: 11 }}
+              >
+                {compactMode ? <Expand size={13} /> : <Shrink size={13} />}
+                {t("toolbar.compactView")}
+              </button>
+              {/* Fold / Unfold — neumorphic button */}
+              <button
+                onClick={() => { if (hasAnyCollapsed) { setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 })); } else { setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 })); } }}
+                className="la-btn la-btn--soft"
+                title={hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
+                style={{ fontSize: 11 }}
+              >
+                <Rows3 size={13} />
+                {hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
+              </button>
               {/* +Add */}
               <button onClick={handleAddLead} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
                 <Plus className="h-[14px] w-[14px] shrink-0" />
@@ -1652,7 +1646,7 @@ export function LeadsTable() {
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
           {/* Right: kanban + optional detail panel */}
           <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
-            <div className="flex-1 min-w-0 overflow-hidden p-[6px] pt-0">
+            <div className="flex-1 min-w-0 overflow-hidden p-[6px] pt-3">
               <LeadsKanban
                 leads={filteredPipelineLeads}
                 loading={loading}
@@ -1667,7 +1661,7 @@ export function LeadsTable() {
               />
             </div>
             {selectedKanbanLead && (
-              <div className="shrink-0 flex flex-col overflow-hidden" style={{ flex: "0 0 clamp(380px, 34vw, 720px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
+              <div className="shrink-0 flex flex-col overflow-hidden" style={{ flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
                 <LeadDetailView
                   lead={selectedKanbanLead}
                   onClose={handleCloseKanbanPanel}

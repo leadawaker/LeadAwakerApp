@@ -21,6 +21,7 @@ import {
 import {
   MobileInvoiceDetail, MobileExpenseDetail, MobileContractDetail,
 } from "./MobileDetailSheets";
+import { ExpenseCreateDialog } from "../ExpenseCreateDialog";
 
 type BillingTab = "invoices" | "contracts" | "expenses";
 
@@ -64,6 +65,7 @@ export function MobileBillingView({
   const [filter, setFilter] = useState("all");
   const [sel, setSel] = useState<Selection>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [expenseCreateOpen, setExpenseCreateOpen] = useState(false);
 
   const { data: expensesRaw } = useExpensesData();
   const expenses = useMemo(() => expensesRaw ?? [], [expensesRaw]);
@@ -304,11 +306,21 @@ export function MobileBillingView({
         </div>
       </div>
 
-      {/* FAB — agency only, not on expenses (expense create panel is desktop-bound) */}
-      {isAgencyUser && activeTab !== "expenses" && (
+      {/* FAB — agency only. Invoices/contracts use the parent panel handlers;
+          expenses open the self-contained ExpenseCreateDialog (auto-refreshes
+          the ["expenses"] query on save). */}
+      {isAgencyUser && (
         <button
-          onClick={activeTab === "invoices" ? onNewInvoice : onNewContract}
-          aria-label={activeTab === "invoices" ? t("toolbar.newInvoice") : t("toolbar.newContract")}
+          onClick={
+            activeTab === "invoices" ? onNewInvoice
+            : activeTab === "contracts" ? onNewContract
+            : () => setExpenseCreateOpen(true)
+          }
+          aria-label={
+            activeTab === "invoices" ? t("toolbar.newInvoice")
+            : activeTab === "contracts" ? t("toolbar.newContract")
+            : t("toolbar.newExpense")
+          }
           style={{
             position: "absolute", right: 18, bottom: "calc(24px + var(--safe-bottom))", zIndex: 15,
             width: 56, height: 56, borderRadius: "var(--r-card)", border: "none", cursor: "pointer",
@@ -349,6 +361,9 @@ export function MobileBillingView({
           )}
         </div>
       </MobSheet>
+
+      {/* Expense create — self-contained dialog (invalidates ["expenses"] on save) */}
+      <ExpenseCreateDialog open={expenseCreateOpen} onClose={() => setExpenseCreateOpen(false)} />
     </div>
   );
 }

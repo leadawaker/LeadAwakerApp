@@ -160,6 +160,15 @@
     "deletePrompt": "Prompt verwijderen",
     "clickToToggle": "Klik om te {{action}}"
   },
+  "tabs": {
+    "system": "Systeem",
+    "campaigns": "Campagnes"
+  },
+  "editor": {
+    "raw": "Raw",
+    "sections": "Secties",
+    "variables": "Variabelen"
+  },
   "time": {
     "justNow": "Zojuist",
     "hoursAgo": "{{count}}u geleden",
