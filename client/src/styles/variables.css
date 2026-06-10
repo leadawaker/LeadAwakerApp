@@ -228,3 +228,136 @@
   --panel-pad: 0.75rem;
   --panel-bg: hsl(var(--card));
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Neumorphic Warm-Bone Design System — Dark Mode
+   Applied when <html class="dark"> (toggled by useTheme / the dark-mode button).
+   Same hues as light mode (warm hue ~30, wine accent ~348), inverted lightness.
+   Only color/shadow/glass tokens are overridden — radii, spacing, layout,
+   shadow geometry and light direction are inherited from :root.
+   ───────────────────────────────────────────────────────────────────────── */
+:root.dark {
+  /* ── Grounds & Surfaces (warm charcoal ladder) ── */
+  --background: 30 12% 8%;            /* #171411 — warm near-black page ground */
+  --foreground: 36 20% 90%;           /* #EAE3D7 — warm off-white text */
+  --bg-main: 30 12% 8%;
+  --bg-2: 30 12% 11%;                 /* nav rail / sidebar chrome */
+
+  --card: 30 11% 13%;                 /* #241F1B — elevated card surface */
+  --card-foreground: 36 20% 90%;
+  --card-hover: 30 11% 16%;           /* lifted card hover */
+
+  --popover: 30 12% 14%;
+  --popover-foreground: 36 20% 90%;
+
+  /* Primary: brightened wine so it separates from the dark ground */
+  --primary: 348 42% 49%;            /* #B14A5C */
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: warm dark surface */
+  --secondary: 30 10% 19%;
+  --secondary-foreground: 36 20% 90%;
+
+  /* Muted */
+  --muted: 30 10% 17%;
+  --muted-foreground: 38 10% 60%;     /* #A39A88 — warm muted text */
+
+  /* Accent: matches primary wine */
+  --accent: 348 42% 49%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive */
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Toast semantic colors */
+  --success: 150 50% 46%;            /* brighter emerald for dark */
+  --success-foreground: 0 0% 100%;
+  --info: 348 42% 49%;
+  --info-foreground: 0 0% 100%;
+
+  /* Borders */
+  --border: 30 9% 26%;
+  --input: 30 10% 19%;
+  --ring: 348 50% 56%;
+
+  /* ── Chart colors (brightened for dark ground) ── */
+  --chart-1: 348 50% 58%;
+  --chart-2: 150 50% 50%;
+  --chart-3: 37 75% 58%;
+  --chart-4: 260 35% 64%;
+  --chart-5: 10 58% 58%;
+
+  /* ── Brand tokens (all wine) ── */
+  --brand-blue: 348 42% 49%;
+  --brand-blue-foreground: 0 0% 100%;
+  --brand-deep-blue: 348 45% 38%;
+  --brand-deep-blue-foreground: 0 0% 100%;
+  --brand-yellow: 348 42% 49%;
+  --brand-yellow-foreground: 0 0% 100%;
+  --brand-soft-yellow: 348 40% 58%;
+  --brand-soft-yellow-foreground: 0 0% 100%;
+  --brand-indigo: 348 42% 49%;
+  --brand-indigo-foreground: 0 0% 100%;
+  --brand-indian-yellow: 30 10% 17%;
+  --brand-indian-yellow-foreground: 36 20% 90%;
+
+  /* Highlight tokens — warm wine/amber tints for active/selected on dark
+     (alpha is applied in tokens.css; these are the base colors) */
+  --highlight-active: 22 55% 30%;
+  --highlight-selected: 24 50% 32%;
+  --highlight-hover: 20 38% 26%;
+  --input-bg: 30 10% 19%;
+
+  /* Sidebar rail (left nav) — darkest chrome tier */
+  --sidebar-bg: 30 12% 11%;
+  --sidebar-foreground: 36 18% 88%;
+  --sidebar-active: 348 42% 49%;
+  --sidebar-active-foreground: 0 0% 100%;
+
+  /* Page toolbars (sticky header rows) */
+  --panel-list-bg: 30 12% 11%;
+
+  /* ── Design System Tokens (inline styles / new components) ── */
+  --surface: #1F1A16;                /* raised chips/buttons */
+  --paper: #1B1714;                   /* elevated paper / hero band */
+  --card-bright: #241E19;            /* polished hero card */
+  --chrome: #16120F;                 /* nav chrome */
+  --ink-soft: #D7CDBE;               /* secondary text */
+  --mute: #A39A88;                   /* secondary warm text */
+  --mute-2: #877E6D;                 /* tertiary warm text */
+  --wine: #B14A5C;                   /* brightened brand wine */
+  --wine-soft: #C25E72;             /* wine hover */
+  --wine-tint: rgba(177, 74, 92, 0.18);
+  --wine-glow: rgba(177, 74, 92, 0.32);
+  --wine-grad: linear-gradient(145deg, #B14A5C, #7E3343);
+  --good: #3FB57A;                   /* emerald status */
+  --good-tint: rgba(63, 181, 122, 0.16);
+  --warn: #E6A23C;                   /* amber status */
+  --warn-tint: rgba(230, 162, 60, 0.16);
+  --line: rgba(225, 208, 178, 0.10);
+  --line-strong: rgba(225, 208, 178, 0.18);
+
+  /* ── Pipeline stage colors (brightened for dark) ── */
+  --stage-new: #8A77AB;
+  --stage-contacted: #6E97CC;
+  --stage-responded: #54AAAA;
+  --stage-multi: #74AB74;
+  --stage-qualified: #D0A954;
+  --stage-booked: #DCA146;
+  --stage-closed: #8A9674;
+  --stage-lost: #C26659;
+  --stage-dnd: #B3A488;
+
+  /* ── Neumorphic shadow base colors ──
+     Dark shadow becomes near-black; light edge becomes a very faint warm
+     highlight (a bright white edge would glow harshly on a dark surface). */
+  --neu-dark: rgba(0, 0, 0, 0.55);
+  --neu-light: rgba(255, 240, 220, 0.045);
+
+  /* ── Glass tokens ── */
+  --glass-bg: rgba(31, 26, 22, 0.55);
+  --glass-bg-strong: rgba(31, 26, 22, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-edge: rgba(255, 255, 255, 0.12);
+}

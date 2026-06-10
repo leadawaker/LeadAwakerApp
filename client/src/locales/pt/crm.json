@@ -21,7 +21,8 @@
     "support": "Suporte",
     "help": "Ajuda",
     "docs": "Docs",
-    "messageFounder": "Mensagem para Gabriel"
+    "messageFounder": "Mensagem para Gabriel",
+    "logout": "Sair"
   },
   "sidebarSections": {
     "engage": "Engajar",

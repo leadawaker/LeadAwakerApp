@@ -324,11 +324,11 @@ body, html { margin: 0; padding: 0; }
   }
   to {
     box-shadow: var(--sh-raised-crisp);
-    background: #FFF;
+    background: var(--card);
   }
 }
 .panel-glass-animate {
-  background: #FFF;
+  background: var(--card);
   border-radius: var(--r-card);
   border-top: 3px solid var(--wine);
   box-shadow: var(--sh-raised-crisp);
@@ -960,4 +960,143 @@ body, html { margin: 0; padding: 0; }
     radial-gradient(ellipse 42% 70% at 1% 125%, rgba(94, 34, 48, 0.06), transparent 70%),
     var(--paper);
   box-shadow: var(--sh-raised-large);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   DARK MODE — warm-charcoal counterpart of the warm-bone system.
+   This file is imported LAST, so this :root.dark block is the final word and
+   overrides the hex design tokens + --sh-* shadows that the neumorphic /
+   migration components (PanelShell, neu-*, calendar grid, task cards, prompt
+   editor) consume directly. Geometry/light vars stay; only colors invert.
+   Applied via <html class="dark"> (useTheme / the dark-mode button).
+   ═════════════════════════════════════════════════════════════════════════ */
+:root.dark {
+  /* Backgrounds & Surfaces — warm charcoal ladder */
+  --bg: #16120F;          /* page ground */
+  --bg-2: #1B1714;        /* sidebar / nav rail */
+  --chrome: #1B1714;      /* nav chrome alias */
+  --paper: #221D19;       /* elevated paper / hero band */
+  --surface: #1E1A16;     /* in-between — page bg, topbar, toolbars */
+  --card: #241F1B;        /* card surface */
+  --card-bright: #2A2420; /* polished hero */
+  --bone: #221D18;        /* prompt editor / preview writing surface */
+
+  /* Ink — warm off-whites */
+  --ink: #EAE3D7;
+  --ink-soft: #D7CDBE;
+  --mute: #A39A88;
+  --mute-2: #877E6D;
+
+  /* Borders — faint warm light on dark */
+  --line: rgba(225, 208, 178, 0.10);
+  --line-strong: rgba(225, 208, 178, 0.20);
+
+  /* Wine accent — brightened so it separates from the dark ground */
+  --wine: #B14A5C;
+  --wine-soft: #C25E72;
+  --wine-tint: rgba(177, 74, 92, 0.18);
+  --wine-glow: rgba(177, 74, 92, 0.32);
+  --wine-grad: linear-gradient(145deg, #B14A5C, #7E3343);
+
+  /* Status accents */
+  --good: #3FB57A;
+  --good-tint: rgba(63, 181, 122, 0.16);
+  --warn: #E6A23C;
+  --warn-tint: rgba(230, 162, 60, 0.16);
+
+  /* Pipeline stage colors — brightened for dark */
+  --stage-new: #8A77AB;
+  --stage-contacted: #6E97CC;
+  --stage-responded: #54AAAA;
+  --stage-multi: #74AB74;
+  --stage-qualified: #D0A954;
+  --stage-booked: #DCA146;
+  --stage-closed: #8A9674;
+  --stage-lost: #C26659;
+  --stage-dnd: #B3A488;
+
+  /* Glass */
+  --glass-bg: rgba(31, 26, 22, 0.42);
+  --glass-bg-strong: rgba(31, 26, 22, 0.64);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-edge: rgba(255, 255, 255, 0.12);
+
+  /* ─── Shadow tokens — same geometry, dark cast + faint warm light edge ─── */
+  --sh-raised-crisp:
+    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) rgba(0, 0, 0, 0.45),
+    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) rgba(255, 240, 220, 0.05);
+
+  --sh-raised-medium:
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) rgba(0, 0, 0, 0.48),
+    calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) rgba(255, 240, 220, 0.05);
+
+  --sh-raised-large:
+    calc(var(--lx) * var(--d-large-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o) * var(--light-strength) * -1) var(--d-large-b) rgba(0, 0, 0, 0.52),
+    calc(var(--lx) * var(--d-large-o) * var(--light-strength)) calc(var(--ly) * var(--d-large-o) * var(--light-strength)) var(--d-large-b) rgba(255, 240, 220, 0.05);
+
+  --sh-inset-crisp:
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) rgba(0, 0, 0, 0.50),
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) rgba(255, 240, 220, 0.045);
+
+  --sh-inset-medium:
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) rgba(0, 0, 0, 0.52),
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) rgba(255, 240, 220, 0.045);
+
+  --sh-polished-crisp:
+    calc(var(--lx) * var(--d-crisp-o) * 1 * var(--depth-polished) * -1)
+    calc(var(--ly) * var(--d-crisp-o) * 1 * var(--depth-polished) * -1)
+    calc(var(--d-crisp-b) * 0.2 * var(--depth-polished))
+    calc(var(--d-crisp-o) * -0.1)
+    rgba(0, 0, 0, 0.40),
+    inset calc(var(--lx) * var(--d-crisp-o) * 1 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-crisp-o) * 3 * var(--inset-highlight-scale))
+    0px 0
+    rgba(255, 240, 220, 0.06),
+    inset 0 1px 0 0 rgba(255, 240, 220, 0.05);
+
+  --sh-polished-medium:
+    calc(var(--lx) * var(--d-crisp-o) * 2 * var(--depth-polished) * -2)
+    calc(var(--ly) * var(--d-crisp-o) * 2 * var(--depth-polished) * -2)
+    calc(var(--d-crisp-b) * 1 * var(--depth-polished))
+    calc(var(--d-crisp-o) * -0.2)
+    rgba(0, 0, 0, 0.42),
+    0
+    calc(var(--d-large-o) * 1.2 * var(--depth-polished))
+    calc(var(--d-large-b) * 1.0 * var(--depth-polished))
+    calc(var(--d-large-o) * -0.3)
+    rgba(0, 0, 0, 0.30),
+    inset
+    calc(var(--lx) * var(--d-large-o) * 1.5 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * 1.5 * var(--inset-highlight-scale))
+    1px 0
+    rgba(255, 240, 220, 0.06),
+    inset
+    calc(var(--lx) * var(--d-large-o) * -1.5 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * -1.5 * var(--inset-highlight-scale))
+    5px 0
+    rgba(255, 240, 220, 0.03),
+    inset 0 1px 0 0 rgba(255, 240, 220, 0.05);
+
+  --sh-polished-large:
+    calc(var(--lx) * var(--d-large-o) * 3.5 * var(--depth-polished) * -1)
+    calc(var(--ly) * var(--d-large-o) * 3.5 * var(--depth-polished) * -1)
+    calc(var(--d-large-b) * 2.0 * var(--depth-polished))
+    calc(var(--d-large-o) * -0.2)
+    rgba(0, 0, 0, 0.45),
+    0
+    calc(var(--d-large-o) * 1.6 * var(--depth-polished))
+    calc(var(--d-large-b) * 1.4 * var(--depth-polished))
+    calc(var(--d-large-o) * -0.4)
+    rgba(0, 0, 0, 0.32),
+    inset
+    calc(var(--lx) * var(--d-large-o) * 1.8 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * 1.8 * var(--inset-highlight-scale))
+    1px 0
+    rgba(255, 240, 220, 0.06),
+    inset
+    calc(var(--lx) * var(--d-large-o) * -1.8 * var(--inset-highlight-scale))
+    calc(var(--ly) * var(--d-large-o) * -1.8 * var(--inset-highlight-scale))
+    12px 0
+    rgba(255, 240, 220, 0.03),
+    inset 0 1px 0 0 rgba(255, 240, 220, 0.05);
 }

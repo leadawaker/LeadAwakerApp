@@ -643,7 +643,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
               onScroll={handleScrollSync}
               className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:thin]"
               style={{
-                background: "#FAF7F2", boxShadow: "var(--sh-inset-crisp)", borderRadius: 8,
+                background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 8,
                 scrollbarColor: "rgba(114,47,55,0.2) transparent",
               }}
             >

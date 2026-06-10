@@ -21,7 +21,8 @@
     "support": "Ondersteuning",
     "help": "Help",
     "docs": "Docs",
-    "messageFounder": "Bericht aan Gabriel"
+    "messageFounder": "Bericht aan Gabriel",
+    "logout": "Uitloggen"
   },
   "sidebarSections": {
     "engage": "Betrekken",

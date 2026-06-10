@@ -456,11 +456,16 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
         color: "var(--ink-soft)",
       }
     : {
-        background: "#FFFFFF",
         boxShadow: "var(--sh-raised-crisp)",
         borderRadius: "13px 13px 3px 13px",
-        color: "var(--ink)",
       };
+  // Outbound bg/text via classes so dark mode can flip them (light unchanged:
+  // white + ink). Dark: AI → wine balloon + white text; human agent → dark card.
+  const bubbleColorClass = inbound
+    ? ""
+    : aiMsg
+      ? "bg-white text-[color:var(--ink)] dark:bg-[var(--wine)] dark:text-white"
+      : "bg-white text-[color:var(--ink)] dark:bg-card dark:text-[color:var(--ink-soft)]";
   const timeColor = inbound ? "var(--mute-2)" : "var(--muted-foreground)";
 
   return (
@@ -477,7 +482,7 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
       {/* Bubble — approved ChatMsg styling (black+cream out / inset in) */}
       <div
         title={aiCostTitle}
-        className="max-w-[80%] px-2.5 pt-1.5 pb-1 text-[13px] relative"
+        className={cn("max-w-[80%] px-2.5 pt-1.5 pb-1 text-[13px] relative", bubbleColorClass)}
         style={bubbleStyle}
       >
         {(() => {

@@ -112,10 +112,10 @@ export function PerformancePanel({ metrics, animTrigger }: {
                   displayText = showMonth ? `${dateStr.substring(0, 3)} ${day}` : day;
                 }
 
-                return <text x={x} y={y + 10} fontSize={10} fill="rgba(0,0,0,0.4)" textAnchor="middle">{displayText}</text>;
+                return <text x={x} y={y + 10} fontSize={10} fill="#948A77" textAnchor="middle">{displayText}</text>;
               }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", backgroundColor: "rgba(255,255,255,0.95)", color: "#111", fontSize: "11px", padding: "6px 10px" }} />
+              <YAxis tick={{ fontSize: 10, fill: "#948A77" }} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid var(--line)", backgroundColor: "var(--card)", color: "var(--ink)", fontSize: "11px", padding: "6px 10px" }} />
               <Area type="monotone" dataKey={t("summary.responsePercent")} stroke="var(--wine)" strokeWidth={2} fill="url(#fillResp)" dot={false} activeDot={{ r: 3 }} />
               <Area type="monotone" dataKey={t("summary.bookingPercent")} stroke="#C4A62F" strokeWidth={2} fill="none" dot={false} activeDot={{ r: 3 }} />
             </AreaChart>

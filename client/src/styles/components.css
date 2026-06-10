@@ -271,7 +271,7 @@
   box-shadow: var(--sh-polished-crisp);
   color: var(--wine);
   font-weight: 600;
-  animation: la-nav-highlight 240ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: la-nav-highlight 200ms cubic-bezier(0.25, 0, 0, 1) forwards;
 }
 .la-nav-item .icon {
   width: 18px;
@@ -450,5 +450,6 @@
 
 @keyframes la-nav-highlight {
   0% { background: transparent; box-shadow: none; }
-  100% { background: var(--surface); box-shadow: var(--sh-inset-crisp); }
+  100% { background: var(--surface); box-shadow: var(--sh-polished-crisp); }
 }
+
