@@ -284,24 +284,66 @@ export function BillingWorkspace(p: Props) {
   );
 
   function renderMain() {
-    // Expenses table mode — full spreadsheet.
-    if (expensesTableMode) {
+    // Table mode — full-width table (all tabs), optional create panel on the right.
+    if (tableMode) {
+      const showCreate =
+        (p.activeTab === "invoices" && (panelMode === "create" || panelMode === "edit")) ||
+        (p.activeTab === "contracts" && panelMode === "create") ||
+        (isExpenses && expensePanelOpen);
       return (
         <div className="flex-1 min-h-0 flex overflow-hidden">
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <ExpensesView
-              quarterFilter={quarterFilter}
-              yearFilter={yearFilter}
-              searchQuery={search}
-              selectedIds={expenseSelectedIds}
-              onSelectionChange={setExpenseSelectedIds}
-              groupBy={groupBy === "year_quarter" ? "year_quarter" : "none"}
-              exportTrigger={0}
-            />
+          <div className="flex-1 min-w-0 overflow-hidden bg-card">
+            {p.activeTab === "invoices" ? (
+              <InvoicesInlineTable
+                invoices={filteredInvoices}
+                loading={p.invoicesLoading}
+                selectedInvoice={p.selectedInvoice}
+                onSelectInvoice={(i) => p.onSelectInvoice(i)}
+                selectedIds={invoiceSelectedIds}
+                onSelectionChange={setInvoiceSelectedIds}
+                visibleColumns={visibleInvoiceColumns}
+                groupBy="none"
+              />
+            ) : p.activeTab === "contracts" ? (
+              <ContractsInlineTable
+                contracts={filteredContracts}
+                loading={p.contractsLoading}
+                selectedContract={p.selectedContract}
+                onSelectContract={(c) => p.onSelectContract(c)}
+                selectedIds={contractSelectedIds}
+                onSelectionChange={setContractSelectedIds}
+                visibleColumns={visibleContractColumns}
+              />
+            ) : (
+              <ExpensesView
+                quarterFilter={quarterFilter}
+                yearFilter={yearFilter}
+                searchQuery={search}
+                selectedIds={expenseSelectedIds}
+                onSelectionChange={setExpenseSelectedIds}
+                groupBy={groupBy === "year_quarter" ? "year_quarter" : "none"}
+                exportTrigger={0}
+              />
+            )}
           </div>
-          {expensePanelOpen && (
-            <div className="w-full md:w-[500px] shrink-0 overflow-y-auto" style={{ background: "var(--bg)" }}>
-              <ExpenseCreatePanel editingExpense={editingExpense} onClose={() => { setExpensePanelOpen(false); setEditingExpense(null); }} />
+          {showCreate && (
+            <div className="w-full md:w-[500px] shrink-0 overflow-hidden flex flex-col" style={{ background: "var(--bg)" }}>
+              {p.activeTab === "invoices" ? (
+                <InvoiceCreatePanel
+                  editingInvoice={editingInvoice}
+                  prefillInvoice={duplicatingInvoice}
+                  nextInvoiceNumber={nextInvoiceNumber}
+                  accounts={accounts}
+                  isAgencyUser={p.isAgencyUser}
+                  onCreate={p.onCreateInvoice}
+                  onUpdate={p.onUpdateInvoice}
+                  onClose={() => { setPanelMode("view"); setEditingInvoice(null); setDuplicatingInvoice(null); }}
+                />
+              ) : p.activeTab === "contracts" ? (
+                <ContractCreatePanel accounts={accounts} isAgencyUser={p.isAgencyUser} onCreate={p.onCreateContract} onClose={() => setPanelMode("view")} />
+              ) : (
+                <ExpenseCreatePanel editingExpense={editingExpense} onClose={() => { setExpensePanelOpen(false); setEditingExpense(null); }} />
+              )}
             </div>
           )}
         </div>
