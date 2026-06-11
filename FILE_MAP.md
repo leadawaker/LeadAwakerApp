@@ -100,7 +100,7 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | LeadsKanban | `components/LeadsKanban.tsx` | Drag-drop kanban columns |
 | LeadsInlineTable | `components/LeadsInlineTable.tsx` | Virtualized table view |
 | LeadDetailPanel | `components/LeadDetailPanel.tsx` | Full slide-over Sheet used in **table view, kanban, calendar, and opportunities only** — NOT used in list view. Now a composition; sections/helpers live in `components/leadDetail/` |
-| leadDetail/ | `components/leadDetail/` | Sections + helpers split out of LeadDetailPanel: `types.ts`, `format.ts` (date/AI-memory/score-context), `badges.tsx`, `atoms.tsx` (InfoRow/SectionTitle/InlineEditField), `ScorePanel.tsx`, `LeadInteractionTimeline.tsx`, `LeadScoreSection.tsx`, `LeadTagsSection.tsx`, `LeadNotesSection.tsx`, `index.ts` (barrel) |
+| leadDetail/ | `components/leadDetail/` | Sections, hooks + helpers split out of LeadDetailPanel (barrel: `index.ts`). Helpers: `types.ts`, `format.ts` (date/AI-memory/score-context), `badges.tsx`, `atoms.tsx` (InfoRow/SectionTitle/InlineEditField), `ScorePanel.tsx`. Section components: `LeadContactSection`, `LeadStatusSection`, `LeadDncSection`, `LeadBumpSection`, `LeadActivitySection`, `LeadBookingSection`, `LeadAiInsightsSection`, `LeadAssignmentSection`, `LeadInteractionTimeline`, `LeadScoreSection`, `LeadTagsSection`, `LeadNotesSection`. State hooks: `useLeadDnc`, `useLeadStage`, `useLeadTags`, `useVoiceRecording`, `useLeadNotes` (Session C). |
 | LeadFilters | `components/LeadFilters.tsx` | Filter UI |
 | PipelineToolbar | `components/PipelineToolbar.tsx` | Kanban pipeline toolbar (legacy ToolbarPill usage) |
 | CsvImportWizard | `components/CsvImportWizard.tsx` | CSV lead import flow |
