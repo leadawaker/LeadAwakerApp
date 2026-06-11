@@ -84,6 +84,7 @@ import {
   LeadTagsSection,
   LeadNotesSection,
   useLeadDnc,
+  useLeadStage,
   type Interaction,
   type TagData,
   type LeadTagEntry,
@@ -112,10 +113,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
   const [tagEvents, setTagEvents] = useState<any[]>([]);
-  const [localStatus, setLocalStatus] = useState<string>("");
-  const [savingStatus, setSavingStatus] = useState(false);
-  const [stageSaved, setStageSaved] = useState(false);
-  const [localAiSummary, setLocalAiSummary] = useState<string | null>(null);
 
   // ── Tags state ──
   const [leadTags, setLeadTags] = useState<TagData[]>([]);
@@ -152,6 +149,15 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
 
   const leadId = lead?.Id || lead?.id;
 
+  // ── Pipeline stage state (extracted hook) ──
+  const {
+    localStatus,
+    savingStatus,
+    stageSaved,
+    localAiSummary,
+    handleStageChange,
+  } = useLeadStage(leadId, lead);
+
   // ── DNC / Opted-out state (extracted hook) ──
   const {
     localOptedOut,
@@ -163,13 +169,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     handleDncChange,
     handleDncReasonSave,
   } = useLeadDnc(leadId, lead);
-
-  // Sync localStatus when lead changes
-  useEffect(() => {
-    const status = lead?.conversion_status || lead?.Conversion_Status || "";
-    setLocalStatus(status);
-    setStageSaved(false);
-  }, [lead?.Id, lead?.id, lead?.Conversion_Status, lead?.conversion_status]);
 
   // Sync notes when lead changes
   useEffect(() => {
@@ -362,46 +361,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const unassignedTags = availableTags.filter(
     (t) => !leadTags.some((lt) => lt.id === t.id)
   );
-
-  const handleStageChange = async (newStage: string) => {
-    if (!leadId || newStage === localStatus) return;
-
-    const prevStatus = localStatus;
-    setLocalStatus(newStage); // optimistic update
-    setSavingStatus(true);
-    setStageSaved(false);
-
-    try {
-      const res = await apiFetch(`/api/leads/${leadId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Conversion_Status: newStage }),
-      });
-      if (!res.ok) {
-        setLocalStatus(prevStatus); // revert on error
-      } else {
-        setStageSaved(true);
-        setTimeout(() => setStageSaved(false), 2000);
-        // After booking/closing, the Python engine generates an AI summary async.
-        // Refetch the lead after ~3.5s to pick it up without requiring a page refresh.
-        if (newStage === "Booked") {
-          setTimeout(async () => {
-            try {
-              const r = await apiFetch(`/api/leads/${leadId}`);
-              if (r.ok) {
-                const updated = await r.json();
-                if (updated.ai_summary) setLocalAiSummary(updated.ai_summary);
-              }
-            } catch { /* silent */ }
-          }, 3500);
-        }
-      }
-    } catch {
-      setLocalStatus(prevStatus); // revert on error
-    } finally {
-      setSavingStatus(false);
-    }
-  };
 
   const handleNotesSave = async () => {
     if (!leadId || !notesDirty || savingNotes) return;
