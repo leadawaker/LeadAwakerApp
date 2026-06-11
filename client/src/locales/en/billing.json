@@ -544,6 +544,19 @@
   },
   "expenses": {
     "title": "Expenses",
+    "bulk": {
+      "selectAll": "Select all",
+      "setPeriod": "Set quarter/year",
+      "quarter": "Quarter",
+      "year": "Year",
+      "apply": "Apply",
+      "export": "Export CSV",
+      "delete": "Delete",
+      "confirmDelete": "Delete {{count}}?",
+      "confirm": "Yes",
+      "cancel": "No",
+      "clear": "Clear"
+    },
     "empty": {
       "noExpensesFound": "No expenses found",
       "noExpensesMatchSearch": "No expenses match your search",

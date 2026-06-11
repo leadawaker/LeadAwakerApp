@@ -543,6 +543,19 @@
   },
   "expenses": {
     "title": "Uitgaven",
+    "bulk": {
+      "selectAll": "Alles selecteren",
+      "setPeriod": "Kwartaal/jaar instellen",
+      "quarter": "Kwartaal",
+      "year": "Jaar",
+      "apply": "Toepassen",
+      "export": "Exporteer CSV",
+      "delete": "Verwijderen",
+      "confirmDelete": "{{count}} verwijderen?",
+      "confirm": "Ja",
+      "cancel": "Nee",
+      "clear": "Wissen"
+    },
     "empty": {
       "noExpensesFound": "Geen uitgaven gevonden",
       "noExpensesMatchSearch": "Geen uitgaven komen overeen met uw zoekopdracht",
