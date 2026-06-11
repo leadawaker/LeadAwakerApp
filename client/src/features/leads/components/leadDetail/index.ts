@@ -5,3 +5,4 @@ export * from "./format";
 export * from "./badges";
 export * from "./atoms";
 export * from "./ScorePanel";
+export * from "./LeadInteractionTimeline";
