@@ -83,6 +83,7 @@ import {
   LeadScoreSection,
   LeadTagsSection,
   LeadNotesSection,
+  useLeadDnc,
   type Interaction,
   type TagData,
   type LeadTagEntry,
@@ -149,14 +150,19 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [localManualTakeover, setLocalManualTakeover] = useState<boolean>(false);
   const [savingManualTakeover, setSavingManualTakeover] = useState(false);
 
-  // ── DNC / Opted-out state ──
-  const [localOptedOut, setLocalOptedOut] = useState<boolean>(false);
-  const [localDncReason, setLocalDncReason] = useState<string>("");
-  const [savingDnc, setSavingDnc] = useState(false);
-  const [dncSaved, setDncSaved] = useState(false);
-  const [showDncReason, setShowDncReason] = useState(false);
-
   const leadId = lead?.Id || lead?.id;
+
+  // ── DNC / Opted-out state (extracted hook) ──
+  const {
+    localOptedOut,
+    localDncReason,
+    setLocalDncReason,
+    savingDnc,
+    dncSaved,
+    showDncReason,
+    handleDncChange,
+    handleDncReasonSave,
+  } = useLeadDnc(leadId, lead);
 
   // Sync localStatus when lead changes
   useEffect(() => {
@@ -186,15 +192,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   useEffect(() => {
     setLocalManualTakeover(Boolean(lead?.manual_takeover));
   }, [lead?.Id, lead?.id, lead?.manual_takeover]);
-
-  // Sync DNC / opted-out state when lead changes
-  useEffect(() => {
-    const optedOut = Boolean(lead?.opted_out);
-    setLocalOptedOut(optedOut);
-    setLocalDncReason(lead?.dnc_reason || "");
-    setShowDncReason(optedOut);
-    setDncSaved(false);
-  }, [lead?.Id, lead?.id, lead?.opted_out, lead?.dnc_reason]);
 
   // Fetch interactions when panel opens with a lead
   useEffect(() => {
@@ -543,55 +540,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [fieldName]: newValue }),
     });
-  };
-
-  const handleDncChange = async (checked: boolean) => {
-    if (!leadId || savingDnc) return;
-    const prev = localOptedOut;
-    setLocalOptedOut(checked);
-    setShowDncReason(checked);
-    setSavingDnc(true);
-    setDncSaved(false);
-    try {
-      const payload: Record<string, any> = { opted_out: checked };
-      if (!checked) payload.dnc_reason = "";
-      const res = await apiFetch(`/api/leads/${leadId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        setLocalOptedOut(prev);
-        setShowDncReason(prev);
-      } else {
-        if (!checked) setLocalDncReason("");
-        setDncSaved(true);
-        setTimeout(() => setDncSaved(false), 2000);
-      }
-    } catch {
-      setLocalOptedOut(prev);
-      setShowDncReason(prev);
-    } finally {
-      setSavingDnc(false);
-    }
-  };
-
-  const handleDncReasonSave = async () => {
-    if (!leadId || savingDnc) return;
-    setSavingDnc(true);
-    try {
-      await apiFetch(`/api/leads/${leadId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dnc_reason: localDncReason }),
-      });
-      setDncSaved(true);
-      setTimeout(() => setDncSaved(false), 2000);
-    } catch {
-      // silently ignore
-    } finally {
-      setSavingDnc(false);
-    }
   };
 
   if (!lead) return null;

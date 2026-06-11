@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lead Awaker · Accounts</title>
+<link rel="stylesheet" href="design-system.css">
+<style>
+  html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: "Manrope", system-ui, sans-serif; }
+  .density-compact { --pad: 18px; --pad-tight: 12px; --gap: 12px; }
+  .density-regular { --pad: 24px; --pad-tight: 16px; --gap: 16px; }
+  .density-comfy   { --pad: 32px; --pad-tight: 22px; --gap: 22px; }
+  .font-instrument { --serif: "Instrument Serif", Georgia, serif; }
+  .font-newsreader { --serif: "Newsreader", Georgia, serif; }
+  .font-garamond   { --serif: "EB Garamond", Georgia, serif; }
+  .font-playfair   { --serif: "Playfair Display", Georgia, serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="accounts-data.js"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="accounts-components.jsx"></script>
+<script type="text/babel" src="accounts-kb.jsx"></script>
+<script type="text/babel" src="accounts-workspace.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "lightAngle": 50,
+  "lightIntensity": 0.85,
+  "depthScale": 0.5,
+  "density": "regular",
+  "displayFont": "instrument",
+  "layout": "auto"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const rad = (t.lightAngle * Math.PI) / 180;
+    root.style.setProperty('--lx',              Math.cos(rad).toFixed(3));
+    root.style.setProperty('--ly',              (-Math.sin(rad)).toFixed(3));
+    root.style.setProperty('--light-x',         `${50 + Math.cos(rad) * 45}%`);
+    root.style.setProperty('--light-y',         `${50 - Math.sin(rad) * 45}%`);
+    root.style.setProperty('--light-intensity', t.lightIntensity);
+    root.style.setProperty('--depth-scale',     t.depthScale);
+    root.style.setProperty('--light-strength',  t.depthScale);
+  }, [t.lightAngle, t.lightIntensity, t.depthScale]);
+
+  const cls = `density-${t.density} font-${t.displayFont}`;
+
+  return (
+    <>
+      <div className={cls} style={{ width: '100%', height: '100%' }}>
+        <AccountsWorkspace layoutOverride={t.layout} />
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Layout" />
+        <TweakRadio  label="Width mode" value={t.layout} options={[
+                       { value: 'auto', label: 'Auto' },
+                       { value: 'regular', label: 'Regular' },
+                       { value: 'ultra', label: 'Ultra-wide' },
+                     ]}
+                     onChange={(v) => setTweak('layout', v)} />
+        <TweakRadio  label="Density" value={t.density} options={['compact','regular','comfy']}
+                     onChange={(v) => setTweak('density', v)} />
+        <TweakSection label="Light" />
+        <TweakSlider label="Angle"     value={t.lightAngle}     min={0}    max={180}  step={5}   unit="°"
+                     onChange={(v) => setTweak('lightAngle', v)} />
+        <TweakSlider label="Intensity" value={Math.round(t.lightIntensity * 100) / 100}
+                     min={0} max={1.5} step={0.05} onChange={(v) => setTweak('lightIntensity', v)} />
+        <TweakSlider label="Depth"     value={Math.round(t.depthScale * 100) / 100}
+                     min={0.35} max={1.85} step={0.05} unit="×" onChange={(v) => setTweak('depthScale', v)} />
+        <TweakSection label="Typography" />
+        <TweakSelect label="Display font" value={t.displayFont}
+                     options={[
+                       { value: 'instrument', label: 'Instrument Serif' },
+                       { value: 'newsreader', label: 'Newsreader' },
+                       { value: 'garamond',   label: 'EB Garamond' },
+                       { value: 'playfair',   label: 'Playfair Display' },
+                     ]}
+                     onChange={(v) => setTweak('displayFont', v)} />
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

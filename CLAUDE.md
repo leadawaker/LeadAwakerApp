@@ -48,6 +48,17 @@ Never use `process.exit()` in Vite or server error handlers — it kills the ent
 - Follow `UI_STANDARDS.md` strictly. Check it before introducing new color values, spacing, or component patterns.
 - Content-width cap: `max-w-[1386px] mr-auto` on outer flex child, never inner wrapper.
 - Full-height columns: parent needs `overflow-hidden + min-h-0`, each column needs `min-h-0 overflow-y-auto`.
+- Dark mode is live: never hardcode `bg-white`/`text-black`/raw hex, always use tokens.
+
+## Architecture Conventions (post-refactor, 2026-06)
+
+- **Routing is lazy everywhere.** Every page in `client/src/App.tsx` and `client/src/pages/app.tsx` is a `React.lazy` import. New pages must follow this pattern (named exports need `.then(m => ({ default: m.X }))`). Never add a static page import: it lands in the entry chunk.
+- **Server routing:** `server/routes/index.ts` + domain files in `server/routes/`. `server/routes.ts` no longer exists.
+- **Server storage:** `server/storage.ts` is a thin barrel; methods live in domain modules under `server/storage/` (accounts, leads, campaigns, interactions, tasks, billing, agents, ...). Add new methods to the right module, keep the barrel's `storage` object as the only consumer-facing API.
+- **List views:** new list/table pipelines use `buildEntityRows()` / `groupItemsToMap()` from `client/src/components/crm/entityList/` instead of copy-pasting another page's filter→sort→group useMemo. Greenfield list pages can use `useEntityList` + `EntityListView`.
+- **Settings page:** `pages/Settings.tsx` is a thin composition; edit the sections in `client/src/features/settings/components/`.
+- **Images:** no multi-MB originals in `client/src/assets/` — compress to WebP at display size before committing.
+- **Deferred refactors:** `specs/structural-debt/session-c-lead-panel.md` (finish LeadDetailPanel decomposition) and `session-d-list-views.md` (Leads/Accounts list views). Read these before restructuring those areas.
 
 ## Deployment
 
@@ -70,7 +81,7 @@ The public-facing landing page is a **static HTML/JSX site**, separate from the 
 
 - All files live in `client/public/premium/` — see `client/public/premium/FILE_MAP.md` for a full index
 - "Landing page", "the website", or "homepage" always means these files — never `client/src/pages/legacy/`
-- Legacy pages (`client/src/pages/legacy/`) are retired backups — do not edit unless explicitly asked
+- Legacy pages (`client/src/legacy/`, served only at `/legacy`) are retired backups — do not edit unless explicitly asked
 - The page uses its own design system (CSS variables, neumorphic tokens, Google Fonts) — `UI_STANDARDS.md` does not apply here
 - Design tweaks (typography, light, depth, textures) are controlled via `config.jsx` + `app-main.jsx`
 

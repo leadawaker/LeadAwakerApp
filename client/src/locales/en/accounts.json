@@ -266,6 +266,72 @@
       "location": "Location",
       "policies": "Policies",
       "testimonials": "Testimonials"
+    },
+    "injectAfter": "Inject after",
+    "countEntries": "{{count}} entries"
+  },
+  "workspace": {
+    "tabs": {
+      "overview": "Overview",
+      "integrations": "Integrations",
+      "knowledge": "Company Intel"
+    },
+    "createAccount": "Create account",
+    "compactPanel": "Compact panel",
+    "hidePanel": "Hide panel",
+    "showPanel": "Show panel"
+  },
+  "metrics": {
+    "campaigns": "Campaigns",
+    "avgResponse": "Avg response",
+    "contracts": "Contracts",
+    "team": "Team",
+    "allActive": "all active",
+    "acrossAll": "across all",
+    "nActive": "{{count}} active",
+    "nOwner": "{{count}} owner",
+    "nMembers": "{{count}} members"
+  },
+  "panels": {
+    "accountDetails": "Account Details",
+    "campaigns": "Campaigns",
+    "team": "Team",
+    "contracts": "Contracts",
+    "integrations": "Integrations",
+    "voiceClone": "Voice Clone",
+    "knowledgeBase": "Company Intel",
+    "available": "Available",
+    "leads": "Leads",
+    "response": "Response",
+    "actions": {
+      "new": "New",
+      "invite": "Invite",
+      "add": "Add",
+      "viewAllCampaigns": "View all campaigns",
+      "addIntegration": "Add integration",
+      "addCategory": "Add category"
     }
+  },
+  "pills": {
+    "connected": "Connected",
+    "notSet": "Not set",
+    "comingSoon": "Coming soon",
+    "nConnected": "{{count}} connected"
+  },
+  "contractStatus": {
+    "active": "Active",
+    "pending": "Pending",
+    "expired": "Expired"
+  },
+  "voice": {
+    "ready": "Ready",
+    "noSample": "No sample",
+    "upload": "Upload",
+    "test": "Test",
+    "ratioReady": "{{ready}}/{{total}} ready",
+    "always": "always"
+  },
+  "scope": {
+    "nSelected": "{{count}} selected"
   }
 }

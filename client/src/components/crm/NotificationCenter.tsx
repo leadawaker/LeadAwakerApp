@@ -202,10 +202,11 @@ export function NotificationCenter({
     if (isUnread(n)) {
       handleMarkAsRead(n.id);
     }
-    // Navigate if there's a link
+    // Navigate if there's a link — normalize bare paths missing the /platform prefix
     if (n.link) {
       onClose();
-      setLocation(n.link);
+      const dest = n.link.startsWith("/platform") ? n.link : `/platform${n.link}`;
+      setLocation(dest);
     } else if (n.leadId) {
       // Default: navigate to leads with the lead preselected
       sessionStorage.setItem("pendingLeadId", String(n.leadId));
@@ -393,42 +394,36 @@ export function NotificationCenter({
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2">
-                          <span
-                            className={cn(
-                              "text-sm leading-snug line-clamp-1",
-                              isUnread(n) ? "font-semibold text-foreground" : "font-normal text-foreground/75"
-                            )}
-                            data-testid={`text-notification-title-${n.id}`}
-                          >
-                            {n.title}
-                          </span>
-                          {isUnread(n) && (
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="h-2 w-2 rounded-full bg-brand-indigo shrink-0 mt-1.5 shadow-[0_0_6px_rgba(99,102,241,0.4)]"
-                              aria-label="Unread"
-                            />
-                          )}
-                        </div>
-                        {n.body && (
-                          <p
-                            className={cn(
-                              "text-xs mt-0.5 line-clamp-2 leading-relaxed",
-                              isUnread(n) ? "text-muted-foreground" : "text-muted-foreground/60"
-                            )}
-                            data-testid={`text-notification-desc-${n.id}`}
-                          >
-                            {n.body}
-                          </p>
-                        )}
                         <span
-                          className="text-[11px] text-muted-foreground/50 mt-1 block tabular-nums"
-                          data-testid={`text-notification-at-${n.id}`}
+                          className={cn(
+                            "text-sm leading-snug line-clamp-1 block",
+                            isUnread(n) ? "font-semibold text-foreground" : "font-normal text-foreground/75"
+                          )}
+                          data-testid={`text-notification-title-${n.id}`}
                         >
-                          {timeAgo(n.createdAt, t)}
+                          {n.title}
                         </span>
+                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                          {n.body ? (
+                            <p
+                              className={cn(
+                                "text-xs line-clamp-1 leading-relaxed min-w-0",
+                                isUnread(n) ? "text-muted-foreground" : "text-muted-foreground/60"
+                              )}
+                              data-testid={`text-notification-desc-${n.id}`}
+                            >
+                              {n.body}
+                            </p>
+                          ) : (
+                            <span className="flex-1" />
+                          )}
+                          <span
+                            className="text-[11px] text-muted-foreground/50 shrink-0 tabular-nums"
+                            data-testid={`text-notification-at-${n.id}`}
+                          >
+                            {timeAgo(n.createdAt, t)}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Delete button — always visible on mobile, hover on desktop */}

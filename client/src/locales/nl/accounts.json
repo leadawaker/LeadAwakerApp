@@ -184,7 +184,7 @@
     "syncFailed": "Synchronisatie mislukt",
     "selectExecution": "Selecteer een uitvoering om de pipeline te bekijken",
     "cropLogo": "Logo bijsnijden",
-    "cropDescription": "Sleep om te herpositioneren \u00b7 gebruik de schuifregelaar om te zoomen",
+    "cropDescription": "Sleep om te herpositioneren · gebruik de schuifregelaar om te zoomen",
     "saveLogo": "Logo opslaan",
     "overview": "Overzicht",
     "campaignsAndContracts": "Campagnes & Contracten",
@@ -194,13 +194,13 @@
     "voiceIdForCampaigns": "Stem-ID voor campagnes",
     "voiceIdWillBe": "Stem-ID wordt",
     "clickOrDragAudio": "Klik of sleep audiobestand",
-    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC \u00b7 max 10 MB",
+    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC · max 10 MB",
     "lead": "lead",
     "leads": "leads",
     "contactsSynced": "{{count}} contacten gesynchroniseerd",
     "alreadyExisted": "{{count}} bestonden al",
     "failedCount": "{{count}} mislukt",
-    "rateLimited": "Snelheidslimiet bereikt \u2014 voer opnieuw uit voor de resterende contacten",
+    "rateLimited": "Snelheidslimiet bereikt — voer opnieuw uit voor de resterende contacten",
     "conversationsScanned": "{{count}} gesprekken gescand"
   },
   "related": {
@@ -234,7 +234,7 @@
     "selectAccount": "Selecteer een account om details te bekijken",
     "title": "Selecteer een account",
     "description": "Klik op een account aan de linkerkant om de details en configuratie te bekijken.",
-    "chooseFromList": "\u2190 Kies uit de lijst"
+    "chooseFromList": "← Kies uit de lijst"
   },
   "knowledge": {
     "title": "Kennisbank",
@@ -266,6 +266,72 @@
       "location": "Locatie",
       "policies": "Beleid",
       "testimonials": "Testimonials"
+    },
+    "injectAfter": "Injecteren na",
+    "countEntries": "{{count}} vermeldingen"
+  },
+  "workspace": {
+    "tabs": {
+      "overview": "Overzicht",
+      "integrations": "Integraties",
+      "knowledge": "Bedrijfsintel"
+    },
+    "createAccount": "Account aanmaken",
+    "compactPanel": "Paneel verkleinen",
+    "hidePanel": "Paneel verbergen",
+    "showPanel": "Paneel tonen"
+  },
+  "metrics": {
+    "campaigns": "Campagnes",
+    "avgResponse": "Gem. respons",
+    "contracts": "Contracten",
+    "team": "Team",
+    "allActive": "allemaal actief",
+    "acrossAll": "over alles",
+    "nActive": "{{count}} actief",
+    "nOwner": "{{count}} eigenaar",
+    "nMembers": "{{count}} leden"
+  },
+  "panels": {
+    "accountDetails": "Accountdetails",
+    "campaigns": "Campagnes",
+    "team": "Team",
+    "contracts": "Contracten",
+    "integrations": "Integraties",
+    "voiceClone": "Stemkloon",
+    "knowledgeBase": "Bedrijfsintel",
+    "available": "Beschikbaar",
+    "leads": "Leads",
+    "response": "Respons",
+    "actions": {
+      "new": "Nieuw",
+      "invite": "Uitnodigen",
+      "add": "Toevoegen",
+      "viewAllCampaigns": "Alle campagnes bekijken",
+      "addIntegration": "Integratie toevoegen",
+      "addCategory": "Categorie toevoegen"
     }
+  },
+  "pills": {
+    "connected": "Verbonden",
+    "notSet": "Niet ingesteld",
+    "comingSoon": "Binnenkort",
+    "nConnected": "{{count}} verbonden"
+  },
+  "contractStatus": {
+    "active": "Actief",
+    "pending": "In afwachting",
+    "expired": "Verlopen"
+  },
+  "voice": {
+    "ready": "Klaar",
+    "noSample": "Geen sample",
+    "upload": "Uploaden",
+    "test": "Testen",
+    "ratioReady": "{{ready}}/{{total}} klaar",
+    "always": "altijd"
+  },
+  "scope": {
+    "nSelected": "{{count}} geselecteerd"
   }
 }

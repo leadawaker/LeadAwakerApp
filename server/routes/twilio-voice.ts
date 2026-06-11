@@ -23,6 +23,44 @@ function getCallerIdForNumber(to: string): string {
   return to.startsWith("+55") ? (TWILIO_BR_NUMBER ?? "") : (TWILIO_NL_NUMBER ?? "");
 }
 
+/**
+ * Reconstruct the exact public URL Twilio signed the request against.
+ * Twilio resolves the relative callback URLs in our TwiML against the public
+ * host it originally hit, so we must rebuild that same absolute URL (scheme +
+ * host + originalUrl, query string included). Behind Cloudflare the request
+ * arrives over plain HTTP, so prefer X-Forwarded-Proto / X-Forwarded-Host.
+ * TWILIO_WEBHOOK_BASE_URL can override the origin if header handling differs.
+ */
+function getRequestUrl(req: Request): string {
+  const base = process.env.TWILIO_WEBHOOK_BASE_URL?.replace(/\/$/, "");
+  if (base) return base + req.originalUrl;
+  const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0].trim() || req.protocol;
+  const host = (req.headers["x-forwarded-host"] as string)?.split(",")[0].trim() || req.get("host");
+  return `${proto}://${host}${req.originalUrl}`;
+}
+
+/**
+ * Express middleware: reject any Twilio webhook whose X-Twilio-Signature does
+ * not match. Without this, anyone who discovers these URLs can forge call
+ * statuses, recordings, and interaction history.
+ */
+function verifyTwilioSignature(req: Request, res: Response, next: () => void): void {
+  if (!TWILIO_AUTH_TOKEN) {
+    // No token configured = cannot validate; fail closed.
+    res.status(503).type("text/plain").send("Twilio not configured");
+    return;
+  }
+  const signature = req.header("X-Twilio-Signature") ?? "";
+  const url = getRequestUrl(req);
+  const valid = twilio.validateRequest(TWILIO_AUTH_TOKEN, signature, url, req.body ?? {});
+  if (!valid) {
+    console.warn(`[twilio] rejected forged webhook: ${req.method} ${req.originalUrl}`);
+    res.status(403).type("text/plain").send("Invalid Twilio signature");
+    return;
+  }
+  next();
+}
+
 async function transcribeChannel(
   filePath: string
 ): Promise<Array<{ start: number; end: number; text: string }>> {
@@ -95,7 +133,7 @@ export function registerTwilioVoiceRoutes(app: Express): void {
   }));
 
   // ── TwiML endpoint (Twilio calls this when browser places a call) ──
-  app.post("/api/twilio/voice", (req: Request, res: Response) => {
+  app.post("/api/twilio/voice", verifyTwilioSignature, (req: Request, res: Response) => {
     const to: string = req.body?.To ?? "";
     const prospectId: string = req.body?.ProspectId ?? "";
     if (!to) {
@@ -119,7 +157,7 @@ export function registerTwilioVoiceRoutes(app: Express): void {
   });
 
   // ── Call status webhook (fired when call ends) ─────────────────────
-  app.post("/api/twilio/call-status", wrapAsync(async (req, res) => {
+  app.post("/api/twilio/call-status", verifyTwilioSignature, wrapAsync(async (req, res) => {
     const { CallSid, To, From, CallDuration, CallStatus } = req.body ?? {};
     // ProspectId is passed as a query param (custom SDK params not forwarded by Twilio)
     const prospectId = req.query.ProspectId ? parseInt(req.query.ProspectId as string, 10) : null;
@@ -149,7 +187,7 @@ export function registerTwilioVoiceRoutes(app: Express): void {
   }));
 
   // ── Recording ready webhook (splits stereo, transcribes, summarises) ─
-  app.post("/api/twilio/recording-ready", wrapAsync(async (req, res) => {
+  app.post("/api/twilio/recording-ready", verifyTwilioSignature, wrapAsync(async (req, res) => {
     const { RecordingUrl, CallSid } = req.body ?? {};
     if (!RecordingUrl || !CallSid || !GROQ_API_KEY) return res.sendStatus(204);
 

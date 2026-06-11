@@ -9,38 +9,50 @@ Read this file to locate any component without running grep/glob searches.
 ## Pages (route-level)
 
 ### Post-Login App Pages
+
+CRM routes are registered in `pages/app.tsx`; top-level routes in `App.tsx`. **Every route component is `React.lazy`** — new pages must be added the same way (lazy import + route), never as static imports.
+
 | Page | Path | Notes |
 |------|------|-------|
-| App shell wrapper | `pages/app.tsx` | Authenticated layout root, role-based routing |
-| Leads | `pages/AppLeads.tsx` | Wraps `features/leads/pages/LeadsPage` |
+| App shell wrapper | `pages/app.tsx` | Authenticated layout root, role-based routing, all routes lazy |
+| Leads | `features/leads/pages/LeadsPage.tsx` | Imported directly in app.tsx (no pages/ wrapper) |
 | Campaigns (landing) | `pages/AppCampaigns.tsx` | Wraps `features/campaigns/pages/CampaignsPage` — **default landing page** |
-| Conversations | `pages/Conversations.tsx` | WhatsApp inbox — three-panel layout |
+| Outreach Inbox | `pages/OutreachInbox.tsx` | Prospect chat (replaced the retired Chats page) |
+| Prospects | `pages/AppProspects.tsx` | Wraps `features/prospects/pages/ProspectsPage` |
+| Cadence | `pages/AppCadence.tsx` | Outreach cadence queue |
 | Calendar | `pages/Calendar.tsx` | Booking / time slots |
 | Accounts | `pages/AppAccounts.tsx` | Wraps `features/accounts/pages/AccountsPage` — agency admin only |
-| Accounts (redirect) | `pages/Accounts.tsx` | Redirects to AppAccounts |
-| Tags | `pages/Tags.tsx` | Tag CRUD — agency admin only |
-| Prompt Library | `pages/PromptLibrary.tsx` | AI prompt templates — agency admin only |
-| Automation Logs | `pages/AutomationLogs.tsx` | n8n execution history — agency admin only |
-| Settings | `pages/Settings.tsx` | Account-level settings, includes Billing section. Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,DashboardSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
+| Tasks | `features/tasks/pages/TasksPage.tsx` | Imported directly in app.tsx |
+| Billing | `features/billing/pages/BillingPage.tsx` | Imported directly in app.tsx (invoices/contracts/expenses) |
+| Prompt Library | `features/prompts/pages/PromptsPage.tsx` | Imported directly in app.tsx |
+| AI Agents | `features/ai-agents/pages/AgentsPage.tsx` + `AgentChatPage.tsx` | Imported directly in app.tsx |
+| Automation Logs | `pages/AutomationLogs.tsx` | Python automation-engine logs — agency admin only |
+| Settings | `pages/Settings.tsx` | Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,DashboardSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
 | Docs | `pages/Docs.tsx` | In-app Operator Manual + Client Guide |
 | Lead Detail (standalone) | `pages/LeadDetail.tsx` | Full-page lead view |
-| Billing | `pages/Billing.tsx` | Standalone billing route wrapper |
-| Invoices | `pages/Invoices.tsx` | Standalone invoices route |
-| Opportunities | `pages/Opportunities.tsx` | Redirects to `/leads` |
+| Prospect Detail (standalone) | `pages/ProspectDetail.tsx` | Full-page prospect view |
+| Invoices (redirect) | `pages/Invoices.tsx` | Redirects to billing |
+| Opportunities (redirect) | `pages/Opportunities.tsx` | Redirects to leads |
+| Accounts (test) | `pages/Accounts.tsx` | Mounted at `/test-table` only |
 | Accept Invite | `pages/AcceptInvite.tsx` | Invite acceptance flow |
 
-### Public / Pre-Login Pages (do not modify)
-| Page | Path |
-|------|------|
-| Home / Landing | `pages/home.tsx` |
-| Login | `pages/login.tsx` |
-| About | `pages/about.tsx` |
-| Services | `pages/services.tsx` |
-| Book Demo | `pages/book-demo.tsx` |
-| Privacy Policy | `pages/privacy-policy.tsx` |
-| Terms of Service | `pages/terms-of-service.tsx` |
-| Canvas | `pages/canvas.tsx` |
-| Not Found | `pages/not-found.tsx` |
+> Deleted — do not look for: `pages/Conversations.tsx`, `pages/AppLeads.tsx`, `pages/Tags.tsx`, `pages/PromptLibrary.tsx`, `pages/SetupProfile.tsx`, `pages/Billing.tsx`, `components/crm/LeadsTable.tsx`, `lib/pwa.ts`, `server/routes.ts`, `client/src/migration/`.
+
+### Public / Pre-Login Pages
+
+The marketing site (leadawaker.com landing) is static files in `client/public/premium/` — see its own FILE_MAP. The old React marketing pages live in `client/src/legacy/` (served at `/legacy` only). Top-level public routes (`App.tsx`, all lazy):
+
+| Page | Path | Notes |
+|------|------|-------|
+| FAQ | `pages/faq.tsx` | `/about` redirects here |
+| Cases | `pages/cases.tsx` | `/services` redirects here |
+| Book Call | `pages/book-call.tsx` | |
+| Intake Demo | `pages/intake-demo.tsx` | `/intake/:token` |
+| Legacy Home | `legacy/LegacyRoute.tsx` | `/legacy` |
+| Privacy Policy | `pages/privacy-policy.tsx` | |
+| Terms of Service | `pages/terms-of-service.tsx` | |
+| Canvas | `pages/canvas.tsx` | |
+| Not Found | `pages/not-found.tsx` | |
 
 > All paths below are relative to `client/src/`. `…/` = the feature's base directory.
 
@@ -150,8 +162,15 @@ Read this file to locate any component without running grep/glob searches.
 
 | Component | File | Notes |
 |-----------|------|-------|
-| BillingPage | `pages/BillingPage.tsx` | Feature page — tabs for contracts/invoices/expenses |
-| BillingListView | `components/BillingListView.tsx` | **Master list** — tab switching between all billing types |
+| BillingPage | `pages/BillingPage.tsx` | Feature page — desktop renders `workspace/BillingWorkspace`, mobile renders `mobile/MobileBillingView`. Owns data hooks, persisted selection, new-item notifications, account filter |
+| **BillingWorkspace** | `components/workspace/BillingWorkspace.tsx` | **Desktop shell (current)** — topbar + 3-state list panel + inline detail/create area. Mirrors the Accounts workspace pattern. Owns search/sort/filter/group/viewMode/panelMode |
+| BillingTopBar | `components/workspace/BillingTopBar.tsx` | Campaigns-chrome topbar: tabs, fold, search, filter/sort/group, date+view (expenses), `+ New`, `⋯` |
+| BillingListPanel | `components/workspace/BillingListPanel.tsx` | Left list panel (full/compact/hidden) — renders per-tab list cards, grouping, pagination, compact rail + hover card |
+| Invoice/Contract/ExpenseListCard | `components/workspace/*ListCard.tsx` | Wine/paper list cards (serif amount, status pill) |
+| Invoice/Contract/ExpenseDetailPanel | `components/workspace/*DetailPanel.tsx` | Inline detail. Invoice = full reskin; Contract/Expense wrap the (already-wine) `*DetailView` full-height |
+| BillingStatCards / CompactBillingCard | `components/workspace/*.tsx` | Per-tab stat chips (BStat port) · compact-rail tile |
+| workspace atoms/formAtoms/adapters | `components/workspace/{atoms,formAtoms,adapters}.ts(x)` | Prototype primitive ports (StatusPill/StatCard/DedBadge…, F* form atoms, status/expense grouping helpers) + `useBillingEdit.ts` |
+| BillingListView | `components/BillingListView.tsx` | **LEGACY desktop master list** — replaced by BillingWorkspace; now only referenced by dead `{Invoices,Contracts,Expenses}Page.tsx` (unrouted). Pending deletion after verification |
 | ContractsInlineTable | `components/ContractsInlineTable.tsx` | Contracts table |
 | ContractDetailView | `components/ContractDetailView.tsx` | Contract detail panel |
 | ContractCreatePanel | `components/ContractCreatePanel.tsx` | Contract creation form (reference panel implementation) |

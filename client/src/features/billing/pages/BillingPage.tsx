@@ -6,11 +6,10 @@ import { MobileBillingView } from "../components/mobile/MobileBillingView";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
-import { BillingListView } from "../components/BillingListView";
+import { BillingWorkspace } from "../components/workspace/BillingWorkspace";
 import { useInvoicesData } from "../hooks/useInvoicesData";
 import { useContractsData } from "../hooks/useContractsData";
 import type { InvoiceRow, ContractRow } from "../types";
-import type { RightPanelMode } from "../components/BillingListView";
 import { useToast } from "@/hooks/use-toast";
 
 type BillingTab = "invoices" | "contracts" | "expenses";
@@ -209,61 +208,36 @@ export function BillingPage() {
   return (
     <CrmShell>
       <div className="h-full flex flex-col">
-      <BillingListView
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        // Invoice data
-        invoices={invoicesHook.invoices}
-        invoicesLoading={invoicesHook.loading}
-        selectedInvoice={selectedInvoice}
-        onSelectInvoice={setSelectedInvoice}
-        onCreateInvoice={invoicesHook.create}
-        onUpdateInvoice={invoicesHook.update}
-        onDeleteInvoice={handleDeleteInvoice}
-        onMarkSent={invoicesHook.markSent}
-        onMarkPaid={invoicesHook.markPaid}
-        onRefreshInvoices={invoicesHook.fetchData}
-        // Contract data
-        contracts={contractsHook.contracts}
-        contractsLoading={contractsHook.loading}
-        selectedContract={selectedContract}
-        onSelectContract={setSelectedContract}
-        onCreateContract={contractsHook.create}
-        onUpdateContract={contractsHook.update}
-        onDeleteContract={handleDeleteContract}
-        onMarkSigned={contractsHook.markSigned}
-        onRefreshContracts={contractsHook.fetchData}
-        // Controls
-        listSearch={listSearch}
-        setListSearch={setListSearch}
-        searchOpen={searchOpen}
-        setSearchOpen={setSearchOpen}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        // Account filter
-        accountFilter={accountFilter}
-        setAccountFilter={setAccountFilter}
-        isAgencyUser={isAgencyUser}
-        isOwner={isOwner}
-        // Panel mode
-        rightPanelMode={rightPanelMode}
-        setRightPanelMode={setRightPanelMode}
-        editingInvoice={editingInvoice}
-        setEditingInvoice={setEditingInvoice}
-        // Upload dialog
-        uploadDialogOpen={uploadDialogOpen}
-        setUploadDialogOpen={setUploadDialogOpen}
-        // View mode
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        // Quarter/year filters
-        quarterFilter={quarterFilter}
-        setQuarterFilter={setQuarterFilter}
-        yearFilter={yearFilter}
-        setYearFilter={setYearFilter}
-      />
+        <BillingWorkspace
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          // Invoice data
+          invoices={invoicesHook.invoices}
+          invoicesLoading={invoicesHook.loading}
+          selectedInvoice={selectedInvoice}
+          onSelectInvoice={setSelectedInvoice}
+          onCreateInvoice={invoicesHook.create}
+          onUpdateInvoice={invoicesHook.update}
+          onDeleteInvoice={handleDeleteInvoice}
+          onMarkSent={invoicesHook.markSent}
+          onMarkPaid={invoicesHook.markPaid}
+          onRefreshInvoices={invoicesHook.fetchData}
+          // Contract data
+          contracts={contractsHook.contracts}
+          contractsLoading={contractsHook.loading}
+          selectedContract={selectedContract}
+          onSelectContract={setSelectedContract}
+          onCreateContract={contractsHook.create}
+          onUpdateContract={contractsHook.update}
+          onDeleteContract={handleDeleteContract}
+          onMarkSigned={contractsHook.markSigned}
+          onRefreshContracts={contractsHook.fetchData}
+          // Shared
+          isAgencyUser={isAgencyUser}
+          isOwner={isOwner}
+          accountFilter={accountFilter}
+          setAccountFilter={setAccountFilter}
+        />
       </div>
     </CrmShell>
   );

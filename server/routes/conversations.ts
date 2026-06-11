@@ -189,7 +189,7 @@ export function registerConversationsRoutes(app: Express): void {
                 userId: admin.id!,
                 accountId: interaction.accountsId ?? null,
                 read: false,
-                link: "/leads",
+                link: "/platform/leads",
                 leadId: leadId,
               });
             }
@@ -213,7 +213,7 @@ export function registerConversationsRoutes(app: Express): void {
             userId: admin.id!,
             accountId: interaction.accountsId ?? null,
             read: false,
-            link: "/leads",
+            link: "/platform/leads",
             leadId: (interaction as any).leadsId ?? (interaction as any).leadId ?? null,
           });
         }
@@ -407,7 +407,7 @@ export function registerConversationsRoutes(app: Express): void {
       });
     } catch (err: any) {
       console.error("[activity-feed] query error:", err);
-      res.status(500).json({ message: "Failed to fetch activity feed", error: err.message });
+      res.status(500).json({ message: "Failed to fetch activity feed" });
     }
   }));
 
