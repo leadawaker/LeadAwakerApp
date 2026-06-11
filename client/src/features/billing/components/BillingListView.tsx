@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { buildEntityRows } from "@/components/crm/entityList";
 import { deleteExpense as deleteExpenseApi } from "../api/expensesApi";
 import {
   Building2,
@@ -597,35 +598,21 @@ export function BillingListView({
   // ── Grouped items for date-grouped rendering ─────────────────────────────
   const flatItems = useMemo((): BillingListItem[] => {
     if (paginatedItems.length === 0) return [];
-
-    const buckets = new Map<string, (InvoiceRow | ContractRow)[]>();
-
-    for (const item of paginatedItems) {
-      const dateField = isInvoicesTab
-        ? ((item as InvoiceRow).issued_date || (item as InvoiceRow).created_at)
-        : ((item as ContractRow).start_date || (item as ContractRow).created_at);
-      const key = getDateGroupKey(dateField);
-      if (!buckets.has(key)) buckets.set(key, []);
-      buckets.get(key)!.push(item);
-    }
-
-    const orderedKeys = DATE_GROUP_ORDER.filter((k) => buckets.has(k));
-    const result: BillingListItem[] = [];
-
-    for (const key of orderedKeys) {
-      const group = buckets.get(key);
-      if (!group?.length) continue;
-      result.push({ kind: "header", label: key, count: group.length });
-      for (const g of group) {
-        if (isInvoicesTab) {
-          result.push({ kind: "invoice", invoice: g as InvoiceRow });
-        } else {
-          result.push({ kind: "contract", contract: g as ContractRow });
-        }
-      }
-    }
-
-    return result;
+    return buildEntityRows<InvoiceRow | ContractRow, BillingListItem>({
+      items: paginatedItems,
+      groupKeyOf: (item) => {
+        const dateField = isInvoicesTab
+          ? ((item as InvoiceRow).issued_date || (item as InvoiceRow).created_at)
+          : ((item as ContractRow).start_date || (item as ContractRow).created_at);
+        return getDateGroupKey(dateField);
+      },
+      orderGroups: (keys) => DATE_GROUP_ORDER.filter((k) => keys.includes(k)),
+      makeHeader: (label, count) => ({ kind: "header", label, count }),
+      makeItem: (g) =>
+        isInvoicesTab
+          ? { kind: "invoice", invoice: g as InvoiceRow }
+          : { kind: "contract", contract: g as ContractRow },
+    });
   }, [paginatedItems, isInvoicesTab]);
 
   // ── Only show selectedInvoice if it still exists in the current invoices array

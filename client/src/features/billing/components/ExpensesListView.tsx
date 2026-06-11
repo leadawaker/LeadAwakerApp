@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ReceiptText, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { buildEntityRows } from "@/components/crm/entityList";
 import type { ExpenseRow } from "../types";
 import { fetchExpenses } from "../api/expensesApi";
 
@@ -249,28 +250,15 @@ export function ExpensesListView({
 
   const groupedItems = useMemo((): ListItem[] => {
     if (groupBy !== "year_quarter" || filteredExpenses.length === 0) return [];
-
-    const buckets = new Map<string, ExpenseRow[]>();
-    for (const row of filteredExpenses) {
-      const key = getExpenseYearQuarter(row);
-      if (!buckets.has(key)) buckets.set(key, []);
-      buckets.get(key)!.push(row);
-    }
-
-    // Sort groups by year·quarter, direction controlled by groupDirection prop
-    const sortedKeys = Array.from(buckets.keys()).sort((a, b) =>
-      groupDirection === "asc" ? a.localeCompare(b) : b.localeCompare(a)
-    );
-
-    const result: ListItem[] = [];
-    for (const key of sortedKeys) {
-      const group = buckets.get(key)!;
-      result.push({ kind: "header", label: key, count: group.length });
-      for (const row of group) {
-        result.push({ kind: "expense", expense: row });
-      }
-    }
-    return result;
+    // Groups sorted by year·quarter ascending; groupDirection reverses to desc.
+    return buildEntityRows<ExpenseRow, ListItem>({
+      items: filteredExpenses,
+      groupKeyOf: getExpenseYearQuarter,
+      groupDirection,
+      orderGroups: (keys) => [...keys].sort((a, b) => a.localeCompare(b)),
+      makeHeader: (label, count) => ({ kind: "header", label, count }),
+      makeItem: (expense) => ({ kind: "expense", expense }),
+    });
   }, [filteredExpenses, groupBy, groupDirection]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
