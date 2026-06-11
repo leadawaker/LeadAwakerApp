@@ -13,7 +13,7 @@ interface ExpensesListViewProps {
   quarterFilter: string | null;
   yearFilter: number | null;
   searchQuery: string;
-  sortBy?: "recent" | "amount_desc" | "amount_asc" | "name_asc";
+  sortBy?: "recent" | "oldest" | "amount_desc" | "amount_asc" | "name_asc" | "name_desc" | "due_asc" | "due_desc";
   selectedId: number | null;
   onSelect: (expense: ExpenseRow) => void;
   groupBy?: "none" | "year_quarter";
@@ -236,6 +236,10 @@ export function ExpensesListView({
           return parseNum(a.totalAmount) - parseNum(b.totalAmount);
         case "name_asc":
           return (a.supplier || "").localeCompare(b.supplier || "");
+        case "name_desc":
+          return (b.supplier || "").localeCompare(a.supplier || "");
+        case "oldest":
+          return (a.date || "").localeCompare(b.date || "");
         default: // "recent"
           return (b.date || "").localeCompare(a.date || "");
       }

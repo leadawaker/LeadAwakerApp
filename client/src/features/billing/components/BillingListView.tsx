@@ -59,6 +59,7 @@ import { InvoiceCreatePanel } from "./InvoiceCreatePanel";
 import { ContractUploadDialog } from "./ContractUploadDialog";
 import { ContractCreatePanel } from "./ContractCreatePanel";
 import { ExpensesView } from "./ExpensesView";
+import { BillingSortMenu } from "./BillingSortMenu";
 import { InvoicesInlineTable, INVOICE_FIELD_DEFS, ALL_INVOICE_COLS, DEFAULT_INVOICE_COLS } from "./InvoicesInlineTable";
 import { ContractsInlineTable, CONTRACT_FIELD_DEFS, ALL_CONTRACT_COLS, DEFAULT_CONTRACT_COLS } from "./ContractsInlineTable";
 import { ContractStatCards } from "./ContractStatCards";
@@ -70,7 +71,7 @@ import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type BillingTab = "invoices" | "contracts" | "expenses";
-type SortBy = "recent" | "amount_desc" | "amount_asc" | "due_asc" | "name_asc";
+type SortBy = "recent" | "oldest" | "amount_desc" | "amount_asc" | "due_asc" | "due_desc" | "name_asc" | "name_desc";
 export type RightPanelMode = "view" | "create" | "edit";
 
 // ── Tab definitions (tKey pattern — computed inside component) ───────────────
@@ -505,7 +506,10 @@ export function BillingListView({
         case "amount_desc": return parseFloat(String(b.total || "0")) - parseFloat(String(a.total || "0"));
         case "amount_asc":  return parseFloat(String(a.total || "0")) - parseFloat(String(b.total || "0"));
         case "due_asc":     return (a.due_date || "9999").localeCompare(b.due_date || "9999");
+        case "due_desc":    return (b.due_date || "0").localeCompare(a.due_date || "0");
         case "name_asc":    return String(a.title || "").localeCompare(String(b.title || ""));
+        case "name_desc":   return String(b.title || "").localeCompare(String(a.title || ""));
+        case "oldest":      return (a.created_at || "").localeCompare(b.created_at || "");
         default:            return (b.created_at || "").localeCompare(a.created_at || "");
       }
     });
@@ -550,9 +554,12 @@ export function BillingListView({
 
     result.sort((a, b) => {
       switch (sortBy) {
-        case "name_asc": return String(a.title || "").localeCompare(String(b.title || ""));
-        case "due_asc":  return (a.end_date || "9999").localeCompare(b.end_date || "9999");
-        default:         return (b.created_at || "").localeCompare(a.created_at || "");
+        case "name_asc":  return String(a.title || "").localeCompare(String(b.title || ""));
+        case "name_desc": return String(b.title || "").localeCompare(String(a.title || ""));
+        case "due_asc":   return (a.end_date || "9999").localeCompare(b.end_date || "9999");
+        case "due_desc":  return (b.end_date || "0").localeCompare(a.end_date || "0");
+        case "oldest":    return (a.created_at || "").localeCompare(b.created_at || "");
+        default:          return (b.created_at || "").localeCompare(a.created_at || "");
       }
     });
 
@@ -883,42 +890,24 @@ export function BillingListView({
       {!isExpensesTab && (
         <>
           {/* Sort */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className={cn("la-btn la-btn--soft shrink-0 hidden sm:inline-flex gap-1.5", isSortNonDefault && "[border-color:var(--wine)] [color:var(--wine)]")}>
-                <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[11px]">{t("toolbar.sort")}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy("recent"); }} className="text-[12px] flex items-center gap-2">
-                <span className={cn("flex-1", sortBy === "recent" && "font-semibold text-[color:var(--wine)]")}>{t("sort.recent")}</span>
-              </DropdownMenuItem>
-              {(() => {
-                const isActive = sortBy === "amount_desc" || sortBy === "amount_asc";
-                const activeDir: "asc" | "desc" = sortBy === "amount_asc" ? "asc" : "desc";
-                return (
-                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy(isActive ? sortBy : "amount_desc"); }} className="text-[12px] flex items-center gap-2">
-                    <span className={cn("flex-1", isActive && "font-semibold text-[color:var(--wine)]")}>{t("sort.amountDesc").replace(" High", "")}</span>
-                    {isActive && (
-                      <>
-                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-[color:var(--wine)]" : "text-foreground/30")} title="High to Low"><ArrowDown className="h-3 w-3" /></button>
-                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortBy("amount_asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-[color:var(--wine)]" : "text-foreground/30")} title="Low to High"><ArrowUp className="h-3 w-3" /></button>
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })()}
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy("due_asc"); }} className="text-[12px] flex items-center gap-2">
-                <span className={cn("flex-1", sortBy === "due_asc" && "font-semibold text-[color:var(--wine)]")}>{t("sort.dueSoonest")}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSortBy("name_asc"); }} className="text-[12px] flex items-center gap-2">
-                <span className={cn("flex-1", sortBy === "name_asc" && "font-semibold text-[color:var(--wine)]")}>{t("sort.nameAZ")}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <BillingSortMenu
+            sortBy={sortBy}
+            setSortBy={(v) => setSortBy(v as SortBy)}
+            fields={
+              isInvoicesTab
+                ? [
+                    { key: "date", label: t("toolbar.date"), asc: "oldest", desc: "recent", ascTitle: t("sort.oldestFirst"), descTitle: t("sort.newestFirst") },
+                    { key: "amount", label: t("sort.amountLabel"), asc: "amount_asc", desc: "amount_desc", ascTitle: t("sort.lowToHigh"), descTitle: t("sort.highToLow") },
+                    { key: "due", label: t("sort.dueLabel"), asc: "due_asc", desc: "due_desc", ascTitle: t("sort.soonestFirst"), descTitle: t("sort.latestFirst") },
+                    { key: "name", label: t("sort.nameLabel"), asc: "name_asc", desc: "name_desc", ascTitle: t("sort.azFirst"), descTitle: t("sort.zaFirst") },
+                  ]
+                : [
+                    { key: "date", label: t("toolbar.date"), asc: "oldest", desc: "recent", ascTitle: t("sort.oldestFirst"), descTitle: t("sort.newestFirst") },
+                    { key: "due", label: t("sort.dueLabel"), asc: "due_asc", desc: "due_desc", ascTitle: t("sort.soonestFirst"), descTitle: t("sort.latestFirst") },
+                    { key: "name", label: t("sort.nameLabel"), asc: "name_asc", desc: "name_desc", ascTitle: t("sort.azFirst"), descTitle: t("sort.zaFirst") },
+                  ]
+            }
+          />
 
           {/* Date */}
           <DropdownMenu>
@@ -1095,6 +1084,16 @@ export function BillingListView({
   const leftPanelToolbar = (
     isExpensesTab ? (
       <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
+        {/* Sort — expenses (Date / Amount / Name) */}
+        <BillingSortMenu
+          sortBy={sortBy}
+          setSortBy={(v) => setSortBy(v as SortBy)}
+          fields={[
+            { key: "date", label: t("toolbar.date"), asc: "oldest", desc: "recent", ascTitle: t("sort.oldestFirst"), descTitle: t("sort.newestFirst") },
+            { key: "amount", label: t("sort.amountLabel"), asc: "amount_asc", desc: "amount_desc", ascTitle: t("sort.lowToHigh"), descTitle: t("sort.highToLow") },
+            { key: "name", label: t("sort.nameLabel"), asc: "name_asc", desc: "name_desc", ascTitle: t("sort.azFirst"), descTitle: t("sort.zaFirst") },
+          ]}
+        />
         {/* Group — expenses only */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -1243,7 +1242,7 @@ export function BillingListView({
                 quarterFilter={quarterFilter}
                 yearFilter={yearFilter}
                 searchQuery={expenseSearch}
-                sortBy={sortBy as "recent" | "amount_desc" | "amount_asc" | "name_asc"}
+                sortBy={sortBy}
                 selectedId={selectedExpenseId}
                 onSelect={(expense) => {
                   setSelectedExpenseId(expense.id);

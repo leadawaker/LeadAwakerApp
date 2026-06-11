@@ -14,7 +14,7 @@ import type { InvoiceRow, ContractRow } from "../types";
 import type { RightPanelMode } from "../components/BillingListView";
 import { useToast } from "@/hooks/use-toast";
 
-type SortBy = "recent" | "amount_desc" | "amount_asc" | "due_asc" | "name_asc";
+type SortBy = "recent" | "oldest" | "amount_desc" | "amount_asc" | "due_asc" | "due_desc" | "name_asc" | "name_desc";
 type ViewMode = "list" | "table";
 
 export function ContractsPage() {
