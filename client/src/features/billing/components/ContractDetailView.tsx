@@ -436,7 +436,7 @@ export function ContractDetailView({
       )}
 
       {/* ── Header (white panel style) ── */}
-      <div className="relative z-10 shrink-0 neu-raised" style={{ borderRadius: "var(--r-card) var(--r-card) 0 0", background: "var(--card)", borderBottom: "1px solid var(--line)", margin: "3px 3px 0" }}>
+      <div className="relative z-10 shrink-0 neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", margin: "6px 6px 4px" }}>
         {/* Mobile back button — hidden on desktop */}
         {toolbarSlot && (
           <div className="md:hidden px-5 pt-3 pb-1 flex items-center gap-1.5">
@@ -586,8 +586,8 @@ export function ContractDetailView({
       </div>
 
       {/* ── Two-column content area ── */}
-      <div className="relative z-10 flex-1 min-h-0 px-[3px] pb-[3px] overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px] max-w-[1386px] w-full mr-auto">
+      <div className="relative z-10 flex-1 min-h-0 px-[6px] pb-[6px] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[6px] max-w-[1386px] w-full mr-auto">
 
           {/* ── LEFT column: full-height contract widget ── */}
           <div

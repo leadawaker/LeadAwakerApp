@@ -49,7 +49,7 @@ type SortDir = "asc" | "desc";
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
+      <div className="h-8 bg-[var(--bg-2)] rounded animate-pulse mb-2" />
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}

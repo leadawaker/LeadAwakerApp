@@ -78,7 +78,7 @@ type SortDir = "asc" | "desc";
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
+      <div className="h-8 bg-[var(--bg-2)] rounded animate-pulse mb-2" />
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
@@ -401,7 +401,7 @@ export function InvoicesInlineTable({
   }
 
   const thBase =
-    "px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/40 whitespace-nowrap select-none bg-[#E3E3E3] dark:bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70";
+    "px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/40 whitespace-nowrap select-none bg-[var(--bg)] dark:bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70";
 
   // ── Row renderer (shared between flat and grouped views) ──────────────────
   function renderInvoiceRow(invoice: InvoiceRow, index: number) {
@@ -442,12 +442,12 @@ export function InvoicesInlineTable({
             className={cn(
               "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
               isMultiSelected
-                ? "border-[#FCB803] bg-[#FCB803]"
+                ? "border-[#5E2230] bg-[#5E2230]"
                 : "border-border/40 group-hover/row:border-border/60"
             )}
             onClick={(e) => handleCheckboxClick(invoice, e)}
           >
-            {isMultiSelected && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+            {isMultiSelected && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
           </div>
         </td>
 
@@ -673,7 +673,7 @@ export function InvoicesInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto bg-[#E3E3E3] dark:bg-muted">
+        <div className="flex-1 min-h-0 overflow-auto bg-[var(--bg)] dark:bg-muted">
           <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 400 }}>
 
             {/* Sticky header */}
@@ -805,8 +805,8 @@ export function InvoicesInlineTable({
                       {/* Year header */}
                       {(() => {
                         const yearBg = isDark
-                          ? (year >= CURRENT_YEAR ? "#1A2744" : "#1E2338")
-                          : (year >= CURRENT_YEAR ? "#DBEAFE" : "#EEF2FF");
+                          ? (year >= CURRENT_YEAR ? "var(--wine)" : "var(--wine)")
+                          : (year >= CURRENT_YEAR ? "var(--wine-tint)" : "var(--surface)");
                         const labelColSpan = totalIdx >= 0 ? totalIdx : orderedCols.length;
                         const afterTotal = totalIdx >= 0 ? orderedCols.slice(totalIdx + 1) : [];
                         return (
@@ -816,10 +816,10 @@ export function InvoicesInlineTable({
                                 className={cn(
                                   "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                   yearRows.every((inv) => selectedIds.has(inv.id))
-                                    ? "bg-[#FCB803] border-[#FCB803]"
+                                    ? "bg-[#5E2230] border-[#5E2230]"
                                     : yearRows.some((inv) => selectedIds.has(inv.id))
-                                    ? "bg-[#FCB803]/30 border-[#FCB803]/60"
-                                    : "border-border/60 hover:border-[#FCB803]/40"
+                                    ? "bg-[#5E2230]/30 border-[#5E2230]/60"
+                                    : "border-border/60 hover:border-[#5E2230]/40"
                                 )}
                                 onClick={() => {
                                   const allYearSelected = yearRows.every((inv) => selectedIds.has(inv.id));
@@ -832,7 +832,7 @@ export function InvoicesInlineTable({
                                   onSelectionChange(next);
                                 }}
                               >
-                                {(yearRows.every((inv) => selectedIds.has(inv.id)) || yearRows.some((inv) => selectedIds.has(inv.id))) && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                                {(yearRows.every((inv) => selectedIds.has(inv.id)) || yearRows.some((inv) => selectedIds.has(inv.id))) && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
                               </div>
                             </td>
                             <td colSpan={labelColSpan} style={{ backgroundColor: yearBg }} onClick={() => toggleGroup(`invoice-${year}`)}>
@@ -876,10 +876,10 @@ export function InvoicesInlineTable({
                                       className={cn(
                                         "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                         rows.every((inv) => selectedIds.has(inv.id))
-                                          ? "bg-[#FCB803] border-[#FCB803]"
+                                          ? "bg-[#5E2230] border-[#5E2230]"
                                           : rows.some((inv) => selectedIds.has(inv.id))
-                                          ? "bg-[#FCB803]/30 border-[#FCB803]/60"
-                                          : "border-border/60 hover:border-[#FCB803]/40"
+                                          ? "bg-[#5E2230]/30 border-[#5E2230]/60"
+                                          : "border-border/60 hover:border-[#5E2230]/40"
                                       )}
                                       onClick={() => {
                                         const allQSelected = rows.every((inv) => selectedIds.has(inv.id));
@@ -892,7 +892,7 @@ export function InvoicesInlineTable({
                                         onSelectionChange(next);
                                       }}
                                     >
-                                      {(rows.every((inv) => selectedIds.has(inv.id)) || rows.some((inv) => selectedIds.has(inv.id))) && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                                      {(rows.every((inv) => selectedIds.has(inv.id)) || rows.some((inv) => selectedIds.has(inv.id))) && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
                                     </div>
                                   </td>
                                   <td colSpan={labelColSpan} style={{ backgroundColor: qBg }} onClick={() => toggleGroup(`invoice-${year}-${q}`)}>

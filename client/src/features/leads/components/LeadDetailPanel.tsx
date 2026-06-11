@@ -6,79 +6,21 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/apiUtils";
-import { renderRichText } from "@/lib/richTextUtils";
-import { cn } from "@/lib/utils";
 import {
-  Phone,
-  Mail,
-  User,
-  MessageSquare,
-  Calendar,
-  Tag,
-  Activity,
   Bot,
-  StickyNote,
   ExternalLink,
-  Loader2,
-  Globe,
-  ArrowUpCircle,
-  BarChart2,
-  CheckCircle2,
-  X,
-  Plus,
-  Save,
-  Send,
-  Smile,
-  Meh,
-  Frown,
-  Layers,
-  PhoneCall,
-  UserCheck,
-  UserX,
-  RefreshCw,
-  Pencil,
-  Ban,
-  Mic,
-  Square,
   RotateCcw,
   Trash2,
   Zap,
 } from "lucide-react";
-import { useScoreBreakdown, TIER_COLORS, TIER_ARC_COLOR, TrendIcon } from "@/hooks/useScoreBreakdown";
+import { useScoreBreakdown } from "@/hooks/useScoreBreakdown";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { formatBookedDate } from "@/features/leads/components/cardView/formatUtils";
 import { PipelineDashBar } from "@/features/leads/components/cardView/atoms";
 import {
-  fmtDate,
-  fmtDateTime,
-  formatAiMemory,
-  engagementContext,
-  activityContext,
-  funnelContext,
-  PIPELINE_STAGES,
-  STATUS_COLORS,
-  StatusBadge,
-  PriorityBadge,
-  SentimentBadge,
-  InfoRow,
-  SectionTitle,
-  InlineEditField,
-  ScoreArcPanel,
-  ScoreDetailBar,
   LeadInteractionTimeline,
   LeadScoreSection,
   LeadTagsSection,
@@ -88,6 +30,14 @@ import {
   useLeadTags,
   useVoiceRecording,
   useLeadNotes,
+  LeadContactSection,
+  LeadStatusSection,
+  LeadDncSection,
+  LeadBumpSection,
+  LeadActivitySection,
+  LeadBookingSection,
+  LeadAiInsightsSection,
+  LeadAssignmentSection,
   type Interaction,
 } from "./leadDetail";
 
@@ -464,196 +414,27 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 py-4 md:px-5" data-testid="lead-detail-panel-body">
 
-          {/* Contact Info — with inline editing */}
-          <SectionTitle icon={<User className="h-3.5 w-3.5" />} title={t("detail.sections.contact")} />
-          <div
-            className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
-            data-testid="contact-info-section"
-          >
-            <InlineEditField
-              label={t("detail.fields.name")}
-              value={fullName}
-              icon={<User className="h-3 w-3" />}
-              onSave={async (v) => {
-                if (!leadId) return;
-                const parts = v.trim().split(/\s+/);
-                const firstName = parts[0] || "";
-                const lastName = parts.slice(1).join(" ") || "";
-                await apiFetch(`/api/leads/${leadId}`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ first_name: firstName, last_name: lastName }),
-                });
-              }}
-              testId="inline-edit-name"
-            />
-            <InlineEditField
-              label={t("detail.fields.phone")}
-              value={lead.phone || ""}
-              icon={<Phone className="h-3 w-3" />}
-              type="tel"
-              onSave={(v) => handleInlineFieldSave("phone", v)}
-              testId="inline-edit-phone"
-            />
-            <InlineEditField
-              label={t("detail.fields.email")}
-              value={lead.email || ""}
-              icon={<Mail className="h-3 w-3" />}
-              type="email"
-              onSave={(v) => handleInlineFieldSave("email", v)}
-              testId="inline-edit-email"
-            />
-            <InlineEditField
-              label={t("detail.fields.priority")}
-              value={lead.priority || ""}
-              icon={<Activity className="h-3 w-3" />}
-              onSave={(v) => handleInlineFieldSave("priority", v)}
-              selectOptions={["", "High", "Medium", "Low"]}
-              testId="inline-edit-priority"
-            />
-            <InfoRow
-              label={t("detail.fields.language")}
-              value={lead.language}
-            />
-            <InfoRow
-              label={t("detail.fields.source")}
-              value={source}
-            />
-            {demoNicheCtx && (
-              <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                <span className="text-[11px] text-muted-foreground shrink-0">Niche</span>
-                <div className="text-right text-[11px] text-foreground/80">
-                  <div className="font-medium">{demoNicheCtx.niche_label || demoNicheCtx.raw || "—"}</div>
-                  {demoNicheCtx.raw && demoNicheCtx.raw !== demoNicheCtx.niche_label && (
-                    <div className="text-muted-foreground/60 mt-0.5 italic">{demoNicheCtx.raw}</div>
-                  )}
-                </div>
-              </div>
-            )}
-            {/* Campaign — editable dropdown (#31, agency view only) */}
-            {isAgencyPanel && (
-              <div
-                className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0 group"
-                data-testid="inline-edit-campaign"
-              >
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-muted-foreground/60"><Layers className="h-3 w-3" /></span>
-                  <span className="text-[11px] text-muted-foreground">{t("detail.fields.campaign")}</span>
-                </div>
-                <select
-                  value={String(lead.campaignsId ?? lead.campaigns_id ?? "")}
-                  onChange={async (e) => {
-                    const val = e.target.value;
-                    await handleInlineFieldSave("campaignsId", val ? val : (null as any));
-                  }}
-                  className="text-[12px] bg-transparent border border-dashed border-border/60 rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50 text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
-                  data-testid="inline-edit-campaign-select"
-                >
-                  <option value="">{"2014"}</option>
-                  {campaigns.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
+          <LeadContactSection
+            lead={lead}
+            fullName={fullName}
+            source={source}
+            demoNicheCtx={demoNicheCtx}
+            leadId={leadId}
+            isAgencyPanel={isAgencyPanel}
+            campaigns={campaigns}
+            handleInlineFieldSave={handleInlineFieldSave}
+          />
 
-          {/* Status */}
-          <SectionTitle icon={<Activity className="h-3.5 w-3.5" />} title={t("detail.sections.status")} />
-          <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
-            {/* Pipeline Stage — interactive dropdown */}
-            <div
-              className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30"
-              data-testid="pipeline-stage-row"
-            >
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[11px] text-muted-foreground">{t("detail.fields.pipelineStage")}</span>
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                {/* Change dropdown */}
-                <Select
-                  value={convStatus}
-                  onValueChange={handleStageChange}
-                  disabled={savingStatus}
-                >
-                  <SelectTrigger
-                    className="h-6 w-auto min-w-[70px] text-[11px] px-2 py-0 border-dashed border-border/60 bg-transparent hover:bg-muted/40 transition-colors"
-                    data-testid="pipeline-stage-trigger"
-                    aria-label={t("detail.fields.pipelineStage")}
-                  >
-                    <SelectValue placeholder={t("detail.fields.changePlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent data-testid="pipeline-stage-dropdown">
-                    {PIPELINE_STAGES.map((stage) => {
-                      const colors = STATUS_COLORS[stage] ?? { bg: "bg-muted", text: "text-muted-foreground" };
-                      return (
-                        <SelectItem
-                          key={stage}
-                          value={stage}
-                          className="text-[12px]"
-                          data-testid={`pipeline-stage-option-${stage.replace(/\s+/g, "-").toLowerCase()}`}
-                        >
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-full text-[11px] font-semibold",
-                              colors.bg,
-                              colors.text
-                            )}
-                          >
-                            {stage}
-                          </span>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-
-                {/* Saving/saved indicator */}
-                {savingStatus && (
-                  <Loader2
-                    className="h-3 w-3 animate-spin text-muted-foreground"
-                    data-testid="pipeline-stage-saving"
-                  />
-                )}
-                {stageSaved && !savingStatus && (
-                  <CheckCircle2
-                    className="h-3.5 w-3.5 text-emerald-500"
-                    data-testid="pipeline-stage-saved"
-                  />
-                )}
-              </div>
-            </div>
-
-            <InfoRow label={t("detail.fields.automation")} value={autoStatus} />
-
-            {/* Manual Takeover — toggle switch */}
-            <div
-              className="flex items-center justify-between gap-3 py-1.5 border-t border-border/30"
-              data-testid="manual-takeover-row"
-            >
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-muted-foreground/60">
-                  {localManualTakeover ? <UserX className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
-                </span>
-                <span className="text-[11px] text-muted-foreground">{t("detail.fields.manualTakeover")}</span>
-                {localManualTakeover && (
-                  <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-400/15 px-1.5 py-px rounded-full">
-                    {t("detail.fields.aiPaused")}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {savingManualTakeover && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-                <Switch
-                  checked={localManualTakeover}
-                  onCheckedChange={handleManualTakeoverChange}
-                  disabled={savingManualTakeover}
-                  data-testid="manual-takeover-toggle"
-                  aria-label={t("detail.fields.manualTakeover")}
-                />
-              </div>
-            </div>
-          </div>
+          <LeadStatusSection
+            convStatus={convStatus}
+            savingStatus={savingStatus}
+            stageSaved={stageSaved}
+            handleStageChange={handleStageChange}
+            autoStatus={autoStatus}
+            localManualTakeover={localManualTakeover}
+            savingManualTakeover={savingManualTakeover}
+            handleManualTakeoverChange={handleManualTakeoverChange}
+          />
 
           {/* Lead Scores — arc + tier + detailed sub-score breakdown */}
           <LeadScoreSection
@@ -664,255 +445,28 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             lead={lead}
           />
 
-          {/* DNC / Opted-out Section */}
-          <SectionTitle icon={<Ban className="h-3.5 w-3.5" />} title={t("detail.sections.doNotContact")} />
-          <div
-            className="rounded-xl border border-border/40 bg-muted/20 px-3 py-2"
-            data-testid="dnc-section"
-          >
-            {/* Opted-out toggle */}
-            <div
-              className="flex items-center justify-between gap-3 py-1.5"
-              data-testid="dnc-toggle-row"
-            >
-              <div className="flex items-center gap-1.5">
-                <Ban className="h-3 w-3 text-muted-foreground/60" />
-                <span className="text-[11px] text-muted-foreground">{t("detail.fields.optedOutDnc")}</span>
-                {localOptedOut && (
-                  <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 bg-red-500/15 px-1.5 py-px rounded-full">
-                    {t("detail.fields.dncActive")}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {savingDnc && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-                {dncSaved && !savingDnc && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
-                <Switch
-                  checked={localOptedOut}
-                  onCheckedChange={handleDncChange}
-                  disabled={savingDnc}
-                  data-testid="dnc-toggle"
-                  aria-label={t("detail.fields.optedOutDnc")}
-                />
-              </div>
-            </div>
+          <LeadDncSection
+            localOptedOut={localOptedOut}
+            savingDnc={savingDnc}
+            dncSaved={dncSaved}
+            showDncReason={showDncReason}
+            localDncReason={localDncReason}
+            setLocalDncReason={setLocalDncReason}
+            handleDncChange={handleDncChange}
+            handleDncReasonSave={handleDncReasonSave}
+          />
 
-            {/* DNC reason input — shows when opted out */}
-            {showDncReason && (
-              <div className="mt-1.5 pt-1.5 border-t border-border/30" data-testid="dnc-reason-container">
-                <label className="text-[11px] text-muted-foreground mb-1 block">{t("detail.fields.dncReason")}</label>
-                <div className="flex gap-1.5">
-                  <input
-                    type="text"
-                    value={localDncReason}
-                    onChange={(e) => setLocalDncReason(e.target.value)}
-                    onBlur={handleDncReasonSave}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleDncReasonSave(); }}
-                    placeholder={t("detail.fields.dncReasonPlaceholder")}
-                    className="flex-1 text-[12px] bg-background border border-border/60 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                    data-testid="dnc-reason-input"
-                    disabled={savingDnc}
-                  />
-                </div>
-                {localDncReason && (
-                  <p className="mt-1 text-[11px] text-muted-foreground" data-testid="dnc-reason-display">
-                    {t("detail.fields.dncReasonLabel")}: <span className="text-foreground/80">{localDncReason}</span>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <LeadBumpSection lead={lead} />
 
-          {/* Bump Stage Indicator */}
-          {(lead.current_bump_stage != null || lead.bump_1_sent_at || lead.bump_2_sent_at || lead.bump_3_sent_at) && (
-            <>
-              <SectionTitle icon={<Layers className="h-3.5 w-3.5" />} title={t("detail.sections.bumpProgress")} />
-              <div
-                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3"
-                data-testid="bump-stage-section"
-              >
-                {/* Stage progress bar */}
-                <div className="flex items-center gap-1 mb-3">
-                  {[1, 2, 3].map((stage) => {
-                    const currentStage = Number(lead.current_bump_stage ?? 0);
-                    const done = currentStage >= stage;
-                    return (
-                      <div
-                        key={stage}
-                        className={cn(
-                          "flex-1 h-2 rounded-full transition-[width] duration-300",
-                          done ? "bg-brand-indigo" : "bg-muted"
-                        )}
-                        data-testid={`bump-stage-step-${stage}`}
-                        data-done={done ? "true" : "false"}
-                      />
-                    );
-                  })}
-                </div>
+          <LeadActivitySection
+            lead={lead}
+            responseRate={responseRate}
+            daysInactive={daysInactive}
+          />
 
-                {/* Current stage label */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] text-muted-foreground">{t("detail.fields.currentStage")}</span>
-                  <span
-                    className="text-[12px] font-semibold text-foreground tabular-nums"
-                    data-testid="bump-current-stage"
-                  >
-                    {lead.current_bump_stage ?? 0} / 3
-                  </span>
-                </div>
+          <LeadBookingSection lead={lead} accountTimezone={accountTimezone} />
 
-                {/* Bump timestamps */}
-                {lead.bump_1_sent_at && (
-                  <div className="flex items-center justify-between py-0.5">
-                    <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 1 })}</span>
-                    <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-1-sent-at">
-                      {fmtDateTime(lead.bump_1_sent_at)}
-                    </span>
-                  </div>
-                )}
-                {lead.bump_2_sent_at && (
-                  <div className="flex items-center justify-between py-0.5">
-                    <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 2 })}</span>
-                    <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-2-sent-at">
-                      {fmtDateTime(lead.bump_2_sent_at)}
-                    </span>
-                  </div>
-                )}
-                {lead.bump_3_sent_at && (
-                  <div className="flex items-center justify-between py-0.5">
-                    <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 3 })}</span>
-                    <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-3-sent-at">
-                      {fmtDateTime(lead.bump_3_sent_at)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Activity */}
-          <SectionTitle icon={<MessageSquare className="h-3.5 w-3.5" />} title={t("detail.sections.activity")} />
-          <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
-            <InfoRow label={t("detail.fields.leadCreated")} value={fmtDate(lead.created_at)} />
-            <InfoRow label={t("detail.fields.lastUpdated")} value={fmtDateTime(lead.updated_at)} />
-            <InfoRow label={t("detail.fields.lastInteraction")} value={fmtDateTime(lead.last_interaction_at)} />
-            <InfoRow label={t("detail.fields.lastSent")} value={fmtDateTime(lead.last_message_sent_at)} />
-            <InfoRow label={t("detail.fields.lastReceived")} value={fmtDateTime(lead.last_message_received_at)} />
-            <InfoRow label={t("detail.fields.sentCount")} value={lead.message_count_sent} />
-            <InfoRow label={t("detail.fields.receivedCount")} value={lead.message_count_received} />
-            <InfoRow label={t("detail.fields.responseRate")} value={responseRate} />
-            <InfoRow label={t("detail.fields.daysInactive")} value={daysInactive} />
-            <InfoRow label={t("detail.fields.firstContacted")} value={fmtDate(lead.first_message_sent_at)} />
-            <InfoRow label={t("detail.fields.nextAction")} value={fmtDateTime(lead.next_action_at)} />
-            {lead.what_has_the_lead_done && (
-              <InfoRow label={t("detail.fields.whatTheyDid")} value={lead.what_has_the_lead_done} />
-            )}
-          </div>
-
-          {/* Booking */}
-          {(lead.booked_call_date || lead.booking_confirmed_at) && (
-            <>
-              <SectionTitle icon={<PhoneCall className="h-3.5 w-3.5" />} title={t("detail.sections.booking")} />
-              <div
-                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
-                data-testid="booked-call-section"
-              >
-                {lead.previous_booked_call_date && lead.re_scheduled_count != null && lead.re_scheduled_count > 0 && (
-                  <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30">
-                    <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.previousCallDate", "Previous")}</span>
-                    <span className="text-[12px] text-muted-foreground/50 line-through tabular-nums">{formatBookedDate(lead.previous_booked_call_date, accountTimezone)}</span>
-                  </div>
-                )}
-                <InfoRow label={t("detail.fields.callDate")} value={formatBookedDate(lead.booked_call_date, accountTimezone)} />
-                <InfoRow label={t("detail.fields.confirmedAt")} value={fmtDateTime(lead.booking_confirmed_at)} />
-                {/* No-show indicator */}
-                <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                  <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.noShow")}</span>
-                  {lead.no_show ? (
-                    <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-red-600 dark:text-red-400"
-                      data-testid="no-show-badge"
-                    >
-                      <X className="h-3 w-3" />
-                      {t("detail.fields.noShow")}
-                    </span>
-                  ) : (
-                    <span className="text-[12px] text-muted-foreground">{"2014"}</span>
-                  )}
-                </div>
-                {/* Reschedule count */}
-                {lead.re_scheduled_count != null && lead.re_scheduled_count > 0 && (
-                  <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <RefreshCw className="h-3 w-3 text-muted-foreground/60" />
-                      <span className="text-[11px] text-muted-foreground">{t("detail.fields.rescheduled")}</span>
-                    </div>
-                    <span
-                      className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums"
-                      data-testid="reschedule-count"
-                    >
-                      {lead.re_scheduled_count}×
-                    </span>
-                  </div>
-                )}
-                {lead.call_duration_minutes != null && (
-                  <InfoRow label={t("detail.fields.duration")} value={t("detail.fields.durationMinutes", { minutes: lead.call_duration_minutes })} />
-                )}
-                {/* Lead summary generated at booking */}
-                {lead.ai_memory && (() => {
-                  let isJsonArray = false;
-                  try { if (Array.isArray(JSON.parse(lead.ai_memory))) isJsonArray = true; } catch { /* not JSON */ }
-                  if (isJsonArray) return null;
-                  return (
-                    <div className="pt-2 pb-1 border-t border-border/30 mt-1">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <Bot className="h-3 w-3 text-muted-foreground/60" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          {t("detail.fields.aiSummary", "AI Summary")}
-                        </span>
-                      </div>
-                      <p className="text-[12px] text-foreground/80 leading-relaxed">{lead.ai_memory}</p>
-                    </div>
-                  );
-                })()}
-              </div>
-            </>
-          )}
-
-          {/* AI Insights */}
-          {(lead.ai_sentiment || lead.ai_memory || lead.ai_summary || localAiSummary) && (
-            <>
-              <SectionTitle icon={<Bot className="h-3.5 w-3.5" />} title={t("detail.sections.aiInsights")} />
-              <div
-                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
-                data-testid="ai-insights-section"
-              >
-                {/* AI summary */}
-                {(localAiSummary || lead.ai_summary) && (
-                  <div className="py-1.5 border-b border-border/30">
-                    <div className="text-[11px] text-muted-foreground mb-1">{t("detail.fields.aiSummary")}</div>
-                    <p className="text-[12px] text-foreground/80 leading-relaxed">{localAiSummary || lead.ai_summary}</p>
-                  </div>
-                )}
-                {/* Sentiment badge — color coded */}
-                {lead.ai_sentiment && (
-                  <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                    <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.aiSentiment")}</span>
-                    <SentimentBadge sentiment={lead.ai_sentiment} />
-                  </div>
-                )}
-                {/* AI memory — formatted readably */}
-                {lead.ai_memory && (
-                  <div className="py-1.5" data-testid="ai-memory-display">
-                    <div className="text-[11px] text-muted-foreground mb-1.5">{t("detail.fields.aiMemory")}</div>
-                    <pre className="text-[11px] text-foreground/80 leading-relaxed whitespace-pre-wrap font-sans break-words">
-                      {formatAiMemory(lead.ai_memory)}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+          <LeadAiInsightsSection lead={lead} localAiSummary={localAiSummary} />
 
           {/* Notes — editable + voice memo + AI notes */}
           <LeadNotesSection
@@ -954,25 +508,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             tagEvents={tagEvents}
           />
 
-          {/* Campaign / Account */}
-          <SectionTitle icon={<Tag className="h-3.5 w-3.5" />} title={t("detailView.assignment")} />
-          <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5 mb-6">
-            <InfoRow label={t("detail.fields.account")} value={lead.Account || lead.account_id} />
-            <InfoRow label={t("detailView.campaign")} value={lead.Campaign || lead.campaign_id} />
-            <InfoRow label={t("contact.created")} value={fmtDate(lead.created_at)} />
-            {convStatus && (
-              <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.sections.status")}</span>
-                <StatusBadge label={convStatus} />
-              </div>
-            )}
-            {priority && (
-              <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.priority")}</span>
-                <PriorityBadge priority={priority} />
-              </div>
-            )}
-          </div>
+          <LeadAssignmentSection lead={lead} convStatus={convStatus} priority={priority} />
         </div>
       </SheetContent>
     </Sheet>
