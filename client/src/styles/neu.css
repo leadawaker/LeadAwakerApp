@@ -111,3 +111,16 @@
     0 0 40px rgba(255, 224, 168, 0.15);
   border-radius: 14px;
 }
+
+/* Dark mode: drop the warm light cast (it brightened the dark ground) and use
+   a near-black drop shadow so glass surfaces read as raised, not glowing. */
+.dark .glass {
+  box-shadow:
+    inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 var(--glass-edge),
+    calc(var(--lx) * var(--d-crisp-o) * -1) calc(var(--ly) * var(--d-crisp-o) * -1) var(--d-crisp-b) rgba(0, 0, 0, 0.45);
+}
+.dark .glass-strong {
+  box-shadow:
+    inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 var(--glass-edge),
+    calc(var(--lx) * var(--d-medium-o) * -1) calc(var(--ly) * var(--d-medium-o) * -1) var(--d-medium-b) rgba(0, 0, 0, 0.5);
+}

@@ -31,13 +31,15 @@ export function BehaviorSectionFields({
     onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
   const focusFor = (field: string) => ({ autoFocus: focusField === field });
 
+  const languageLabels: Record<string, string> = { en: "English", pt: "Português", nl: "Nederlands" };
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
 
       {/* Language & Locale */}
-      <InfoRow icon={Globe} label={t("config.language")} value={campaign.language}
+      <InfoRow icon={Globe} label={t("config.language")} value={languageLabels[campaign.language] ?? campaign.language}
         {...editFor("language")}
-        editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["en", "nl", "pt"]} {...focusFor("language")} /> : undefined}
+        editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["en", "nl", "pt"]} labels={languageLabels} {...focusFor("language")} /> : undefined}
       />
       <InfoRow icon={MapPin} label={t("config.nicheQuestion")} value={campaign.niche}
         {...editFor("niche")}

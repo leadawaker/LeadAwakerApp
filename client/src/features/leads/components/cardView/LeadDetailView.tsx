@@ -409,7 +409,7 @@ export function LeadDetailView({
         {isAgencyUser && (
           <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
             <div className="glass-strong" style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end", padding: "8px 8px 0" }}>
+              <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-start", padding: "8px 8px 0" }}>
                 <div className="la-seg la-seg--pill">
                   <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
                   <button className={`la-seg-btn${chatTab === "summary" ? " on" : ""}`} onClick={() => setChatTab("summary")}>{t("detail.aiSummary", "Summary")}</button>

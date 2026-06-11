@@ -409,13 +409,13 @@ export default function CalendarPage() {
     return (
       <CrmShell>
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-[3px] p-0" data-testid="page-calendar">
-          <div className="hidden lg:flex bg-white rounded-lg flex-col overflow-hidden">
+          <div className="hidden lg:flex bg-card rounded-lg flex-col overflow-hidden">
             <div className="px-3.5 pt-5 pb-1 flex items-center justify-between shrink-0">
               <Skeleton className="h-5 w-24 rounded bg-primary/10" />
             </div>
             <div className="flex-1 min-h-0 overflow-hidden px-[3px] flex flex-col gap-[3px]">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2.5">
+                <div key={i} className="flex items-center gap-3 bg-card rounded-lg px-3 py-2.5">
                   <Skeleton className="h-9 w-9 rounded-full bg-primary/10 shrink-0" />
                   <div className="flex-1 flex flex-col gap-1.5">
                     <Skeleton className="h-3 w-3/4 rounded bg-primary/10" />
@@ -425,7 +425,7 @@ export default function CalendarPage() {
               ))}
             </div>
           </div>
-          <div className="bg-white rounded-lg flex flex-col overflow-hidden">
+          <div className="bg-card rounded-lg flex flex-col overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
               <Skeleton className="h-5 w-40 rounded bg-primary/10" />
             </div>

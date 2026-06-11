@@ -464,7 +464,7 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
   const bubbleColorClass = inbound
     ? ""
     : aiMsg
-      ? "bg-white text-[color:var(--ink)] dark:bg-[var(--wine)] dark:text-white"
+      ? "bg-white text-[color:var(--ink)] dark:bg-[#5E2230] dark:text-white"
       : "bg-white text-[color:var(--ink)] dark:bg-card dark:text-[color:var(--ink-soft)]";
   const timeColor = inbound ? "var(--mute-2)" : "var(--muted-foreground)";
 

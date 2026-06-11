@@ -259,7 +259,7 @@
   --secondary-foreground: 36 20% 90%;
 
   /* Muted */
-  --muted: 30 10% 17%;
+  --muted: 30 10% 13%;
   --muted-foreground: 38 10% 60%;     /* #A39A88 — warm muted text */
 
   /* Accent: matches primary wine */

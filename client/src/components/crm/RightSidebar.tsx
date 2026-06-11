@@ -680,7 +680,7 @@ export function RightSidebar({
           borderBottom: "1px solid var(--line)",
           cursor: "pointer",
         }}>
-          <img src="/premium/logo-v2.svg" alt="Lead Awaker" style={{ height: 34, marginTop: 4 }} />
+          <img src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2.svg"} alt="Lead Awaker" style={{ height: 34, marginTop: 4 }} />
         </a>
 
         {/* ── Nav (scrolls) ── */}
