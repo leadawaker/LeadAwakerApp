@@ -204,7 +204,7 @@ export function BillingListPanel({
         </div>
       ) : (
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area p-[3px]">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area px-2 pt-1.5 pb-2">
             {loading ? (
               <div className="flex items-center justify-center py-10"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
             ) : paginatedItems.length === 0 ? (

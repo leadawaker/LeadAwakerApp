@@ -136,8 +136,8 @@ export function GroupBar({ label, count, accent, sticky }: {
     <div
       className="row"
       style={{
-        gap: 10, padding: "14px 4px 8px",
-        ...(sticky ? { position: "sticky", top: 0, zIndex: 5, background: "var(--bg)", boxShadow: "0 -8px 0 8px var(--bg)" } : {}),
+        gap: 10, padding: "10px 4px 8px",
+        ...(sticky ? { position: "sticky", top: 0, zIndex: 5, background: "var(--bg)" } : {}),
       }}
     >
       <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: accent || "var(--ink-soft)", fontWeight: 700 }}>{label}</span>
