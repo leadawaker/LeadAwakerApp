@@ -21,7 +21,7 @@ Read this file to locate any component without running grep/glob searches.
 | Tags | `pages/Tags.tsx` | Tag CRUD — agency admin only |
 | Prompt Library | `pages/PromptLibrary.tsx` | AI prompt templates — agency admin only |
 | Automation Logs | `pages/AutomationLogs.tsx` | n8n execution history — agency admin only |
-| Settings | `pages/Settings.tsx` | Account-level settings, includes Billing section |
+| Settings | `pages/Settings.tsx` | Account-level settings, includes Billing section. Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,DashboardSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
 | Docs | `pages/Docs.tsx` | In-app Operator Manual + Client Guide |
 | Lead Detail (standalone) | `pages/LeadDetail.tsx` | Full-page lead view |
 | Billing | `pages/Billing.tsx` | Standalone billing route wrapper |
@@ -67,6 +67,7 @@ Read this file to locate any component without running grep/glob searches.
 | DbStatusIndicator | `DbStatusIndicator.tsx` | 34px circle + status dot badge |
 | ConnectionBanner | `ConnectionBanner.tsx` | DB connectivity indicator |
 | DataEmptyState | `DataEmptyState.tsx` | Shared empty-state placeholder |
+| entityList/ | `primitives/` sibling `entityList/` | Shared list infra: `buildEntityRows()`/`groupItemsToMap()` (stateless filter→sort→group→flatten helpers used by Tags/Prompts/Prospects/Billing list views) + `useEntityList`/`EntityListView` (state-owning hook + card-list shell, available for future use) |
 | ApiErrorFallback | `ApiErrorFallback.tsx` | API error display |
 | ErrorBoundary | `ErrorBoundary.tsx` | React error boundary |
 | ChangePasswordDialog | `ChangePasswordDialog.tsx` | Password change form |
@@ -86,7 +87,8 @@ Read this file to locate any component without running grep/glob searches.
 | LeadsCardView | `components/LeadsCardView.tsx` | D365-style split-pane **list view** — also contains `LeadDetailView` (desktop detail panel) and `MobileLeadDetailPanel` (mobile full-screen overlay). **Edit lead detail for list view here, NOT in LeadDetailPanel.tsx.** |
 | LeadsKanban | `components/LeadsKanban.tsx` | Drag-drop kanban columns |
 | LeadsInlineTable | `components/LeadsInlineTable.tsx` | Virtualized table view |
-| LeadDetailPanel | `components/LeadDetailPanel.tsx` | Full slide-over Sheet used in **table view, kanban, calendar, and opportunities only** — NOT used in list view |
+| LeadDetailPanel | `components/LeadDetailPanel.tsx` | Full slide-over Sheet used in **table view, kanban, calendar, and opportunities only** — NOT used in list view. Now a composition; sections/helpers live in `components/leadDetail/` |
+| leadDetail/ | `components/leadDetail/` | Sections + helpers split out of LeadDetailPanel: `types.ts`, `format.ts` (date/AI-memory/score-context), `badges.tsx`, `atoms.tsx` (InfoRow/SectionTitle/InlineEditField), `ScorePanel.tsx`, `LeadInteractionTimeline.tsx`, `LeadScoreSection.tsx`, `LeadTagsSection.tsx`, `LeadNotesSection.tsx`, `index.ts` (barrel) |
 | LeadFilters | `components/LeadFilters.tsx` | Filter UI |
 | PipelineToolbar | `components/PipelineToolbar.tsx` | Kanban pipeline toolbar (legacy ToolbarPill usage) |
 | CsvImportWizard | `components/CsvImportWizard.tsx` | CSV lead import flow |
@@ -356,6 +358,15 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | useProspectsData | `hooks/useProspectsData.ts` | Prospects data hook |
 | prospectsApi | `api/prospectsApi.ts` | API calls for prospects |
 | outreachTemplatesApi | `api/outreachTemplatesApi.ts` | API calls for outreach templates |
+
+---
+
+## Server (`server/`)
+
+| Area | File | Notes |
+|------|------|-------|
+| Routing | `routes/index.ts` + domain files in `routes/` | `routes.ts` (monolith) was **deleted** — routing now lives here |
+| Storage | `storage.ts` (barrel) | Methods live in `storage/{accounts,prospects,campaigns,leads,interactions,automation,notifications,billing,tasks,agents,misc,types}.ts` |
 
 ---
 
