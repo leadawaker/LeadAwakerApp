@@ -56,6 +56,11 @@ Generated_Image_*.jpg
 wave*.png
 calc-scroll-fixed.png
 funnel-chart.png
+pipeline-*.png
+login-*.png
+leads-view.png
+after-login.png
+automation-*.png
 leads.md
 client.log
 
