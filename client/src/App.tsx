@@ -1,5 +1,5 @@
 import { Switch, Route, useRoute, useLocation, Redirect } from "wouter";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import i18n from "./i18n";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -12,19 +12,21 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { WhatsAppBubbleProvider } from "@/components/layout/WhatsAppBubble";
 import Seo from "./Seo";
 
-import FAQ from "@/pages/faq";
-import BookCall from "@/pages/book-call";
-import Cases from "@/pages/cases";
-import IntakeDemo from "@/pages/intake-demo";
-import AcceptInvite from "@/pages/AcceptInvite";
-import LegacyHome from "@/legacy/LegacyRoute";
+// Top-level routes are lazy so visitors don't download the CRM and CRM users
+// don't download the marketing/legacy site — they live in separate chunks.
+const FAQ = lazy(() => import("@/pages/faq"));
+const BookCall = lazy(() => import("@/pages/book-call"));
+const Cases = lazy(() => import("@/pages/cases"));
+const IntakeDemo = lazy(() => import("@/pages/intake-demo"));
+const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
+const LegacyHome = lazy(() => import("@/legacy/LegacyRoute"));
 
-import AppArea from "@/pages/app";
-import Canvas from "@/pages/canvas";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import TermsOfService from "@/pages/terms-of-service";
-import Accounts from "@/pages/Accounts";
-import NotFound from "@/pages/not-found";
+const AppArea = lazy(() => import("@/pages/app"));
+const Canvas = lazy(() => import("@/pages/canvas"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
+const Accounts = lazy(() => import("@/pages/Accounts"));
+const NotFound = lazy(() => import("@/pages/not-found"));
 
 /* ------------------------------------------------------------------ */
 /* Language setup                                                      */
@@ -102,6 +104,7 @@ function AppRoutes() {
   useSyncLanguage("en");
 
   return (
+    <Suspense fallback={null}>
     <Switch>
       <Route path="/" component={() => <Redirect to="/platform" />} />
       <Route path="/legacy" component={LegacyHome} />
@@ -127,6 +130,7 @@ function AppRoutes() {
       <Route path="/test-table" component={Accounts} />
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
@@ -138,6 +142,7 @@ function LanguageRouter({ lang }: { lang: Lang }) {
   useSyncLanguage(lang);
 
   return (
+    <Suspense fallback={null}>
     <Switch>
       <Route path={`/${lang}/faq`} component={FAQ} />
       <Route path={`/${lang}/about`} component={() => <Redirect to={`/${lang}/faq`} />} />
@@ -155,6 +160,7 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
