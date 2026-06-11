@@ -170,3 +170,52 @@ export function ToolBtn({ icon, label, onClick, primary, disabled, title }: {
     </button>
   );
 }
+
+// ── Detail-panel building blocks (shared style across all billing detail panels) ──
+// neu-raised section card with an eyebrow heading + optional header action.
+export function DetailSection({ title, action, children, style }: {
+  title?: ReactNode; action?: ReactNode; children: ReactNode; style?: CSSProperties;
+}) {
+  return (
+    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "18px 20px", ...style }}>
+      {(title || action) && (
+        <div className="row" style={{ justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
+          <span className="eyebrow eyebrow-sm">{title}</span>
+          {action}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+// Soft (or wine) action button used in detail headers; supports anchor mode via href.
+export function ActBtn({ icon, label, onClick, disabled, danger, active, primary, href }: {
+  icon?: ReactNode; label?: ReactNode; onClick?: () => void; disabled?: boolean;
+  danger?: boolean; active?: boolean; primary?: boolean; href?: string;
+}) {
+  const style: CSSProperties = { ...(danger ? { color: "var(--stage-lost)" } : active ? { color: "var(--good)" } : {}), opacity: disabled ? 0.5 : 1 };
+  const cls = `la-btn ${primary ? "la-btn--wine" : "la-btn--soft"}`;
+  if (href) return <a href={href} target="_blank" rel="noopener noreferrer" className={cls} style={style}>{icon}{label}</a>;
+  return <button onClick={onClick} disabled={disabled} className={cls} style={style}>{icon}{label}</button>;
+}
+
+// Label/value row used inside detail sections.
+export function DetailRow({ label, value, valueColor }: { label: ReactNode; value: ReactNode; valueColor?: string }) {
+  return (
+    <div className="row" style={{ justifyContent: "space-between" }}>
+      <span style={{ fontSize: 11.5, color: "var(--mute)" }}>{label}</span>
+      <span style={{ fontSize: 12, color: valueColor || "var(--ink)", fontFamily: "var(--mono)" }}>{value}</span>
+    </div>
+  );
+}
+
+// Label-above-value block used inside detail sections (e.g. dates).
+export function DetailField({ label, children, divider }: { label: ReactNode; children: ReactNode; divider?: boolean }) {
+  return (
+    <div style={divider ? { paddingTop: 10, borderTop: "1px solid var(--line)" } : undefined}>
+      <div className="eyebrow eyebrow-sm" style={{ marginBottom: 4 }}>{label}</div>
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>{children}</span>
+    </div>
+  );
+}
