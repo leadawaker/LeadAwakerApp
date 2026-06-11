@@ -103,30 +103,9 @@ import {
 } from "@shared/schema";
 
 
-export interface NotificationItem {
-  id: string;
-  type: 'inbound' | 'booking' | 'error';
-  title: string;
-  description: string;
-  at: string; // ISO date string
-  leadId?: number;
-}
-
-export interface ProspectsListParams {
-  limit?: number;
-  offset?: number;
-  search?: string;
-  niche?: string[];
-  status?: string[];
-  country?: string[];
-  priority?: string[];
-  source?: string[];
-  overdue?: boolean;
-  sortBy?: string; // "recent" | "name_asc" | "name_desc" | "priority"
-  groupBy?: string;
-  groupDirection?: "asc" | "desc";
-  all?: boolean;
-}
+import { accountsStorage } from "./storage/accounts";
+import type { NotificationItem, ProspectsListParams } from "./storage/types";
+export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
 export interface IStorage {
   // Accounts
@@ -365,34 +344,7 @@ export interface IStorage {
   deleteGmailSyncState(accountEmail: string): Promise<boolean>;
 }
 
-export class DatabaseStorage implements IStorage {
-  // ─── Accounts ───────────────────────────────────────────────────────
-
-  async getAccounts(): Promise<Accounts[]> {
-    const { voiceFileData, ...cols } = getTableColumns(accounts);
-    return db.select(cols).from(accounts) as any;
-  }
-
-  async getAccountById(id: number): Promise<Accounts | undefined> {
-    const [row] = await db.select().from(accounts).where(eq(accounts.id, id));
-    return row;
-  }
-
-  async createAccount(data: InsertAccounts): Promise<Accounts> {
-    const [row] = await db.insert(accounts).values(data as any).returning();
-    return row;
-  }
-
-  async updateAccount(id: number, data: Partial<InsertAccounts>): Promise<Accounts | undefined> {
-    const [row] = await db.update(accounts).set(data).where(eq(accounts.id, id)).returning();
-    return row;
-  }
-
-  async deleteAccount(id: number): Promise<boolean> {
-    const result = await db.delete(accounts).where(eq(accounts.id, id)).returning();
-    return result.length > 0;
-  }
-
+export class DatabaseStorage {
   // ─── Prospects ──────────────────────────────────────────────────────
 
   async getProspects(): Promise<Prospects[]> {
@@ -1045,33 +997,6 @@ export class DatabaseStorage implements IStorage {
     return [...inboundNotifs, ...bookingNotifs, ...errorNotifs]
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
       .slice(0, limit);
-  }
-
-  // ─── Users ──────────────────────────────────────────────────────────
-
-  async getAppUsers(): Promise<Users[]> {
-    return db.select().from(users);
-  }
-
-  async getAppUserById(id: number): Promise<Users | undefined> {
-    const [row] = await db.select().from(users).where(eq(users.id, id));
-    return row;
-  }
-
-  async getAppUserByEmail(email: string): Promise<Users | undefined> {
-    const [row] = await db.select().from(users).where(eq(users.email, email));
-    return row;
-  }
-
-  async createAppUser(data: InsertUsers): Promise<Users> {
-    const [row] = await db.insert(users).values(data as any).returning();
-    return row;
-  }
-
-  async updateAppUser(id: number, data: Partial<Users>): Promise<Users | undefined> {
-    const { id: _id, createdAt: _createdAt, createdBy: _createdBy, ...updateData } = data as any;
-    const [updated] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
-    return updated;
   }
 
   // ─── Prompt Library ─────────────────────────────────────────────────
@@ -1805,5 +1730,10 @@ export async function paginatedQuery<T>(
   return { data: data as T[], total, page, limit };
 }
 
-export const storage = new DatabaseStorage();
+// Composed storage object: class methods plus extracted domain modules.
+// Object.assign keeps `this.x()` calls working across module boundaries.
+export const storage = Object.assign(
+  new DatabaseStorage(),
+  accountsStorage,
+);
 
