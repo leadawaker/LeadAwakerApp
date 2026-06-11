@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Sheet,
   SheetContent,
@@ -87,6 +87,7 @@ import {
   useLeadStage,
   useLeadTags,
   useVoiceRecording,
+  useLeadNotes,
   type Interaction,
 } from "./leadDetail";
 
@@ -118,14 +119,20 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const { breakdown: scoreBreakdown, loading: scoreLoading, refetch: refetchScore, resetToZero: resetScoreToZero } = useScoreBreakdown(lead?.id ?? null);
   const panelScore = scoreBreakdown?.lead_score ?? (lead?.lead_score ?? lead?.leadScore ?? 0);
 
-  // ── Notes editing state ──
-  const [localNotes, setLocalNotes] = useState<string>("");
-  const [notesDirty, setNotesDirty] = useState(false);
-  const [savingNotes, setSavingNotes] = useState(false);
-  const [notesSaved, setNotesSaved] = useState(false);
-  const notesOriginalRef = useRef<string>("");
-
   const leadId = lead?.Id || lead?.id;
+
+  // ── Notes editing state (extracted hook) ──
+  const {
+    localNotes,
+    setLocalNotes,
+    notesDirty,
+    setNotesDirty,
+    savingNotes,
+    notesSaved,
+    setNotesSaved,
+    notesOriginalRef,
+    handleNotesSave,
+  } = useLeadNotes(leadId, lead);
 
   // ── Voice recording (extracted hook) — writes transcription into notes ──
   const {
@@ -181,15 +188,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     handleDncChange,
     handleDncReasonSave,
   } = useLeadDnc(leadId, lead);
-
-  // Sync notes when lead changes
-  useEffect(() => {
-    const notes = lead?.notes || "";
-    notesOriginalRef.current = notes;
-    setLocalNotes(notes);
-    setNotesDirty(false);
-    setNotesSaved(false);
-  }, [lead?.Id, lead?.id, lead?.notes]);
 
   // Sync manual_takeover when lead changes
   useEffect(() => {
@@ -265,29 +263,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
       })
       .catch(() => {});
   }, [open, isAgencyPanel, leadAccountId]);
-
-  const handleNotesSave = async () => {
-    if (!leadId || !notesDirty || savingNotes) return;
-    setSavingNotes(true);
-    setNotesSaved(false);
-    try {
-      const res = await apiFetch(`/api/leads/${leadId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: localNotes }),
-      });
-      if (res.ok) {
-        notesOriginalRef.current = localNotes;
-        setNotesDirty(false);
-        setNotesSaved(true);
-        setTimeout(() => setNotesSaved(false), 2000);
-      }
-    } catch {
-      // silently fail — user can retry
-    } finally {
-      setSavingNotes(false);
-    }
-  };
 
   const handleManualTakeoverChange = async (checked: boolean) => {
     if (!leadId || savingManualTakeover) return;

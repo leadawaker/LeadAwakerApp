@@ -401,16 +401,24 @@ export function BillingWorkspace(p: Props) {
       );
     }
     if (isExpenses) {
+      const sy = selectedExpense ? expenseYear(selectedExpense) : null;
+      const sq = selectedExpense ? expenseQuarterNum(selectedExpense) : null;
+      const quarterExpenses = selectedExpense ? (expensesData ?? []).filter((e) => expenseYear(e) === sy && expenseQuarterNum(e) === sq) : [];
       return (
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {selectedExpense ? (
-            <ExpenseDetailPanel
-              expense={selectedExpense}
-              onEdit={(exp) => { setEditingExpense(exp); setExpensePanelOpen(true); }}
-              onDeleted={() => setSelectedExpenseId(null)}
-              onNew={p.isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined}
-            />
-          ) : <ExpenseDetailPanelEmpty onNew={p.isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined} />}
+        <div className="flex-1 min-h-0 overflow-y-auto" style={{ padding: isNarrow ? "16px 16px 40px" : "24px 30px 40px" }}>
+          <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+            {selectedExpense ? (
+              <>
+                <BillingStatCards tab="expenses" invoices={[]} contracts={[]} expenses={quarterExpenses} />
+                <ExpenseDetailPanel
+                  expense={selectedExpense}
+                  onEdit={(exp) => { setEditingExpense(exp); setExpensePanelOpen(true); }}
+                  onDeleted={() => setSelectedExpenseId(null)}
+                  onNew={p.isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined}
+                />
+              </>
+            ) : <ExpenseDetailPanelEmpty onNew={p.isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined} />}
+          </div>
         </div>
       );
     }

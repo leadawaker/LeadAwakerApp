@@ -13,3 +13,4 @@ export * from "./useLeadDnc";
 export * from "./useLeadStage";
 export * from "./useLeadTags";
 export * from "./useVoiceRecording";
+export * from "./useLeadNotes";
