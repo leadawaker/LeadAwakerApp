@@ -425,6 +425,7 @@ export const interactions = nocodb.table("Interactions", {
   index("interactions_accounts_id_idx").on(t.accountsId),
   index("interactions_created_at_idx").on(t.createdAt),
   index("interactions_prospect_id_idx").on(t.prospectId),
+  index("interactions_direction_idx").on(t.direction),
 ]);
 
 export const insertInteractionsSchema = createInsertSchema(interactions).omit({
@@ -506,6 +507,7 @@ export const leads = nocodb.table("Leads", {
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),
+  index("leads_conversion_status_idx").on(t.conversionStatus),
 ]);
 
 export const insertLeadsSchema = createInsertSchema(leads).omit({
