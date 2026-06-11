@@ -105,7 +105,7 @@ export function registerTasksRoutes(app: Express): void {
           userId: task.assignedToUserId,
           accountId: task.accountsId ?? null,
           read: false,
-          link: "/tasks",
+          link: "/platform/tasks",
           leadId: null,
         });
       } catch (notifErr) {
@@ -197,7 +197,7 @@ export function registerTasksRoutes(app: Express): void {
           userId: updated.assignedToUserId,
           accountId: updated.accountsId ?? null,
           read: false,
-          link: "/tasks",
+          link: "/platform/tasks",
           leadId: null,
         });
       } catch (notifErr) {
@@ -488,7 +488,7 @@ export function startTaskNotifiers(): void {
           userId: task.assignedToUserId!,
           accountId: task.accountsId ?? null,
           read: false,
-          link: "/tasks",
+          link: "/platform/tasks",
           leadId: task.leadsId ?? null,
         });
       }
@@ -533,7 +533,7 @@ export function startTaskNotifiers(): void {
           userId: task.assignedToUserId!,
           accountId: task.accountsId ?? null,
           read: false,
-          link: "/tasks",
+          link: "/platform/tasks",
           leadId: task.leadsId ?? null,
         });
       }

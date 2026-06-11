@@ -93,7 +93,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   });
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
   const [highlightTick, setHighlightTick] = useState(0);
-  const [scrollTop, setScrollTop] = useState(0);
   const [sampleLead, setSampleLead] = useState<import("../utils/resolveVariables").LeadForPreview | null>(null);
   const [foldedSections, setFoldedSections] = useState<Set<number>>(new Set());
 
@@ -374,7 +373,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     const container = scrollContainerRef.current;
     const preview = previewPaneScrollRef.current;
     if (!container || !preview) return;
-    setScrollTop(container.scrollTop);
     const maxSrc = container.scrollHeight - container.clientHeight;
     if (maxSrc <= 0) return;
     const pct = container.scrollTop / maxSrc;
@@ -384,19 +382,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     requestAnimationFrame(() => { isSyncingScrollRef.current = false; });
   }
 
-  function handlePreviewScrollSync() {
-    if (isSyncingScrollRef.current) return;
-    const container = scrollContainerRef.current;
-    const preview = previewPaneScrollRef.current;
-    if (!container || !preview) return;
-    const maxSrc = preview.scrollHeight - preview.clientHeight;
-    if (maxSrc <= 0) return;
-    const pct = preview.scrollTop / maxSrc;
-    const maxDst = container.scrollHeight - container.clientHeight;
-    isSyncingScrollRef.current = true;
-    container.scrollTop = pct * maxDst;
-    requestAnimationFrame(() => { isSyncingScrollRef.current = false; });
-  }
 
   function insertAtCaret(token: string) {
     const ta = rawTextareaRef.current;
@@ -422,14 +407,41 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     void highlightTick;
     const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
     const rawLines = text.split("\n");
-    const highlighted = resolveVariablesHtml(text, selectedCampaign, sampleLead);
-    const previewLines = highlighted.split("\n");
 
     if (!text.trim()) return (
       <p className="text-muted-foreground italic text-[12px]">Nothing to preview yet.</p>
     );
 
-    // Group lines into foldable sections
+    // Group RAW lines into foldable sections first, then resolve variables per
+    // section. Resolving the whole text up front breaks line alignment because
+    // multi-line {{#if}} conditionals collapse into fewer lines, shifting every
+    // heading below them.
+    type RawSection = {
+      headingLineIndex: number | null;
+      headingRawLine: string | null;
+      headingLevel: number;
+      bodyRawLines: string[];
+    };
+
+    const rawSections: RawSection[] = [];
+    let currentRaw: RawSection = { headingLineIndex: null, headingRawLine: null, headingLevel: 0, bodyRawLines: [] };
+
+    rawLines.forEach((rawLine, i) => {
+      const m = rawLine.match(/^(#{1,3})\s+/);
+      if (m) {
+        rawSections.push(currentRaw);
+        currentRaw = {
+          headingLineIndex: i,
+          headingRawLine: rawLine,
+          headingLevel: m[1].length,
+          bodyRawLines: [],
+        };
+      } else {
+        currentRaw.bodyRawLines.push(rawLine);
+      }
+    });
+    rawSections.push(currentRaw);
+
     type Section = {
       headingLineIndex: number | null;
       headingHtmlLine: string | null;
@@ -437,24 +449,18 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
       bodyLines: { htmlLine: string; lineIndex: number }[];
     };
 
-    const sections: Section[] = [];
-    let current: Section = { headingLineIndex: null, headingHtmlLine: null, headingLevel: 0, bodyLines: [] };
-
-    rawLines.forEach((rawLine, i) => {
-      const m = rawLine.match(/^(#{1,3})\s+/);
-      if (m) {
-        sections.push(current);
-        current = {
-          headingLineIndex: i,
-          headingHtmlLine: previewLines[i],
-          headingLevel: m[1].length,
-          bodyLines: [],
-        };
-      } else {
-        current.bodyLines.push({ htmlLine: previewLines[i], lineIndex: i });
-      }
-    });
-    sections.push(current);
+    const sections: Section[] = rawSections.map((s) => ({
+      headingLineIndex: s.headingLineIndex,
+      headingHtmlLine: s.headingRawLine !== null
+        ? resolveVariablesHtml(s.headingRawLine, selectedCampaign, sampleLead)
+        : null,
+      headingLevel: s.headingLevel,
+      bodyLines: s.bodyRawLines.length > 0
+        ? resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead)
+            .split("\n")
+            .map((htmlLine, j) => ({ htmlLine, lineIndex: j }))
+        : [],
+    }));
 
     // Determine which section indices have a "real" heading (for top border logic)
     const headingIndices = new Set(sections.map((s, si) => s.headingLineIndex !== null ? si : -1).filter((n) => n >= 0));
@@ -659,7 +665,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                       fontSize: `${editorFontSize}px`, fontFamily: "var(--mono)", lineHeight: 1.7,
                       color: "transparent", whiteSpace: "pre-wrap", wordBreak: "break-word",
                       boxSizing: "border-box", minHeight: 180,
-                      transform: `translateY(-${scrollTop}px)`,
                     }}
                     dangerouslySetInnerHTML={{
                       __html: (promptTextValRef.current ?? "")
@@ -729,7 +734,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
               )}
               <div
                 ref={previewPaneScrollRef}
-                onScroll={handlePreviewScrollSync}
                 className="h-full overflow-y-auto px-5 py-4 [scrollbar-width:thin]"
                 style={{ background: "var(--paper)" }}
               >

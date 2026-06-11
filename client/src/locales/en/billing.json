@@ -15,9 +15,9 @@
     "newInvoice": "New Invoice",
     "newContract": "New Contract",
     "newExpense": "New Expense",
-    "searchInvoices": "Search invoices\u2026",
-    "searchContracts": "Search contracts\u2026",
-    "searchExpenses": "Search expenses\u2026",
+    "searchInvoices": "Search invoices…",
+    "searchContracts": "Search contracts…",
+    "searchExpenses": "Search expenses…",
     "sort": "Sort",
     "sortBy": "Sort by",
     "filter": "Filter",
@@ -40,15 +40,16 @@
     "markPaid": "Mark Paid",
     "clearSelection": "Clear selection",
     "selected": "{{count}} Selected",
-    "showAllFields": "Show all fields"
+    "showAllFields": "Show all fields",
+    "of": "of"
   },
   "sort": {
     "recent": "Most Recent",
     "amountDesc": "Amount High",
     "amountAsc": "Amount Low",
     "dueSoonest": "Due Soonest",
-    "nameAZ": "Name A\u2013Z",
-    "supplierAZ": "Supplier A\u2013Z",
+    "nameAZ": "Name A–Z",
+    "supplierAZ": "Supplier A–Z",
     "dateLabel": "Date",
     "amountLabel": "Amount",
     "dueLabel": "Due date",
@@ -67,7 +68,7 @@
   "groupOptions": {
     "none": "None",
     "noneFlatLabel": "None (flat)",
-    "yearQuarter": "Year \u00b7 Quarter",
+    "yearQuarter": "Year · Quarter",
     "yearPlusQuarter": "Year + Quarter"
   },
   "dateGroups": {
@@ -82,10 +83,10 @@
   "dateFilter": {
     "year": "Year",
     "quarter": "Quarter",
-    "q1Months": "Jan\u2013Mar",
-    "q2Months": "Apr\u2013Jun",
-    "q3Months": "Jul\u2013Sep",
-    "q4Months": "Oct\u2013Dec"
+    "q1Months": "Jan–Mar",
+    "q2Months": "Apr–Jun",
+    "q3Months": "Jul–Sep",
+    "q4Months": "Oct–Dec"
   },
   "statusFilter": {
     "status": "Status",
@@ -109,7 +110,9 @@
       "dOverdue": "{{count}}d overdue",
       "paid": "Paid",
       "dueIn": "Due in {{count}}d",
-      "due": "Due {{date}}"
+      "due": "Due {{date}}",
+      "notSent": "Not sent",
+      "dueToday": "Due today"
     },
     "statusLabels": {
       "Draft": "Draft",
@@ -226,8 +229,7 @@
       "loading": "Loading...",
       "close": "Close",
       "dueInDays": "Due in {{count}} days from issued date",
-      "useBankDetails": "Use {{label}} bank details",
-      "updateInvoice": "Update Invoice"
+      "useBankDetails": "Use {{label}} bank details"
     },
     "table": {
       "columns": {
@@ -527,7 +529,7 @@
       "linkCopied": "Copied!",
       "testDocCreated": "Test document created",
       "testDocDesc": "Test mode — no real email sent. Copy the signing link below.",
-      "testDocNote": "\u26a0 Test document — no real signature legally binding.",
+      "testDocNote": "⚠ Test document — no real signature legally binding.",
       "contractSentNote": "Contract sent. Status updated to Sent.",
       "sentForSignature": "Sent for signature",
       "sentForSignatureDesc": "Signing link sent to {{email}}.",
@@ -605,7 +607,7 @@
       "aiAutoExtract": "AI will auto-extract all fields",
       "clickToReplace": "Click to replace",
       "analysingInvoice": "Analysing invoice with AI...",
-      "analysingInvoiceShort": "Analysing invoice\u2026",
+      "analysingInvoiceShort": "Analysing invoice…",
       "processWithAi": "Process with AI",
       "fieldsExtracted": "Fields extracted successfully",
       "onlyPdfAccepted": "Only PDF files are accepted.",
@@ -639,13 +641,13 @@
       "nlBtwDeductibleDesc": "VAT is reclaimable as NL voorbelasting (BTW)",
       "nlBtwDeductibleDescAlt": "VAT reclaimable as voorbelasting on BTW return",
       "notes": "Notes",
-      "notesPlaceholder": "e.g. US company \u2014 no EU VAT charged",
-      "notesPlaceholderAlt": "e.g. US company \u2014 no EU VAT charged. Pre-start expense for Q1 2026.",
+      "notesPlaceholder": "e.g. US company — no EU VAT charged",
+      "notesPlaceholderAlt": "e.g. US company — no EU VAT charged. Pre-start expense for Q1 2026.",
       "close": "Close",
       "cancel": "Cancel",
       "saveExpense": "Save Expense",
       "saveChanges": "Save Changes",
-      "saving": "Saving\u2026"
+      "saving": "Saving…"
     },
     "table": {
       "columns": {
@@ -717,5 +719,19 @@
       "committed": "Committed",
       "awaiting": "Awaiting"
     }
+  },
+  "stats": {
+    "billed": "Billed",
+    "outstanding": "Outstanding",
+    "overdue": "Overdue",
+    "collected": "Collected",
+    "totalSpend": "Total spend",
+    "reclaimableBtw": "Reclaimable BTW",
+    "deductible": "Deductible"
+  },
+  "workspace": {
+    "compactPanel": "Compact list",
+    "hidePanel": "Hide list",
+    "showPanel": "Show list"
   }
 }

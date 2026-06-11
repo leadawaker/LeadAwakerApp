@@ -211,7 +211,7 @@ export function registerLeadsRoutes(app: Express): void {
             userId: admin.id!,
             accountId: lead.accountsId ?? null,
             read: false,
-            link: "/calendar",
+            link: "/platform/calendar",
             leadId: lead.id,
           });
         }
@@ -605,7 +605,8 @@ export function registerLeadsRoutes(app: Express): void {
       const data = await resp.json();
       res.json(data);
     } catch (err: any) {
-      res.status(502).json({ message: "Automation service unavailable: " + (err.message || "") });
+      console.error("[leads] automation engine unreachable:", err?.message || err);
+      res.status(502).json({ message: "Automation service unavailable" });
     }
   }));
 
@@ -818,7 +819,8 @@ export function registerLeadsRoutes(app: Express): void {
       }
       res.json(await resp.json());
     } catch (err: any) {
-      res.status(502).json({ message: "Automation service unavailable: " + (err.message || "") });
+      console.error("[leads] automation engine unreachable:", err?.message || err);
+      res.status(502).json({ message: "Automation service unavailable" });
     }
   }));
 
@@ -849,7 +851,8 @@ export function registerLeadsRoutes(app: Express): void {
       }
       res.json(await fetchResp.json());
     } catch (err: any) {
-      res.status(502).json({ message: "Automation service unavailable: " + (err.message || "") });
+      console.error("[leads] automation engine unreachable:", err?.message || err);
+      res.status(502).json({ message: "Automation service unavailable" });
     }
   }));
 
@@ -928,7 +931,7 @@ export function startBookingReminders(): void {
             userId: admin.id!,
             accountId: lead.accountsId ?? null,
             read: false,
-            link: "/calendar",
+            link: "/platform/calendar",
             leadId: lead.id,
           });
         }

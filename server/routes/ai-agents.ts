@@ -2259,7 +2259,7 @@ export function startCampaignFinishedNotifier(): void {
               userId: user.id!,
               accountId: campaign.accountsId ?? null,
               read: false,
-              link: "/campaigns",
+              link: "/platform/campaigns",
               leadId: null,
             });
           }

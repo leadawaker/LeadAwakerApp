@@ -41,7 +41,10 @@ The design uses directional-light neumorphic shadows (bilateral dark + light hig
 frosted glass for overlays. (The earlier indigo `#4F46E5` + yellow `#FFDF3D` + wine `#8D354B`
 palettes have been retired; `--brand-indigo`/`--brand-yellow` token *names* still exist but
 resolve to deep wine for backwards-compat — see `variables.css` and `neu.css` for the full system.)
-**Dark mode is deferred** — light mode only for the current phase.
+**Dark mode is live** (warm charcoal): `.dark` token overrides live in `variables.css` and
+`design-system.css`. Never hardcode `bg-white`, `text-black`, or raw hex in components; anything
+not going through tokens breaks in dark mode. (Known debt: Settings forms, billing panels, and
+some mobile sheets still hardcode `bg-white`.)
 
 ### 2.1 Brand Colors (Primary Palette)
 

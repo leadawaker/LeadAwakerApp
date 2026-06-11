@@ -9,3 +9,4 @@ export * from "./LeadInteractionTimeline";
 export * from "./LeadScoreSection";
 export * from "./LeadTagsSection";
 export * from "./LeadNotesSection";
+export * from "./useLeadDnc";

@@ -808,7 +808,7 @@ export function RightSidebar({
             </PopoverTrigger>
             <PopoverContent side="right" align="end" sideOffset={8}
               className="w-[380px] p-0 rounded-2xl shadow-xl border-border overflow-hidden"
-              style={{ background: "rgba(255, 250, 240, 0.65)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
+              style={{ background: isDark ? "rgba(10, 8, 6, 0.88)" : "rgba(255, 250, 240, 0.65)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
               <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
             </PopoverContent>
           </Popover>

@@ -32,6 +32,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
   // Forward all /webhook/* requests to the Python engine (port 8100).
   // Uses fetch so the already-parsed body (req.body) is re-serialized cleanly.
+  //
+  // SECURITY: this proxy performs NO authentication or signature verification —
+  // it forwards every /webhook/* request straight to the engine. This is only
+  // safe because the engine is bound to localhost and these routes are not meant
+  // to be reachable from the public internet. If /webhook/* is ever exposed
+  // through Cloudflare / a public host, add auth or per-provider signature
+  // validation here (and to the engine) BEFORE doing so.
   app.use("/webhook", async (req: Request, res: Response) => {
     const targetUrl = `http://localhost:8100${req.originalUrl}`;
     const body = req.method !== "GET" && req.method !== "HEAD"

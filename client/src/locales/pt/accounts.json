@@ -45,7 +45,7 @@
   },
   "status": {
     "active": "Ativo",
-    "trial": "Avalia\u00e7\u00e3o",
+    "trial": "Avaliação",
     "inactive": "Inativo",
     "suspended": "Suspenso",
     "unknown": "Desconhecido"
@@ -148,7 +148,7 @@
     "phonePlaceholder": "+55 (11) 0000-0000",
     "websitePlaceholder": "https://exemplo.com",
     "notesPlaceholder": "Notas internas sobre esta conta...",
-    "userId": "ID do Usu\u00e1rio"
+    "userId": "ID do Usuário"
   },
   "typoFrequency": {
     "none": "Nenhum",
@@ -182,25 +182,25 @@
     "syncInstagram": "Sincronizar Contatos Instagram",
     "syncingContacts": "Sincronizando contatos...",
     "syncFailed": "Falha na sincronizacao",
-    "selectExecution": "Selecione uma execu\u00e7\u00e3o para ver seu pipeline",
+    "selectExecution": "Selecione uma execução para ver seu pipeline",
     "cropLogo": "Recortar Logo",
-    "cropDescription": "Arraste para reposicionar \u00b7 use o slider para zoom",
+    "cropDescription": "Arraste para reposicionar · use o slider para zoom",
     "saveLogo": "Salvar Logo",
-    "overview": "Vis\u00e3o Geral",
+    "overview": "Visão Geral",
     "campaignsAndContracts": "Campanhas e Contratos",
     "aiAndSchedule": "IA e Agenda",
-    "integrations": "Integra\u00e7\u00f5es",
+    "integrations": "Integrações",
     "voiceClone": "Clone de Voz",
     "voiceIdForCampaigns": "ID de Voz para campanhas",
-    "voiceIdWillBe": "ID de Voz ser\u00e1",
-    "clickOrDragAudio": "Clique ou arraste um arquivo de \u00e1udio",
-    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC \u00b7 m\u00e1x 10 MB",
+    "voiceIdWillBe": "ID de Voz será",
+    "clickOrDragAudio": "Clique ou arraste um arquivo de áudio",
+    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC · máx 10 MB",
     "lead": "lead",
     "leads": "leads",
     "contactsSynced": "{{count}} contatos sincronizados",
-    "alreadyExisted": "{{count}} j\u00e1 existiam",
+    "alreadyExisted": "{{count}} já existiam",
     "failedCount": "{{count}} com falha",
-    "rateLimited": "Limite de taxa atingido \u2014 execute novamente para os contatos restantes",
+    "rateLimited": "Limite de taxa atingido — execute novamente para os contatos restantes",
     "conversationsScanned": "{{count}} conversas verificadas"
   },
   "related": {
@@ -216,15 +216,15 @@
     "more": "+{{count}} mais",
     "copy": "(Copia)",
     "pickCampaign": "Escolha uma campanha para atribuir a esta conta.",
-    "noCampaignsAvailable": "Nenhuma campanha dispon\u00edvel",
+    "noCampaignsAvailable": "Nenhuma campanha disponível",
     "noCampaigns": "Nenhuma campanha",
     "contract": "Contrato",
     "noContract": "Sem contrato",
-    "unlinkedContracts": "Contratos sem v\u00ednculo",
+    "unlinkedContracts": "Contratos sem vínculo",
     "members": "Membros",
-    "pickUser": "Escolha um usu\u00e1rio para atribuir a esta conta.",
-    "noUsersAvailable": "Nenhum usu\u00e1rio dispon\u00edvel",
-    "noUsersAssigned": "Nenhum usu\u00e1rio atribu\u00eddo"
+    "pickUser": "Escolha um usuário para atribuir a esta conta.",
+    "noUsersAvailable": "Nenhum usuário disponível",
+    "noUsersAssigned": "Nenhum usuário atribuído"
   },
   "pagination": {
     "previous": "Anterior",
@@ -233,8 +233,8 @@
   "empty": {
     "selectAccount": "Selecione uma conta para ver detalhes",
     "title": "Selecione uma conta",
-    "description": "Clique em qualquer conta \u00e0 esquerda para ver seus detalhes e configura\u00e7\u00f5es.",
-    "chooseFromList": "\u2190 Escolha da lista"
+    "description": "Clique em qualquer conta à esquerda para ver seus detalhes e configurações.",
+    "chooseFromList": "← Escolha da lista"
   },
   "knowledge": {
     "title": "Base de Conhecimento",
@@ -245,10 +245,10 @@
     "update": "Atualizar",
     "saving": "Guardando...",
     "cancel": "Cancelar",
-    "titlePlaceholder": "T\u00edtulo da entrada...",
-    "contentPlaceholder": "Conte\u00fado que a IA usar\u00e1 para responder perguntas...",
+    "titlePlaceholder": "Título da entrada...",
+    "contentPlaceholder": "Conteúdo que a IA usará para responder perguntas...",
     "emptyTitle": "Ainda sem entradas na base de conhecimento",
-    "emptyDescription": "Adicione pre\u00e7os, servi\u00e7os, FAQs e mais para que a IA possa responder \u00e0s perguntas dos leads com precis\u00e3o.",
+    "emptyDescription": "Adicione preços, serviços, FAQs e mais para que a IA possa responder às perguntas dos leads com precisão.",
     "campaigns": {
       "label": "Campanhas",
       "all": "Todas",
@@ -258,14 +258,80 @@
       "count": "campanhas"
     },
     "categories": {
-      "pricing": "Pre\u00e7os",
-      "services": "Servi\u00e7os",
+      "pricing": "Preços",
+      "services": "Serviços",
       "faq": "FAQ",
       "team": "Equipa",
-      "hours": "Hor\u00e1rios",
-      "location": "Localiza\u00e7\u00e3o",
-      "policies": "Pol\u00edticas",
+      "hours": "Horários",
+      "location": "Localização",
+      "policies": "Políticas",
       "testimonials": "Testemunhos"
+    },
+    "injectAfter": "Injetar após",
+    "countEntries": "{{count}} entradas"
+  },
+  "workspace": {
+    "tabs": {
+      "overview": "Visão geral",
+      "integrations": "Integrações",
+      "knowledge": "Intel da Empresa"
+    },
+    "createAccount": "Criar conta",
+    "compactPanel": "Compactar painel",
+    "hidePanel": "Ocultar painel",
+    "showPanel": "Mostrar painel"
+  },
+  "metrics": {
+    "campaigns": "Campanhas",
+    "avgResponse": "Resposta média",
+    "contracts": "Contratos",
+    "team": "Equipe",
+    "allActive": "todas ativas",
+    "acrossAll": "no total",
+    "nActive": "{{count}} ativos",
+    "nOwner": "{{count}} dono",
+    "nMembers": "{{count}} membros"
+  },
+  "panels": {
+    "accountDetails": "Detalhes da conta",
+    "campaigns": "Campanhas",
+    "team": "Equipe",
+    "contracts": "Contratos",
+    "integrations": "Integrações",
+    "voiceClone": "Clone de voz",
+    "knowledgeBase": "Inteligência da Empresa",
+    "available": "Disponível",
+    "leads": "Leads",
+    "response": "Resposta",
+    "actions": {
+      "new": "Nova",
+      "invite": "Convidar",
+      "add": "Adicionar",
+      "viewAllCampaigns": "Ver todas as campanhas",
+      "addIntegration": "Adicionar integração",
+      "addCategory": "Adicionar categoria"
     }
+  },
+  "pills": {
+    "connected": "Conectado",
+    "notSet": "Não definido",
+    "comingSoon": "Em breve",
+    "nConnected": "{{count}} conectado(s)"
+  },
+  "contractStatus": {
+    "active": "Ativo",
+    "pending": "Pendente",
+    "expired": "Expirado"
+  },
+  "voice": {
+    "ready": "Pronto",
+    "noSample": "Sem amostra",
+    "upload": "Enviar",
+    "test": "Testar",
+    "ratioReady": "{{ready}}/{{total}} prontas",
+    "always": "sempre"
+  },
+  "scope": {
+    "nSelected": "{{count}} selecionada(s)"
   }
 }

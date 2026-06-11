@@ -49,10 +49,13 @@ if (allowedOrigins.length > 0) {
   app.use(cors({ origin: allowedOrigins, credentials: true }));
 }
 
-// Allow embedding in code-server Simple Browser (iframe)
-// CSP frame-ancestors overrides X-Frame-Options (even if Cloudflare adds it)
+// Clickjacking protection: only allow same-origin framing.
+// frame-ancestors overrides X-Frame-Options (even if Cloudflare adds it).
+// Note: this disallows embedding in the code-server Simple Browser; if that
+// is needed during local dev, add the explicit code-server origin here rather
+// than reverting to the "*" wildcard (which lets any site iframe the app).
 app.use((_req, res, next) => {
-  res.setHeader("Content-Security-Policy", "frame-ancestors *");
+  res.setHeader("Content-Security-Policy", "frame-ancestors 'self'");
   res.removeHeader("X-Frame-Options");
   next();
 });
