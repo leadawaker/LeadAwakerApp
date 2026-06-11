@@ -106,6 +106,7 @@ import {
 import { accountsStorage } from "./storage/accounts";
 import { prospectsStorage } from "./storage/prospects";
 import { campaignsStorage } from "./storage/campaigns";
+import { leadsStorage } from "./storage/leads";
 import type { NotificationItem, ProspectsListParams } from "./storage/types";
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -347,40 +348,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage {
-  // ─── Leads ──────────────────────────────────────────────────────────
-
-  async getLeads(): Promise<Leads[]> {
-    return db.select().from(leads);
-  }
-
-  async getLeadById(id: number): Promise<Leads | undefined> {
-    const [row] = await db.select().from(leads).where(eq(leads.id, id));
-    return row;
-  }
-
-  async getLeadsByAccountId(accountId: number): Promise<Leads[]> {
-    return db.select().from(leads).where(eq(leads.accountsId, accountId));
-  }
-
-  async getLeadsByCampaignId(campaignId: number): Promise<Leads[]> {
-    return db.select().from(leads).where(eq(leads.campaignsId, campaignId));
-  }
-
-  async createLead(data: InsertLeads): Promise<Leads> {
-    const [row] = await db.insert(leads).values(data as any).returning();
-    return row;
-  }
-
-  async updateLead(id: number, data: Partial<InsertLeads>): Promise<Leads | undefined> {
-    const [row] = await db.update(leads).set(data).where(eq(leads.id, id)).returning();
-    return row;
-  }
-
-  async deleteLead(id: number): Promise<boolean> {
-    const result = await db.delete(leads).where(eq(leads.id, id)).returning();
-    return result.length > 0;
-  }
-
   // ─── Interactions ───────────────────────────────────────────────────
 
   async getInteractions(): Promise<Interactions[]> {
@@ -536,74 +503,6 @@ export class DatabaseStorage {
 
   async deleteInteractionsByLeadId(leadId: number): Promise<void> {
     await db.delete(interactions).where(eq(interactions.leadsId, leadId));
-  }
-
-  // ─── Tags ───────────────────────────────────────────────────────────
-
-  async getTags(): Promise<Tags[]> {
-    return db.select().from(tags);
-  }
-
-  async getTagsByAccountId(accountId: number): Promise<Tags[]> {
-    return db.select().from(tags).where(eq(tags.accountsId, accountId));
-  }
-
-  async createTag(data: InsertTags): Promise<Tags> {
-    const [row] = await db.insert(tags).values(data as any).returning();
-    return row;
-  }
-
-  async updateTag(id: number, data: Partial<InsertTags>): Promise<Tags | undefined> {
-    const [row] = await db.update(tags).set(data).where(eq(tags.id, id)).returning();
-    return row;
-  }
-
-  async deleteTag(id: number): Promise<boolean> {
-    const result = await db.delete(tags).where(eq(tags.id, id)).returning();
-    return result.length > 0;
-  }
-
-  // ─── Leads_Tags ─────────────────────────────────────────────────────
-
-  async getTagsByLeadId(leadId: number): Promise<Leads_Tags[]> {
-    return db.select().from(leadsTags).where(and(eq(leadsTags.leadsId, leadId), isNull(leadsTags.removedAt)));
-  }
-
-  async getTagsByLeadIds(leadIds: number[]): Promise<Leads_Tags[]> {
-    if (leadIds.length === 0) return [];
-    return db.select().from(leadsTags).where(and(inArray(leadsTags.leadsId, leadIds), isNull(leadsTags.removedAt)));
-  }
-
-  async createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags> {
-    const [row] = await db.insert(leadsTags).values(data as any).returning();
-    return row;
-  }
-
-  async bulkCreateLeadTags(data: InsertLeads_Tags[]): Promise<Leads_Tags[]> {
-    if (data.length === 0) return [];
-    return db.insert(leadsTags).values(data as any).returning();
-  }
-
-  async deleteLeadTag(leadId: number, tagId: number): Promise<boolean> {
-    const result = await db.delete(leadsTags)
-      .where(and(eq(leadsTags.leadsId, leadId), eq(leadsTags.tagsId, tagId)))
-      .returning();
-    return result.length > 0;
-  }
-
-  async deleteAllLeadTags(leadId: number): Promise<void> {
-    await db.delete(leadsTags).where(eq(leadsTags.leadsId, leadId));
-  }
-
-  // ─── Bulk Operations ──────────────────────────────────────────────────
-
-  async bulkUpdateLeads(ids: number[], data: Partial<InsertLeads>): Promise<Leads[]> {
-    if (ids.length === 0) return [];
-    return db
-      .update(leads)
-      .set(data)
-      .where(inArray(leads.id, ids))
-      .returning();
   }
 
   // ─── Automation Logs ────────────────────────────────────────────────
@@ -829,19 +728,6 @@ export class DatabaseStorage {
     return [...inboundNotifs, ...bookingNotifs, ...errorNotifs]
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
       .slice(0, limit);
-  }
-
-  // ─── Lead Score History ───────────────────────────────────────────────
-  async getLeadScoreHistory(): Promise<Lead_Score_History[]> {
-    return db.select().from(leadScoreHistory).orderBy(desc(leadScoreHistory.scoreDate));
-  }
-
-  async getLeadScoreHistoryByLeadId(leadId: number): Promise<Lead_Score_History[]> {
-    return db
-      .select()
-      .from(leadScoreHistory)
-      .where(eq(leadScoreHistory.leadsId, leadId))
-      .orderBy(desc(leadScoreHistory.createdAt));
   }
 
   // ─── Invoices ──────────────────────────────────────────────────────────
@@ -1476,6 +1362,7 @@ export async function paginatedQuery<T>(
 // Object.assign keeps `this.x()` calls working across module boundaries.
 export const storage = Object.assign(
   new DatabaseStorage(),
+  leadsStorage,
   campaignsStorage,
   prospectsStorage,
   accountsStorage,
