@@ -107,6 +107,7 @@ import { accountsStorage } from "./storage/accounts";
 import { prospectsStorage } from "./storage/prospects";
 import { campaignsStorage } from "./storage/campaigns";
 import { leadsStorage } from "./storage/leads";
+import { interactionsStorage } from "./storage/interactions";
 import type { NotificationItem, ProspectsListParams } from "./storage/types";
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -348,163 +349,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage {
-  // ─── Interactions ───────────────────────────────────────────────────
-
-  async getInteractions(): Promise<Interactions[]> {
-    return db.select().from(interactions).orderBy(desc(interactions.createdAt));
-  }
-
-  async getInteractionById(id: number): Promise<Interactions | undefined> {
-    const [row] = await db.select().from(interactions).where(eq(interactions.id, id));
-    return row;
-  }
-
-  async getInteractionsByLeadId(leadId: number): Promise<Interactions[]> {
-    return db
-      .select()
-      .from(interactions)
-      .where(eq(interactions.leadsId, leadId))
-      .orderBy(desc(interactions.createdAt));
-  }
-
-  async getInteractionsByAccountId(accountId: number): Promise<Interactions[]> {
-    return db
-      .select()
-      .from(interactions)
-      .where(eq(interactions.accountsId, accountId))
-      .orderBy(desc(interactions.createdAt));
-  }
-
-  async getInteractionsByProspectId(prospectId: number, limit: number = 20, offset: number = 0): Promise<{ interactions: Interactions[]; total: number }> {
-    // Fetch prospect to get all email addresses
-    const prospect = await this.getProspectById(prospectId);
-    if (!prospect) return { interactions: [], total: 0 };
-
-    const emails: string[] = [];
-    if (prospect.email) emails.push(prospect.email);
-    if (prospect.contactEmail) emails.push(prospect.contactEmail);
-    if (prospect.contact2Email) emails.push(prospect.contact2Email);
-
-    // Build query: match by prospect_id FK OR by email in metadata JSON
-    let emailClause = "";
-    const params: any[] = [prospectId];
-    if (emails.length > 0) {
-      params.push(emails);
-      emailClause = ` OR metadata->>'from_email' = ANY($2) OR metadata->>'to_email' = ANY($2)`;
-    }
-
-    const whereClause = `WHERE prospect_id = $1${emailClause}`;
-    const countParam = emails.length > 0 ? 2 : 1;
-
-    // Use raw SQL via pool for complex OR with JSON operators
-    const countRows = await pool.query(
-      `SELECT COUNT(*)::int as total FROM p2mxx34fvbf3ll6."Interactions" ${whereClause}`,
-      emails.length > 0 ? [prospectId, emails] : [prospectId]
-    );
-    const total = countRows.rows[0]?.total ?? 0;
-
-    // Fetch data
-    const dataRows = await pool.query(
-      `SELECT * FROM p2mxx34fvbf3ll6."Interactions" ${whereClause} ORDER BY COALESCE(sent_at, created_at) DESC LIMIT $${countParam + 1} OFFSET $${countParam + 2}`,
-      emails.length > 0 ? [prospectId, emails, limit, offset] : [prospectId, limit, offset]
-    );
-
-    return { interactions: dataRows.rows as Interactions[], total };
-  }
-
-  async getProspectConversations(): Promise<any[]> {
-    const result = await pool.query(`
-      SELECT
-        p.id as prospect_id,
-        p.name,
-        p.company,
-        p.contact_name,
-        p.contact_email,
-        p.niche,
-        p.outreach_status,
-        p.priority,
-        p.contact_phone,
-        p.phone,
-        p.company_logo_url,
-        p.website,
-        COUNT(i.id) FILTER (WHERE i.is_read = false AND i.direction = 'inbound') as unread_count,
-        COUNT(i.id) as total_messages,
-        MAX(i.sent_at) as last_message_at,
-        (SELECT i2."Content" FROM p2mxx34fvbf3ll6."Interactions" i2
-         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message,
-        (SELECT i2.direction FROM p2mxx34fvbf3ll6."Interactions" i2
-         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_direction,
-        (SELECT i2.type FROM p2mxx34fvbf3ll6."Interactions" i2
-         WHERE i2.prospect_id = p.id ORDER BY i2.sent_at DESC LIMIT 1) as last_message_type,
-        ARRAY(SELECT DISTINCT LOWER(i3.type) FROM p2mxx34fvbf3ll6."Interactions" i3
-         WHERE i3.prospect_id = p.id AND i3.type IS NOT NULL) as channels
-      FROM p2mxx34fvbf3ll6."Prospects" p
-      INNER JOIN p2mxx34fvbf3ll6."Interactions" i ON i.prospect_id = p.id
-      GROUP BY p.id
-      ORDER BY MAX(i.sent_at) DESC
-    `);
-    return result.rows;
-  }
-
-  async getProspectMessages(prospectId: number, limit: number, offset: number): Promise<any[]> {
-    const result = await pool.query(`
-      SELECT * FROM p2mxx34fvbf3ll6."Interactions"
-      WHERE prospect_id = $1
-      ORDER BY sent_at ASC
-      LIMIT $2 OFFSET $3
-    `, [prospectId, limit, offset]);
-    return result.rows;
-  }
-
-  async markProspectInteractionsRead(prospectId: number): Promise<void> {
-    await pool.query(`
-      UPDATE p2mxx34fvbf3ll6."Interactions"
-      SET is_read = true
-      WHERE prospect_id = $1 AND is_read = false
-    `, [prospectId]);
-  }
-
-  async createInteraction(data: InsertInteractions): Promise<Interactions> {
-    const now = new Date();
-    const [row] = await db.insert(interactions).values({
-      createdAt: now,
-      updatedAt: now,
-      ...data,
-    } as any).returning();
-    return row;
-  }
-
-  async updateInteraction(id: number, data: Partial<InsertInteractions>): Promise<Interactions | undefined> {
-    const [row] = await db.update(interactions)
-      .set({ ...data, updatedAt: new Date() } as any)
-      .where(eq(interactions.id, id))
-      .returning();
-    return row;
-  }
-
-  async deleteInteraction(id: number): Promise<boolean> {
-    const rows = await db.delete(interactions).where(eq(interactions.id, id)).returning();
-    return rows.length > 0;
-  }
-
-  async bulkDeleteInteractions(ids: number[]): Promise<number> {
-    if (ids.length === 0) return 0;
-    const rows = await db.delete(interactions).where(inArray(interactions.id, ids)).returning();
-    return rows.length;
-  }
-
-  async bulkDeleteInteractionsScoped(ids: number[], accountId: number): Promise<number> {
-    if (ids.length === 0) return 0;
-    const rows = await db.delete(interactions)
-      .where(and(inArray(interactions.id, ids), eq(interactions.accountsId, accountId)))
-      .returning();
-    return rows.length;
-  }
-
-  async deleteInteractionsByLeadId(leadId: number): Promise<void> {
-    await db.delete(interactions).where(eq(interactions.leadsId, leadId));
-  }
-
   // ─── Automation Logs ────────────────────────────────────────────────
 
   async getAutomationLogs(): Promise<Automation_Logs[]> {
@@ -1362,6 +1206,7 @@ export async function paginatedQuery<T>(
 // Object.assign keeps `this.x()` calls working across module boundaries.
 export const storage = Object.assign(
   new DatabaseStorage(),
+  interactionsStorage,
   leadsStorage,
   campaignsStorage,
   prospectsStorage,
