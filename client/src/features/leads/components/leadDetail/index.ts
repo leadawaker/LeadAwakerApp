@@ -6,3 +6,4 @@ export * from "./badges";
 export * from "./atoms";
 export * from "./ScorePanel";
 export * from "./LeadInteractionTimeline";
+export * from "./LeadScoreSection";
