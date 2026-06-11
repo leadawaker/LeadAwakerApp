@@ -104,11 +104,19 @@ import {
 
 import type { NotificationItem, ProspectsListParams } from "./types";
 
+// Safety cap for no-arg full-table fetches. The live route uses
+// getAutomationLogsPaginated; this no-arg variant is a defensive fallback.
+const MAX_UNPAGINATED_ROWS = 5000;
+
 export const automationStorage = {
   // ─── Automation Logs ────────────────────────────────────────────────
 
   async getAutomationLogs(): Promise<Automation_Logs[]> {
-    return db.select().from(automationLogs).orderBy(desc(automationLogs.createdAt));
+    const rows = await db.select().from(automationLogs).orderBy(desc(automationLogs.createdAt)).limit(MAX_UNPAGINATED_ROWS);
+    if (rows.length === MAX_UNPAGINATED_ROWS) {
+      console.warn(`[storage] getAutomationLogs() hit ${MAX_UNPAGINATED_ROWS}-row cap; results truncated — caller should paginate`);
+    }
+    return rows;
   },
 
   async getAutomationLogsByAccountId(accountId: number): Promise<Automation_Logs[]> {

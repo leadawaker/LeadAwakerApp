@@ -104,11 +104,20 @@ import {
 
 import type { NotificationItem, ProspectsListParams } from "./types";
 
+// Safety cap for no-arg full-table fetches that feed global views / AI tools.
+const MAX_UNPAGINATED_ROWS = 5000;
+
 export const interactionsStorage = {
   // ─── Interactions ───────────────────────────────────────────────────
 
   async getInteractions(): Promise<Interactions[]> {
-    return db.select().from(interactions).orderBy(desc(interactions.createdAt));
+    // No-arg global fetch returns the whole interactions table (largest table).
+    // Hard-cap to the most recent rows; scoped views use the by-lead/by-account methods.
+    const rows = await db.select().from(interactions).orderBy(desc(interactions.createdAt)).limit(MAX_UNPAGINATED_ROWS);
+    if (rows.length === MAX_UNPAGINATED_ROWS) {
+      console.warn(`[storage] getInteractions() hit ${MAX_UNPAGINATED_ROWS}-row cap; results truncated — caller should paginate`);
+    }
+    return rows;
   },
 
   async getInteractionById(id: number): Promise<Interactions | undefined> {

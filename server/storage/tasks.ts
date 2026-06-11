@@ -205,12 +205,14 @@ export const tasksStorage = {
   },
 
   async reorderSubtasks(taskId: number, subtaskIds: number[]): Promise<TaskSubtask[]> {
-    // Update sortOrder for each subtask based on array position
-    for (let i = 0; i < subtaskIds.length; i++) {
+    // Single UPDATE: set sortOrder from array position via a CASE expression
+    // (was one UPDATE per subtask in a for-loop — N+1 round-trips per drag).
+    if (subtaskIds.length > 0) {
+      const cases = subtaskIds.map((id, i) => sql`when ${taskSubtasks.id} = ${id} then ${i}`);
       await db
         .update(taskSubtasks)
-        .set({ sortOrder: i, updatedAt: new Date() })
-        .where(and(eq(taskSubtasks.id, subtaskIds[i]), eq(taskSubtasks.taskId, taskId)));
+        .set({ sortOrder: sql`case ${sql.join(cases, sql` `)} end`, updatedAt: new Date() })
+        .where(and(eq(taskSubtasks.taskId, taskId), inArray(taskSubtasks.id, subtaskIds)));
     }
     // Return updated subtasks in new order
     return db.select().from(taskSubtasks).where(eq(taskSubtasks.taskId, taskId)).orderBy(asc(taskSubtasks.sortOrder));

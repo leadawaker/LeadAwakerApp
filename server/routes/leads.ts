@@ -400,8 +400,7 @@ export function registerLeadsRoutes(app: Express): void {
         const userAccountId = req.user!.accountsId;
         const ownedLeads: number[] = [];
         for (const lid of leadIds) {
-          const allLeads = await storage.getLeads();
-          const lead = allLeads.find((l: any) => l.id === lid || l.Id === lid);
+          const lead = await storage.getLeadById(lid);
           if (lead && lead.accountsId === userAccountId) {
             ownedLeads.push(lid);
           }

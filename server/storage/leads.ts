@@ -104,11 +104,20 @@ import {
 
 import type { NotificationItem, ProspectsListParams } from "./types";
 
+// Safety cap for no-arg full-table fetches that feed list views / AI tools.
+const MAX_UNPAGINATED_ROWS = 5000;
+
 export const leadsStorage = {
   // ─── Leads ──────────────────────────────────────────────────────────
 
   async getLeads(): Promise<Leads[]> {
-    return db.select().from(leads);
+    // No-arg global fetch (agency/admin + AI tools). Hard-cap to avoid scanning
+    // the entire table; per-account/per-campaign views use the scoped methods.
+    const rows = await db.select().from(leads).limit(MAX_UNPAGINATED_ROWS);
+    if (rows.length === MAX_UNPAGINATED_ROWS) {
+      console.warn(`[storage] getLeads() hit ${MAX_UNPAGINATED_ROWS}-row cap; results truncated — caller should paginate`);
+    }
+    return rows;
   },
 
   async getLeadById(id: number): Promise<Leads | undefined> {
