@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { buildEntityRows } from "@/components/crm/entityList";
 import {
   ProspectRow,
   VirtualListItem,
@@ -47,36 +48,32 @@ export function useProspectListFiltering({
       }
     };
 
-    const buckets = new Map<string, ProspectRow[]>();
-    prospects.forEach((p) => {
-      const key = bucketKey(p);
-      if (!buckets.has(key)) buckets.set(key, []);
-      buckets.get(key)!.push(p);
+    // Group ordering depends on the active field; fixed sequences for
+    // status/priority/date, alphabetical for niche/country. Direction reverse
+    // is applied by buildEntityRows after this ordering.
+    const orderGroups = (keys: string[]): string[] => {
+      if (groupBy === "status") {
+        return STATUS_GROUP_ORDER.filter((k) => keys.includes(k))
+          .concat(keys.filter((k) => !STATUS_GROUP_ORDER.includes(k)));
+      }
+      if (groupBy === "priority") {
+        return ["High", "Medium", "Low"].filter((k) => keys.includes(k))
+          .concat(keys.filter((k) => !["High", "Medium", "Low"].includes(k)));
+      }
+      if (groupBy === "date_created" || groupBy === "date_updated") {
+        return DATE_BUCKET_ORDER.filter((k) => keys.includes(k));
+      }
+      return [...keys].sort();
+    };
+
+    return buildEntityRows<ProspectRow, VirtualListItem>({
+      items: prospects,
+      groupKeyOf: bucketKey,
+      groupDirection,
+      orderGroups,
+      makeHeader: (label, count) => ({ kind: "header", label, count }),
+      makeItem: (prospect) => ({ kind: "prospect", prospect }),
     });
-
-    let orderedKeys: string[];
-    if (groupBy === "status") {
-      orderedKeys = STATUS_GROUP_ORDER.filter((k) => buckets.has(k))
-        .concat(Array.from(buckets.keys()).filter((k) => !STATUS_GROUP_ORDER.includes(k)));
-    } else if (groupBy === "priority") {
-      orderedKeys = ["High", "Medium", "Low"].filter((k) => buckets.has(k))
-        .concat(Array.from(buckets.keys()).filter((k) => !["High", "Medium", "Low"].includes(k)));
-    } else if (groupBy === "date_created" || groupBy === "date_updated") {
-      orderedKeys = DATE_BUCKET_ORDER.filter((k) => buckets.has(k));
-    } else {
-      orderedKeys = Array.from(buckets.keys()).sort();
-    }
-
-    if (groupDirection === "desc") orderedKeys = [...orderedKeys].reverse();
-
-    const result: VirtualListItem[] = [];
-    orderedKeys.forEach((key) => {
-      const group = buckets.get(key);
-      if (!group || group.length === 0) return;
-      result.push({ kind: "header", label: key, count: group.length });
-      group.forEach((p) => result.push({ kind: "prospect", prospect: p }));
-    });
-    return result;
   }, [prospects, groupBy, groupDirection]);
 
   // Niche color map — derived from loaded items + provided filter options (so colors stay stable as more load)

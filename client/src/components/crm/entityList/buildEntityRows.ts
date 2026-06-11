@@ -14,15 +14,18 @@
  */
 
 /**
- * Group items into an insertion-stable, key-sorted Map. Keys are sorted
- * ascending (localeCompare-free, matching the legacy Array.sort default) and
- * reversed when `direction === "desc"`. Mirrors the grouping useMemos that
- * PromptsPage / TagsPage / the inline tables hand-rolled.
+ * Group items into an insertion-stable, ordered Map. By default keys are sorted
+ * ascending (localeCompare-free, matching the legacy Array.sort default); pass
+ * `orderGroups` to impose a custom order (e.g. a fixed status/priority/date
+ * sequence). The chosen order is then reversed when `direction === "desc"`.
+ * Mirrors the grouping useMemos that PromptsPage / TagsPage / the prospect &
+ * billing views hand-rolled.
  */
 export function groupItemsToMap<T>(
   items: T[],
   groupKeyOf: (item: T) => string,
   direction: "asc" | "desc" = "asc",
+  orderGroups?: (keys: string[]) => string[],
 ): Map<string, T[]> {
   const groups = new Map<string, T[]>();
   for (const item of items) {
@@ -30,8 +33,9 @@ export function groupItemsToMap<T>(
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(item);
   }
-  const orderedKeys = Array.from(groups.keys()).sort();
-  if (direction === "desc") orderedKeys.reverse();
+  const rawKeys = Array.from(groups.keys());
+  let orderedKeys = orderGroups ? orderGroups(rawKeys) : rawKeys.sort();
+  if (direction === "desc") orderedKeys = [...orderedKeys].reverse();
   const ordered = new Map<string, T[]>();
   for (const k of orderedKeys) ordered.set(k, groups.get(k)!);
   return ordered;
@@ -46,6 +50,8 @@ export interface BuildEntityRowsOptions<T, R> {
   /** Group key for an item; pass null/undefined to skip grouping (flat list). */
   groupKeyOf?: ((item: T) => string) | null;
   groupDirection?: "asc" | "desc";
+  /** Custom group-key ordering (before direction reverse). Default: ascending. */
+  orderGroups?: (keys: string[]) => string[];
   /** Group keys present here render only their header (children stay hidden). */
   collapsedGroups?: Set<string>;
   /** Map a group key+count to the page's own header row shape. */
@@ -66,6 +72,7 @@ export function buildEntityRows<T, R>(opts: BuildEntityRowsOptions<T, R>): R[] {
     comparator,
     groupKeyOf,
     groupDirection = "asc",
+    orderGroups,
     collapsedGroups,
     makeHeader,
     makeItem,
@@ -76,7 +83,7 @@ export function buildEntityRows<T, R>(opts: BuildEntityRowsOptions<T, R>): R[] {
 
   if (!groupKeyOf) return work.map(makeItem);
 
-  const grouped = groupItemsToMap(work, groupKeyOf, groupDirection);
+  const grouped = groupItemsToMap(work, groupKeyOf, groupDirection, orderGroups);
   const rows: R[] = [];
   grouped.forEach((group, key) => {
     rows.push(makeHeader(key, group.length));
