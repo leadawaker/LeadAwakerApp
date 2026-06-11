@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { DottedSurface } from "@/components/ui/dotted-surface";
 import Seo from "@/Seo";
+
+// three.js is ~600KB — load the decorative dotted surface only when faq mounts.
+const DottedSurface = lazy(() =>
+  import("@/components/ui/dotted-surface").then(m => ({ default: m.DottedSurface }))
+);
 
 export default function FAQ() {
   const { t, i18n } = useTranslation("about");
@@ -101,7 +105,9 @@ export default function FAQ() {
 
         {/* CTA */}
         <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
-          <DottedSurface className="opacity-60" />
+          <Suspense fallback={null}>
+            <DottedSurface className="opacity-60" />
+          </Suspense>
           <div className="container mx-auto px-6 md:px-12 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

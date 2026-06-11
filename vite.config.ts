@@ -34,6 +34,19 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, "client/app.html"),
+      output: {
+        // Split heavy shared vendors into their own chunks so they are not
+        // duplicated across route chunks (and so three.js only loads with faq).
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("recharts") || id.includes("/d3-")) return "vendor-charts";
+            if (id.includes("framer-motion")) return "vendor-motion";
+            if (id.includes("three")) return "vendor-three";
+            if (id.includes("xlsx") || id.includes("papaparse")) return "vendor-sheets";
+            if (id.includes("@radix-ui")) return "vendor-radix";
+          }
+        },
+      },
     },
   },
   server: {

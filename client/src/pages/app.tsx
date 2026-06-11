@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, type ReactElement } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactElement } from "react";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
@@ -8,24 +8,26 @@ import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget
 import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 
-import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
-import OutreachInbox from "@/pages/OutreachInbox";
-import LeadDetailPage from "@/pages/LeadDetail";
-import ProspectDetailPage from "@/pages/ProspectDetail";
-import AppCampaigns from "@/pages/AppCampaigns";
-import AppAccounts from "@/pages/AppAccounts";
-import AppProspects from "@/pages/AppProspects";
-import AppCadence from "@/pages/AppCadence";
-import CalendarPage from "@/pages/Calendar";
-import AutomationLogsPage from "@/pages/AutomationLogs";
+// Route-level code splitting: each page is its own lazy chunk so the initial
+// CRM bundle stays small. Named exports are unwrapped to { default }.
+const AppLeads = lazy(() => import("@/features/leads/pages/LeadsPage").then(m => ({ default: m.LeadsPage })));
+const OutreachInbox = lazy(() => import("@/pages/OutreachInbox"));
+const LeadDetailPage = lazy(() => import("@/pages/LeadDetail"));
+const ProspectDetailPage = lazy(() => import("@/pages/ProspectDetail"));
+const AppCampaigns = lazy(() => import("@/pages/AppCampaigns"));
+const AppAccounts = lazy(() => import("@/pages/AppAccounts"));
+const AppProspects = lazy(() => import("@/pages/AppProspects"));
+const AppCadence = lazy(() => import("@/pages/AppCadence"));
+const CalendarPage = lazy(() => import("@/pages/Calendar"));
+const AutomationLogsPage = lazy(() => import("@/pages/AutomationLogs"));
 // UsersPage removed — user management now lives in Settings > Team tab
-import PromptsPage from "@/features/prompts/pages/PromptsPage";
-import { BillingPage } from "@/features/billing/pages/BillingPage";
-import SettingsPage from "@/pages/Settings";
-import DocsPage from "@/pages/Docs";
-import TasksPage from "@/features/tasks/pages/TasksPage";
-import { AgentsPage } from "@/features/ai-agents/pages/AgentsPage";
-import { AgentChatPage } from "@/features/ai-agents/pages/AgentChatPage";
+const PromptsPage = lazy(() => import("@/features/prompts/pages/PromptsPage"));
+const BillingPage = lazy(() => import("@/features/billing/pages/BillingPage").then(m => ({ default: m.BillingPage })));
+const SettingsPage = lazy(() => import("@/pages/Settings"));
+const DocsPage = lazy(() => import("@/pages/Docs"));
+const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
+const AgentsPage = lazy(() => import("@/features/ai-agents/pages/AgentsPage").then(m => ({ default: m.AgentsPage })));
+const AgentChatPage = lazy(() => import("@/features/ai-agents/pages/AgentChatPage").then(m => ({ default: m.AgentChatPage })));
 // OpportunitiesPage merged into Leads as "Pipeline" tab — route redirects below
 
 function isAuthed() {
