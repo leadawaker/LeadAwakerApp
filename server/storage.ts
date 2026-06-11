@@ -113,6 +113,7 @@ import { notificationsStorage } from "./storage/notifications";
 import { billingStorage } from "./storage/billing";
 import { tasksStorage } from "./storage/tasks";
 import { agentsStorage } from "./storage/agents";
+import { miscStorage } from "./storage/misc";
 import type { NotificationItem, ProspectsListParams } from "./storage/types";
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -354,85 +355,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage {
-  // ─── Support Chat ─────────────────────────────────────────────────────
-
-  async createSupportSession(data: InsertSupportSession): Promise<SupportSession> {
-    const [row] = await db.insert(supportSessions).values(data as any).returning();
-    return row;
-  }
-
-  async getActiveSupportSession(userId: number, channel = "bot"): Promise<SupportSession | undefined> {
-    const [row] = await db
-      .select()
-      .from(supportSessions)
-      .where(and(
-        eq(supportSessions.userId, userId),
-        eq(supportSessions.channel, channel),
-        inArray(supportSessions.status, ["active", "escalated"]),
-      ))
-      .orderBy(desc(supportSessions.createdAt))
-      .limit(1);
-    return row;
-  }
-
-  async getSupportSessionBySessionId(sessionId: string): Promise<SupportSession | undefined> {
-    const [row] = await db.select().from(supportSessions).where(eq(supportSessions.sessionId, sessionId));
-    return row;
-  }
-
-  async updateSupportSession(id: number, data: Partial<InsertSupportSession>): Promise<SupportSession | undefined> {
-    const [row] = await db.update(supportSessions).set(data as any).where(eq(supportSessions.id, id)).returning();
-    return row;
-  }
-
-  async createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage> {
-    const [row] = await db.insert(supportMessages).values(data as any).returning();
-    return row;
-  }
-
-  async getSupportMessagesBySessionId(sessionId: string): Promise<SupportMessage[]> {
-    return db
-      .select()
-      .from(supportMessages)
-      .where(eq(supportMessages.sessionId, sessionId))
-      .orderBy(asc(supportMessages.createdAt));
-  }
-
-  async getFounderSessions(): Promise<SupportSession[]> {
-    return db
-      .select()
-      .from(supportSessions)
-      .where(and(
-        eq(supportSessions.channel, "founder"),
-        inArray(supportSessions.status, ["active", "escalated"]),
-      ))
-      .orderBy(desc(supportSessions.createdAt));
-  }
-
-  // ─── Gmail Sync State ──────────────────────────────────────────────────────
-
-  async getGmailSyncState(accountEmail: string): Promise<GmailSyncState | undefined> {
-    const [row] = await db.select().from(gmailSyncState).where(eq(gmailSyncState.accountEmail, accountEmail));
-    return row;
-  }
-
-  async upsertGmailSyncState(data: InsertGmailSyncState): Promise<GmailSyncState> {
-    const existing = await this.getGmailSyncState(data.accountEmail);
-    if (existing) {
-      const [row] = await db.update(gmailSyncState)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(gmailSyncState.accountEmail, data.accountEmail))
-        .returning();
-      return row;
-    }
-    const [row] = await db.insert(gmailSyncState).values(data as any).returning();
-    return row;
-  }
-
-  async deleteGmailSyncState(accountEmail: string): Promise<boolean> {
-    const result = await db.delete(gmailSyncState).where(eq(gmailSyncState.accountEmail, accountEmail)).returning();
-    return result.length > 0;
-  }
 }
 
 // ─── Pagination helpers ───────────────────────────────────────────────────
@@ -480,6 +402,7 @@ export async function paginatedQuery<T>(
 // Object.assign keeps `this.x()` calls working across module boundaries.
 export const storage = Object.assign(
   new DatabaseStorage(),
+  miscStorage,
   agentsStorage,
   tasksStorage,
   billingStorage,
