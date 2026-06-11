@@ -112,6 +112,7 @@ import { automationStorage } from "./storage/automation";
 import { notificationsStorage } from "./storage/notifications";
 import { billingStorage } from "./storage/billing";
 import { tasksStorage } from "./storage/tasks";
+import { agentsStorage } from "./storage/agents";
 import type { NotificationItem, ProspectsListParams } from "./storage/types";
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -408,84 +409,6 @@ export class DatabaseStorage {
       .orderBy(desc(supportSessions.createdAt));
   }
 
-  // ─── AI Agents ────────────────────────────────────────────────────────
-
-  async getAiAgents(): Promise<AiAgent[]> {
-    return db.select().from(aiAgents).where(eq(aiAgents.enabled, true)).orderBy(asc(aiAgents.displayOrder));
-  }
-
-  async getAiAgentById(id: number): Promise<AiAgent | undefined> {
-    const [row] = await db.select().from(aiAgents).where(eq(aiAgents.id, id));
-    return row;
-  }
-
-  async createAiAgent(data: InsertAiAgent): Promise<AiAgent> {
-    const [row] = await db.insert(aiAgents).values(data as any).returning();
-    return row;
-  }
-
-  async updateAiAgent(id: number, data: Partial<InsertAiAgent>): Promise<AiAgent | undefined> {
-    const [row] = await db.update(aiAgents).set({ ...data, updatedAt: new Date() } as any).where(eq(aiAgents.id, id)).returning();
-    return row;
-  }
-
-  // ─── AI Sessions ──────────────────────────────────────────────────────
-
-  async createAiSession(data: InsertAiSession): Promise<AiSession> {
-    const [row] = await db.insert(aiSessions).values(data as any).returning();
-    return row;
-  }
-
-  async getAiSessionsByUserId(userId: number): Promise<AiSession[]> {
-    return db.select().from(aiSessions).where(eq(aiSessions.userId, userId)).orderBy(desc(aiSessions.createdAt));
-  }
-
-  async getAiSessionBySessionId(sessionId: string): Promise<AiSession | undefined> {
-    const [row] = await db.select().from(aiSessions).where(eq(aiSessions.sessionId, sessionId));
-    return row;
-  }
-
-  async getActiveAiSessionByUserAndAgent(userId: number, agentId: number): Promise<AiSession | undefined> {
-    const [row] = await db
-      .select()
-      .from(aiSessions)
-      .where(and(eq(aiSessions.userId, userId), eq(aiSessions.agentId, agentId), eq(aiSessions.status, "active")))
-      .orderBy(desc(aiSessions.createdAt))
-      .limit(1);
-    return row;
-  }
-
-  async updateAiSession(id: number, data: Partial<InsertAiSession>): Promise<AiSession | undefined> {
-    const [row] = await db.update(aiSessions).set(data as any).where(eq(aiSessions.id, id)).returning();
-    return row;
-  }
-
-  // ─── AI Messages ──────────────────────────────────────────────────────
-
-  async createAiMessage(data: InsertAiMessage): Promise<AiMessage> {
-    const [row] = await db.insert(aiMessages).values(data as any).returning();
-    return row;
-  }
-
-  async getAiMessagesBySessionId(sessionId: string): Promise<AiMessage[]> {
-    return db.select().from(aiMessages).where(eq(aiMessages.sessionId, sessionId)).orderBy(asc(aiMessages.createdAt));
-  }
-
-  // ─── AI Files ────────────────────────────────────────────────────────
-
-  async createAiFile(data: InsertAiFile): Promise<AiFile> {
-    const [row] = await db.insert(aiFiles).values(data as any).returning();
-    return row;
-  }
-
-  async getAiFilesByConversationId(conversationId: string): Promise<AiFile[]> {
-    return db.select().from(aiFiles).where(eq(aiFiles.conversationId, conversationId)).orderBy(asc(aiFiles.createdAt));
-  }
-
-  async getAiFilesByMessageId(messageId: number): Promise<AiFile[]> {
-    return db.select().from(aiFiles).where(eq(aiFiles.messageId, messageId)).orderBy(asc(aiFiles.createdAt));
-  }
-
   // ─── Gmail Sync State ──────────────────────────────────────────────────────
 
   async getGmailSyncState(accountEmail: string): Promise<GmailSyncState | undefined> {
@@ -557,6 +480,7 @@ export async function paginatedQuery<T>(
 // Object.assign keeps `this.x()` calls working across module boundaries.
 export const storage = Object.assign(
   new DatabaseStorage(),
+  agentsStorage,
   tasksStorage,
   billingStorage,
   notificationsStorage,
