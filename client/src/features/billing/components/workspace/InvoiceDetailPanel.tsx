@@ -4,31 +4,8 @@ import { Download, Link2, SendHorizontal, CheckCircle, Pencil, Trash2, Eye, Chec
 import type { InvoiceRow } from "../../types";
 import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import { parseLineItems, formatCurrency } from "../../types";
-import { StatusPill, fmtDateFull, daysFrom } from "./atoms";
+import { StatusPill, fmtDateFull, daysFrom, DetailSection, ActBtn, DetailRow } from "./atoms";
 import { effectiveInvoiceStatus } from "./adapters";
-
-// Small soft action button used in the detail header.
-function ActBtn({ icon, label, onClick, disabled, danger, active }: {
-  icon: ReactNode; label: string; onClick: () => void; disabled?: boolean; danger?: boolean; active?: boolean;
-}) {
-  return (
-    <button onClick={onClick} disabled={disabled}
-      className="la-btn la-btn--soft"
-      style={{ ...(danger ? { color: "var(--stage-lost)" } : active ? { color: "var(--good)" } : {}), opacity: disabled ? 0.5 : 1 }}>
-      {icon}{label}
-    </button>
-  );
-}
-
-// neu-raised section card with an eyebrow heading.
-function SectionCard({ title, children, style }: { title: ReactNode; children: ReactNode; style?: React.CSSProperties }) {
-  return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "18px 20px", ...style }}>
-      <div className="eyebrow eyebrow-sm" style={{ marginBottom: 14 }}>{title}</div>
-      {children}
-    </section>
-  );
-}
 
 function parsePaymentLines(text: string): Array<{ key: string | null; value: string }> {
   return text.split("\n").filter((l) => l.trim()).map((line) => {
@@ -177,7 +154,7 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1fr)", gap: 16 }} className="max-md:!grid-cols-1">
         {/* Line items */}
-        <SectionCard title={t("invoices.detail.lineItems")}>
+        <DetailSection title={t("invoices.detail.lineItems")}>
           {lineItems.length > 0 ? (
             <>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -200,9 +177,9 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
                 </tbody>
               </table>
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: 6 }}>
-                {showSubtotalDiff && <Row label={t("invoices.detail.subtotal")} value={formatCurrency(subtotalNum, currency)} />}
-                {taxAmt > 0 && <Row label={invoice.tax_percent ? t("invoices.detail.taxWithPercent", { percent: invoice.tax_percent }) : t("invoices.detail.tax")} value={formatCurrency(taxAmt, currency)} />}
-                {discountAmt > 0 && <Row label={t("invoices.detail.discount")} value={`-${formatCurrency(discountAmt, currency)}`} valueColor="var(--good)" />}
+                {showSubtotalDiff && <DetailRow label={t("invoices.detail.subtotal")} value={formatCurrency(subtotalNum, currency)} />}
+                {taxAmt > 0 && <DetailRow label={invoice.tax_percent ? t("invoices.detail.taxWithPercent", { percent: invoice.tax_percent }) : t("invoices.detail.tax")} value={formatCurrency(taxAmt, currency)} />}
+                {discountAmt > 0 && <DetailRow label={t("invoices.detail.discount")} value={`-${formatCurrency(discountAmt, currency)}`} valueColor="var(--good)" />}
                 <div className="row" style={{ justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid var(--line)" }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{t("invoices.detail.total")}</span>
                   <span className="serif" style={{ fontSize: 20, color: "var(--ink)" }}>{formatCurrency(totalNum, currency)}</span>
@@ -218,15 +195,15 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
               <p style={{ fontSize: 11.5, color: "var(--mute)", lineHeight: 1.5, whiteSpace: "pre-wrap", margin: 0 }}>{invoice.notes}</p>
             </div>
           )}
-        </SectionCard>
+        </DetailSection>
 
         {/* Right column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <SectionCard title={t("invoices.detail.totalAmount")}>
+          <DetailSection title={t("invoices.detail.totalAmount")}>
             <div className="serif" style={{ fontSize: 30, color: "var(--ink)", lineHeight: 1 }}>{formatCurrency(totalNum, currency)}</div>
-          </SectionCard>
+          </DetailSection>
 
-          <SectionCard title={t("invoices.detail.status")}>
+          <DetailSection title={t("invoices.detail.status")}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div><StatusPill kind="invoice" status={status} label={t(`invoices.statusLabels.${status}`, status)} /></div>
               <div className="row" style={{ gap: 6 }}>
@@ -235,9 +212,9 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
                 <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{(invoice.viewed_count ?? 0) === 1 ? t("invoices.detail.view") : t("invoices.detail.views")}</span>
               </div>
             </div>
-          </SectionCard>
+          </DetailSection>
 
-          <SectionCard title={t("invoices.detail.dates")}>
+          <DetailSection title={t("invoices.detail.dates")}>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div>
                 <div className="eyebrow eyebrow-sm" style={{ marginBottom: 4 }}>{t("invoices.detail.dueDate")}</div>
@@ -254,10 +231,10 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>{invoice.sent_at ? fmtDateFull(invoice.sent_at) : t("invoices.detail.notSentYet")}</span>
               </div>
             </div>
-          </SectionCard>
+          </DetailSection>
 
           {invoice.payment_info && (
-            <SectionCard title={t("invoices.detail.paymentInfo")}>
+            <DetailSection title={t("invoices.detail.paymentInfo")}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {parsePaymentLines(invoice.payment_info).map((line, i) =>
                   line.key ? (
@@ -270,7 +247,7 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
                   )
                 )}
               </div>
-            </SectionCard>
+            </DetailSection>
           )}
         </div>
       </div>
@@ -278,14 +255,6 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
   );
 }
 
-function Row({ label, value, valueColor }: { label: ReactNode; value: ReactNode; valueColor?: string }) {
-  return (
-    <div className="row" style={{ justifyContent: "space-between" }}>
-      <span style={{ fontSize: 11.5, color: "var(--mute)" }}>{label}</span>
-      <span style={{ fontSize: 12, color: valueColor || "var(--ink)", fontFamily: "var(--mono)" }}>{value}</span>
-    </div>
-  );
-}
 
 export function InvoiceDetailPanelEmpty() {
   const { t } = useTranslation("billing");
