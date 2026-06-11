@@ -125,11 +125,11 @@ function ExpenseDataRow({
             className={cn(
               "h-4 w-4 rounded border flex items-center justify-center transition-colors",
               sel
-                ? "bg-[#FCB803] border-[#FCB803]"
+                ? "bg-[#5E2230] border-[#5E2230]"
                 : "border-border/60"
             )}
           >
-            {sel && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+            {sel && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
           </div>
         </td>
       )}
@@ -158,7 +158,7 @@ function ExpenseDataRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center h-7 w-7 rounded-lg hover:bg-brand-indigo/10 text-brand-indigo/50 hover:text-brand-indigo transition-colors"
+            className="inline-flex items-center justify-center h-7 w-7 rounded-lg hover:bg-[#5E2230]/10 text-[#5E2230]/50 hover:text-[#5E2230] transition-colors"
             title={t("expenses.table.viewPdf")}
           >
             <FileText className="h-4 w-4" />
@@ -508,12 +508,12 @@ export function ExpensesView({
               <div className="w-px h-8 bg-border/30" />
               <div className="flex items-center gap-1.5">
                 {yearFilter && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-indigo/8 text-brand-indigo">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#5E2230]/8 text-[#5E2230]">
                     {yearFilter}
                   </span>
                 )}
                 {quarterFilter && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-indigo/8 text-brand-indigo">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#5E2230]/8 text-[#5E2230]">
                     {quarterFilter}
                   </span>
                 )}
@@ -547,7 +547,7 @@ export function ExpensesView({
 
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full border-2 border-brand-indigo/30 border-t-brand-indigo animate-spin" />
+            <div className="w-6 h-6 rounded-full border-2 border-[#5E2230]/30 border-t-[#5E2230] animate-spin" />
           </div>
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
@@ -561,11 +561,11 @@ export function ExpensesView({
             <p className="text-sm font-medium text-foreground/40">{t("expenses.empty.noExpensesFound")}</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto bg-[#E3E3E3] dark:bg-muted">
+          <div className="flex-1 overflow-y-auto bg-[var(--bg)] dark:bg-muted">
             <table className="w-full text-[12px]" style={{ borderCollapse: "separate", borderSpacing: "0 3px" }}>
 
               {/* Header */}
-              <thead className="sticky top-0 z-10 bg-[#E3E3E3] dark:bg-muted border-b border-border/30">
+              <thead className="sticky top-0 z-10 bg-[var(--bg)] dark:bg-muted border-b border-border/30">
                 <tr>
                   {hasSelection && (
                     <th className="w-10 px-3 py-2.5">
@@ -574,13 +574,13 @@ export function ExpensesView({
                         className={cn(
                           "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                           allSelected
-                            ? "bg-[#FCB803] border-[#FCB803]"
+                            ? "bg-[#5E2230] border-[#5E2230]"
                             : someSelected
-                            ? "bg-[#FCB803]/30 border-[#FCB803]/60"
-                            : "border-border/60 hover:border-[#FCB803]/40"
+                            ? "bg-[#5E2230]/30 border-[#5E2230]/60"
+                            : "border-border/60 hover:border-[#5E2230]/40"
                         )}
                       >
-                        {(allSelected || someSelected) && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                        {(allSelected || someSelected) && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
                       </button>
                     </th>
                   )}
@@ -619,8 +619,8 @@ export function ExpensesView({
                         {/* Year header */}
                         {(() => {
                           const yearBg = isDark
-                            ? (year >= CURRENT_YEAR ? "#1A2744" : "#1E2338")
-                            : (year >= CURRENT_YEAR ? "#DBEAFE" : "#EEF2FF");
+                            ? (year >= CURRENT_YEAR ? "var(--wine)" : "var(--wine)")
+                            : (year >= CURRENT_YEAR ? "var(--wine-tint)" : "var(--surface)");
                           return (
                             <tr key={`year-${year}`} className="cursor-pointer select-none h-[44px]">
                               {hasSelection && (
@@ -629,10 +629,10 @@ export function ExpensesView({
                                     className={cn(
                                       "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                       yearRows.every((r) => selectedIds?.has(r.id))
-                                        ? "bg-[#FCB803] border-[#FCB803]"
+                                        ? "bg-[#5E2230] border-[#5E2230]"
                                         : yearRows.some((r) => selectedIds?.has(r.id))
-                                        ? "bg-[#FCB803]/30 border-[#FCB803]/60"
-                                        : "border-border/60 hover:border-[#FCB803]/40"
+                                        ? "bg-[#5E2230]/30 border-[#5E2230]/60"
+                                        : "border-border/60 hover:border-[#5E2230]/40"
                                     )}
                                     onClick={() => {
                                       if (!onSelectionChange || !selectedIds) return;
@@ -646,7 +646,7 @@ export function ExpensesView({
                                       onSelectionChange(next);
                                     }}
                                   >
-                                    {(yearRows.every((r) => selectedIds?.has(r.id)) || yearRows.some((r) => selectedIds?.has(r.id))) && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                                    {(yearRows.every((r) => selectedIds?.has(r.id)) || yearRows.some((r) => selectedIds?.has(r.id))) && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
                                   </div>
                                 </td>
                               )}
@@ -713,10 +713,10 @@ export function ExpensesView({
                                               className={cn(
                                                 "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                                 qRows.every((r) => selectedIds?.has(r.id))
-                                                  ? "bg-[#FCB803] border-[#FCB803]"
+                                                  ? "bg-[#5E2230] border-[#5E2230]"
                                                   : qRows.some((r) => selectedIds?.has(r.id))
-                                                  ? "bg-[#FCB803]/30 border-[#FCB803]/60"
-                                                  : "border-border/60 hover:border-[#FCB803]/40"
+                                                  ? "bg-[#5E2230]/30 border-[#5E2230]/60"
+                                                  : "border-border/60 hover:border-[#5E2230]/40"
                                               )}
                                               onClick={() => {
                                                 if (!onSelectionChange || !selectedIds) return;
@@ -730,7 +730,7 @@ export function ExpensesView({
                                                 onSelectionChange(next);
                                               }}
                                             >
-                                              {(qRows.every((r) => selectedIds?.has(r.id)) || qRows.some((r) => selectedIds?.has(r.id))) && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                                              {(qRows.every((r) => selectedIds?.has(r.id)) || qRows.some((r) => selectedIds?.has(r.id))) && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
                                             </div>
                                           </td>
                                         )}

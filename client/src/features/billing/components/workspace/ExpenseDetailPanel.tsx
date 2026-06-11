@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, ExternalLink, Pencil, Trash2, Check, FileText, Wallet } from "lucide-react";
 import type { ExpenseRow } from "../../types";
 import { formatCurrency } from "../../types";
-import { deleteExpense, updateExpense } from "../api/expensesApi";
+import { deleteExpense, updateExpense } from "../../api/expensesApi";
 import { DetailSection, ActBtn, DetailRow, DetailField, fmtDateFull } from "./atoms";
 import { parseNum, expenseYear, expenseQuarterNum } from "./adapters";
 
