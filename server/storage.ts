@@ -105,6 +105,7 @@ import {
 
 import { accountsStorage } from "./storage/accounts";
 import { prospectsStorage } from "./storage/prospects";
+import { campaignsStorage } from "./storage/campaigns";
 import type { NotificationItem, ProspectsListParams } from "./storage/types";
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -346,36 +347,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage {
-  // ─── Campaigns ──────────────────────────────────────────────────────
-
-  async getCampaigns(): Promise<Campaigns[]> {
-    return db.select().from(campaigns);
-  }
-
-  async getCampaignById(id: number): Promise<Campaigns | undefined> {
-    const [row] = await db.select().from(campaigns).where(eq(campaigns.id, id));
-    return row;
-  }
-
-  async getCampaignsByAccountId(accountId: number): Promise<Campaigns[]> {
-    return db.select().from(campaigns).where(eq(campaigns.accountsId, accountId));
-  }
-
-  async createCampaign(data: InsertCampaigns): Promise<Campaigns> {
-    const [row] = await db.insert(campaigns).values(data as any).returning();
-    return row;
-  }
-
-  async updateCampaign(id: number, data: Partial<InsertCampaigns>): Promise<Campaigns | undefined> {
-    const [row] = await db.update(campaigns).set(data).where(eq(campaigns.id, id)).returning();
-    return row;
-  }
-
-  async deleteCampaign(id: number): Promise<boolean> {
-    const result = await db.delete(campaigns).where(eq(campaigns.id, id)).returning();
-    return result.length > 0;
-  }
-
   // ─── Leads ──────────────────────────────────────────────────────────
 
   async getLeads(): Promise<Leads[]> {
@@ -860,78 +831,6 @@ export class DatabaseStorage {
       .slice(0, limit);
   }
 
-  // ─── Prompt Library ─────────────────────────────────────────────────
-
-  async getPrompts(): Promise<Prompt_Library[]> {
-    return db.select().from(promptLibrary);
-  }
-
-  async getPromptById(id: number): Promise<Prompt_Library | undefined> {
-    const [row] = await db.select().from(promptLibrary).where(eq(promptLibrary.id, id)).limit(1);
-    return row;
-  }
-
-  async getPromptsByAccountId(accountId: number): Promise<Prompt_Library[]> {
-    return db.select().from(promptLibrary).where(eq(promptLibrary.accountsId, accountId));
-  }
-
-  async getPromptByUseCase(useCase: string): Promise<Prompt_Library | undefined> {
-    const [row] = await db.select().from(promptLibrary).where(eq(promptLibrary.useCase, useCase)).limit(1);
-    return row;
-  }
-
-  async createPrompt(data: InsertPrompt_Library): Promise<Prompt_Library> {
-    const [row] = await db.insert(promptLibrary).values(data as any).returning();
-    return row;
-  }
-
-  async updatePrompt(id: number, data: Partial<InsertPrompt_Library>): Promise<Prompt_Library | undefined> {
-    const [row] = await db.update(promptLibrary).set({ ...data, updatedAt: new Date() } as any).where(eq(promptLibrary.id, id)).returning();
-    return row;
-  }
-
-  async deletePrompt(id: number): Promise<boolean> {
-    const rows = await db.delete(promptLibrary).where(eq(promptLibrary.id, id)).returning();
-    return rows.length > 0;
-  }
-
-  async deletePromptsByCampaignId(campaignId: number): Promise<number> {
-    const rows = await db.delete(promptLibrary)
-      .where(eq(promptLibrary.campaignsId, campaignId))
-      .returning();
-    return rows.length;
-  }
-
-  // ─── Prompt Versions ─────────────────────────────────────────────────
-
-  async getPromptVersions(promptId: number): Promise<Prompt_Version[]> {
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    await db.delete(promptVersions)
-      .where(and(eq(promptVersions.promptsId, promptId), lt(promptVersions.savedAt, oneMonthAgo)));
-    return db.select().from(promptVersions)
-      .where(eq(promptVersions.promptsId, promptId))
-      .orderBy(desc(promptVersions.savedAt));
-  }
-
-  async getLatestPromptVersion(promptId: number): Promise<Prompt_Version | undefined> {
-    const [row] = await db.select().from(promptVersions)
-      .where(eq(promptVersions.promptsId, promptId))
-      .orderBy(desc(promptVersions.savedAt))
-      .limit(1);
-    return row;
-  }
-
-  async createPromptVersion(data: InsertPrompt_Version): Promise<Prompt_Version> {
-    const [row] = await db.insert(promptVersions).values(data as any).returning();
-    return row;
-  }
-
-  async deletePromptVersion(id: number): Promise<boolean> {
-    const [row] = await db.delete(promptVersions).where(eq(promptVersions.id, id)).returning();
-    return !!row;
-  }
-
   // ─── Lead Score History ───────────────────────────────────────────────
   async getLeadScoreHistory(): Promise<Lead_Score_History[]> {
     return db.select().from(leadScoreHistory).orderBy(desc(leadScoreHistory.scoreDate));
@@ -943,24 +842,6 @@ export class DatabaseStorage {
       .from(leadScoreHistory)
       .where(eq(leadScoreHistory.leadsId, leadId))
       .orderBy(desc(leadScoreHistory.createdAt));
-  }
-
-  // ─── Campaign Metrics History ─────────────────────────────────────────
-  async getCampaignMetricsHistory(): Promise<Campaign_Metrics_History[]> {
-    return db.select().from(campaignMetricsHistory).orderBy(desc(campaignMetricsHistory.metricDate));
-  }
-
-  async getCampaignMetricsHistoryByCampaignId(campaignId: number): Promise<Campaign_Metrics_History[]> {
-    return db
-      .select()
-      .from(campaignMetricsHistory)
-      .where(eq(campaignMetricsHistory.campaignsId, campaignId))
-      .orderBy(desc(campaignMetricsHistory.metricDate));
-  }
-
-  async createCampaignMetricsHistory(data: any): Promise<Campaign_Metrics_History> {
-    const [row] = await db.insert(campaignMetricsHistory).values(data as any).returning();
-    return row;
   }
 
   // ─── Invoices ──────────────────────────────────────────────────────────
@@ -1595,6 +1476,7 @@ export async function paginatedQuery<T>(
 // Object.assign keeps `this.x()` calls working across module boundaries.
 export const storage = Object.assign(
   new DatabaseStorage(),
+  campaignsStorage,
   prospectsStorage,
   accountsStorage,
 );
