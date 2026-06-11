@@ -13,3 +13,5 @@ export type {
   EntityListRow,
 } from "./useEntityList";
 export { EntityListView, type EntityListViewProps } from "./EntityListView";
+// Stateless pipeline helpers for pages that already own their list state.
+export { buildEntityRows, groupItemsToMap, type BuildEntityRowsOptions } from "./buildEntityRows";

@@ -3,6 +3,7 @@ import { List, LayoutGrid } from "lucide-react";
 
 import { CrmShell } from "@/components/crm/CrmShell";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
+import { buildEntityRows } from "@/components/crm/entityList";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 
@@ -229,85 +230,59 @@ export default function TagsPage() {
 
   /* ── Table flat items (filter -> sort -> group) ─────────────────────────── */
   const tableFlatItems = useMemo((): TagTableItem[] => {
-    let enriched: EnrichedTag[] = tags.map((tag) => ({
+    const enriched: EnrichedTag[] = tags.map((tag) => ({
       ...tag,
       leadCount: scopedTagCounts.get(tag.name!) ?? 0,
       hexColor: resolveColor(tag.color),
     }));
 
-    // Search filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      enriched = enriched.filter((t) => t.name.toLowerCase().includes(q));
-    }
-    // Category filter
-    if (filterCategories.length > 0) {
-      enriched = enriched.filter((t) => {
-        const cat = t.category
-          ? t.category.charAt(0).toUpperCase() + t.category.slice(1)
-          : "Uncategorized";
-        return filterCategories.includes(cat);
-      });
-    }
-    // Auto-applied filter
-    if (filterAutoApplied === "yes") enriched = enriched.filter((t) => t.auto_applied);
-    if (filterAutoApplied === "no") enriched = enriched.filter((t) => !t.auto_applied);
-    // Account filter
-    if (selectedAccountId !== "all") {
-      enriched = enriched.filter((t) => {
-        const a = t.account_id ?? t.Accounts_id;
-        return a == null || String(a) === selectedAccountId;
-      });
-    }
+    const catLabel = (t: EnrichedTag) =>
+      t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : "Uncategorized";
+    const q = searchQuery.toLowerCase();
 
-    // Sort
-    enriched.sort((a, b) => {
-      switch (sortBy) {
-        case "name_asc":
-          return (a.name ?? "").localeCompare(b.name ?? "");
-        case "name_desc":
-          return (b.name ?? "").localeCompare(a.name ?? "");
-        case "count_desc":
-          return b.leadCount - a.leadCount || (a.name ?? "").localeCompare(b.name ?? "");
-        case "category_asc":
-          return (
-            (a.category ?? "zzz").localeCompare(b.category ?? "zzz") ||
-            (a.name ?? "").localeCompare(b.name ?? "")
-          );
-        default:
-          return 0;
-      }
-    });
-
-    // No grouping
-    if (groupBy === "none") return enriched.map((tag) => ({ kind: "tag" as const, tag }));
-
-    // Group
-    const grouped = new Map<string, EnrichedTag[]>();
-    enriched.forEach((tag) => {
-      const key =
-        groupBy === "category"
-          ? tag.category
-            ? tag.category.charAt(0).toUpperCase() + tag.category.slice(1)
-            : "Uncategorized"
-          : tag.color
-            ? tag.color.charAt(0).toUpperCase() + tag.color.slice(1)
-            : "No Color";
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key)!.push(tag);
-    });
-
-    const items: TagTableItem[] = [];
-    Array.from(grouped.keys())
-      .sort()
-      .forEach((key) => {
-        const g = grouped.get(key)!;
-        items.push({ kind: "header", label: key, count: g.length });
-        if (!collapsedGroups.has(key)) {
-          g.forEach((tag) => items.push({ kind: "tag", tag }));
+    return buildEntityRows<EnrichedTag, TagTableItem>({
+      items: enriched,
+      predicate: (t) => {
+        if (searchQuery && !t.name.toLowerCase().includes(q)) return false;
+        if (filterCategories.length > 0 && !filterCategories.includes(catLabel(t))) return false;
+        if (filterAutoApplied === "yes" && !t.auto_applied) return false;
+        if (filterAutoApplied === "no" && t.auto_applied) return false;
+        if (selectedAccountId !== "all") {
+          const a = t.account_id ?? t.Accounts_id;
+          if (!(a == null || String(a) === selectedAccountId)) return false;
         }
-      });
-    return items;
+        return true;
+      },
+      comparator: (a, b) => {
+        switch (sortBy) {
+          case "name_asc":
+            return (a.name ?? "").localeCompare(b.name ?? "");
+          case "name_desc":
+            return (b.name ?? "").localeCompare(a.name ?? "");
+          case "count_desc":
+            return b.leadCount - a.leadCount || (a.name ?? "").localeCompare(b.name ?? "");
+          case "category_asc":
+            return (
+              (a.category ?? "zzz").localeCompare(b.category ?? "zzz") ||
+              (a.name ?? "").localeCompare(b.name ?? "")
+            );
+          default:
+            return 0;
+        }
+      },
+      groupKeyOf:
+        groupBy === "none"
+          ? null
+          : (t) =>
+              groupBy === "category"
+                ? catLabel(t)
+                : t.color
+                  ? t.color.charAt(0).toUpperCase() + t.color.slice(1)
+                  : "No Color",
+      collapsedGroups,
+      makeHeader: (key, count) => ({ kind: "header", label: key, count }),
+      makeItem: (tag) => ({ kind: "tag", tag }),
+    });
   }, [
     tags,
     scopedTagCounts,
