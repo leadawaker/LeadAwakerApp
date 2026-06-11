@@ -4,6 +4,7 @@ import { List, Table2 } from "lucide-react";
 
 import { CrmShell } from "@/components/crm/CrmShell";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
+import { groupItemsToMap } from "@/components/crm/entityList";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
@@ -262,41 +263,30 @@ export default function PromptsPage() {
   /* ── Derived: grouped rows ───────────────────────────────────────────────── */
   const groupedRows = useMemo(() => {
     if (groupBy === "none") return null;
-
-    const groups = new Map<string, any[]>();
-    for (const p of rows) {
-      let key: string;
-      switch (groupBy) {
-        case "status":
-          key = (p.status || "Unknown").toLowerCase();
-          key = key.charAt(0).toUpperCase() + key.slice(1);
-          break;
-        case "model":
-          key = p.model || "No Model";
-          break;
-        case "campaign": {
-          const cId = p.campaignsId || p.Campaigns_id;
-          key = cId ? (campaignMap.get(cId) || `Campaign #${cId}`) : "No Campaign";
-          break;
+    return groupItemsToMap(
+      rows,
+      (p: any) => {
+        switch (groupBy) {
+          case "status": {
+            const key = (p.status || "Unknown").toLowerCase();
+            return key.charAt(0).toUpperCase() + key.slice(1);
+          }
+          case "model":
+            return p.model || "No Model";
+          case "campaign": {
+            const cId = p.campaignsId || p.Campaigns_id;
+            return cId ? (campaignMap.get(cId) || `Campaign #${cId}`) : "No Campaign";
+          }
+          case "account": {
+            const aId = p.accountsId || p.Accounts_id;
+            return aId ? (accountMap.get(aId) || `Account #${aId}`) : "Agency Bots";
+          }
+          default:
+            return "All";
         }
-        case "account": {
-          const aId = p.accountsId || p.Accounts_id;
-          key = aId ? (accountMap.get(aId) || `Account #${aId}`) : "Agency Bots";
-          break;
-        }
-        default:
-          key = "All";
-      }
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(p);
-    }
-
-    // Order group keys alphabetically, reverse if descending
-    const orderedKeys = Array.from(groups.keys()).sort();
-    if (groupDirection === "desc") orderedKeys.reverse();
-    const ordered = new Map<string, any[]>();
-    for (const k of orderedKeys) ordered.set(k, groups.get(k)!);
-    return ordered;
+      },
+      groupDirection,
+    );
   }, [rows, groupBy, groupDirection, campaignMap, accountMap]);
 
   /* ── Filter state helpers ───────────────────────────────────────────────── */
