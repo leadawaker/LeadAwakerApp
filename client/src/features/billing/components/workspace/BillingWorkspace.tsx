@@ -22,6 +22,8 @@ import { ExpenseCreatePanel } from "../ExpenseCreatePanel";
 import { ExpensesView } from "../ExpensesView";
 import { useExpensesData } from "../ExpensesListView";
 import { ContractUploadDialog } from "../ContractUploadDialog";
+import { InvoicesInlineTable, DEFAULT_INVOICE_COLS } from "../InvoicesInlineTable";
+import { ContractsInlineTable, DEFAULT_CONTRACT_COLS } from "../ContractsInlineTable";
 
 type Tab = "invoices" | "contracts" | "expenses";
 type ViewMode = "list" | "table";
@@ -92,6 +94,11 @@ export function BillingWorkspace(p: Props) {
   const [editingExpense, setEditingExpense] = useState<ExpenseRow | null>(null);
   const [expensePanelOpen, setExpensePanelOpen] = useState(false);
   const [expenseSelectedIds, setExpenseSelectedIds] = useState<Set<number>>(new Set());
+  // Table-mode multi-select
+  const [invoiceSelectedIds, setInvoiceSelectedIds] = useState<Set<number>>(new Set());
+  const [contractSelectedIds, setContractSelectedIds] = useState<Set<number>>(new Set());
+  const visibleInvoiceColumns = useMemo(() => new Set(DEFAULT_INVOICE_COLS), []);
+  const visibleContractColumns = useMemo(() => new Set(DEFAULT_CONTRACT_COLS), []);
   // Contract upload dialog
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
@@ -206,8 +213,8 @@ export function BillingWorkspace(p: Props) {
   const selectedExpense = (expensesData ?? []).find((e) => e.id === selectedExpenseId) ?? null;
   const invoiceAccount = p.selectedInvoice ? (accounts.find((a) => a.id === p.selectedInvoice!.Accounts_id) ?? null) : null;
 
-  // Expenses table mode = full-width spreadsheet (no list panel).
-  const expensesTableMode = isExpenses && viewMode === "table";
+  // Table mode = full-width table (no list panel), with optional create panel on the right.
+  const tableMode = viewMode === "table";
 
   return (
     <div className="flex flex-col h-full w-full" data-testid="billing-workspace">
@@ -246,7 +253,7 @@ export function BillingWorkspace(p: Props) {
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {!expensesTableMode && (
+        {!tableMode && (
           <BillingListPanel
             tab={p.activeTab}
             items={listItems}
