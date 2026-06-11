@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { pool } from "../db";
 import { registerAuthRoutes } from "../auth";
-import { verifySmtp, sendInviteEmail } from "../email";
+import { verifySmtp, sendInviteEmail, sendRawEmail } from "../email";
 import { requireAgency } from "../auth";
 
 export function registerAuthAndAdminRoutes(app: Express): void {
@@ -32,6 +32,24 @@ export function registerAuthAndAdminRoutes(app: Express): void {
       res.json({ message: `Test email sent to ${to}` });
     } catch (err: any) {
       res.status(500).json({ message: `Email failed: ${err.message}` });
+    }
+  });
+
+  // ─── Landing page contact form (public) ───────────────────────────
+  app.post("/api/contact", async (req, res) => {
+    const { name, email, description } = req.body ?? {};
+    if (!name || !email) return res.status(400).json({ message: "name and email are required" });
+    try {
+      await sendRawEmail({
+        to: "gabriel@leadawaker.com",
+        subject: `New introduction: ${name}`,
+        text: `Name: ${name}\nEmail: ${email}\n\n${description ?? ""}`,
+        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p>${(description ?? "").replace(/\n/g, "<br>")}</p>`,
+      });
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error("[contact] email failed:", err.message);
+      res.status(500).json({ message: "Failed to send — try again later." });
     }
   });
 

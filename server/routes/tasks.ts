@@ -309,6 +309,11 @@ export function registerTasksRoutes(app: Express): void {
     res.json(counts);
   }));
 
+  app.get("/api/comment-counts", requireAgency, wrapAsync(async (_req, res) => {
+    const counts = await storage.getCommentCounts();
+    res.json(counts);
+  }));
+
   // ─── Task Categories ────────────────────────────────────────────────
 
   app.get("/api/task-categories", requireAgency, wrapAsync(async (_req, res) => {
