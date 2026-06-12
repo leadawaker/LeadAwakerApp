@@ -45,7 +45,7 @@ export function Avatar({ init, size = 34, color }: { init: string; size?: number
   return (
     <span style={{
       width: size, height: size, borderRadius: Math.round(size * 0.28), flexShrink: 0,
-      background: color || "var(--wine-grad)", color: "var(--paper)", boxShadow: "var(--sh-raised-crisp)",
+      background: color || "var(--wine-grad)", color: "var(--paper)",
       display: "inline-flex", alignItems: "center", justifyContent: "center",
       fontFamily: "var(--mono)", fontSize: size * 0.34, fontWeight: 700, letterSpacing: "0.01em",
     }}>{init}</span>
@@ -79,14 +79,14 @@ export function StatusPill({ kind, status, label }: {
 
 // ── Expense badges (port of BDedBadge / BPdfBadge) ─────────────────────────────
 export function DedBadge({ ded }: { ded: boolean }) {
-  const { t } = useTranslation("billing");
+  if (!ded) return null;
   return (
     <span style={{
-      display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", borderRadius: "var(--r-pill)",
-      background: ded ? "var(--good-tint)" : "rgba(148,138,119,0.14)", color: ded ? "var(--good)" : "var(--mute-2)",
+      display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: "var(--r-pill)",
+      background: "var(--good-tint)", color: "var(--good)",
       fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, whiteSpace: "nowrap",
     }}>
-      {ded && <Check size={10} />}{ded ? t("expenses.status.deductible", "BTW Deductible") : t("expenses.status.notDeductible", "Non-deductible")}
+      <Check size={9} />{"BTW"}
     </span>
   );
 }
@@ -112,11 +112,11 @@ export function CatTag({ color, label, big }: { color: string; label: string; bi
 }
 
 // ── Stat card (port of BStat) ──────────────────────────────────────────────────
-export function StatCard({ label, value, sub, accent, icon }: {
-  label: ReactNode; value: ReactNode; sub?: ReactNode; accent?: string; icon?: ReactNode;
+export function StatCard({ label, value, sub, accent, icon, flat }: {
+  label: ReactNode; value: ReactNode; sub?: ReactNode; accent?: string; icon?: ReactNode; flat?: boolean;
 }) {
   return (
-    <div className="neu-raised" style={{ flex: "1 1 0", minWidth: 0, padding: "16px 18px", borderRadius: "var(--r-card)", position: "relative", overflow: "hidden" }}>
+    <div className={flat ? "" : "neu-raised"} style={{ flex: "1 1 0", minWidth: 0, padding: "16px 18px", borderRadius: "var(--r-card)", position: "relative", overflow: "hidden", ...(flat ? { background: "transparent", border: "1px solid var(--line)" } : {}) }}>
       {accent && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: accent }} />}
       <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
         <span className="eyebrow eyebrow-sm">{label}</span>

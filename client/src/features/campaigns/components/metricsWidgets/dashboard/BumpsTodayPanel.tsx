@@ -34,7 +34,7 @@ export function BumpsTodayPanel({ campaign }: { campaign: Campaign }) {
   const { queuedToday, cadence } = useMemo(() => bumpDistribution(leads as Record<string, any>[], campaign), [leads, campaign]);
 
   return (
-    <div className="surface-panel" style={{
+    <div className="surface-panel surface-panel--inset" style={{
       height: "100%",
       display: "flex",
       flexDirection: "column",

@@ -189,9 +189,9 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                       width: "100%",
                       maxWidth: 28,
                       height: Math.max(stats.confidence * 80, 2),
-                      background: "#547BB0",
+                      background: "#fcfbfb",
                       borderRadius: "var(--r-pill) var(--r-pill) 0 0",
-                      boxShadow: hoveredMetricKey === "confidence" ? `inset 0 0 0 1.5px #547BB055` : undefined,
+                      boxShadow: hoveredMetricKey === "confidence" ? `inset 0 0 0 1.5px #DADADA` : undefined,
                     }}
                   />
                 </div>
@@ -275,7 +275,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
   };
 
   return (
-    <div className="surface-panel" style={{
+    <div className="surface-panel surface-panel--inset" style={{
       padding: "20px 18px",
       display: "flex",
       flexDirection: "column",

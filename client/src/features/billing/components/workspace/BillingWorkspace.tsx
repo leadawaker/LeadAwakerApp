@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useListPanelState } from "@/hooks/useListPanelState";
@@ -24,6 +26,7 @@ import { useExpensesData } from "../ExpensesListView";
 import { ContractUploadDialog } from "../ContractUploadDialog";
 import { InvoicesInlineTable, DEFAULT_INVOICE_COLS } from "../InvoicesInlineTable";
 import { ContractsInlineTable, DEFAULT_CONTRACT_COLS } from "../ContractsInlineTable";
+import { deleteExpense } from "../../api/expensesApi";
 
 type Tab = "invoices" | "contracts" | "expenses";
 type ViewMode = "list" | "table";
@@ -63,6 +66,7 @@ const QUARTER_OF = (m: number) => (m <= 2 ? "Q1" : m <= 5 ? "Q2" : m <= 8 ? "Q3"
 
 export function BillingWorkspace(p: Props) {
   const { t } = useTranslation("billing");
+  const queryClient = useQueryClient();
   const isNarrow = useIsMobile(1024);
   const isExpenses = p.activeTab === "expenses";
 
@@ -97,6 +101,8 @@ export function BillingWorkspace(p: Props) {
   // Table-mode multi-select
   const [invoiceSelectedIds, setInvoiceSelectedIds] = useState<Set<number>>(new Set());
   const [contractSelectedIds, setContractSelectedIds] = useState<Set<number>>(new Set());
+  // List-mode multi-select (shared across tabs — cleared on tab change)
+  const [listSelectedIds, setListSelectedIds] = useState<Set<number>>(new Set());
   const visibleInvoiceColumns = useMemo(() => new Set(DEFAULT_INVOICE_COLS), []);
   const visibleContractColumns = useMemo(() => new Set(DEFAULT_CONTRACT_COLS), []);
   // Contract upload dialog
@@ -111,6 +117,7 @@ export function BillingWorkspace(p: Props) {
     setEditingInvoice(null); setDuplicatingInvoice(null); setExpensePanelOpen(false);
     setGroupBy(p.activeTab === "expenses" ? "year_quarter" : "date");
     setGroupDirection("desc");
+    setListSelectedIds(new Set());
   }, [p.activeTab]);
 
   // ── Filtered + sorted lists ──────────────────────────────────────────────
@@ -208,6 +215,59 @@ export function BillingWorkspace(p: Props) {
   const handleDuplicate = (inv: InvoiceRow) => { setDuplicatingInvoice(inv); setEditingInvoice(null); setPanelMode("create"); };
 
   const hasSelection = p.activeTab === "invoices" ? !!p.selectedInvoice : p.activeTab === "contracts" ? !!p.selectedContract : selectedExpenseId != null;
+
+  // ── Bulk delete for table mode ───────────────────────────────────────────
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const activeBulkIds = p.activeTab === "invoices" ? invoiceSelectedIds : p.activeTab === "contracts" ? contractSelectedIds : expenseSelectedIds;
+  const clearActiveBulk = () => {
+    if (p.activeTab === "invoices") setInvoiceSelectedIds(new Set());
+    else if (p.activeTab === "contracts") setContractSelectedIds(new Set());
+    else setExpenseSelectedIds(new Set());
+  };
+  const handleListCheck = useCallback((id: number) => {
+    setListSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleListBulkDelete = useCallback(async () => {
+    if (listSelectedIds.size === 0) return;
+    if (p.activeTab === "invoices") {
+      await Promise.all([...listSelectedIds].map((id) => p.onDeleteInvoice(id)));
+      await p.onRefreshInvoices();
+    } else if (p.activeTab === "contracts") {
+      await Promise.all([...listSelectedIds].map((id) => p.onDeleteContract(id)));
+      await p.onRefreshContracts();
+    } else {
+      await Promise.all([...listSelectedIds].map((id) => deleteExpense(id)));
+      await queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    }
+    setListSelectedIds(new Set());
+  }, [listSelectedIds, p.activeTab, p.onDeleteInvoice, p.onDeleteContract, p.onRefreshInvoices, p.onRefreshContracts, queryClient]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (bulkDeleting || activeBulkIds.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      if (p.activeTab === "invoices") {
+        await Promise.all([...invoiceSelectedIds].map((id) => p.onDeleteInvoice(id)));
+        setInvoiceSelectedIds(new Set());
+        await p.onRefreshInvoices();
+      } else if (p.activeTab === "contracts") {
+        await Promise.all([...contractSelectedIds].map((id) => p.onDeleteContract(id)));
+        setContractSelectedIds(new Set());
+        await p.onRefreshContracts();
+      } else {
+        await Promise.all([...expenseSelectedIds].map((id) => deleteExpense(id)));
+        setExpenseSelectedIds(new Set());
+        await queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      }
+    } finally {
+      setBulkDeleting(false);
+    }
+  }, [bulkDeleting, activeBulkIds.size, p.activeTab, invoiceSelectedIds, contractSelectedIds, expenseSelectedIds, p.onDeleteInvoice, p.onDeleteContract, p.onRefreshInvoices, p.onRefreshContracts, queryClient]);
   const count = p.activeTab === "invoices" ? filteredInvoices.length : p.activeTab === "contracts" ? filteredContracts.length : filteredExpenses.length;
   const showStatCards = !(isExpenses && viewMode === "table");
   const selectedExpense = (expensesData ?? []).find((e) => e.id === selectedExpenseId) ?? null;
@@ -265,6 +325,10 @@ export function BillingWorkspace(p: Props) {
             isListCompact={isListCompact}
             isListHidden={isListHidden}
             isNarrow={isNarrow}
+            listSelectedIds={listSelectedIds}
+            onListCheck={handleListCheck}
+            onListBulkDelete={handleListBulkDelete}
+            onListClearSelection={() => setListSelectedIds(new Set())}
           />
         )}
 
@@ -292,7 +356,25 @@ export function BillingWorkspace(p: Props) {
         (isExpenses && expensePanelOpen);
       return (
         <div className="flex-1 min-h-0 flex overflow-hidden">
-          <div className="flex-1 min-w-0 overflow-hidden bg-card">
+          <div className="flex-1 min-w-0 overflow-hidden bg-card flex flex-col">
+            {activeBulkIds.size > 0 && (
+              <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b" style={{ background: "var(--wine-tint)", borderColor: "var(--wine)" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--wine)" }}>{activeBulkIds.size} {t("toolbar.selected", "selected")}</span>
+                <div style={{ flex: 1 }} />
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting}
+                  className="flex items-center gap-1.5"
+                  style={{ fontSize: 12, fontWeight: 700, color: "var(--stage-lost)", background: "none", border: "none", cursor: "pointer", opacity: bulkDeleting ? 0.6 : 1 }}
+                >
+                  <Trash2 size={13} />{bulkDeleting ? t("toolbar.deleting", "Deleting…") : t("toolbar.delete", "Delete")}
+                </button>
+                <button onClick={clearActiveBulk} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--mute)", display: "flex", alignItems: "center" }}>
+                  <X size={15} />
+                </button>
+              </div>
+            )}
+            <div className="flex-1 min-h-0 overflow-hidden">
             {p.activeTab === "invoices" ? (
               <InvoicesInlineTable
                 invoices={filteredInvoices}
@@ -325,6 +407,7 @@ export function BillingWorkspace(p: Props) {
                 exportTrigger={0}
               />
             )}
+            </div>
           </div>
           {showCreate && (
             <div className="w-full md:w-[500px] shrink-0 overflow-hidden flex flex-col" style={{ background: "var(--bg)" }}>
@@ -437,7 +520,6 @@ export function BillingWorkspace(p: Props) {
               onMarkPaid={p.onMarkPaid}
               onEdit={(inv) => { setEditingInvoice(inv); setDuplicatingInvoice(null); setPanelMode("edit"); }}
               onDuplicate={handleDuplicate}
-              onDelete={p.onDeleteInvoice}
               onRefresh={p.onRefreshInvoices}
             />
           ) : <InvoiceDetailPanelEmpty />}

@@ -199,7 +199,7 @@ export function ExpenseCreatePanel({ editingExpense, onClose }: ExpenseCreatePan
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" data-testid="expense-create-panel">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: "var(--card)" }} data-testid="expense-create-panel">
 
       {/* ── Panel header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between px-5 pt-6 pb-4 border-b border-border/30 shrink-0">
@@ -219,7 +219,7 @@ export function ExpenseCreatePanel({ editingExpense, onClose }: ExpenseCreatePan
       </div>
 
       {/* ── Scrollable form body ─────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto neu-panel">
         <div className="px-5 py-4 space-y-5">
 
           {/* PDF Drop Zone */}

@@ -61,31 +61,33 @@ export function ExpenseDetailPanel({ expense, onEdit, onDeleted, onNew }: Props)
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }} data-testid="expense-detail-panel">
-      {/* Header */}
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="serif" style={{ fontSize: 28, color: "var(--ink)", lineHeight: 1.1 }}>
-            {expense.supplier || t("expenses.detail.unknownSupplier")}
+      {/* Header — white panel matching contract/invoice header style */}
+      <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 20px" }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="serif" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.1 }}>
+              {expense.supplier || t("expenses.detail.unknownSupplier")}
+            </div>
+            <div className="row" style={{ gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+              {expense.invoiceNumber && <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>#{expense.invoiceNumber}</span>}
+              {expense.country && (
+                <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "3px 8px", borderRadius: "var(--r-pill)" }}>{expense.country}</span>
+              )}
+              <button onClick={handleToggleBtw} disabled={togglingBtw} title={t("expenses.detail.toggleNlBtw")} style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", borderRadius: "var(--r-pill)", border: "none", cursor: "pointer",
+                background: expense.nlBtwDeductible ? "var(--good-tint)" : "rgba(148,138,119,0.14)", color: expense.nlBtwDeductible ? "var(--good)" : "var(--mute-2)",
+                fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, opacity: togglingBtw ? 0.6 : 1,
+              }}>
+                {expense.nlBtwDeductible && <Check size={10} />}{expense.nlBtwDeductible ? t("expenses.status.deductible", "BTW Deductible") : t("expenses.status.notDeductible", "Non-deductible")}
+              </button>
+            </div>
           </div>
-          <div className="row" style={{ gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-            {expense.invoiceNumber && <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>#{expense.invoiceNumber}</span>}
-            {expense.country && (
-              <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "3px 8px", borderRadius: "var(--r-pill)" }}>{expense.country}</span>
-            )}
-            <button onClick={handleToggleBtw} disabled={togglingBtw} title={t("expenses.detail.toggleNlBtw")} style={{
-              display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", borderRadius: "var(--r-pill)", border: "none", cursor: "pointer",
-              background: expense.nlBtwDeductible ? "var(--good-tint)" : "rgba(148,138,119,0.14)", color: expense.nlBtwDeductible ? "var(--good)" : "var(--mute-2)",
-              fontFamily: "var(--mono)", fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, opacity: togglingBtw ? 0.6 : 1,
-            }}>
-              {expense.nlBtwDeductible && <Check size={10} />}{expense.nlBtwDeductible ? t("expenses.status.deductible", "BTW Deductible") : t("expenses.status.notDeductible", "Non-deductible")}
-            </button>
+          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+            {onNew && <ActBtn icon={<Plus size={14} />} label={t("expenses.actions.new")} onClick={onNew} />}
+            {expense.pdfPath && <ActBtn icon={<ExternalLink size={14} />} label={t("expenses.actions.pdf")} href={`/api/expenses/${expense.id}/pdf`} />}
+            <ActBtn icon={<Pencil size={14} />} label={t("expenses.actions.edit")} onClick={() => onEdit(expense)} />
+            <ActBtn icon={<Trash2 size={14} />} label={deleteConfirm ? t("expenses.actions.confirm") : isDeleting ? t("expenses.actions.deleting") : t("expenses.actions.delete")} onClick={handleDelete} disabled={isDeleting} danger={deleteConfirm} />
           </div>
-        </div>
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          {onNew && <ActBtn icon={<Plus size={14} />} label={t("expenses.actions.new")} onClick={onNew} />}
-          {expense.pdfPath && <ActBtn icon={<ExternalLink size={14} />} label={t("expenses.actions.pdf")} href={`/api/expenses/${expense.id}/pdf`} />}
-          <ActBtn icon={<Pencil size={14} />} label={t("expenses.actions.edit")} onClick={() => onEdit(expense)} />
-          <ActBtn icon={<Trash2 size={14} />} label={deleteConfirm ? t("expenses.actions.confirm") : isDeleting ? t("expenses.actions.deleting") : t("expenses.actions.delete")} onClick={handleDelete} disabled={isDeleting} danger={deleteConfirm} />
         </div>
       </div>
 

@@ -103,14 +103,14 @@ export function ContractCreatePanel({
   const [creatingCampaign, setCreatingCampaign] = useState(false);
 
   // ── Settings ─────────────────────────────────────────────────────────────
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("nl");
   const [timezone, setTimezone] = useState("Europe/Amsterdam");
   const [startDate, setStartDate] = useState(todayISO());
   const [endDate, setEndDate] = useState(addMonths(todayISO(), 12));
   const [endDatePreset, setEndDatePreset] = useState<number | "custom">(12);
 
   // ── Deal structure ─────────────────────────────────────────────────────────
-  const [dealType, setDealType] = useState("");
+  const [dealType, setDealType] = useState("performance");
   const [paymentTrigger, setPaymentTrigger] = useState("");
   const [currency, setCurrency] = useState("EUR");
   const [valuePerBooking, setValuePerBooking] = useState("");
@@ -293,10 +293,13 @@ export function ContractCreatePanel({
       <div className={cn("flex-1 min-h-0 flex overflow-hidden", compact ? "flex-col" : "flex-col md:flex-row")}>
 
         {/* ── LEFT: Form column ── */}
-        <div className={cn(
-          "flex flex-col overflow-y-auto border-r border-border/20 bg-card",
-          compact ? "flex-none" : "w-full md:w-[380px] md:shrink-0"
-        )}>
+        <div
+          className={cn(
+            "flex flex-col overflow-y-auto border-r neu-panel",
+            compact ? "flex-none" : "w-full md:w-[380px] md:shrink-0"
+          )}
+          style={{ background: "var(--card)", borderColor: "var(--line)" }}
+        >
           <div className="px-4 py-4 space-y-4">
 
             {/* Title */}
@@ -393,7 +396,7 @@ export function ContractCreatePanel({
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.language")}</Label>
                 <div className="flex gap-1">
-                  {(["en"] as const).map(lang => (
+                  {(["en", "nl"] as const).map(lang => (
                     <button key={lang} type="button"
                       className={cn(
                         "h-9 px-3 rounded-lg text-[12px] font-medium border",
@@ -402,14 +405,7 @@ export function ContractCreatePanel({
                           : "bg-card border-border text-muted-foreground"
                       )}
                       onClick={() => setLanguage(lang)}>
-                      EN
-                    </button>
-                  ))}
-                  {/* Future languages — grayed out */}
-                  {["nl", "pt"].map(l => (
-                    <button key={l} type="button" disabled
-                      className="h-9 px-3 rounded-lg text-[12px] font-medium border border-border/40 text-muted-foreground/30 cursor-not-allowed">
-                      {l.toUpperCase()}
+                      {lang.toUpperCase()}
                     </button>
                   ))}
                 </div>
@@ -422,43 +418,6 @@ export function ContractCreatePanel({
                   placeholder={t("contracts.form.timezonePlaceholder")}
                   className="text-[12px]"
                 />
-              </div>
-            </div>
-
-            {/* Dates */}
-            <div className="space-y-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.startDate")}</Label>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.endDate")}</Label>
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={e => { setEndDate(e.target.value); setEndDatePreset("custom"); }}
-                  />
-                </div>
-              </div>
-              {/* End date quick presets */}
-              <div className="flex gap-1 flex-wrap">
-                {END_DATE_PRESETS.map(p => (
-                  <button key={p.tKey} type="button"
-                    onClick={() => handleEndDatePreset(p.months)}
-                    className={cn(
-                      "h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors",
-                      endDatePreset === (p.months === 0 ? "custom" : p.months)
-                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] text-[color:var(--wine)]"
-                        : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
-                    )}>
-                    {t(p.tKey)}
-                  </button>
-                ))}
               </div>
             </div>
 
@@ -512,6 +471,17 @@ export function ContractCreatePanel({
               </div>
             </div>
 
+            {/* Fixed Upfront Fee — always visible */}
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.fixedFee")}</Label>
+              <Input
+                type="number" min={0} step={0.01} placeholder="0.00"
+                value={fixedFeeAmount}
+                onChange={e => setFixedFeeAmount(e.target.value)}
+                className="tabular-nums"
+              />
+            </div>
+
             {/* Payment Trigger */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.paymentTrigger")}</Label>
@@ -531,8 +501,8 @@ export function ContractCreatePanel({
               </div>
             </div>
 
-            {/* Conditional deal fields */}
-            {(showCostPassthrough || showFixedFee || showDeposit || showMonthlyFee) && (
+            {/* Other conditional deal fields */}
+            {(showCostPassthrough || showDeposit || showMonthlyFee) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {showCostPassthrough && (
                   <div className="space-y-1.5">
@@ -546,17 +516,6 @@ export function ContractCreatePanel({
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground pointer-events-none">%</span>
                     </div>
-                  </div>
-                )}
-                {showFixedFee && (
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.fixedFee")}</Label>
-                    <Input
-                      type="number" min={0} step={0.01} placeholder="0.00"
-                      value={fixedFeeAmount}
-                      onChange={e => setFixedFeeAmount(e.target.value)}
-                      className="tabular-nums"
-                    />
                   </div>
                 )}
                 {showDeposit && (
@@ -622,6 +581,46 @@ export function ContractCreatePanel({
                     )}>
                     <span className="text-[12px] font-semibold">{opt.label}</span>
                     <span className="text-[10px] text-muted-foreground font-mono">{opt.summary}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Divider: Dates */}
+            <div className="h-px bg-border/40" />
+
+            {/* Dates — start / end */}
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.startDate")}</Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.endDate")}</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={e => { setEndDate(e.target.value); setEndDatePreset("custom"); }}
+                  />
+                </div>
+              </div>
+              {/* End date quick presets */}
+              <div className="flex gap-1 flex-wrap">
+                {END_DATE_PRESETS.map(p => (
+                  <button key={p.tKey} type="button"
+                    onClick={() => handleEndDatePreset(p.months)}
+                    className={cn(
+                      "h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors",
+                      endDatePreset === (p.months === 0 ? "custom" : p.months)
+                        ? "[background:var(--wine-tint)] [border-color:var(--wine)] text-[color:var(--wine)]"
+                        : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+                    )}>
+                    {t(p.tKey)}
                   </button>
                 ))}
               </div>

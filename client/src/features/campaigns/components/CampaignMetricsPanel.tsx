@@ -101,12 +101,15 @@ export function CampaignMetricsPanel({
         </div>
       </div>
 
-      {/* Bumps Today + A/B test — full width row */}
-      <div style={{ display: "flex", gap: 16, width: "100%", marginTop: 24 }}>
-        <div style={{ flex: "1.2 1 0", minWidth: 0 }}>
+      {/* Bumps Today + A/B test — full width row. The Bumps card is sized to
+          match the Conversion Pipeline panel above; because the panels row is
+          1/3-each when stacked but 1/4.15 at ultrawide, the flex ratio flips in
+          design-system.css. Gap matches the 22px used everywhere else. */}
+      <div className="summary-bumps-row">
+        <div className="summary-bumps-cell">
           <BumpsTodayPanel campaign={campaign} />
         </div>
-        <div style={{ flex: "2 1 0", minWidth: 0 }}>
+        <div className="summary-ab-cell">
           <ABTestCard campaign={campaign} mockStats={isDemoMode ? DEMO_AB_STATS : undefined} />
         </div>
       </div>

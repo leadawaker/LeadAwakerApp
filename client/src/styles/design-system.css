@@ -315,6 +315,15 @@ body, html { margin: 0; padding: 0; }
   border-color: transparent;
   box-shadow: var(--sh-inset-medium);
 }
+/* Inverted variant — inset by default, flat outlined surface on hover */
+.surface-panel--inset {
+  border-color: transparent;
+  box-shadow: var(--sh-inset-medium);
+}
+.surface-panel--inset:hover {
+  border-color: var(--wine);
+  box-shadow: none;
+}
 
 /* Glass cards — play once on mount: surface outline → white raised */
 @keyframes outline-to-glass {
@@ -651,6 +660,33 @@ body, html { margin: 0; padding: 0; }
 .neu-input::placeholder { color: var(--mute-2); }
 .neu-input:focus { outline: none; }
 
+/* ─── Form panel — neumorphic inset inputs ────────────────────── */
+/* Applied to the scrollable body of Invoice/Expense create panels */
+
+.neu-panel input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.neu-panel textarea {
+  background: var(--bg) !important;
+  box-shadow: var(--sh-inset-crisp) !important;
+  border-color: transparent !important;
+  color: var(--ink) !important;
+}
+.neu-panel input:not([type="checkbox"]):not([type="radio"]):not([type="file"])::placeholder,
+.neu-panel textarea::placeholder {
+  color: var(--mute-2) !important;
+}
+.neu-panel input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+.neu-panel textarea:focus {
+  outline: none !important;
+  box-shadow: var(--sh-inset-crisp), 0 0 0 2px var(--wine-tint) !important;
+}
+/* shadcn SelectTrigger (renders as button with role=combobox) */
+.neu-panel button[role="combobox"] {
+  background: var(--bg) !important;
+  box-shadow: var(--sh-inset-crisp) !important;
+  border-color: transparent !important;
+  color: var(--ink) !important;
+}
+
 /* ─── Utility ─────────────────────────────────────────────────── */
 
 .neu-pill { border-radius: 999px; }
@@ -937,17 +973,25 @@ body, html { margin: 0; padding: 0; }
   .summary-perf .perf-chart { flex: 1 1 auto; min-height: 0; }
   .bold-metrics-rule { display: none; }
   .pipeline-layout { flex-direction: row !important; align-items: flex-start !important; }
-
-  /* AB Testing: switch to horizontal bars on ultrawide */
-  .ab-layout { --ab-mode: horizontal; }
-  .ab-bars-vertical { display: none !important; }
-  .ab-bars-horizontal { display: flex !important; }
 }
 
-/* AB Testing: default layout (non-ultrawide) uses vertical bars */
+/* AB Testing: vertical bar columns at every width. */
 .ab-layout { --ab-mode: vertical; }
 .ab-bars-horizontal { display: none; }
 .ab-bars-vertical { display: flex; }
+
+/* Bumps Today + A/B row. Bumps is sized to match the Conversion Pipeline panel
+   above it. When the three panels are stacked in one row each is 1/3 width, so
+   bumps:1 / ab:2 → bumps = 1/3. */
+.summary-bumps-row { display: flex; gap: 22px; width: 100%; margin-top: 22px; }
+.summary-bumps-cell { flex: 1 1 0; min-width: 0; }
+.summary-ab-cell { flex: 2 1 0; min-width: 0; }
+
+/* ≥1400px (ultrawide): the grid is a single row of perf(1.15) + panels(3), so
+   the Pipeline panel is 1/4.15 of the width. Match it: bumps:1 / ab:3.15. */
+@container summary (min-width: 1400px) {
+  .summary-ab-cell { flex: 3.15 1 0; }
+}
 
 /* ─── Curvy hero panel (version B) ────────────────────────────── */
 .bold-hero {

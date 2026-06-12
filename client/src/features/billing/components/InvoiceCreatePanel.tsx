@@ -365,14 +365,14 @@ export function InvoiceCreatePanel({
   }
 
   function fmt(value: number) {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(value);
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "EUR" }).format(value);
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full overflow-hidden" data-testid="invoice-create-panel">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: "var(--card)" }} data-testid="invoice-create-panel">
       {/* Panel header */}
-      <div className="flex items-start justify-between px-5 pt-6 pb-4 border-b border-border/30 shrink-0">
+      <div className="flex items-start justify-between px-5 pt-6 pb-4 border-b shrink-0" style={{ borderColor: "var(--line)" }}>
         <div>
           <h2 className="text-2xl font-bold text-foreground font-heading leading-tight">
             {isEditMode ? t("invoices.form.editInvoice") : prefillInvoice ? t("invoices.form.duplicateInvoice") : t("invoices.form.newInvoice")}
@@ -392,7 +392,7 @@ export function InvoiceCreatePanel({
       </div>
 
       {/* Scrollable form body */}
-      <form id="invoice-create-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+      <form id="invoice-create-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto neu-panel">
         <div className="px-5 py-4 space-y-5">
 
           {/* ── Title + Account + Invoice # ───────────────────────────── */}
