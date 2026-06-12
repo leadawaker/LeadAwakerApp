@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { buildEntityRows } from "@/components/crm/entityList";
 import type { VirtualListItem } from "./LeadsCardView";
 
 type ViewMode = "list" | "table" | "pipeline";
@@ -596,25 +597,19 @@ export function LeadsTable() {
 
   /* ── Table flat items — filtered, sorted, grouped ───────────────────────── */
   const tableFlatItems = useMemo((): VirtualListItem[] => {
-    let source = filteredLeads;
-
-    if (tableFilterStatus.length > 0) {
-      source = source.filter((l) =>
-        tableFilterStatus.includes(l.conversion_status || l.Conversion_Status || "")
-      );
-    }
-    if (tableFilterAccount) {
-      source = source.filter((l) =>
-        String(l.Accounts_id || l.account_id || "") === tableFilterAccount
-      );
-    }
-    if (tableFilterCampaign) {
-      source = source.filter((l) =>
-        String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") === tableFilterCampaign
-      );
-    }
-    if (tableSortBy !== "recent") {
-      source = [...source].sort((a, b) => {
+    return buildEntityRows<Record<string, any>, VirtualListItem>({
+      items: filteredLeads,
+      predicate: (l) => {
+        if (tableFilterStatus.length > 0 &&
+          !tableFilterStatus.includes(l.conversion_status || l.Conversion_Status || "")) return false;
+        if (tableFilterAccount &&
+          String(l.Accounts_id || l.account_id || "") !== tableFilterAccount) return false;
+        if (tableFilterCampaign &&
+          String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") !== tableFilterCampaign) return false;
+        return true;
+      },
+      // "recent" keeps source order (no sort); other modes sort.
+      comparator: tableSortBy === "recent" ? undefined : (a, b) => {
         switch (tableSortBy) {
           case "oldest":     return (Number(a.id || a.Id || 0)) - (Number(b.id || b.Id || 0));
           case "name_asc":   return getFullNameHelper(a).localeCompare(getFullNameHelper(b));
@@ -623,58 +618,33 @@ export function LeadsTable() {
           case "score_asc":  return Number(a.lead_score ?? a.leadScore ?? 0) - Number(b.lead_score ?? b.leadScore ?? 0);
           default: return 0;
         }
-      });
-    }
-
-    if (tableGroupBy === "none") {
-      const result: VirtualListItem[] = [];
-      source.forEach((l) =>
-        result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] })
-      );
-      return result;
-    }
-
-    const buckets = new Map<string, Record<string, any>[]>();
-    source.forEach((l) => {
-      let groupKey: string;
-      switch (tableGroupBy) {
-        case "campaign": {
-          const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-          groupKey = (cId && campaignsById.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+      },
+      groupKeyOf: tableGroupBy === "none" ? null : (l) => {
+        switch (tableGroupBy) {
+          case "campaign": {
+            const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+            return (cId && campaignsById.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+          }
+          case "account":
+            return accountsById.get(Number(l.Accounts_id || l.account_id)) ||
+              (l.Accounts_id || l.account_id ? `Account ${l.Accounts_id || l.account_id}` : "No Account");
+          default: // status
+            return l.conversion_status || l.Conversion_Status || "Unknown";
         }
-          break;
-        case "account":
-          groupKey = accountsById.get(Number(l.Accounts_id || l.account_id)) ||
-            (l.Accounts_id || l.account_id ? `Account ${l.Accounts_id || l.account_id}` : "No Account");
-          break;
-        default: // status
-          groupKey = l.conversion_status || l.Conversion_Status || "Unknown";
-      }
-      if (!buckets.has(groupKey)) buckets.set(groupKey, []);
-      buckets.get(groupKey)!.push(l);
+      },
+      groupDirection: tableGroupDirection,
+      orderGroups: tableGroupBy === "status"
+        ? (keys) => STATUS_GROUP_ORDER.filter((k) => keys.includes(k))
+            .concat(keys.filter((k) => !STATUS_GROUP_ORDER.includes(k)))
+        : undefined,
+      makeHeader: (key, count) => ({
+        kind: "header",
+        label: tableGroupBy === "status" ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key) : key,
+        count,
+      }),
+      makeItem: (l) => ({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] }),
     });
-
-    const baseKeys =
-      tableGroupBy === "status"
-        ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k))
-            .concat(Array.from(buckets.keys()).filter((k) => !STATUS_GROUP_ORDER.includes(k)))
-        : Array.from(buckets.keys()).sort();
-    const orderedKeys = tableGroupDirection === "desc" ? [...baseKeys].reverse() : baseKeys;
-
-    const result: VirtualListItem[] = [];
-    orderedKeys.forEach((key) => {
-      const group = buckets.get(key);
-      if (!group || group.length === 0) return;
-      const headerLabel = tableGroupBy === "status"
-        ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key)
-        : key;
-      result.push({ kind: "header", label: headerLabel, count: group.length });
-      group.forEach((l) =>
-        result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] })
-      );
-    });
-    return result;
-  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById]);
+  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById, t]);
 
   const handleViewSwitch = useCallback((mode: ViewMode) => {
     setViewMode(mode);
