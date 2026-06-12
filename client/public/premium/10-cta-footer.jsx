@@ -1,7 +1,7 @@
 // CTA + Footer — cream background with live-edge wood slab borders
 
-const CAL_LINK = "lead-awaker-orlfpr/discovery-call";
-const CAL_NAMESPACE = "discovery-call";
+const CAL_LINK = "leadawaker/reactivatie-scan";
+const CAL_NAMESPACE = "reactivatie-scan";
 const MAPS_URL = "https://www.google.com/maps/place/Christiaan+Huygensweg+32,+5223+BH+'s-Hertogenbosch,+Netherlands/@51.691872,5.2869323,17z";
 
 /* Cal.com inline embed loader — runs once per page */
