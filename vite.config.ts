@@ -39,6 +39,17 @@ export default defineConfig({
         // duplicated across route chunks (and so three.js only loads with faq).
         manualChunks(id) {
           if (id.includes("node_modules")) {
+            // The cn() utility trio is used by the app shell (entry) AND is a
+            // transitive dep of recharts. Pin it to its own tiny chunk so Rollup
+            // never absorbs it into vendor-charts — otherwise the entry would
+            // statically import (and modulepreload) the whole 109 KB charts
+            // bundle just to get clsx. Keep this rule before the charts rule.
+            if (
+              id.includes("node_modules/clsx") ||
+              id.includes("node_modules/tailwind-merge") ||
+              id.includes("node_modules/class-variance-authority")
+            )
+              return "vendor-ui-utils";
             if (id.includes("recharts") || id.includes("/d3-")) return "vendor-charts";
             if (id.includes("framer-motion")) return "vendor-motion";
             if (id.includes("three")) return "vendor-three";
