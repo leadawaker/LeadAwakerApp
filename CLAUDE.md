@@ -58,7 +58,7 @@ Never use `process.exit()` in Vite or server error handlers — it kills the ent
 - **List views:** new list/table pipelines use `buildEntityRows()` / `groupItemsToMap()` from `client/src/components/crm/entityList/` instead of copy-pasting another page's filter→sort→group useMemo. Greenfield list pages can use `useEntityList` + `EntityListView`.
 - **Settings page:** `pages/Settings.tsx` is a thin composition; edit the sections in `client/src/features/settings/components/`.
 - **Images:** no multi-MB originals in `client/src/assets/` — compress to WebP at display size before committing.
-- **Deferred refactors:** `specs/structural-debt/session-c-lead-panel.md` (finish LeadDetailPanel decomposition) and `session-d-list-views.md` (Leads/Accounts list views). Read these before restructuring those areas.
+- **Structural-debt refactors are DONE** (sessions A-D, 2026-06): routes/storage split, Settings split, LeadDetailPanel decomposition (516-line composition + `leadDetail/` hooks and sections), all major list views on `buildEntityRows`. Summaries in `specs/structural-debt/`. Do not re-plan this work.
 
 ## Deployment
 
