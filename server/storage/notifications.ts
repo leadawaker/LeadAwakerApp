@@ -288,15 +288,6 @@ export const notificationsStorage = {
     return row;
   },
 
-  async getPushSubscriptionByEndpoint(endpoint: string): Promise<PushSubscriptionRow | undefined> {
-    const [row] = await db
-      .select()
-      .from(pushSubscriptions)
-      .where(eq(pushSubscriptions.endpoint, endpoint))
-      .limit(1);
-    return row;
-  },
-
   async deletePushSubscriptionByEndpoint(endpoint: string): Promise<boolean> {
     const rows = await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint)).returning({ id: pushSubscriptions.id });
     return rows.length > 0;

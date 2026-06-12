@@ -107,10 +107,6 @@ import type { NotificationItem, ProspectsListParams } from "./types";
 export const prospectsStorage = {
   // ─── Prospects ──────────────────────────────────────────────────────
 
-  async getProspects(): Promise<Prospects[]> {
-    return db.select().from(prospects).orderBy(desc(prospects.createdAt));
-  },
-
   async getProspectsPaginated(params: ProspectsListParams): Promise<{ items: Prospects[]; total: number; hasMore: boolean }> {
     const conditions: SQL[] = [];
 

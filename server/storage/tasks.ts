@@ -111,10 +111,6 @@ export const tasksStorage = {
     return db.select().from(tasks).where(eq(tasks.isArchived, false)).orderBy(desc(tasks.createdAt));
   },
 
-  async getTasksByAccountId(accountId: number): Promise<Task[]> {
-    return db.select().from(tasks).where(and(eq(tasks.accountsId, accountId), eq(tasks.isArchived, false))).orderBy(desc(tasks.createdAt));
-  },
-
   async getTasksFiltered(filters: { accountId?: number; categoryId?: number | null; parentTaskId?: number | null }): Promise<Task[]> {
     const conditions: SQL[] = [eq(tasks.isArchived, false)];
     if (filters.accountId !== undefined) {

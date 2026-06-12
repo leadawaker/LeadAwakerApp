@@ -178,8 +178,4 @@ export const agentsStorage = {
   async getAiFilesByConversationId(conversationId: string): Promise<AiFile[]> {
     return db.select().from(aiFiles).where(eq(aiFiles.conversationId, conversationId)).orderBy(asc(aiFiles.createdAt));
   },
-
-  async getAiFilesByMessageId(messageId: number): Promise<AiFile[]> {
-    return db.select().from(aiFiles).where(eq(aiFiles.messageId, messageId)).orderBy(asc(aiFiles.createdAt));
-  },
 };
