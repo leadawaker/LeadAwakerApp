@@ -109,17 +109,19 @@ function ExpenseDataRow({
     <tr
       key={row.id ?? i}
       onClick={hasSelection ? () => toggleRow(row.id) : undefined}
-      className={cn(
-        "h-[52px] transition-colors",
-        hasSelection && "cursor-pointer",
-        !sel && "hover:bg-card-hover"
-      )}
-      style={{ backgroundColor: sel ? "var(--color-highlight-selected)" : "var(--color-card)" }}
+      className={cn("h-[52px]", hasSelection && "cursor-pointer")}
+      style={{
+        background: sel ? "var(--surface)" : "transparent",
+        boxShadow: sel ? "inset 3px 0 0 var(--wine)" : "none",
+        transition: "background 120ms",
+      }}
+      onMouseEnter={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "var(--surface)"; }}
+      onMouseLeave={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
     >
       {hasSelection && (
         <td
           className="px-3 py-0 w-10"
-          style={{ backgroundColor: sel ? "var(--color-highlight-selected)" : undefined }}
+          style={{ background: sel ? "var(--surface)" : "var(--card)" }}
         >
           <div
             className={cn(
@@ -479,11 +481,11 @@ export function ExpensesView({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-card">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: "var(--card)" }}>
 
       {/* ── Summary topbar ── */}
       {!isLoading && !isError && totalCount > 0 && (
-        <div className="shrink-0 px-5 py-3 border-b border-border/30 flex items-center gap-6">
+        <div className="shrink-0 px-5 py-3 flex items-center gap-6" style={{ borderBottom: "1px solid var(--line)", background: "var(--bg-2)" }}>
           <div>
             <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/35 block">{t("expenses.table.summary.expenses")}</span>
             <span className="text-[15px] font-bold tabular-nums text-foreground">{totalCount}</span>
@@ -561,11 +563,11 @@ export function ExpensesView({
             <p className="text-sm font-medium text-foreground/40">{t("expenses.empty.noExpensesFound")}</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto bg-[var(--bg)] dark:bg-muted">
+          <div className="flex-1 overflow-y-auto" style={{ background: "var(--card)" }}>
             <table className="w-full text-[12px]" style={{ borderCollapse: "separate", borderSpacing: "0 3px" }}>
 
               {/* Header */}
-              <thead className="sticky top-0 z-10 bg-[var(--bg)] dark:bg-muted border-b border-border/30">
+              <thead className="sticky top-0 z-10 border-b" style={{ background: "var(--bg-2)", borderColor: "var(--line)" }}>
                 <tr>
                   {hasSelection && (
                     <th className="w-10 px-3 py-2.5">
@@ -704,7 +706,7 @@ export function ExpensesView({
                                 <>
                                   {/* Quarter sub-header */}
                                   {(() => {
-                                    const qBg = isDark ? "#18283E" : "#E3E3E3";
+                                    const qBg = isDark ? "#18283E" : "var(--bg-2)";
                                     return (
                                       <tr key={`qhdr-${year}-${q}`} className="cursor-pointer select-none h-[38px]">
                                         {hasSelection && (

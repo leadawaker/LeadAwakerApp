@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Receipt, FileText, Wallet } from "lucide-react";
+import { Receipt, FileText, Wallet, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useCompactHoverCard, CompactHoverCardPortal } from "@/components/crm/CompactEntityRail";
@@ -39,13 +39,19 @@ interface Props {
   isListCompact: boolean;
   isListHidden: boolean;
   isNarrow: boolean;
+  listSelectedIds?: Set<number>;
+  onListCheck?: (id: number) => void;
+  onListBulkDelete?: () => Promise<void>;
+  onListClearSelection?: () => void;
 }
 
 export function BillingListPanel({
   tab, items, loading, selectedId, onSelect,
   groupBy, groupDirection, isListCompact, isListHidden, isNarrow,
+  listSelectedIds, onListCheck, onListBulkDelete, onListClearSelection,
 }: Props) {
   const { t } = useTranslation("billing");
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -151,9 +157,12 @@ export function BillingListPanel({
   const { hovered, rect, onHover, onHoverEnd, cancelHoverEnd, close } = useCompactHoverCard<BillingItem>(idOf, findEl);
 
   const renderCard = (item: BillingItem, selected: boolean, onClick: () => void) => {
-    if (tab === "invoices") return <InvoiceListCard invoice={item as InvoiceRow} isSelected={selected} onClick={onClick} />;
-    if (tab === "contracts") return <ContractListCard contract={item as ContractRow} isSelected={selected} onClick={onClick} />;
-    return <ExpenseListCard expense={item as ExpenseRow} isSelected={selected} onClick={onClick} />;
+    const id = idOf(item);
+    const checked = listSelectedIds?.has(id) ?? false;
+    const handleCheck = onListCheck ? (e: React.MouseEvent) => { e.stopPropagation(); onListCheck(id); } : undefined;
+    if (tab === "invoices") return <InvoiceListCard invoice={item as InvoiceRow} isSelected={selected} isChecked={checked} onClick={onClick} onCheck={handleCheck} />;
+    if (tab === "contracts") return <ContractListCard contract={item as ContractRow} isSelected={selected} isChecked={checked} onClick={onClick} onCheck={handleCheck} />;
+    return <ExpenseListCard expense={item as ExpenseRow} isSelected={selected} isChecked={checked} onClick={onClick} onCheck={handleCheck} />;
   };
 
   const compactDot = (item: BillingItem): string => {
@@ -228,6 +237,25 @@ export function BillingListPanel({
               </div>
             )}
           </div>
+          {(listSelectedIds?.size ?? 0) > 0 && onListBulkDelete && (
+            <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-t" style={{ background: "var(--wine-tint)", borderColor: "var(--wine)" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--wine)" }}>{listSelectedIds!.size} {t("toolbar.selected", "selected")}</span>
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={async () => { setBulkDeleting(true); try { await onListBulkDelete(); } finally { setBulkDeleting(false); } }}
+                disabled={bulkDeleting}
+                className="flex items-center gap-1.5"
+                style={{ fontSize: 12, fontWeight: 700, color: "var(--stage-lost)", background: "none", border: "none", cursor: "pointer", opacity: bulkDeleting ? 0.6 : 1 }}
+              >
+                <Trash2 size={13} />{bulkDeleting ? t("toolbar.deleting", "Deleting…") : t("toolbar.delete", "Delete")}
+              </button>
+              {onListClearSelection && (
+                <button onClick={onListClearSelection} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--mute)", display: "flex", alignItems: "center" }}>
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+          )}
           {totalItems > PAGE_SIZE && (
             <div className="h-9 md:h-[18px] px-3 py-1 border-t border-border/20 flex items-center justify-between shrink-0">
               <button onClick={() => setCurrentPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0} className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30">{t("toolbar.previous")}</button>

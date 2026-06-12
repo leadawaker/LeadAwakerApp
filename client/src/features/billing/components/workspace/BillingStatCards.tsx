@@ -82,9 +82,9 @@ export function BillingStatCards({ tab, invoices, contracts, expenses }: {
   }
 
   return (
-    <div className="row" style={{ gap: 10, padding: "0 0 28px", flexWrap: "wrap" }}>
+    <div className="row" style={{ gap: 10, padding: "0 0 56px", flexWrap: "wrap" }}>
       {cards.map((c) => (
-        <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} accent={c.accent} icon={c.icon} />
+        <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} accent={c.accent} icon={c.icon} flat />
       ))}
     </div>
   );

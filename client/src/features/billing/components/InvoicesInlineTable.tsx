@@ -401,7 +401,8 @@ export function InvoicesInlineTable({
   }
 
   const thBase =
-    "px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/40 whitespace-nowrap select-none bg-[var(--bg)] dark:bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70";
+    "px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider whitespace-nowrap select-none border-b cursor-pointer hover:text-foreground/70"
+    + " [background:var(--bg-2)] [border-color:var(--line)] [color:var(--mute-2)]";
 
   // ── Row renderer (shared between flat and grouped views) ──────────────────
   function renderInvoiceRow(invoice: InvoiceRow, index: number) {
@@ -416,17 +417,18 @@ export function InvoicesInlineTable({
       dot: "#94A3B8",
     };
 
-    const rowBg = isHighlighted ? "var(--color-highlight-selected)" : "var(--color-card)";
-    const rowHoverClass = isHighlighted ? "" : "hover:bg-card-hover";
-
     return (
       <tr
         key={invoice.id}
-        className={cn(
-          "group/row cursor-pointer h-[52px] animate-card-enter",
-          rowHoverClass,
-        )}
-        style={{ backgroundColor: rowBg, animationDelay: `${Math.min(index, 15) * 30}ms` }}
+        className="group/row cursor-pointer h-[52px] animate-card-enter"
+        style={{
+          background: isHighlighted ? "var(--surface)" : "transparent",
+          boxShadow: isHighlighted ? "inset 3px 0 0 var(--wine)" : "none",
+          transition: "background 120ms",
+          animationDelay: `${Math.min(index, 15) * 30}ms`,
+        }}
+        onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = "var(--surface)"; }}
+        onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
         onClick={(e) => handleRowClick(invoice, index, e)}
       >
         {/* Checkbox */}
@@ -435,7 +437,7 @@ export function InvoicesInlineTable({
           style={{
             width: 40,
             minWidth: 40,
-            backgroundColor: isHighlighted ? "var(--color-highlight-selected)" : undefined,
+            background: isHighlighted ? "var(--surface)" : "var(--card)",
           }}
         >
           <div
@@ -628,7 +630,7 @@ export function InvoicesInlineTable({
 
       {/* ── Summary stats bar (TOP, above headers) ── */}
       {!loading && (
-        <div className="shrink-0 flex items-center px-5 h-[52px] border-b border-border/30 bg-card">
+        <div className="shrink-0 flex items-center px-5 h-[52px] border-b" style={{ background: "var(--bg-2)", borderColor: "var(--line)" }}>
           {/* Count */}
           <div className="flex flex-col justify-center pr-5">
             <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/35">{t("invoices.table.summary.invoices")}</span>
@@ -673,7 +675,7 @@ export function InvoicesInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto bg-[var(--bg)] dark:bg-muted">
+        <div className="flex-1 min-h-0 overflow-auto" style={{ background: "var(--card)" }}>
           <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 400 }}>
 
             {/* Sticky header */}
@@ -866,7 +868,7 @@ export function InvoicesInlineTable({
                           <Fragment key={q}>
                             {/* Quarter sub-header */}
                             {(() => {
-                              const qBg = isDark ? "#18283E" : "#E3E3E3";
+                              const qBg = isDark ? "#18283E" : "var(--bg-2)";
                               const labelColSpan = totalIdx >= 0 ? totalIdx : orderedCols.length;
                               const afterTotal = totalIdx >= 0 ? orderedCols.slice(totalIdx + 1) : [];
                               return (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, Link2, SendHorizontal, CheckCircle, Pencil, Trash2, Eye, Check, CopyPlus } from "lucide-react";
+import { Download, Link2, SendHorizontal, CheckCircle, Pencil, Eye, Check, CopyPlus } from "lucide-react";
 import type { InvoiceRow } from "../../types";
 import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import { parseLineItems, formatCurrency } from "../../types";
@@ -28,29 +28,22 @@ interface Props {
   onMarkPaid: (id: number) => Promise<any>;
   onEdit: (invoice: InvoiceRow) => void;
   onDuplicate?: (invoice: InvoiceRow) => void;
-  onDelete: (id: number) => Promise<void>;
   onRefresh: () => void;
 }
 
-export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent, onMarkPaid, onEdit, onDuplicate, onDelete, onRefresh }: Props) {
+export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent, onMarkPaid, onEdit, onDuplicate, onRefresh }: Props) {
   const { t } = useTranslation("billing");
   const status = effectiveInvoiceStatus(invoice);
   const lineItems = parseLineItems(invoice.line_items);
   const currency = invoice.currency || "EUR";
 
   const [copied, setCopied] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [markingSent, setMarkingSent] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
 
   useEffect(() => {
-    setCopied(false); setDeleteConfirm(false); setMarkingSent(false); setMarkingPaid(false);
+    setCopied(false); setMarkingSent(false); setMarkingPaid(false);
   }, [invoice.id]);
-  useEffect(() => {
-    if (!deleteConfirm) return;
-    const tm = setTimeout(() => setDeleteConfirm(false), 3000);
-    return () => clearTimeout(tm);
-  }, [deleteConfirm]);
 
   const handleCopyLink = useCallback(() => {
     const url = `${window.location.origin}/api/invoices/view/${invoice.view_token}`;
@@ -68,11 +61,6 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
     setMarkingPaid(true);
     try { await onMarkPaid(invoice.id); onRefresh(); } finally { setMarkingPaid(false); }
   }, [invoice.id, onMarkPaid, onRefresh]);
-
-  const handleDelete = useCallback(async () => {
-    if (deleteConfirm) { setDeleteConfirm(false); await onDelete(invoice.id); }
-    else setDeleteConfirm(true);
-  }, [deleteConfirm, invoice.id, onDelete]);
 
   const handleDownloadPdf = useCallback(() => {
     const subtotalNum = parseFloat(invoice.subtotal || "0");
@@ -128,33 +116,38 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }} data-testid="invoice-detail-panel">
-      {/* Header */}
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="serif" style={{ fontSize: 28, color: "var(--ink)", lineHeight: 1.1 }}>
-            {toDisplayTitle(invoice.title, t("invoices.card.untitledInvoice"))}
+      {/* Header — white panel matching contract header style */}
+      <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 20px" }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="serif" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.1 }}>
+              {toDisplayTitle(invoice.title, t("invoices.card.untitledInvoice"))}
+            </div>
+            <div className="row" style={{ gap: 10, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <StatusPill kind="invoice" status={status} label={t(`invoices.statusLabels.${status}`, status)} />
+              <span className="row" style={{ gap: 5 }}>
+                <Eye size={13} style={{ color: "var(--mute-2)" }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--mono)" }}>{invoice.viewed_count ?? 0}</span>
+                <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{(invoice.viewed_count ?? 0) === 1 ? t("invoices.detail.view") : t("invoices.detail.views")}</span>
+              </span>
+              {invoice.account_name && <span style={{ fontSize: 13, color: "var(--mute)" }}>{invoice.account_name}</span>}
+              {invoice.invoice_number && <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>#{invoice.invoice_number}</span>}
+            </div>
           </div>
-          <div className="row" style={{ gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-            {invoice.account_name && <span style={{ fontSize: 13, color: "var(--mute)" }}>{invoice.account_name}</span>}
-            {invoice.invoice_number && <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>#{invoice.invoice_number}</span>}
-          </div>
+          {isAgencyUser && (
+            <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+              <ActBtn icon={<Download size={14} />} label={t("invoices.actions.pdf")} onClick={handleDownloadPdf} />
+              <ActBtn icon={copied ? <Check size={14} /> : <Link2 size={14} />} label={copied ? t("invoices.actions.copied") : t("invoices.actions.copyLink")} onClick={handleCopyLink} active={copied} />
+              {invoice.status === "Draft" && <ActBtn icon={<SendHorizontal size={14} />} label={markingSent ? t("invoices.actions.sending") : t("invoices.actions.markSent")} onClick={handleMarkSent} disabled={markingSent} />}
+              {(invoice.status === "Sent" || invoice.status === "Viewed") && <ActBtn icon={<CheckCircle size={14} />} label={markingPaid ? t("invoices.actions.updating") : t("invoices.actions.markPaid")} onClick={handleMarkPaid} disabled={markingPaid} />}
+              <ActBtn icon={<Pencil size={14} />} label={t("invoices.actions.edit")} onClick={() => onEdit(invoice)} />
+              {onDuplicate && <ActBtn icon={<CopyPlus size={14} />} label={t("invoices.actions.duplicate")} onClick={() => onDuplicate(invoice)} />}
+            </div>
+          )}
         </div>
-        {isAgencyUser && (
-          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-            <ActBtn icon={<Download size={14} />} label={t("invoices.actions.pdf")} onClick={handleDownloadPdf} />
-            <ActBtn icon={copied ? <Check size={14} /> : <Link2 size={14} />} label={copied ? t("invoices.actions.copied") : t("invoices.actions.copyLink")} onClick={handleCopyLink} active={copied} />
-            {invoice.status === "Draft" && <ActBtn icon={<SendHorizontal size={14} />} label={markingSent ? t("invoices.actions.sending") : t("invoices.actions.markSent")} onClick={handleMarkSent} disabled={markingSent} />}
-            {(invoice.status === "Sent" || invoice.status === "Viewed") && <ActBtn icon={<CheckCircle size={14} />} label={markingPaid ? t("invoices.actions.updating") : t("invoices.actions.markPaid")} onClick={handleMarkPaid} disabled={markingPaid} />}
-            <ActBtn icon={<Pencil size={14} />} label={t("invoices.actions.edit")} onClick={() => onEdit(invoice)} />
-            {onDuplicate && <ActBtn icon={<CopyPlus size={14} />} label={t("invoices.actions.duplicate")} onClick={() => onDuplicate(invoice)} />}
-            <ActBtn icon={<Trash2 size={14} />} label={deleteConfirm ? t("invoices.actions.confirm") : t("invoices.actions.delete")} onClick={handleDelete} danger={deleteConfirm} />
-          </div>
-        )}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1fr)", gap: 16 }} className="max-md:!grid-cols-1">
-        {/* Line items */}
-        <DetailSection title={t("invoices.detail.lineItems")}>
+      <DetailSection title={t("invoices.detail.lineItems")}>
           {lineItems.length > 0 ? (
             <>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -189,33 +182,10 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
           ) : (
             <div style={{ padding: "24px 0", textAlign: "center", fontSize: 12, color: "var(--mute-2)", fontStyle: "italic" }}>{t("invoices.detail.noLineItems")}</div>
           )}
-          {invoice.notes && (
-            <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-              <div className="eyebrow eyebrow-sm" style={{ marginBottom: 6 }}>{t("invoices.detail.notesAndDetails")}</div>
-              <p style={{ fontSize: 11.5, color: "var(--mute)", lineHeight: 1.5, whiteSpace: "pre-wrap", margin: 0 }}>{invoice.notes}</p>
-            </div>
-          )}
-        </DetailSection>
-
-        {/* Right column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <DetailSection title={t("invoices.detail.totalAmount")}>
-            <div className="serif" style={{ fontSize: 30, color: "var(--ink)", lineHeight: 1 }}>{formatCurrency(totalNum, currency)}</div>
-          </DetailSection>
-
-          <DetailSection title={t("invoices.detail.status")}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div><StatusPill kind="invoice" status={status} label={t(`invoices.statusLabels.${status}`, status)} /></div>
-              <div className="row" style={{ gap: 6 }}>
-                <Eye size={14} style={{ color: "var(--mute-2)" }} />
-                <span style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--mono)" }}>{invoice.viewed_count ?? 0}</span>
-                <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{(invoice.viewed_count ?? 0) === 1 ? t("invoices.detail.view") : t("invoices.detail.views")}</span>
-              </div>
-            </div>
-          </DetailSection>
-
-          <DetailSection title={t("invoices.detail.dates")}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Dates */}
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+            <div className="eyebrow eyebrow-sm" style={{ marginBottom: 10 }}>{t("invoices.detail.dates")}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="max-md:!grid-cols-1">
               <div>
                 <div className="eyebrow eyebrow-sm" style={{ marginBottom: 4 }}>{t("invoices.detail.dueDate")}</div>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>{fmtDateFull(invoice.due_date)}</span>
@@ -226,15 +196,17 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
                 )}
                 {status === "Paid" && invoice.paid_at && <span style={{ fontSize: 11, marginLeft: 6, color: "var(--good)" }}>· {t("invoices.detail.paidOn", { date: fmtDateFull(invoice.paid_at) })}</span>}
               </div>
-              <div style={{ paddingTop: 10, borderTop: "1px solid var(--line)" }}>
+              <div>
                 <div className="eyebrow eyebrow-sm" style={{ marginBottom: 4 }}>{t("invoices.detail.sentDate")}</div>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>{invoice.sent_at ? fmtDateFull(invoice.sent_at) : t("invoices.detail.notSentYet")}</span>
               </div>
             </div>
-          </DetailSection>
+          </div>
 
+          {/* Payment info */}
           {invoice.payment_info && (
-            <DetailSection title={t("invoices.detail.paymentInfo")}>
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+              <div className="eyebrow eyebrow-sm" style={{ marginBottom: 10 }}>{t("invoices.detail.paymentInfo")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {parsePaymentLines(invoice.payment_info).map((line, i) =>
                   line.key ? (
@@ -247,10 +219,17 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
                   )
                 )}
               </div>
-            </DetailSection>
+            </div>
           )}
-        </div>
-      </div>
+
+          {/* Notes */}
+          {invoice.notes && (
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+              <div className="eyebrow eyebrow-sm" style={{ marginBottom: 6 }}>{t("invoices.detail.notesAndDetails")}</div>
+              <p style={{ fontSize: 11.5, color: "var(--mute)", lineHeight: 1.5, whiteSpace: "pre-wrap", margin: 0 }}>{invoice.notes}</p>
+            </div>
+          )}
+        </DetailSection>
     </div>
   );
 }

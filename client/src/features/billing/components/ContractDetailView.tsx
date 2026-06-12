@@ -436,7 +436,7 @@ export function ContractDetailView({
       )}
 
       {/* ── Header (white panel style) ── */}
-      <div className="relative z-10 shrink-0 neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", margin: "6px 6px 4px" }}>
+      <div className="relative z-10 shrink-0 neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", margin: "24px auto 16px", maxWidth: 1386, width: "calc(100% - 48px)" }}>
         {/* Mobile back button — hidden on desktop */}
         {toolbarSlot && (
           <div className="md:hidden px-5 pt-3 pb-1 flex items-center gap-1.5">
@@ -444,71 +444,72 @@ export function ContractDetailView({
           </div>
         )}
 
-        {/* Title */}
-        <div className="px-5 pt-5 pb-4">
-          {contract.account_name && (
-            <div className="eyebrow eyebrow-sm mb-1.5">{contract.account_name}</div>
-          )}
-          <h2 className="serif leading-tight" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.1 }}>
-            {contract.title || t("contracts.card.untitledContract")}
-          </h2>
-        </div>
-
-        {/* Action buttons row */}
-        {isAgencyUser && (
-          <div className="px-5 pb-4 flex flex-wrap gap-2">
-            {onNew && (
-              <button onClick={onNew} className="la-btn la-btn--soft gap-1.5">
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                {t("contracts.actions.new")}
-              </button>
+        {/* Title + action buttons — space-between row on desktop */}
+        <div className="px-5 pt-5 pb-4 flex flex-wrap items-start justify-between gap-4">
+          <div style={{ minWidth: 0 }}>
+            {contract.account_name && (
+              <div className="eyebrow eyebrow-sm mb-1.5">{contract.account_name}</div>
             )}
-            {contract.file_data && (
-              <button onClick={handleDownloadPdf} className="la-btn la-btn--soft gap-1.5">
-                <Download className="h-3.5 w-3.5 shrink-0" />
-                {t("contracts.actions.pdf")}
-              </button>
-            )}
-            <button onClick={handleCopyLink} className={`la-btn gap-1.5 ${linkCopied ? "la-btn--wine" : "la-btn--soft"}`}>
-              {linkCopied ? <Check className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--good)" }} /> : <Link className="h-3.5 w-3.5 shrink-0" />}
-              {linkCopied ? t("contracts.actions.copied") : t("contracts.actions.copyLink")}
-            </button>
-            {contract.status === "Draft" && (
-              <>
-                {canEdit && !isEditing && (
-                  <button onClick={handleStartEdit} className="la-btn la-btn--soft gap-1.5">
-                    <Pencil className="h-3.5 w-3.5 shrink-0" />
-                    {t("contracts.actions.edit")}
-                  </button>
-                )}
-                <button onClick={handleSend} disabled={sending} className="la-btn la-btn--wine gap-1.5 disabled:opacity-50">
-                  <Link className="h-3.5 w-3.5 shrink-0" />
-                  {sending ? t("contracts.actions.sending") : t("contracts.actions.markSent")}
-                </button>
-                {contract.contract_text && (
-                  <button onClick={() => setSwDialogOpen(v => !v)} className={`la-btn gap-1.5 ${swDialogOpen ? "la-btn--wine" : "la-btn--soft"}`}>
-                    <Send className="h-3.5 w-3.5 shrink-0" />
-                    {t("contracts.signwell.sendViaSignWell")}
-                  </button>
-                )}
-              </>
-            )}
-            {(contract.status === "Sent" || contract.status === "Viewed") && (
-              <button onClick={handleMarkSigned} disabled={markingSigned} className="la-btn la-btn--wine gap-1.5 disabled:opacity-50">
-                <FileSignature className="h-3.5 w-3.5 shrink-0" />
-                {markingSigned ? t("contracts.actions.updating") : t("contracts.actions.markSigned")}
-              </button>
-            )}
-            <button
-              onClick={handleDelete}
-              className="la-btn la-btn--soft gap-1.5"
-              style={deleteConfirm ? { borderColor: "var(--warn)", color: "var(--warn)" } : {}}
-            >
-              <Trash2 className="h-3.5 w-3.5 shrink-0" />
-              {deleteConfirm ? t("contracts.actions.confirm") : t("contracts.actions.delete")}
-            </button>
+            <h2 className="serif leading-tight" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.1 }}>
+              {contract.title || t("contracts.card.untitledContract")}
+            </h2>
           </div>
-        )}
+
+          {isAgencyUser && (
+            <div className="flex flex-wrap gap-2 shrink-0">
+              {onNew && (
+                <button onClick={onNew} className="la-btn la-btn--soft gap-1.5">
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  {t("contracts.actions.new")}
+                </button>
+              )}
+              {contract.file_data && (
+                <button onClick={handleDownloadPdf} className="la-btn la-btn--soft gap-1.5">
+                  <Download className="h-3.5 w-3.5 shrink-0" />
+                  {t("contracts.actions.pdf")}
+                </button>
+              )}
+              <button onClick={handleCopyLink} className={`la-btn gap-1.5 ${linkCopied ? "la-btn--wine" : "la-btn--soft"}`}>
+                {linkCopied ? <Check className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--good)" }} /> : <Link className="h-3.5 w-3.5 shrink-0" />}
+                {linkCopied ? t("contracts.actions.copied") : t("contracts.actions.copyLink")}
+              </button>
+              {contract.status === "Draft" && (
+                <>
+                  {canEdit && !isEditing && (
+                    <button onClick={handleStartEdit} className="la-btn la-btn--soft gap-1.5">
+                      <Pencil className="h-3.5 w-3.5 shrink-0" />
+                      {t("contracts.actions.edit")}
+                    </button>
+                  )}
+                  <button onClick={handleSend} disabled={sending} className="la-btn la-btn--wine gap-1.5 disabled:opacity-50">
+                    <Link className="h-3.5 w-3.5 shrink-0" />
+                    {sending ? t("contracts.actions.sending") : t("contracts.actions.markSent")}
+                  </button>
+                  {contract.contract_text && (
+                    <button onClick={() => setSwDialogOpen(v => !v)} className={`la-btn gap-1.5 ${swDialogOpen ? "la-btn--wine" : "la-btn--soft"}`}>
+                      <Send className="h-3.5 w-3.5 shrink-0" />
+                      {t("contracts.signwell.sendViaSignWell")}
+                    </button>
+                  )}
+                </>
+              )}
+              {(contract.status === "Sent" || contract.status === "Viewed") && (
+                <button onClick={handleMarkSigned} disabled={markingSigned} className="la-btn la-btn--wine gap-1.5 disabled:opacity-50">
+                  <FileSignature className="h-3.5 w-3.5 shrink-0" />
+                  {markingSigned ? t("contracts.actions.updating") : t("contracts.actions.markSigned")}
+                </button>
+              )}
+              <button
+                onClick={handleDelete}
+                className="la-btn la-btn--soft gap-1.5"
+                style={deleteConfirm ? { borderColor: "var(--warn)", color: "var(--warn)" } : {}}
+              >
+                <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                {deleteConfirm ? t("contracts.actions.confirm") : t("contracts.actions.delete")}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* ── SignWell inline dialog ── */}
         {swDialogOpen && (
@@ -586,8 +587,8 @@ export function ContractDetailView({
       </div>
 
       {/* ── Two-column content area ── */}
-      <div className="relative z-10 flex-1 min-h-0 px-[6px] pb-[6px] overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[6px] max-w-[1386px] w-full mr-auto">
+      <div className="relative z-10 flex-1 min-h-0 px-[24px] pb-[30px] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[16px] max-w-[1386px] w-full mx-auto md:min-h-full">
 
           {/* ── LEFT column: full-height contract widget ── */}
           <div
@@ -725,7 +726,7 @@ export function ContractDetailView({
           <div className={cn("flex flex-col gap-[3px]", mobileTab === "terms" ? "hidden md:flex" : "flex")}>
 
             {/* Single inset panel: Status + Dates + Deal Structure + Attach PDF */}
-            <div className="neu-raised shrink-0" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
+            <div className="neu-inset flex-1" style={{ borderRadius: "var(--r-card)", background: "var(--bg)" }}>
 
               {/* ── Status section ── */}
               <div className="p-4">

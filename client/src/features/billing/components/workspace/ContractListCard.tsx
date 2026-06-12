@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ContractRow } from "../../types";
 import { formatCurrency } from "../../types";
@@ -15,8 +15,8 @@ export function deriveContractValue(contract: ContractRow, t: (k: string, o?: an
   return null;
 }
 
-export function ContractListCard({ contract, isSelected, onClick }: {
-  contract: ContractRow; isSelected: boolean; onClick: () => void;
+export function ContractListCard({ contract, isSelected, isChecked, onClick, onCheck }: {
+  contract: ContractRow; isSelected: boolean; isChecked?: boolean; onClick: () => void; onCheck?: (e: React.MouseEvent) => void;
 }) {
   const { t } = useTranslation("billing");
   const status = contract.status || "Draft";
@@ -31,48 +31,57 @@ export function ContractListCard({ contract, isSelected, onClick }: {
         ? t("contracts.card.until", { date: fmtShort(contract.end_date) })
         : null;
 
-  const stampDate = contract.signed_at || contract.created_at;
   const value = deriveContractValue(contract, t);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.transform = "translateY(-1px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
-      className="w-full text-left flex items-center gap-4 cursor-pointer"
+      onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "var(--card)"; }}
+      onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+      className="w-full text-left flex items-center gap-3 cursor-pointer"
       style={{
-        padding: "15px 18px", borderRadius: "var(--r-card)", background: "var(--card)",
-        boxShadow: isSelected ? "var(--sh-raised-medium), 0 0 0 1.5px var(--wine)" : "var(--sh-raised-crisp)",
-        transition: "box-shadow 130ms, transform 130ms",
+        padding: "12px 16px", borderRadius: "var(--r-card)",
+        background: isSelected ? "var(--card)" : "transparent",
+        boxShadow: isSelected ? "inset 3px 0 0 var(--wine), var(--sh-raised-crisp)" : "none",
+        transition: "background 120ms, box-shadow 120ms",
       }}
       data-testid="contract-card"
     >
-      <span className="shrink-0 flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: "var(--r-surface)", background: colors.bg, color: colors.text }}>
-        <FileText className="h-[18px] w-[18px]" />
+      <span
+        className="shrink-0 flex items-center justify-center"
+        onClick={onCheck ? (e) => { e.stopPropagation(); onCheck(e); } : undefined}
+        style={{
+          width: 36, height: 36, borderRadius: "var(--r-surface)",
+          background: isChecked ? "var(--wine)" : colors.bg,
+          color: isChecked ? "var(--paper)" : colors.text,
+          cursor: onCheck ? "pointer" : undefined,
+          transition: "background 120ms",
+        }}
+      >
+        {isChecked ? <Check className="h-[14px] w-[14px]" /> : <FileText className="h-[15px] w-[15px]" />}
       </span>
 
-      <div className="flex-1 min-w-0">
-        <div className="truncate" style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>
-          {contract.title || t("contracts.card.untitledContract")}
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="truncate" style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
+            {contract.title || t("contracts.card.untitledContract")}
+          </div>
+          <div className="row" style={{ gap: 6, marginTop: 3 }}>
+            <span className="truncate" style={{ fontSize: 11.5, color: "var(--mute)" }}>
+              {contract.account_name || t("contracts.card.noAccount")}
+            </span>
+            {termLabel && (
+              <>
+                <span className="shrink-0" style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--mute-2)" }} />
+                <span className="shrink-0" style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>{termLabel}</span>
+              </>
+            )}
+          </div>
         </div>
-        <div className="row" style={{ gap: 8, marginTop: 4 }}>
-          <span className="truncate" style={{ fontSize: 12, color: "var(--mute)" }}>
-            {contract.account_name || t("contracts.card.noAccount")}
-          </span>
-          {termLabel && (
-            <>
-              <span className="shrink-0" style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--mute-2)" }} />
-              <span className="shrink-0" style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute-2)", whiteSpace: "nowrap" }}>{termLabel}</span>
-            </>
-          )}
-        </div>
-      </div>
 
-      <div className="shrink-0 flex flex-col items-end" style={{ gap: 7 }}>
-        {value && <span className="serif" style={{ fontSize: 22, color: "var(--ink)", lineHeight: 1 }}>{value}</span>}
-        <div className="row" style={{ gap: 10 }}>
-          {stampDate && <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>{fmtShort(stampDate)}</span>}
+        <div className="shrink-0 flex flex-col items-end" style={{ gap: 5 }}>
+          {value && <span className="serif" style={{ fontSize: 19, color: "var(--ink)", lineHeight: 1 }}>{value}</span>}
           <StatusPill kind="contract" status={status} label={t(`contracts.statusLabels.${status}`, status)} />
         </div>
       </div>
