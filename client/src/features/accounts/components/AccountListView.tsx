@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { buildEntityRows } from "@/components/crm/entityList";
 import { type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
@@ -169,74 +170,46 @@ export function AccountListView({
 
   // Build flat grouped list
   const flatItems = useMemo((): VirtualListItem[] => {
-    let filtered = accounts;
-
-    // Text search
-    if (listSearch.trim()) {
-      const q = listSearch.toLowerCase();
-      filtered = filtered.filter((a) =>
-        String(a.name || "").toLowerCase().includes(q) ||
-        String(a.owner_email || "").toLowerCase().includes(q) ||
-        String(a.business_niche || "").toLowerCase().includes(q) ||
-        String(a.type || "").toLowerCase().includes(q)
-      );
-    }
-
-    // Status filter
-    if (filterStatus.length > 0) {
-      filtered = filtered.filter((a) => filterStatus.includes(String(a.status || "")));
-    }
-
-    // Sort
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "name_asc":  return String(a.name || "").localeCompare(String(b.name || ""));
-        case "name_desc": return String(b.name || "").localeCompare(String(a.name || ""));
-        default: { // recent
-          const da = a.updated_at || a.created_at || "";
-          const db = b.updated_at || b.created_at || "";
-          return db.localeCompare(da);
+    const q = listSearch.trim().toLowerCase();
+    return buildEntityRows<AccountRow, VirtualListItem>({
+      items: accounts,
+      predicate: (a) => {
+        if (q &&
+          !(String(a.name || "").toLowerCase().includes(q) ||
+            String(a.owner_email || "").toLowerCase().includes(q) ||
+            String(a.business_niche || "").toLowerCase().includes(q) ||
+            String(a.type || "").toLowerCase().includes(q))
+        ) return false;
+        if (filterStatus.length > 0 && !filterStatus.includes(String(a.status || ""))) return false;
+        return true;
+      },
+      comparator: (a, b) => {
+        switch (sortBy) {
+          case "name_asc":  return String(a.name || "").localeCompare(String(b.name || ""));
+          case "name_desc": return String(b.name || "").localeCompare(String(a.name || ""));
+          default: { // recent
+            const da = a.updated_at || a.created_at || "";
+            const db = b.updated_at || b.created_at || "";
+            return db.localeCompare(da);
+          }
         }
-      }
-    });
-
-    // No grouping
-    if (groupBy === "none") {
-      return filtered.map((a) => ({ kind: "account" as const, account: a }));
-    }
-
-    // Group
-    const buckets = new Map<string, AccountRow[]>();
-    filtered.forEach((a) => {
-      let key: string;
-      if (groupBy === "status") {
-        key = String(a.status || "Unknown");
-      } else {
-        key = String(a.type || "Unknown");
-      }
-      if (!buckets.has(key)) buckets.set(key, []);
-      buckets.get(key)!.push(a);
-    });
-
-    let orderedKeys =
-      groupBy === "status"
-        ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k))
-            .concat(Array.from(buckets.keys()).filter((k) => !STATUS_GROUP_ORDER.includes(k)))
-        : Array.from(buckets.keys()).sort();
-    if (groupDirection === "desc") orderedKeys = orderedKeys.slice().reverse();
-
-    const result: VirtualListItem[] = [];
-    orderedKeys.forEach((key) => {
-      const group = buckets.get(key);
-      if (!group || group.length === 0) return;
+      },
+      groupKeyOf: groupBy === "none"
+        ? null
+        : (a) => groupBy === "status" ? String(a.status || "Unknown") : String(a.type || "Unknown"),
+      groupDirection,
+      orderGroups: groupBy === "status"
+        ? (keys) => STATUS_GROUP_ORDER.filter((k) => keys.includes(k))
+            .concat(keys.filter((k) => !STATUS_GROUP_ORDER.includes(k)))
+        : undefined,
       // Translate status group headers; type keys are data values — displayed as-is
-      const label = groupBy === "status"
-        ? t(STATUS_I18N_KEY[key] ?? key)
-        : key;
-      result.push({ kind: "header", label, count: group.length });
-      group.forEach((a) => result.push({ kind: "account", account: a }));
+      makeHeader: (key, count) => ({
+        kind: "header",
+        label: groupBy === "status" ? t(STATUS_I18N_KEY[key] ?? key) : key,
+        count,
+      }),
+      makeItem: (a) => ({ kind: "account", account: a }),
     });
-    return result;
   }, [accounts, listSearch, filterStatus, sortBy, groupBy, groupDirection, t]);
 
   const totalAccounts = flatItems.filter((i) => i.kind === "account").length;
