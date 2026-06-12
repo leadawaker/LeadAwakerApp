@@ -116,11 +116,13 @@ DNC, bump-progress, booking, AI-insights, assignment sections + ~30 state vars/h
 
 ## What was NOT done (deferred)
 
+> Update (2026-06-12): Sessions C and D are COMPLETE — see `session-c-summary.md`
+> (LeadDetailPanel 1,279 → 516 lines: 5 state hooks + 8 section components) and the
+> session D summary (Leads/Accounts row pipelines migrated onto `buildEntityRows`,
+> commits `43ab2829`/`56c6cfc2`/`27f675ee`). Only the dead storage methods remain.
+
 | Deferred item | Spec |
 |---|---|
-| LeadDetailPanel full decomposition (<400 lines via state hooks) | `session-c-lead-panel.md` |
-| Leads list views (LeadsCardView, LeadsTable, LeadsInlineTable) | `session-d-list-views.md` |
-| Accounts list view (`AccountListView.tsx`) | `session-d-list-views.md` |
 | Dead storage methods (6 flagged in Session A) | `session-a-summary.md` |
 
 > Update (2026-06-11, post-merge review): the `reorderSubtasks` N+1 was subsequently FIXED by the
