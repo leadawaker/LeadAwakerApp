@@ -31,7 +31,8 @@ export function registerAuthAndAdminRoutes(app: Express): void {
       });
       res.json({ message: `Test email sent to ${to}` });
     } catch (err: any) {
-      res.status(500).json({ message: `Email failed: ${err.message}` });
+      console.error("[auth] test email failed:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -59,7 +60,8 @@ export function registerAuthAndAdminRoutes(app: Express): void {
       await pool.query("SELECT 1");
       res.json({ status: "healthy", database: "connected" });
     } catch (err: any) {
-      res.status(500).json({ status: "error", database: "disconnected", error: err.message });
+      console.error("[auth] health check DB error:", err);
+      res.status(500).json({ status: "error", database: "disconnected" });
     }
   });
 }

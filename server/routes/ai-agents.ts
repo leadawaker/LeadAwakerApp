@@ -1917,7 +1917,7 @@ export function registerAiAgentsRoutes(app: Express): void {
       if (!res.headersSent) {
         return res.status(500).json({ message: "Failed to send message" });
       }
-      res.write(`data: ${JSON.stringify({ type: "error", message: err.message || "Internal error" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "error", message: "Internal error" })}\n\n`);
       res.write(`data: ${JSON.stringify({ type: "done", cliSessionId: null, subAgentBlocks: [], usage: { inputTokens: 0, outputTokens: 0, costUsd: 0 } })}\n\n`);
       res.end();
     }
@@ -2085,7 +2085,7 @@ export function registerAiAgentsRoutes(app: Express): void {
       if (!res.headersSent) {
         return res.status(500).json({ message: "Failed to execute skill" });
       }
-      res.write(`data: ${JSON.stringify({ type: "error", message: err.message || "Skill execution failed" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "error", message: "Skill execution failed" })}\n\n`);
       res.write(`data: ${JSON.stringify({ type: "done", subAgentBlocks: [] })}\n\n`);
       res.end();
     }

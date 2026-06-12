@@ -524,8 +524,8 @@ export function registerAccountsRoutes(app: Express): void {
         const r = await startCompanyEnrichment(prospectId);
         results.company = r.started ? "started" : "failed";
       } catch (err: any) {
-        console.error("[Enrich] Company enrichment error:", err.message);
-        results.company = `error: ${err.message}`;
+        console.error("[Enrich] Company enrichment error:", err);
+        results.company = "error";
       }
     } else if (type === "both") {
       // Legacy path: LinkedIn then Python website enricher
@@ -533,8 +533,8 @@ export function registerAccountsRoutes(app: Express): void {
         const { enrichLinkedIn } = await import("../linkedinEnricher");
         results.linkedin = await enrichLinkedIn(prospectId, slot);
       } catch (err: any) {
-        console.error("[Enrich] LinkedIn error:", err.message);
-        results.linkedin = { error: err.message };
+        console.error("[Enrich] LinkedIn error:", err);
+        results.linkedin = { error: "enrichment failed" };
       }
       await spawnWebsiteEnricher();
     } else if (type === "website") {
@@ -544,8 +544,8 @@ export function registerAccountsRoutes(app: Express): void {
         const { enrichLinkedIn } = await import("../linkedinEnricher");
         results.linkedin = await enrichLinkedIn(prospectId, slot);
       } catch (err: any) {
-        console.error("[Enrich] LinkedIn error:", err.message);
-        results.linkedin = { error: err.message };
+        console.error("[Enrich] LinkedIn error:", err);
+        results.linkedin = { error: "enrichment failed" };
       }
     }
 
@@ -1103,7 +1103,7 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
       res.json(safeUser);
     } catch (err: any) {
       console.error("Error updating user:", err);
-      res.status(500).json({ message: "Failed to update user", error: err.message });
+      res.status(500).json({ message: "Failed to update user" });
     }
   });
 
@@ -1201,7 +1201,7 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
       });
     } catch (err: any) {
       console.error("Error creating invite:", err);
-      res.status(500).json({ message: "Failed to create invite", error: err.message });
+      res.status(500).json({ message: "Failed to create invite" });
     }
   });
 
@@ -1262,7 +1262,7 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
       });
     } catch (err: any) {
       console.error("Error resending invite:", err);
-      res.status(500).json({ message: "Failed to resend invite", error: err.message });
+      res.status(500).json({ message: "Failed to resend invite" });
     }
   });
 
@@ -1304,7 +1304,7 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
       });
     } catch (err: any) {
       console.error("Error revoking invite:", err);
-      res.status(500).json({ message: "Failed to revoke invite", error: err.message });
+      res.status(500).json({ message: "Failed to revoke invite" });
     }
   });
 }
