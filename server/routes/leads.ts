@@ -370,8 +370,8 @@ export function registerLeadsRoutes(app: Express): void {
         leads: created,
       });
     } catch (err: any) {
-      console.error("CSV import error:", err);
-      res.status(500).json({ message: err.message || "CSV import failed" });
+      console.error("[leads] CSV import error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -418,8 +418,8 @@ export function registerLeadsRoutes(app: Express): void {
         leads: toDbKeysArray(updated as any, leads),
       });
     } catch (err: any) {
-      console.error("Bulk update error:", err);
-      res.status(500).json({ message: err.message || "Bulk update failed" });
+      console.error("[leads] bulk update error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -453,8 +453,8 @@ export function registerLeadsRoutes(app: Express): void {
         message: `Applied ${tagIds.length} tag(s) to ${leadIds.length} lead(s)`,
       });
     } catch (err: any) {
-      console.error("Bulk tag error:", err);
-      res.status(500).json({ message: err.message || "Bulk tag failed" });
+      console.error("[leads] bulk tag error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -569,7 +569,8 @@ export function registerLeadsRoutes(app: Express): void {
       const row = await storage.createLeadTag({ leadsId: leadId, tagsId: Number(tagId) });
       res.status(201).json(row);
     } catch (err: any) {
-      res.status(500).json({ message: err.message || "Failed to add tag" });
+      console.error("[leads] add tag error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -582,7 +583,8 @@ export function registerLeadsRoutes(app: Express): void {
       if (!deleted) return res.status(404).json({ message: "Tag not found on this lead" });
       res.json({ success: true });
     } catch (err: any) {
-      res.status(500).json({ message: err.message || "Failed to remove tag" });
+      console.error("[leads] remove tag error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -724,7 +726,8 @@ export function registerLeadsRoutes(app: Express): void {
 
       res.json(history);
     } catch (err: any) {
-      res.status(500).json({ message: "Failed to fetch score history", error: err.message });
+      console.error("[leads] score history error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   }));
 

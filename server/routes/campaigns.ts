@@ -491,8 +491,8 @@ export function registerCampaignsRoutes(app: Express): void {
         leads_needed_for_95pct: leads_needed,
       });
     } catch (err: any) {
-      console.error("ab-stats error:", err);
-      res.status(500).json({ error: err.message });
+      console.error("[campaigns] ab-stats error:", err);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
@@ -792,7 +792,7 @@ export function registerCampaignsRoutes(app: Express): void {
       res.json(trends);
     } catch (err: any) {
       console.error("Error fetching dashboard trends:", err);
-      res.status(500).json({ message: "Failed to fetch dashboard trends", error: err.message });
+      res.status(500).json({ message: "Failed to fetch dashboard trends" });
     }
   });
 
