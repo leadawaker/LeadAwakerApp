@@ -31,12 +31,11 @@ CRM routes are registered in `pages/app.tsx`; top-level routes in `App.tsx`. **E
 | Docs | `pages/Docs.tsx` | In-app Operator Manual + Client Guide |
 | Lead Detail (standalone) | `pages/LeadDetail.tsx` | Full-page lead view |
 | Prospect Detail (standalone) | `pages/ProspectDetail.tsx` | Full-page prospect view |
-| Invoices (redirect) | `pages/Invoices.tsx` | Redirects to billing |
 | Opportunities (redirect) | `pages/Opportunities.tsx` | Redirects to leads |
 | Accounts (test) | `pages/Accounts.tsx` | Mounted at `/test-table` only |
 | Accept Invite | `pages/AcceptInvite.tsx` | Invite acceptance flow |
 
-> Deleted — do not look for: `pages/Conversations.tsx`, `pages/AppLeads.tsx`, `pages/Tags.tsx`, `pages/PromptLibrary.tsx`, `pages/SetupProfile.tsx`, `pages/Billing.tsx`, `components/crm/LeadsTable.tsx`, `lib/pwa.ts`, `server/routes.ts`, `client/src/migration/`.
+> Deleted — do not look for: `pages/Conversations.tsx`, `pages/AppLeads.tsx`, `pages/Tags.tsx`, `pages/PromptLibrary.tsx`, `pages/SetupProfile.tsx`, `pages/Billing.tsx`, `pages/Invoices.tsx`, `components/crm/LeadsTable.tsx`, `components/crm/CampaignPerformanceCards.tsx`, `components/ui/chart.tsx`, `lib/pwa.ts`, `server/routes.ts`, `client/src/migration/`, `features/invoices/` (entire dir), `features/billing/pages/{InvoicesPage,ContractsPage,ExpensesPage}.tsx`, `features/billing/components/{BillingListView,InvoiceCard,ContractCard}.tsx`.
 
 ### Public / Pre-Login Pages
 
@@ -73,13 +72,12 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | AgendaWidget | `AgendaWidget.tsx` | Calendar upcoming-items widget |
 | ActivityFeed | `ActivityFeed.tsx` | Timeline feed for detail panels |
 | BookedCallsKpi | `BookedCallsKpi.tsx` | KPI card component |
-| CampaignPerformanceCards | `CampaignPerformanceCards.tsx` | Dashboard metric cards |
 | DateRangeFilter | `DateRangeFilter.tsx` | Shared date range filter |
 | SearchModal | `SearchModal.tsx` | Global search modal |
 | DbStatusIndicator | `DbStatusIndicator.tsx` | 34px circle + status dot badge |
 | ConnectionBanner | `ConnectionBanner.tsx` | DB connectivity indicator |
 | DataEmptyState | `DataEmptyState.tsx` | Shared empty-state placeholder |
-| entityList/ | `primitives/` sibling `entityList/` | Shared list infra: `buildEntityRows()`/`groupItemsToMap()` (stateless filter→sort→group→flatten helpers used by Tags/Prompts/Prospects/Billing list views) + `useEntityList`/`EntityListView` (state-owning hook + card-list shell, available for future use) |
+| entityList/ | `primitives/` sibling `entityList/` | Shared list infra: `buildEntityRows()`/`groupItemsToMap()` (stateless filter→sort→group→flatten helpers used by Tags/Prompts/Prospects/Billing/Leads/Accounts list views) + `useEntityList`/`EntityListView` (state-owning hook + card-list shell, available for future use) |
 | ApiErrorFallback | `ApiErrorFallback.tsx` | API error display |
 | ErrorBoundary | `ErrorBoundary.tsx` | React error boundary |
 | ChangePasswordDialog | `ChangePasswordDialog.tsx` | Password change form |
@@ -170,17 +168,14 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | Invoice/Contract/ExpenseDetailPanel | `components/workspace/*DetailPanel.tsx` | Inline detail. Invoice = full reskin; Contract/Expense wrap the (already-wine) `*DetailView` full-height |
 | BillingStatCards / CompactBillingCard | `components/workspace/*.tsx` | Per-tab stat chips (BStat port) · compact-rail tile |
 | workspace atoms/formAtoms/adapters | `components/workspace/{atoms,formAtoms,adapters}.ts(x)` | Prototype primitive ports (StatusPill/StatCard/DedBadge…, F* form atoms, status/expense grouping helpers) + `useBillingEdit.ts` |
-| BillingListView | `components/BillingListView.tsx` | **LEGACY desktop master list** — replaced by BillingWorkspace; now only referenced by dead `{Invoices,Contracts,Expenses}Page.tsx` (unrouted). Pending deletion after verification |
 | ContractsInlineTable | `components/ContractsInlineTable.tsx` | Contracts table |
 | ContractDetailView | `components/ContractDetailView.tsx` | Contract detail panel |
 | ContractCreatePanel | `components/ContractCreatePanel.tsx` | Contract creation form (reference panel implementation) |
 | ContractUploadDialog | `components/ContractUploadDialog.tsx` | Contract file upload |
-| ContractCard | `components/ContractCard.tsx` | Contract card in list |
 | InvoicesInlineTable | `components/InvoicesInlineTable.tsx` | Invoices table |
 | InvoiceDetailView | `components/InvoiceDetailView.tsx` | Invoice detail panel |
 | InvoiceCreatePanel | `components/InvoiceCreatePanel.tsx` | Invoice creation form |
 | InvoiceCreateDialog | `components/InvoiceCreateDialog.tsx` | Invoice creation dialog |
-| InvoiceCard | `components/InvoiceCard.tsx` | Invoice card in list |
 | ExpensesView | `components/ExpensesView.tsx` | Expenses main view |
 | ExpensesListView | `components/ExpensesListView.tsx` | Expenses list |
 | ExpenseDetailView | `components/ExpenseDetailView.tsx` | Expense detail panel |
