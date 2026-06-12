@@ -2,7 +2,7 @@
 
 const SCENARIOS = [
   { label: "Conservative", response: 0.50, qualified: 0.30, close: 0.20 },
-  { label: "Expected",     response: 0.70, qualified: 0.50, close: 0.30 },
+  { label: "Expected",     response: 0.65, qualified: 0.25, close: 0.30 },
   { label: "Optimistic",   response: 0.80, qualified: 0.60, close: 0.35 },
 ];
 
