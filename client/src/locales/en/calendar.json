@@ -202,6 +202,8 @@
       "aiAgent": "AI Agent",
       "googleMeet": "Google Meet",
       "phone": "Phone",
+      "email": "Email",
+      "actions": "Appointment actions",
       "reschedule": "Reschedule",
       "cancelCall": "Cancel call",
       "close": "Close"
@@ -210,6 +212,10 @@
       "minimize": "Minimize panel",
       "hide": "Hide panel",
       "show": "Show panel"
+    },
+    "weekends": {
+      "hide": "Hide weekends",
+      "show": "Show weekends"
     }
   }
 }

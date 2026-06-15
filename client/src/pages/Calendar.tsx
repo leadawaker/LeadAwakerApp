@@ -99,6 +99,7 @@ export default function CalendarPage() {
   const [apptFilterStatuses, setApptFilterStatuses] = useState<ApptFilterStatus[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [hideWeekends, setHideWeekends] = usePersistedState<boolean>("calendar-hide-weekends", false);
 
   const [recentMessages, setRecentMessages] = useState<Interaction[]>([]);
   const [recentMessagesLoading, setRecentMessagesLoading] = useState(false);
@@ -186,7 +187,7 @@ export default function CalendarPage() {
     const year = month.getFullYear();
     const m = month.getMonth();
     const first = new Date(year, m, 1);
-    const startDow = first.getDay();
+    const startDow = (first.getDay() + 6) % 7; // Monday-first grid
     const gridStart = new Date(year, m, 1 - startDow);
     const out: { date: Date; count: number }[] = [];
     for (let i = 0; i < 42; i++) {
@@ -202,7 +203,8 @@ export default function CalendarPage() {
   const weekDays = useMemo(() => {
     const startOfWeek = new Date(anchorDate);
     const day = startOfWeek.getDay();
-    startOfWeek.setDate(startOfWeek.getDate() - day);
+    const diff = (day + 6) % 7; // Monday-first week
+    startOfWeek.setDate(startOfWeek.getDate() - diff);
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(startOfWeek);
       d.setDate(startOfWeek.getDate() + i);
@@ -284,13 +286,19 @@ export default function CalendarPage() {
     }
   }, [sortedAppts, apptGroupBy, apptGroupDirection, t]);
 
-  // Auto-select first upcoming appointment when nothing is selected
+  // On first load: select the next upcoming call within the displayed week only.
+  // If no upcoming call falls in this week, leave nothing selected.
+  const didInitSelectRef = useRef(false);
   useEffect(() => {
-    if (selectedBooking || sortedAppts.length === 0) return;
-    const now = new Date(); now.setHours(0, 0, 0, 0);
-    const firstUpcoming = sortedAppts.find((a) => new Date(a.raw_booked_call_date) >= now);
-    setSelectedBooking(firstUpcoming ?? sortedAppts[0]);
-  }, [sortedAppts]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (didInitSelectRef.current || sortedAppts.length === 0) return;
+    didInitSelectRef.current = true;
+    const weekKeys = new Set(weekDays.map(dateKeyOf));
+    const now = new Date();
+    const upcoming = sortedAppts
+      .filter((a) => weekKeys.has(a.date) && new Date(a.raw_booked_call_date) >= now)
+      .sort((a, b) => new Date(a.raw_booked_call_date).getTime() - new Date(b.raw_booked_call_date).getTime());
+    setSelectedBooking(upcoming[0] ?? null);
+  }, [sortedAppts, weekDays]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Breadcrumb
   const { setCrumb } = useBreadcrumb();
@@ -350,6 +358,25 @@ export default function CalendarPage() {
       ? `${t(`months.short.${MONTH_KEYS[start.getMonth()]}`)} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
       : `${t(`months.short.${MONTH_KEYS[start.getMonth()]}`)} ${start.getDate()} - ${t(`months.short.${MONTH_KEYS[end.getMonth()]}`)} ${end.getDate()}, ${end.getFullYear()}`;
   }, [viewMode, anchorDate, weekDays, t]);
+
+  // Week label + week-only nav + absolute month selector (used by the ultra-wide split)
+  const weekLabel = useMemo(() => {
+    const start = weekDays[0], end = weekDays[6];
+    const sameMonth = start.getMonth() === end.getMonth();
+    return sameMonth
+      ? `${t(`months.short.${MONTH_KEYS[start.getMonth()]}`)} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
+      : `${t(`months.short.${MONTH_KEYS[start.getMonth()]}`)} ${start.getDate()} - ${t(`months.short.${MONTH_KEYS[end.getMonth()]}`)} ${end.getDate()}, ${end.getFullYear()}`;
+  }, [weekDays, t]);
+
+  const navigateWeek = (direction: number) => {
+    const next = new Date(anchorDate);
+    next.setDate(anchorDate.getDate() + direction * 7);
+    setAnchorDate(next);
+  };
+
+  const selectMonth = (monthIndex: number) => {
+    setAnchorDate(new Date(anchorDate.getFullYear(), monthIndex, 1));
+  };
 
   // Reschedule a booking (PATCH booked_call_date + re_scheduled_count)
   const handleReschedule = useCallback(async (apptId: number, newDate: Date) => {
@@ -460,9 +487,14 @@ export default function CalendarPage() {
           month={month}
           todayStr={todayStr}
           viewLabel={viewLabel}
+          weekLabel={weekLabel}
           viewMode={viewMode}
           setViewMode={setViewMode}
           onNavigate={navigate}
+          onNavigateWeek={navigateWeek}
+          onSelectMonth={selectMonth}
+          hideWeekends={hideWeekends}
+          setHideWeekends={setHideWeekends}
           onToday={() => setAnchorDate(new Date())}
           selectedBooking={selectedBooking}
           onSelectBooking={setSelectedBooking}

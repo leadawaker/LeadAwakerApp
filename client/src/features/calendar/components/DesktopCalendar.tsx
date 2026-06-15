@@ -4,15 +4,22 @@
 import { useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
 import type { TFunction } from "i18next";
 import {
-  ChevronLeft, ChevronRight, Maximize2, Clock, Video, Phone, Check,
-  Calendar as CalIcon, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
+  ChevronLeft, ChevronRight, Clock, Video, Phone, Mail, Check,
+  Calendar as CalIcon, CalendarDays, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, X, MoreVertical, RefreshCw, XCircle,
   Info, AlertCircle, Target, ShieldQuestion, ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
+import { usePersistedState } from "@/hooks/usePersistedState";
+import { useSession } from "@/hooks/useSession";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import {
+  computeMiniMsgMeta, groupMiniMessagesByThread, isAiMsg,
+  MiniLeadRunWrapper, MiniAgentRunWrapper, MiniBotRunWrapper,
+} from "@/features/leads/components/cardView/MiniChat";
+import type { MiniMsgMeta } from "@/features/leads/components/cardView/types";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -27,7 +34,10 @@ import {
 import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
 
-const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]; // indexed by Date.getDay()
+const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday-first column order (getDay values)
+const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const isWeekendDay = (d: Date) => d.getDay() === 0 || d.getDay() === 6;
 
 type ApptSortBy = "time_asc" | "time_desc" | "name_asc" | "name_desc" | "campaign_asc" | "campaign_desc" | "status_asc" | "status_desc";
 type ApptGroupBy = "date" | "campaign" | "status" | "none";
@@ -88,9 +98,14 @@ export interface DesktopCalendarProps {
   month: Date;
   todayStr: string;
   viewLabel: string;
+  weekLabel: string;
   viewMode: "week" | "month";
   setViewMode: (v: "week" | "month") => void;
   onNavigate: (dir: number) => void;
+  onNavigateWeek: (dir: number) => void;
+  onSelectMonth: (monthIndex: number) => void;
+  hideWeekends: boolean;
+  setHideWeekends: (v: boolean) => void;
   onToday: () => void;
   selectedBooking: Appointment | null;
   onSelectBooking: (a: Appointment | null) => void;
@@ -117,6 +132,8 @@ export interface DesktopCalendarProps {
   leftPanelState?: ListPanelState;
   onCyclePanel?: () => void;
   showClose?: boolean;
+  // ultra-wide (>= 1700px): week + month shown side by side, toggle hidden
+  ultra?: boolean;
 }
 
 // Toolbar dropdown trigger (wine soft icon button)
@@ -129,6 +146,9 @@ function toolBtnClass(active: boolean) {
 // ════════════════════════════════════════════════════════════════════════════
 function TopToolbar(p: DesktopCalendarProps) {
   const { t } = p;
+  const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
+  const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
+  const activeMonth = p.month.getMonth();
 
   return (
     <div style={{ height: 60, flexShrink: 0, padding: "0 14px", background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18 }}>
@@ -136,13 +156,15 @@ function TopToolbar(p: DesktopCalendarProps) {
 
       {/* Week / Month + collapse button immediately after */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div className="la-seg">
-          {(["week", "month"] as const).map((k) => (
-            <button key={k} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
-              {t(`views.${k}`)}
-            </button>
-          ))}
-        </div>
+        {!p.ultra && (
+          <div className="la-seg">
+            {(["week", "month"] as const).map((k) => (
+              <button key={k} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
+                {t(`views.${k}`)}
+              </button>
+            ))}
+          </div>
+        )}
         {p.onCyclePanel && (
           <button
             className="la-btn la-btn--soft la-btn--icon"
@@ -152,12 +174,84 @@ function TopToolbar(p: DesktopCalendarProps) {
             {p.leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
         )}
+        {/* Meetings-this-week KPI — moves to the topbar on ultra-wide */}
+        {p.ultra && (
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 4 }}>
+            <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+            <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1 }} />
 
+      {/* Month tags — top-right, ultra-wide only; active month is an inset tag */}
+      {p.ultra && (
+        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
+          {MONTH_KEYS.map((mk, i) => {
+            const on = i === activeMonth;
+            return (
+              <button
+                key={mk}
+                onClick={() => p.onSelectMonth(i)}
+                style={{
+                  ...MONO, fontSize: 8.5, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700,
+                  padding: "4px 6px", borderRadius: "var(--r-button)", cursor: "pointer", whiteSpace: "nowrap",
+                  background: on ? "var(--bg)" : "transparent",
+                  boxShadow: on ? "var(--sh-inset-crisp)" : "none",
+                  border: on ? "1px solid transparent" : "1px solid var(--line)",
+                  color: on ? "var(--wine)" : "var(--mute-2)",
+                }}
+              >
+                {t(`months.short.${mk}`)}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Search / Filter / Sort / Group / New — top-right */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {/* Appointment actions (reschedule / cancel) — only with a selection */}
+        {p.selectedBooking && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="la-btn la-btn--soft la-btn--icon" title={t("design.detail.actions")}><MoreVertical className="h-4 w-4" /></button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-[12px] p-0">
+                <ReschedulePopover
+                  ev={p.selectedBooking}
+                  onReschedule={p.onReschedule}
+                  t={t}
+                  trigger={
+                    <button className="flex items-center gap-2 w-full px-2 py-1.5 text-[12px] text-left hover:bg-muted/50 rounded">
+                      <RefreshCw className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      {t("design.detail.reschedule")}
+                    </button>
+                  }
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => p.selectedBooking && p.onCancelCall(p.selectedBooking.id)}
+                className="text-[12px] flex items-center gap-2 text-destructive focus:text-destructive"
+              >
+                <XCircle className="h-3.5 w-3.5 shrink-0" />
+                {t("design.detail.cancelCall")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Hide / show weekends — affects both week and month views */}
+        <button
+          className={toolBtnClass(p.hideWeekends)}
+          onClick={() => p.setHideWeekends(!p.hideWeekends)}
+          title={p.hideWeekends ? t("design.weekends.show") : t("design.weekends.hide")}
+        >
+          <CalendarDays className="h-4 w-4" />
+        </button>
+
         {/* Search */}
         <div style={{ position: "relative" }}>
           <input
@@ -365,6 +459,18 @@ function CenterHeader(p: DesktopCalendarProps) {
   const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
   const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
 
+  // Ultra-wide: date nav sits next to Today (left), week-only stepping, KPI lives in the topbar.
+  if (p.ultra) {
+    return (
+      <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 12 }}>
+        <button onClick={p.onToday} className="la-btn la-btn--soft">{t("navigation.today")}</button>
+        <button onClick={() => p.onNavigateWeek(-1)} style={NAV_BTN} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></button>
+        <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{p.weekLabel}</span>
+        <button onClick={() => p.onNavigateWeek(1)} style={NAV_BTN} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
       <button onClick={p.onToday} className="la-btn la-btn--soft" style={{ position: "absolute", left: 14 }}>{t("navigation.today")}</button>
@@ -380,13 +486,13 @@ function CenterHeader(p: DesktopCalendarProps) {
   );
 }
 
-function WeekEvent({ ev, dayIdx, active, onClick, t }: { ev: Appointment; dayIdx: number; active: boolean; onClick: (e: React.MouseEvent) => void; t: TFunction }) {
+function WeekEvent({ ev, dayIdx, nCols, active, onClick, t }: { ev: Appointment; dayIdx: number; nCols: number; active: boolean; onClick: (e: React.MouseEvent) => void; t: TFunction }) {
   const sm = statusMetaOf(ev, t);
   const startH = Math.min(Math.max(apptHm(ev), HOUR0), HOUR1);
   const topPct = ((startH - HOUR0) / SPAN) * 100;
   const hPct = Math.max(((ev.callDurationMinutes || 60) / 60 / SPAN) * 100, 4.2);
-  const left = `calc(56px + (100% - 56px) * ${dayIdx} / 7 + 3px)`;
-  const width = `calc((100% - 56px) / 7 - 6px)`;
+  const left = `calc(56px + (100% - 56px) * ${dayIdx} / ${nCols} + 3px)`;
+  const width = `calc((100% - 56px) / ${nCols} - 6px)`;
   const faded = ev.no_show;
   // no-show events get a pale gold border instead of wine
   const borderColor = ev.no_show ? "var(--warn)" : "var(--wine-soft)";
@@ -414,19 +520,24 @@ function WeekEvent({ ev, dayIdx, active, onClick, t }: { ev: Appointment; dayIdx
 
 function WeekGrid(p: DesktopCalendarProps) {
   const { t } = p;
+  const days = useMemo(
+    () => p.weekDays.filter((d) => !p.hideWeekends || !isWeekendDay(d)),
+    [p.weekDays, p.hideWeekends],
+  );
+  const nCols = days.length || 1;
   const hours: number[] = [];
   for (let h = HOUR0; h <= HOUR1; h++) hours.push(h);
-  const gridCols = "56px repeat(7, minmax(0, 1fr))";
+  const gridCols = `56px repeat(${nCols}, minmax(0, 1fr))`;
   const nowH = p.currentTime.getHours() + p.currentTime.getMinutes() / 60;
   const nowPct = nowH >= HOUR0 && nowH <= HOUR1 ? ((nowH - HOUR0) / SPAN) * 100 : null;
-  const todayIdx = p.weekDays.findIndex((d) => dateKeyOf(d) === p.todayStr);
+  const todayIdx = days.findIndex((d) => dateKeyOf(d) === p.todayStr);
 
   return (
     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
       {/* Day header row */}
       <div style={{ display: "grid", gridTemplateColumns: gridCols, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
         <div />
-        {p.weekDays.map((d) => {
+        {days.map((d) => {
           const iso = dateKeyOf(d), isToday = iso === p.todayStr;
           return (
             <div key={iso} style={{ padding: "9px 6px 11px", textAlign: "center", borderLeft: "1px solid var(--line)" }}>
@@ -442,7 +553,7 @@ function WeekGrid(p: DesktopCalendarProps) {
         {/* vertical separators + today tint */}
         <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: gridCols }}>
           <div />
-          {p.weekDays.map((d) => {
+          {days.map((d) => {
             const iso = dateKeyOf(d), isToday = iso === p.todayStr;
             return <div key={iso} style={{ borderLeft: "1px solid var(--line)", background: isToday ? "rgba(94,34,48,0.022)" : "transparent" }} />;
           })}
@@ -458,17 +569,17 @@ function WeekGrid(p: DesktopCalendarProps) {
           );
         })}
         {/* events */}
-        {p.weekDays.map((d, di) => {
+        {days.map((d, di) => {
           const iso = dateKeyOf(d);
           return (p.apptsByDate.get(iso) ?? []).map((e) => (
-            <WeekEvent key={e.id} ev={e} dayIdx={di} active={p.selectedBooking?.id === e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} t={t} />
+            <WeekEvent key={e.id} ev={e} dayIdx={di} nCols={nCols} active={p.selectedBooking?.id === e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} t={t} />
           ));
         })}
         {/* current-time line */}
         {nowPct != null && (
           <div style={{ position: "absolute", top: `${nowPct}%`, left: 56, right: 0, height: 0, borderTop: "1.5px solid var(--wine)", zIndex: 5, pointerEvents: "none" }}>
             <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px rgba(94,34,48,0.18)" }} />
-            {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc((100% - 0px) * ${todayIdx} / 7)`, top: -7, ...MONO, fontSize: 8, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "1px 5px", transform: "translateX(6px)" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+            {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc((100% - 0px) * ${todayIdx} / ${nCols})`, top: -7, ...MONO, fontSize: 8, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "1px 5px", transform: "translateX(6px)" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
           </div>
         )}
       </div>
@@ -479,19 +590,28 @@ function WeekGrid(p: DesktopCalendarProps) {
 function MonthGrid(p: DesktopCalendarProps) {
   const { t } = p;
   const m = p.month.getMonth();
+  const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
+  const visibleDows = DOW_ORDER.filter((dow) => !p.hideWeekends || (dow !== 0 && dow !== 6));
+  const nCols = visibleDows.length;
+  const colTemplate = `repeat(${nCols},1fr)`;
+  const filterCell = (c: { date: Date }) => !p.hideWeekends || !isWeekendDay(c.date);
+
   const weeks: { date: Date; count: number }[][] = [];
-  for (let i = 0; i < p.days.length; i += 7) weeks.push(p.days.slice(i, i + 7));
+  for (let i = 0; i < p.days.length; i += 7) weeks.push(p.days.slice(i, i + 7).filter(filterCell));
 
   return (
     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
-        {DAY_KEYS.map((dk, i) => (
-          <div key={dk} style={{ padding: "10px 0", textAlign: "center", ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, borderLeft: i ? "1px solid var(--line)" : "none" }}>{t(`days.short.${dk}`)}</div>
+      <div style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
+        {visibleDows.map((dow, i) => (
+          <div key={dow} style={{ padding: "10px 0", textAlign: "center", ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, borderLeft: i ? "1px solid var(--line)" : "none" }}>{t(`days.short.${DAY_KEYS[dow]}`)}</div>
         ))}
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
-        {weeks.map((wk, wi) => (
-          <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: wi < weeks.length - 1 ? "1px solid var(--line)" : "none" }}>
+        {weeks.map((wk, wi) => {
+          // Highlight the week currently shown in the left/week panel (top + bottom rule)
+          const isCurrentWeek = wk.some((c) => weekKeys.has(dateKeyOf(c.date)));
+          return (
+          <div key={wi} style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: !isCurrentWeek && wi < weeks.length - 1 ? "1px solid var(--line)" : "none", boxShadow: isCurrentWeek ? "inset 0 2px 0 0 var(--wine), inset 0 -2px 0 0 var(--wine)" : "none" }}>
             {wk.map((cell, di) => {
               const iso = dateKeyOf(cell.date), inMonth = cell.date.getMonth() === m, isToday = iso === p.todayStr;
               const items = p.apptsByDate.get(iso) ?? [];
@@ -525,7 +645,8 @@ function MonthGrid(p: DesktopCalendarProps) {
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -538,7 +659,7 @@ function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; va
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}><span style={{ color: "var(--mute)", display: "flex" }}>{icon}</span>{label}</div>
-      <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)" }}>{value}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)", overflowWrap: "anywhere", wordBreak: "break-word" }}>{value}</div>
     </div>
   );
 }
@@ -585,6 +706,58 @@ function ReschedulePopover({ ev, onReschedule, t, trigger }: { ev: Appointment; 
   );
 }
 
+// Leads-chat conversation thread — reuses the Leads card-view rendering pipeline
+// (computeMiniMsgMeta + groupMiniMessagesByThread + run wrappers). The wrappers
+// internally render MiniChatBubble, which has the `content || Content` fallback
+// that fixes the previously-blank message text.
+function ConversationThread({ msgs, leadName, leadAvatarColors }: {
+  msgs: Interaction[];
+  leadName: string;
+  leadAvatarColors: { bgColor: string; textColor: string };
+}) {
+  const session = useSession();
+  const currentUser = session.status === "authenticated" ? session.user : null;
+
+  const items = useMemo(() => {
+    if (msgs.length === 0) return [];
+    const all = msgs as any[];
+    const metas = computeMiniMsgMeta(all);
+    const idxOf = new Map<any, number>();
+    all.forEach((mm, i) => idxOf.set(mm, i));
+
+    const senderOf = (mm: any): "inbound" | "ai" | "human" =>
+      String(mm.direction || "").toLowerCase() !== "outbound" ? "inbound" : isAiMsg(mm) ? "ai" : "human";
+
+    const out: React.ReactNode[] = [];
+    const groups = groupMiniMessagesByThread(all);
+    for (const group of groups) {
+      const gmsgs = group.msgs;
+      let i = 0;
+      while (i < gmsgs.length) {
+        const sk = senderOf(gmsgs[i]);
+        const runMsgs: any[] = [];
+        const runMetas: MiniMsgMeta[] = [];
+        const startIdx = idxOf.get(gmsgs[i]) ?? i;
+        while (i < gmsgs.length && senderOf(gmsgs[i]) === sk) {
+          runMsgs.push(gmsgs[i]);
+          runMetas.push(metas[idxOf.get(gmsgs[i]) ?? 0]);
+          i++;
+        }
+        if (sk === "human") {
+          out.push(<MiniAgentRunWrapper key={`h-${startIdx}`} msgs={runMsgs} metas={runMetas} leadName={leadName} leadAvatarColors={leadAvatarColors} currentUser={currentUser} />);
+        } else if (sk === "inbound") {
+          out.push(<MiniLeadRunWrapper key={`l-${startIdx}`} msgs={runMsgs} metas={runMetas} leadName={leadName} leadAvatarColors={leadAvatarColors} />);
+        } else {
+          out.push(<MiniBotRunWrapper key={`b-${startIdx}`} msgs={runMsgs} metas={runMetas} leadName={leadName} leadAvatarColors={leadAvatarColors} />);
+        }
+      }
+    }
+    return out;
+  }, [msgs, leadName, leadAvatarColors, currentUser]);
+
+  return <div className="flex flex-col">{items}</div>;
+}
+
 function DetailPanel(p: DesktopCalendarProps) {
   const { t } = p;
   const ev = p.selectedBooking;
@@ -598,59 +771,25 @@ function DetailPanel(p: DesktopCalendarProps) {
 
   return (
     <>
-      <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {/* Kebab menu: reschedule + cancel */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button style={NAV_BTN} title="More actions"><MoreVertical className="h-3.5 w-3.5" /></button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              {/* Reschedule — uses its own popover, so we close the dropdown and open it */}
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                className="text-[12px] p-0"
-              >
-                <ReschedulePopover
-                  ev={ev}
-                  onReschedule={p.onReschedule}
-                  t={t}
-                  trigger={
-                    <button className="flex items-center gap-2 w-full px-2 py-1.5 text-[12px] text-left hover:bg-muted/50 rounded">
-                      <RefreshCw className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      {t("design.detail.reschedule")}
-                    </button>
-                  }
-                />
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => p.onCancelCall(ev.id)}
-                className="text-[12px] flex items-center gap-2 text-destructive focus:text-destructive"
-              >
-                <XCircle className="h-3.5 w-3.5 shrink-0" />
-                {t("design.detail.cancelCall")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={() => { const leadId = ev.rawLead?.id ?? ev.rawLead?.Id; if (leadId) { try { localStorage.setItem("selected-lead-id", String(leadId)); localStorage.setItem("leadawaker-returnto", "/platform/calendar"); } catch {} window.location.href = "/platform/contacts"; } }} style={NAV_BTN} title={t("design.detail.openInLead")}><Maximize2 className="h-3.5 w-3.5" /></button>
-          {p.showClose && (
-            <button onClick={() => p.onSelectBooking(null)} style={NAV_BTN} title={t("design.detail.close")} aria-label={t("design.detail.close")}><X className="h-3.5 w-3.5" /></button>
-          )}
-        </div>
+      <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 10px 0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        {/* Identity — avatar + name, opens the Leads page on click */}
+        <button
+          onClick={p.onOpenInLead}
+          title={t("design.detail.openInLead")}
+          style={{ display: "flex", gap: 11, alignItems: "center", flex: 1, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+        >
+          <div style={{ width: 38, height: 38, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{ev.lead_name.split(/\s+/).slice(0, 2).map(s => s[0]).join("").toUpperCase()}</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ ...SERIF, fontSize: 18, color: "var(--ink)", lineHeight: 1.15, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
+            {ev.campaign_name && <div style={{ fontSize: 11, color: "var(--mute)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.campaign_name}</div>}
+          </div>
+        </button>
+        {p.showClose && (
+          <button onClick={() => p.onSelectBooking(null)} style={{ ...NAV_BTN, flexShrink: 0 }} title={t("design.detail.close")} aria-label={t("design.detail.close")}><X className="h-3.5 w-3.5" /></button>
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "18px 16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
-        {/* identity */}
-        <div style={{ display: "flex", gap: 13, alignItems: "center" }}>
-          <div style={{ width: 48, height: 48, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{ev.lead_name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase()}</div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ ...SERIF, fontSize: 23, color: "var(--ink)", lineHeight: 1.1, letterSpacing: "-0.01em" }}>{ev.lead_name}</div>
-            {ev.campaign_name && <div style={{ fontSize: 12, color: "var(--mute)", marginTop: 2 }}>{ev.campaign_name}</div>}
-          </div>
-        </div>
-
         {/* status banner */}
         {sm.key !== "booked" && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: "var(--r-surface)", background: sm.tint, border: `1px solid ${sm.color}33` }}>
@@ -659,19 +798,18 @@ function DetailPanel(p: DesktopCalendarProps) {
           </div>
         )}
 
-        {/* facts */}
+        {/* facts — white raised panel */}
         <div style={{ background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-card)", padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 12, rowGap: 14 }}>
           <Fact icon={<CalIcon className="h-3.5 w-3.5" />} label={t("design.detail.date")} value={ev.formattedDate} />
           <Fact icon={channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />} label={t("design.detail.channel")} value={channelOf(ev) === "phone" ? t("design.detail.phone") : t("design.detail.googleMeet")} />
           <Fact icon={<Clock className="h-3.5 w-3.5" />} label={t("design.detail.time")} value={`${ev.time} – ${endClockOf(ev)}`} />
+          <Fact icon={<Phone className="h-3.5 w-3.5" />} label={t("design.detail.phone")} value={ev.phone || "—"} />
+          <Fact icon={<Mail className="h-3.5 w-3.5" />} label={t("design.detail.email")} value={ev.email || "—"} />
           {/* Lead score replaces fake attendance */}
           <div>
             <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("design.detail.leadScore")}</div>
             {ev.leadScore > 0 ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <ScoreArcDonut score={ev.leadScore} />
-                <span style={{ ...MONO, fontSize: 10, color: "var(--ink-soft)" }}>{ev.leadScore}</span>
-              </div>
+              <ScoreArcDonut score={ev.leadScore} />
             ) : (
               <span style={{ fontSize: 12, color: "var(--mute-2)" }}>—</span>
             )}
@@ -707,26 +845,14 @@ function DetailPanel(p: DesktopCalendarProps) {
         {/* Full conversation thread — admin/owner only */}
         {p.canSeeConversation && p.recentMessages.length > 0 && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+            <div style={{ marginBottom: 9 }}>
               <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mute)", fontWeight: 700 }}>{t("design.detail.conversation")}</span>
-              <button onClick={p.onOpenInLead} style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, ...MONO, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>{t("design.detail.openInLead")}<ChevronRight className="h-2.5 w-2.5" /></button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {p.recentMessages.map((m, i) => {
-                const isIn = (m.direction || "").toLowerCase() === "inbound";
-                return (
-                  <div key={i} style={{
-                    alignSelf: isIn ? "flex-start" : "flex-end", maxWidth: "88%",
-                    background: isIn ? "var(--surface)" : "var(--wine-tint)",
-                    border: isIn ? "1px solid var(--line)" : "1px solid var(--wine-glow)",
-                    borderRadius: isIn ? "3px 12px 12px 12px" : "12px 3px 12px 12px", padding: "8px 11px",
-                  }}>
-                    <div style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.12em", textTransform: "uppercase", color: isIn ? "var(--good)" : "var(--wine)", fontWeight: 700, marginBottom: 3 }}>{isIn ? ev.lead_name.split(" ")[0] : t("design.detail.aiAgent")}</div>
-                    <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.5, color: "var(--ink-soft)" }}>{m.content}</p>
-                  </div>
-                );
-              })}
-            </div>
+            <ConversationThread
+              msgs={p.recentMessages}
+              leadName={ev.lead_name}
+              leadAvatarColors={{ bgColor: av.bg, textColor: av.text }}
+            />
           </div>
         )}
       </div>
@@ -764,6 +890,53 @@ function CompactAgendaList(p: DesktopCalendarProps) {
   );
 }
 
+// ── Ultra-wide split: week (left) + draggable divider + month (right, darker) ──
+function WeekMonthSplit(p: DesktopCalendarProps) {
+  const [frac, setFrac] = usePersistedState<number>(
+    "calendar-week-month-split",
+    0.5,
+    (v) => typeof v === "number" && v >= 0 && v <= 1,
+  );
+  const ref = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const updateFromX = (clientX: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    let f = (clientX - rect.left) / rect.width;
+    if (f < 0.08) f = 0;
+    else if (f > 0.92) f = 1;
+    else f = Math.max(0, Math.min(1, f));
+    setFrac(f);
+  };
+
+  return (
+    <div ref={ref} style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
+      {/* Week side */}
+      <div style={{ width: `${frac * 100}%`, minWidth: 0, display: frac === 0 ? "none" : "flex", flexDirection: "column", minHeight: 0 }}>
+        <WeekGrid {...p} />
+      </div>
+      {/* Draggable divider — 8px gap with a short centered handle; collapses a side */}
+      <div
+        onPointerDown={(e) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); }}
+        onPointerMove={(e) => { if (dragging.current) updateFromX(e.clientX); }}
+        onPointerUp={(e) => { dragging.current = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
+        style={{ width: 8, flexShrink: 0, cursor: "col-resize", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", touchAction: "none" }}
+        role="separator"
+        aria-orientation="vertical"
+      >
+        <div style={{ width: 3, height: 50, borderRadius: 2, background: "var(--line-strong)" }} />
+      </div>
+      {/* Month side — darker warm tint to distinguish it */}
+      <div style={{ flex: 1, minWidth: 0, display: frac === 1 ? "none" : "flex", flexDirection: "column", minHeight: 0, background: "rgba(94,34,48,0.045)" }}>
+        <MonthGrid {...p} />
+      </div>
+    </div>
+  );
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Composition
 // ════════════════════════════════════════════════════════════════════════════
@@ -785,11 +958,11 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
   }, []);
 
   const leftWidth = leftPanelState === "hidden" ? 0 : leftPanelState === "compact" ? 64 : 318;
-  const narrow = rootWidth > 0 && rootWidth - leftWidth - DETAIL_W < 500;
+  const ultra = rootWidth >= 1700;
 
   return (
     <div ref={rootRef} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
-      <TopToolbar {...p} leftPanelState={leftPanelState} onCyclePanel={cycle} />
+      <TopToolbar {...p} leftPanelState={leftPanelState} onCyclePanel={cycle} ultra={ultra} />
       <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden", position: "relative" }}>
         {/* LEFT — agenda (full | minimized | hidden) */}
         {leftPanelState !== "hidden" && (
@@ -804,21 +977,17 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
             )}
           </div>
         )}
-        {/* CENTER — calendar (no rounded corners, flush edges) */}
+        {/* CENTER — calendar (no rounded corners, flush edges). Ultra-wide: week + month split */}
         <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)", borderRadius: 0 }}>
-          <CenterHeader {...p} />
-          {p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
+          <CenterHeader {...p} ultra={ultra} />
+          {ultra
+            ? <WeekMonthSplit {...p} />
+            : p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
         </div>
-        {/* RIGHT — detail: inline column or floating popup when narrow */}
-        {narrow ? (
-          p.selectedBooking && (
-            <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
-              <DetailPanel {...p} showClose />
-            </div>
-          )
-        ) : (
-          <div style={{ ...CARD_STYLE, width: DETAIL_W, flexShrink: 0, borderRadius: 0, marginLeft: "auto" }}>
-            <DetailPanel {...p} />
+        {/* RIGHT — detail: floating slide-over at every width */}
+        {p.selectedBooking && (
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
+            <DetailPanel {...p} showClose />
           </div>
         )}
       </div>

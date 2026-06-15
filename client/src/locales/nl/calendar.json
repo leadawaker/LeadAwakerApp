@@ -202,6 +202,8 @@
       "aiAgent": "AI-agent",
       "googleMeet": "Google Meet",
       "phone": "Telefoon",
+      "email": "E-mail",
+      "actions": "Afspraakacties",
       "reschedule": "Verzetten",
       "cancelCall": "Gesprek annuleren",
       "close": "Sluiten"
@@ -210,6 +212,10 @@
       "minimize": "Paneel minimaliseren",
       "hide": "Paneel verbergen",
       "show": "Paneel tonen"
+    },
+    "weekends": {
+      "hide": "Weekenden verbergen",
+      "show": "Weekenden tonen"
     }
   }
 }
