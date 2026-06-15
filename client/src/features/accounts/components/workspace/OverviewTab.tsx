@@ -4,6 +4,7 @@ import { TeamPanel } from "./TeamPanel";
 import { ContractsPanel } from "./ContractsPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { KBPanel } from "./knowledge/KBPanel";
+import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
 import type { AccountRow, AccountDetail, WorkspaceTab, CampaignRowData, ContractRowData, TeamMemberData } from "./types";
 
 interface OverviewData {
@@ -48,6 +49,7 @@ function OverviewUltra(p: OverviewData) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20, height: "100%" }}>
         <KBPanel accountId={p.accountId} />
+        <CommunicationProfilePanel accountId={p.accountId} fill={false} />
       </div>
     </div>
   );
@@ -73,6 +75,7 @@ export function TabContent({ tab, ultra, isMobile, data }: {
   }
   if (tab === "integrations") return <IntegrationsPanel account={data.account} d={data.d} onSave={data.onSave} fieldCols={isMobile ? 1 : 3} stacked={isMobile} />;
   if (tab === "knowledge") return <KBPanel accountId={data.accountId} />;
+  if (tab === "communication") return <CommunicationProfilePanel accountId={data.accountId} />;
   return null;
 }
 

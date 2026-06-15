@@ -274,7 +274,8 @@
     "tabs": {
       "overview": "Overview",
       "integrations": "Integrations",
-      "knowledge": "Company Intel"
+      "knowledge": "Company Intel",
+      "communication": "Communication"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",

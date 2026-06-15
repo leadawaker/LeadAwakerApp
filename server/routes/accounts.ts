@@ -7,9 +7,11 @@ import {
   prospects,
   interactions,
   outreachTemplates,
+  accountCommunicationProfile,
   insertAccountsSchema,
   insertProspectsSchema,
   insertOutreachTemplatesSchema,
+  insertAccountCommunicationProfileSchema,
   users,
   insertUsersSchema,
 } from "@shared/schema";
@@ -230,6 +232,24 @@ export function registerAccountsRoutes(app: Express): void {
     const kbId = Number(req.params.kbId);
     await pool.query(`DELETE FROM ${KB_TABLE} WHERE id = $1`, [kbId]);
     res.json({ ok: true });
+  }));
+
+  // ─── Communication Profile (onboarding wizard) ─────────────────────────
+
+  app.get("/api/accounts/:id/communication-profile", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    const profile = await storage.getCommunicationProfile(accountId);
+    res.json(profile ? toDbKeys(profile as any, accountCommunicationProfile) : null);
+  }));
+
+  app.put("/api/accounts/:id/communication-profile", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    const parsed = insertAccountCommunicationProfileSchema.partial().safeParse(
+      fromDbKeys(req.body, accountCommunicationProfile),
+    );
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const profile = await storage.upsertCommunicationProfile(accountId, parsed.data);
+    res.json(toDbKeys(profile as any, accountCommunicationProfile));
   }));
 
   // ─── Prospects ───────────────────────────────────────────────────────

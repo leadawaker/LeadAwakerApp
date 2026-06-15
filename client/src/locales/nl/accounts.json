@@ -274,7 +274,8 @@
     "tabs": {
       "overview": "Overzicht",
       "integrations": "Integraties",
-      "knowledge": "Bedrijfsintel"
+      "knowledge": "Bedrijfsintel",
+      "communication": "Communicatie"
     },
     "createAccount": "Account aanmaken",
     "compactPanel": "Paneel verkleinen",

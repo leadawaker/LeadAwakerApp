@@ -16,7 +16,7 @@ import type { ListPanelState } from "@/hooks/useListPanelState";
 import type { WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const TABS: WorkspaceTab[] = ["overview", "integrations", "knowledge"];
+const TABS: WorkspaceTab[] = ["overview", "integrations", "knowledge", "communication"];
 const SORT_OPTIONS: AccountSortBy[] = ["recent", "name_asc", "name_desc"];
 
 interface Props {

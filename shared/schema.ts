@@ -15,6 +15,7 @@ import {
   jsonb,
   real,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -202,6 +203,55 @@ export const insertOutreachTemplatesSchema = createInsertSchema(outreachTemplate
 });
 export type OutreachTemplate = typeof outreachTemplates.$inferSelect;
 export type InsertOutreachTemplate = z.infer<typeof insertOutreachTemplatesSchema>;
+
+// ─── Account_Communication_Profile ───────────────────────────────────────────
+// One row per account. Captures how the client wants the AI to communicate with
+// their leads (onboarding wizard answers). Stored only for now — does not yet
+// feed prompt generation or the leads' active_agent persona.
+
+export const accountCommunicationProfile = nocodb.table("Account_Communication_Profile", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  accountsId: integer("Accounts_id"),
+  // Q1–Q5, Q8, Q10 — single-choice (stored as plain strings, validated by Zod at the route).
+  openingStyle: text("opening_style"),       // personal | project | business
+  addressForm: text("address_form"),         // je | u
+  statusQuestion: text("status_question"),    // traject | project | besluitvorming
+  brandFeel: text("brand_feel"),             // warm | professional | direct
+  contactApproach: text("contact_approach"),  // awaiting | neutral | proactive
+  formality: integer("formality"),           // 1–5
+  agentName: text("agent_name"),             // thomas | mark | sophie | lisa
+  agentNameNote: text("agent_name_note"),
+  // Q6/Q7/Q9 — structured multi/grouped selections.
+  distinctive: jsonb("distinctive").$type<string[]>(),
+  distinctiveOther: text("distinctive_other"),
+  preferredWords: jsonb("preferred_words").$type<{ projectTerm?: string; proposalTerm?: string; decisionTerm?: string }>(),
+  perception: jsonb("perception").$type<string[]>(),
+  // Wizard progress.
+  status: text("status"),                    // draft | in_progress | completed
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+}, (t) => [
+  uniqueIndex("account_communication_profile_accounts_id_idx").on(t.accountsId),
+]);
+
+export const insertAccountCommunicationProfileSchema = createInsertSchema(accountCommunicationProfile, {
+  formality: z.coerce.number().int().min(1).max(5).nullish(),
+  distinctive: z.array(z.string()).nullish(),
+  perception: z.array(z.string()).max(3).nullish(),
+  preferredWords: z.object({
+    projectTerm: z.string().optional(),
+    proposalTerm: z.string().optional(),
+    decisionTerm: z.string().optional(),
+  }).nullish(),
+  completedAt: z.coerce.date().nullish(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type AccountCommunicationProfile = typeof accountCommunicationProfile.$inferSelect;
+export type InsertAccountCommunicationProfile = z.infer<typeof insertAccountCommunicationProfileSchema>;
 
 // ─── Automation_Logs ───────────────────────────────────────────────────────────────
 

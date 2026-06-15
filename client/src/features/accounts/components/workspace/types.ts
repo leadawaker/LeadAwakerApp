@@ -3,7 +3,7 @@ import type { AccountRow } from "../AccountDetailsDialog";
 
 export type { AccountRow };
 
-export type WorkspaceTab = "overview" | "integrations" | "knowledge";
+export type WorkspaceTab = "overview" | "integrations" | "knowledge" | "communication";
 
 // ── Identity-card metric chip ────────────────────────────────────────────────
 export interface MetaChip {

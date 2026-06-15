@@ -19,6 +19,9 @@ import {
   contracts,
   expenses,
   notifications,
+  accountCommunicationProfile,
+  type AccountCommunicationProfile,
+  type InsertAccountCommunicationProfile,
   type Accounts,
   type InsertAccounts,
   type Prospects,
@@ -130,6 +133,32 @@ export const accountsStorage = {
   async deleteAccount(id: number): Promise<boolean> {
     const result = await db.delete(accounts).where(eq(accounts.id, id)).returning();
     return result.length > 0;
+  },
+
+  // ─── Communication Profile (onboarding wizard) ──────────────────────
+
+  async getCommunicationProfile(accountId: number): Promise<AccountCommunicationProfile | undefined> {
+    const [row] = await db.select().from(accountCommunicationProfile)
+      .where(eq(accountCommunicationProfile.accountsId, accountId));
+    return row;
+  },
+
+  async upsertCommunicationProfile(
+    accountId: number,
+    data: Partial<InsertAccountCommunicationProfile>,
+  ): Promise<AccountCommunicationProfile> {
+    const existing = await this.getCommunicationProfile(accountId);
+    const now = new Date();
+    const completedAt = data.status === "completed" ? now : (data.completedAt ?? existing?.completedAt ?? null);
+    const payload = { ...data, accountsId: accountId, updatedAt: now, completedAt } as any;
+    if (existing) {
+      const [row] = await db.update(accountCommunicationProfile)
+        .set(payload).where(eq(accountCommunicationProfile.id, existing.id)).returning();
+      return row;
+    }
+    const [row] = await db.insert(accountCommunicationProfile)
+      .values({ ...payload, createdAt: now }).returning();
+    return row;
   },
 
   // ─── Users ──────────────────────────────────────────────────────────
