@@ -2,67 +2,69 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 
 /* ── Theme context (shared state across all consumers) ─────────────────── */
 
+export type ThemeMode = "light" | "dark" | "system";
+
 interface ThemeCtx {
+  /** Effective resolved value — true when the .dark class is applied */
   isDark: boolean;
+  /** The user's chosen mode: explicit light/dark, or follow the OS */
+  themeMode: ThemeMode;
+  setThemeMode: (m: ThemeMode) => void;
+  /** Back-compat: flips between light and dark (never selects system) */
   toggleTheme: () => void;
+  /** Back-compat: sets an explicit light/dark mode */
   setIsDark: (v: boolean) => void;
-  /** When true, .dark follows OS prefers-color-scheme instead of the CRM toggle */
+  /** When true, .dark follows OS prefers-color-scheme instead of the CRM choice */
   publicMode: boolean;
   setPublicMode: (v: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeCtx | null>(null);
 
-/**
- * Provider — mount once near the app root (e.g. inside App or CrmShell).
- * All useTheme() consumers will share the same isDark state.
- *
- * publicMode = true  → .dark on <html> follows system preference (public pages)
- * publicMode = false → .dark on <html> follows localStorage toggle (CRM)
- */
+const systemPrefersDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(() => {
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem("theme");
-    if (stored === "dark") return true;
-    if (stored === "light") return false;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (stored === "dark" || stored === "light" || stored === "system") return stored;
+    // Old format: stored as "true"/"false" booleans
+    if (stored === "true") return "dark";
+    if (stored === "false") return "light";
+    return "system";
   });
 
   const [publicMode, setPublicMode] = useState(false);
+  const [systemDark, setSystemDark] = useState(systemPrefersDark);
 
   useEffect(() => {
-    const root = document.documentElement;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
-    if (publicMode) {
-      /* Public pages: follow system preference, ignore CRM toggle */
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      const apply = (dark: boolean) => {
-        root.classList.toggle("dark", dark);
-      };
-      apply(mq.matches);
-      const handler = (e: MediaQueryListEvent) => apply(e.matches);
-      mq.addEventListener("change", handler);
-      return () => mq.removeEventListener("change", handler);
-    }
+  const followSystem = publicMode || themeMode === "system";
+  const isDark = followSystem ? systemDark : themeMode === "dark";
 
-    /* CRM pages: follow the manual toggle stored in localStorage */
-    root.classList.toggle("dark", isDark);
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-  }, [isDark, publicMode]);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    if (!publicMode) localStorage.setItem("theme", themeMode);
+  }, [isDark, themeMode, publicMode]);
 
-  const toggleTheme = useCallback(() => setIsDark((prev) => !prev), []);
+  const setThemeMode = useCallback((m: ThemeMode) => setThemeModeState(m), []);
+  const toggleTheme = useCallback(
+    () => setThemeModeState((prev) => (prev === "dark" ? "light" : "dark")),
+    [],
+  );
+  const setIsDark = useCallback((v: boolean) => setThemeModeState(v ? "dark" : "light"), []);
 
   return (
-    <ThemeContext value={{ isDark, toggleTheme, setIsDark, publicMode, setPublicMode }}>
+    <ThemeContext value={{ isDark, themeMode, setThemeMode, toggleTheme, setIsDark, publicMode, setPublicMode }}>
       {children}
     </ThemeContext>
   );
 }
 
-/**
- * Hook to consume the shared theme state.
- * Must be rendered inside a <ThemeProvider>.
- */
 export function useTheme(): ThemeCtx {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used within a ThemeProvider");

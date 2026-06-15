@@ -36,6 +36,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   previewOpen,
   setPreviewOpen: _setPreviewOpen,
   showSidebar: showSidebarProp = false,
+  showSystemMessage = true,
+  showNotes = true,
   editorFontSize,
   previewFont = "var(--mono)",
   accentColor = "var(--wine)",
@@ -50,6 +52,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   previewOpen: boolean;
   setPreviewOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   showSidebar?: boolean;
+  showSystemMessage?: boolean;
+  showNotes?: boolean;
   editorFontSize: number;
   previewFont?: string;
   accentColor?: string;
@@ -532,9 +536,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
           {showSidebar && (
             <div style={{
               width: 148, flexShrink: 0,
-              overflowY: "auto", display: "flex",
-              flexDirection: "column", padding: "12px 0",
-              scrollbarWidth: "none",
+              overflowY: "auto", padding: "12px 0",
+              scrollbarWidth: "thin",
             }}>
               {headings.length > 0 && (
                 <>
@@ -648,16 +651,22 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
               {errors.promptText && <p className="text-[10px] text-red-500 pb-2" style={{ paddingLeft: EDITOR_PX }}>{errors.promptText}</p>}
 
               {/* System message + notes */}
-              <div className="flex flex-col gap-4" style={{ padding: `14px ${EDITOR_PX}px 18px` }}>
-                <div>
-                  <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: "0 0 8px 0" }}>{t("form.systemMessage")}</p>
-                  <textarea ref={systemMessageTextareaRef} className="w-full px-2.5 py-2 text-[12px] outline-none resize-y min-h-[60px] overflow-hidden" style={{ background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 4 }} defaultValue={systemMessageValRef.current} onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); setHighlightTick((tk) => tk + 1); scheduleAutoSave(); }} placeholder={t("form.systemMessagePlaceholderAlt")} />
+              {(showSystemMessage || showNotes) && (
+                <div className="flex flex-col gap-4" style={{ padding: "14px 0 18px" }}>
+                  {showSystemMessage && (
+                    <div>
+                      <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: "0 0 8px 0", paddingLeft: EDITOR_PX }}>{t("form.systemMessage")}</p>
+                      <textarea ref={systemMessageTextareaRef} className="w-full px-2.5 py-2 text-[12px] outline-none resize-y min-h-[60px] overflow-hidden" style={{ background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 4 }} defaultValue={systemMessageValRef.current} onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); setHighlightTick((tk) => tk + 1); scheduleAutoSave(); }} placeholder={t("form.systemMessagePlaceholderAlt")} />
+                    </div>
+                  )}
+                  {showNotes && (
+                    <div>
+                      <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: "0 0 8px 0", paddingLeft: EDITOR_PX }}>{t("form.notes")}</p>
+                      <textarea ref={notesTextareaRef} className="w-full px-2.5 py-2 text-[12px] outline-none resize-y min-h-[60px] overflow-hidden" style={{ background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 4 }} defaultValue={notesValRef.current} onChange={(e) => { notesValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }} placeholder={t("form.notesPlaceholderAlt")} />
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: "0 0 8px 0" }}>{t("form.notes")}</p>
-                  <textarea ref={notesTextareaRef} className="w-full px-2.5 py-2 text-[12px] outline-none resize-y min-h-[60px] overflow-hidden" style={{ background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 4 }} defaultValue={notesValRef.current} onChange={(e) => { notesValRef.current = e.target.value; autoResize(e.target); scheduleAutoSave(); }} placeholder={t("form.notesPlaceholderAlt")} />
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

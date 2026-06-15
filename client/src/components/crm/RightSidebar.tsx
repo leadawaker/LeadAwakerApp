@@ -34,9 +34,24 @@ import {
   Bot,
   Moon,
   Sun,
+  SunMoon,
   Eye,
   ArrowLeft,
+  Globe,
 } from "lucide-react";
+import { useTheme, type ThemeMode } from "@/hooks/useTheme";
+
+const NAV_LANGUAGES = [
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "pt", label: "Português", flag: "🇧🇷" },
+  { code: "nl", label: "Nederlands", flag: "🇳🇱" },
+] as const;
+
+const THEME_CYCLE: { mode: ThemeMode; icon: typeof Sun; labelKey: string }[] = [
+  { mode: "light", icon: Sun,     labelKey: "sidebar.themeLight" },
+  { mode: "dark",  icon: Moon,    labelKey: "sidebar.themeDark"  },
+  { mode: "system", icon: SunMoon, labelKey: "sidebar.themeSystem" },
+];
 
 import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -101,7 +116,7 @@ export function RightSidebar({
   isDark?: boolean;
   onToggleTheme?: () => void;
 }) {
-  const { t } = useTranslation("crm");
+  const { t, i18n } = useTranslation("crm");
   const [location, setLocation] = useLocation();
 
 
@@ -155,9 +170,24 @@ export function RightSidebar({
   });
   const unreadNotifCount = notifCountData?.unreadCount ?? 0;
 
+  const { themeMode, setThemeMode } = useTheme();
+  const themeIndex = Math.max(0, THEME_CYCLE.findIndex((o) => o.mode === themeMode));
+  const activeTheme = THEME_CYCLE[themeIndex];
+  const cycleTheme = () => setThemeMode(THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length].mode);
+
+  const currentLang = i18n.language?.split("-")[0] || "en";
+  const currentLanguage = NAV_LANGUAGES.find((l) => l.code === currentLang) ?? NAV_LANGUAGES[0];
+  const handleChangeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem("leadawaker_lang", lang);
+    setLangOpen(false);
+    setProfileOpen(false);
+  };
+
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [impersonationOpen, setImpersonationOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
 
   // Read current user info from localStorage
   const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
@@ -826,9 +856,9 @@ export function RightSidebar({
                     <Bot size={14} />Lead Awaker AI
                   </button>
                 )}
-                <button className="la-profile-menu-item" onClick={() => { onToggleTheme?.(); }}>
-                  {isDark ? <Sun size={14} /> : <Moon size={14} />}
-                  {isDark ? "Light mode" : "Dark mode"}
+                <button className="la-profile-menu-item" onClick={cycleTheme} data-testid="nav-theme-cycle">
+                  <activeTheme.icon size={14} />
+                  {t(activeTheme.labelKey)}
                 </button>
                 {isOwner && !isImpersonating && (
                   <Popover open={impersonationOpen} onOpenChange={setImpersonationOpen}>
@@ -863,6 +893,29 @@ export function RightSidebar({
                 <button className="la-profile-menu-item" onClick={onToggleHelp}>
                   <HelpCircle size={14} />Help &amp; docs
                 </button>
+                <Popover open={langOpen} onOpenChange={setLangOpen}>
+                  <PopoverTrigger asChild>
+                    <button className="la-profile-menu-item">
+                      <Globe size={14} />
+                      <span style={{ flex: 1, textAlign: "left" }}>{t("sidebar.language") || "Language"}</span>
+                      <span style={{ fontSize: 13 }}>{currentLanguage.flag}</span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent side="right" align="start" sideOffset={4} className="w-48 p-1 rounded-2xl shadow-xl border-border bg-background">
+                    {NAV_LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleChangeLanguage(lang.code)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm hover:bg-muted/50 transition-colors"
+                        data-testid={`nav-language-${lang.code}`}
+                      >
+                        <span className="text-base leading-none">{lang.flag}</span>
+                        <span className="flex-1 text-left">{lang.label}</span>
+                        {lang.code === currentLang && <Check size={14} />}
+                      </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
                 <div className="rule" style={{ margin: "6px 8px" }} />
                 <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); onLogout?.(); }}
                   style={{ color: "#A24B3F" }}>

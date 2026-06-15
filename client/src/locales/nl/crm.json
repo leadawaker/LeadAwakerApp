@@ -21,6 +21,10 @@
     "support": "Ondersteuning",
     "help": "Help",
     "docs": "Docs",
+    "language": "Taal",
+    "themeLight": "Lichte modus",
+    "themeDark": "Donkere modus",
+    "themeSystem": "Systeem volgen",
     "messageFounder": "Bericht aan Gabriel",
     "logout": "Uitloggen"
   },

@@ -133,7 +133,7 @@ function PromptListCard({
   const isStatusActive = normalizedStatus === "active";
   const updatedAt = prompt.updatedAt || prompt.updated_at;
   const promptId = getPromptId(prompt);
-  const isSystem = !(prompt.campaignsId || prompt.Campaigns_id);
+  const isSystem = !MODEL_OPTIONS.includes(prompt.model);
   const accent = isSystem ? "var(--stage-responded)" : "var(--wine)";
   const accentTint = isSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
 
@@ -268,7 +268,7 @@ function CompactPromptRail({
           const id = getPromptId(p);
           const isActive = selectedId === id;
           const pStatus = (p.status || "").toLowerCase().trim();
-          const isSystem = !(p.campaignsId || p.Campaigns_id);
+          const isSystem = !MODEL_OPTIONS.includes(p.model);
           const accent = isSystem ? "var(--stage-responded)" : "var(--wine)";
           const accentTint = isSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
           const railColor = isActive
@@ -415,9 +415,13 @@ export function PromptsListView({
   // System / Campaigns tab filter
   const [listTab, setListTab] = useState<"system" | "campaign">("campaign");
 
+  // Section visibility toggles
+  const [showSystemMessage, setShowSystemMessage] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+
   // Counts from the full prompts list (not filtered by tab)
-  const systemCount = useMemo(() => prompts.filter((p: any) => !(p.campaignsId || p.Campaigns_id)).length, [prompts]);
-  const campaignCount = useMemo(() => prompts.filter((p: any) => !!(p.campaignsId || p.Campaigns_id)).length, [prompts]);
+  const systemCount = useMemo(() => prompts.filter((p: any) => !MODEL_OPTIONS.includes(p.model)).length, [prompts]);
+  const campaignCount = useMemo(() => prompts.filter((p: any) => MODEL_OPTIONS.includes(p.model)).length, [prompts]);
 
   const accountMap = useMemo(
     () => new Map(availableAccounts.map((a) => [a.id, a.name])),
@@ -427,8 +431,8 @@ export function PromptsListView({
   // Tab-filtered prompts
   const tabFilteredPrompts = useMemo(() => {
     return prompts.filter((p: any) => {
-      const hasCampaign = !!(p.campaignsId || p.Campaigns_id);
-      return listTab === "campaign" ? hasCampaign : !hasCampaign;
+      const isSelectable = MODEL_OPTIONS.includes(p.model);
+      return listTab === "campaign" ? isSelectable : !isSelectable;
     });
   }, [prompts, listTab]);
 
@@ -438,8 +442,8 @@ export function PromptsListView({
     const result = new Map<string, any[]>();
     groupedRows.forEach((items, key) => {
       const filtered = items.filter((p: any) => {
-        const hasCampaign = !!(p.campaignsId || p.Campaigns_id);
-        return listTab === "campaign" ? hasCampaign : !hasCampaign;
+        const isSelectable = MODEL_OPTIONS.includes(p.model);
+        return listTab === "campaign" ? isSelectable : !isSelectable;
       });
       if (filtered.length > 0) result.set(key, filtered);
     });
@@ -743,6 +747,35 @@ export function PromptsListView({
 
         {/* Spacer */}
         <div style={{ flex: 1 }} />
+
+        {/* Model pill — shown when a prompt is selected */}
+        {selectedPrompt && (
+          MODEL_OPTIONS.includes(selectedPrompt.model) ? (
+            <select
+              className="hidden md:block text-[11px] font-mono outline-none cursor-pointer shrink-0"
+              style={{
+                background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+                color: "var(--mute)", borderRadius: "var(--r-pill)",
+                padding: "6px 12px", height: 34,
+              }}
+              value={selectedPrompt.model}
+              onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
+            >
+              {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          ) : (
+            <span
+              className="hidden md:inline-block text-[11px] font-mono shrink-0"
+              style={{
+                background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+                color: "var(--mute-2)", borderRadius: "var(--r-pill)",
+                padding: "6px 12px", height: 34, lineHeight: "22px",
+              }}
+            >
+              Hardcoded
+            </span>
+          )
+        )}
 
         {/* Controls */}
         <div className="hidden md:flex items-center gap-1.5">
@@ -1206,26 +1239,47 @@ export function PromptsListView({
 
                     {/* Right section: meta + controls */}
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Token estimate */}
+                      {/* Token + char estimate */}
                       <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
-                        ~{tokenEstimate} tok
+                        ~{tokenEstimate} tok · {((selectedPrompt?.promptText || selectedPrompt?.prompt_text || "").length / 1000).toFixed(1)}k chr
                       </span>
-
-                      {/* Model (compact) */}
-                      <select
-                        className="text-[11px] font-mono px-2 py-1 rounded-full outline-none cursor-pointer shrink-0"
-                        style={{
-                          background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
-                          color: "var(--mute)", maxWidth: 92, textOverflow: "ellipsis",
-                        }}
-                        value={selectedPrompt.model || "gpt-5.5"}
-                        onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
-                      >
-                        {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                      </select>
 
                       {/* Vertical divider */}
                       <div style={{ width: 1, height: 22, background: "var(--line)" }} />
+
+                      {/* System message toggle */}
+                      {(() => {
+                        const hasSysMsg = !!(selectedPrompt.systemMessage || selectedPrompt.system_message);
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => setShowSystemMessage((v) => !v)}
+                            className={cn("la-btn", showSystemMessage ? "la-btn--inset" : "la-btn")}
+                            style={{ height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12, color: hasSysMsg ? detailAccent : showSystemMessage ? "var(--ink)" : "var(--mute-2)" }}
+                            title="Toggle system message"
+                          >
+                            <EyeOff size={13} />
+                            System msg
+                          </button>
+                        );
+                      })()}
+
+                      {/* Notes toggle */}
+                      {(() => {
+                        const hasNotes = !!(selectedPrompt.notes);
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => setShowNotes((v) => !v)}
+                            className={cn("la-btn", showNotes ? "la-btn--inset" : "la-btn")}
+                            style={{ height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12, color: hasNotes ? detailAccent : showNotes ? "var(--ink)" : "var(--mute-2)" }}
+                            title="Toggle notes"
+                          >
+                            <EyeOff size={13} />
+                            Notes
+                          </button>
+                        );
+                      })()}
 
                       {/* Left panel toggle */}
                       <button
@@ -1266,6 +1320,8 @@ export function PromptsListView({
                 previewOpen={previewOpen}
                 setPreviewOpen={setPreviewOpen}
                 showSidebar={showEditorSidebar}
+                showSystemMessage={showSystemMessage}
+                showNotes={showNotes}
                 editorFontSize={editorFontSize}
                 previewFont={previewFont}
                 accentColor={detailAccent}

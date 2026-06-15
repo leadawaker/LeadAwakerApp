@@ -21,6 +21,10 @@
     "support": "Support",
     "help": "Help",
     "docs": "Docs",
+    "language": "Language",
+    "themeLight": "Light Mode",
+    "themeDark": "Dark Mode",
+    "themeSystem": "Follow System",
     "messageFounder": "Message Gabriel",
     "logout": "Log out"
   },
