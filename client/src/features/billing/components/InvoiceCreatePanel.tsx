@@ -25,9 +25,15 @@ export type SenderPreset = "EU" | "BR";
 // TODO: Fetch from server-side API
 export const SENDER_PRESETS: Record<SenderPreset, { label: string; flag: string; paymentInfo: string }> = {
   EU: {
-    label: "EU — N26",
+    label: "EU — Finom",
     flag: "🇳🇱",
-    paymentInfo: "",
+    paymentInfo: [
+      "Payment method: Bank transfer (SEPA / International)",
+      "Account holder: Lead Awaker",
+      "Bank: Finom",
+      "IBAN: NL50 FNOM 0173 6400 07",
+      "KVK: 99366738",
+    ].join("\n"),
   },
   BR: {
     label: "BR — Banco 380",

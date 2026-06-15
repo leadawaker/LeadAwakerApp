@@ -122,11 +122,11 @@ function buildPaymentInfo(preset: string): string {
   // Default: EU
   return [
     "  Payment method: Bank transfer (SEPA / International)",
-    "  Account holder: Gabriel Barbosa Fronza",
-    "  Bank: N26",
-    "  IBAN: DE35 1001 1001 2939 5454 81",
+    "  Account holder: Lead Awaker",
+    "  Bank: Finom",
+    "  IBAN: NL50 FNOM 0173 6400 07",
     "  Company registration (KVK): 99366738",
-    "  Address: Christiaan Huygensweg 32, s'Hertogenbosch, The Netherlands",
+    "  Address: Christiaan Huygensweg 32, 5223 BH 's-Hertogenbosch, The Netherlands",
     "  Email: gabriel@leadawaker.com",
   ].join("\n");
 }
@@ -146,7 +146,7 @@ This Service Agreement ("Agreement") is entered into as of ${fmtDate(f.startDate
 
   Service Provider:
     Gabriel Barbosa Fronza (trading as "Lead Awaker")
-    Christiaan Huygensweg 32, s'Hertogenbosch, The Netherlands
+    Christiaan Huygensweg 32, 5223 BH 's-Hertogenbosch, The Netherlands
     KVK: 99366738 | Email: gabriel@leadawaker.com
     Phone: +55 84 8111 8224
 

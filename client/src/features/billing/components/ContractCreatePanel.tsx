@@ -48,7 +48,7 @@ const CADENCE_OPTIONS = [
 ];
 
 const PAYMENT_PRESETS = [
-  { value: "EU", label: "EU — N26",      summary: "EU bank account" },
+  { value: "EU", label: "EU — Finom",    summary: "EU bank account" },
   { value: "BR", label: "BR — Banco 380", summary: "BR bank account" },
 ] as const;
 
