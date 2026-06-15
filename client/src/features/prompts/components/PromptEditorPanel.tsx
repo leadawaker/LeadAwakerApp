@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { resolveVariablesHtml, buildMap, type CampaignForPreview } from "../utils/resolveVariables";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
+import { PromptCodeEditor, type PromptCodeEditorHandle } from "./PromptCodeEditor";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -95,11 +96,14 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   const [highlightTick, setHighlightTick] = useState(0);
   const [sampleLead, setSampleLead] = useState<import("../utils/resolveVariables").LeadForPreview | null>(null);
   const [foldedSections, setFoldedSections] = useState<Set<number>>(new Set());
+  // Active heading tracking for the Sections panel (emitted by the CodeMirror editor).
+  const [activeH1, setActiveH1] = useState(-1);
+  const [activeH2, setActiveH2] = useState(-1);
 
   const promptTextValRef = useRef<string>("");
   const systemMessageValRef = useRef<string>("");
   const notesValRef = useRef<string>("");
-  const rawTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const codeEditorRef = useRef<PromptCodeEditorHandle>(null);
   const systemMessageTextareaRef = useRef<HTMLTextAreaElement>(null);
   const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -130,10 +134,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     notesValRef.current = notes;
     if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = systemMessage;
     if (notesTextareaRef.current) notesTextareaRef.current.value = notes;
-    if (rawTextareaRef.current) {
-      rawTextareaRef.current.value = promptText;
-      autoResize(rawTextareaRef.current);
-    }
+    // The CodeMirror editor reloads its document from initialValue on re-render.
     const linkedCampaignId =
       prompt.campaignsId != null ? String(prompt.campaignsId)
       : prompt.Campaigns_id != null ? String(prompt.Campaigns_id) : "";
@@ -174,10 +175,6 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     notesValRef.current = nt;
     if (systemMessageTextareaRef.current) systemMessageTextareaRef.current.value = sm;
     if (notesTextareaRef.current) notesTextareaRef.current.value = nt;
-    if (rawTextareaRef.current) {
-      rawTextareaRef.current.value = pt;
-      autoResize(rawTextareaRef.current);
-    }
     setHighlightTick((n) => n + 1);
     scheduleAutoSave();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,9 +257,9 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  function onRawInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    promptTextValRef.current = e.target.value;
-    autoResize(e.target);
+  // The CodeMirror editor reports edits through this; mirrors the old textarea input.
+  function onEditorChange(value: string) {
+    promptTextValRef.current = value;
     clearTimeout(highlightDebounceRef.current);
     highlightDebounceRef.current = setTimeout(() => setHighlightTick((n) => n + 1), 150);
     scheduleAutoSave();
@@ -356,21 +353,12 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   handleSaveRef.current = handleSave;
 
   function scrollToLine(lineIndex: number) {
-    const ta = rawTextareaRef.current;
-    const container = scrollContainerRef.current;
-    if (!ta || !container) return;
-    const lines = ta.value.split("\n");
-    const charOffset = lines.slice(0, lineIndex).join("\n").length;
-    ta.focus();
-    ta.setSelectionRange(charOffset, charOffset);
-    const lineHeight = editorFontSize * 1.7;
-    const targetScroll = lineIndex * lineHeight - container.clientHeight / 3;
-    container.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
+    codeEditorRef.current?.scrollToLine(lineIndex);
   }
 
   function handleScrollSync() {
     if (isSyncingScrollRef.current) return;
-    const container = scrollContainerRef.current;
+    const container = codeEditorRef.current?.getScrollDOM();
     const preview = previewPaneScrollRef.current;
     if (!container || !preview) return;
     const maxSrc = container.scrollHeight - container.clientHeight;
@@ -384,18 +372,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
 
 
   function insertAtCaret(token: string) {
-    const ta = rawTextareaRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart ?? ta.value.length;
-    const end = ta.selectionEnd ?? start;
-    const val = ta.value;
-    ta.value = val.slice(0, start) + token + val.slice(end);
-    ta.selectionStart = ta.selectionEnd = start + token.length;
-    ta.focus();
-    promptTextValRef.current = ta.value;
-    autoResize(ta);
-    setHighlightTick((n) => n + 1);
-    scheduleAutoSave();
+    // CodeMirror inserts at the caret and fires onEditorChange (ref + highlight + autosave).
+    codeEditorRef.current?.insertAtCaret(token);
   }
 
   void saving;
@@ -567,7 +545,10 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                   }}>
                     SECTIONS
                   </span>
-                  {headings.map((h, i) => (
+                  {headings.map((h, i) => {
+                    // Only the topmost-visible `#` and the topmost-visible `##` within it light up.
+                    const isActive = (h.level === 1 && h.lineIndex === activeH1) || (h.level === 2 && h.lineIndex === activeH2);
+                    return (
                     <button
                       key={i}
                       onClick={() => scrollToLine(h.lineIndex)}
@@ -576,8 +557,9 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                         cursor: "pointer", textAlign: "left",
                         padding: h.level === 1 ? "3px 12px" : h.level === 2 ? "3px 12px 3px 20px" : "3px 12px 3px 28px",
                         fontSize: 9,
-                        fontWeight: 500,
-                        color: "var(--mute)",
+                        fontWeight: isActive ? 700 : 500,
+                        color: isActive ? "var(--ink)" : "var(--mute-2)",
+                        opacity: isActive ? 1 : 0.55,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         display: "block", width: "100%",
                       }}
@@ -585,7 +567,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                     >
                       {h.text}
                     </button>
-                  ))}
+                    );
+                  })}
                 </>
               )}
 
@@ -645,58 +628,27 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
               display: "flex", flexDirection: "column", overflow: "hidden",
             }}>
             <div
-              ref={scrollContainerRef}
-              onScroll={handleScrollSync}
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:thin]"
+              className="flex-1 min-h-0 overflow-hidden"
               style={{
                 background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 8,
-                scrollbarColor: "rgba(114,47,55,0.2) transparent",
               }}
             >
-              <div style={{ paddingTop: 16, minHeight: 200, position: "relative" }}>
-                {/* Variable highlight backdrop — same font metrics as textarea, sits behind it */}
-                {highlightTick >= 0 && (
-                  <div
-                    aria-hidden
-                    style={{
-                      position: "absolute", top: 16, left: 0, right: 0,
-                      pointerEvents: "none",
-                      paddingLeft: EDITOR_PX, paddingRight: EDITOR_PX, paddingBottom: 8,
-                      fontSize: `${editorFontSize}px`, fontFamily: "var(--mono)", lineHeight: 1.7,
-                      color: "transparent", whiteSpace: "pre-wrap", wordBreak: "break-word",
-                      boxSizing: "border-box", minHeight: 180,
-                    }}
-                    dangerouslySetInnerHTML={{
-                      __html: (promptTextValRef.current ?? "")
-                        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                        .replace(/\{(\w+)\}/g, '<mark style="background:rgba(114,47,55,0.13);color:var(--wine);border-radius:2px;padding:0 1px">{$1}</mark>'),
-                    }}
-                  />
-                )}
-                <textarea
-                  ref={rawTextareaRef}
-                  className="w-full outline-none resize-none break-words relative"
-                  style={{
-                    fontSize: `${editorFontSize}px`, fontFamily: "var(--mono)", lineHeight: 1.7,
-                    paddingLeft: EDITOR_PX, paddingRight: EDITOR_PX, paddingBottom: 8,
-                    color: "var(--ink)", caretColor: "var(--wine)", minHeight: 180,
-                    display: "block", boxSizing: "border-box", background: "transparent",
-                  }}
-                  defaultValue={promptTextValRef.current}
-                  onChange={onRawInput}
-                  onDrop={(e) => {
-                    const token = e.dataTransfer.getData("text/plain");
-                    if (!token) return;
-                    e.preventDefault();
-                    insertAtCaret(token);
-                  }}
-                  spellCheck={false}
-                />
-              </div>
+              {/* CodeMirror editor — variable highlights, live heading styling, wrap-aware scroll */}
+              <PromptCodeEditor
+                ref={codeEditorRef}
+                initialValue={promptTextValRef.current}
+                fontSize={editorFontSize}
+                accentColor={accentColor}
+                onChange={onEditorChange}
+                onScroll={handleScrollSync}
+                onActiveHeadingsChange={(h1, h2) => { setActiveH1(h1); setActiveH2(h2); }}
+              />
+            </div>
+            <div className="flex-shrink-0 overflow-y-auto [scrollbar-width:thin]" style={{ maxHeight: "42%" }}>
               {errors.promptText && <p className="text-[10px] text-red-500 pb-2" style={{ paddingLeft: EDITOR_PX }}>{errors.promptText}</p>}
 
               {/* System message + notes */}
-              <div className="flex flex-col gap-4 flex-shrink-0" style={{ padding: `14px ${EDITOR_PX}px 18px` }}>
+              <div className="flex flex-col gap-4" style={{ padding: `14px ${EDITOR_PX}px 18px` }}>
                 <div>
                   <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: "0 0 8px 0" }}>{t("form.systemMessage")}</p>
                   <textarea ref={systemMessageTextareaRef} className="w-full px-2.5 py-2 text-[12px] outline-none resize-y min-h-[60px] overflow-hidden" style={{ background: "var(--bone)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 4 }} defaultValue={systemMessageValRef.current} onChange={(e) => { systemMessageValRef.current = e.target.value; autoResize(e.target); setHighlightTick((tk) => tk + 1); scheduleAutoSave(); }} placeholder={t("form.systemMessagePlaceholderAlt")} />

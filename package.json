@@ -31,6 +31,9 @@
     "inject-auth": "node -e \"require('fs').writeFileSync('/tmp/pw-auth.json',JSON.stringify(Object.assign(JSON.parse(require('fs').readFileSync('/tmp/pw-auth.json','utf8')),{cookies:[{name:'connect.sid',value:'s%3Agrmp6XMfWzybhsh2s6kh9w9jIaJ_Gqu_.7dKE5PEESuwJoNyh%2BmIYpZP8c1yWM1xNSepP5CPHadQ',domain:'localhost',path:'/',httpOnly:true,secure:false,sameSite:'Lax'}]})))\""
   },
   "dependencies": {
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.43.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
