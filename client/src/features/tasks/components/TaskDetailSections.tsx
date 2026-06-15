@@ -102,10 +102,10 @@ export function CommentsSection({ taskId, currentUserName, users = [] }: { taskI
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-0.5 text-foreground/80 leading-relaxed">{c.body}</p>
+                  <p className="mt-0.5 text-foreground/80 leading-relaxed whitespace-pre-wrap">{c.body}</p>
                 )}
               </div>
-              {!isEditing && (
+              {!isEditing && isOwnComment && (
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 shrink-0">
                   <button
                     onClick={() => startEdit(c.id, c.body ?? "")}

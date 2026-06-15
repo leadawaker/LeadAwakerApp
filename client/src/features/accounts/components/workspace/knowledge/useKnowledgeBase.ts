@@ -7,6 +7,7 @@ export const KB_CATEGORIES = [
   "pricing",
   "services",
   "faq",
+  "objections",
   "team",
   "hours",
   "location",

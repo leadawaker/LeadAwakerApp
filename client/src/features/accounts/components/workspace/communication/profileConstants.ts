@@ -1,31 +1,38 @@
 // Canonical structure for the Communication Profile onboarding wizard.
-// Keys only — all human-facing labels live in the `communicationProfile` i18n namespace.
-// Q7 (preferred words) values are literal Dutch terms that flow into prompts later,
-// so they are rendered verbatim (not translated).
+// One merged, ordered list: style answers write to the profile table, fact
+// answers and the Q&A grids (objections, FAQ) write to the Knowledge Base.
+// Keys only — labels live in the `communicationProfile` i18n namespace.
 
-export const OPENING_STYLE = ["personal", "project", "business"] as const;
-export const ADDRESS_FORM = ["je", "u"] as const;
+export const AI_STYLE = ["personal", "project", "business"] as const;
 export const STATUS_QUESTION = ["traject", "project", "besluitvorming"] as const;
-export const BRAND_FEEL = ["warm", "professional", "direct"] as const;
-export const CONTACT_APPROACH = ["awaiting", "neutral", "proactive"] as const;
 
-export const DISTINCTIVE = [
-  "persoonlijke_aandacht", "vakmanschap", "design", "kwaliteit", "ontzorgen",
-  "meedenken", "exclusiviteit", "snelheid", "transparantie", "betrouwbaarheid",
-  "familiebedrijf",
+// Formality replaces the separate je/u question: 3 levels, each implying an
+// address form (formal → u, otherwise je).
+export const FORMALITY_LEVELS = [
+  { key: "informal", value: 1, address: "je" },
+  { key: "neutral", value: 2, address: "je" },
+  { key: "formal", value: 3, address: "u" },
 ] as const;
+export function formalityKey(value: number | null): string | null {
+  return FORMALITY_LEVELS.find((l) => l.value === value)?.key ?? null;
+}
+export function addressFor(value: number | null): string | null {
+  return FORMALITY_LEVELS.find((l) => l.value === value)?.address ?? null;
+}
 
+// Perception: 6 options, max 3 picks.
 export const PERCEPTION = [
-  "persoonlijk", "deskundig", "rustig", "betrokken", "exclusief", "creatief",
-  "praktisch", "vertrouwd", "hoogwaardig", "toegankelijk", "direct", "geduldig",
+  "persoonlijk", "deskundig", "betrokken", "exclusief", "hoogwaardig", "toegankelijk",
 ] as const;
+export const PERCEPTION_MAX = 3;
 
 export const AGENT_NAMES = ["thomas", "mark", "sophie", "lisa"] as const;
 export const AGENT_GENDER: Record<(typeof AGENT_NAMES)[number], "male" | "female"> = {
   thomas: "male", mark: "male", sophie: "female", lisa: "female",
 };
 
-// Q7 — grouped single-selects. Values are the literal words shown to the client.
+export const AVATAR_CHOICES = ["logo", "avatar", "avatarLogo"] as const;
+
 export const PREFERRED_WORD_GROUPS = {
   projectTerm: ["keukenproject", "keuken", "project"],
   proposalTerm: ["ontwerp", "verbouwing", "voorstel", "offerte", "ontwerpvoorstel", "plan"],
@@ -33,88 +40,74 @@ export const PREFERRED_WORD_GROUPS = {
 } as const;
 export type PreferredWordGroup = keyof typeof PREFERRED_WORD_GROUPS;
 
-export const FORMALITY_MIN = 1;
-export const FORMALITY_MAX = 5;
-export const PERCEPTION_MAX = 3;
-
-// Phase 1 — communication style. Reordered so brand feel + formality come first:
-// they drive the expert recommendation we pre-select for the tactical questions
-// (status question, contact approach), which clients shouldn't have to decide.
-export const STYLE_STEPS = [
-  "brandFeel",
-  "formality",
-  "addressForm",
-  "openingStyle",
-  "statusQuestion",
-  "contactApproach",
-  "preferredWords",
-  "distinctive",
-  "perception",
-  "agentName",
-] as const;
-export type WizardStep = (typeof STYLE_STEPS)[number];
-
-// Which steps carry an illustrative Dutch sample sentence (rendered under the option).
-export const STEPS_WITH_EXAMPLES: WizardStep[] = ["openingStyle", "statusQuestion", "contactApproach"];
-
-// Tactical questions where we pre-select an expert default (derived from brand
-// feel) so the client confirms rather than decides.
-export const RECOMMENDED_STEPS = ["statusQuestion", "contactApproach"] as const;
-export type RecommendedStep = (typeof RECOMMENDED_STEPS)[number];
-
-export function recommendFor(field: RecommendedStep, brandFeel: string | null): string {
-  const bf = brandFeel ?? "professional";
-  if (field === "statusQuestion") {
-    return bf === "warm" ? "traject" : bf === "direct" ? "besluitvorming" : "project";
-  }
-  return bf === "warm" ? "awaiting" : bf === "direct" ? "proactive" : "neutral";
+// Expert recommendation for the status question, derived from the chosen AI style.
+export function recommendStatus(aiStyle: string | null): string {
+  return aiStyle === "personal" ? "traject" : aiStyle === "business" ? "besluitvorming" : "project";
 }
 
-// Phase 2 — key facts. Each step is a free-text question whose answer is written
-// to the existing Knowledge Base (Company Intel), matched by category + title.
-// Titles are stable identifiers used to upsert the KB entry, so they are NOT
-// translated (the AI conversation pipeline reads facts from the KB).
-export interface FactQuestion { id: string; category: string; title: string; }
-export const FACT_STEPS: FactQuestion[] = [
-  { id: "pricing", category: "pricing", title: "Pricing approach" },
-  { id: "discounts", category: "pricing", title: "Discounts" },
-  { id: "financing", category: "pricing", title: "Financing & payment terms" },
-  { id: "leadTimes", category: "services", title: "Lead times" },
-  { id: "guarantees", category: "policies", title: "Guarantees & warranty" },
-  { id: "serviceArea", category: "location", title: "Service area" },
-  { id: "included", category: "services", title: "What is included" },
-  { id: "objection", category: "faq", title: "Common objection & response" },
-  { id: "faq", category: "faq", title: "Frequently asked questions" },
+// ── Merged step list ─────────────────────────────────────────────────────────
+export type StepKind = "style" | "fact" | "qagrid";
+export interface StepDef { key: string; kind: StepKind }
+
+export const STEPS: StepDef[] = [
+  { key: "openingStyle", kind: "style" },     // AI style
+  { key: "statusQuestion", kind: "style" },   // recommendation derived from AI style
+  { key: "formality", kind: "style" },        // 3 levels, sets je/u
+  { key: "perception", kind: "style" },
+  { key: "objections", kind: "qagrid" },      // → KB "objections"
+  { key: "faq", kind: "qagrid" },             // → KB "faq"
+  { key: "preferredWords", kind: "style" },
+  { key: "agentName", kind: "style" },        // name + custom + avatar
+  { key: "negotiation", kind: "fact" },
+  { key: "financing", kind: "fact" },
+  { key: "installments", kind: "fact" },
+  { key: "deliveryTime", kind: "fact" },
+  { key: "guarantees", kind: "fact" },
 ];
+
+export type StyleField =
+  | "openingStyle" | "statusQuestion" | "formality" | "perception"
+  | "preferredWords" | "agentName";
+
+export const STEPS_WITH_EXAMPLES: StyleField[] = ["openingStyle", "statusQuestion"];
+
+// ── Fixed facts → KB entries (matched by category + title, NOT translated). ──
+export interface FactDef { category: string; title: string }
+export const FACT_DEFS: Record<string, FactDef> = {
+  negotiation: { category: "pricing", title: "Negotiation room" },
+  financing: { category: "pricing", title: "Financing" },
+  installments: { category: "pricing", title: "Installments" },
+  deliveryTime: { category: "services", title: "Delivery time" },
+  guarantees: { category: "policies", title: "Guarantees & warranty" },
+};
 export type FactValues = Record<string, string>;
 
-// The in-memory answer shape the wizard edits.
+// ── Q&A grids (objections + FAQ) → KB rows by category. ──────────────────────
+export const QA_CATEGORY: Record<string, string> = { objections: "objections", faq: "faq" };
+export const QA_MIN_ROWS = 5;
+export interface QARow { id?: number; question: string; answer: string }
+
+// ── In-memory style answers ──────────────────────────────────────────────────
 export interface ProfileAnswers {
-  openingStyle: string | null;
-  addressForm: string | null;
+  openingStyle: string | null;   // AI style
+  addressForm: string | null;    // derived from formality (je | u)
   statusQuestion: string | null;
-  brandFeel: string | null;
-  contactApproach: string | null;
-  distinctive: string[];
-  distinctiveOther: string;
-  preferredWords: { projectTerm?: string; proposalTerm?: string; decisionTerm?: string };
-  formality: number | null;
+  formality: number | null;      // 1 informal | 2 neutral | 3 formal
   perception: string[];
+  preferredWords: { projectTerm?: string; proposalTerm?: string; decisionTerm?: string };
   agentName: string | null;
-  agentNameNote: string;
+  agentNameCustom: string;
+  avatarChoice: string | null;
 }
 
 export const EMPTY_ANSWERS: ProfileAnswers = {
   openingStyle: null,
   addressForm: null,
   statusQuestion: null,
-  brandFeel: null,
-  contactApproach: null,
-  distinctive: [],
-  distinctiveOther: "",
-  preferredWords: {},
   formality: null,
   perception: [],
+  preferredWords: {},
   agentName: null,
-  agentNameNote: "",
+  agentNameCustom: "",
+  avatarChoice: null,
 };

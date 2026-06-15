@@ -214,23 +214,27 @@ export const accountCommunicationProfile = nocodb.table("Account_Communication_P
   createdAt: timestamp("created_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
   accountsId: integer("Accounts_id"),
-  // Q1–Q5, Q8, Q10 — single-choice (stored as plain strings, validated by Zod at the route).
-  openingStyle: text("opening_style"),       // personal | project | business
+  // Single-choice style answers (stored as plain strings, validated by Zod at the route).
+  openingStyle: text("opening_style"),       // AI style: personal | project | business
   addressForm: text("address_form"),         // je | u
   statusQuestion: text("status_question"),    // traject | project | besluitvorming
-  brandFeel: text("brand_feel"),             // warm | professional | direct
-  contactApproach: text("contact_approach"),  // awaiting | neutral | proactive
   formality: integer("formality"),           // 1–5
   agentName: text("agent_name"),             // thomas | mark | sophie | lisa
-  agentNameNote: text("agent_name_note"),
-  // Q6/Q7/Q9 — structured multi/grouped selections.
-  distinctive: jsonb("distinctive").$type<string[]>(),
-  distinctiveOther: text("distinctive_other"),
+  agentNameCustom: text("agent_name_custom"), // free-text alternative name
+  avatarChoice: text("avatar_choice"),        // logo | avatar | avatarLogo
+  // Structured selections.
   preferredWords: jsonb("preferred_words").$type<{ projectTerm?: string; proposalTerm?: string; decisionTerm?: string }>(),
   perception: jsonb("perception").$type<string[]>(),
   // Wizard progress.
   status: text("status"),                    // draft | in_progress | completed
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  // Deprecated columns kept for back-compat (no longer written): brand_feel,
+  // contact_approach, distinctive, distinctive_other, agent_name_note.
+  brandFeel: text("brand_feel"),
+  contactApproach: text("contact_approach"),
+  distinctive: jsonb("distinctive").$type<string[]>(),
+  distinctiveOther: text("distinctive_other"),
+  agentNameNote: text("agent_name_note"),
 }, (t) => [
   uniqueIndex("account_communication_profile_accounts_id_idx").on(t.accountsId),
 ]);

@@ -2,7 +2,7 @@
   "tab": "Comunicação",
   "panel": {
     "title": "Perfil de comunicação",
-    "subtitle": "Como este cliente quer que a IA fale com os leads dele."
+    "subtitle": "Como este cliente quer que a IA fale com os clientes dele."
   },
   "wizard": {
     "stepLabel": "Pergunta {{current}} de {{total}}",
@@ -10,49 +10,35 @@
     "next": "Próxima",
     "finish": "Concluir",
     "saving": "Salvando…",
-    "exampleLabel": "Exemplo",
-    "optionalNote": "Observação opcional",
     "selectUpTo": "Escolha até {{max}}",
-    "otherPlaceholder": "Outro, especificamente…",
-    "recommended": "Recomendado",
-    "phaseCommunication": "Comunicação",
-    "phaseFacts": "Fatos principais"
+    "recommended": "Recomendado"
   },
   "summary": {
     "title": "Perfil de comunicação",
     "subtitle": "Respostas salvas do questionário de onboarding.",
     "edit": "Editar respostas",
     "notSet": "Não definido",
-    "empty": "Ainda não há perfil de comunicação. Inicie o questionário para configurar um.",
-    "start": "Iniciar questionário",
     "factsTitle": "Fatos principais"
-  },
-  "facts": {
-    "placeholder": "Digite a resposta aqui…",
-    "pricing": { "label": "Abordagem de preços", "help": "Como funcionam os preços? Preços fixos, sob orçamento, faixas de preço? O que o assistente deve dizer quando um lead pergunta sobre custo?" },
-    "discounts": { "label": "Descontos", "help": "Vocês oferecem descontos? Sob quais condições? O assistente pode mencioná-los ou oferecê-los?" },
-    "financing": { "label": "Financiamento e condições de pagamento", "help": "Vocês oferecem financiamento ou parcelamento? Quais são as condições padrão de pagamento (entrada, etapas)?" },
-    "leadTimes": { "label": "Prazos de entrega", "help": "Quanto tempo do pedido até a entrega/instalação? O que o assistente deve dizer a um lead que pergunta?" },
-    "guarantees": { "label": "Garantias", "help": "Quais garantias vocês oferecem? Algo que o assistente possa mencionar para gerar confiança?" },
-    "serviceArea": { "label": "Área de atuação", "help": "Quais regiões ou cidades vocês atendem? Há áreas que não cobrem?" },
-    "included": { "label": "O que está incluído", "help": "O que está incluído em um projeto ou orçamento padrão (design, instalação, materiais, pós-venda)?" },
-    "objection": { "label": "Objeção comum e resposta", "help": "Qual é a objeção ou hesitação mais comum, e qual é a melhor resposta de vocês para ela?" },
-    "faq": { "label": "Perguntas frequentes", "help": "Outras perguntas que os leads fazem com frequência, com as respostas que o assistente deve dar?" }
   },
   "questions": {
     "openingStyle": {
-      "label": "Qual estilo de abertura combina melhor com vocês?",
+      "label": "Qual estilo de IA combina melhor com vocês?",
       "options": {
-        "personal": { "label": "Pessoal", "example": "Hi Jan, dit is Thomas van Gourmet Kitchen Designs. Ik kom nog even terug op de offerte die jullie een tijdje geleden bij ons hebben laten maken. Klopt dat?" },
-        "project": { "label": "Focado no projeto", "example": "Hi Jan, Thomas hier van Gourmet Kitchen Designs. Jullie hebben eerder een ontwerp en voorstel van ons ontvangen. Ik was benieuwd of dit nog speelt." },
-        "business": { "label": "Profissional", "example": "Hi Jan, Thomas van Gourmet Kitchen Designs. Ik zag dat we eerder een voorstel voor jullie hebben uitgewerkt en vroeg me af hoe de situatie inmiddels is veranderd." }
-      }
-    },
-    "addressForm": {
-      "label": "Como vocês tratam os clientes?",
-      "options": {
-        "je": { "label": "Je / jij (informal)" },
-        "u": { "label": "U (formal)" }
+        "personal": {
+          "label": "Pessoal",
+          "behavior": "Relacionamento, envolvimento, humano. Fala de forma informal, demonstra empatia, faz perguntas abertas, responde a emoções, tem calma.",
+          "example": "Helemaal begrijpelijk dat het even is blijven liggen, Jan. Zullen we samen kijken wat voor jullie een fijn moment is om het weer op te pakken?"
+        },
+        "project": {
+          "label": "Focado no projeto",
+          "behavior": "Foco no projeto e no andamento. Mantém a conversa prática, discute planejamento, escolhas e status, pouca conversa fiada.",
+          "example": "Helder. Zal ik de planning er even bij pakken? Dan zien we meteen welke keuzes voor het ontwerp nog openstaan."
+        },
+        "business": {
+          "label": "Profissional",
+          "behavior": "Eficiência e clareza. Curto, factual, direto ao ponto, pouca linguagem emocional.",
+          "example": "Duidelijk. Het voorstel is nog geldig. Zal ik een moment inplannen om de details door te nemen?"
+        }
       }
     },
     "statusQuestion": {
@@ -63,36 +49,15 @@
         "besluitvorming": { "label": "Tomada de decisão", "example": "Waar staan jullie momenteel in jullie besluitvorming?" }
       }
     },
-    "brandFeel": {
-      "label": "O que combina melhor com a marca de vocês?",
+    "perception": {
+      "label": "Como vocês querem ser percebidos? Escolha até 3.",
       "options": {
-        "warm": { "label": "Acolhedor e pessoal" },
-        "professional": { "label": "Profissional e consultivo" },
-        "direct": { "label": "Objetivo e direto" }
-      }
-    },
-    "contactApproach": {
-      "label": "Como vocês normalmente entram em contato?",
-      "options": {
-        "awaiting": { "label": "Reservado", "example": "Ik was benieuwd hoe jullie er momenteel in staan." },
-        "neutral": { "label": "Neutro", "example": "Ik wilde even horen waar jullie momenteel staan." },
-        "proactive": { "label": "Proativo", "example": "Ik dacht, ik neem even contact op om te horen waar jullie momenteel staan." }
-      }
-    },
-    "distinctive": {
-      "label": "O que os clientes mais consideram diferencial em vocês?",
-      "options": {
-        "persoonlijke_aandacht": { "label": "Atenção personalizada" },
-        "vakmanschap": { "label": "Artesanato" },
-        "design": { "label": "Design" },
-        "kwaliteit": { "label": "Qualidade" },
-        "ontzorgen": { "label": "Cuidar de tudo" },
-        "meedenken": { "label": "Colaboração nas ideias" },
-        "exclusiviteit": { "label": "Exclusividade" },
-        "snelheid": { "label": "Rapidez" },
-        "transparantie": { "label": "Transparência" },
-        "betrouwbaarheid": { "label": "Confiabilidade" },
-        "familiebedrijf": { "label": "Empresa familiar" }
+        "persoonlijk": { "label": "Pessoal" },
+        "deskundig": { "label": "Especialista" },
+        "betrokken": { "label": "Engajado" },
+        "exclusief": { "label": "Exclusivo" },
+        "hoogwaardig": { "label": "Premium" },
+        "toegankelijk": { "label": "Acessível" }
       }
     },
     "preferredWords": {
@@ -105,37 +70,40 @@
     },
     "formality": {
       "label": "Quão formal a comunicação pode ser?",
-      "scale": {
-        "1": "Muito informal",
-        "2": "Informal",
-        "3": "Neutra",
-        "4": "Formal",
-        "5": "Muito formal"
+      "levels": {
+        "informal": { "label": "Informal (je)", "example": "Hé Jan! Hoe staat het met jullie keukenplannen?" },
+        "neutral": { "label": "Neutra (je)", "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat." },
+        "formal": { "label": "Formal (u)", "example": "Goedendag, ik neem contact met u op over uw aanvraag." }
       }
     },
-    "perception": {
-      "label": "Como vocês querem ser percebidos? Escolha até 3.",
-      "options": {
-        "persoonlijk": { "label": "Pessoal" },
-        "deskundig": { "label": "Especialista" },
-        "rustig": { "label": "Tranquilo" },
-        "betrokken": { "label": "Engajado" },
-        "exclusief": { "label": "Exclusivo" },
-        "creatief": { "label": "Criativo" },
-        "praktisch": { "label": "Prático" },
-        "vertrouwd": { "label": "Familiar" },
-        "hoogwaardig": { "label": "Premium" },
-        "toegankelijk": { "label": "Acessível" },
-        "direct": { "label": "Direto" },
-        "geduldig": { "label": "Paciente" }
-      }
+    "objections": {
+      "label": "Objeções comuns e respostas",
+      "help": "Liste as objeções que os clientes mais levantam e a resposta que o assistente deve dar. Adicione quantas quiser.",
+      "questionPlaceholder": "Objeção ou pergunta",
+      "answerPlaceholder": "Como o assistente deve responder",
+      "add": "Adicionar linha",
+      "remove": "Remover"
+    },
+    "faq": {
+      "label": "Perguntas frequentes",
+      "help": "Liste perguntas que os clientes fazem com frequência e a resposta que o assistente deve dar. Adicione quantas quiser.",
+      "questionPlaceholder": "Pergunta",
+      "answerPlaceholder": "Resposta",
+      "add": "Adicionar linha",
+      "remove": "Remover"
     },
     "agentName": {
       "label": "Qual nome usamos nas conversas?",
       "help": "O nome é usado como remetente das conversas de WhatsApp e mensagens de acompanhamento. Qual nome combina melhor com o showroom de vocês?",
       "male": "Masculino",
       "female": "Feminino",
-      "notePlaceholder": "Por que esse nome combina com o showroom (opcional)",
+      "customPlaceholder": "Ou digite outro nome…",
+      "avatarLabel": "Foto de perfil",
+      "avatar": {
+        "logo": { "label": "Logo da empresa", "help": "Usar o logo do showroom como foto de perfil." },
+        "avatar": { "label": "Avatar do assistente", "help": "Usar uma foto de retrato do assistente." },
+        "avatarLogo": { "label": "Avatar com logo", "help": "Retrato do assistente com o logo da empresa no canto inferior." }
+      },
       "options": {
         "thomas": { "label": "Thomas" },
         "mark": { "label": "Mark" },
@@ -143,5 +111,13 @@
         "lisa": { "label": "Lisa" }
       }
     }
+  },
+  "facts": {
+    "placeholder": "Digite a resposta aqui…",
+    "negotiation": { "label": "Margem para negociação", "help": "Costuma haver margem para negociação? O assistente pode sugerir que o preço é flexível, e até onde pode ir?" },
+    "financing": { "label": "Financiamento", "help": "Vocês oferecem financiamento? Por meio de quem, e o que o assistente deve dizer sobre isso?" },
+    "installments": { "label": "Parcelamento", "help": "Os clientes podem pagar parcelado? Quais condições (número de parcelas, entrada)?" },
+    "deliveryTime": { "label": "Prazo de entrega", "help": "Vocês têm um prazo de entrega padrão? Ele consta no orçamento? Se sim, o assistente remete ao orçamento; se não, o que ele pode dizer ao cliente?" },
+    "guarantees": { "label": "Garantias", "help": "Quais garantias vocês oferecem? Algo que o assistente possa mencionar para gerar confiança?" }
   }
 }

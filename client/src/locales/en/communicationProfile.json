@@ -2,7 +2,7 @@
   "tab": "Communication",
   "panel": {
     "title": "Communication Profile",
-    "subtitle": "How this client wants the AI to talk to their leads."
+    "subtitle": "How this client wants the AI to talk to their customers."
   },
   "wizard": {
     "stepLabel": "Question {{current}} of {{total}}",
@@ -10,49 +10,35 @@
     "next": "Next",
     "finish": "Finish",
     "saving": "Saving…",
-    "exampleLabel": "Example",
-    "optionalNote": "Optional note",
     "selectUpTo": "Choose up to {{max}}",
-    "otherPlaceholder": "Other, namely…",
-    "recommended": "Recommended",
-    "phaseCommunication": "Communication",
-    "phaseFacts": "Key facts"
+    "recommended": "Recommended"
   },
   "summary": {
     "title": "Communication Profile",
     "subtitle": "Saved answers from the onboarding wizard.",
     "edit": "Edit answers",
     "notSet": "Not set",
-    "empty": "No communication profile yet. Start the wizard to set one up.",
-    "start": "Start wizard",
     "factsTitle": "Key facts"
-  },
-  "facts": {
-    "placeholder": "Type the answer here…",
-    "pricing": { "label": "Pricing approach", "help": "How does pricing work? Fixed prices, quote-based, price ranges? What should the assistant say when a lead asks about cost?" },
-    "discounts": { "label": "Discounts", "help": "Do you offer discounts? Under what conditions? Should the assistant ever mention or offer them?" },
-    "financing": { "label": "Financing & payment terms", "help": "Do you offer financing or instalments? What are the standard payment terms (deposit, milestones)?" },
-    "leadTimes": { "label": "Lead times", "help": "How long from order to delivery/installation? What should the assistant tell a lead who asks?" },
-    "guarantees": { "label": "Guarantees & warranty", "help": "What guarantees or warranties do you offer? Anything the assistant can mention to build trust?" },
-    "serviceArea": { "label": "Service area", "help": "Which regions or cities do you serve? Are there areas you do not cover?" },
-    "included": { "label": "What is included", "help": "What is included in a standard project or quote (design, installation, materials, aftercare)?" },
-    "objection": { "label": "Common objection & response", "help": "What is the most common objection or hesitation, and what is your best response to it?" },
-    "faq": { "label": "Frequently asked questions", "help": "Any other questions leads ask often, with the answers the assistant should give?" }
   },
   "questions": {
     "openingStyle": {
-      "label": "Which opening style fits you best?",
+      "label": "Which AI style fits you best?",
       "options": {
-        "personal": { "label": "Personal", "example": "Hi Jan, dit is Thomas van Gourmet Kitchen Designs. Ik kom nog even terug op de offerte die jullie een tijdje geleden bij ons hebben laten maken. Klopt dat?" },
-        "project": { "label": "Project-focused", "example": "Hi Jan, Thomas hier van Gourmet Kitchen Designs. Jullie hebben eerder een ontwerp en voorstel van ons ontvangen. Ik was benieuwd of dit nog speelt." },
-        "business": { "label": "Businesslike", "example": "Hi Jan, Thomas van Gourmet Kitchen Designs. Ik zag dat we eerder een voorstel voor jullie hebben uitgewerkt en vroeg me af hoe de situatie inmiddels is veranderd." }
-      }
-    },
-    "addressForm": {
-      "label": "How do you address customers?",
-      "options": {
-        "je": { "label": "Je / jij (informal)" },
-        "u": { "label": "U (formal)" }
+        "personal": {
+          "label": "Personal",
+          "behavior": "Relationship, involvement, human. Talks informally, shows empathy, asks open questions, responds to emotions, takes its time.",
+          "example": "Helemaal begrijpelijk dat het even is blijven liggen, Jan. Zullen we samen kijken wat voor jullie een fijn moment is om het weer op te pakken?"
+        },
+        "project": {
+          "label": "Project-focused",
+          "behavior": "Focus on the project and its progress. Keeps the conversation practical, discusses planning, choices and status, little small talk.",
+          "example": "Helder. Zal ik de planning er even bij pakken? Dan zien we meteen welke keuzes voor het ontwerp nog openstaan."
+        },
+        "business": {
+          "label": "Businesslike",
+          "behavior": "Efficiency and clarity. Short, factual, straight to the point, little emotional language.",
+          "example": "Duidelijk. Het voorstel is nog geldig. Zal ik een moment inplannen om de details door te nemen?"
+        }
       }
     },
     "statusQuestion": {
@@ -63,36 +49,15 @@
         "besluitvorming": { "label": "Decision-making", "example": "Waar staan jullie momenteel in jullie besluitvorming?" }
       }
     },
-    "brandFeel": {
-      "label": "What fits your brand best?",
+    "perception": {
+      "label": "How do you want to come across? Choose up to 3.",
       "options": {
-        "warm": { "label": "Warm & personal" },
-        "professional": { "label": "Professional & advisory" },
-        "direct": { "label": "Businesslike & direct" }
-      }
-    },
-    "contactApproach": {
-      "label": "How do you normally reach out?",
-      "options": {
-        "awaiting": { "label": "Reserved", "example": "Ik was benieuwd hoe jullie er momenteel in staan." },
-        "neutral": { "label": "Neutral", "example": "Ik wilde even horen waar jullie momenteel staan." },
-        "proactive": { "label": "Proactive", "example": "Ik dacht, ik neem even contact op om te horen waar jullie momenteel staan." }
-      }
-    },
-    "distinctive": {
-      "label": "What do customers most often find distinctive about you?",
-      "options": {
-        "persoonlijke_aandacht": { "label": "Personal attention" },
-        "vakmanschap": { "label": "Craftsmanship" },
-        "design": { "label": "Design" },
-        "kwaliteit": { "label": "Quality" },
-        "ontzorgen": { "label": "Taking care of everything" },
-        "meedenken": { "label": "Thinking along" },
-        "exclusiviteit": { "label": "Exclusivity" },
-        "snelheid": { "label": "Speed" },
-        "transparantie": { "label": "Transparency" },
-        "betrouwbaarheid": { "label": "Reliability" },
-        "familiebedrijf": { "label": "Family business" }
+        "persoonlijk": { "label": "Personal" },
+        "deskundig": { "label": "Expert" },
+        "betrokken": { "label": "Involved" },
+        "exclusief": { "label": "Exclusive" },
+        "hoogwaardig": { "label": "High-end" },
+        "toegankelijk": { "label": "Approachable" }
       }
     },
     "preferredWords": {
@@ -105,37 +70,40 @@
     },
     "formality": {
       "label": "How formal may the communication be?",
-      "scale": {
-        "1": "Very informal",
-        "2": "Informal",
-        "3": "Neutral",
-        "4": "Formal",
-        "5": "Very formal"
+      "levels": {
+        "informal": { "label": "Informal (je)", "example": "Hé Jan! Hoe staat het met jullie keukenplannen?" },
+        "neutral": { "label": "Neutral (je)", "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat." },
+        "formal": { "label": "Formal (u)", "example": "Goedendag, ik neem contact met u op over uw aanvraag." }
       }
     },
-    "perception": {
-      "label": "How do you want to come across? Choose up to 3.",
-      "options": {
-        "persoonlijk": { "label": "Personal" },
-        "deskundig": { "label": "Expert" },
-        "rustig": { "label": "Calm" },
-        "betrokken": { "label": "Involved" },
-        "exclusief": { "label": "Exclusive" },
-        "creatief": { "label": "Creative" },
-        "praktisch": { "label": "Practical" },
-        "vertrouwd": { "label": "Familiar" },
-        "hoogwaardig": { "label": "High-end" },
-        "toegankelijk": { "label": "Approachable" },
-        "direct": { "label": "Direct" },
-        "geduldig": { "label": "Patient" }
-      }
+    "objections": {
+      "label": "Common objections & answers",
+      "help": "List the objections customers raise most often and the answer the assistant should give. Add as many as you like.",
+      "questionPlaceholder": "Objection or question",
+      "answerPlaceholder": "How the assistant should respond",
+      "add": "Add row",
+      "remove": "Remove"
+    },
+    "faq": {
+      "label": "Frequently asked questions",
+      "help": "List questions customers ask often and the answer the assistant should give. Add as many as you like.",
+      "questionPlaceholder": "Question",
+      "answerPlaceholder": "Answer",
+      "add": "Add row",
+      "remove": "Remove"
     },
     "agentName": {
       "label": "Which name do we use in conversations?",
       "help": "The name is used as the sender of WhatsApp conversations and follow-up messages. Which name fits your showroom best?",
       "male": "Male",
       "female": "Female",
-      "notePlaceholder": "Why this name fits your showroom (optional)",
+      "customPlaceholder": "Or type a different name…",
+      "avatarLabel": "Profile picture",
+      "avatar": {
+        "logo": { "label": "Company logo", "help": "Use the showroom's logo as the profile picture." },
+        "avatar": { "label": "Assistant avatar", "help": "Use a portrait image of the assistant." },
+        "avatarLogo": { "label": "Avatar with logo badge", "help": "Assistant portrait with the company logo in the bottom corner." }
+      },
       "options": {
         "thomas": { "label": "Thomas" },
         "mark": { "label": "Mark" },
@@ -143,5 +111,13 @@
         "lisa": { "label": "Lisa" }
       }
     }
+  },
+  "facts": {
+    "placeholder": "Type the answer here…",
+    "negotiation": { "label": "Room for negotiation", "help": "Is there usually room for negotiation? Can the assistant hint that the price may be flexible, and how far can it go?" },
+    "financing": { "label": "Financing", "help": "Do you offer financing? Through whom, and what should the assistant say about it?" },
+    "installments": { "label": "Installments", "help": "Can customers pay in installments? What terms (number of instalments, deposit)?" },
+    "deliveryTime": { "label": "Delivery time", "help": "Do you have a standard delivery time? Is it stated in the quote? If yes, the assistant refers to the quote; if not, what can it tell the customer?" },
+    "guarantees": { "label": "Guarantees & warranty", "help": "What guarantees or warranties do you offer? Anything the assistant can mention to build trust?" }
   }
 }

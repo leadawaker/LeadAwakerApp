@@ -1,19 +1,16 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Plus, X } from "lucide-react";
 import {
-  STYLE_STEPS, STEPS_WITH_EXAMPLES, RECOMMENDED_STEPS, recommendFor, EMPTY_ANSWERS,
-  FACT_STEPS,
-  OPENING_STYLE, ADDRESS_FORM, STATUS_QUESTION, BRAND_FEEL, CONTACT_APPROACH,
-  DISTINCTIVE, PERCEPTION, PERCEPTION_MAX, AGENT_NAMES, AGENT_GENDER,
-  PREFERRED_WORD_GROUPS, FORMALITY_MIN, FORMALITY_MAX,
-  type ProfileAnswers, type WizardStep, type RecommendedStep, type PreferredWordGroup, type FactValues,
+  STEPS, STEPS_WITH_EXAMPLES, recommendStatus, addressFor, EMPTY_ANSWERS, QA_MIN_ROWS,
+  AI_STYLE, STATUS_QUESTION, FORMALITY_LEVELS, PERCEPTION, PERCEPTION_MAX,
+  AGENT_NAMES, AGENT_GENDER, AVATAR_CHOICES, PREFERRED_WORD_GROUPS, QA_CATEGORY,
+  type ProfileAnswers, type StyleField, type PreferredWordGroup, type FactValues, type QARow,
 } from "./profileConstants";
+import type { QAGrids } from "./useOnboardingFacts";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const isRecommended = (f: string): f is RecommendedStep => (RECOMMENDED_STEPS as readonly string[]).includes(f);
 
-// ── Selectable option card ───────────────────────────────────────────────────
 function OptionCard({ selected, onClick, children, badge }: { selected: boolean; onClick: () => void; children: ReactNode; badge?: ReactNode }) {
   return (
     <button
@@ -39,7 +36,6 @@ function OptionCard({ selected, onClick, children, badge }: { selected: boolean;
   );
 }
 
-// ── Toggle chip (multi-select) ───────────────────────────────────────────────
 function Chip({ selected, disabled, onClick, label }: { selected: boolean; disabled?: boolean; onClick: () => void; label: string }) {
   return (
     <button
@@ -67,71 +63,93 @@ function RecommendedBadge({ label }: { label: string }) {
   );
 }
 
+const inputStyle = {
+  width: "100%", padding: "9px 13px", borderRadius: "var(--r-button)", fontSize: 13,
+  border: "none", background: "var(--bg)", color: "var(--ink-soft)",
+} as const;
+
+function padRows(rows?: QARow[]): QARow[] {
+  const out = [...(rows ?? [])];
+  while (out.length < QA_MIN_ROWS) out.push({ question: "", answer: "" });
+  return out;
+}
+
 interface Props {
   initial?: ProfileAnswers;
   initialFacts?: FactValues;
+  initialGrids?: QAGrids;
+  initialStep?: number;
   saving: boolean;
-  onFinish: (answers: ProfileAnswers, facts: FactValues) => void;
-  // When set, the question area scrolls within this max height instead of
-  // filling the parent (used inline in the ultra-wide overview).
+  onFinish: (answers: ProfileAnswers, facts: FactValues, grids: QAGrids) => void;
   bodyMaxHeight?: number;
 }
 
-export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMaxHeight }: Props) {
+export function ProfileWizard({ initial, initialFacts, initialGrids, initialStep, saving, onFinish, bodyMaxHeight }: Props) {
   const { t } = useTranslation("communicationProfile");
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(initialStep ?? 0);
   const [a, setA] = useState<ProfileAnswers>(initial ?? { ...EMPTY_ANSWERS });
   const [facts, setFacts] = useState<FactValues>(initialFacts ?? {});
+  const [grids, setGrids] = useState<QAGrids>(() => {
+    const g: QAGrids = {};
+    for (const key of Object.keys(QA_CATEGORY)) g[key] = padRows(initialGrids?.[key]);
+    return g;
+  });
 
-  const styleCount = STYLE_STEPS.length;
-  const total = styleCount + FACT_STEPS.length;
-  const isStyle = step < styleCount;
-  const field = isStyle ? (STYLE_STEPS[step] as WizardStep) : null;
-  const fact = isStyle ? null : FACT_STEPS[step - styleCount];
+  const total = STEPS.length;
+  const def = STEPS[step];
   const isLast = step === total - 1;
   const set = (patch: Partial<ProfileAnswers>) => setA((prev) => ({ ...prev, ...patch }));
 
-  // Pre-select the expert recommendation when first landing on a tactical step.
+  // Pre-select the recommended status question (derived from AI style) on arrival.
   useEffect(() => {
-    if (field && isRecommended(field) && a[field] == null) {
-      setA((prev) => ({ ...prev, [field]: recommendFor(field, prev.brandFeel) }));
+    if (def.key === "statusQuestion" && a.statusQuestion == null) {
+      setA((prev) => ({ ...prev, statusQuestion: recommendStatus(prev.openingStyle) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  const toggleArray = (key: "distinctive" | "perception", value: string, max?: number) => {
-    const cur = a[key];
-    if (cur.includes(value)) set({ [key]: cur.filter((v) => v !== value) } as any);
-    else if (!max || cur.length < max) set({ [key]: [...cur, value] } as any);
-  };
+  const togglePerception = (value: string) => setA((prev) => {
+    const cur = prev.perception;
+    if (cur.includes(value)) return { ...prev, perception: cur.filter((v) => v !== value) };
+    if (cur.length < PERCEPTION_MAX) return { ...prev, perception: [...cur, value] };
+    return prev;
+  });
 
-  function renderStyle(f: WizardStep) {
+  function renderStyle(f: StyleField) {
     switch (f) {
       case "openingStyle":
-        return <SingleChoice field={f} options={OPENING_STYLE} value={a.openingStyle} onSelect={(v) => set({ openingStyle: v })} />;
-      case "addressForm":
-        return <SingleChoice field={f} options={ADDRESS_FORM} value={a.addressForm} onSelect={(v) => set({ addressForm: v })} />;
+        return <SingleChoice field="openingStyle" options={AI_STYLE} value={a.openingStyle} onSelect={(v) => set({ openingStyle: v })} withBehavior />;
       case "statusQuestion":
-        return <SingleChoice field={f} options={STATUS_QUESTION} value={a.statusQuestion} onSelect={(v) => set({ statusQuestion: v })} />;
-      case "brandFeel":
-        return <SingleChoice field={f} options={BRAND_FEEL} value={a.brandFeel} onSelect={(v) => set({ brandFeel: v })} />;
-      case "contactApproach":
-        return <SingleChoice field={f} options={CONTACT_APPROACH} value={a.contactApproach} onSelect={(v) => set({ contactApproach: v })} />;
-      case "distinctive":
+        return <SingleChoice field="statusQuestion" options={STATUS_QUESTION} value={a.statusQuestion} onSelect={(v) => set({ statusQuestion: v })} />;
+      case "formality":
         return (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
-            {DISTINCTIVE.map((k) => (
-              <Chip key={k} selected={a.distinctive.includes(k)} onClick={() => toggleArray("distinctive", k)} label={t(`questions.distinctive.options.${k}.label`)} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {FORMALITY_LEVELS.map((lvl) => (
+              <OptionCard
+                key={lvl.key}
+                selected={a.formality === lvl.value}
+                onClick={() => set({ formality: lvl.value, addressForm: addressFor(lvl.value) })}
+                badge={<RecommendedBadge label={lvl.address === "u" ? "U" : "Je"} />}
+              >
+                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-soft)", display: "block" }}>{t(`questions.formality.levels.${lvl.key}.label`)}</span>
+                <span style={{ display: "block", fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginTop: 6, lineHeight: 1.5 }}>"{t(`questions.formality.levels.${lvl.key}.example`)}"</span>
+              </OptionCard>
             ))}
-            <input
-              value={a.distinctiveOther}
-              onChange={(e) => set({ distinctiveOther: e.target.value })}
-              placeholder={t("wizard.otherPlaceholder")}
-              className="neu-inset-crisp"
-              style={{ flex: "1 1 100%", marginTop: 6, padding: "9px 13px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)" }}
-            />
           </div>
         );
+      case "perception": {
+        const full = a.perception.length >= PERCEPTION_MAX;
+        return (
+          <div>
+            <div className="eyebrow eyebrow-sm" style={{ marginBottom: 10, color: "var(--mute-2)" }}>{t("wizard.selectUpTo", { max: PERCEPTION_MAX })} · {a.perception.length}/{PERCEPTION_MAX}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
+              {PERCEPTION.map((k) => (
+                <Chip key={k} selected={a.perception.includes(k)} disabled={full} onClick={() => togglePerception(k)} label={t(`questions.perception.options.${k}.label`)} />
+              ))}
+            </div>
+          </div>
+        );
+      }
       case "preferredWords":
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -152,51 +170,16 @@ export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMax
             ))}
           </div>
         );
-      case "formality":
-        return (
-          <div style={{ display: "flex", gap: 9 }}>
-            {Array.from({ length: FORMALITY_MAX - FORMALITY_MIN + 1 }, (_, i) => i + FORMALITY_MIN).map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => set({ formality: n })}
-                className={a.formality === n ? "neu-raised" : "neu-inset-crisp"}
-                style={{
-                  flex: 1, padding: "12px 6px", borderRadius: "var(--r-button)", cursor: "pointer",
-                  border: a.formality === n ? "1px solid var(--wine)" : "1px solid transparent",
-                  background: a.formality === n ? "var(--wine-tint)" : "var(--bg)",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                }}
-              >
-                <span className="serif" style={{ fontSize: 20, color: a.formality === n ? "var(--wine)" : "var(--ink)", lineHeight: 1 }}>{n}</span>
-                <span style={{ fontSize: 10, color: "var(--mute)", textAlign: "center", lineHeight: 1.2 }}>{t(`questions.formality.scale.${n}`)}</span>
-              </button>
-            ))}
-          </div>
-        );
-      case "perception": {
-        const full = a.perception.length >= PERCEPTION_MAX;
-        return (
-          <div>
-            <div className="eyebrow eyebrow-sm" style={{ marginBottom: 10, color: "var(--mute-2)" }}>{t("wizard.selectUpTo", { max: PERCEPTION_MAX })} · {a.perception.length}/{PERCEPTION_MAX}</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
-              {PERCEPTION.map((k) => (
-                <Chip key={k} selected={a.perception.includes(k)} disabled={full} onClick={() => toggleArray("perception", k, PERCEPTION_MAX)} label={t(`questions.perception.options.${k}.label`)} />
-              ))}
-            </div>
-          </div>
-        );
-      }
       case "agentName":
         return (
           <div>
             <p style={{ fontSize: 12.5, color: "var(--mute)", margin: "0 0 16px", lineHeight: 1.5 }}>{t("questions.agentName.help")}</p>
             {(["male", "female"] as const).map((gender) => (
-              <div key={gender} style={{ marginBottom: 14 }}>
+              <div key={gender} style={{ marginBottom: 12 }}>
                 <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>{t(`questions.agentName.${gender}`)}</div>
                 <div style={{ display: "flex", gap: 9 }}>
                   {AGENT_NAMES.filter((n) => AGENT_GENDER[n] === gender).map((n) => (
-                    <OptionCard key={n} selected={a.agentName === n} onClick={() => set({ agentName: n })}>
+                    <OptionCard key={n} selected={a.agentName === n && !a.agentNameCustom} onClick={() => set({ agentName: n, agentNameCustom: "" })}>
                       <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-soft)" }}>{t(`questions.agentName.options.${n}.label`)}</span>
                     </OptionCard>
                   ))}
@@ -204,24 +187,31 @@ export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMax
               </div>
             ))}
             <input
-              value={a.agentNameNote}
-              onChange={(e) => set({ agentNameNote: e.target.value })}
-              placeholder={t("questions.agentName.notePlaceholder")}
+              value={a.agentNameCustom}
+              onChange={(e) => set({ agentNameCustom: e.target.value, agentName: e.target.value ? null : a.agentName })}
+              placeholder={t("questions.agentName.customPlaceholder")}
               className="neu-inset-crisp"
-              style={{ width: "100%", marginTop: 4, padding: "9px 13px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)" }}
+              style={{ ...inputStyle, marginTop: 2 }}
             />
+            <div className="eyebrow eyebrow-sm" style={{ margin: "18px 0 8px" }}>{t("questions.agentName.avatarLabel")}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {AVATAR_CHOICES.map((c) => (
+                <OptionCard key={c} selected={a.avatarChoice === c} onClick={() => set({ avatarChoice: c })}>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink-soft)", display: "block" }}>{t(`questions.agentName.avatar.${c}.label`)}</span>
+                  <span style={{ fontSize: 11.5, color: "var(--mute)", display: "block", marginTop: 3 }}>{t(`questions.agentName.avatar.${c}.help`)}</span>
+                </OptionCard>
+              ))}
+            </div>
           </div>
         );
     }
   }
 
-  // Single-choice block factored so example sentences + the recommendation badge
-  // render uniformly.
-  function SingleChoice({ field, options, value, onSelect }: {
-    field: WizardStep; options: readonly string[]; value: string | null; onSelect: (v: string) => void;
+  function SingleChoice({ field, options, value, onSelect, withBehavior }: {
+    field: StyleField; options: readonly string[]; value: string | null; onSelect: (v: string) => void; withBehavior?: boolean;
   }) {
     const withExample = STEPS_WITH_EXAMPLES.includes(field);
-    const rec = isRecommended(field) ? recommendFor(field, a.brandFeel) : null;
+    const rec = field === "statusQuestion" ? recommendStatus(a.openingStyle) : null;
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((k) => (
@@ -232,6 +222,9 @@ export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMax
             badge={rec === k ? <RecommendedBadge label={t("wizard.recommended")} /> : undefined}
           >
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-soft)", display: "block" }}>{t(`questions.${field}.options.${k}.label`)}</span>
+            {withBehavior && (
+              <span style={{ display: "block", fontSize: 12, color: "var(--mute)", marginTop: 5, lineHeight: 1.5 }}>{t(`questions.${field}.options.${k}.behavior`)}</span>
+            )}
             {withExample && (
               <span style={{ display: "block", fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginTop: 6, lineHeight: 1.5 }}>
                 "{t(`questions.${field}.options.${k}.example`)}"
@@ -243,34 +236,54 @@ export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMax
     );
   }
 
-  function renderFact() {
-    if (!fact) return null;
+  function renderFact(key: string) {
     return (
       <div>
-        <p style={{ fontSize: 12.5, color: "var(--mute)", margin: "0 0 12px", lineHeight: 1.5 }}>{t(`facts.${fact.id}.help`)}</p>
+        <p style={{ fontSize: 12.5, color: "var(--mute)", margin: "0 0 12px", lineHeight: 1.5 }}>{t(`facts.${key}.help`)}</p>
         <textarea
-          value={facts[fact.id] ?? ""}
-          onChange={(e) => setFacts((prev) => ({ ...prev, [fact.id]: e.target.value }))}
+          value={facts[key] ?? ""}
+          onChange={(e) => setFacts((prev) => ({ ...prev, [key]: e.target.value }))}
           placeholder={t("facts.placeholder")}
           rows={6}
           className="neu-inset-crisp"
-          style={{ width: "100%", padding: "11px 13px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)", resize: "vertical", lineHeight: 1.5 }}
+          style={{ ...inputStyle, padding: "11px 13px", resize: "vertical", lineHeight: 1.5 }}
         />
       </div>
     );
   }
 
-  const phaseLabel = isStyle ? t("wizard.phaseCommunication") : t("wizard.phaseFacts");
-  const questionLabel = isStyle ? t(`questions.${field}.label`) : t(`facts.${fact!.id}.label`);
+  function renderGrid(stepKey: string) {
+    const rows = grids[stepKey] ?? [];
+    const setRows = (updater: (prev: QARow[]) => QARow[]) =>
+      setGrids((prev) => ({ ...prev, [stepKey]: updater(prev[stepKey] ?? []) }));
+    return (
+      <div>
+        <p style={{ fontSize: 12.5, color: "var(--mute)", margin: "0 0 12px", lineHeight: 1.5 }}>{t(`questions.${stepKey}.help`)}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {rows.map((row, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, alignItems: "start" }}>
+              <input value={row.question} onChange={(e) => setRows((p) => p.map((r, idx) => idx === i ? { ...r, question: e.target.value } : r))} placeholder={t(`questions.${stepKey}.questionPlaceholder`)} className="neu-inset-crisp" style={inputStyle} />
+              <input value={row.answer} onChange={(e) => setRows((p) => p.map((r, idx) => idx === i ? { ...r, answer: e.target.value } : r))} placeholder={t(`questions.${stepKey}.answerPlaceholder`)} className="neu-inset-crisp" style={inputStyle} />
+              <button type="button" onClick={() => setRows((p) => p.filter((_, idx) => idx !== i))} className="la-btn la-btn--soft la-btn--icon" title={t(`questions.${stepKey}.remove`)} style={{ marginTop: 1 }}>
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="la-btn la-btn--inset" style={{ marginTop: 12 }} onClick={() => setRows((p) => [...p, { question: "", answer: "" }])}>
+          <Plus size={13} />{t(`questions.${stepKey}.add`)}
+        </button>
+      </div>
+    );
+  }
+
+  const questionLabel = def.kind === "fact" ? t(`facts.${def.key}.label`) : t(`questions.${def.key}.label`);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: bodyMaxHeight ? "auto" : "100%", minHeight: 0 }}>
       {/* Progress */}
       <div style={{ marginBottom: 18 }}>
-        <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
-          <span className="eyebrow eyebrow-sm" style={{ color: "var(--wine)" }}>{phaseLabel}</span>
-          <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>{t("wizard.stepLabel", { current: step + 1, total })}</span>
-        </div>
+        <div className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)", marginBottom: 8 }}>{t("wizard.stepLabel", { current: step + 1, total })}</div>
         <div style={{ height: 4, borderRadius: 999, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${((step + 1) / total) * 100}%`, background: "var(--wine)", borderRadius: 999, transition: "width 200ms" }} />
         </div>
@@ -282,7 +295,9 @@ export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMax
       </h4>
 
       <div style={{ flex: bodyMaxHeight ? undefined : 1, minHeight: 0, maxHeight: bodyMaxHeight, overflowY: "auto", paddingRight: 4 }}>
-        {isStyle ? renderStyle(field!) : renderFact()}
+        {def.kind === "style" && renderStyle(def.key as StyleField)}
+        {def.kind === "fact" && renderFact(def.key)}
+        {def.kind === "qagrid" && renderGrid(def.key)}
       </div>
 
       {/* Nav */}
@@ -291,7 +306,7 @@ export function ProfileWizard({ initial, initialFacts, saving, onFinish, bodyMax
           <ChevronLeft size={14} />{t("wizard.back")}
         </button>
         {isLast ? (
-          <button className="la-btn la-btn--wine" onClick={() => onFinish(a, facts)} disabled={saving}>
+          <button className="la-btn la-btn--wine" onClick={() => onFinish(a, facts, grids)} disabled={saving}>
             <Check size={14} />{saving ? t("wizard.saving") : t("wizard.finish")}
           </button>
         ) : (

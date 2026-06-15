@@ -295,14 +295,6 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
             {/* Activity */}
             <ActivitySection taskId={taskId} users={users} />
 
-            {/* Attachments */}
-            <AttachmentsSection taskId={taskId} />
-
-            {/* Timestamps */}
-            <div className="text-[11px] text-muted-foreground pt-2 border-t border-border/20 flex items-center gap-4 flex-wrap">
-              <span>{t("detail.created")} {relativeTime(task.createdAt as unknown as string)}</span>
-              <span>{t("detail.updated")} {relativeTime(task.updatedAt as unknown as string)}</span>
-            </div>
           </div>
 
           {/* ── Right: all controls ── */}
@@ -469,11 +461,14 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 </div>
               </div>
             )}
+
+            {/* Attachments */}
+            <AttachmentsSection taskId={taskId} />
           </div>
         </div>
       </div>
 
-      {/* ── Footer: destructive / duplicate actions, bottom-left ── */}
+      {/* ── Footer: destructive / duplicate actions + timestamps ── */}
       <div className="relative shrink-0 flex items-center gap-2 px-5 py-3 border-t border-border/20">
         <button onClick={handleClone} title={t("detail.clone")} className="la-btn la-btn--soft shrink-0">
           {t("detail.clone")}
@@ -490,6 +485,11 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
             <button onClick={handleDelete} className="la-btn la-btn--wine" style={{ background: "var(--stage-lost)" }}>{t("detail.delete")}</button>
           </PopoverContent>
         </Popover>
+        <div className="flex-1" />
+        <div className="text-[11px] text-muted-foreground flex items-center gap-3">
+          <span>{t("detail.created")} {relativeTime(task.createdAt as unknown as string)}</span>
+          <span>{t("detail.updated")} {relativeTime(task.updatedAt as unknown as string)}</span>
+        </div>
       </div>
     </div>
   );

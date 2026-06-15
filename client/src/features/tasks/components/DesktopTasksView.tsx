@@ -435,7 +435,7 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
               className="w-full max-w-4xl max-h-[88vh] overflow-hidden flex flex-col pointer-events-auto"
               style={{
                 borderRadius: 'var(--r-panel)',
-                background: 'var(--card)',
+                background: 'var(--bone)',
                 boxShadow: '0 24px 48px rgba(0,0,0,0.18)',
               }}
             >

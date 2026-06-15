@@ -502,62 +502,30 @@ export function CampaignDetailView({
               )}
             </div>
             <div className="flex items-center gap-1">
-              {(() => {
-                const hasSystemMessage = !!String((detail.linkedPrompt as any)?.systemMessage ?? (detail.linkedPrompt as any)?.system_message ?? "").trim();
-                const hasNotes = !!String((detail.linkedPrompt as any)?.notes ?? "").trim();
-                // Hidden = gray + crossed eye. Shown = open eye + inset + wine text.
-                const toggleCls = (open: boolean) => cn(
-                  "h-7 w-7 rounded-full flex items-center justify-center transition-all",
-                  open ? "" : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                );
-                const toggleStyle = (open: boolean, hasContent = false): React.CSSProperties | undefined => {
-                  if (open) return { color: "var(--wine)", boxShadow: "var(--sh-inset-crisp)" };
-                  if (hasContent) return { color: "#2563eb" }; // hidden but holds content
-                  return undefined;
-                };
-                const ToggleIcon = ({ open }: { open: boolean }) =>
-                  open ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />;
-                return (
-                  <>
-                    {/* Left panel (sections & variables) */}
-                    <button
-                      onClick={() => setPromptSidebarOpen(p => !p)}
-                      className={toggleCls(promptSidebarOpen)}
-                      style={toggleStyle(promptSidebarOpen)}
-                      title={promptSidebarOpen ? "Hide left panel" : "Show left panel"}
-                    >
-                      <ToggleIcon open={promptSidebarOpen} />
-                    </button>
-                    {/* System prompt */}
-                    <button
-                      onClick={() => setPromptSystemOpen(p => !p)}
-                      className={toggleCls(promptSystemOpen)}
-                      style={toggleStyle(promptSystemOpen, hasSystemMessage)}
-                      title={promptSystemOpen ? "Hide system prompt" : "Show system prompt"}
-                    >
-                      <ToggleIcon open={promptSystemOpen} />
-                    </button>
-                    {/* Notes */}
-                    <button
-                      onClick={() => setPromptNotesOpen(p => !p)}
-                      className={toggleCls(promptNotesOpen)}
-                      style={toggleStyle(promptNotesOpen, hasNotes)}
-                      title={promptNotesOpen ? "Hide notes" : "Show notes"}
-                    >
-                      <ToggleIcon open={promptNotesOpen} />
-                    </button>
-                    {/* Preview */}
-                    <button
-                      onClick={() => setPromptPreviewOpen(p => !p)}
-                      className={toggleCls(promptPreviewOpen)}
-                      style={toggleStyle(promptPreviewOpen)}
-                      title={promptPreviewOpen ? "Hide preview" : "Show preview"}
-                    >
-                      <ToggleIcon open={promptPreviewOpen} />
-                    </button>
-                  </>
-                );
-              })()}
+              {([
+                { open: promptSidebarOpen, toggle: () => setPromptSidebarOpen(p => !p), label: "left panel" },
+                { open: promptSystemOpen, toggle: () => setPromptSystemOpen(p => !p), label: "system prompt" },
+                { open: promptNotesOpen, toggle: () => setPromptNotesOpen(p => !p), label: "notes" },
+                { open: promptPreviewOpen, toggle: () => setPromptPreviewOpen(p => !p), label: "preview" },
+              ] as const).map(({ open, toggle, label }) => (
+                <button
+                  key={label}
+                  onClick={toggle}
+                  className={cn(
+                    "h-7 w-7 rounded-full flex items-center justify-center transition-all",
+                    // Hidden = flat + gray. Shown = recessed (inset) + wine.
+                    open ? "" : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                  )}
+                  style={
+                    open
+                      ? { color: "var(--wine)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }
+                      : { background: "transparent", boxShadow: "none" }
+                  }
+                  title={`${open ? "Hide" : "Show"} ${label}`}
+                >
+                  {open ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                </button>
+              ))}
               <button
                 onClick={togglePromptPanel}
                 className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
