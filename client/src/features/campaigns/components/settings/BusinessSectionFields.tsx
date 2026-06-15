@@ -6,6 +6,8 @@ import {
 import {
   EditText, EditSelect, InfoRow,
 } from "../formFields";
+import { EditCombo } from "../formFields/EditCombo";
+import { asCampaignLang, USP_OPTIONS, AI_STYLE_OPTIONS, placeholderFor } from "./fieldLocale";
 
 interface BusinessSectionFieldsProps {
   campaign: any;
@@ -21,6 +23,8 @@ export function BusinessSectionFields({
   focusField, onStartEditField,
 }: BusinessSectionFieldsProps) {
   const { t } = useTranslation("campaigns");
+  // Enum/option sets + placeholders follow the campaign's own language, not the UI locale.
+  const lang = asCampaignLang(draft.language ?? campaign.language);
 
   const editFor = (field: string) =>
     onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
@@ -42,7 +46,7 @@ export function BusinessSectionFields({
       />
       <InfoRow icon={Paintbrush} label="AI Style" value={campaign.ai_style_override}
         {...editFor("ai_style_override")}
-        editChild={isEditing ? <EditSelect value={String(draft.ai_style_override ?? "")} onChange={(v) => setDraft(d => ({...d, ai_style_override: v}))} options={["", "Professional & consultative", "Warm & educational", "Direct & results-focused", "Friendly & reassuring", "Premium & exclusive"]} {...focusFor("ai_style_override")} /> : undefined}
+        editChild={isEditing ? <EditCombo value={String(draft.ai_style_override ?? "")} onChange={(v) => setDraft(d => ({...d, ai_style_override: v}))} options={AI_STYLE_OPTIONS[lang]} {...focusFor("ai_style_override")} /> : undefined}
       />
       <InfoRow icon={Clock} label="Inquiry date" value={campaign.inquiry_timeframe}
         {...editFor("inquiry_timeframe")}
@@ -54,19 +58,19 @@ export function BusinessSectionFields({
       />
       <InfoRow icon={HelpCircle} label={t("config.nicheQuestion")} value={campaign.niche_question}
         {...editFor("niche_question")}
-        editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder="e.g. Are you still looking for…?" {...focusFor("niche_question")} /> : undefined}
+        editChild={isEditing ? <EditText value={String(draft.niche_question ?? "")} onChange={(v) => setDraft(d => ({...d, niche_question: v}))} placeholder={placeholderFor("niche_question", lang)} {...focusFor("niche_question")} /> : undefined}
       />
       <InfoRow icon={Award} label={t("config.usp")} value={campaign.campaign_usp}
         {...editFor("campaign_usp")}
-        editChild={isEditing ? <EditSelect value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} options={["", "Naturally sourced materials", "Smart technology integration", "Fast delivery: kitchen ready in 6 weeks", "Made in Germany", "Made in Italy", "Dedicated designer: start to finish", "Extended warranty: 10 years"]} {...focusFor("campaign_usp")} /> : undefined}
+        editChild={isEditing ? <EditCombo value={String(draft.campaign_usp ?? "")} onChange={(v) => setDraft(d => ({...d, campaign_usp: v}))} options={USP_OPTIONS[lang]} {...focusFor("campaign_usp")} /> : undefined}
       />
       <InfoRow icon={Building2} label={t("config.businessDescription")} value={campaign.description} richText={true}
         {...editFor("description")}
-        editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline minRows={1} placeholder="Business description…" {...focusFor("description")} /> : undefined}
+        editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline minRows={1} placeholder={placeholderFor("business_description", lang)} {...focusFor("description")} /> : undefined}
       />
       <InfoRow icon={BookOpen} label={t("config.kb")} value={campaign.kb} richText={true}
         {...editFor("kb")}
-        editChild={isEditing ? <EditText value={String(draft.kb ?? "")} onChange={(v) => setDraft(d => ({...d, kb: v}))} multiline minRows={1} placeholder="Key facts, stats, achievements the AI should know about this business…" {...focusFor("kb")} /> : undefined}
+        editChild={isEditing ? <EditText value={String(draft.kb ?? "")} onChange={(v) => setDraft(d => ({...d, kb: v}))} multiline minRows={1} placeholder={placeholderFor("kb", lang)} {...focusFor("kb")} /> : undefined}
       />
     </div>
   );

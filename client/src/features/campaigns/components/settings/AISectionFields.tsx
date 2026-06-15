@@ -7,6 +7,7 @@ import {
   EditText, EditNumber, EditSelect, EditToggle, InfoRow, CopyButton,
 } from "../formFields";
 import { MODEL_OPTIONS } from "@/features/prompts/types";
+import { asCampaignLang, placeholderFor } from "./fieldLocale";
 
 interface AISectionFieldsProps {
   campaign: any;
@@ -22,6 +23,7 @@ export function AISectionFields({
   focusField, onStartEditField,
 }: AISectionFieldsProps) {
   const { t } = useTranslation("campaigns");
+  const lang = asCampaignLang(draft.language ?? campaign.language);
 
   const editFor = (field: string) =>
     onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
@@ -92,7 +94,7 @@ export function AISectionFields({
       </div>
       <InfoRow icon={Bot} label={t("config.aiRole") || "AI Role"} value={campaign.ai_role}
         {...editFor("ai_role")}
-        editChild={isEditing ? <EditText value={String(draft.ai_role ?? "")} onChange={(v) => setDraft(d => ({...d, ai_role: v}))} placeholder="e.g. Sales representative…" {...focusFor("ai_role")} /> : undefined}
+        editChild={isEditing ? <EditText value={String(draft.ai_role ?? "")} onChange={(v) => setDraft(d => ({...d, ai_role: v}))} placeholder={placeholderFor("ai_role", lang)} {...focusFor("ai_role")} /> : undefined}
       />
       <InfoRow icon={Mic} label={t("config.voiceReplyMode")} value={campaign.voice_reply_mode || "off"}
         {...editFor("voice_reply_mode")}
