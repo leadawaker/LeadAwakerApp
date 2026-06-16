@@ -60,6 +60,19 @@ translates the opener downstream — per `fieldLocale.ts` doc), `agent_name`,
 > rather than the UI-language one. Translating arbitrary business prose to the UI locale
 > just for display would be misleading/expensive, so we show the real stored content.
 
+## Dropdown UX (fix in this work)
+
+- The current localized dropdowns (USP, AI Style — wired today with `EditCombo`) use a
+  native HTML `<datalist>`: the **chevron looks different** from the other selects and
+  **clicking it doesn't open the options**. Replace `EditCombo` with a **proper combobox**:
+  - clicking the field/chevron **opens the suggestion list**,
+  - chevron + styling **match `EditSelect`** (consistent look across all dropdowns),
+  - the user can still **type a custom value** (pick-or-type),
+  - keyboard + click selection, closes on outside-click/Escape.
+- **Extensibility:** option lists live only in `fieldLocale.ts` (one place per field, aligned
+  `en`/`nl`). Adding more options = appending to those arrays — no component changes. Gabriel
+  plans to grow these lists.
+
 ## Behavioral requirements
 
 1. **No data loss / backward compatible.** Existing campaigns (plain-string fields,

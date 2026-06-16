@@ -51,11 +51,19 @@ real translation exists (so legacy/PT campaigns are unaffected).
 
 ## Phase 3 — Frontend display/edit (UI-language dropdowns, campaign-language free-text)
 
-- **EditCombo wrapper** for dropdowns: a small `LocalizedCombo` (or extend `EditCombo`
-  usage) that:
-  - renders options from `OPTIONS[uiLang]` (UI locale from `i18n.language`),
-  - shows the current value mapped to `uiLang` via `optionLabel(...)`,
-  - on change writes the field as `{en, nl}` JSON via `optionStore(...)`.
+- **New `LocalizedCombo` component** (replaces the datalist-based `EditCombo`; delete
+  `EditCombo.tsx` once unused). A real combobox, **not** `<datalist>`:
+  - input + a **chevron that opens** a popover list (Radix Popover or a small controlled
+    list), styled to **match `EditSelect`** (same chevron, height, `la-input`/`neu-input`
+    look) so all dropdowns are visually consistent — fixes the "different chevron / won't
+    open" bug.
+  - **pick-or-type**: click an option to select, or type a custom value (kept verbatim).
+  - keyboard nav (↑/↓/Enter), close on outside-click/Escape, `autoFocus` support.
+  - props: `value`, `onChange`, `options` (display-lang list), `placeholder`, `autoFocus`.
+- **Wiring** for the four dropdown fields:
+  - render options from `OPTIONS[uiLang]` (UI locale via `i18n.language`),
+  - show the current value mapped to `uiLang` via `optionLabel(...)`,
+  - on change write the field as `{en, nl}` JSON via `optionStore(...)`.
 - **BusinessSectionFields / AISectionFields / BehaviorSectionFields**:
   - Dropdowns (usp, ai_style, what_lead_did, service) → `LocalizedCombo`, display = `uiLang`,
     store = `{en,nl}`.
