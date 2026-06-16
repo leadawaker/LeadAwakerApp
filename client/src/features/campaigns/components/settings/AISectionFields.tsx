@@ -8,6 +8,7 @@ import {
 } from "../formFields";
 import { MODEL_OPTIONS } from "@/features/prompts/types";
 import { asCampaignLang, placeholderFor } from "./fieldLocale";
+import { resolveLang } from "@shared/langField";
 
 interface AISectionFieldsProps {
   campaign: any;
@@ -24,6 +25,20 @@ export function AISectionFields({
 }: AISectionFieldsProps) {
   const { t } = useTranslation("campaigns");
   const lang = asCampaignLang(draft.language ?? campaign.language);
+
+  const displayText = (raw: unknown) => resolveLang(raw, lang);
+
+  const onTextChange = (field: string, raw: unknown, text: string) => {
+    let current: Record<string, string> = {};
+    const s = String(raw ?? "").trim();
+    if (s.startsWith("{")) {
+      try { current = JSON.parse(s); } catch { /* ok */ }
+    } else if (s) {
+      current = { en: s };
+    }
+    current[lang] = text;
+    setDraft(d => ({ ...d, [field]: JSON.stringify(current) }));
+  };
 
   const editFor = (field: string) =>
     onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
@@ -92,9 +107,17 @@ export function AISectionFields({
           {...editFor("first_message_template")}
         />
       </div>
-      <InfoRow icon={Bot} label={t("config.aiRole") || "AI Role"} value={campaign.ai_role}
+      <InfoRow icon={Bot} label={t("config.aiRole") || "AI Role"}
+        value={displayText(campaign.ai_role)}
         {...editFor("ai_role")}
-        editChild={isEditing ? <EditText value={String(draft.ai_role ?? "")} onChange={(v) => setDraft(d => ({...d, ai_role: v}))} placeholder={placeholderFor("ai_role", lang)} {...focusFor("ai_role")} /> : undefined}
+        editChild={isEditing ? (
+          <EditText
+            value={displayText(draft.ai_role ?? campaign.ai_role)}
+            onChange={(v) => onTextChange("ai_role", draft.ai_role ?? campaign.ai_role, v)}
+            placeholder={placeholderFor("ai_role", lang)}
+            {...focusFor("ai_role")}
+          />
+        ) : undefined}
       />
       <InfoRow icon={Mic} label={t("config.voiceReplyMode")} value={campaign.voice_reply_mode || "off"}
         {...editFor("voice_reply_mode")}

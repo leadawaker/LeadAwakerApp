@@ -26,7 +26,18 @@
     "cancel": "Cancelar",
     "openPrompt": "Prompt",
     "closePrompt": "Fechar Prompt",
-    "promptPanel": "Editor de Prompt"
+    "promptPanel": "Editor de Prompt",
+    "generate": "Gerar / Traduzir",
+    "generateHint": "Digite um nicho — a IA preenche os campos vazios em EN + NL e traduz os campos com apenas um idioma.",
+    "translateHint": "Todos os campos estão preenchidos. Clique para adicionar os idiomas faltantes.",
+    "translate": "Traduzir idiomas ausentes",
+    "nichePlaceholder": "ex.: clínica dental, solar, academia",
+    "filled": "Preenchido",
+    "translated": "Traduzido",
+    "done": "Pronto",
+    "nothingToDo": "Nada a fazer",
+    "allComplete": "Todos os campos já têm ambos os idiomas.",
+    "generateFailed": "Geração falhou"
   },
   "columns": {
     "name": "Nome",
@@ -531,6 +542,28 @@
       "createFailed": "Falha ao criar tag: {{error}}",
       "updateFailed": "Falha ao atualizar tag: {{error}}",
       "deleteFailed": "Falha ao excluir tag: {{error}}"
+    }
+  },
+  "preflight": {
+    "title": "Prontidão para iniciar",
+    "checking": "Verificando prontidão…",
+    "recheck": "Verificar novamente",
+    "ready": "Pronta",
+    "readyFull": "Pronta para ativar",
+    "notReady": "{{count}} problema(s)",
+    "notReadyFull": "{{count}} bloqueio(s) a resolver",
+    "caughtUp": "Tudo enviado",
+    "caughtUpFull": "Todos os leads enviados — campanha em dia",
+    "error": "Não foi possível verificar a prontidão",
+    "blockedTitle": "Ainda não dá para ativar",
+    "checks": {
+      "firstMessage": "Primeira mensagem definida",
+      "twilio": "Credenciais Twilio",
+      "accountActive": "Conta ativa",
+      "queuedLeads": "{{count}} leads na fila",
+      "phoneFormat": "{{count}} telefone(s) fora do E.164",
+      "phoneFormatOk": "Telefones válidos",
+      "bumpTemplates": "Modelos de bump definidos"
     }
   }
 }

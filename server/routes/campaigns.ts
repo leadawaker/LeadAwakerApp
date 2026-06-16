@@ -5,6 +5,7 @@ import { canDeleteHard } from "../permissions";
 import {
   campaigns,
   interactions,
+  leads,
   insertCampaignsSchema,
   insertPrompt_LibrarySchema,
   insertCampaignMetricsHistorySchema,
@@ -13,8 +14,8 @@ import {
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
-import { eq, count, and, gte } from "drizzle-orm";
-import { generateCampaignContext } from "../demo-session";
+import { eq, count, and, gte, sql } from "drizzle-orm";
+import { generateCampaignContext, generateBilingualContext, translateFields, parseLang } from "../demo-session";
 
 // SYNC: keep in sync with tools/ai_service.py DEFAULT_CONVERSATION_PROMPT
 const DEFAULT_CONVERSATION_PROMPT = `You are {agent_name}, from the commercial team at {company_name}. Your job is to qualify leads via WhatsApp who showed interest in {service_name} but never followed through, and book a consultation call. If a lead drifts off topic, use your SPIN training to keep them engaged. Always stay on topic.
@@ -191,6 +192,58 @@ async function getOrCreateSystemPrompt(useCase: string, defaultName: string, def
   return entry;
 }
 
+// Campaign activation readiness. "critical" checks gate activation; the rest are warnings.
+// status per check: "ok" | "warn" | "error". Shared by the GET preflight endpoint and the
+// PATCH activation guard so every activation path enforces the same rules.
+export async function computeCampaignPreflight(
+  campaign: any,
+  opts: { forActivation?: boolean } = {},
+): Promise<{ ready: boolean; active: boolean; checks: any[] }> {
+  const campaignId = campaign.id;
+  const account = campaign.accountsId ? await storage.getAccountById(campaign.accountsId) : undefined;
+
+  // One pass over the campaign's leads: total, how many are still queued, and how
+  // many queued ones have a non-E.164 phone (only queued phones matter for sending).
+  const [counts] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      queued: sql<number>`count(*) filter (where ${leads.automationStatus} = 'queued')::int`,
+      badPhones: sql<number>`count(*) filter (where ${leads.automationStatus} = 'queued' and (${leads.phone} is null or ${leads.phone} !~ '^\\+[1-9][0-9]{7,14}$'))::int`,
+    })
+    .from(leads)
+    .where(eq(leads.campaignsId, campaignId));
+  const totalLeads = counts?.total ?? 0;
+  const queuedCount = counts?.queued ?? 0;
+  const badPhoneCount = counts?.badPhones ?? 0;
+
+  const channel = String(campaign.channel || "sms").toLowerCase();
+  const needsTwilio = channel === "sms" || channel === "whatsapp";
+  const hasTwilio = !!account?.twilioAccountSid &&
+    (!!account?.twilioMessagingServiceSid || !!account?.twilioDefaultFromNumber);
+  const accountStatus = String(account?.status || "").toLowerCase();
+  const accountActive = !["suspended", "inactive", "disabled", "cancelled", "archived"].includes(accountStatus);
+  const maxBumps = Number(campaign.maxBumps || 0);
+  const active = String(campaign.status || "") === "Active";
+
+  // An empty queue only blocks when we're about to activate (or the campaign isn't
+  // running yet). For a live campaign that has drained its queue, that's "caught up",
+  // not a blocker — it means every lead has been worked, not that nothing was set up.
+  const emptyQueueBlocks = opts.forActivation ?? !active;
+  const queueOk = queuedCount > 0 || !emptyQueueBlocks;
+
+  const checks = [
+    { key: "firstMessage", critical: true, status: campaign.firstMessage && String(campaign.firstMessage).trim() ? "ok" : "error" },
+    { key: "twilio", critical: needsTwilio, status: !needsTwilio ? "ok" : hasTwilio ? "ok" : "error" },
+    { key: "accountActive", critical: true, status: accountActive ? "ok" : "error" },
+    { key: "queuedLeads", critical: emptyQueueBlocks, status: queueOk ? "ok" : "error", count: queuedCount, total: totalLeads },
+    { key: "phoneFormat", critical: false, status: badPhoneCount > 0 ? "warn" : "ok", count: badPhoneCount },
+    { key: "bumpTemplates", critical: false, status: maxBumps > 0 && !(campaign.bump1Template && String(campaign.bump1Template).trim()) ? "warn" : "ok" },
+  ];
+
+  const ready = checks.every((c) => !c.critical || c.status === "ok");
+  return { ready, active, checks };
+}
+
 export function registerCampaignsRoutes(app: Express): void {
   // ─── Campaigns ────────────────────────────────────────────────────
 
@@ -209,6 +262,28 @@ export function registerCampaignsRoutes(app: Express): void {
       ? await storage.getCampaignsByAccountId(accountId)
       : await storage.getCampaigns();
     res.json(toDbKeysArray(data as any, campaigns));
+  }));
+
+  // Batch readiness for a set of campaigns (for at-a-glance dots in list views).
+  // Returns { [id]: { ready } }. Admin/owner-scoped per campaign.
+  // NOTE: must be registered before "/api/campaigns/:id" so it isn't captured as an id.
+  app.get("/api/campaigns/preflight-batch", requireAuth, wrapAsync(async (req, res) => {
+    const ids = String(req.query.ids || "")
+      .split(",")
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isFinite(n))
+      .slice(0, 50);
+    if (ids.length === 0) return res.json({});
+
+    const out: Record<number, { ready: boolean }> = {};
+    await Promise.all(ids.map(async (id) => {
+      const campaign = await storage.getCampaignById(id);
+      if (!campaign) return;
+      if (req.user!.accountsId !== 1 && campaign.accountsId !== req.user!.accountsId) return;
+      const { ready } = await computeCampaignPreflight(campaign);
+      out[id] = { ready };
+    }));
+    res.json(out);
   }));
 
   app.get("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
@@ -246,6 +321,21 @@ export function registerCampaignsRoutes(app: Express): void {
     res.status(201).json(toDbKeys(campaign as any, campaigns));
   }));
 
+  // Preflight — readiness checks before a campaign can be activated.
+  // Admin/owner-only diagnostic; "critical" checks gate activation, the rest are warnings.
+  app.get("/api/campaigns/:id/preflight", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const campaign = await storage.getCampaignById(campaignId);
+    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+    // Subaccount users can only inspect their own campaigns
+    if (req.user!.accountsId !== 1 && campaign.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const result = await computeCampaignPreflight(campaign);
+    res.json(result);
+  }));
+
   app.patch("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
     const existing = await storage.getCampaignById(Number(req.params.id));
     if (!existing) return res.status(404).json({ message: "Campaign not found" });
@@ -255,13 +345,26 @@ export function registerCampaignsRoutes(app: Express): void {
     }
     const parsed = insertCampaignsSchema.partial().safeParse(fromDbKeys(req.body, campaigns));
     if (!parsed.success) return handleZodError(res, parsed.error);
+
+    // Hard-block activation if preflight critical checks fail (every activation path enforces this).
+    const activating = parsed.data.status === "Active" && existing.status !== "Active";
+    if (activating) {
+      const { ready, checks } = await computeCampaignPreflight({ ...existing, ...parsed.data }, { forActivation: true });
+      if (!ready) {
+        return res.status(422).json({
+          message: "Campaign not ready to activate",
+          code: "PREFLIGHT_FAILED",
+          checks,
+        });
+      }
+    }
+
     const campaign = await storage.updateCampaign(Number(req.params.id), parsed.data);
     if (!campaign) return res.status(404).json({ message: "Campaign not found" });
     res.json(toDbKeys(campaign as any, campaigns));
 
     // When a campaign is activated, immediately kick the campaign launcher
-    const becomingActive = parsed.data.status === "Active" && existing.status !== "Active";
-    if (becomingActive) {
+    if (activating) {
       const engineUrl = getEngineUrl();
       fetch(`${engineUrl}/api/campaigns/${req.params.id}/trigger`, { method: "POST" }).catch(() => {});
     }
@@ -851,5 +954,120 @@ export function registerCampaignsRoutes(app: Express): void {
     const updated = await storage.updateCampaign(campaignId, patch);
     if (!updated) return res.status(500).json({ message: "Failed to update campaign" });
     res.json({ campaign: toDbKeys(updated as any, campaigns), filledFields });
+  }));
+
+  // POST /api/campaigns/:id/generate — fill empty fields in en+nl, translate single-lang fields
+  app.post("/api/campaigns/:id/generate", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const { niche } = req.body as { niche?: string };
+
+    const existing = await storage.getCampaignById(campaignId);
+    if (!existing) return res.status(404).json({ message: "Campaign not found" });
+
+    // Context fields that get the bilingual treatment
+    const CONTEXT_FIELDS: Array<{ key: string; patchKey: string; label: string; isDropdown?: boolean }> = [
+      { key: "description",      patchKey: "description",     label: "Business Description" },
+      { key: "nicheQuestion",    patchKey: "nicheQuestion",   label: "Niche Question" },
+      { key: "kb",               patchKey: "kb",              label: "Knowledge Base" },
+      { key: "campaignUsp",      patchKey: "campaignUsp",     label: "USP",       isDropdown: true },
+      { key: "aiStyleOverride",  patchKey: "aiStyleOverride", label: "AI Style",  isDropdown: true },
+      { key: "whatLeadDid",      patchKey: "whatLeadDid",     label: "Stage",     isDropdown: true },
+      { key: "serviceName",      patchKey: "serviceName",     label: "Service",   isDropdown: true },
+    ];
+
+    // Map the patchKey to the raw field key used by generateBilingualContext
+    const GEN_KEY: Record<string, string> = {
+      description: "description",
+      nicheQuestion: "niche_question",
+      kb: "kb",
+      campaignUsp: "campaign_usp",
+      aiStyleOverride: "ai_style_override",
+      whatLeadDid: "what_lead_did",
+      serviceName: "service_name",
+    };
+
+    const ex = existing as any;
+    const filledFields: string[] = [];
+    const translatedFields: string[] = [];
+    const patch: Record<string, unknown> = {};
+
+    // Classify each field
+    const emptyFields: typeof CONTEXT_FIELDS = [];
+    const enOnlyFields: Array<{ key: string; patchKey: string; label: string; enVal: string }> = [];
+    const nlOnlyFields: Array<{ key: string; patchKey: string; label: string; nlVal: string }> = [];
+
+    for (const f of CONTEXT_FIELDS) {
+      const raw = ex[f.key];
+      const lang = parseLang(raw);
+      const hasEn = !!(lang.en && lang.en.trim());
+      const hasNl = !!(lang.nl && lang.nl.trim());
+      // Mirrored plain strings have en === nl — treat as en-only so we still generate the real NL
+      const isMirrored = hasEn && hasNl && lang.en === lang.nl;
+      if (!hasEn && !hasNl) {
+        emptyFields.push(f);
+      } else if ((!hasNl || isMirrored) && hasEn) {
+        enOnlyFields.push({ ...f, enVal: lang.en! });
+      } else if (!hasEn && hasNl) {
+        nlOnlyFields.push({ ...f, nlVal: lang.nl! });
+      }
+    }
+
+    // Step 1: fill empty fields via bilingual generation
+    if (emptyFields.length > 0) {
+      if (!niche || !niche.trim()) {
+        return res.status(400).json({ message: "niche is required to fill empty fields", emptyFields: emptyFields.map(f => f.label) });
+      }
+      const generated = await generateBilingualContext(niche.trim());
+      if (!generated) return res.status(500).json({ message: "Generation failed — check OPEN_AI_API_KEY" });
+
+      for (const f of emptyFields) {
+        const genKey = GEN_KEY[f.patchKey] as keyof typeof generated;
+        const value = generated[genKey];
+        if (value !== undefined) {
+          patch[f.patchKey] = value;
+          filledFields.push(f.label);
+        }
+      }
+    }
+
+    // Step 2: translate en-only fields to add Dutch
+    if (enOnlyFields.length > 0) {
+      const toTranslate: Record<string, string> = {};
+      for (const f of enOnlyFields) toTranslate[f.patchKey] = f.enVal;
+      const nlValues = await translateFields(toTranslate, "en", "nl");
+      for (const f of enOnlyFields) {
+        const nlVal = nlValues[f.patchKey];
+        if (nlVal) {
+          const existing_lang = parseLang(ex[f.key]);
+          patch[f.patchKey] = JSON.stringify({ en: existing_lang.en ?? f.enVal, nl: nlVal });
+          translatedFields.push(f.label);
+        }
+      }
+    }
+
+    // Step 3: translate nl-only fields to add English
+    if (nlOnlyFields.length > 0) {
+      const toTranslate: Record<string, string> = {};
+      for (const f of nlOnlyFields) toTranslate[f.patchKey] = f.nlVal;
+      const enValues = await translateFields(toTranslate, "nl", "en");
+      for (const f of nlOnlyFields) {
+        const enVal = enValues[f.patchKey];
+        if (enVal) {
+          const existing_lang = parseLang(ex[f.key]);
+          patch[f.patchKey] = JSON.stringify({ en: enVal, nl: existing_lang.nl ?? f.nlVal });
+          translatedFields.push(f.label);
+        }
+      }
+    }
+
+    if (Object.keys(patch).length === 0) {
+      // Nothing to do — all fields already have both languages
+      return res.json({ campaign: toDbKeys(ex, campaigns), filledFields: [], translatedFields: [] });
+    }
+
+    const parsed = insertCampaignsSchema.partial().parse(patch);
+    const updated = await storage.updateCampaign(campaignId, parsed);
+    if (!updated) return res.status(500).json({ message: "Failed to update campaign" });
+    res.json({ campaign: toDbKeys(updated as any, campaigns), filledFields, translatedFields });
   }));
 }

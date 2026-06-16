@@ -27,7 +27,18 @@
     "close": "Close",
     "openPrompt": "Prompt",
     "closePrompt": "Close Prompt",
-    "promptPanel": "Prompt Editor"
+    "promptPanel": "Prompt Editor",
+    "generate": "Generate / Translate",
+    "generateHint": "Type a niche — AI fills empty fields in EN + NL and translates any single-language fields.",
+    "translateHint": "All fields are filled. Click to translate any single-language fields to add the missing language.",
+    "translate": "Translate missing languages",
+    "nichePlaceholder": "e.g. dental clinic, solar, gym",
+    "filled": "Filled",
+    "translated": "Translated",
+    "done": "Done",
+    "nothingToDo": "Nothing to do",
+    "allComplete": "All fields already have both languages.",
+    "generateFailed": "Generation failed"
   },
   "columns": {
     "name": "Name",
@@ -543,6 +554,28 @@
       "createFailed": "Failed to create tag: {{error}}",
       "updateFailed": "Failed to update tag: {{error}}",
       "deleteFailed": "Failed to delete tag: {{error}}"
+    }
+  },
+  "preflight": {
+    "title": "Launch readiness",
+    "checking": "Checking readiness…",
+    "recheck": "Re-check",
+    "ready": "Ready",
+    "readyFull": "Ready to activate",
+    "notReady": "{{count}} issue(s)",
+    "notReadyFull": "{{count}} blocker(s) to fix",
+    "caughtUp": "All sent",
+    "caughtUpFull": "All leads sent — campaign is caught up",
+    "error": "Could not load readiness",
+    "blockedTitle": "Can't activate yet",
+    "checks": {
+      "firstMessage": "First message set",
+      "twilio": "Twilio credentials",
+      "accountActive": "Account active",
+      "queuedLeads": "{{count}} leads queued",
+      "phoneFormat": "{{count}} phone(s) not E.164",
+      "phoneFormatOk": "Phone numbers valid",
+      "bumpTemplates": "Bump templates set"
     }
   }
 }

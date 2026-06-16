@@ -369,3 +369,152 @@ export async function generateCampaignContext(niche: string): Promise<CampaignCo
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Bilingual context generation (Phase 4)
+// ---------------------------------------------------------------------------
+
+/** Index-aligned dropdown options (mirrors fieldLocale.ts client-side). */
+const DROPDOWN_OPTIONS = {
+  campaign_usp: {
+    en: ["", "Naturally sourced materials", "Smart technology integration", "Fast delivery: kitchen ready in 6 weeks", "Made in Germany", "Made in Italy", "Dedicated designer: start to finish", "Extended warranty: 10 years"],
+    nl: ["", "Natuurlijke materialen", "Slimme technologie-integratie", "Snelle levering: keuken klaar in 6 weken", "Made in Germany", "Made in Italy", "Eigen ontwerper: van begin tot eind", "Verlengde garantie: 10 jaar"],
+  },
+  ai_style_override: {
+    en: ["", "Professional & consultative", "Warm & educational", "Direct & results-focused", "Friendly & reassuring", "Premium & exclusive"],
+    nl: ["", "Professioneel & adviserend", "Warm & informatief", "Direct & resultaatgericht", "Vriendelijk & geruststellend", "Premium & exclusief"],
+  },
+  what_lead_did: {
+    en: ["", "Inquired about a quote", "Received a quote", "Had a site visit / assessment", "In the decision phase", "Declined / went with another provider"],
+    nl: ["", "Heeft een offerte aangevraagd", "Heeft een offerte ontvangen", "Heeft een bezoek / keuring gehad", "In de beslissingsfase", "Afgewezen / naar een andere aanbieder"],
+  },
+  service_name: {
+    en: ["", "Design and manufacturing including installation", "Design and manufacturing not including installation", "Supply and installation", "Design consultancy only"],
+    nl: ["", "Ontwerp en productie inclusief installatie", "Ontwerp en productie exclusief installatie", "Levering en installatie", "Alleen ontwerpadvies"],
+  },
+};
+
+/** Given an EN dropdown value, return the stored {en, nl} JSON string. */
+function dropdownStore(field: keyof typeof DROPDOWN_OPTIONS, enValue: string): string {
+  const table = DROPDOWN_OPTIONS[field];
+  const idx = table.en.indexOf(enValue);
+  if (idx !== -1) return JSON.stringify({ en: table.en[idx], nl: table.nl[idx] });
+  return JSON.stringify({ en: enValue, nl: enValue });
+}
+
+/** Parse a stored field (plain string or JSON) to {en?, nl?}. */
+export function parseLang(raw: unknown): { en?: string; nl?: string } {
+  if (!raw) return {};
+  const s = String(raw).trim();
+  if (s.startsWith("{")) {
+    try {
+      const p = JSON.parse(s);
+      if (typeof p === "object" && p !== null) return p;
+    } catch { /* ok */ }
+  }
+  return { en: s, nl: s };
+}
+
+export interface BilingualFields {
+  description?: string;
+  niche_question?: string;
+  kb?: string;
+  campaign_usp?: string;
+  ai_style_override?: string;
+  what_lead_did?: string;
+  service_name?: string;
+}
+
+const BILINGUAL_GENERATOR_SYSTEM = `You generate campaign context fields in both English and Dutch for a B2B/B2C lead reactivation AI tool.
+
+Given a business niche, output a JSON object with these exact keys:
+- description_en / description_nl: 2-sentence business description
+- niche_question_en / niche_question_nl: one sharp qualifying question for lapsed leads
+- kb_en / kb_nl: 4-6 specific knowledge base facts the AI should know (numbers, timelines, objection rebuttals). Newline-separated, NOT an array.
+- usp_en: one of these exact options: "Naturally sourced materials", "Smart technology integration", "Fast delivery: kitchen ready in 6 weeks", "Made in Germany", "Made in Italy", "Dedicated designer: start to finish", "Extended warranty: 10 years"
+- ai_style_en: one of: "Professional & consultative", "Warm & educational", "Direct & results-focused", "Friendly & reassuring", "Premium & exclusive"
+- what_lead_did_en: one of: "Inquired about a quote", "Received a quote", "Had a site visit / assessment", "In the decision phase"
+- service_name_en: one of: "Design and manufacturing including installation", "Design and manufacturing not including installation", "Supply and installation", "Design consultancy only"
+
+Return ONLY valid JSON, no markdown.`;
+
+const TRANSLATE_SYSTEM = `You translate campaign context fields between English and Dutch.
+Return ONLY valid JSON with the translated values — same keys as the input, no extra keys.`;
+
+export async function generateBilingualContext(niche: string): Promise<BilingualFields | null> {
+  const apiKey = process.env.OPEN_AI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: BILINGUAL_GENERATOR_SYSTEM },
+          { role: "user", content: `Business niche: ${niche}` },
+        ],
+        max_tokens: 900,
+        temperature: 0.7,
+      }),
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const json = await res.json() as any;
+    const raw = (json?.choices?.[0]?.message?.content || "").trim();
+    const data = JSON.parse(raw) as Record<string, string>;
+
+    return {
+      description: JSON.stringify({ en: data.description_en ?? "", nl: data.description_nl ?? "" }),
+      niche_question: JSON.stringify({ en: data.niche_question_en ?? "", nl: data.niche_question_nl ?? "" }),
+      kb: JSON.stringify({ en: data.kb_en ?? "", nl: data.kb_nl ?? "" }),
+      campaign_usp: dropdownStore("campaign_usp", data.usp_en ?? ""),
+      ai_style_override: dropdownStore("ai_style_override", data.ai_style_en ?? ""),
+      what_lead_did: dropdownStore("what_lead_did", data.what_lead_did_en ?? ""),
+      service_name: dropdownStore("service_name", data.service_name_en ?? ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Translate a set of plain-string values from one lang to the other. Returns {field: translatedValue}. */
+export async function translateFields(
+  values: Record<string, string>,
+  fromLang: "en" | "nl",
+  toLang: "en" | "nl",
+): Promise<Record<string, string>> {
+  const apiKey = process.env.OPEN_AI_API_KEY;
+  if (!apiKey || !Object.keys(values).length) return {};
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    const langName = (l: string) => (l === "nl" ? "Dutch" : "English");
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: TRANSLATE_SYSTEM },
+          { role: "user", content: `Translate from ${langName(fromLang)} to ${langName(toLang)}:\n${JSON.stringify(values, null, 2)}` },
+        ],
+        max_tokens: 600,
+        temperature: 0.3,
+      }),
+    });
+    clearTimeout(timer);
+    if (!res.ok) return {};
+    const json = await res.json() as any;
+    const raw = (json?.choices?.[0]?.message?.content || "").trim();
+    return JSON.parse(raw) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}

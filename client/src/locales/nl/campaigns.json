@@ -27,7 +27,18 @@
     "close": "Sluiten",
     "openPrompt": "Prompt",
     "closePrompt": "Prompt Sluiten",
-    "promptPanel": "Prompt Editor"
+    "promptPanel": "Prompt Editor",
+    "generate": "Genereren / Vertalen",
+    "generateHint": "Vul een niche in — de AI vult lege velden in EN + NL en vertaalt velden die maar één taal hebben.",
+    "translateHint": "Alle velden zijn ingevuld. Klik om ontbrekende vertalingen toe te voegen.",
+    "translate": "Ontbrekende talen vertalen",
+    "nichePlaceholder": "bijv. tandartspraktijk, zonnepanelen, sportschool",
+    "filled": "Ingevuld",
+    "translated": "Vertaald",
+    "done": "Klaar",
+    "nothingToDo": "Niets te doen",
+    "allComplete": "Alle velden hebben al beide talen.",
+    "generateFailed": "Genereren mislukt"
   },
   "columns": {
     "name": "Naam",
@@ -543,6 +554,28 @@
       "createFailed": "Tag aanmaken mislukt: {{error}}",
       "updateFailed": "Tag bijwerken mislukt: {{error}}",
       "deleteFailed": "Tag verwijderen mislukt: {{error}}"
+    }
+  },
+  "preflight": {
+    "title": "Startgereedheid",
+    "checking": "Gereedheid controleren…",
+    "recheck": "Opnieuw controleren",
+    "ready": "Klaar",
+    "readyFull": "Klaar om te activeren",
+    "notReady": "{{count}} issue(s)",
+    "notReadyFull": "{{count}} blokker(s) op te lossen",
+    "caughtUp": "Alles verzonden",
+    "caughtUpFull": "Alle leads verzonden — campagne is bijgewerkt",
+    "error": "Gereedheid kon niet worden geladen",
+    "blockedTitle": "Nog niet te activeren",
+    "checks": {
+      "firstMessage": "Eerste bericht ingesteld",
+      "twilio": "Twilio-inloggegevens",
+      "accountActive": "Account actief",
+      "queuedLeads": "{{count}} leads in wachtrij",
+      "phoneFormat": "{{count}} nummer(s) niet E.164",
+      "phoneFormatOk": "Telefoonnummers geldig",
+      "bumpTemplates": "Bump-sjablonen ingesteld"
     }
   }
 }
