@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { PIPELINE_HEX } from "@/lib/avatarUtils";
+import { PIPELINE_HEX, getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { useTheme } from "@/hooks/useTheme";
 import { getFullName, getStatus, getInitials } from "./leadUtils";
 
 interface Props {
@@ -19,9 +20,11 @@ const SIZE = 38;
  */
 export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
+  const { isDark } = useTheme();
   const name = getFullName(lead);
   const status = getStatus(lead);
-  const color = PIPELINE_HEX[status] ?? "#6B7280";
+  const avatarColor = getLeadStatusAvatarColor(status);
+  const color = isDark ? avatarColor.bg : (PIPELINE_HEX[status] ?? "#6B7280");
   const initials = getInitials(name);
 
   return (
@@ -44,7 +47,7 @@ export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#fff",
+        color: isDark ? avatarColor.text : "#fff",
         fontFamily: "var(--mono)",
         fontWeight: 600,
         fontSize: Math.round(SIZE * 0.34),
