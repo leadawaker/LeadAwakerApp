@@ -187,12 +187,10 @@ export function CampaignBehaviorColumn({
           ) : undefined}
         />
 
-        {(isEditing ? draft.channel : campaign.channel) !== "whatsapp" && (
-          <InfoRow icon={Gauge} label={t("config.dailyLimit")} value={campaign.daily_lead_limit?.toLocaleString()}
-            {...editFor("daily_lead_limit")}
-            editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit ?? "")} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} placeholder="e.g. 50" {...focusFor("daily_lead_limit")} /> : undefined}
-          />
-        )}
+        <InfoRow icon={Gauge} label={t("config.dailyLimit")} value={(campaign.daily_lead_limit || 500).toLocaleString()}
+          {...editFor("daily_lead_limit")}
+          editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit || 500)} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v === "" ? "" : Number(v)}))} placeholder="500" {...focusFor("daily_lead_limit")} /> : undefined}
+        />
         <InfoRow icon={Timer} label={t("config.interval")} value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null}
           {...editFor("message_interval_minutes")}
           editChild={isEditing ? <EditNumber value={String(draft.message_interval_minutes ?? "")} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} placeholder="minutes" {...focusFor("message_interval_minutes")} /> : undefined}
@@ -214,17 +212,6 @@ export function CampaignBehaviorColumn({
           {...editFor("channel")}
           editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} {...focusFor("channel")} /> : undefined}
         />
-        {campaign.channel === "whatsapp" && (
-          <InfoRow label={t("config.whatsappTier")}
-            value={(() => {
-              const lim = campaign.daily_lead_limit;
-              if (!lim || lim > 100000) return "Tier 4 · ∞";
-              if (lim > 10000) return "Tier 3 · 100k/day";
-              if (lim > 1000) return "Tier 2 · 10k/day";
-              return "Tier 1 · 1,000/day";
-            })()}
-          />
-        )}
 
         <BoolRow icon={StopCircle} label={t("config.stopOnResponse")} value={campaign.stop_on_response}
           {...directToggle("stop_on_response", Boolean(draft.stop_on_response ?? campaign.stop_on_response))}

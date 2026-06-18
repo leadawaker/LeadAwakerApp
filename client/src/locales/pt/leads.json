@@ -310,6 +310,13 @@
     "summaryLockedHint": "Aparece aqui quando o lead agenda ou o chat é encerrado",
     "outcome": "Resultado",
     "keyPoints": "Pontos principais",
+    "summarySections": {
+      "interest": "Interesse",
+      "painPoints": "Pontos de dor",
+      "qualification": "Qualificação",
+      "sentiment": "Sentimento",
+      "outcome": "Resultado"
+    },
     "gradientTester": "Testador de gradiente"
   },
   "contact": {

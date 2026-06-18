@@ -17,6 +17,7 @@ import { useCreateTask, useUpdateTask } from "../api/tasksApi";
 import TaskDetailPanel from "./TaskDetailPanel";
 import TasksBoardView from "./TasksBoardView";
 import TasksBoardCard from "./TasksBoardCard";
+import TasksLoadingSkeleton from "./TasksLoadingSkeleton";
 import TasksWeekCalendar, {
   rescheduleDate, taskDueISO, getMondayISO, weekRangeLabel, monthLabel, nextMonthMonday, prevMonthMonday,
   addDays, isoToUTC, utcToISO,
@@ -65,9 +66,10 @@ interface Props {
   users: AccountUser[];
   todayISO: string;
   currentUserName: string;
+  loading?: boolean;
 }
 
-export default function DesktopTasksView({ tasks, categories, users, todayISO, currentUserName }: Props) {
+export default function DesktopTasksView({ tasks, categories, users, todayISO, currentUserName, loading = false }: Props) {
   const { t } = useTranslation("tasks");
   const createMutation = useCreateTask();
   const updateMutation = useUpdateTask();
@@ -402,14 +404,18 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
       {/* Content — merged board + calendar (responsive), one shared drag context */}
       <DndContext sensors={dndSensors} collisionDetection={pointerWithin} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
-          <div className="tasks-merged" style={{ width: '100%' }}>
-            <div className="tasks-merged__board">
-              <TasksBoardView tasks={boardTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} users={users} />
+          {loading ? (
+            <TasksLoadingSkeleton />
+          ) : (
+            <div className="tasks-merged" style={{ width: '100%' }}>
+              <div className="tasks-merged__board">
+                <TasksBoardView tasks={boardTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} users={users} />
+              </div>
+              <div className="tasks-merged__cal">
+                <TasksWeekCalendar tasks={calendarTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} weekStart={weekStart} compact={!isWide} monthly={isWide} hideWeekends={hideWeekends} />
+              </div>
             </div>
-            <div className="tasks-merged__cal">
-              <TasksWeekCalendar tasks={calendarTasks} categories={categories as any} activeId={openTaskId} onSelect={setOpenTaskId} todayISO={todayISO} weekStart={weekStart} compact={!isWide} monthly={isWide} hideWeekends={hideWeekends} />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Portal to body so position:fixed anchors to the viewport, not the

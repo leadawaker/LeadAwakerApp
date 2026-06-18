@@ -41,7 +41,7 @@ import {
 } from "./MiniChat";
 
 // ── Conversation widget (ChatPanel-style with run wrappers + separators) ─────
-export function ConversationWidget({ lead, showHeader = false, readOnly = false }: { lead: Record<string, any>; showHeader?: boolean; readOnly?: boolean }) {
+export function ConversationWidget({ lead, showHeader = false, readOnly = false, onTakeoverChange }: { lead: Record<string, any>; showHeader?: boolean; readOnly?: boolean; onTakeoverChange?: (isHuman: boolean) => void }) {
   const { t } = useTranslation("leads");
   const leadId = getLeadId(lead);
   const { interactions, loading, refresh } = useInteractions(undefined, leadId);
@@ -204,6 +204,9 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
         status: "sent",
         who: "Agent",
       });
+      // Sending as the agent is a human takeover — reflect it immediately so the
+      // "Let AI continue" control appears without waiting for a lead refetch.
+      setIsHumanTakeover(true);
       await refresh();
     } catch (err) {
       console.error("Failed to send message", err);
@@ -222,6 +225,12 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
       console.error("Failed to resume AI", err);
     }
   }, [leadId, refresh]);
+
+  // Report takeover state to the parent so it can render its own resume control
+  // (e.g. aligned with the Conversations/Summary tab switcher).
+  useEffect(() => {
+    onTakeoverChange?.(isHumanTakeover);
+  }, [isHumanTakeover, onTakeoverChange]);
 
   // Build structured render list: date separators + thread dividers + sender-run wrappers
   const chatItems = useMemo(() => {
@@ -433,52 +442,57 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false 
     return items;
   }, [sorted, leadName, leadAvatarColors, currentUser, isAgencyView, tagEvents, t]);
 
+  // Let AI continue — only when human has taken over. Shared between the
+  // showHeader layout and the top-right overlay used inside the tab-switcher box.
+  const aiResumeButton = isHumanTakeover ? (
+    <Popover open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="group relative inline-flex items-center justify-center h-[34px] w-[34px] rounded-full border border-black/[0.125] bg-white/80 dark:bg-card/80 backdrop-blur-sm hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[130px]"
+          aria-label={t("chat.letAiContinue")}
+        >
+          <img src="/6. Favicon.svg" alt="AI" className="h-5 w-5 shrink-0 absolute left-[6px]" />
+          <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            {t("chat.letAiContinue")}
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        side="bottom"
+        sideOffset={6}
+        className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+      >
+        <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
+          AI will resume this conversation. You can take over again anytime.
+        </p>
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            type="button"
+            onClick={() => setShowAiResumeConfirm(false)}
+            className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleAiResume}
+            className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors"
+          >
+            Confirm
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  ) : null;
+
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col h-full min-h-0 relative">
       {/* Header with AI resume button only — open-in-chats button removed, no border */}
       {showHeader && (
         <div className="px-3 flex items-center justify-end shrink-0 relative z-10" style={{ height: 36, paddingTop: 6 }}>
-          {/* Let AI continue — only when human has taken over */}
-          {isHumanTakeover && <Popover open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="group relative inline-flex items-center justify-center h-[34px] w-[34px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[130px]"
-                aria-label={t("chat.letAiContinue")}
-              >
-                <img src="/6. Favicon.svg" alt="AI" className="h-5 w-5 shrink-0 absolute left-[6px]" />
-                <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  {t("chat.letAiContinue")}
-                </span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              side="bottom"
-              sideOffset={6}
-              className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
-            >
-              <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
-                AI will resume this conversation. You can take over again anytime.
-              </p>
-              <div className="flex items-center gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowAiResumeConfirm(false)}
-                  className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAiResume}
-                  className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors"
-                >
-                  Confirm
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>}
+          {aiResumeButton}
         </div>
       )}
 

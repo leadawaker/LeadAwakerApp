@@ -3,22 +3,30 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import type { CampaignMetricsHistory } from "@/types/models";
+import { useInteractions } from "@/hooks/useApiData";
 import { SectionHead } from "../panelPrimitives";
 import { AnimatedMetricCard } from "../AnimatedMetricCard";
-import { aggregateByTimeframe, trendPoints, type Timeframe } from "./utils";
+import { liveAggregateByTimeframe, liveTrendPoints, computeXTicks, type Timeframe } from "./utils";
 
 const TF_INDEX: Record<Timeframe, number> = { "1D": 0, "7D": 1, "1M": 2 };
 
-export function PerformancePanel({ metrics, animTrigger }: {
-  metrics: CampaignMetricsHistory[];
+export function PerformancePanel({ leads, campaignId, accountId, animTrigger }: {
+  /** Campaign-scoped, normalized leads (from useLeads). */
+  leads: Record<string, any>[];
+  campaignId: number;
+  accountId: number;
   animTrigger: number;
 }) {
   const { t } = useTranslation("campaigns");
   const [tf, setTf] = useState<Timeframe>("7D");
 
-  const agg = useMemo(() => aggregateByTimeframe(metrics, tf), [metrics, tf]);
-  const points = useMemo(() => trendPoints(metrics, tf), [metrics, tf]);
+  // Live interactions for this account — derive performance straight from them so
+  // the numbers stay consistent with the A/B card and Pipeline/Next panels.
+  const { interactions } = useInteractions(accountId);
+
+  const agg = useMemo(() => liveAggregateByTimeframe(leads, interactions, campaignId, tf), [leads, interactions, campaignId, tf]);
+  const points = useMemo(() => liveTrendPoints(leads, interactions, campaignId, tf), [leads, interactions, campaignId, tf]);
+  const xAxis = useMemo(() => computeXTicks(points, tf), [points, tf]);
   const trig = animTrigger + TF_INDEX[tf] + 1;
 
   const title =
@@ -76,44 +84,31 @@ export function PerformancePanel({ metrics, animTrigger }: {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-              <XAxis dataKey="date" tick={({ x, y, payload, index }) => {
-                const dateStr = payload.value;
-                const prevDate = index > 0 ? points[index - 1]?.date : null;
+              <XAxis dataKey="date" ticks={xAxis.ticks} tick={({ x, y, payload }) => {
+                const dateStr: string = payload.value;
                 let displayText = dateStr;
 
                 if (tf === "1D") {
-                  // Daily view: show hourly (e.g., "12:00", "1:00", "2:00")
-                  const timePart = dateStr.split(' ').pop() ?? dateStr;
-                  displayText = timePart.replace(':00', ''); // Remove :00 for cleaner look
+                  // Daily view: hourly, drop the ":00" (e.g. "14:00" → "14h")
+                  displayText = `${dateStr.replace(":00", "")}h`;
                 } else if (tf === "7D") {
-                  // Weekly view: show day abbreviation + date (e.g., "Mon 15", "Tue 16")
+                  // Weekly view: weekday + date (e.g. "Mon 15")
                   try {
                     const date = new Date(dateStr);
                     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                    const dayName = dayNames[date.getDay()];
-                    const dayNum = date.getDate();
-                    displayText = `${dayName} ${dayNum}`;
+                    displayText = `${dayNames[date.getDay()]} ${date.getDate()}`;
                   } catch {
-                    displayText = dateStr.split(' ').pop() ?? dateStr;
+                    displayText = dateStr;
                   }
                 } else if (tf === "1M") {
-                  // Monthly view: show month only on first occurrence, then just day numbers
-                  const parts = dateStr.split(' ');
-                  const day = parts[parts.length - 1];
-
-                  // Check if this is the first occurrence of this month
-                  let showMonth = index === 0;
-                  if (!showMonth && prevDate) {
-                    const currMonthStr = dateStr.substring(0, 3); // e.g., "Feb", "Mar"
-                    const prevMonthStr = prevDate.substring(0, 3);
-                    showMonth = currMonthStr !== prevMonthStr;
-                  }
-
-                  displayText = showMonth ? `${dateStr.substring(0, 3)} ${day}` : day;
+                  // Monthly view: month name only on the first visible tick of each
+                  // month (computed in computeXTicks); otherwise just the day number.
+                  const day = dateStr.split(" ").pop() ?? dateStr;
+                  displayText = xAxis.showMonth.has(dateStr) ? `${dateStr.substring(0, 3)} ${day}` : day;
                 }
 
                 return <text x={x} y={y + 10} fontSize={10} fill="#948A77" textAnchor="middle">{displayText}</text>;
-              }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+              }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "#948A77" }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid var(--line)", backgroundColor: "var(--card)", color: "var(--ink)", fontSize: "11px", padding: "6px 10px" }} />
               <Area type="monotone" dataKey={t("summary.responsePercent")} stroke="var(--wine)" strokeWidth={2} fill="url(#fillResp)" dot={false} activeDot={{ r: 3 }} />

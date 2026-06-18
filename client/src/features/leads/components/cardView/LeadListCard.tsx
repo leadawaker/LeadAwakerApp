@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/useTheme";
+import { LEAD_AVATAR_BG_DARK, LEAD_AVATAR_TEXT_DARK } from "@/lib/avatarUtils";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check } from "lucide-react";
 
@@ -44,6 +46,7 @@ export function LeadListCard({
   onToggleSelect?: () => void;
 }) {
   const { t } = useTranslation("leads");
+  const { isDark } = useTheme();
   const { label: deleteLabel } = useDeleteAction("lead");
   const name        = getFullName(lead);
   const status      = getStatus(lead);
@@ -51,6 +54,10 @@ export function LeadListCard({
   const phone       = getPhone(lead);
   const email       = lead.email || lead.Email || "";
   const statusHex   = PIPELINE_HEX[status] || "#6B7280";
+  // Night-mode-friendly avatar: muted dark bg + light initials in dark mode,
+  // keeping the solid saturated look untouched in light mode.
+  const avatarBg    = isDark ? (LEAD_AVATAR_BG_DARK[status] ?? "#2A2D33") : statusHex;
+  const avatarText  = isDark ? (LEAD_AVATAR_TEXT_DARK[status] ?? "#9CA3AF") : "#FFFFFF";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
   const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
@@ -321,24 +328,21 @@ export function LeadListCard({
       >
           {/* Stage-colored avatar — click to toggle selection (with unread badge) */}
         <div
-          className="shrink-0 relative"
-          style={{ width: 36, height: 36, cursor: 'pointer' }}
+          className="shrink-0 relative w-9 h-9 max-md:w-11 max-md:h-11"
+          style={{ cursor: 'pointer' }}
           onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
           role="checkbox"
           aria-checked={selected}
           aria-label={selected ? "Deselect" : "Select"}
         >
           <div
-            className="flex items-center justify-center"
+            className="flex items-center justify-center w-full h-full text-[14px] max-md:text-[17px]"
             style={{
-              width: 36,
-              height: 36,
               borderRadius: 'var(--r-surface)',
-              background: selected ? '#FFFFFF' : statusHex,
-              color: selected ? 'var(--wine)' : '#FFFFFF',
+              background: selected ? '#FFFFFF' : avatarBg,
+              color: selected ? 'var(--wine)' : avatarText,
               border: selected ? '2px solid var(--wine)' : 'none',
               fontFamily: "'Geist Mono', ui-monospace, monospace",
-              fontSize: 14,
               fontWeight: 700,
               opacity: isPastCall ? 0.4 : 1,
             }}
@@ -371,8 +375,8 @@ export function LeadListCard({
 
         {/* Body */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 12, fontWeight: 600, color: "var(--ink)",
+          <div className="text-[12px] max-md:text-[16px]" style={{
+            fontWeight: 600, color: "var(--ink)",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             marginBottom: 2,
             display: 'flex', alignItems: 'center', gap: 6,
@@ -390,7 +394,7 @@ export function LeadListCard({
           {/* Stage + campaign — single line, matches the design leads page */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
-            <span style={{ fontSize: 9, color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className="text-[9px] max-md:text-[13px]" style={{ color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}
             </span>
           </div>
@@ -421,7 +425,7 @@ export function LeadListCard({
         {/* Right column: date (top-aligned with name) + score donut */}
         <div className="shrink-0 flex flex-col items-end gap-1.5" style={{ paddingTop: 1 }}>
           {lastActivity && (
-            <span className="text-[9px] tabular-nums leading-none text-muted-foreground/60">
+            <span className="text-[9px] max-md:text-[11px] tabular-nums leading-none text-muted-foreground/60">
               {formatRelativeTime(lastActivity, t)}
             </span>
           )}
@@ -432,9 +436,9 @@ export function LeadListCard({
         {showPeek && peekText && (
           <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
             <span
+              className="text-[7.5px] max-md:text-[10px]"
               style={{
                 fontFamily: "'Geist Mono', ui-monospace, monospace",
-                fontSize: 7.5,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
@@ -449,8 +453,8 @@ export function LeadListCard({
               {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
             </span>
             <span
+              className="text-[10px] max-md:text-[13px]"
               style={{
-                fontSize: 10,
                 color: 'var(--ink-soft)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

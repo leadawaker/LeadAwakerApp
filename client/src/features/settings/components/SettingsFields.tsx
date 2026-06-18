@@ -29,7 +29,8 @@ export function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-white dark:bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+        className="mt-1.5 h-10 w-full neu-inset-crisp px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/20"
+        style={{ borderRadius: "var(--r-button)" }}
         data-testid={testId}
         placeholder={placeholder}
       />
@@ -66,7 +67,8 @@ export function PasswordField({
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-full rounded-xl border border-border/40 bg-white dark:bg-card px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+          className="h-10 w-full neu-inset-crisp px-3 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/20"
+          style={{ borderRadius: "var(--r-button)" }}
           data-testid={testId}
           placeholder={placeholder}
           autoComplete={autoComplete}

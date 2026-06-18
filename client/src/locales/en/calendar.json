@@ -44,7 +44,8 @@
   "views": {
     "month": "Month",
     "week": "Week",
-    "day": "Day"
+    "day": "Day",
+    "list": "List"
   },
   "navigation": {
     "previous": "Previous",
@@ -216,6 +217,11 @@
     "weekends": {
       "hide": "Hide weekends",
       "show": "Show weekends"
+    },
+    "settings": {
+      "title": "Calendar settings",
+      "availability": "Show availability",
+      "hours": "Business hours"
     }
   }
 }

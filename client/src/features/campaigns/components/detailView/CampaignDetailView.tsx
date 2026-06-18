@@ -55,6 +55,7 @@ import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { DetailViewToolbar } from "./DetailViewToolbar";
 import { DetailViewHeader } from "./DetailViewHeader";
+import { CampaignPreflight } from "./CampaignPreflight";
 import { DetailViewBody } from "./DetailViewBody";
 export { CampaignDetailViewEmpty } from "./atoms";
 
@@ -413,8 +414,8 @@ export function CampaignDetailView({
           />
             </div>
 
-            {/* Toolbar actions — right side */}
-            <div className="shrink-0 pt-1">
+            {/* Toolbar actions + launch-readiness — right side */}
+            <div className="shrink-0 pt-1 flex flex-col items-end gap-2">
               <DetailViewToolbar
                 detail={detail}
                 campaign={campaign}
@@ -434,6 +435,9 @@ export function CampaignDetailView({
                 onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
                 t={t}
               />
+              {isAgencyUser && campaignId && (
+                <CampaignPreflight campaignId={Number(campaignId)} refreshKey={status} t={t} />
+              )}
             </div>
           </div>
         </div>

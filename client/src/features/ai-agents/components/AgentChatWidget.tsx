@@ -383,10 +383,14 @@ export function AgentChatWidget() {
       <div
         data-agent-widget
         className={cn(
-          "fixed z-[9999] flex flex-col glass-strong overflow-hidden",
+          "fixed z-[9999] flex flex-col overflow-hidden",
+          // Mobile gets a solid light cream surface (no blur); desktop keeps glass.
+          // Don't edit the shared .glass-strong utility — toasts/dropdowns use it too.
+          isMobile ? "bg-[var(--card)]" : "glass-strong",
           isMobile
             ? cn(
-                "inset-0 w-full h-full !rounded-none border-0 transition-[opacity,transform] duration-300 ease-out",
+                // Stop above the mobile bottom nav so the footer stays visible/tappable.
+                "top-0 left-0 right-0 w-full !rounded-none border-0 transition-[opacity,transform] duration-300 ease-out",
                 isOpen
                   ? "translate-y-0 opacity-100 pointer-events-auto"
                   : "translate-y-full opacity-0 invisible pointer-events-none",
@@ -408,7 +412,7 @@ export function AgentChatWidget() {
         )}
         style={
           isMobile
-            ? undefined
+            ? { bottom: "var(--bottombar-h)" }
             : isDocked
               ? { position: "fixed", right: 0, top: 0, bottom: 0, width: dockWidth }
               : {

@@ -50,7 +50,7 @@ export function WorkspaceAccountCard({
         )}
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "var(--space-xxs)" }}>
+          <div className="text-[14px] max-md:text-[16px]" style={{ fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "var(--space-xxs)" }}>
             {name}
           </div>
           <div className="row" style={{ gap: "var(--space-xs)", marginBottom: type || niche ? 6 : 0 }}>
@@ -58,7 +58,7 @@ export function WorkspaceAccountCard({
             {aid > 0 && <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, color: "var(--mute-2)", letterSpacing: "0.1em" }}>#{aid}</span>}
           </div>
           {(type || niche) && (
-            <div className="row" style={{ gap: 5, fontSize: 11, color: "var(--mute)" }}>
+            <div className="row text-[11px] max-md:text-[13px]" style={{ gap: 5, color: "var(--mute)" }}>
               <span className="dot" style={{ background: "var(--mute-2)" }} />
               {[type, niche].filter(Boolean).join(" · ")}
             </div>
@@ -67,8 +67,8 @@ export function WorkspaceAccountCard({
       </div>
 
       <div className={cn(
-        "opacity-100 max-h-[72px] md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[72px]",
-        "transition-[opacity,max-height] duration-200 flex flex-col gap-1 overflow-hidden",
+        "hidden md:flex md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[72px]",
+        "transition-[opacity,max-height] duration-200 flex-col gap-1 overflow-hidden",
       )}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1, borderRadius: "var(--r-button)", overflow: "hidden", background: isActive ? "var(--warn-tint)" : "var(--line)" }}>
           {([

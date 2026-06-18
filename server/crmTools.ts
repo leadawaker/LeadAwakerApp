@@ -192,7 +192,7 @@ const WRITE_TOOLS: CrmToolDef[] = [
       { name: "name", type: "string", description: "Campaign name", required: false },
       { name: "description", type: "string", description: "Campaign description", required: false },
       { name: "status", type: "string", description: "Status: Draft, Active, Paused, or Completed", required: false },
-      { name: "dailyLeadLimit", type: "number", description: "Max leads per day", required: false },
+      { name: "dailyLeadLimit", type: "number", description: "Max messages per day (default: 500)", required: false },
     ],
   },
   {
@@ -244,7 +244,7 @@ const CREATE_TOOLS: CrmToolDef[] = [
       { name: "description", type: "string", description: "Campaign description", required: false },
       { name: "status", type: "string", description: "Status: Draft, Active, Paused, or Completed (default: Draft)", required: false },
       { name: "account_id", type: "number", description: "Account ID the campaign belongs to", required: false },
-      { name: "dailyLeadLimit", type: "number", description: "Max leads per day", required: false },
+      { name: "dailyLeadLimit", type: "number", description: "Max messages per day (default: 500)", required: false },
       { name: "channel", type: "string", description: "Communication channel (e.g. sms, email, whatsapp)", required: false },
     ],
   },

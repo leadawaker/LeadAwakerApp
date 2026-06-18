@@ -9,8 +9,15 @@
     "profile": "Meu Perfil",
     "security": "Seguranca",
     "notifications": "Notificacoes",
-    "dashboard": "Painel",
     "team": "Equipe"
+  },
+  "team": {
+    "people": "Pessoas",
+    "table": "Tabela",
+    "back": "Voltar",
+    "editProfile": "Editar perfil",
+    "editMyProfile": "Editar meu perfil",
+    "title": "Equipe"
   },
   "account": {
     "saved": "Salvo",
@@ -45,12 +52,9 @@
     "profileSavedDescription": "Suas alteracoes foram salvas.",
     "saveFailed": "Falha ao salvar",
     "saveFailedDescription": "Nao foi possivel salvar o perfil.",
-    "onboardingTutorial": "Tutorial de Integracao",
-    "onboardingDescription": "Reiniciar o tutorial guiado de configuracao",
-    "restartTutorial": "Reiniciar Tutorial",
-    "tutorialRestarted": "Tutorial reiniciado",
-    "tutorialRestartedDescription": "O video de introducao esta sendo exibido agora.",
-    "tutorialRestartFailed": "Falha ao reiniciar tutorial",
+    "impersonation": "Ver como",
+    "impersonationDescription": "Alterne sua visualizacao para ver o app como outro papel. Use a barra superior para sair da visualizacao.",
+    "viewAsAdmin": "Ver como Admin",
     "lastLogin": "Ultimo login"
   },
   "notifications": {
@@ -78,9 +82,9 @@
       "added": "adicionado",
       "remove": "Remover",
       "deviceRemoved": "Dispositivo removido",
-      "permissionDenied": "Notifica\u00e7\u00f5es est\u00e3o bloqueadas. Por favor, permita nas configura\u00e7\u00f5es do seu navegador.",
-      "notConfigured": "Notifica\u00e7\u00f5es push n\u00e3o est\u00e3o configuradas neste servidor.",
-      "serverRegistrationFailed": "N\u00e3o foi poss\u00edvel registrar, tente novamente."
+      "permissionDenied": "Notificações estão bloqueadas. Por favor, permita nas configurações do seu navegador.",
+      "notConfigured": "Notificações push não estão configuradas neste servidor.",
+      "serverRegistrationFailed": "Não foi possível registrar, tente novamente."
     },
     "overrides": {
       "title": "Substituicoes por Tipo de Notificacao",
@@ -97,15 +101,6 @@
       "criticalAutomationFailure": "Falha Critica de Automacao",
       "campaignFinished": "Campanha Concluida"
     }
-  },
-  "dashboard": {
-    "title": "Painel",
-    "description": "Configure o comportamento do painel e intervalos de atualizacao automatica.",
-    "autoRefresh": "Intervalo de Atualizacao Automatica",
-    "current": "Atual:",
-    "refreshUpdated": "Intervalo de atualizacao alterado",
-    "autoRefreshDisabled": "Atualizacao automatica desativada.",
-    "refreshEvery": "Atualiza a cada {{interval}}."
   },
   "hub": {
     "back": "Voltar",

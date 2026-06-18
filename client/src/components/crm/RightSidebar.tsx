@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import {
   HelpCircle,
-  Headphones,
   MessageSquare,
-  MessageCircle,
   Megaphone,
   Calendar,
   CalendarDays,
@@ -15,31 +13,29 @@ import {
   ChevronRight,
   BookUser,
   Users,
-  ChevronsUpDown,
   Check,
   Menu,
-  X,
   Building2,
   UserSearch,
   PhoneCall,
   ClipboardList,
+  MoreHorizontal,
   LogOut,
   Receipt,
   CreditCard,
   FileCheck,
   Settings,
-  Settings2,
 
   Bell,
   Bot,
   Moon,
   Sun,
   SunMoon,
-  Eye,
   ArrowLeft,
   Globe,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
+import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
 
 const NAV_LANGUAGES = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -54,7 +50,7 @@ const THEME_CYCLE: { mode: ThemeMode; icon: typeof Sun; labelKey: string }[] = [
 ];
 
 import { cn } from "@/lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
@@ -86,7 +82,6 @@ function triggerHaptic() {
 export function RightSidebar({
   collapsed,
   onCollapse,
-  onOpenSupport,
   onOpenAi,
   onOpenNotifications,
   onToggleHelp,
@@ -102,7 +97,6 @@ export function RightSidebar({
 }: {
   collapsed: boolean;
   onCollapse: (v: boolean) => void;
-  onOpenSupport: () => void;
   onOpenAi?: () => void;
   onOpenNotifications: () => void;
   onToggleHelp: () => void;
@@ -128,7 +122,6 @@ export function RightSidebar({
     accounts,
     isAgencyUser,
     isOwner,
-    isImpersonating,
   } = useWorkspace();
 
   // Booked calls this month (badge on Calendar icon)
@@ -186,7 +179,6 @@ export function RightSidebar({
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [impersonationOpen, setImpersonationOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
   // Read current user info from localStorage
@@ -222,43 +214,11 @@ export function RightSidebar({
     setCurrentAccountId(id);
   };
 
-  const queryClient = useQueryClient();
-
-  // Role/account changes re-render the app via the effective role; no URL prefix
-  // to switch under the unified /platform area.
-  const handleImpersonate = async (role: string, accountId?: number) => {
-    try {
-      await apiFetch("/api/auth/impersonate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, accountId }),
-      });
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-    } catch (err) {
-      console.error("Failed to start impersonation", err);
-    }
-  };
-
-  const handleStopImpersonation = async () => {
-    try {
-      await apiFetch("/api/auth/impersonate/stop", { method: "POST" });
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-    } catch (err) {
-      console.error("Failed to stop impersonation", err);
-    }
-  };
-
   useEffect(() => {
     onCloseMobileMenu?.();
   }, [location]);
 
   const prefix = "/platform";
-
-  const clientImpersonationId = currentAccountId > 0 ? currentAccountId : 1;
-  const selectedAccount = currentAccountId > 0 ? accounts.find(a => a.id === currentAccountId) : null;
-  const clientImpersonationLabel = selectedAccount
-    ? t("topbar.viewAsClient", { name: selectedAccount.name })
-    : t("topbar.viewAsClientSandbox");
 
   const navItems: {
     href: string;
@@ -401,290 +361,101 @@ export function RightSidebar({
 
   return (
     <>
-      {/* MOBILE SIDEBAR OVERLAY */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[80]" data-testid="mobile-sidebar-overlay">
-          {/* Backdrop - tap outside to close */}
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/50"
-            onClick={onCloseMobileMenu}
-            aria-label="Close menu"
-            data-testid="mobile-sidebar-backdrop"
-          />
-          {/* Slide-in sidebar */}
-          <aside
-            className="absolute left-0 top-0 bottom-0 w-[260px] bg-background shadow-[4px_0_24px_rgba(0,0,0,0.12)] flex flex-col animate-in slide-in-from-left duration-250 ease-out"
-            style={{ paddingTop: "var(--safe-top)" }}
-            data-testid="mobile-sidebar-panel"
-          >
-            {/* LOGO */}
-            <div className="py-5 px-5 flex items-center gap-3 border-b border-border/40">
-              <Link href="/" onClick={onCloseMobileMenu}>
-                <img
-                  src="/premium/favicon.svg"
-                  alt="Lead Awaker"
-                  className="h-9 w-9"
-                />
-              </Link>
-              <span className="text-sm font-bold text-foreground">Lead Awaker</span>
-            </div>
+      {/* MOBILE "MORE" FULL-SCREEN PAGE — replaces the old slide-in drawer */}
+      <div className="md:hidden fixed inset-0 z-[80]" style={{ display: isMobileMenuOpen ? "block" : "none" }} data-testid="mobile-more-overlay">
+        <MobileMorePage
+          open={isMobileMenuOpen}
+          onOpenAi={() => { onOpenAi?.(); onCloseMobileMenu?.(); }}
+          onToggleHelp={() => { onToggleHelp(); onCloseMobileMenu?.(); }}
+          onLogout={() => { onLogout?.(); onCloseMobileMenu?.(); }}
+        />
+      </div>
 
-            {/* ACCOUNT SWITCHER — mobile, agency users only */}
-            {isAgencyUser && (
-              <div className="px-3 pt-3" data-testid="mobile-sidebar-account-switcher">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className={cn(
-                        "w-full rounded-xl border border-border/60 px-3 py-2.5 flex items-center gap-2 hover:bg-muted/60 transition-colors text-left",
-                        currentAccountId === 0 || currentAccountId === 1
-                          ? "bg-brand-yellow/10 dark:bg-brand-yellow/10"
-                          : "bg-brand-indigo/10 dark:bg-brand-indigo/10"
-                      )}
-                      data-testid="mobile-sidebar-account-switcher-trigger"
-                    >
-                      <div
-                        className={cn(
-                          "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                          currentAccountId === 0 || currentAccountId === 1
-                            ? "bg-brand-yellow text-brand-yellow-foreground"
-                            : "bg-brand-indigo text-brand-indigo-foreground"
-                        )}
-                      >
-                        {currentAccount?.name?.[0] || "?"}
-                      </div>
-                      <span className="text-xs font-semibold truncate flex-1">
-                        {currentAccount?.name || "Select Account"}
-                      </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    side="bottom"
-                    align="start"
-                    className="w-56 rounded-2xl shadow-xl border-border bg-background"
-                  >
-                    <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      {t("topbar.switchAccount")}
-                    </div>
-                    {[...accounts].sort((a, b) => a.id === 1 ? -1 : b.id === 1 ? 1 : 0).map((acc) => (
-                      <DropdownMenuItem
-                        key={acc.id}
-                        onClick={() => handleAccountSelect(acc.id)}
-                        className={cn(
-                          "flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1",
-                          currentAccountId === acc.id && "bg-muted font-bold"
-                        )}
-                        data-testid={`mobile-sidebar-account-option-${acc.id}`}
-                      >
-                        <div
-                          className={cn(
-                            "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                            acc.id === 1
-                              ? "bg-brand-yellow text-brand-yellow-foreground"
-                              : "bg-brand-indigo text-brand-indigo-foreground"
-                          )}
-                        >
-                          {acc.name?.[0] || "?"}
-                        </div>
-                        <span className="text-sm truncate flex-1">{acc.name}</span>
-                        {currentAccountId === acc.id && (
-                          <Check className="h-4 w-4 text-brand-indigo shrink-0" />
-                        )}
-                        {acc.id === 1 && (
-                          <span className="text-[9px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter shrink-0">
-                            {t("sidebarSections.agency")}
-                          </span>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
-
-            {/* NAV */}
-            <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-              {visibleNavItems.map((it) => {
-                const Icon = it.icon;
-                const active = isActive(it.href);
-                return (
-                  <Link
-                    key={it.href}
-                    href={it.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-3 rounded-xl transition-colors",
-                      active
-                        ? "bg-highlight-active text-foreground font-bold shadow-sm"
-                        : "text-muted-foreground hover:bg-muted"
-                    )}
-                    data-testid={`mobile-${it.testId}`}
-                    data-active={active || undefined}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-semibold">{it.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* BOTTOM ACTIONS */}
-            <div className="px-3 pb-3 pt-2 space-y-2 border-t border-border/40">
-              <Link
-                href={`${prefix}/settings`}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors",
-                  isActive(`${prefix}/settings`)
-                    ? "bg-highlight-active text-foreground font-bold shadow-sm"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
-                data-testid="mobile-nav-settings"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="text-sm font-semibold">{t("sidebar.settings")}</span>
-              </Link>
-              <button
-                onClick={() => { onOpenSupport(); onCloseMobileMenu?.(); }}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
-              >
-                <Headphones className="h-4 w-4" />
-                <span className="text-sm font-semibold">{t("sidebar.support")}</span>
-              </button>
-              <button
-                onClick={() => { onToggleHelp(); onCloseMobileMenu?.(); }}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
-              >
-                <HelpCircle className="h-4 w-4" />
-                <span className="text-sm font-semibold">{t("sidebar.help")}</span>
-              </button>
-            </div>
-
-            {/* USER FOOTER */}
-            <div className="px-3 pb-6 pt-2 border-t border-border/40" data-testid="mobile-sidebar-user-footer">
-              <div className="flex items-center gap-3 px-3 py-2">
-                <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-                  {userInitials}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate" data-testid="mobile-sidebar-user-name">{userName}</div>
-                  <div className="text-[11px] text-muted-foreground truncate" data-testid="mobile-sidebar-user-role">{userRole}</div>
-                </div>
-                <button
-                  onClick={() => { onLogout?.(); onCloseMobileMenu?.(); }}
-                  className="icon-circle-lg icon-circle-base hover:text-red-600 hover:border-red-400/40 hover:bg-red-50 dark:hover:bg-red-950/30"
-                  title="Logout"
-                  data-testid="mobile-sidebar-logout-btn"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </aside>
-        </div>
-      )}
-
-      {/* MOBILE BOTTOM BAR — 5 tabs: Campaigns, Leads, Chats, Calendar, Settings */}
+      {/* MOBILE BOTTOM BAR — wine/paper neumorphic, 5 tabs: Campaigns, Leads, Calendar, Tasks, More */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 z-[100] flex justify-around items-start pt-2"
-        style={{ height: "var(--bottombar-h)", paddingBottom: "var(--safe-bottom)" }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[100] grid grid-cols-5 items-stretch"
+        style={{
+          height: "var(--bottombar-h)",
+          paddingTop: 7,
+          paddingBottom: "calc(var(--safe-bottom) + 9px)",
+          background: "var(--bg-2)",
+          borderTop: "1px solid var(--line)",
+        }}
         data-testid="mobile-bottom-bar"
       >
-        {/* Campaigns */}
-        <button
-          onClick={() => { triggerHaptic(); setLocation(`${prefix}/campaigns`); }}
-          className={cn(
-            "relative flex flex-col items-center gap-1 px-3 py-2 min-h-[44px] rounded-xl transition-colors",
-            isActive(`${prefix}/campaigns`)
-              ? "text-brand-indigo"
-              : "text-muted-foreground"
-          )}
-          data-testid="mobile-nav-campaigns"
-          data-active={isActive(`${prefix}/campaigns`) || undefined}
-        >
-          <Megaphone className="h-[18px] w-[18px]" />
-          <span className="text-[10px] font-semibold">{t("sidebar.campaigns")}</span>
-          {isActive(`${prefix}/campaigns`) && (
-            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />
-          )}
-        </button>
+        {([
+          { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.campaigns"), testId: "mobile-nav-campaigns" },
+          { key: "contacts", href: `${prefix}/contacts`, icon: Users, label: t("sidebar.leads"), testId: "mobile-nav-contacts" },
+          { key: "calendar", href: `${prefix}/calendar`, icon: CalendarDays, label: t("sidebar.calendar"), testId: "mobile-nav-calendar" },
+          // Agency users get Tasks; client users get their Accounts page instead.
+          isAgencyUser
+            ? { key: "tasks", href: `${prefix}/tasks`, icon: ClipboardList, label: t("sidebar.tasks"), testId: "mobile-nav-tasks" }
+            : { key: "accounts", href: `${prefix}/accounts`, icon: Building2, label: t("sidebar.accounts"), testId: "mobile-nav-accounts" },
+        ]).map((tab) => {
+          // Don't double-highlight a tab when the More drawer is open over it.
+          const active = isActive(tab.href) && !isMobileMenuOpen;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => { triggerHaptic(); setLocation(tab.href); }}
+              className="flex flex-col items-center justify-center gap-[5px] mx-[5px] h-full"
+              style={{
+                borderRadius: "var(--r-card)",
+                color: active ? "var(--wine)" : "var(--mute)",
+                background: active ? "var(--card)" : "transparent",
+                boxShadow: active ? "var(--sh-raised-crisp)" : "none",
+                transition: "background-color 160ms, color 160ms, box-shadow 160ms",
+              }}
+              data-testid={tab.testId}
+              data-active={active || undefined}
+            >
+              <Icon className="h-6 w-6" />
+              <span
+                style={{
+                  fontFamily: "var(--mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  color: active ? "var(--wine)" : "var(--mute-2)",
+                  fontWeight: active ? 700 : 400,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
 
-        {/* Leads */}
+        {/* More — opens the slide-in drawer (Settings + secondary nav live inside) */}
         <button
-          onClick={() => { triggerHaptic(); setLocation(`${prefix}/contacts`); }}
-          className={cn(
-            "relative flex flex-col items-center gap-1 px-3 py-2 min-h-[44px] rounded-xl transition-colors",
-            isActive(`${prefix}/contacts`)
-              ? "text-brand-indigo"
-              : "text-muted-foreground"
-          )}
-          data-testid="mobile-nav-contacts"
-          data-active={isActive(`${prefix}/contacts`) || undefined}
+          onClick={() => { triggerHaptic(); onToggleMobileMenu?.(); }}
+          className="flex flex-col items-center justify-center gap-[5px] mx-[5px] h-full"
+          style={{
+            borderRadius: "var(--r-card)",
+            color: isMobileMenuOpen ? "var(--wine)" : "var(--mute)",
+            background: isMobileMenuOpen ? "var(--card)" : "transparent",
+            boxShadow: isMobileMenuOpen ? "var(--sh-raised-crisp)" : "none",
+            transition: "background-color 160ms, color 160ms, box-shadow 160ms",
+          }}
+          data-testid="mobile-nav-more"
+          data-active={isMobileMenuOpen || undefined}
         >
-          <Users className="h-[18px] w-[18px]" />
-          <span className="text-[10px] font-semibold">{t("sidebar.leads")}</span>
-          {isActive(`${prefix}/contacts`) && (
-            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />
-          )}
-        </button>
-
-        {/* Outreach Inbox — owner only */}
-        {isOwner && (
-          <button
-            onClick={() => { triggerHaptic(); setLocation(`${prefix}/outreach-inbox`); }}
-            className={cn(
-              "relative flex flex-col items-center gap-1 px-3 py-2 min-h-[44px] rounded-xl transition-colors",
-              isActive(`${prefix}/outreach-inbox`)
-                ? "text-brand-indigo"
-                : "text-muted-foreground"
-            )}
-            data-testid="mobile-nav-outreach-inbox"
-            data-active={isActive(`${prefix}/outreach-inbox`) || undefined}
+          <MoreHorizontal className="h-6 w-6" />
+          <span
+            style={{
+              fontFamily: "var(--mono)",
+              fontSize: 10,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color: isMobileMenuOpen ? "var(--wine)" : "var(--mute-2)",
+              fontWeight: isMobileMenuOpen ? 700 : 400,
+              whiteSpace: "nowrap",
+            }}
           >
-            <MessageCircle className="h-[18px] w-[18px]" />
-            <span className="text-[10px] font-semibold">{t("sidebar.inbox")}</span>
-            {isActive(`${prefix}/outreach-inbox`) && (
-              <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />
-            )}
-          </button>
-        )}
-
-        {/* Calendar */}
-        <button
-          onClick={() => { triggerHaptic(); setLocation(`${prefix}/calendar`); }}
-          className={cn(
-            "relative flex flex-col items-center gap-1 px-3 py-2 min-h-[44px] rounded-xl transition-colors",
-            isActive(`${prefix}/calendar`)
-              ? "text-brand-indigo"
-              : "text-muted-foreground"
-          )}
-          data-testid="mobile-nav-calendar"
-          data-active={isActive(`${prefix}/calendar`) || undefined}
-        >
-          <CalendarDays className="h-[18px] w-[18px]" />
-          <span className="text-[10px] font-semibold">{t("sidebar.calendar")}</span>
-          {isActive(`${prefix}/calendar`) && (
-            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />
-          )}
-        </button>
-
-        {/* Settings */}
-        <button
-          onClick={() => { triggerHaptic(); setLocation(`${prefix}/settings`); }}
-          className={cn(
-            "relative flex flex-col items-center gap-1 px-3 py-2 min-h-[44px] rounded-xl transition-colors",
-            isActive(`${prefix}/settings`)
-              ? "text-brand-indigo"
-              : "text-muted-foreground"
-          )}
-          data-testid="mobile-nav-settings-bar"
-          data-active={isActive(`${prefix}/settings`) || undefined}
-        >
-          <Settings2 className="h-[18px] w-[18px]" />
-          <span className="text-[10px] font-semibold">{t("sidebar.settings")}</span>
-          {isActive(`${prefix}/settings`) && (
-            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />
-          )}
+            {t("sidebar.more")}
+          </span>
         </button>
       </div>
 
@@ -860,36 +631,6 @@ export function RightSidebar({
                   <activeTheme.icon size={14} />
                   {t(activeTheme.labelKey)}
                 </button>
-                {isOwner && !isImpersonating && (
-                  <Popover open={impersonationOpen} onOpenChange={setImpersonationOpen}>
-                    <PopoverTrigger asChild>
-                      <button className="la-profile-menu-item">
-                        <Eye size={14} />Impersonation
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent side="right" align="start" sideOffset={4} className="w-48 p-1 rounded-2xl shadow-xl border-border bg-background">
-                      <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        {t("topbar.viewAsRole")}
-                      </div>
-                      <button onClick={() => { setImpersonationOpen(false); setProfileOpen(false); handleImpersonate("Admin"); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm hover:bg-muted/50 transition-colors">
-                        <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-brand-indigo text-brand-indigo-foreground">A</div>
-                        <span>{t("topbar.viewAsAdmin")}</span>
-                      </button>
-                      <button onClick={() => { setImpersonationOpen(false); setProfileOpen(false); handleImpersonate("Manager", clientImpersonationId); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm hover:bg-muted/50 transition-colors">
-                        <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-muted text-muted-foreground">C</div>
-                        <span>{clientImpersonationLabel}</span>
-                      </button>
-                    </PopoverContent>
-                  </Popover>
-                )}
-                {isImpersonating && (
-                  <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); handleStopImpersonation(); }}
-                    style={{ color: "var(--warn)" }}>
-                    <X size={14} />{t("topbar.exitImpersonation")}
-                  </button>
-                )}
                 <button className="la-profile-menu-item" onClick={onToggleHelp}>
                   <HelpCircle size={14} />Help &amp; docs
                 </button>

@@ -7,7 +7,7 @@ import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useCompactHoverCard, CompactHoverCardPortal } from "@/components/crm/CompactEntityRail";
 import {
   getAccountId, STATUS_GROUP_ORDER, STATUS_I18N_KEY, type VirtualListItem,
-  ListSkeleton,
+  ListSkeleton, CompactListSkeleton,
 } from "../listWidgets";
 import { WorkspaceAccountCard, WorkspaceGroupHeader } from "./WorkspaceAccountCard";
 import { CompactAccountCard } from "./CompactAccountCard";
@@ -175,7 +175,7 @@ export function AccountsListPanel({
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (
-            <div className="flex items-center justify-center py-6"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
+            <CompactListSkeleton />
           ) : (
             <div className="flex flex-col items-center gap-0">
               {flatItems.map((item) => {

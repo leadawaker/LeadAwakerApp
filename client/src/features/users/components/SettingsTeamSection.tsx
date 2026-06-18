@@ -1,17 +1,21 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
-  ArrowUpDown, Filter, Eye, Check, Search, X,
-  UserPlus, Mail, Phone, Copy, Clock, User, Shield, Calendar,
+  ArrowUpDown, Filter, Check, Search, X, Plus,
+  Mail, Phone, Copy, Clock, User, Shield, Calendar,
   Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal,
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { UsersInlineTable } from "./UsersInlineTable";
-import type { UserTableItem, UserColKey } from "./UsersInlineTable";
+import { ProfileSection } from "@/features/settings/components/ProfileSection";
+import { UsersCardGrid } from "./UsersCardGrid";
+import type { UserTableItem } from "./UsersInlineTable";
 import type { AppUser, AccountMap } from "../types";
 import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSession } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -36,9 +40,6 @@ import { getInitials, ROLE_AVATAR } from "@/lib/avatarUtils";
 type SortBy = "name_asc" | "name_desc" | "recent";
 type GroupBy = "role" | "status" | "account" | "none";
 
-const VISIBLE_COLS_KEY = "users-table-visible-cols";
-const DEFAULT_VISIBLE_COLS: UserColKey[] = ["name", "role", "account", "email", "lastLogin"];
-
 const ROLE_OPTIONS = ["Admin", "Manager", "Viewer"] as const;
 const STATUS_OPTIONS = ["Active", "Inactive", "Invited"];
 const ROLE_GROUP_ORDER = ["Admin", "Manager", "Viewer"];
@@ -52,22 +53,10 @@ const SORT_LABELS: Record<SortBy, string> = {
 const GROUP_LABELS: Record<GroupBy, string> = {
   role: "Role", status: "Status", account: "Account", none: "None",
 };
-const COL_META: { key: UserColKey; label: string; defaultVisible: boolean }[] = [
-  { key: "name",        label: "Name",         defaultVisible: true  },
-  { key: "account",     label: "Account",      defaultVisible: true  },
-  { key: "email",       label: "Email",        defaultVisible: true  },
-  { key: "phone",       label: "Phone",        defaultVisible: false },
-  { key: "role",        label: "Role",         defaultVisible: true  },
-  { key: "status",      label: "Status",       defaultVisible: true  },
-  { key: "lastLogin",   label: "Last Login",   defaultVisible: true  },
-  { key: "memberSince", label: "Member Since", defaultVisible: false },
-  { key: "timezone",    label: "Timezone",     defaultVisible: false },
-];
 
 // Expand-on-hover button constants
 const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
+const xDefault = "border-[var(--line)] text-foreground/60 hover:text-foreground";
 const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 function isActiveStatus(s: string | null | undefined) { return (s || "").toLowerCase() === "active"; }
@@ -95,7 +84,7 @@ function ConfirmToolbarButton({
   const isMobile = useIsMobile();
   if (confirming) {
     return (
-      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full border border-[var(--line)] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -212,24 +201,24 @@ function isInviteExpired(u: AppUser): boolean {
 // ══════════════════════════════════════════════════════════════════════════════
 // SettingsTeamSection — main export
 // ══════════════════════════════════════════════════════════════════════════════
-export function SettingsTeamSection() {
+export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boolean }) {
+  const { t } = useTranslation("settings");
   const [, setLocation] = useLocation();
   const isMobile = useIsMobile();
-  const { currentAccountId } = useWorkspace();
+  const { currentAccountId, isOwner } = useWorkspace();
+  const session = useSession();
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
   const [accounts, setAccounts] = useState<AccountMap>({});
-  const [campaignsByAccount, setCampaignsByAccount] = useState<Record<number, { id: number; name: string }[]>>({});
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [usersRes, accountsRes, campaignsRes] = await Promise.all([
+      const [usersRes, accountsRes] = await Promise.all([
         apiFetch("/api/users"),
         apiFetch("/api/accounts"),
-        apiFetch("/api/campaigns"),
       ]);
       if (!usersRes.ok) throw new Error("Failed to fetch users");
       const userData = await usersRes.json();
@@ -242,19 +231,6 @@ export function SettingsTeamSection() {
         }
         setAccounts(map);
       }
-      if (campaignsRes.ok) {
-        const campaignsData = await campaignsRes.json();
-        const byAccount: Record<number, { id: number; name: string }[]> = {};
-        if (Array.isArray(campaignsData)) {
-          campaignsData.forEach((c: any) => {
-            const accId = c.Accounts_id ?? c.accountsId;
-            if (!accId) return;
-            if (!byAccount[accId]) byAccount[accId] = [];
-            byAccount[accId].push({ id: c.id, name: c.name || "Unnamed" });
-          });
-        }
-        setCampaignsByAccount(byAccount);
-      }
     } catch {
       toast({ title: "Failed to load users", variant: "destructive" });
     } finally {
@@ -264,15 +240,34 @@ export function SettingsTeamSection() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+  // ── Toolbar portal: renders toolbar into Settings topbar slot when available ─
+  const [slotEl, setSlotEl] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const el = document.getElementById("settings-team-toolbar-slot") ?? null;
+    setSlotEl((prev) => (prev !== el ? el : prev));
+  });
+
+  // ── Default-select current user once list loads ─────────────────────────────
+  const defaultApplied = useRef(false);
+  useEffect(() => {
+    if (defaultApplied.current || loading || users.length === 0) return;
+    const sessionEmail = session.status === "authenticated" ? session.user.email : null;
+    const match = sessionEmail ? users.find((u) => u.email === sessionEmail) : null;
+    if (match) {
+      setViewingUser(match);
+      defaultApplied.current = true;
+    }
+  }, [loading, users, session.status]);
+
   const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "";
   const currentUserRole  = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  const isAdmin = currentUserRole === "Admin" || currentUserEmail === "leadawaker@gmail.com";
+  const isAdmin = currentUserRole === "Admin";
 
   // ── Table state (persisted) ────────────────────────────────────────────────
   const [search, setSearch]       = useState("");
   const [teamPrefs, setTeamPrefs] = usePersistedState("team-prefs", {
     sortBy: "name_asc" as SortBy,
-    groupBy: "role" as GroupBy,
+    groupBy: "account" as GroupBy,
     filterRole: [] as string[],
     filterStatus: [] as string[],
   });
@@ -293,15 +288,14 @@ export function SettingsTeamSection() {
   const toggleFilterStatus = useCallback((s: string) => setFilterStatus(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]), []);
   const clearFilters       = useCallback(() => { setFilterRole([]); setFilterStatus([]); }, []);
 
-  // ── Column visibility (persisted) ──────────────────────────────────────────
-  const [visibleCols, setVisibleCols] = useState<Set<UserColKey>>(() => {
-    try {
-      const s = localStorage.getItem(VISIBLE_COLS_KEY);
-      if (s) { const arr = JSON.parse(s); if (Array.isArray(arr) && arr.length > 0) return new Set(arr); }
-    } catch {}
-    return new Set(DEFAULT_VISIBLE_COLS);
-  });
-  useEffect(() => { try { localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(Array.from(visibleCols))); } catch {} }, [visibleCols]);
+  const toggleSelectUser = useCallback((id: number) => {
+    if (!isOwner) return;
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, [isOwner]);
 
   // ── Flat items (filtered + sorted + grouped) ──────────────────────────────
   const flatItems = useMemo((): UserTableItem[] => {
@@ -535,6 +529,8 @@ export function SettingsTeamSection() {
 
   // ── Edit user dialog ───────────────────────────────────────────────────────
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
+  // Self-edit reuses the full ProfileSection (avatar, secure password, Gmail, impersonation)
+  const [editingSelf, setEditingSelf] = useState(false);
 
   const handleSaveUser = useCallback(async () => {
     if (!editingUser) return;
@@ -566,30 +562,33 @@ export function SettingsTeamSection() {
     }
   }, [editingUser, currentUserEmail]);
 
-  // ── Search input open state ────────────────────────────────────────────────
-  const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (searchOpen && searchInputRef.current) searchInputRef.current.focus();
-  }, [searchOpen]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full">
-      {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 flex-wrap px-3.5 pt-3 pb-2.5 shrink-0">
-        {/* Invite button — opens popover below */}
-        {isAdmin && (
+      {/* ── Toolbar — portaled into Settings topbar on normal screens, inline on ultrawide ── */}
+      {(() => {
+        const toolbarInner = (
+          <div className={cn(
+            "flex items-center gap-1.5 flex-wrap shrink-0",
+            slotEl ? "" : isUltrawide ? "px-3.5 py-2.5 border-b border-[color:var(--line)]" : "px-3.5 pt-3 pb-2.5",
+          )}>
+        {/* Spacer — pushes invite / search / filter / sort / group to the right edge */}
+        <div className="flex-1 min-w-0" />
+
+        {/* Invite button — opens popover below (owner or admin) */}
+        {(isAdmin || isOwner) && (
           <Popover open={inviteOpen} onOpenChange={(open) => { if (!open) { setInviteOpen(false); setInviteResult(null); } else { handleInviteOpen(); } }} modal={false}>
             <PopoverTrigger asChild>
               <button
-                className="inline-flex items-center gap-1.5 h-9 pl-[9px] pr-3 rounded-full bg-brand-indigo text-white text-[12px] font-medium hover:bg-brand-indigo/90 shrink-0"
+                className="la-btn la-btn--wine la-btn--icon shrink-0"
+                title="Invite user"
+                data-testid="button-invite-user"
               >
-                <UserPlus className="h-4 w-4 shrink-0" />
-                Invite
+                <Plus className="h-4 w-4 shrink-0" />
               </button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" sideOffset={6} className="w-80 p-0 rounded-xl shadow-lg border border-border/40">
@@ -648,56 +647,32 @@ export function SettingsTeamSection() {
           </Popover>
         )}
 
-        <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-
-        {/* Search */}
-        {searchOpen ? (
-          <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
-            <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-            <input
-              ref={searchInputRef}
-              className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-              placeholder="Search users…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            <button onClick={() => { setSearch(""); setSearchOpen(false); }} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
+        {/* Search — persistent inline input */}
+        <div className="relative shrink-0" style={{ width: 160 }}>
+          <input
+            ref={searchInputRef}
+            className="neu-input"
+            style={{ paddingLeft: 28, paddingTop: 0, paddingBottom: 0, paddingRight: search ? 28 : 10, height: 32, fontSize: 12 }}
+            placeholder="Search users…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
+            <Search className="h-3 w-3" />
+          </span>
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-[9px] top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground">
               <X className="h-3 w-3" />
             </button>
-          </div>
-        ) : (
-          <button className={cn(xBase, xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")} onClick={() => setSearchOpen(true)}>
-            <Search className="h-4 w-4 shrink-0" />
-            <span className={cn(xSpan, isMobile && "!opacity-100")}>Search</span>
-          </button>
-        )}
-
-        {/* Sort */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, sortBy !== "name_asc" ? xActive : xDefault, isMobile ? "max-w-[80px]" : "hover:max-w-[80px]")}>
-              <ArrowUpDown className="h-4 w-4 shrink-0" />
-              <span className={cn(xSpan, isMobile && "!opacity-100")}>Sort</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-44">
-            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {(Object.keys(SORT_LABELS) as SortBy[]).map(opt => (
-              <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-                {SORT_LABELS[opt]}
-                {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+        </div>
 
         {/* Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, isFilterActive ? xActive : xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")}>
+            <button className="la-btn la-btn--soft la-btn--icon shrink-0" style={{ position: "relative" }} title="Filter" data-testid="button-filter">
               <Filter className="h-4 w-4 shrink-0" />
-              <span className={cn(xSpan, isMobile && "!opacity-100")}>Filter{isFilterActive && activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}</span>
+              {isFilterActive && <span style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: "var(--wine)" }} />}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
@@ -727,12 +702,32 @@ export function SettingsTeamSection() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Sort */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="la-btn la-btn--soft la-btn--icon shrink-0" style={{ position: "relative" }} title="Sort" data-testid="button-sort">
+              <ArrowUpDown className="h-4 w-4 shrink-0" />
+              {sortBy !== "name_asc" && <span style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: "var(--wine)" }} />}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44">
+            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {(Object.keys(SORT_LABELS) as SortBy[]).map(opt => (
+              <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
+                {SORT_LABELS[opt]}
+                {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Group */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, groupBy !== "role" ? xActive : xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")}>
+            <button className="la-btn la-btn--soft la-btn--icon shrink-0" style={{ position: "relative" }} title="Group" data-testid="button-group">
               <Layers className="h-4 w-4 shrink-0" />
-              <span className={cn(xSpan, isMobile && "!opacity-100")}>Group</span>
+              {groupBy !== "account" && <span style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: "var(--wine)" }} />}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-44">
@@ -745,228 +740,189 @@ export function SettingsTeamSection() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Fields (column visibility) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? xActive : xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")}>
-              <Eye className="h-4 w-4 shrink-0" />
-              <span className={cn(xSpan, isMobile && "!opacity-100")}>Fields</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
-            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {COL_META.map(col => {
-              const isVisible = visibleCols.has(col.key);
-              return (
-                <DropdownMenuItem
-                  key={col.key}
-                  onClick={e => { e.preventDefault(); setVisibleCols(prev => { const next = new Set(prev); if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); } else next.add(col.key); return next; }); }}
-                  className="flex items-center gap-2 text-[12px]"
-                >
-                  <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-                    {isVisible && <Check className="h-2 w-2 text-white" />}
-                  </div>
-                  <span className="flex-1">{col.label}</span>
-                  {!col.defaultVisible && <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>}
-                </DropdownMenuItem>
-              );
-            })}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">Reset to default</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Bulk deactivate — far right, when rows selected */}
-        {selectedIds.size > 0 && (
-          <>
-            <div className="flex-1 min-w-0" />
-            <ConfirmToolbarButton icon={Trash2} label="Deactivate" onConfirm={handleBulkDeactivate} variant="danger" />
-          </>
+        {/* Bulk deactivate — when avatars are multi-selected (Owner-only) */}
+        {isOwner && selectedIds.size > 0 && (
+          <ConfirmToolbarButton icon={Trash2} label="Deactivate" onConfirm={handleBulkDeactivate} variant="danger" />
         )}
-      </div>
+          </div>
+        );
+        return slotEl ? createPortal(toolbarInner, slotEl) : toolbarInner;
+      })()}
 
-      {/* ── Pending invites ─────────────────────────────────────────────────── */}
-      {isAdmin && pendingInvites.length > 0 && (
-        <div className="pb-2 px-3.5 shrink-0">
-          <PendingInvitesSection
-            invites={pendingInvites}
-            accounts={accounts}
-            resendingUserId={resendingUserId}
-            revokingUserId={revokingUserId}
-            resendResult={resendResult}
-            onResend={handleResendInvite}
-            onRevoke={handleRevokeInvite}
-          />
+      {/* ── White panel: the whole Team section lives on one surface ── */}
+      <div className="neu-raised rounded-2xl bg-card flex flex-col flex-1 min-h-0 overflow-hidden">
+        {/* Team title — top-left inside the panel */}
+        <div className="flex items-center gap-2 px-5 pt-4 pb-3 shrink-0">
+          <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("team.title", "Team")}</span>
+          <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{flatItems.filter((i) => i.kind === "user").length}</span>
         </div>
-      )}
 
-      {/* ── Table — fills remaining space, edge-to-edge, no rounded corners */}
-      <div className="flex-1 min-h-0 overflow-x-auto">
-        <UsersInlineTable
-          flatItems={flatItems}
-          loading={loading}
-          selectedUserId={null}
-          onSelectUser={u => setViewingUser(u)}
-          accounts={accounts}
-          visibleCols={visibleCols}
-          tableSearch={search}
-          selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
-          campaignsByAccount={campaignsByAccount}
-        />
-      </div>
+        {/* Pending invites */}
+        {(isAdmin || isOwner) && pendingInvites.length > 0 && (
+          <div className="pb-2 px-5 shrink-0">
+            <PendingInvitesSection
+              invites={pendingInvites}
+              accounts={accounts}
+              resendingUserId={resendingUserId}
+              revokingUserId={revokingUserId}
+              resendResult={resendResult}
+              onResend={handleResendInvite}
+              onRevoke={handleRevokeInvite}
+            />
+          </div>
+        )}
 
-      {/* Invite popover is now inline in the toolbar */}
-
-      {/* ── View User Dialog ────────────────────────────────────────────────── */}
-      <Dialog open={!!viewingUser} onOpenChange={open => !open && setViewingUser(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="w-5 h-5 text-brand-indigo" />
-              User Profile
-            </DialogTitle>
-            <DialogDescription>Full profile details for this user.</DialogDescription>
-          </DialogHeader>
+        {/* Split: detail (left, flat) + cards (right) */}
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Detail — flat, on the left */}
           {viewingUser && (
-            <div className="py-2 space-y-4">
-              <div className="flex items-center gap-4 pb-4 border-b border-border">
-                <EntityAvatar
-                  name={getUserName(viewingUser)}
-                  photoUrl={viewingUser.avatarUrl}
-                  bgColor={(ROLE_AVATAR[viewingUser.role || "Viewer"] ?? ROLE_AVATAR.Viewer).bg}
-                  textColor={(ROLE_AVATAR[viewingUser.role || "Viewer"] ?? ROLE_AVATAR.Viewer).text}
-                  size={56}
-                />
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">
-                    {viewingUser.fullName1 || <span className="text-muted-foreground italic text-sm">No name set</span>}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    {viewingUser.role && (
-                      <span className={cn("px-2.5 py-0.5 rounded-lg text-xs font-medium", ROLE_STYLES[viewingUser.role] ?? "bg-muted text-muted-foreground")}>{viewingUser.role}</span>
-                    )}
-                    {viewingUser.status && (
-                      <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                        isActiveStatus(viewingUser.status) ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-muted text-muted-foreground"
-                      )}>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", isActiveStatus(viewingUser.status) ? "bg-emerald-500" : "bg-muted-foreground")} />
-                        {viewingUser.status}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { icon: Mail,     label: "Email",      value: viewingUser.email },
-                  { icon: Phone,    label: "Phone",      value: viewingUser.phone },
-                  { icon: Clock,    label: "Last Login",  value: viewingUser.lastLoginAt ? new Date(viewingUser.lastLoginAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Never logged in" },
-                  viewingUser.timezone  ? { icon: Calendar, label: "Timezone",     value: viewingUser.timezone } : null,
-                  viewingUser.createdAt ? { icon: Calendar, label: "Member Since", value: new Date(viewingUser.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" }) } : null,
-                ].filter(Boolean).map((row) => row && (
-                  <div key={row.label} className="flex items-start gap-3">
-                    <row.icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">{row.label}</p>
-                      <p className="text-sm text-foreground break-all">{row.value || <span className="italic text-muted-foreground">Not set</span>}</p>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Account */}
-                {viewingUser.accountsId && (
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Account</p>
-                      <button
-                        className="text-sm text-brand-indigo hover:underline font-medium cursor-pointer inline-flex items-center gap-1"
-                        onClick={() => {
-                          sessionStorage.setItem("pendingAccountId", String(viewingUser.accountsId));
-                          setViewingUser(null);
-                          const isAgencyView = localStorage.getItem("leadawaker_user_role") !== "Manager" && localStorage.getItem("leadawaker_user_role") !== "Viewer";
-                          setLocation("/platform/accounts");
-                        }}
-                      >
-                        {accounts[viewingUser.accountsId] || `Account #${viewingUser.accountsId}`}
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Human Takeover count */}
-                <div className="flex items-start gap-3">
-                  <HandMetal className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="shrink-0 flex flex-col min-h-0 overflow-hidden border-r" style={{ width: 600, borderColor: "var(--line)" }}>
+              {/* Header: big name + badges + close */}
+              <div className="px-6 pt-5 pb-4 shrink-0">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Human Takeovers</p>
-                    <p className="text-sm text-foreground">
-                      {viewDataLoading ? (
-                        <span className="text-muted-foreground italic">Loading...</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-brand-indigo/10 text-brand-indigo text-xs font-bold tabular-nums">
-                            {viewTakeoverCount}
-                          </span>
-                          <span className="text-muted-foreground text-xs">manual messages sent</span>
+                    <h3 className="text-[34px] font-bold font-heading text-foreground leading-[1.05] truncate">
+                      {viewingUser.fullName1 || <span className="text-muted-foreground italic text-2xl">No name set</span>}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      {viewingUser.role && (
+                        <span className={cn("px-2.5 py-1 rounded-md text-[12px] font-semibold", ROLE_STYLES[viewingUser.role] ?? "bg-muted text-muted-foreground")}>
+                          {viewingUser.role}
                         </span>
                       )}
-                    </p>
+                      {viewingUser.status && (
+                        <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase",
+                          isActiveStatus(viewingUser.status) ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-muted text-muted-foreground"
+                        )}>
+                          <span className={cn("w-1.5 h-1.5 rounded-full", isActiveStatus(viewingUser.status) ? "bg-emerald-500" : "bg-muted-foreground")} />
+                          {viewingUser.status}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewingUser(null)}
+                    className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0 mt-1"
+                    aria-label="Close panel"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
-              {/* Campaigns */}
-              <div className="pt-3 border-t border-border">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-2 flex items-center gap-1.5">
-                  <Megaphone className="w-3.5 h-3.5" />
-                  Campaigns
-                  {!viewDataLoading && <span className="text-[10px] tabular-nums font-normal text-muted-foreground/60 ml-0.5">({viewCampaigns.length})</span>}
-                </p>
-                {viewDataLoading ? (
-                  <p className="text-xs text-muted-foreground italic">Loading...</p>
-                ) : viewCampaigns.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic">No campaigns for this account</p>
-                ) : (
-                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                    {viewCampaigns.map((c: any) => {
-                      const name = c.name || "Unnamed";
-                      const acronym = name.split(/\s+/).map((w: string) => w[0]?.toUpperCase()).join("").slice(0, 2);
-                      return (
+              {/* Body: 2-column info grid + campaigns */}
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-5">
+                <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+                  {[
+                    { label: "Email",        value: viewingUser.email },
+                    { label: "Phone",        value: viewingUser.phone },
+                    { label: "Last Login",   value: viewingUser.lastLoginAt && viewingUser.lastLoginAt !== ""
+                      ? new Date(viewingUser.lastLoginAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+                      : "Never logged in" },
+                    { label: "Member Since", value: viewingUser.createdAt ? new Date(viewingUser.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" }) : null },
+                    viewingUser.timezone ? { label: "Timezone", value: viewingUser.timezone } : null,
+                    viewingUser.accountsId ? { label: "Account", value: accounts[viewingUser.accountsId] || `Account #${viewingUser.accountsId}`, isAccount: true } : null,
+                  ].filter(Boolean).map((row) => row && (
+                    <div key={row.label} className="min-w-0">
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-1">{row.label}</p>
+                      {(row as any).isAccount ? (
                         <button
-                          key={c.id}
-                          className="flex items-center gap-2.5 w-full text-left px-2 py-1.5 rounded-lg hover:bg-muted/60 transition-colors group"
+                          className="text-[14px] font-medium hover:underline inline-flex items-center gap-1 leading-snug truncate max-w-full"
+                          style={{ color: "var(--wine)" }}
                           onClick={() => {
-                            sessionStorage.setItem("pendingCampaignId", String(c.id));
+                            sessionStorage.setItem("pendingAccountId", String(viewingUser.accountsId));
                             setViewingUser(null);
-                            const isAgencyView = localStorage.getItem("leadawaker_user_role") !== "Manager" && localStorage.getItem("leadawaker_user_role") !== "Viewer";
-                            setLocation("/platform/campaigns");
+                            setLocation("/platform/accounts");
                           }}
                         >
-                          <span className="w-7 h-7 rounded-full bg-brand-indigo/10 text-brand-indigo text-[10px] font-bold flex items-center justify-center shrink-0">{acronym}</span>
-                          <span className="text-sm text-foreground truncate group-hover:text-brand-indigo transition-colors">{name}</span>
-                          <ExternalLink className="w-3 h-3 text-muted-foreground/40 group-hover:text-brand-indigo ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <span className="truncate">{(row as any).value}</span>
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                         </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                      ) : (
+                        <p className="text-[14px] text-foreground break-words leading-snug">
+                          {row.value || <span className="italic text-muted-foreground">Not set</span>}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
+                {/* Edit — light wine button, right below user info */}
+                {(isAdmin || isOwner || viewingUser.email === currentUserEmail) && (
+                  <button
+                    type="button"
+                    className="w-full h-10 mt-5 rounded-full inline-flex items-center justify-center gap-2 text-[13px] font-semibold transition-[filter] duration-150 hover:brightness-95"
+                    style={{ background: "var(--wine-tint)", color: "var(--wine)" }}
+                    onClick={() => {
+                      const u = viewingUser;
+                      if (u.email === currentUserEmail) setEditingSelf(true);
+                      else { setViewingUser(null); setEditingUser(u); }
+                    }}
+                  >
+                    <User className="h-4 w-4" />
+                    {viewingUser.email === currentUserEmail ? t("team.editMyProfile", "Edit My Profile") : t("team.editProfile", "Edit Profile")}
+                  </button>
+                )}
+
+                {/* Takeovers */}
+                <div className="mt-5 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-1.5 flex items-center gap-1.5">
+                    <HandMetal className="w-3.5 h-3.5" />Takeovers
+                  </p>
+                  {viewDataLoading ? <span className="text-[12px] italic text-muted-foreground">…</span> : (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-[13px] font-bold tabular-nums" style={{ background: "var(--wine-tint)", color: "var(--wine)" }}>{viewTakeoverCount}</span>
+                      <span className="text-[12px] text-muted-foreground">messages sent</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Campaigns — bigger, with avatars */}
+                <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-2 flex items-center gap-1.5">
+                    <Megaphone className="w-3.5 h-3.5" />Campaigns
+                    {!viewDataLoading && <span className="font-normal text-muted-foreground/50 ml-0.5">({viewCampaigns.length})</span>}
+                  </p>
+                  {viewDataLoading ? <span className="text-[12px] italic text-muted-foreground">…</span> :
+                  viewCampaigns.length === 0 ? <span className="text-[12px] italic text-muted-foreground">None</span> : (
+                    <div className="space-y-1.5">
+                      {viewCampaigns.slice(0, 8).map((c: any) => {
+                        const cname = c.name || "Unnamed";
+                        return (
+                          <button
+                            key={c.id}
+                            className="flex items-center gap-2.5 w-full text-left group rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-muted/40 transition-colors"
+                            onClick={() => { sessionStorage.setItem("pendingCampaignId", String(c.id)); setViewingUser(null); setLocation("/platform/campaigns"); }}
+                          >
+                            <EntityAvatar name={cname} size={30} bgColor="var(--wine-tint)" textColor="var(--wine)" />
+                            <span className="text-[13px] font-medium text-foreground truncate group-hover:underline">{cname}</span>
+                          </button>
+                        );
+                      })}
+                      {viewCampaigns.length > 8 && <span className="text-[11px] text-muted-foreground italic">+{viewCampaigns.length - 8} more</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setViewingUser(null)}>Close</Button>
-            {viewingUser && (isAdmin || viewingUser.email === currentUserEmail) && (
-              <Button onClick={() => { const u = viewingUser; setViewingUser(null); setEditingUser(u); }}>
-                Edit Profile
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {/* Cards — right side */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <UsersCardGrid
+              flatItems={flatItems}
+              loading={loading}
+              accounts={accounts}
+              selectedUserId={viewingUser?.id ?? null}
+              onSelectUser={u => setViewingUser(u)}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelectUser}
+              canMultiSelect={isOwner}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* ── Edit User Dialog ────────────────────────────────────────────────── */}
       <Dialog open={!!editingUser} onOpenChange={open => !open && setEditingUser(null)}>
@@ -1041,6 +997,17 @@ export function SettingsTeamSection() {
             <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
             <Button onClick={handleSaveUser}>Save Changes</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Self-edit popup — full ProfileSection (avatar, secure password, Gmail, impersonation) ── */}
+      <Dialog open={editingSelf} onOpenChange={(o) => setEditingSelf(o)}>
+        <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("team.editMyProfile", "Edit My Profile")}</DialogTitle>
+            <DialogDescription className="sr-only">{t("team.editMyProfile", "Edit My Profile")}</DialogDescription>
+          </DialogHeader>
+          <ProfileSection />
         </DialogContent>
       </Dialog>
     </div>

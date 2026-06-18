@@ -15,7 +15,7 @@ function HealthSkeleton() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="h-[60px] bg-card/70 rounded-xl animate-pulse"
+          className="h-[60px] bg-primary/10 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 40}ms` }}
         />
       ))}

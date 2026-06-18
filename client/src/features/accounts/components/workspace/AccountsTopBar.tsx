@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
+  Building2, Link2, BookOpen, MessagesSquare,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -17,6 +18,12 @@ import type { WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
 const TABS: WorkspaceTab[] = ["overview", "integrations", "knowledge", "communication"];
+const TAB_ICONS: Record<WorkspaceTab, ReactNode> = {
+  overview: <Building2 size={13} />,
+  integrations: <Link2 size={13} />,
+  knowledge: <BookOpen size={13} />,
+  communication: <MessagesSquare size={13} />,
+};
 const SORT_OPTIONS: AccountSortBy[] = ["recent", "name_asc", "name_desc"];
 
 interface Props {
@@ -66,7 +73,8 @@ export function AccountsTopBar(p: Props) {
       {p.showTabs && (
         <div className="la-seg shrink-0" style={{ marginLeft: 10 }}>
           {TABS.map((k) => (
-            <button key={k} onClick={() => p.onTabChange(k)} className={`la-seg-btn${p.tab === k ? " on" : ""}`} style={{ padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}>
+            <button key={k} onClick={() => p.onTabChange(k)} className={`la-seg-btn${p.tab === k ? " on" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}>
+              <span style={{ display: "flex" }}>{TAB_ICONS[k]}</span>
               {t(`workspace.tabs.${k}`)}
             </button>
           ))}

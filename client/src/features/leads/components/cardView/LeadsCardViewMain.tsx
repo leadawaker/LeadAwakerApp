@@ -1,7 +1,6 @@
 // LeadsCardView main component extracted from LeadsCardView.tsx
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +21,7 @@ import { useLocation } from "wouter";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { SkeletonLeadPanel } from "@/components/ui/skeleton";
+import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeadsSelection } from "../useLeadsSelection";
 import { useLeadsFilters } from "../useLeadsFilters";
@@ -142,6 +142,9 @@ export function LeadsCardView({
   }, []);
   const PAGE_SIZE = 50;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Keeps the mobile sheet showing the last lead's content while it animates closed.
+  const lastSelectedLeadRef = useRef<typeof selectedLead>(null);
+  if (selectedLead) lastSelectedLeadRef.current = selectedLead;
 
   // Compact hover card state (shared hook).
   const findLeadEl = useCallback(
@@ -366,77 +369,75 @@ export function LeadsCardView({
       )}
 
       {/* ── Content row: list panel + detail panel ── */}
-      <div className="relative flex flex-1 min-h-0 w-full" style={{ gap: "var(--panel-gap)", paddingLeft: 0, paddingRight: "var(--panel-gap)" }}>
+      <div className="relative flex flex-1 min-h-0 w-full" style={{ gap: "var(--panel-gap)", paddingLeft: 0, paddingRight: isNarrow ? 0 : "var(--panel-gap)" }}>
 
       {/* ── LEFT: Lead List ── */}
-      <LeadsListPanel
-        isHidden={isHidden}
-        isCompact={isCompact}
-        isNarrow={isNarrow}
-        scrollContainerRef={scrollContainerRef}
-        loading={loading}
-        flatItems={flatItems}
-        selectedLead={selectedLead}
-        onSelectLead={onSelectLead}
-        onMobileViewChange={onMobileViewChange}
-        handleCompactHover={handleCompactHover}
-        handleCompactHoverEnd={handleCompactHoverEnd}
-        isFilterActive={isFilterActive}
-        filterStatus={filterStatus}
-        filterTags={filterTags}
-        filterAccount={filterAccount}
-        filterCampaign={filterCampaign}
-        setFilterSheetOpen={setFilterSheetOpen}
-        mobileListMode={mobileListMode}
-        setMobileListMode={setMobileListMode}
-        setMobileAddOpen={setMobileAddOpen}
-        viewTabs={viewTabs}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-        listSearch={listSearch}
-        onListSearchChange={onListSearchChange}
-        upcomingCallsOnly={upcomingCallsOnly}
-        setUpcomingCallsOnly={setUpcomingCallsOnly}
-        leads={leads}
-        leadTagsInfo={leadTagsInfo}
-        leadsPullDistance={leadsPullDistance}
-        leadsIsRefreshing={leadsIsRefreshing}
-        cardAnimKey={cardAnimKey}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        pageSize={PAGE_SIZE}
-        campaignsById={campaignsById}
-        peekOn={peekOn}
-        handleOpenConversation={handleOpenConversation}
-        openQuickAction={openQuickAction}
-        toggleLeadSelection={toggleLeadSelection}
-        selectedLeadIds={selectedLeadIds}
-      />
+      <MobileRecede open={mobileView === "detail" && !!selectedLead} fill={isNarrow}>
+        <LeadsListPanel
+          isHidden={isHidden}
+          isCompact={isCompact}
+          isNarrow={isNarrow}
+          scrollContainerRef={scrollContainerRef}
+          loading={loading}
+          flatItems={flatItems}
+          selectedLead={selectedLead}
+          onSelectLead={onSelectLead}
+          onMobileViewChange={onMobileViewChange}
+          handleCompactHover={handleCompactHover}
+          handleCompactHoverEnd={handleCompactHoverEnd}
+          isFilterActive={isFilterActive}
+          filterStatus={filterStatus}
+          filterTags={filterTags}
+          filterAccount={filterAccount}
+          filterCampaign={filterCampaign}
+          setFilterSheetOpen={setFilterSheetOpen}
+          mobileListMode={mobileListMode}
+          setMobileListMode={setMobileListMode}
+          setMobileAddOpen={setMobileAddOpen}
+          viewTabs={viewTabs}
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          listSearch={listSearch}
+          onListSearchChange={onListSearchChange}
+          upcomingCallsOnly={upcomingCallsOnly}
+          setUpcomingCallsOnly={setUpcomingCallsOnly}
+          leads={leads}
+          leadTagsInfo={leadTagsInfo}
+          leadsPullDistance={leadsPullDistance}
+          leadsIsRefreshing={leadsIsRefreshing}
+          cardAnimKey={cardAnimKey}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          pageSize={PAGE_SIZE}
+          campaignsById={campaignsById}
+          peekOn={peekOn}
+          handleOpenConversation={handleOpenConversation}
+          openQuickAction={openQuickAction}
+          toggleLeadSelection={toggleLeadSelection}
+          selectedLeadIds={selectedLeadIds}
+        />
+      </MobileRecede>
 
       {/* ── RIGHT: Detail panel ── */}
-      {/* Mobile full-screen detail overlay — only shown on mobile when a lead is selected */}
-      <AnimatePresence>
-        {mobileView === "detail" && selectedLead && (
-          <MobileLeadDetailPanel
-            key={String(getLeadId(selectedLead))}
-            lead={selectedLead}
-            onBack={() => {
-              const returnTo = localStorage.getItem("leadawaker-returnto");
-              if (returnTo) {
-                localStorage.removeItem("leadawaker-returnto");
-                setLocation(returnTo);
-              } else {
-                onMobileViewChange?.("list");
-              }
-            }}
-            onRefresh={onRefresh}
-          />
-        )}
-      </AnimatePresence>
+      {/* Mobile bottom-sheet detail — rises over the list, drag down to close */}
+      <MobileLeadDetailPanel
+        open={mobileView === "detail" && !!selectedLead}
+        lead={selectedLead ?? lastSelectedLeadRef.current}
+        onBack={() => {
+          const returnTo = localStorage.getItem("leadawaker-returnto");
+          if (returnTo) {
+            localStorage.removeItem("leadawaker-returnto");
+            setLocation(returnTo);
+          } else {
+            onMobileViewChange?.("list");
+          }
+        }}
+        onRefresh={onRefresh}
+      />
 
       {/* Desktop detail panel — always hidden on mobile (mobile uses MobileLeadDetailPanel overlay) */}
       <div ref={rightPanelRef} className={cn(
-        "relative flex-1 flex-col min-w-0 overflow-hidden rounded-lg hidden lg:flex"
+        "relative flex-1 flex-col min-w-0 rounded-lg hidden lg:flex"
       )}>
         {loading && !selectedLead ? (
           <SkeletonLeadPanel />

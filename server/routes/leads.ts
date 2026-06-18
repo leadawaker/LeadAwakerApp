@@ -16,6 +16,7 @@ import {
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
+import { pushBookingEvent } from "../calendar";
 import { broadcast } from "../sse";
 import { addClient, removeClient } from "../sse";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates } from "./_helpers";
@@ -217,6 +218,31 @@ export function registerLeadsRoutes(app: Express): void {
         }
       } catch (notifErr) {
         console.error("[notifications] Failed to dispatch booking_confirmed:", notifErr);
+      }
+
+      // Push the booked call to the account's connected calendar(s) (Google/Outlook).
+      // Best-effort: never block the lead update on calendar failures.
+      if (lead.bookedCallDate && lead.accountsId) {
+        try {
+          const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(" ") || "Lead";
+          const campaign = lead.campaignsId ? await storage.getCampaignById(lead.campaignsId) : null;
+          const durationMin = lead.callDurationMinutes || campaign?.defaultCallDurationMinutes || 30;
+          const start = new Date(lead.bookedCallDate);
+          const end = new Date(start.getTime() + durationMin * 60000);
+          await pushBookingEvent(lead.accountsId, {
+            title: `Call: ${leadName}`,
+            description: lead.phone ? `WhatsApp: ${lead.phone}` : undefined,
+            start: start.toISOString(),
+            end: end.toISOString(),
+            attendees: lead.email ? [lead.email] : undefined,
+          });
+          // Persist duration so the calendar UI renders the correct block height.
+          if (!lead.callDurationMinutes) {
+            await storage.updateLead(lead.id!, { callDurationMinutes: durationMin }).catch(() => {});
+          }
+        } catch (calErr) {
+          console.error("[calendar] Failed to push booked call:", calErr);
+        }
       }
     }
 

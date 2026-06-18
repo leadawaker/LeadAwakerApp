@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
-import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { Switch } from "@/components/ui/switch";
@@ -110,7 +109,6 @@ function PasswordField({
 export function SettingsPanel() {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
-  const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
   const session = useSession();
 
   const [email, setEmail] = useState("");
@@ -524,45 +522,6 @@ export function SettingsPanel() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </section>
-
-        {/* ── DASHBOARD ─────────────────────────────────────────── */}
-        <section style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }} className="pt-5" data-testid="card-refresh-interval">
-          <SectionLabel icon={Clock} label={t("dashboard.title")} />
-
-          <div className="mt-3 space-y-3">
-            <div>
-              <div className="text-sm font-semibold" data-testid="text-refresh-title">{t("dashboard.autoRefresh")}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {t("dashboard.current")}: <span className="font-semibold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2" data-testid="refresh-interval-options">
-              {REFRESH_INTERVAL_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setIntervalSeconds(option.value);
-                    toast({
-                      variant: "success",
-                      title: t("dashboard.refreshUpdated"),
-                      description: option.value === 0 ? t("dashboard.autoRefreshDisabled") : t("dashboard.refreshEvery", { interval: option.label }),
-                    });
-                  }}
-                  className={cn(
-                    "h-10 rounded-full text-[13px] font-semibold transition-colors duration-150",
-                    intervalSeconds === option.value
-                      ? "border-2 border-highlight-active bg-highlight-active/30 text-foreground"
-                      : "bg-background hover:bg-muted text-muted-foreground"
-                  )}
-                  data-testid={`refresh-interval-option-${option.value}`}
-                >
-                  {option.label}
-                </button>
-              ))}
             </div>
           </div>
         </section>

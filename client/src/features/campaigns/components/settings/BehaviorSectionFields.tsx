@@ -131,9 +131,9 @@ export function BehaviorSectionFields({
       />
 
       {/* Daily Limit & Interval */}
-      <InfoRow icon={BarChart3} label={t("config.dailyLimit")} value={campaign.daily_lead_limit}
+      <InfoRow icon={BarChart3} label={t("config.dailyLimit")} value={campaign.daily_lead_limit || 500}
         {...editFor("daily_lead_limit")}
-        editChild={isEditing ? <EditNumber value={Number(draft.daily_lead_limit ?? 0)} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} {...focusFor("daily_lead_limit")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={Number(draft.daily_lead_limit || 500)} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v === "" ? "" : Number(v)}))} placeholder="500" {...focusFor("daily_lead_limit")} /> : undefined}
       />
       <InfoRow icon={MessageCircle} label={t("config.interval")} value={`${campaign.message_interval_minutes ?? 0} min`}
         {...editFor("message_interval_minutes")}

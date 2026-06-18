@@ -17,6 +17,7 @@
     "tasks": "Tarefas",
     "automations": "Automações",
     "settings": "Configurações",
+    "more": "Mais",
     "paint": "Pintar",
     "support": "Suporte",
     "help": "Ajuda",
@@ -66,7 +67,8 @@
     "viewAsAccount": "Conta Real",
     "exitImpersonation": "Sair da representação",
     "impersonationBannerViewing": "Visualizando como {{role}}",
-    "impersonationBannerExit": "Sair"
+    "impersonationBannerExit": "Sair",
+    "account": "Conta"
   },
   "search": {
     "leads": "Leads",
@@ -143,24 +145,24 @@
     "title": "Conversa",
     "selectLead": "Selecione um lead",
     "selectLeadDescription": "Escolha um lead para ver suas mensagens.",
-    "loading": "Carregando mensagens\u2026",
-    "noInteractions": "Nenhuma intera\u00e7\u00e3o ainda",
-    "noInteractionsDescription": "As mensagens aparecer\u00e3o aqui assim que o lead receber contato.",
+    "loading": "Carregando mensagens…",
+    "noInteractions": "Nenhuma interação ainda",
+    "noInteractionsDescription": "As mensagens aparecerão aqui assim que o lead receber contato.",
     "sendViaApi": "Enviar mensagens via API",
     "interactionTypes": {
       "SMS": "SMS",
       "WhatsApp": "WhatsApp",
       "Email": "E-mail",
-      "Call": "Liga\u00e7\u00e3o",
+      "Call": "Ligação",
       "Note": "Nota"
     }
   },
   "performance": {
     "title": "Desempenho de Campanhas",
     "noCampaigns": "Nenhuma campanha ainda",
-    "noCampaignsDescription": "Crie sua primeira campanha para come\u00e7ar a engajar leads via WhatsApp.",
+    "noCampaignsDescription": "Crie sua primeira campanha para começar a engajar leads via WhatsApp.",
     "noData": "Nenhum dado de desempenho ainda",
-    "noDataDescription": "As m\u00e9tricas de campanha aparecer\u00e3o aqui assim que suas campanhas come\u00e7arem.",
+    "noDataDescription": "As métricas de campanha aparecerão aqui assim que suas campanhas começarem.",
     "response": "Resposta",
     "booked": "Agendado",
     "sent": "Enviado",
@@ -172,13 +174,13 @@
     "Active": "Ativo",
     "Draft": "Rascunho",
     "Paused": "Pausado",
-    "Completed": "Conclu\u00eddo",
+    "Completed": "Concluído",
     "Finished": "Finalizado",
     "Archived": "Arquivado",
     "Inactive": "Inativo"
   },
   "campaignTypes": {
-    "Cold Outreach": "Prospec\u00e7\u00e3o Fria",
+    "Cold Outreach": "Prospecção Fria",
     "Re-engagement": "Reengajamento",
     "Follow-up": "Acompanhamento",
     "Event": "Evento"
@@ -186,19 +188,19 @@
   "emptyStates": {
     "leads": {
       "title": "Nenhum lead ainda",
-      "description": "Importe leads ou adicione seu primeiro contato para come\u00e7ar a acompanhar seu pipeline."
+      "description": "Importe leads ou adicione seu primeiro contato para começar a acompanhar seu pipeline."
     },
     "campaigns": {
       "title": "Nenhuma campanha ainda",
-      "description": "Crie sua primeira campanha para come\u00e7ar a engajar leads via WhatsApp."
+      "description": "Crie sua primeira campanha para começar a engajar leads via WhatsApp."
     },
     "accounts": {
       "title": "Nenhuma conta ainda",
-      "description": "Adicione uma conta de cliente para come\u00e7ar a gerenciar seus leads e campanhas."
+      "description": "Adicione uma conta de cliente para começar a gerenciar seus leads e campanhas."
     },
     "tags": {
       "title": "Nenhuma tag encontrada",
-      "description": "Crie tags para categorizar e organizar seus leads para melhor segmenta\u00e7\u00e3o."
+      "description": "Crie tags para categorizar e organizar seus leads para melhor segmentação."
     },
     "users": {
       "title": "Nenhum membro da equipe",
@@ -209,16 +211,16 @@
       "description": "Crie templates de prompt de IA para padronizar mensagens entre campanhas."
     },
     "automation": {
-      "title": "Nenhum log de automa\u00e7\u00e3o",
-      "description": "Os logs de automa\u00e7\u00e3o aparecer\u00e3o aqui assim que os fluxos n8n come\u00e7arem."
+      "title": "Nenhum log de automação",
+      "description": "Os logs de automação aparecerão aqui assim que os fluxos n8n começarem."
     },
     "conversations": {
       "title": "Nenhuma conversa ainda",
-      "description": "As conversas aparecer\u00e3o aqui quando os leads come\u00e7arem a receber mensagens."
+      "description": "As conversas aparecerão aqui quando os leads começarem a receber mensagens."
     },
     "calendar": {
       "title": "Nenhum compromisso agendado",
-      "description": "Liga\u00e7\u00f5es e compromissos agendados aparecer\u00e3o aqui conforme os leads convertem."
+      "description": "Ligações e compromissos agendados aparecerão aqui conforme os leads convertem."
     },
     "search": {
       "title": "Nenhum resultado encontrado",
@@ -226,21 +228,21 @@
     },
     "generic": {
       "title": "Nada aqui ainda",
-      "description": "Os dados aparecer\u00e3o aqui assim que forem criados."
+      "description": "Os dados aparecerão aqui assim que forem criados."
     }
   },
   "notifications": {
-    "title": "Notifica\u00e7\u00f5es",
+    "title": "Notificações",
     "markAllRead": "Marcar todas como lidas",
     "all": "Todas",
-    "unread": "N\u00e3o lidas",
+    "unread": "Não lidas",
     "allCaughtUp": "Tudo em dia!",
-    "noUnread": "Sem notifica\u00e7\u00f5es n\u00e3o lidas.",
-    "noNotifications": "Nenhuma notifica\u00e7\u00e3o ainda.",
+    "noUnread": "Sem notificações não lidas.",
+    "noNotifications": "Nenhuma notificação ainda.",
     "older": "Mais antigas",
     "loading": "Carregando...",
     "clearAll": "Limpar tudo",
-    "delete": "Excluir notifica\u00e7\u00e3o",
+    "delete": "Excluir notificação",
     "showingLatest": "Mostrando os {{count}} mais recentes",
     "filterAll": "Todos",
     "filterMessages": "Mensagens",

@@ -59,12 +59,59 @@ function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: stri
   return children;
 }
 
+/**
+ * Route-level Suspense fallback shown while a page's lazy chunk loads.
+ * Mirrors the real shell: a 188px left nav rail (matching CrmShell's fixed
+ * navbar) plus the page area (60px flush header + toolbar list panel + content)
+ * to its right — so the loader never overlays the navbar. All surfaces use
+ * semantic tokens, so it adapts to dark mode automatically.
+ */
 function PageLoader() {
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading...</p>
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Nav rail placeholder — matches the 188px fixed navbar (desktop only) */}
+      <div
+        className="hidden w-[188px] shrink-0 flex-col items-center gap-2 px-3 py-4 md:flex"
+        style={{ background: "var(--bg-2)" }}
+      >
+        <div className="mb-2 h-9 w-9 animate-pulse rounded-xl bg-primary/10" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-9 w-full animate-pulse rounded-lg bg-primary/10" />
+        ))}
+        <div className="mt-auto h-11 w-full animate-pulse rounded-xl bg-primary/10" />
+      </div>
+
+      {/* Page area — sits to the right of the navbar */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Flush page header (la-page-header: 60px) */}
+        <div className="flex h-[60px] shrink-0 items-center gap-4 border-b border-border bg-muted px-5">
+          <div className="h-5 w-40 animate-pulse rounded bg-primary/10" />
+          <div className="ml-2 flex items-center gap-1.5">
+            {[72, 72, 72].map((w, i) => (
+              <div key={i} className="h-8 animate-pulse rounded-full bg-primary/10" style={{ width: w }} />
+            ))}
+          </div>
+          <div className="ml-auto h-8 w-48 animate-pulse rounded-full bg-primary/10" />
+        </div>
+        {/* Body: toolbar list panel + content */}
+        <div className="flex min-h-0 flex-1">
+          {/* Toolbar / list panel */}
+          <div className="hidden w-[300px] shrink-0 flex-col gap-2 border-r border-border bg-muted p-3 md:flex">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-xl p-3">
+                <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-primary/10" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-2/3 animate-pulse rounded bg-primary/10" />
+                  <div className="h-3 w-2/5 animate-pulse rounded bg-primary/10" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Content area */}
+          <div className="flex flex-1 items-center justify-center p-6">
+            <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
+          </div>
+        </div>
       </div>
     </div>
   );

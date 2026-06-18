@@ -17,6 +17,7 @@
     "tasks": "Taken",
     "automations": "Automatiseringen",
     "settings": "Instellingen",
+    "more": "Meer",
     "paint": "Verven",
     "support": "Ondersteuning",
     "help": "Help",
@@ -66,7 +67,8 @@
     "viewAsAccount": "Echt account",
     "exitImpersonation": "Impersonatie beëindigen",
     "impersonationBannerViewing": "Bekijken als {{role}}",
-    "impersonationBannerExit": "Afsluiten"
+    "impersonationBannerExit": "Afsluiten",
+    "account": "Account"
   },
   "search": {
     "leads": "Leads",
@@ -143,7 +145,7 @@
     "title": "Gesprek",
     "selectLead": "Selecteer een lead",
     "selectLeadDescription": "Kies een lead om hun berichten te bekijken.",
-    "loading": "Berichten laden\u2026",
+    "loading": "Berichten laden…",
     "noInteractions": "Nog geen interacties",
     "noInteractionsDescription": "Berichten verschijnen hier zodra de lead een bericht ontvangt.",
     "sendViaApi": "Berichten versturen via API",

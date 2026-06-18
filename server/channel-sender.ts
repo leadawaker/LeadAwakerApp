@@ -3,7 +3,22 @@
  * Called by the POST /api/interactions handler when a human agent sends a message.
  */
 
+import { exec } from "child_process";
+import { writeFile, readFile, unlink } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+
 const DEFAULT_TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
+
+/** WhatsApp Cloud accepts OGG/Opus for voice notes, not the browser's webm/opus. */
+function isWhatsAppChannel(campaignChannel: string, channelIdentifier: string): boolean {
+  return (
+    campaignChannel === "whatsapp" ||
+    campaignChannel === "whatsapp_cloud" ||
+    channelIdentifier.startsWith("wa:") ||
+    channelIdentifier.startsWith("wa-demo:")
+  );
+}
 
 function resolveTelegramBot(channelId: string, botToken?: string): { token: string; chatId: string } {
   // Prefer explicitly provided bot token (from campaign record), fall back to env default
@@ -45,7 +60,7 @@ export async function sendToChannel(
   }
 
   // WhatsApp Cloud
-  if (campaignChannel === "whatsapp_cloud") {
+  if (isWhatsAppChannel(campaignChannel, channelIdentifier)) {
     return sendWhatsAppCloudText(channelIdentifier, text);
   }
 
@@ -69,6 +84,10 @@ export async function sendVoiceToChannel(
     campaignChannel === "telegram"
   ) {
     return sendTelegramVoice(channelIdentifier, audioBase64, mimeType, botToken);
+  }
+
+  if (isWhatsAppChannel(campaignChannel, channelIdentifier)) {
+    return sendWhatsAppCloudAudio(channelIdentifier, audioBase64, mimeType);
   }
 
   return { success: false, channel: campaignChannel, error: `Voice not supported for channel: ${campaignChannel}` };
@@ -314,6 +333,79 @@ async function sendWhatsAppCloudText(phone: string, text: string): Promise<SendR
     if (msgId) {
       return { success: true, channel: "whatsapp_cloud", messageId: msgId };
     }
+    return { success: false, channel: "whatsapp_cloud", error: JSON.stringify(data.error || data) };
+  } catch (err: any) {
+    return { success: false, channel: "whatsapp_cloud", error: err.message };
+  }
+}
+
+/**
+ * Transcode the browser's webm/opus recording to OGG/Opus, which WhatsApp Cloud
+ * renders as a voice note. Returns base64 OGG. No-op if already ogg.
+ */
+async function transcodeToOggOpus(audioBase64: string, mimeType: string): Promise<{ base64: string } | { error: string }> {
+  const base64Clean = audioBase64.replace(/^data:[^,]+,/, "");
+  if (mimeType.includes("ogg")) return { base64: base64Clean };
+
+  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const inExt = mimeType.includes("webm") ? "webm" : mimeType.includes("mp4") ? "m4a" : "webm";
+  const inFile = join(tmpdir(), `wa-voice-${stamp}.${inExt}`);
+  const outFile = join(tmpdir(), `wa-voice-${stamp}.ogg`);
+  try {
+    await writeFile(inFile, Buffer.from(base64Clean, "base64"));
+    await new Promise<void>((resolve, reject) => {
+      exec(
+        `ffmpeg -y -i "${inFile}" -c:a libopus -b:a 32k -ar 48000 -ac 1 "${outFile}"`,
+        (err) => (err ? reject(err) : resolve()),
+      );
+    });
+    const ogg = await readFile(outFile);
+    return { base64: ogg.toString("base64") };
+  } catch (err: any) {
+    return { error: `transcode failed: ${err.message}` };
+  } finally {
+    await unlink(inFile).catch(() => {});
+    await unlink(outFile).catch(() => {});
+  }
+}
+
+async function sendWhatsAppCloudAudio(phone: string, audioBase64: string, mimeType: string): Promise<SendResult> {
+  const token = process.env.WHATSAPP_TOKEN ?? process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneNumberId) {
+    return { success: false, channel: "whatsapp_cloud", error: "WhatsApp Cloud not configured" };
+  }
+
+  const transcoded = await transcodeToOggOpus(audioBase64, mimeType);
+  if ("error" in transcoded) {
+    return { success: false, channel: "whatsapp_cloud", error: transcoded.error };
+  }
+
+  const upload = await uploadWhatsAppMedia(transcoded.base64, "audio/ogg");
+  if ("error" in upload) {
+    return { success: false, channel: "whatsapp_cloud", error: upload.error };
+  }
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: phone?.replace(/\D/g, ""),
+          type: "audio",
+          audio: { id: upload.mediaId },
+        }),
+      },
+    );
+    const data = await res.json() as any;
+    const msgId = data.messages?.[0]?.id;
+    if (msgId) return { success: true, channel: "whatsapp_cloud", messageId: msgId };
     return { success: false, channel: "whatsapp_cloud", error: JSON.stringify(data.error || data) };
   } catch (err: any) {
     return { success: false, channel: "whatsapp_cloud", error: err.message };

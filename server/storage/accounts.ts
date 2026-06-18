@@ -103,6 +103,8 @@ import {
   gmailSyncState,
   type GmailSyncState,
   type InsertGmailSyncState,
+  nicheVocabulary,
+  type NicheVocabulary,
 } from "@shared/schema";
 
 import type { NotificationItem, ProspectsListParams } from "./types";
@@ -159,6 +161,53 @@ export const accountsStorage = {
     const [row] = await db.insert(accountCommunicationProfile)
       .values({ ...payload, createdAt: now }).returning();
     return row;
+  },
+
+  // ─── Niche Vocabulary ───────────────────────────────────────────────
+
+  async getNicheVocabulary(niche: string): Promise<{ projectTerm: string[]; proposalTerm: string[]; decisionTerm: string[] }> {
+    const empty = { projectTerm: [], proposalTerm: [], decisionTerm: [] };
+    const [row] = await db.select().from(nicheVocabulary)
+      .where(eq(nicheVocabulary.niche, niche));
+    const [def] = row ? [row] : await db.select().from(nicheVocabulary)
+      .where(eq(nicheVocabulary.niche, "__default__"));
+    if (!def) return empty;
+    return {
+      projectTerm: def.projectTerms ?? [],
+      proposalTerm: def.proposalTerms ?? [],
+      decisionTerm: def.decisionTerms ?? [],
+    };
+  },
+
+  async addNicheWord(niche: string, group: "projectTerm" | "proposalTerm" | "decisionTerm", word: string): Promise<{ projectTerm: string[]; proposalTerm: string[]; decisionTerm: string[] }> {
+    // Resolve the words currently shown for this niche (falls back to the
+    // __default__ row when no niche-specific row exists yet). We seed the new
+    // niche row with ALL of these so adding a word never drops the fallback
+    // vocabulary the user was looking at.
+    const current = await this.getNicheVocabulary(niche);
+    const withWord = (arr: string[]) => (arr.includes(word) ? arr : [...arr, word]);
+    const next = {
+      projectTerm: group === "projectTerm" ? withWord(current.projectTerm) : current.projectTerm,
+      proposalTerm: group === "proposalTerm" ? withWord(current.proposalTerm) : current.proposalTerm,
+      decisionTerm: group === "decisionTerm" ? withWord(current.decisionTerm) : current.decisionTerm,
+    };
+    // Upsert the full row so all three columns are persisted for this niche.
+    await db.execute(sql`
+      INSERT INTO "p2mxx34fvbf3ll6"."Niche_Vocabulary" (niche, project_terms, proposal_terms, decision_terms, created_at, updated_at)
+      VALUES (
+        ${niche},
+        ${JSON.stringify(next.projectTerm)}::jsonb,
+        ${JSON.stringify(next.proposalTerm)}::jsonb,
+        ${JSON.stringify(next.decisionTerm)}::jsonb,
+        NOW(), NOW()
+      )
+      ON CONFLICT (niche) DO UPDATE SET
+        project_terms  = ${JSON.stringify(next.projectTerm)}::jsonb,
+        proposal_terms = ${JSON.stringify(next.proposalTerm)}::jsonb,
+        decision_terms = ${JSON.stringify(next.decisionTerm)}::jsonb,
+        updated_at = NOW()
+    `);
+    return this.getNicheVocabulary(niche);
   },
 
   // ─── Users ──────────────────────────────────────────────────────────

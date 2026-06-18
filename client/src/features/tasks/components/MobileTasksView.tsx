@@ -1,13 +1,16 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus } from "lucide-react";
+import { Plus, Check, SlidersHorizontal, ArrowDownUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
+import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { useUpdateTask } from "../api/tasksApi";
-import MobileTaskListCard, {
-  MobileTaskBoardCard, MTGroupBar, MTAvatar, dueToISO, mtParse,
-} from "./MobileTaskListCard";
+import { MobileTaskBoardCard } from "./MobileTaskListCard";
 import MobileTaskDetailPanel from "./MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "./MobileTaskCreatePanel";
-import { sortTasks, type SortOption, type Task, type TaskStatus } from "../types";
+import MobileTaskWeekStrip from "./MobileTaskWeekStrip";
+import { sortTasks, SORT_OPTIONS, type SortOption, type Task, type TaskStatus } from "../types";
 import { loadLocal, saveLocal, applyDesktopFilter, type DesktopFilter } from "../lib/taskViewUtils";
 
 type AccountUser = { id: number; fullName1: string | null; email: string | null };
@@ -23,17 +26,16 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
   const { t } = useTranslation("tasks");
   const updateMutation = useUpdateTask();
 
-  const [mobileView, setMobileView] = useState<'agenda' | 'board'>(() => loadLocal<'agenda' | 'board'>("tasks-mobile-view", "agenda"));
   const [mobileFilter, setMobileFilter] = useState<DesktopFilter>(() => loadLocal<DesktopFilter>("tasks-mobile-filter", "all"));
   const [mobileWho, setMobileWho] = useState<string>(() => loadLocal<string>("tasks-mobile-who", "all"));
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const lastTaskIdRef = useRef<number | null>(null);
   const [mobileCreateOpen, setMobileCreateOpen] = useState(false);
+  const [sort, setSort] = useState<SortOption>(() => loadLocal<SortOption>("tasks-sort", "due_date_asc"));
 
-  const handleMobileView = useCallback((v: 'agenda' | 'board') => { setMobileView(v); saveLocal("tasks-mobile-view", v); }, []);
   const handleMobileFilter = useCallback((f: DesktopFilter) => { setMobileFilter(f); saveLocal("tasks-mobile-filter", f); }, []);
   const handleMobileWho = useCallback((w: string) => { setMobileWho(w); saveLocal("tasks-mobile-who", w); }, []);
-
-  const sort = loadLocal<SortOption>("tasks-sort", "due_date_asc");
+  const handleSort = useCallback((s: SortOption) => { setSort(s); saveLocal("tasks-sort", s); }, []);
 
   const categoryMap = useMemo(() => new Map((categories ?? []).map(c => [c.id, c])), [categories]);
   const mobileDueLabels = useMemo(
@@ -61,33 +63,6 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
     completed: applyDesktopFilter(baseByWho, 'completed', todayISO).length,
   }) as Record<DesktopFilter, number>, [baseByWho, todayISO]);
 
-  const groups = useMemo(() => {
-    const g: Record<string, Task[]> = { overdue: [], today: [], week: [], upcoming: [], completed: [] };
-    const [ty, tm, td] = todayISO.split("-").map(Number);
-    const today = new Date(Date.UTC(ty, tm - 1, td));
-    const weekEnd = new Date(Date.UTC(ty, tm - 1, td + (7 - ((today.getUTCDay() + 6) % 7))));
-    for (const tk of filtered) {
-      if (tk.status === "done") { g.completed.push(tk); continue; }
-      const iso = dueToISO(tk.dueDate);
-      if (!iso) { g.upcoming.push(tk); continue; }
-      const d = mtParse(iso);
-      const days = Math.round((d.getTime() - today.getTime()) / 86400000);
-      if (days < 0) g.overdue.push(tk);
-      else if (days === 0) g.today.push(tk);
-      else if (d <= weekEnd) g.week.push(tk);
-      else g.upcoming.push(tk);
-    }
-    return g;
-  }, [filtered, todayISO]);
-
-  const groupOrder: Array<[string, string, string | null]> = [
-    ["overdue",   t("groups.overdue"),  "var(--stage-lost)"],
-    ["today",     t("groups.today"),    "var(--wine)"],
-    ["week",      t("groups.thisWeek"), null],
-    ["upcoming",  t("groups.upcoming"), null],
-    ["completed", t("groups.completed"), "var(--good)"],
-  ];
-
   const filterChips: Array<[DesktopFilter, string]> = [
     ["all", t("filter.all")], ["next7", t("filter.next7")], ["overdue", t("filter.overdue")],
     ["waiting", t("filter.waiting")], ["completed", t("filter.completed")],
@@ -104,89 +79,77 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
     updateMutation.mutate({ id: task.id, data: { status: task.status === "done" ? "todo" : "done" } });
   }, [updateMutation]);
 
-  const empty = groupOrder.every(([k]) => groups[k].length === 0);
-
   return (
     <>
+      <MobileRecede open={selectedTaskId !== null}>
       <div className="relative h-full min-h-0 flex flex-col overflow-hidden" style={{ background: 'var(--bg)' }} data-testid="page-tasks">
 
-        {/* Top bar: serif title + Agenda/Board segmented */}
-        <div style={{ flexShrink: 0, background: 'var(--bg)', borderBottom: '1px solid var(--line)' }}>
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-end', padding: '14px 18px 12px' }}>
-            <span className="serif" style={{ fontFamily: 'var(--serif)', fontSize: 30, color: 'var(--ink)', letterSpacing: '-0.02em' }}>{t("page.title")}</span>
-            <div className="la-seg">
-              <button className={`la-seg-btn${mobileView === 'agenda' ? ' on' : ''}`} onClick={() => handleMobileView('agenda')}>{t("views.agenda")}</button>
-              <button className={`la-seg-btn${mobileView === 'board' ? ' on' : ''}`} onClick={() => handleMobileView('board')}>{t("views.board")}</button>
-            </div>
-          </div>
-        </div>
+        {/* Top bar: shared mobile header — assignee tabs (title row) + status filter + sort */}
+        <MobileListHeader
+          title={t("page.title")}
+          tabSwitcher={(
+            <MobileTabSeg
+              tabs={[
+                { id: "all", label: t("assignee.everyone") },
+                ...users.map((u) => ({
+                  id: String(u.id),
+                  label: (u.fullName1 ?? u.email ?? "?").split(/\s+/)[0],
+                })),
+              ]}
+              activeId={mobileWho}
+              onChange={handleMobileWho}
+            />
+          )}
+          filterControl={(
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <MobileHeaderIconBtn
+                  dot={mobileFilter !== "all"}
+                  active={mobileFilter !== "all"}
+                  aria-label={t("filter.title", "Filter")}
+                  data-testid="mobile-tasks-filter"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </MobileHeaderIconBtn>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-[var(--mute-2)]">{t("filter.title", "Filter")}</DropdownMenuLabel>
+                {filterChips.map(([k, lbl]) => (
+                  <DropdownMenuItem key={k} onSelect={(e) => { e.preventDefault(); handleMobileFilter(k); }} className="text-[12px] flex items-center gap-2">
+                    <span className={cn("flex-1", mobileFilter === k && "font-semibold !text-brand-indigo")}>{lbl}</span>
+                    <span className="text-[10px] text-[var(--mute-2)]">{chipCounts[k]}</span>
+                    {mobileFilter === k && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          sortControl={(
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <MobileHeaderIconBtn active={sort !== "due_date_asc"} aria-label={t("sort.title", "Sort")} data-testid="mobile-tasks-sort">
+                  <ArrowDownUp className="h-4 w-4" />
+                </MobileHeaderIconBtn>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                {SORT_OPTIONS.map((opt) => (
+                  <DropdownMenuItem key={opt.value} onSelect={(e) => { e.preventDefault(); handleSort(opt.value); }} className="text-[12px] flex items-center gap-2">
+                    <span className={cn("flex-1", sort === opt.value && "font-semibold !text-brand-indigo")}>{t(`sortOptions.${opt.value}`, opt.label)}</span>
+                    {sort === opt.value && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        />
 
-        {/* Filters: assignee toggle + filter chips */}
-        <div style={{ flexShrink: 0, background: 'var(--bg)', borderBottom: '1px solid var(--line)', padding: '11px 0' }}>
-          <div style={{ padding: '0 16px 11px', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
-            <div style={{ display: 'inline-flex', gap: 3, background: 'var(--bg-2)', boxShadow: 'var(--sh-inset-crisp)', borderRadius: 'var(--r-pill)', padding: 3 }}>
-              <button onClick={() => handleMobileWho('all')} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '6px 13px', borderRadius: 'var(--r-pill)', border: 'none', cursor: 'pointer',
-                background: mobileWho === 'all' ? 'var(--card)' : 'transparent', boxShadow: mobileWho === 'all' ? 'var(--sh-raised-crisp)' : 'none',
-                color: mobileWho === 'all' ? 'var(--ink)' : 'var(--mute)', fontSize: 12, fontWeight: mobileWho === 'all' ? 600 : 400, whiteSpace: 'nowrap',
-              }}>{t("assignee.everyone")}</button>
-              {users.map(u => {
-                const on = String(u.id) === mobileWho;
-                const name = u.fullName1 ?? u.email ?? '?';
-                return (
-                  <button key={u.id} onClick={() => handleMobileWho(String(u.id))} style={{
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px 5px 5px', borderRadius: 'var(--r-pill)', border: 'none', cursor: 'pointer',
-                    background: on ? 'var(--card)' : 'transparent', boxShadow: on ? 'var(--sh-raised-crisp)' : 'none',
-                    color: on ? 'var(--ink)' : 'var(--mute)', fontSize: 12, fontWeight: on ? 600 : 400, whiteSpace: 'nowrap',
-                  }}>
-                    <MTAvatar name={name} size={22} />{name.split(' ')[0]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px', scrollbarWidth: 'none' }}>
-            {filterChips.map(([k, lbl]) => {
-              const on = k === mobileFilter;
-              return (
-                <button key={k} onClick={() => handleMobileFilter(k)} style={{
-                  flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 'var(--r-pill)', border: 'none', cursor: 'pointer',
-                  background: on ? 'var(--wine)' : 'var(--surface)', boxShadow: on ? 'none' : 'var(--sh-raised-crisp)',
-                  color: on ? 'var(--paper)' : 'var(--ink-soft)', fontSize: 12.5, fontWeight: on ? 700 : 500,
-                }}>
-                  {lbl}
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, color: on ? 'var(--paper)' : 'var(--mute-2)', background: on ? 'rgba(255,255,255,0.18)' : 'var(--bg-2)', borderRadius: 'var(--r-pill)', padding: '1px 7px' }}>
-                    {chipCounts[k]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Content: weekly task calendar (top) then kanban (below), one vertical scroll */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 0 90px' }} data-testid="mobile-tasks-content">
+          {/* Weekly task calendar (tasks plotted by due date) */}
+          <MobileTaskWeekStrip tasks={filtered} todayISO={todayISO} categoryMap={categoryMap} onSelect={setSelectedTaskId} />
 
-        {/* Content */}
-        {mobileView === 'agenda' ? (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px 14px 90px' }} data-testid="mobile-tasks-list">
-            {empty && (
-              <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute-2)' }}>
-                {t("page.noTasksFound")}
-              </div>
-            )}
-            {groupOrder.map(([key, lbl, accent]) =>
-              groups[key].length > 0 ? (
-                <div key={key}>
-                  <MTGroupBar label={lbl} count={groups[key].length} accent={accent} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                    {groups[key].map(task => (
-                      <MobileTaskListCard key={task.id} task={task} category={task.categoryId ? categoryMap.get(task.categoryId) ?? null : null} todayISO={todayISO} dueLabels={mobileDueLabels} onClick={() => setSelectedTaskId(task.id)} onToggle={() => handleToggle(task)} />
-                    ))}
-                  </div>
-                </div>
-              ) : null
-            )}
-          </div>
-        ) : (
-          <div style={{ flex: 1, display: 'flex', gap: 13, overflowX: 'auto', padding: '14px 14px 90px', scrollbarWidth: 'none' }} data-testid="mobile-tasks-board">
+          {/* Kanban board */}
+          <div style={{ display: 'flex', gap: 13, overflowX: 'auto', padding: '14px 14px 8px', scrollbarWidth: 'none' }} data-testid="mobile-tasks-board">
             {boardCols.map(col => {
               const items = filtered.filter(tk => tk.status === col.key);
               return (
@@ -209,7 +172,7 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
               );
             })}
           </div>
-        )}
+        </div>
 
         {/* FAB */}
         <button onClick={() => setMobileCreateOpen(true)} aria-label={t("create.title")} style={{
@@ -220,10 +183,20 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
           <Plus className="h-4 w-4" />{t("toolbar.add")}
         </button>
       </div>
+      </MobileRecede>
 
-      {selectedTaskId !== null && (
-        <MobileTaskDetailPanel taskId={selectedTaskId} onBack={() => setSelectedTaskId(null)} />
-      )}
+      {/* Keep the panel mounted with the last id so the close gesture can animate down */}
+      {(() => {
+        if (selectedTaskId !== null) lastTaskIdRef.current = selectedTaskId;
+        const detailTaskId = selectedTaskId ?? lastTaskIdRef.current;
+        return detailTaskId !== null ? (
+          <MobileTaskDetailPanel
+            taskId={detailTaskId}
+            open={selectedTaskId !== null}
+            onBack={() => setSelectedTaskId(null)}
+          />
+        ) : null;
+      })()}
       {mobileCreateOpen && (
         <MobileTaskCreatePanel onClose={() => setMobileCreateOpen(false)} onCreated={id => { setMobileCreateOpen(false); setSelectedTaskId(id); }} />
       )}

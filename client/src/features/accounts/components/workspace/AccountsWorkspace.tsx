@@ -1,8 +1,12 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Building2 } from "lucide-react";
+import { ChevronLeft, Building2, Filter, ArrowUpDown, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { MobileListHeader, MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { STATUS_FILTER_OPTIONS, STATUS_I18N_KEY } from "../listWidgets/accountListConstants";
+import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
@@ -17,6 +21,8 @@ import { AccountCreatePanel } from "../AccountCreatePanel";
 import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
+
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "knowledge", "communication"];
 
 interface Props {
   accounts: AccountRow[];
@@ -102,6 +108,58 @@ export function AccountsWorkspace(p: Props) {
 
   return (
     <div className="flex flex-col h-full w-full" data-testid="accounts-workspace">
+      <MobileListHeader
+        title={t("page.title")}
+        searchValue={p.listSearch}
+        onSearchChange={p.onListSearchChange}
+        searchPlaceholder={t("page.searchPlaceholder", "Search accounts...")}
+        filterControl={(
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <MobileHeaderIconBtn dot={p.isFilterActive} active={p.isFilterActive} aria-label="Filter" data-testid="mobile-accounts-filter">
+                <Filter className="h-4 w-4" />
+              </MobileHeaderIconBtn>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {STATUS_FILTER_OPTIONS.map((s) => (
+                <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); p.onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }} />
+                  <span className={cn("flex-1", p.filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(STATUS_I18N_KEY[s] ?? s)}</span>
+                  {p.filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+              {p.isFilterActive && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={p.onResetControls} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        sortControl={(
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <MobileHeaderIconBtn active={p.isSortNonDefault} aria-label="Sort" data-testid="mobile-accounts-sort">
+                <ArrowUpDown className="h-4 w-4" />
+              </MobileHeaderIconBtn>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {(["recent", "name_asc", "name_desc"] as const).map((opt) => (
+                <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.onSortByChange(opt); }} className="text-[12px] flex items-center gap-2">
+                  <span className={cn("flex-1", p.sortBy === opt && "font-semibold !text-brand-indigo")}>{t(`sort.${opt === "recent" ? "mostRecent" : opt === "name_asc" ? "nameAZ" : "nameZA"}`, opt)}</span>
+                  {p.sortBy === opt && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        extraActions={(
+          <MobileHeaderIconBtn onClick={() => setPanelMode("create")} aria-label={t("toolbar.add", "New account")} data-testid="mobile-accounts-add">
+            <Plus className="h-4 w-4" />
+          </MobileHeaderIconBtn>
+        )}
+      />
       <AccountsTopBar
         tab={tab}
         onTabChange={setTab}
@@ -164,6 +222,23 @@ export function AccountsWorkspace(p: Props) {
                 </button>
               )}
               <IdentityCard d={d} metrics={metrics} onSave={p.onSave} />
+              {/* Mobile detail tab switcher — desktop uses the AccountsTopBar tabs
+                  (hidden on mobile); mirror the leads mobile detail tab style. */}
+              {isNarrow && !ultra && (
+                <div className="la-seg la-seg--fill md:hidden">
+                  {ACCOUNT_TABS.map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => setTab(k)}
+                      className={`la-seg-btn${tab === k ? " on" : ""}`}
+                      style={{ padding: "9px 0", fontSize: 11, letterSpacing: "0.08em" }}
+                      data-testid={`account-tab-${k}`}
+                    >
+                      {t(`workspace.tabs.${k}`)}
+                    </button>
+                  ))}
+                </div>
+              )}
               <TabContent
                 tab={effectiveTab}
                 ultra={ultra}
@@ -176,6 +251,7 @@ export function AccountsWorkspace(p: Props) {
                   loadingCampaigns: detailData.loadingCampaigns,
                   loadingContracts: detailData.loadingContracts,
                   loadingTeam: detailData.loadingTeam,
+                  onRefresh: detailData.refresh,
                 }}
               />
             </div>

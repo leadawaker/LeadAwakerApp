@@ -78,11 +78,11 @@ type SortDir = "asc" | "desc";
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[var(--bg-2)] rounded animate-pulse mb-2" />
+      <div className="h-8 bg-muted rounded animate-pulse mb-2" />
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-primary/10 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}

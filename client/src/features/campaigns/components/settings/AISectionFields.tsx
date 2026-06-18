@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   MessageSquare, Bot, Mic, Link, Zap,
-  Thermometer, Radio, MessageCircle,
+  Thermometer, Radio, MessageCircle, HelpCircle,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditSelect, EditToggle, InfoRow, CopyButton,
@@ -17,16 +17,19 @@ interface AISectionFieldsProps {
   setDraft: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
   focusField?: string | null;
   onStartEditField?: (field: string) => void;
+  conversationPrompts?: any[];
 }
 
 export function AISectionFields({
   campaign, isEditing, draft, setDraft,
   focusField, onStartEditField,
+  conversationPrompts = [],
 }: AISectionFieldsProps) {
-  const { t } = useTranslation("campaigns");
-  const lang = asCampaignLang(draft.language ?? campaign.language);
+  const { t, i18n } = useTranslation("campaigns");
+  // UI language drives display & edit; campaign `language` decides what the engine sends.
+  const uiLang = asCampaignLang(i18n.language);
 
-  const displayText = (raw: unknown) => resolveLang(raw, lang);
+  const displayText = (raw: unknown) => resolveLang(raw, uiLang);
 
   const onTextChange = (field: string, raw: unknown, text: string) => {
     let current: Record<string, string> = {};
@@ -34,9 +37,9 @@ export function AISectionFields({
     if (s.startsWith("{")) {
       try { current = JSON.parse(s); } catch { /* ok */ }
     } else if (s) {
-      current = { en: s };
+      current = { en: s, nl: s };
     }
-    current[lang] = text;
+    current[uiLang] = text;
     setDraft(d => ({ ...d, [field]: JSON.stringify(current) }));
   };
 
@@ -114,7 +117,7 @@ export function AISectionFields({
           <EditText
             value={displayText(draft.ai_role ?? campaign.ai_role)}
             onChange={(v) => onTextChange("ai_role", draft.ai_role ?? campaign.ai_role, v)}
-            placeholder={placeholderFor("ai_role", lang)}
+            placeholder={placeholderFor("ai_role", uiLang)}
             {...focusFor("ai_role")}
           />
         ) : undefined}
@@ -126,7 +129,12 @@ export function AISectionFields({
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={Link} label={t("config.promptLinked")} value={campaign.prompt_linked_id || t("config.noPromptLinked")}
           {...editFor("prompt_linked_id")}
-          editChild={isEditing ? <EditSelect value={String(draft.prompt_linked_id ?? "")} onChange={(v) => setDraft(d => ({...d, prompt_linked_id: v}))} options={[]} {...focusFor("prompt_linked_id")} /> : undefined}
+          editChild={isEditing ? (() => {
+            const promptOptions = ["", ...conversationPrompts.map((p) => String(p.id || p.Id))];
+            const promptLabels: Record<string, string> = { "": t("config.noPromptLinked") };
+            conversationPrompts.forEach((p) => { promptLabels[String(p.id || p.Id)] = p.name; });
+            return <EditSelect value={String(draft.prompt_linked_id ?? "")} onChange={(v) => setDraft(d => ({...d, prompt_linked_id: v || null}))} options={promptOptions} labels={promptLabels} {...focusFor("prompt_linked_id")} />;
+          })() : undefined}
         />
       </div>
 
@@ -152,6 +160,20 @@ export function AISectionFields({
         />
       </div>
 
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={HelpCircle} label={t("config.nicheQuestion")}
+          value={displayText(campaign.niche_question)}
+          {...editFor("niche_question")}
+          editChild={isEditing ? (
+            <EditText
+              value={displayText(draft.niche_question ?? campaign.niche_question)}
+              onChange={(v) => onTextChange("niche_question", draft.niche_question ?? campaign.niche_question, v)}
+              placeholder={placeholderFor("niche_question", uiLang)}
+              {...focusFor("niche_question")}
+            />
+          ) : undefined}
+        />
+      </div>
       <InfoRow icon={Zap} label={t("config.model")} value={campaign.ai_model}
         {...editFor("ai_model")}
         editChild={isEditing ? <EditSelect value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} options={MODEL_OPTIONS} {...focusFor("ai_model")} /> : undefined}

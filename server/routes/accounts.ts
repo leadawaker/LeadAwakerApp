@@ -252,6 +252,26 @@ export function registerAccountsRoutes(app: Express): void {
     res.json(toDbKeys(profile as any, accountCommunicationProfile));
   }));
 
+  // ─── Niche Vocabulary ──────────────────────────────────────────────────────
+
+  app.get("/api/niche-vocabulary/:niche", requireAuth, wrapAsync(async (req, res) => {
+    const niche = req.params.niche;
+    const groups = await storage.getNicheVocabulary(niche);
+    res.json(groups);
+  }));
+
+  app.post("/api/niche-vocabulary/:niche/words", requireAgency, wrapAsync(async (req, res) => {
+    const niche = req.params.niche;
+    const { group, word } = req.body;
+    if (!group || !word || typeof group !== "string" || typeof word !== "string") {
+      return res.status(400).json({ error: "group and word are required" });
+    }
+    const validGroups = ["projectTerm", "proposalTerm", "decisionTerm"];
+    if (!validGroups.includes(group)) return res.status(400).json({ error: "invalid group" });
+    const groups = await storage.addNicheWord(niche, group as any, word.trim());
+    res.json({ groups });
+  }));
+
   // ─── Prospects ───────────────────────────────────────────────────────
 
   app.get("/api/prospects", requireAgency, wrapAsync(async (req, res) => {
@@ -1198,6 +1218,7 @@ IMPORTANT: Always write the offers in English, regardless of the company's count
         preferences,
         notificationEmail: true,
         notificationSms: false,
+        createdAt: new Date(), // stamp Member Since at invite time (Date object, never ISO string)
       } as any);
 
       const { passwordHash: _, ...safeUser } = newUser;

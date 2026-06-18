@@ -26,6 +26,9 @@ function fromApi(raw: any): CommunicationProfile {
       agentName: raw.agent_name ?? null,
       agentNameCustom: raw.agent_name_custom ?? "",
       avatarChoice: raw.avatar_choice ?? null,
+      avatarGender: raw.avatar_gender ?? null,
+      differentiator: raw.distinctive_other ?? "",
+      bookingUrl: raw.booking_url ?? "",
     },
   };
 }
@@ -41,6 +44,9 @@ function toApi(answers: ProfileAnswers, status: ProfileStatus) {
     agent_name: answers.agentName,
     agent_name_custom: answers.agentNameCustom || null,
     avatar_choice: answers.avatarChoice,
+    avatar_gender: answers.avatarGender || null,
+    distinctive_other: answers.differentiator || null,
+    booking_url: answers.bookingUrl || null,
     status,
   };
 }

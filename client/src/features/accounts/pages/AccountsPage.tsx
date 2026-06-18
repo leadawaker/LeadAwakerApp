@@ -2,6 +2,7 @@
 import { useMemo, useCallback, useEffect } from "react";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -20,6 +21,7 @@ export type AccountSortBy = "recent" | "name_asc" | "name_desc";
 
 export default function AccountsPage() {
   const { currentAccountId } = useWorkspace();
+  const isMobile = useIsMobile(768);
 
   // Clear any global topbar actions — the workspace owns its own top bar.
   const { clearTopbarActions } = useTopbarActions();
@@ -59,10 +61,12 @@ export default function AccountsPage() {
     rows as AccountRow[],
   );
 
-  // Auto-select first account when none is chosen.
+  // Auto-select first account when none is chosen. On mobile we stay list-first
+  // (no auto-open): the user taps an account to open its detail panel.
   useEffect(() => {
+    if (isMobile) return;
     if (!selectedAccount && rows.length > 0) setSelectedAccount(rows[0] as AccountRow);
-  }, [rows, selectedAccount, setSelectedAccount]);
+  }, [rows, selectedAccount, setSelectedAccount, isMobile]);
 
   // ── Breadcrumb ─────────────────────────────────────────────────────────────
   const { setCrumb } = useBreadcrumb();

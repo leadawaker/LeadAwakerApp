@@ -310,6 +310,13 @@
     "summaryLockedHint": "It appears here when the lead books or the chat closes",
     "outcome": "Outcome",
     "keyPoints": "Key points",
+    "summarySections": {
+      "interest": "Interest",
+      "painPoints": "Pain points",
+      "qualification": "Qualification",
+      "sentiment": "Sentiment",
+      "outcome": "Outcome"
+    },
     "gradientTester": "Gradient tester"
   },
   "contact": {

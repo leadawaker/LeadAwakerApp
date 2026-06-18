@@ -1,16 +1,12 @@
 {
   "title": "Documentation",
-  "searchPlaceholder": "Search...",
   "whatsNew": "What's New",
   "operatorManual": "Operator Manual",
   "clientGuide": "Client Guide",
   "agencyDocs": "Agency Docs",
   "userDocs": "User Docs",
-  "agency": "Agency",
-  "user": "User",
   "agencyDocumentation": "Agency Documentation",
   "userDocumentation": "User Documentation",
-  "noResults": "No sections match \"{{query}}\"",
   "copy": "Copy",
   "gradientTester": "Gradient Tester",
   "gradientTesterStyle": "Style",
@@ -39,27 +35,6 @@
       "access": "Read-only, scoped to their account"
     }
   },
-  "toc": {
-    "setup": "Account Setup",
-    "campaign": "Creating a Campaign",
-    "lifecycle": "Lead Lifecycle",
-    "webhooks": "CRM Webhooks",
-    "instagram": "Instagram",
-    "analytics": "Analytics & Reporting",
-    "troubleshoot": "Troubleshoot",
-    "userManagement": "User Management",
-    "promptLibrary": "Prompt Library",
-    "billing": "Billing & Invoicing",
-    "gettingStarted": "Getting Started",
-    "whatIsIt": "What is LeadAwaker?",
-    "yourLeads": "Your Leads",
-    "conversations": "Conversations",
-    "leadScore": "Lead Score",
-    "bookings": "Bookings",
-    "yourAccount": "Your Account",
-    "reportsInsights": "Reports & Insights",
-    "faq": "FAQ"
-  },
   "operator": {
     "setup": {
       "title": "1 - Account Setup",
@@ -69,13 +44,13 @@
       "step4": "Set your <strong>business hours</strong> (start/end time) and <strong>timezone</strong>. The engine will never send messages outside these hours.",
       "step5": "Set a <strong>Daily Send Limit</strong> (default 500). This is the max messages the account can send per day across all campaigns.",
       "step6": "Copy the <strong>API Key</strong> (webhook_secret) from <settingsLink>Settings</settingsLink>. Paste this into your CRM integrations to authorize inbound leads.",
-      "tip": "The API key is shown once on generation. If lost, regenerate it — the old key will stop working immediately."
+      "tip": "The API key is shown once on generation. If lost, regenerate it: the old key will stop working immediately."
     },
     "campaign": {
       "title": "2 - Creating a Campaign",
       "step1": "Go to <strong>Campaigns → New Campaign</strong>. Give it a name and select the <strong>channel</strong> (SMS or WhatsApp).",
       "smsVsWhatsapp": {
-        "title": "SMS vs WhatsApp — when to use which",
+        "title": "SMS vs WhatsApp: when to use which",
         "sms": "Higher open rates in the US/Canada, works with any phone, no template approval needed. Best for short, direct re-engagement.",
         "whatsapp": "Preferred internationally, supports rich media, requires pre-approved message templates for the first outbound message. Best for longer conversational flows."
       },
@@ -84,7 +59,7 @@
       "step4": "Add up to 3 <strong>Follow-up bumps</strong>. Set the delay in hours for each (e.g., 24h, 48h, 72h). Bumps are sent only if the lead hasn't replied.",
       "step5": "Set <strong>Active Hours</strong>, <strong>Daily Lead Limit</strong>, and optionally link a <strong>Prompt Library entry</strong> to customize the AI's persona.",
       "step6": "Set campaign status to <strong>Active</strong> when you're ready to start sending.",
-      "tip": "Keep the first message short and personal. Avoid links in the first message — many carrier filters block them."
+      "tip": "Keep the first message short and personal. Avoid links in the first message: many carrier filters block them."
     },
     "lifecycle": {
       "title": "3 - Lead Lifecycle & Statuses",
@@ -95,9 +70,9 @@
         "contacted": "First message sent. Waiting for a reply.",
         "responded": "Lead replied at least once.",
         "multipleResponses": "Active back-and-forth dialogue.",
-        "qualified": "Lead shows intent — being guided to book.",
+        "qualified": "Lead shows intent, being guided to book.",
         "booked": "Appointment confirmed. North-star KPI.",
-        "closed": "Deal completed — no further action.",
+        "closed": "Deal completed, no further action.",
         "lost": "Lead went cold or was not a fit.",
         "dnd": "Opted out. Never contacted again."
       },
@@ -132,13 +107,13 @@
       "step1": "Go to <settingsLink>Settings → Account</settingsLink>. Enter your <strong>Instagram User ID</strong> (your IG Business Account numeric ID) and <strong>Access Token</strong> (a long-lived Page access token from Meta).",
       "step2": "Click <strong>Sync Instagram Contacts</strong> to pull all existing DM conversation contacts from Meta's API. Each unique contact is created as a lead with status paused.",
       "step3": "Assign synced leads to a campaign to start automated outreach, or use them for manual follow-up in the Conversations inbox.",
-      "tip": "Meta allows ~200 API calls per hour per token. For accounts with 200+ contacts, the sync may stop early due to rate limiting — just run it again after an hour. Duplicates are automatically skipped."
+      "tip": "Meta allows ~200 API calls per hour per token. For accounts with 200+ contacts, the sync may stop early due to rate limiting: just run it again after an hour. Duplicates are automatically skipped."
     },
     "analytics": {
       "title": "6 - Analytics & Reporting",
       "step1": "<strong>Lead Scores</strong> (0–100) are recalculated every 30 minutes. They combine funnel stage (40%), engagement (30%), and activity recency (30%).",
       "step2": "<strong>Campaign Metrics</strong> (response rate, booking rate, cost per lead) are snapshotted daily at midnight. Check them under Reports.",
-      "step3": "<strong>Automation Logs</strong> show every step the engine took for every lead — useful for debugging missed sends or unexpected behavior.",
+      "step3": "<strong>Automation Logs</strong> show every step the engine took for every lead, useful for debugging missed sends or unexpected behavior.",
       "tip": "A lead score above 70 = high intent. Prioritize manual follow-up on these."
     },
     "users": {
@@ -161,7 +136,7 @@
     "billing": {
       "title": "9 · Billing & Invoicing",
       "description": "The Billing section tracks contracts, invoices, and expenses for each account.",
-      "step1": "<strong>Contracts</strong> define the agreement between you and the client — monthly fee, start date, and terms. Create them under Billing → Contracts.",
+      "step1": "<strong>Contracts</strong> define the agreement between you and the client: monthly fee, start date, and terms. Create them under Billing → Contracts.",
       "step2": "<strong>Invoices</strong> are sent to clients for payment. You can generate invoices manually or set up recurring billing. Each invoice links to a contract.",
       "step3": "<strong>Expenses</strong> (agency-only) track costs like Twilio usage, API fees, and other operational costs. Upload PDF receipts for record-keeping.",
       "tip": "All amounts support BTW/VAT calculations automatically. Set your VAT rate in the account settings to have it applied to new invoices."
@@ -219,13 +194,13 @@
       "title": "Getting Started",
       "description": "Welcome to LeadAwaker! Here's a quick overview of what you'll see after logging in.",
       "step1": "After logging in, you'll land on the <strong>Campaigns</strong> page. This shows all active campaigns running for your account with key metrics at a glance.",
-      "step2": "Use the <strong>left sidebar</strong> to navigate between pages: Campaigns, Leads, Conversations, Calendar, and Documentation (this page).",
+      "step2": "Use the <strong>left sidebar</strong> to navigate between pages: Campaigns, Leads, Calendar, Tasks, and Documentation (this page).",
       "step3": "Click on any <strong>lead</strong> to view their full profile, conversation history, and current status in the pipeline.",
       "tip": "Start by reviewing your active campaigns and their lead counts. The Leads page lets you filter by status to quickly find your hottest prospects."
     },
     "what": {
       "title": "What is LeadAwaker?",
-      "p1": "LeadAwaker is an AI-powered lead follow-up system. When someone expresses interest in your service (fills a form, clicks an ad, etc.), LeadAwaker automatically reaches out via WhatsApp, nurtures the conversation, and books calls — all on autopilot.",
+      "p1": "LeadAwaker is an AI-powered lead follow-up system. When someone expresses interest in your service (fills a form, clicks an ad, etc.), LeadAwaker automatically reaches out via WhatsApp, nurtures the conversation, and books calls, all on autopilot.",
       "p2": "The AI agent replies to leads in real time, handles objections, and knows when to stop and let a human take over."
     },
     "leads": {
@@ -238,7 +213,7 @@
         "multipleResponses": "Active back-and-forth dialogue with the AI.",
         "qualified": "Lead has shown interest and is being guided to book.",
         "booked": "Appointment confirmed! This is the north-star outcome.",
-        "closed": "Deal completed — no further action needed.",
+        "closed": "Deal completed, no further action needed.",
         "lost": "Lead went cold or was not a fit.",
         "dnd": "Lead opted out. Never contacted again."
       },
@@ -267,19 +242,25 @@
       "statusNotInterested": "Not Interested"
     },
     "conversations": {
-      "title": "Reading Conversations",
-      "step1": "Open the <strong>Leads</strong> page and click any lead to view their full conversation history.",
-      "step2": "Messages shown on the <strong>right side</strong> are outbound (sent by the AI or your team). Messages on the <strong>left</strong> are inbound (from the lead).",
-      "step3": "Look for the <strong>AI label</strong> on messages — these were generated automatically. Messages without this label were sent manually.",
-      "step4": "Message status icons tell you the delivery state:",
-      "statusSent": "Sent",
-      "statusSentDesc": "message left the system",
-      "statusDelivered": "Delivered",
-      "statusDeliveredDesc": "confirmed arrival on the lead's device",
-      "statusRead": "Read",
-      "statusReadDesc": "lead opened the message (WhatsApp only)",
-      "step5": "If you want to take over the conversation manually, toggle <strong>Manual Takeover</strong> on the lead detail. The AI will stop replying and you can message freely. To hand back to the AI, toggle it off again.",
-      "tip": "Use Manual Takeover for high-value leads you want to handle personally. The AI won't interfere while takeover is active — but remember to turn it off when done, or the lead will stop receiving automated follow-ups."
+      "title": "Reading Lead Summaries",
+      "intro": "You don't read raw message threads. Instead, every lead gets an <strong>AI Summary card</strong> that distills the whole conversation into a few scannable fields, so you can judge a lead's status in seconds instead of scrolling a chat log.",
+      "step1": "Open the <strong>Leads</strong> page and click any lead to open their detail panel. The AI Summary card sits at the top.",
+      "step2": "<strong>Headline</strong> is a one-line summary of where things stand. <strong>Sentiment</strong> shows whether the lead is reading as positive, neutral, or negative.",
+      "step3": "<strong>Key points</strong> lists the important facts the AI picked up during the conversation (budget mentioned, objection raised, timing constraint, etc.), each tagged with a tone.",
+      "step4": "<strong>Next step</strong> tells you what should happen next: a bump is scheduled, a booking is pending confirmation, or the lead needs a human follow-up. <strong>Outcome</strong> shows the final result once the lead reaches a conclusion (booked, lost, closed).",
+      "step5": "If you want to take over personally, toggle <strong>Manual Takeover</strong> on the lead detail. The AI stops replying and you can message freely. Toggle it off again to hand back to the AI.",
+      "tip": "Use Manual Takeover for high-value leads you want to handle personally. The AI won't interfere while takeover is active, but remember to turn it off when done, or the lead will stop receiving automated follow-ups."
+    },
+    "campaignDashboard": {
+      "title": "Campaign Dashboard",
+      "description": "Each campaign has a <strong>Summary</strong> tab that rolls up everything happening inside it, so you can find relevance and value without digging through individual leads.",
+      "step1": "<strong>AI Read</strong> is a short AI-generated summary strip at the top, written in plain language about how the campaign is trending.",
+      "step2": "<strong>Performance</strong> shows the campaign's key metrics (response rate, booking rate, cost per lead) at a glance.",
+      "step3": "<strong>Pipeline</strong> is a funnel view of how leads are distributed across stages, from New to Booked.",
+      "step4": "<strong>AI Activity</strong> is a live feed of what the AI has been doing: messages sent, replies handled, bumps fired.",
+      "step5": "<strong>Next Up</strong> is the most important panel for day-to-day use: it shows your <strong>next booking time</strong>, with the soonest call highlighted, plus everything else booked later in the week.",
+      "step6": "<strong>Bumps Today</strong> shows scheduled follow-ups going out today, and <strong>A/B Test</strong> (when enabled) compares two message variants head to head.",
+      "tip": "Check the Summary tab first thing: the AI Read and Next Up panels together tell you what changed and what's coming up without opening a single lead."
     },
     "score": {
       "title": "Lead Score",
@@ -315,14 +296,14 @@
       "description": "Customize your profile and preferences from the Settings page.",
       "step1": "<strong>Profile:</strong> Update your name, email, phone number, and avatar under <settingsLink>Settings → My Profile</settingsLink>.",
       "step2": "<strong>Notifications:</strong> Choose which events trigger alerts (call booked, lead responded, AI needs takeover) and how you receive them (in-app or email). Set quiet hours to pause notifications outside business hours.",
-      "step3": "<strong>Timezone:</strong> Make sure your timezone is set correctly — it affects how business hours, scheduling, and calendar events are displayed.",
+      "step3": "<strong>Timezone:</strong> Make sure your timezone is set correctly: it affects how business hours, scheduling, and calendar events are displayed.",
       "tip": "Enable email notifications for \"Booked\" events so you never miss a new appointment, even when you're away from the dashboard."
     },
     "reports": {
       "title": "Reports & Insights",
       "description": "Track how your campaigns are performing with key metrics available across the dashboard.",
       "responseRate": "Response Rate",
-      "responseRateDesc": "Percentage of leads who replied to at least one message. Higher is better — aim for 30%+.",
+      "responseRateDesc": "Percentage of leads who replied to at least one message. Higher is better, aim for 30%+.",
       "bookingRate": "Booking Rate",
       "bookingRateDesc": "Percentage of leads who booked a call. This is your bottom-line conversion metric.",
       "costPerLead": "Cost per Lead",
@@ -333,7 +314,7 @@
       "pipelineFunnelDescription": "The campaign detail page shows a visual funnel of how leads move through stages:",
       "scoreDistributionTitle": "Lead Score Distribution",
       "scoreDistributionDescription": "Score rings appear on lead cards, showing at a glance how warm each lead is:",
-      "tip": "Check campaign metrics weekly to spot trends. A sudden drop in response rate may indicate message fatigue — consider refreshing your first message copy."
+      "tip": "Check campaign metrics weekly to spot trends. A sudden drop in response rate may indicate message fatigue: consider refreshing your first message copy."
     },
     "faq": {
       "title": "Frequently Asked Questions",
@@ -344,13 +325,13 @@
       "q3": "How fast does the AI reply?",
       "a3": "Within seconds to a few minutes, depending on message volume. A small delay is added to simulate natural human typing.",
       "q4": "Can I message a lead manually?",
-      "a4": "Yes — enable Manual Takeover on the lead. The AI pauses and you send messages directly from the Conversations page.",
+      "a4": "Yes, enable Manual Takeover on the lead detail panel. The AI pauses and you can send messages directly from there.",
       "q5": "What if a lead doesn't respond?",
       "a5": "The system sends up to 3 follow-up messages (bumps) at scheduled intervals. After all bumps are exhausted, the lead is marked Completed and automation stops.",
       "q6": "How do I export my leads?",
       "a6": "Open the Leads page and use the export button in the toolbar. You can export filtered results as CSV for use in spreadsheets or other tools.",
       "q7": "Can I customize the AI's tone?",
-      "a7": "Yes — each campaign can be linked to a Prompt Library entry that defines the AI's personality, language, and conversation style. Ask your account operator to set this up.",
+      "a7": "Yes, each campaign can be linked to a Prompt Library entry that defines the AI's personality, language, and conversation style. Ask your account operator to set this up.",
       "q8": "What happens when I change my business hours?",
       "a8": "The change takes effect immediately. Any leads currently queued for messages outside the new hours will wait until the next valid window. No messages are lost.",
       "q9": "How are leads assigned to campaigns?",
@@ -361,7 +342,7 @@
     "v15": {
       "date": "March 2026",
       "items": [
-        "Documentation redesign — sidebar navigation, expanded content, agency/user split",
+        "Documentation redesign: white neu-raised panels, agency/user split",
         "New docs sections: User Management, Prompt Library, Billing, Getting Started, Reports"
       ]
     },
@@ -369,28 +350,28 @@
       "date": "March 2026",
       "items": [
         "Documentation page with Operator Manual and Client Guide",
-        "Campaign Tags tab — group and organize tags by category",
-        "Users management page — roles, avatars, and permissions",
+        "Campaign Tags tab: group and organize tags by category",
+        "Users management page: roles, avatars, and permissions",
         "Support chat integration in the navigation bar",
-        "Instagram contact sync — pull existing DM contacts from Meta's API"
+        "Instagram contact sync: pull existing DM contacts from Meta's API"
       ]
     },
     "v13": {
       "date": "February 2026",
       "items": [
-        "Full design system overhaul — new color palette and avatar system",
-        "Leads page redesign — split-pane with List, Table, and Kanban views",
-        "Calendar page — monthly, weekly, and daily booking views",
-        "Conversations inbox — real-time WhatsApp chat interface"
+        "Full design system overhaul: new color palette and avatar system",
+        "Leads page redesign: split-pane with List, Table, and Kanban views",
+        "Calendar page: monthly, weekly, and daily booking views",
+        "Conversations inbox: real-time WhatsApp chat interface"
       ]
     },
     "v12": {
       "date": "January 2026",
       "items": [
-        "Campaigns page — create, manage, and monitor campaigns",
-        "Prompt Library — AI persona and script management",
-        "Automation Logs — full audit trail for every lead action",
-        "Billing & Expenses — BTW/VAT invoice management with PDF upload"
+        "Campaigns page: create, manage, and monitor campaigns",
+        "Prompt Library: AI persona and script management",
+        "Automation Logs: full audit trail for every lead action",
+        "Billing & Expenses: BTW/VAT invoice management with PDF upload"
       ]
     }
   }

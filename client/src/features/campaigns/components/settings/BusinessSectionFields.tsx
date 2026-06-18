@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
-  Clock, Bot, Building2, HelpCircle,
-  MousePointerClick, Award, Megaphone, BookOpen, Paintbrush,
+  Clock, Bot, Building2,
+  MousePointerClick, Award, Megaphone, BookOpen, Paintbrush, MapPin,
 } from "lucide-react";
 import {
   EditText, InfoRow,
@@ -9,10 +9,14 @@ import {
 import { LocalizedCombo } from "../formFields/LocalizedCombo";
 import {
   asCampaignLang,
-  USP_OPTIONS, AI_STYLE_OPTIONS, WHAT_LEAD_DID_OPTIONS, SERVICE_OPTIONS,
+  USP_OPTIONS, AI_STYLE_OPTIONS, WHAT_LEAD_DID_OPTIONS, SERVICE_OPTIONS, FIRST_TOUCH_OPTIONS,
   placeholderFor, optionLabel, optionStore,
 } from "./fieldLocale";
 import { resolveLang } from "@shared/langField";
+
+// The four built-in assistant personas (same set as the onboarding wizard). The
+// operator picks one or types a custom name — it's a pick-or-type combobox.
+const AGENT_NAME_OPTIONS = ["Thomas", "Mark", "Sophie", "Lisa"].map((n) => ({ label: n, store: n }));
 
 interface BusinessSectionFieldsProps {
   campaign: any;
@@ -29,9 +33,9 @@ export function BusinessSectionFields({
 }: BusinessSectionFieldsProps) {
   const { t, i18n } = useTranslation("campaigns");
 
-  // Campaign language: controls free-text display/edit
-  const campaignLang = asCampaignLang(draft.language ?? campaign.language);
-  // UI language: controls dropdown labels
+  // UI language drives BOTH dropdown labels AND free-text display/edit.
+  // The operator reads & writes the slot for their CRM language; the campaign's
+  // `language` field (read by the engine) decides what actually gets sent.
   const uiLang = asCampaignLang(i18n.language);
 
   const editFor = (field: string) =>
@@ -52,20 +56,19 @@ export function BusinessSectionFields({
   const displayLabel = (field: string, raw: unknown) =>
     optionLabel(field, raw, uiLang);
 
-  // Resolve a free-text field to the campaign-language variant
-  const displayText = (raw: unknown) => resolveLang(raw, campaignLang);
+  // Show the slot for the operator's UI language.
+  const displayText = (raw: unknown) => resolveLang(raw, uiLang);
 
-  // OnChange for free-text fields: write the campaign-language slot
+  // OnChange for free-text fields: write the UI-language slot, preserving others.
   const onTextChange = (field: string, raw: unknown, text: string) => {
-    // Import setLang inline to avoid circular issues with the shared helper
     let current: Record<string, string> = {};
     const s = String(raw ?? "").trim();
     if (s.startsWith("{")) {
       try { current = JSON.parse(s); } catch { /* ok */ }
     } else if (s) {
-      current = { en: s };
+      current = { en: s, nl: s };
     }
-    current[campaignLang] = text;
+    current[uiLang] = text;
     setDraft(d => ({ ...d, [field]: JSON.stringify(current) }));
   };
 
@@ -75,13 +78,20 @@ export function BusinessSectionFields({
         {...editFor("company_name")}
         editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
       />
-      <InfoRow icon={Bot} label="Agent Name" value={campaign.agent_name}
+      <InfoRow icon={Bot} label={t("config.agentName")} value={campaign.agent_name}
         {...editFor("agent_name")}
-        editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} {...focusFor("agent_name")} /> : undefined}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={String(draft.agent_name ?? campaign.agent_name ?? "")}
+            onChange={(store) => setDraft(d => ({...d, agent_name: store}))}
+            options={AGENT_NAME_OPTIONS}
+            {...focusFor("agent_name")}
+          />
+        ) : undefined}
       />
 
       {/* Stage of Sales Process — multilingual dropdown */}
-      <InfoRow icon={MousePointerClick} label="Stage of Sales Process"
+      <InfoRow icon={MousePointerClick} label={t("config.whatLeadDid")}
         value={displayLabel("what_lead_did", campaign.what_lead_did)}
         {...editFor("what_lead_did")}
         editChild={isEditing ? (
@@ -95,7 +105,7 @@ export function BusinessSectionFields({
       />
 
       {/* AI Style — multilingual dropdown */}
-      <InfoRow icon={Paintbrush} label="AI Style"
+      <InfoRow icon={Paintbrush} label={t("config.aiStyleOverride")}
         value={displayLabel("ai_style_override", campaign.ai_style_override)}
         {...editFor("ai_style_override")}
         editChild={isEditing ? (
@@ -108,9 +118,30 @@ export function BusinessSectionFields({
         ) : undefined}
       />
 
-      <InfoRow icon={Clock} label="Inquiry date" value={campaign.inquiry_timeframe}
+      <InfoRow icon={Clock} label={t("config.inquiryDate")} value={displayText(campaign.inquiry_timeframe)}
         {...editFor("inquiry_timeframe")}
-        editChild={isEditing ? <EditText value={String(draft.inquiry_timeframe ?? "")} onChange={(v) => setDraft(d => ({...d, inquiry_timeframe: v}))} placeholder="e.g. Last 6 months, 2+ years ago" {...focusFor("inquiry_timeframe")} /> : undefined}
+        editChild={isEditing ? (
+          <EditText
+            value={displayText(draft.inquiry_timeframe ?? campaign.inquiry_timeframe)}
+            onChange={(v) => onTextChange("inquiry_timeframe", draft.inquiry_timeframe ?? campaign.inquiry_timeframe, v)}
+            placeholder="e.g. Last 6 months, 2+ years ago"
+            {...focusFor("inquiry_timeframe")}
+          />
+        ) : undefined}
+      />
+
+      {/* First Touch — how the lead first contacted the business */}
+      <InfoRow icon={MapPin} label={t("config.firstTouch")}
+        value={displayLabel("first_touch", campaign.first_touch)}
+        {...editFor("first_touch")}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={displayLabel("first_touch", draft.first_touch ?? campaign.first_touch)}
+            onChange={(store) => setDraft(d => ({...d, first_touch: store}))}
+            options={comboOptions("first_touch", FIRST_TOUCH_OPTIONS)}
+            {...focusFor("first_touch")}
+          />
+        ) : undefined}
       />
 
       {/* Service — multilingual dropdown */}
@@ -123,19 +154,6 @@ export function BusinessSectionFields({
             onChange={(store) => setDraft(d => ({...d, service_name: store}))}
             options={comboOptions("service_name", SERVICE_OPTIONS)}
             {...focusFor("service_name")}
-          />
-        ) : undefined}
-      />
-
-      <InfoRow icon={HelpCircle} label={t("config.nicheQuestion")}
-        value={displayText(campaign.niche_question)}
-        {...editFor("niche_question")}
-        editChild={isEditing ? (
-          <EditText
-            value={displayText(draft.niche_question ?? campaign.niche_question)}
-            onChange={(v) => onTextChange("niche_question", draft.niche_question ?? campaign.niche_question, v)}
-            placeholder={placeholderFor("niche_question", campaignLang)}
-            {...focusFor("niche_question")}
           />
         ) : undefined}
       />
@@ -155,14 +173,14 @@ export function BusinessSectionFields({
       />
 
       <InfoRow icon={Building2} label={t("config.businessDescription")}
-        value={displayText(campaign.description)} richText={true}
+        value={displayText(campaign.description)} richText={true} noBorder
         {...editFor("description")}
         editChild={isEditing ? (
           <EditText
             value={displayText(draft.description ?? campaign.description)}
             onChange={(v) => onTextChange("description", draft.description ?? campaign.description, v)}
-            multiline minRows={1}
-            placeholder={placeholderFor("business_description", campaignLang)}
+            multiline minRows={4}
+            placeholder={placeholderFor("business_description", uiLang)}
             {...focusFor("description")}
           />
         ) : undefined}
@@ -176,7 +194,7 @@ export function BusinessSectionFields({
             value={displayText(draft.kb ?? campaign.kb)}
             onChange={(v) => onTextChange("kb", draft.kb ?? campaign.kb, v)}
             multiline minRows={1}
-            placeholder={placeholderFor("kb", campaignLang)}
+            placeholder={placeholderFor("kb", uiLang)}
             {...focusFor("kb")}
           />
         ) : undefined}

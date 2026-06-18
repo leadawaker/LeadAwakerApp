@@ -558,7 +558,22 @@ export function GroupHeader({ label, count, isFirst }: { label: string; count: n
 }
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
-export function ListSkeleton() {
+export function ListSkeleton({ compact = false }: { compact?: boolean } = {}) {
+  // Compact (narrow) rail: a vertical strip of 38×38 avatar tiles, matching
+  // CompactLeadCard, so the loading state fits the minimized toolbar width.
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center" style={{ gap: 9, padding: "12px 0 20px" }}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-[38px] w-[38px] rounded-[11px] bg-primary/10 shrink-0 animate-pulse"
+            style={{ animationDelay: `${i * 50}ms` }}
+          />
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="space-y-0 p-2">
       {Array.from({ length: 8 }).map((_, i) => (
@@ -567,11 +582,11 @@ export function ListSkeleton() {
           className="flex items-center gap-3 px-4 py-3.5 rounded-lg animate-pulse"
           style={{ animationDelay: `${i * 50}ms` }}
         >
-          <div className="h-10 w-10 rounded-lg bg-foreground/10 shrink-0" />
+          <div className="h-10 w-10 rounded-lg bg-primary/10 shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 bg-foreground/10 rounded-full w-2/3" />
-            <div className="h-2.5 bg-foreground/8 rounded-full w-1/2" />
-            <div className="h-2 bg-foreground/6 rounded-full w-1/3" />
+            <div className="h-3 bg-primary/10 rounded-full w-2/3" />
+            <div className="h-2.5 bg-primary/5 rounded-full w-1/2" />
+            <div className="h-2 bg-primary/5 rounded-full w-1/3" />
           </div>
         </div>
       ))}

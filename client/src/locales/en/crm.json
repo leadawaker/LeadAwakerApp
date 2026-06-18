@@ -17,6 +17,7 @@
     "tasks": "Tasks",
     "automations": "Automations",
     "settings": "Settings",
+    "more": "More",
     "paint": "Paint",
     "support": "Support",
     "help": "Help",
@@ -66,7 +67,8 @@
     "viewAsAccount": "Real Account",
     "exitImpersonation": "Exit impersonation",
     "impersonationBannerViewing": "Viewing as {{role}}",
-    "impersonationBannerExit": "Exit"
+    "impersonationBannerExit": "Exit",
+    "account": "Account"
   },
   "search": {
     "leads": "Leads",

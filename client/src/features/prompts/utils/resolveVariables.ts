@@ -1,5 +1,6 @@
 // Mirrors backend _helpers.py personalize_message logic
 // Resolves {variable} tokens in a template string using campaign + lead + account data
+import { resolveLang, type Lang } from "@shared/langField";
 
 export interface CampaignForPreview {
   id: number;
@@ -11,6 +12,7 @@ export interface CampaignForPreview {
   campaignUsp?: string | null;
   calendarLink?: string | null;
   whatLeadDid?: string | null;
+  firstTouch?: string | null;
   inquiriesSource?: string | null;
   inquiryTimeframe?: string | null;
   niche?: string | null;
@@ -64,29 +66,33 @@ export function buildMap(
   campaign?: CampaignForPreview | null,
   lead?: LeadForPreview | null,
   _account?: AccountForPreview | null,
+  lang?: string,
 ): Record<string, string | undefined | null> {
+  const l = (lang || campaign?.language || "en") as Lang;
+  const rl = (raw: unknown) => resolveLang(raw, l) || undefined;
   return {
     first_name: lead?.firstName,
     last_name: lead?.lastName,
     phone: lead?.phone,
     email: lead?.email,
     agent_name: campaign?.agentName,
-    service_name: campaign?.serviceName ?? campaign?.campaignService,
+    service_name: rl(campaign?.serviceName ?? campaign?.campaignService),
     calendar_link: campaign?.calendarLink,
     campaign_name: campaign?.name,
-    usp: campaign?.campaignUsp,
-    kb: campaign?.kb,
-    what_lead_did: campaign?.whatLeadDid,
+    usp: rl(campaign?.campaignUsp),
+    kb: rl(campaign?.kb),
+    what_lead_did: rl(campaign?.whatLeadDid),
+    first_touch: rl(campaign?.firstTouch),
     inquiries_source: campaign?.inquiriesSource,
-    inquiry_timeframe: campaign?.inquiryTimeframe,
-    niche_question: campaign?.nicheQuestion,
+    inquiry_timeframe: rl(campaign?.inquiryTimeframe),
+    niche_question: rl(campaign?.nicheQuestion),
     booking_mode: normalizeBookingMode(campaign?.bookingMode),
     company_name: campaign?.companyName || campaign?.demoClientName,
     niche: campaign?.niche,
-    business_description: campaign?.description,
-    ai_style: campaign?.aiStyleOverride || "Casual, smooth and pro",
+    business_description: rl(campaign?.description),
+    ai_style: rl(campaign?.aiStyleOverride) || "Casual, smooth and pro",
     language: campaign?.language || "English",
-    ai_role: campaign?.aiRole || "sales representative",
+    ai_role: rl(campaign?.aiRole) || "sales representative",
     typo_frequency: mapTypoFrequency(campaign?.typoCount) || "Rare",
     today_date: new Date().toLocaleDateString(),
     qualification_criteria: "",
@@ -118,10 +124,11 @@ export function resolveVariables(
   campaign?: CampaignForPreview | null,
   lead?: LeadForPreview | null,
   account?: AccountForPreview | null,
+  lang?: string,
 ): { resolved: string; missing: string[] } {
   const VAR_PATTERN = /\{(\w+)\}/g;
   const missing: string[] = [];
-  const map = buildMap(campaign, lead, account);
+  const map = buildMap(campaign, lead, account, lang);
 
   const resolved = text.replace(VAR_PATTERN, (match, key) => {
     const val = map[key.toLowerCase()];
@@ -144,8 +151,9 @@ export function resolveVariablesHtml(
   campaign?: CampaignForPreview | null,
   lead?: LeadForPreview | null,
   account?: AccountForPreview | null,
+  lang?: string,
 ): string {
-  const map = buildMap(campaign, lead, account);
+  const map = buildMap(campaign, lead, account, lang);
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
   // 1. Escape everything first

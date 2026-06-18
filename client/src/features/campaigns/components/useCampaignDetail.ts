@@ -224,7 +224,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     end_date: c.end_date || "",
     active_hours_start: c.active_hours_start || "",
     active_hours_end: c.active_hours_end || "",
-    daily_lead_limit: c.daily_lead_limit ?? "",
+    daily_lead_limit: c.daily_lead_limit || "",
     message_interval_minutes: c.message_interval_minutes ?? "",
     stop_on_response: c.stop_on_response ?? false,
     use_ai_bumps: c.use_ai_bumps ?? false,

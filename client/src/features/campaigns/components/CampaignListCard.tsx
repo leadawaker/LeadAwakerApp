@@ -84,8 +84,8 @@ export function CampaignListCard({
         )}
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 14, fontWeight: 600, color: "var(--ink)",
+          <div className="text-[14px] max-md:text-[16px]" style={{
+            fontWeight: 600, color: "var(--ink)",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             marginBottom: 'var(--space-xxs)',
           }}>
@@ -107,7 +107,7 @@ export function CampaignListCard({
           </div>
 
           {accountName && (
-            <div className="row" style={{ gap: 5, fontSize: 11, color: "var(--mute)" }}>
+            <div className="row text-[11px] max-md:text-[13px]" style={{ gap: 5, color: "var(--mute)" }}>
               <span className="dot" style={{ background: "var(--mute-2)" }} />
               {accountName}
             </div>
@@ -117,8 +117,8 @@ export function CampaignListCard({
 
       {!campaign.is_demo && (
       <div className={cn(
-        "opacity-100 max-h-[72px] md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[72px]",
-        "transition-[opacity,max-height] duration-200 flex flex-col gap-1 overflow-hidden"
+        "hidden md:flex md:opacity-0 md:max-h-0 md:group-hover:opacity-100 md:group-hover:max-h-[72px]",
+        "transition-[opacity,max-height] duration-200 flex-col gap-1 overflow-hidden"
       )}>
         <div style={{
           display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
@@ -194,11 +194,29 @@ export function ListSkeleton() {
           className="flex items-center gap-3 px-4 py-3.5 rounded-lg animate-pulse"
           style={{ animationDelay: `${i * 50}ms` }}
         >
-          <div className="h-10 w-10 rounded-full bg-foreground/10 shrink-0" />
+          <div className="h-10 w-10 rounded-full bg-primary/10 shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 bg-foreground/10 rounded-full w-2/3" />
-            <div className="h-2.5 bg-foreground/8 rounded-full w-1/2" />
+            <div className="h-3 bg-primary/10 rounded-full w-2/3" />
+            <div className="h-2.5 bg-primary/5 rounded-full w-1/2" />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Loading skeleton for the compact (narrow) campaign rail — mirrors the
+ *  44×44 mono tiles of CompactCampaignCard. */
+export function CompactListSkeleton() {
+  return (
+    <div className="flex flex-col items-center gap-0">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center justify-center py-1 mx-1 animate-pulse"
+          style={{ animationDelay: `${i * 50}ms` }}
+        >
+          <div className="h-11 w-11 rounded-[10px] bg-primary/10" />
         </div>
       ))}
     </div>

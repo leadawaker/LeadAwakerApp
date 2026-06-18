@@ -222,9 +222,11 @@ export const accountCommunicationProfile = nocodb.table("Account_Communication_P
   agentName: text("agent_name"),             // thomas | mark | sophie | lisa
   agentNameCustom: text("agent_name_custom"), // free-text alternative name
   avatarChoice: text("avatar_choice"),        // logo | avatar | avatarLogo
+  avatarGender: text("avatar_gender"),         // male | female — portrait gender (for custom names)
   // Structured selections.
   preferredWords: jsonb("preferred_words").$type<{ projectTerm?: string; proposalTerm?: string; decisionTerm?: string }>(),
   perception: jsonb("perception").$type<string[]>(),
+  bookingUrl: text("booking_url"),           // calendar / booking link the AI sends to leads
   // Wizard progress.
   status: text("status"),                    // draft | in_progress | completed
   completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -256,6 +258,30 @@ export const insertAccountCommunicationProfileSchema = createInsertSchema(accoun
 });
 export type AccountCommunicationProfile = typeof accountCommunicationProfile.$inferSelect;
 export type InsertAccountCommunicationProfile = z.infer<typeof insertAccountCommunicationProfileSchema>;
+
+// ─── Niche_Vocabulary ─────────────────────────────────────────────────────────
+// One row per niche (or __default__). Stores the word lists for the preferred-words
+// wizard step. Inline-added words persist per niche.
+
+export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  niche: text("niche").notNull(),
+  projectTerms: jsonb("project_terms").$type<string[]>().default([]),
+  proposalTerms: jsonb("proposal_terms").$type<string[]>().default([]),
+  decisionTerms: jsonb("decision_terms").$type<string[]>().default([]),
+}, (t) => [
+  uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
+]);
+
+export const insertNicheVocabularySchema = createInsertSchema(nicheVocabulary).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type NicheVocabulary = typeof nicheVocabulary.$inferSelect;
+export type InsertNicheVocabulary = z.infer<typeof insertNicheVocabularySchema>;
 
 // ─── Automation_Logs ───────────────────────────────────────────────────────────────
 
@@ -403,6 +429,7 @@ export const campaigns = nocodb.table("Campaigns", {
   aiStyleOverride: text("ai_style_override"),
   twilioFirstMessageTemplateSid: text("twilio_first_message_template_sid"),
   twilioBumpTemplateSid: text("twilio_bump_template_sid"),
+  firstTouch: text("first_touch"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
@@ -1318,3 +1345,40 @@ export const insertGmailSyncStateSchema = createInsertSchema(gmailSyncState).omi
 });
 export type GmailSyncState = typeof gmailSyncState.$inferSelect;
 export type InsertGmailSyncState = z.infer<typeof insertGmailSyncStateSchema>;
+
+// ─── Calendar Connections ─────────────────────────────────────────────────────
+// Per-account external calendar integration. One row per (account, provider).
+// Providers: google | outlook (OAuth) · calcom | calendly (API key) · ical (read-only URL).
+// Secrets are stored encrypted (AES-256-GCM, see server/calendar/crypto.ts); never
+// expose oauthTokensEncrypted / apiKeyEncrypted to the client.
+
+export const calendarConnections = nocodb.table("Calendar_Connections", {
+  id: serial("id").primaryKey(),
+  accountId: integer("account_id").notNull(),
+  provider: text("provider").notNull(), // google | outlook | calcom | calendly | ical
+  status: text("status").default("connected"), // connected | error | disconnected
+  // Human-readable identity of the connected calendar (email / username / feed name).
+  displayName: text("display_name"),
+  calendarId: text("calendar_id"),       // primary calendar id used for event writes
+  externalId: text("external_id"),       // calendly user uri / cal.com username, etc.
+  timezone: text("timezone"),
+  // Secret material (only one is set depending on provider).
+  oauthTokensEncrypted: text("oauth_tokens_encrypted"), // google / outlook
+  apiKeyEncrypted: text("api_key_encrypted"),           // calcom / calendly
+  icalUrl: text("ical_url"),                            // ical read-only feed
+  lastError: text("last_error"),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("calendar_connections_account_id_idx").on(t.accountId),
+  uniqueIndex("calendar_connections_account_provider_idx").on(t.accountId, t.provider),
+]);
+
+export const insertCalendarConnectionSchema = createInsertSchema(calendarConnections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CalendarConnection = typeof calendarConnections.$inferSelect;
+export type InsertCalendarConnection = z.infer<typeof insertCalendarConnectionSchema>;

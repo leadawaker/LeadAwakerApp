@@ -6,23 +6,47 @@
   },
   "wizard": {
     "stepLabel": "Vraag {{current}} van {{total}}",
+    "sectionLabel": "Onderdeel {{current}} van {{total}}",
+    "questionInSection": "Vraag {{current}} van {{total}}",
     "back": "Terug",
     "next": "Volgende",
     "finish": "Afronden",
     "saving": "Opslaan…",
     "selectUpTo": "Kies maximaal {{max}}",
-    "recommended": "Aanbevolen"
+    "recommended": "Aanbevolen",
+    "nope": "Nee",
+    "saveDraft": "Concept opslaan"
   },
   "summary": {
     "title": "Communicatieprofiel",
     "subtitle": "Opgeslagen antwoorden uit de onboarding.",
     "edit": "Antwoorden bewerken",
     "notSet": "Niet ingesteld",
-    "factsTitle": "Belangrijke feiten"
+    "factsTitle": "Belangrijke feiten",
+    "complete": "Profiel compleet",
+    "itemsMissing": "{{count}} item ontbreekt",
+    "itemsMissing_other": "{{count}} items ontbreken"
+  },
+  "done": {
+    "title": "Profiel compleet 🎉",
+    "subtitle": "Het communicatieprofiel is opgeslagen. De assistent praat nu precies zoals jullie willen.",
+    "button": "Bekijk profiel"
+  },
+  "sections": {
+    "tone": "Identiteit en stijl",
+    "identity": "Woorden & identiteit",
+    "sales": "Verkoopargumenten",
+    "facts": "Feiten & beleid"
   },
   "questions": {
+    "bookingUrl": {
+      "label": "Welke link gebruiken jullie om afspraken in te plannen?",
+      "help": "De assistent stuurt deze link zodat leads zelf een afspraak kunnen inplannen. Plak hier jullie agenda- of boekingslink.",
+      "placeholder": "https://cal.com/..."
+    },
     "openingStyle": {
       "label": "Welke AI-stijl past het beste bij jullie?",
+      "short": "AI-stijl",
       "options": {
         "personal": {
           "label": "Persoonlijk",
@@ -30,7 +54,7 @@
           "example": "Helemaal begrijpelijk dat het even is blijven liggen, Jan. Zullen we samen kijken wat voor jullie een fijn moment is om het weer op te pakken?"
         },
         "project": {
-          "label": "Projectgericht",
+          "label": "Praktisch",
           "behavior": "Focus op het project en de voortgang. Houdt het gesprek praktisch, bespreekt planning, keuzes en status, weinig small talk.",
           "example": "Helder. Zal ik de planning er even bij pakken? Dan zien we meteen welke keuzes voor het ontwerp nog openstaan."
         },
@@ -51,6 +75,7 @@
     },
     "perception": {
       "label": "Hoe willen jullie overkomen? Kies maximaal 3.",
+      "short": "Perceptie",
       "options": {
         "persoonlijk": { "label": "Persoonlijk" },
         "deskundig": { "label": "Deskundig" },
@@ -62,6 +87,7 @@
     },
     "preferredWords": {
       "label": "Welke woorden gebruiken jullie zelf het liefst?",
+      "short": "Gewenste woorden",
       "groups": {
         "projectTerm": "Het project",
         "proposalTerm": "Het voorstel",
@@ -70,34 +96,47 @@
     },
     "formality": {
       "label": "Hoe formeel mag de communicatie zijn?",
+      "short": "Formaliteit",
       "levels": {
         "informal": { "label": "Informeel (je)", "example": "Hé Jan! Hoe staat het met jullie keukenplannen?" },
         "neutral": { "label": "Neutraal (je)", "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat." },
         "formal": { "label": "Formeel (u)", "example": "Goedendag, ik neem contact met u op over uw aanvraag." }
       }
     },
+    "differentiator": {
+      "label": "Waarom kiezen klanten voor jullie en niet voor de concurrent?",
+      "short": "Onderscheidend vermogen",
+      "help": "Jullie sterkste verkoopargumenten: wat jullie onderscheidt (vakmanschap, familiebedrijf, snelheid, garantie). De assistent gebruikt deze om twijfels weg te nemen en vertrouwen te winnen. Voeg er één per rij toe.",
+      "add": "Argument toevoegen",
+      "remove": "Verwijderen",
+      "examplesLabel": "Voorbeelden"
+    },
     "objections": {
       "label": "Veelvoorkomende bezwaren & antwoorden",
+      "short": "Bezwaren",
       "help": "Noteer de bezwaren die klanten het vaakst hebben en het antwoord dat de assistent moet geven. Voeg er zoveel toe als je wilt.",
-      "questionPlaceholder": "Bezwaar of vraag",
-      "answerPlaceholder": "Hoe de assistent moet reageren",
+      "questionPlaceholder": "Bezwaar {{n}}",
+      "answerPlaceholder": "Antwoord {{n}}",
       "add": "Rij toevoegen",
       "remove": "Verwijderen"
     },
     "faq": {
       "label": "Veelgestelde vragen",
+      "short": "FAQ",
       "help": "Noteer vragen die klanten vaak stellen en het antwoord dat de assistent moet geven. Voeg er zoveel toe als je wilt.",
-      "questionPlaceholder": "Vraag",
-      "answerPlaceholder": "Antwoord",
+      "questionPlaceholder": "Vraag {{n}}",
+      "answerPlaceholder": "Antwoord {{n}}",
       "add": "Rij toevoegen",
       "remove": "Verwijderen"
     },
     "agentName": {
       "label": "Welke naam gebruiken we in de gesprekken?",
+      "short": "Naam assistent",
       "help": "De naam wordt gebruikt als afzender van WhatsApp-gesprekken en opvolgberichten. Welke naam past het beste bij jullie showroom?",
       "male": "Mannelijk",
       "female": "Vrouwelijk",
       "customPlaceholder": "Of typ een andere naam…",
+      "toggleGender": "Wissel tussen mannelijke en vrouwelijke avatar",
       "avatarLabel": "Profielfoto",
       "avatar": {
         "logo": { "label": "Bedrijfslogo", "help": "Gebruik het logo van de showroom als profielfoto." },
@@ -114,10 +153,50 @@
   },
   "facts": {
     "placeholder": "Typ hier het antwoord…",
-    "negotiation": { "label": "Onderhandelingsruimte", "help": "Is er meestal ruimte om te onderhandelen? Mag de assistent hinten dat de prijs flexibel kan zijn, en hoe ver kan dat gaan?" },
-    "financing": { "label": "Financiering", "help": "Bieden jullie financiering aan? Via wie, en wat moet de assistent erover zeggen?" },
-    "installments": { "label": "Termijnbetaling", "help": "Kunnen klanten in termijnen betalen? Welke voorwaarden (aantal termijnen, aanbetaling)?" },
-    "deliveryTime": { "label": "Levertijd", "help": "Hebben jullie een standaard levertijd? Staat die in de offerte? Zo ja, dan verwijst de assistent naar de offerte; zo nee, wat kan de assistent dan tegen de klant zeggen?" },
-    "guarantees": { "label": "Garanties", "help": "Welke garanties bieden jullie? Iets dat de assistent kan noemen om vertrouwen op te bouwen?" }
+    "negotiation": { "label": "Onderhandelingsruimte", "short": "Onderhandelingsruimte", "help": "Is er meestal ruimte om te onderhandelen? Mag de assistent hinten dat de prijs flexibel kan zijn, en hoe ver kan dat gaan?", "negative": "We hebben geen ruimte om te onderhandelen over de prijs." },
+    "financing": { "label": "Financiering", "short": "Financiering", "help": "Bieden jullie financiering aan? Via wie, en wat moet de assistent erover zeggen?", "negative": "We bieden geen financiering aan." },
+    "installments": { "label": "Termijnbetaling", "short": "Termijnbetaling", "help": "Kunnen klanten in termijnen betalen? Welke voorwaarden (aantal termijnen, aanbetaling)?", "negative": "We bieden geen termijnbetalingen aan." },
+    "deliveryTime": { "label": "Levertijd", "short": "Levertijd", "help": "Hebben jullie een standaard levertijd? Staat die in de offerte? Zo ja, dan verwijst de assistent naar de offerte; zo nee, wat kan de assistent dan tegen de klant zeggen?", "negative": "We hebben geen vaste levertijd. Dat hangt af van het project." },
+    "guarantees": { "label": "Garanties", "short": "Garanties", "help": "Welke garanties bieden jullie? Iets dat de assistent kan noemen om vertrouwen op te bouwen?", "negative": "We bieden geen specifieke garanties buiten het wettelijke minimum." },
+    "sensitiveTopics": {
+      "label": "Gevoelige onderwerpen",
+      "short": "Gevoelige onderwerpen",
+      "help": "Zijn er onderwerpen die de AI moet vermijden of voorzichtig mee moet omgaan? Denk aan: prijsvergelijkingen met concurrenten, producten die jullie niet meer aanbieden, of iets wat snel tot een lastig gesprek kan leiden."
+    }
+  },
+  "preview": {
+    "title": "Live voorbeeld",
+    "subtitle": "Hoe de assistent zich aanpast aan jullie instellingen",
+    "name": "{{name}} · WhatsApp",
+    "objection": "Eerlijk gezegd zat een andere partij qua prijs iets lager 🤔",
+    "close": "Dat snap ik. Waar wij echt het verschil maken: {{differentiator}}. Zal ik een vrijblijvend {{proposal}} voor het {{project}} opstellen, zodat {{you}} een goede {{decision}} kunt {{decisionVerb}}?",
+    "differentiatorFallback": "onze persoonlijke aanpak en kwaliteit",
+    "leadReply": {
+      "personal": "Eerlijk gezegd zijn we nog aan het twijfelen 🤔",
+      "project": "We hebben nog geen beslissing genomen.",
+      "business": "Het budget moet nog worden bevestigd."
+    },
+    "followup": {
+      "warm": {
+        "informal": "Dat snap ik! Wat houdt {{you}} het meest tegen? 😊",
+        "neutral": "Dat begrijp ik. Wat houdt {{you}} op dit moment het meest tegen?",
+        "formal": "Dat begrijp ik volkomen. Mag ik vragen wat de voornaamste overweging is voor {{you}}?"
+      },
+      "expert": {
+        "informal": "Logisch! We hebben veel mensen in dezelfde situatie geholpen. Wil ik het nog eens met {{you}} doorlopen? 😊",
+        "neutral": "Begrijpelijk. Op basis van ons gesprek denk ik dat onze aanpak goed aansluit. Wat zou helpen om verder te gaan?",
+        "formal": "Begrijpelijk. Op basis van onze eerdere bespreking ben ik ervan overtuigd dat onze aanpak aansluit. Wat zou {{you}} helpen bij een {{decision}}?"
+      },
+      "exclusive": {
+        "informal": "Geen probleem! Wel even laten weten: onze planning raakt snel vol 📅 Ik hou graag een plekje voor {{you}} vrij.",
+        "neutral": "Uiteraard! Onze beschikbaarheid raakt snel vol. Wil ik een plek voor {{you}} reserveren?",
+        "formal": "Uiteraard. Onze planning raakt snel vol op dit moment. Ik kan voor {{you}} beschikbaarheid reserveren."
+      },
+      "default": {
+        "informal": "Geen stress! Wat zou {{you}} helpen om de knoop door te hakken? 😊",
+        "neutral": "Geen probleem! Is er iets wat ik voor {{you}} kan verduidelijken?",
+        "formal": "Uiteraard. Kan ik {{you}} meer informatie verstrekken om tot een {{decision}} te komen?"
+      }
+    }
   }
 }

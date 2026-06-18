@@ -44,7 +44,8 @@
   "views": {
     "month": "Mes",
     "week": "Semana",
-    "day": "Dia"
+    "day": "Dia",
+    "list": "Lista"
   },
   "navigation": {
     "previous": "Anterior",
@@ -216,6 +217,11 @@
     "weekends": {
       "hide": "Ocultar fins de semana",
       "show": "Mostrar fins de semana"
+    },
+    "settings": {
+      "title": "Configurações da agenda",
+      "availability": "Mostrar disponibilidade",
+      "hours": "Horário comercial"
     }
   }
 }

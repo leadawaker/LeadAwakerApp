@@ -12,7 +12,8 @@ import { updateLead } from "../api/leadsApi";
 import { resolveColor } from "@/features/tags/types";
 import type { VirtualListItem } from "./LeadsCardView";
 import { getLeadId } from "./LeadsCardView";
-import { getInitials, PIPELINE_HEX } from "@/lib/avatarUtils";
+import { getInitials, PIPELINE_HEX, getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { useTheme } from "@/hooks/useTheme";
 import { getLastMessage, getLastMessageSender } from "./cardView/leadUtils";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -174,7 +175,7 @@ function formatRelativeTime(dateStr: string | null | undefined, t: (key: string,
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
+      <div className="h-8 bg-primary/10 rounded animate-pulse mb-2" />
       {Array.from({ length: 12 }).map((_, i) => (
         <div
           key={i}
@@ -371,6 +372,7 @@ export function LeadsInlineTable({
   const { t } = useTranslation("leads");
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
+  const { isDark } = useTheme();
 
   // ── Editing state ─────────────────────────────────────────────────────────
   const [editingCell,    setEditingCell]    = useState<{ leadId: number; field: ColKey } | null>(null);
@@ -824,6 +826,7 @@ export function LeadsInlineTable({
                   const score            = getScore(lead);
                   const leadStatus       = getStatus(lead);
                   const stageHex         = PIPELINE_HEX[leadStatus] || PIPELINE_HEX.New || "#6C5A8C";
+                  const avatarColor      = getLeadStatusAvatarColor(leadStatus);
                   // Sticky cells need an opaque background that tracks the row state.
                   // `--row-bg` is updated on hover via inline mouse handlers below.
                   const rowBg            = isHighlighted ? "var(--card)" : "var(--row-bg, transparent)";
@@ -891,9 +894,9 @@ export function LeadsInlineTable({
                                 <div
                                   style={{
                                     width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                                    background: stageHex,
+                                    background: isDark ? avatarColor.bg : stageHex,
                                     display: "flex", alignItems: "center", justifyContent: "center",
-                                    color: "#fff", fontFamily: "var(--mono)", fontWeight: 600,
+                                    color: isDark ? avatarColor.text : "#fff", fontFamily: "var(--mono)", fontWeight: 600,
                                     fontSize: 11, letterSpacing: "0.01em",
                                     boxShadow: "var(--sh-raised-crisp)",
                                   }}

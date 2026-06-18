@@ -9,8 +9,15 @@
     "profile": "Mijn Profiel",
     "security": "Beveiliging",
     "notifications": "Meldingen",
-    "dashboard": "Dashboard",
     "team": "Team"
+  },
+  "team": {
+    "people": "Personen",
+    "table": "Tabel",
+    "back": "Terug",
+    "editProfile": "Profiel bewerken",
+    "editMyProfile": "Mijn profiel bewerken",
+    "title": "Team"
   },
   "account": {
     "saved": "Opgeslagen",
@@ -45,12 +52,9 @@
     "profileSavedDescription": "Je wijzigingen zijn opgeslagen.",
     "saveFailed": "Opslaan mislukt",
     "saveFailedDescription": "Kon profiel niet opslaan.",
-    "onboardingTutorial": "Introductie Tutorial",
-    "onboardingDescription": "Herstart de begeleide installatiewizard",
-    "restartTutorial": "Tutorial Herstarten",
-    "tutorialRestarted": "Tutorial herstart",
-    "tutorialRestartedDescription": "De introvideo wordt nu getoond.",
-    "tutorialRestartFailed": "Kan tutorial niet herstarten",
+    "impersonation": "Weergeven als",
+    "impersonationDescription": "Wissel je weergave om de app als een andere rol te bekijken. Gebruik de topbar om de weergave te verlaten.",
+    "viewAsAdmin": "Weergeven als Admin",
     "lastLogin": "Laatste login"
   },
   "notifications": {
@@ -97,15 +101,6 @@
       "criticalAutomationFailure": "Kritieke Automatiseringsfout",
       "campaignFinished": "Campagne Voltooid"
     }
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "description": "Configureer dashboardgedrag en automatische vernieuwingsintervallen.",
-    "autoRefresh": "Automatisch Vernieuwingsinterval",
-    "current": "Huidig:",
-    "refreshUpdated": "Vernieuwingsinterval bijgewerkt",
-    "autoRefreshDisabled": "Automatisch vernieuwen uitgeschakeld.",
-    "refreshEvery": "Vernieuwt elke {{interval}}."
   },
   "hub": {
     "back": "Terug",

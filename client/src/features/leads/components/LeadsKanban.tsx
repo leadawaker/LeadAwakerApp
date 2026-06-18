@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { getLeadStatusAvatarColor, getInitials as getInitialsUtil, PIPELINE_HEX as PIPELINE_HEX_UTIL } from "@/lib/avatarUtils";
+import { useTheme } from "@/hooks/useTheme";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import {
   Phone,
@@ -203,13 +204,16 @@ function ScoreArc({ score, size = 26, sw = 2.5 }: { score: number; size?: number
 /* ─────────── Stage avatar — colored rounded square with mono initials ─────────── */
 
 function StageAvatar({ name, status, size = 30, radius = 8 }: { name: string; status: string; size?: number; radius?: number }) {
+  const { isDark } = useTheme();
   const hex = PIPELINE_HEX[status] || "#6B7280";
+  const avatarColor = getLeadStatusAvatarColor(status);
   return (
     <div
       style={{
-        width: size, height: size, borderRadius: radius, flexShrink: 0, background: hex,
+        width: size, height: size, borderRadius: radius, flexShrink: 0,
+        background: isDark ? avatarColor.bg : hex,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#fff", fontFamily: "var(--mono)", fontWeight: 600,
+        color: isDark ? avatarColor.text : "#fff", fontFamily: "var(--mono)", fontWeight: 600,
         fontSize: Math.round(size * 0.34), letterSpacing: "0.01em",
         boxShadow: "var(--sh-raised-crisp)",
       }}
@@ -1193,7 +1197,7 @@ export function LeadsKanban({
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="mx-0.5 my-0.5 rounded-xl bg-white/70 dark:bg-white/[0.07] px-2.5 pt-2 pb-1.5 space-y-1.5 animate-pulse"
+                    className="mx-0.5 my-0.5 rounded-xl bg-card px-2.5 pt-2 pb-1.5 space-y-1.5 animate-pulse"
                     data-testid="kanban-skeleton-card"
                     style={{ animationDelay: `${i * 80}ms` }}
                   >

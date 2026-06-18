@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Shield, Mail, Clock, FileText, Check, X } from "lucide-react";
 import { Panel, PanelAction, GroupLabel, FieldRow, EditButton } from "./atoms";
 import { useAccountEdit } from "./useAccountEdit";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { formatTimeDisplay } from "../accountDetailWidgets/accountFormatters";
 import type { AccountRow } from "./types";
 
@@ -33,12 +34,13 @@ export function AccountDetailsPanel({ account, onSave, cols = 2 }: {
 }) {
   const { t } = useTranslation("accounts");
   const { isEditing, saving, startEdit, cancelEdit, set, val, save } = useAccountEdit(account, onSave);
+  const { isOwner } = useWorkspace();
 
   const ColA = (
     <div>
       <GroupLabel icon={<Shield size={13} />}>{t("detail.overview")}</GroupLabel>
       <FieldRow label={t("fields.status")} value={val("status")} dropdown editChild={isEditing ? <EditSelectField value={val("status")} onChange={(v) => set("status", v)} options={STATUS_OPTIONS} /> : undefined} />
-      <FieldRow label={t("fields.type")} value={val("type")} dropdown editChild={isEditing ? <EditSelectField value={val("type")} onChange={(v) => set("type", v)} options={TYPE_OPTIONS} /> : undefined} />
+      {isOwner && <FieldRow label={t("fields.type")} value={val("type")} dropdown editChild={isEditing ? <EditSelectField value={val("type")} onChange={(v) => set("type", v)} options={TYPE_OPTIONS} /> : undefined} />}
       <FieldRow label={t("columns.niche", { defaultValue: t("fields.businessNiche") })} value={val("business_niche")} editChild={isEditing ? <EditInput value={val("business_niche")} onChange={(v) => set("business_niche", v)} placeholder={t("fields.businessNichePlaceholder")} /> : undefined} />
 
       <div style={{ height: 10 }} />

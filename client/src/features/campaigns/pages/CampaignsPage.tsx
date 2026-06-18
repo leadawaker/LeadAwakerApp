@@ -16,7 +16,8 @@ import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { cn } from "@/lib/utils";
 import { xBase, xDefault, xSpan } from "@/components/crm/primitives";
 import { apiFetch } from "@/lib/apiUtils";
-import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
+import { createCampaign, deleteCampaign, updateCampaign, fetchCampaignPreflight } from "../api/campaignsApi";
+import { useToast } from "@/hooks/use-toast";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 
 export type CampaignDetailTab = "summary" | "configurations";
@@ -91,6 +92,7 @@ function ConfirmToolbarButton({
 
 function CampaignsContent() {
   const { t } = useTranslation("campaigns");
+  const { toast } = useToast();
 
   // ── Detail tab (persisted) — controls which tab CampaignDetailView shows ───
   const [detailTab, setDetailTab] = useState<CampaignDetailTab>(() => {
@@ -248,14 +250,36 @@ function CampaignsContent() {
     setEditCampaign(null);
   }, []);
 
-  const handleToggleStatus = useCallback((campaign: Campaign) => {
+  const handleToggleStatus = useCallback(async (campaign: Campaign) => {
     const cid = campaign.id || campaign.Id;
     const newStatus = String(campaign.status) === "Active" ? "Paused" : "Active";
+
+    // Hard-block activation if preflight critical checks fail (mirrors the server guard,
+    // but proactively so we never show an optimistic "Active" that snaps back).
+    if (newStatus === "Active") {
+      try {
+        const { ready, checks } = await fetchCampaignPreflight(cid);
+        if (!ready) {
+          const blockers = checks
+            .filter((c) => c.critical && c.status === "error")
+            .map((c) => t(`preflight.checks.${c.key}`, c.key, c.count !== undefined ? { count: c.count } : undefined));
+          toast({
+            variant: "destructive",
+            title: t("preflight.blockedTitle", "Can't activate yet"),
+            description: blockers.join(" · "),
+          });
+          return;
+        }
+      } catch {
+        // If the check itself fails, fall through — the server guard still protects us.
+      }
+    }
+
     updateCampaignRow(cid, "status", newStatus);
     setSelectedCampaign((prev) =>
       prev && (prev.id || prev.Id) === cid ? { ...prev, status: newStatus } : prev
     );
-  }, [updateCampaignRow]);
+  }, [updateCampaignRow, t, toast]);
 
   const handleSaveCampaign = useCallback(async (id: number, patch: Record<string, unknown>) => {
     setCampaigns((prev) => prev.map((c) => (c.id === id || c.Id === id) ? { ...c, ...patch } : c));

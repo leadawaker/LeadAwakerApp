@@ -22,6 +22,7 @@ import { CompactLeadCard } from "./CompactLeadCard";
 import { GroupHeader, ListSkeleton } from "./atoms";
 import { LeadListCard } from "./LeadListCard";
 import { MobileSimpleKanban } from "./MobileViews";
+import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
 import { getLeadId } from "./leadUtils";
 import type { ViewMode } from "./types";
 
@@ -117,7 +118,7 @@ export function LeadsListPanel({
   return (
     <div
       className={cn(
-        "flex flex-col bg-panel-list-bg overflow-hidden",
+        "flex flex-col bg-panel-list-bg overflow-hidden h-full min-h-0",
         isHidden
           ? "hidden"
           : isCompact
@@ -134,7 +135,7 @@ export function LeadsListPanel({
               live in the always-visible top bar. */}
           <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto" style={{ overflowX: "hidden" }}>
             {loading ? (
-              <ListSkeleton />
+              <ListSkeleton compact />
             ) : flatItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center px-2">
                 <Users className="h-5 w-5 text-muted-foreground/40" />
@@ -168,8 +169,36 @@ export function LeadsListPanel({
       {/* ── Mobile list chrome (isNarrow only) — desktop uses the full-width top bar ── */}
       {isNarrow && (
         <>
-          {/* Panel header: title + view tabs + action buttons + search */}
-          <div className="pl-[17px] pr-[17px] pt-3 pb-1 shrink-0 flex flex-col gap-2">
+          {/* True mobile (<768): shared two-row header (switcher+search+bell / title+filter+actions) */}
+          <MobileListHeader
+            title={t("page.title")}
+            tabSwitcher={(
+              <MobileTabSeg
+                // Mobile: List + Pipeline only (no Table). The tab drives the
+                // existing mobile bodies directly via mobileListMode.
+                tabs={viewTabs.filter((tab) => tab.id !== "table")}
+                activeId={mobileListMode === "kanban" ? "pipeline" : "list"}
+                onChange={(id) => setMobileListMode(id === "pipeline" ? "kanban" : "list")}
+              />
+            )}
+            searchValue={listSearch}
+            onSearchChange={onListSearchChange}
+            searchPlaceholder={t("toolbar.searchPlaceholder")}
+            onFilterClick={() => setFilterSheetOpen(true)}
+            filterActive={filterOn}
+            extraActions={(
+              <MobileHeaderIconBtn
+                onClick={() => setMobileAddOpen(true)}
+                aria-label={t("toolbar.add", "Add Lead")}
+                data-testid="mobile-add-lead-button"
+              >
+                <Plus className="h-4 w-4" />
+              </MobileHeaderIconBtn>
+            )}
+          />
+
+          {/* Tablet chrome (768–1023): legacy header (title + view tabs + actions + search) */}
+          <div className="hidden md:flex pl-[17px] pr-[17px] pt-3 pb-1 shrink-0 flex-col gap-2">
             <div className="flex items-center justify-between w-full">
               <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
               {/* Mobile action buttons: filter + kanban toggle + add (Feature #42 + #39 + #45) */}

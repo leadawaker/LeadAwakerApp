@@ -309,9 +309,68 @@
       "new": "Nova",
       "invite": "Convidar",
       "add": "Adicionar",
+      "open": "Abrir",
       "viewAllCampaigns": "Ver todas as campanhas",
       "addIntegration": "Adicionar integração",
       "addCategory": "Adicionar categoria"
+    },
+    "bulk": {
+      "selected": "{{count}} selecionada(s)",
+      "setStatus": "Definir status",
+      "delete": "Excluir",
+      "clear": "Limpar",
+      "status": {
+        "Active": "Ativa",
+        "Paused": "Pausada",
+        "Draft": "Rascunho",
+        "Archived": "Arquivada"
+      }
+    },
+    "invite": {
+      "title": "Adicionar membro à equipe",
+      "loading": "Carregando…",
+      "empty": "Não há mais usuários para adicionar"
+    },
+    "contractLink": {
+      "title": "Vincular um contrato",
+      "empty": "Nenhum contrato sem vínculo",
+      "createNew": "Criar contrato"
+    },
+    "preflightReady": "Pronta para ativar",
+    "preflightNotReady": "Ainda não pronta para ativar"
+  },
+  "calendar": {
+    "title": "Agenda",
+    "provider": "Provedor",
+    "providers": {
+      "google": "Google Agenda",
+      "outlook": "Outlook",
+      "calcom": "Cal.com",
+      "calendly": "Calendly",
+      "ical": "iCal / URL ICS"
+    },
+    "url": "URL do feed",
+    "urlPlaceholder": "URL pública do feed iCal / ICS",
+    "apiKey": "Chave de API",
+    "apiKeyPlaceholder": "Cole sua chave de API / token",
+    "connect": "Conectar",
+    "connectWith": "Conectar {{provider}}",
+    "disconnect": "Desconectar",
+    "readOnlyNote": "Somente leitura: usado para disponibilidade, não cria eventos",
+    "comingSoon": "Configuração em breve",
+    "booking": {
+      "title": "Página de agendamento",
+      "explainer": "Crie com um clique uma página de agendamento Cal.diy pronta para uso para este cliente. Ele só precisa fazer login e conectar a própria agenda.",
+      "provision": "Criar página de agendamento",
+      "provisioning": "Criando…",
+      "bookingUrl": "URL de agendamento",
+      "username": "Usuário",
+      "password": "Senha",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "reveal": "Revelar",
+      "regenerate": "Gerar nova senha",
+      "sendHint": "Envie essas credenciais para o cliente para que ele possa fazer login e conectar a agenda."
     }
   },
   "pills": {

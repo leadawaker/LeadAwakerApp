@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { DEFAULT_DAILY_LEAD_LIMIT } from "../config";
 import { storage, paginatedQuery } from "../storage";
 import { requireAuth, requireAgency, requireOwner, scopeToAccount } from "../auth";
 import { canDeleteHard } from "../permissions";
@@ -433,7 +434,7 @@ export function registerCampaignsRoutes(app: Express): void {
       ));
     res.json({
       sentToday: Number(value),
-      dailyLimit: campaign.dailyLeadLimit ?? 1000,
+      dailyLimit: campaign.dailyLeadLimit || DEFAULT_DAILY_LEAD_LIMIT,
       channel: campaign.channel ?? "sms",
     });
   }));
@@ -969,6 +970,7 @@ export function registerCampaignsRoutes(app: Express): void {
       { key: "description",      patchKey: "description",     label: "Business Description" },
       { key: "nicheQuestion",    patchKey: "nicheQuestion",   label: "Niche Question" },
       { key: "kb",               patchKey: "kb",              label: "Knowledge Base" },
+      { key: "inquiryTimeframe", patchKey: "inquiryTimeframe",label: "Inquiry date" },
       { key: "campaignUsp",      patchKey: "campaignUsp",     label: "USP",       isDropdown: true },
       { key: "aiStyleOverride",  patchKey: "aiStyleOverride", label: "AI Style",  isDropdown: true },
       { key: "whatLeadDid",      patchKey: "whatLeadDid",     label: "Stage",     isDropdown: true },
@@ -980,6 +982,7 @@ export function registerCampaignsRoutes(app: Express): void {
       description: "description",
       nicheQuestion: "niche_question",
       kb: "kb",
+      inquiryTimeframe: "inquiry_timeframe",
       campaignUsp: "campaign_usp",
       aiStyleOverride: "ai_style_override",
       whatLeadDid: "what_lead_did",

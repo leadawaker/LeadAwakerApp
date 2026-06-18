@@ -119,7 +119,8 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                           style={{
                             width: "100%",
                             maxWidth: 28,
-                            height: Math.max(percent * 0.6, 2),
+                            // 80px rail → percent maps 1:1 (100% fills the pill).
+                            height: Math.max((percent / 100) * 80, 2),
                             background: color,
                             borderRadius: "var(--r-pill) var(--r-pill) 0 0",
                             boxShadow: isHovered ? `inset 0 0 0 1.5px ${color}55` : undefined,
@@ -189,7 +190,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                       width: "100%",
                       maxWidth: 28,
                       height: Math.max(stats.confidence * 80, 2),
-                      background: "#fcfbfb",
+                      background: "#DADADA",
                       borderRadius: "var(--r-pill) var(--r-pill) 0 0",
                       boxShadow: hoveredMetricKey === "confidence" ? `inset 0 0 0 1.5px #DADADA` : undefined,
                     }}
@@ -229,6 +230,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                   {label} {better && <span style={{ color: "var(--ink)" }}>{better}</span>}
                 </span>
               </div>
+              <div className="flex flex-col gap-1 ab-variants">
               {(["A", "B"] as const).map((v) => {
                 const val = v === "A" ? a : b;
                 const percent = pct ? val * 100 : (max > 0 ? (val / max) * 100 : 0);
@@ -267,6 +269,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                   </div>
                 );
               })}
+              </div>
             </div>
           );
         })}

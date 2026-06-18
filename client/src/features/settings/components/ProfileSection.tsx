@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useContext } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { hapticSave } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,14 +8,13 @@ import { apiFetch, API_BASE } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
 import {
   Mail, Globe, User, Shield, Clock,
-  Phone, Camera, X, ChevronDown, BookOpen,
+  Phone, Camera, X, ChevronDown, Eye,
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useImpersonation } from "@/hooks/useImpersonation";
 import { SkeletonSettingsSection } from "@/components/ui/skeleton";
-import { LanguageSelector } from "@/components/crm/LanguageSelector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { OnboardingContext } from "@/components/onboarding/OnboardingProvider";
 import type { UserProfile } from "../types";
 import { Field, PasswordField } from "./SettingsFields";
 
@@ -23,8 +22,8 @@ export function ProfileSection() {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
   const session = useSession();
-  const { isAgencyUser } = useWorkspace();
-  const { triggerRestart } = useContext(OnboardingContext);
+  const { isAgencyUser, isOwner, accounts, currentAccountId } = useWorkspace();
+  const { impersonate } = useImpersonation();
   const isMobile = useIsMobile();
 
   // ── Profile state ──────────────────────────────────────────────────
@@ -410,14 +409,14 @@ export function ProfileSection() {
                   <button
                     type="button"
                     onClick={() => setCropImage(null)}
-                    className="px-4 py-2 text-sm font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                    className="la-btn la-btn--soft"
                   >
                     {t("cropDialog.cancel")}
                   </button>
                   <button
                     type="button"
                     onClick={handleCropConfirm}
-                    className="px-4 py-2 text-sm font-medium rounded-md bg-brand-indigo text-white hover:opacity-90 transition-opacity"
+                    className="la-btn la-btn--wine"
                   >
                     {t("cropDialog.confirm")}
                   </button>
@@ -426,7 +425,7 @@ export function ProfileSection() {
             </Dialog>
 
             <div className="flex-1 min-w-0">
-              <div className="text-xl font-bold font-heading text-foreground truncate">{name || t("profile.noName")}</div>
+              <div className="text-3xl font-bold font-heading text-foreground truncate">{name || t("profile.noName")}</div>
               <span className={cn(
                 "inline-block mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full",
                 profile?.role === "Admin" ? "bg-brand-indigo/10 text-brand-indigo" :
@@ -447,10 +446,7 @@ export function ProfileSection() {
 
           {/* Personal Information */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold font-heading text-foreground">{t("profile.description")}</h3>
-            </div>
+            <div className="text-sm font-semibold text-foreground">{t("profile.description")}</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-onboarding="profile-name">
             <Field
               label={t("profile.fullName")}
@@ -491,7 +487,8 @@ export function ProfileSection() {
                 id="profile-timezone-select"
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-white dark:bg-card px-3 pr-8 text-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+                style={{ borderRadius: "var(--r-button)", backgroundColor: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}
+                className="mt-1.5 h-10 w-full text-foreground px-3 pr-8 text-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat focus:outline-none focus:ring-2 focus:ring-brand-indigo/20"
                 data-testid="select-profile-timezone"
                 aria-label={t("profile.timezone")}
               >
@@ -511,7 +508,7 @@ export function ProfileSection() {
             <div className="flex justify-end pt-1">
               <button
                 type="button"
-                className="h-11 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+                className="la-btn la-btn--wine la-btn--lg la-btn--pill disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-save-profile"
                 data-onboarding="save-profile"
                 onClick={handleSaveProfile}
@@ -593,7 +590,8 @@ export function ProfileSection() {
                       type="button"
                       onClick={handleResetEmail}
                       disabled={isResetting}
-                      className="text-xs font-semibold text-brand-indigo hover:opacity-80 disabled:opacity-50 transition-opacity duration-150"
+                      className="text-xs font-semibold hover:opacity-80 disabled:opacity-50 transition-opacity duration-150"
+                      style={{ color: "var(--wine)" }}
                       data-testid="button-reset-password"
                     >
                       {isResetting ? t("security.sendingReset") : t("security.forgotSendReset")}
@@ -602,7 +600,7 @@ export function ProfileSection() {
                       type="button"
                       onClick={handleChangePassword}
                       disabled={isChangingPassword}
-                      className="h-11 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+                      className="la-btn la-btn--wine la-btn--lg la-btn--pill disabled:opacity-50 disabled:cursor-not-allowed"
                       data-testid="button-change-password"
                     >
                       {isChangingPassword ? t("security.changing") : t("security.updatePassword")}
@@ -613,96 +611,78 @@ export function ProfileSection() {
             </div>
           </div>
 
-          {/* Language selector */}
-          <div className="rounded-2xl bg-muted/40 px-5 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
+          {/* ── View As + Gmail Integration side by side (Owner only) ── */}
+          {isOwner && (() => {
+            const selectedAccount = currentAccountId > 0 ? accounts.find(a => a.id === currentAccountId) : null;
+            const clientLabel = selectedAccount
+              ? `View as Client: ${selectedAccount.name}`
+              : "View as Client (sandbox)";
+            return (
+              <div className="grid grid-cols-2 gap-4">
+                {/* View As */}
+                <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    {t("profile.impersonation")}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t("profile.impersonationDescription")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => impersonate("Admin")}
+                      className="la-btn la-btn--soft la-btn--pill"
+                    >
+                      <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-primary text-primary-foreground">A</div>
+                      {t("profile.viewAsAdmin")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => impersonate("Manager", selectedAccount ? currentAccountId : undefined)}
+                      className="la-btn la-btn--soft la-btn--pill"
+                    >
+                      <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-muted-foreground/20 text-muted-foreground">C</div>
+                      {clientLabel}
+                    </button>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{t("language.label")}</p>
-                  <p className="text-xs text-muted-foreground truncate">{t("language.description")}</p>
-                </div>
-              </div>
-              <LanguageSelector />
-            </div>
-          </div>
 
-          {/* Tutorial restart */}
-          <div className="rounded-2xl bg-muted/40 px-5 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{t("profile.onboardingTutorial")}</p>
-                  <p className="text-xs text-muted-foreground truncate">{t("profile.onboardingDescription")}</p>
+                {/* Gmail Integration */}
+                <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+                    <Mail className="h-4 w-4 text-brand-indigo" />
+                    {t("gmail.title")}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("gmail.description")}
+                  </p>
+                  {gmailStatus?.connected ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-foreground">{gmailStatus.email}</span>
+                      </div>
+                      <button
+                        onClick={handleGmailDisconnect}
+                        disabled={gmailLoading}
+                        className="text-xs text-red-500 hover:text-red-600 transition-colors font-medium"
+                      >
+                        {gmailLoading ? "..." : t("gmail.disconnect")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleGmailConnect}
+                      disabled={gmailLoading}
+                      className="la-btn la-btn--wine"
+                    >
+                      <Mail className="h-4 w-4" />
+                      {gmailLoading ? "..." : t("gmail.connect")}
+                    </button>
+                  )}
                 </div>
               </div>
-              <button
-                type="button"
-                className="text-xs font-semibold px-4 py-2 rounded-full border border-border/60 hover:bg-background transition-colors shrink-0"
-                data-testid="button-restart-tutorial"
-                onClick={async () => {
-                  try {
-                    // Enable dev override for agency users
-                    if (isAgencyUser) {
-                      localStorage.setItem("dev-onboarding", "true");
-                      window.dispatchEvent(new CustomEvent("dev-onboarding-changed"));
-                    }
-                    const res = await apiFetch("/api/onboarding/restart", { method: "POST" });
-                    if (res.ok) {
-                      toast({ title: t("profile.tutorialRestarted"), description: t("profile.tutorialRestartedDescription") });
-                      triggerRestart();
-                    } else {
-                      toast({ title: t("security.error"), description: t("profile.tutorialRestartFailed"), variant: "destructive" });
-                    }
-                  } catch {
-                    toast({ title: t("security.error"), description: t("profile.tutorialRestartFailed"), variant: "destructive" });
-                  }
-                }}
-              >
-                {t("profile.restartTutorial")}
-              </button>
-            </div>
-          </div>
-
-          {/* ── Gmail Integration (Agency only) ────────────────────── */}
-          {isAgencyUser && <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-            <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
-              <Mail className="h-4 w-4 text-brand-indigo" />
-              {t("gmail.title")}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t("gmail.description")}
-            </p>
-            {gmailStatus?.connected ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-sm text-foreground">{gmailStatus.email}</span>
-                </div>
-                <button
-                  onClick={handleGmailDisconnect}
-                  disabled={gmailLoading}
-                  className="text-xs text-red-500 hover:text-red-600 transition-colors font-medium"
-                >
-                  {gmailLoading ? "..." : t("gmail.disconnect")}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleGmailConnect}
-                disabled={gmailLoading}
-                className="inline-flex items-center gap-2 rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90 transition-colors"
-              >
-                <Mail className="h-4 w-4" />
-                {gmailLoading ? "..." : t("gmail.connect")}
-              </button>
-            )}
-          </div>}
+            );
+          })()}
         </>
       )}
     </div>

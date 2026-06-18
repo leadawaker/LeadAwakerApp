@@ -309,9 +309,68 @@
       "new": "Nieuw",
       "invite": "Uitnodigen",
       "add": "Toevoegen",
+      "open": "Openen",
       "viewAllCampaigns": "Alle campagnes bekijken",
       "addIntegration": "Integratie toevoegen",
       "addCategory": "Categorie toevoegen"
+    },
+    "bulk": {
+      "selected": "{{count}} geselecteerd",
+      "setStatus": "Status instellen",
+      "delete": "Verwijderen",
+      "clear": "Wissen",
+      "status": {
+        "Active": "Actief",
+        "Paused": "Gepauzeerd",
+        "Draft": "Concept",
+        "Archived": "Gearchiveerd"
+      }
+    },
+    "invite": {
+      "title": "Teamlid toevoegen",
+      "loading": "Laden…",
+      "empty": "Geen gebruikers meer om toe te voegen"
+    },
+    "contractLink": {
+      "title": "Contract koppelen",
+      "empty": "Geen ongekoppelde contracten",
+      "createNew": "Contract aanmaken"
+    },
+    "preflightReady": "Klaar om te activeren",
+    "preflightNotReady": "Nog niet te activeren"
+  },
+  "calendar": {
+    "title": "Agenda",
+    "provider": "Provider",
+    "providers": {
+      "google": "Google Agenda",
+      "outlook": "Outlook",
+      "calcom": "Cal.com",
+      "calendly": "Calendly",
+      "ical": "iCal / ICS-URL"
+    },
+    "url": "Feed-URL",
+    "urlPlaceholder": "Openbare iCal / ICS feed-URL",
+    "apiKey": "API-sleutel",
+    "apiKeyPlaceholder": "Plak je API-sleutel / token",
+    "connect": "Verbinden",
+    "connectWith": "{{provider}} verbinden",
+    "disconnect": "Verbinding verbreken",
+    "readOnlyNote": "Alleen-lezen: voor beschikbaarheid, kan geen afspraken aanmaken",
+    "comingSoon": "Configuratie komt binnenkort",
+    "booking": {
+      "title": "Boekingspagina",
+      "explainer": "Maak met één klik een kant-en-klare Cal.diy-boekingspagina voor deze klant. Ze hoeven alleen in te loggen en hun eigen agenda te verbinden.",
+      "provision": "Boekingspagina aanmaken",
+      "provisioning": "Bezig met aanmaken…",
+      "bookingUrl": "Boekings-URL",
+      "username": "Gebruikersnaam",
+      "password": "Wachtwoord",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd",
+      "reveal": "Tonen",
+      "regenerate": "Wachtwoord opnieuw genereren",
+      "sendHint": "Stuur deze gegevens naar je klant zodat ze kunnen inloggen en hun agenda kunnen verbinden."
     }
   },
   "pills": {

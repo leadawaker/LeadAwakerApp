@@ -58,6 +58,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // ── Alias used inside this file ──────────────────────────────────────────────
 const getStatusAvatarColor = getLeadStatusAvatarColor;
@@ -119,6 +120,22 @@ export function LeadDetailView({
     setChatTab(hasSummary ? "summary" : "chat");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId]);
+
+  // ── Human-takeover state (reported up by ConversationWidget) so the "Let AI
+  //    continue" control can sit in the tab-switcher row, opposite corner. ──
+  const [chatHumanTakeover, setChatHumanTakeover] = useState(false);
+  const [showAiResume, setShowAiResume] = useState(false);
+  useEffect(() => { setShowAiResume(false); }, [leadId]);
+  const handleChatAiResume = useCallback(async () => {
+    setShowAiResume(false);
+    try {
+      await updateLead(leadId, { manual_takeover: false });
+      setChatHumanTakeover(false);
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to resume AI", err);
+    }
+  }, [leadId, onRefresh]);
 
   // ── Tag events — fetch junction rows + full tag list, merge by ID ──────────
   const [tagEvents, setTagEvents] = useState<{ name: string; color?: string; appliedAt?: string }[]>([]);
@@ -317,7 +334,7 @@ export function LeadDetailView({
   const sep = <span style={{ color: "var(--line-strong)" }}>·</span>;
 
   return (
-    <div ref={setRefs} className="relative flex flex-col h-full overflow-hidden" style={{ gap: 14, paddingTop: 14, paddingBottom: 14 }}>
+    <div ref={setRefs} className="relative flex flex-col h-full" style={{ gap: 14, padding: 14 }}>
 
       {/* ── Hero (detached, rounded) ── */}
       <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
@@ -386,7 +403,7 @@ export function LeadDetailView({
       </div>
 
       {/* ── Columns ── */}
-      <div style={{ flex: 1, minHeight: 0, width: "100%", display: "flex", flexDirection: isNarrow ? "column" : "row", gap: 14, overflowY: isNarrow ? "auto" : undefined, overflow: isNarrow ? "auto" : "hidden" }}>
+      <div style={{ flex: 1, minHeight: 0, width: "100%", display: "flex", flexDirection: isNarrow ? "column" : "row", gap: 14, overflowY: isNarrow ? "auto" : undefined, overflow: isNarrow ? "auto" : "visible" }}>
         {/* Contact */}
         <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
           <ContactWidget
@@ -409,18 +426,49 @@ export function LeadDetailView({
         {isAgencyUser && (
           <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
             <div className="glass-strong" style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-start", padding: "8px 8px 0" }}>
+              <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 0" }}>
                 <div className="la-seg la-seg--pill">
                   <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
                   <button className={`la-seg-btn${chatTab === "summary" ? " on" : ""}`} onClick={() => setChatTab("summary")}>{t("detail.aiSummary", "Summary")}</button>
                 </div>
+                {/* Let AI continue — opposite corner from the tab switcher, only while a human has taken over */}
+                {chatTab === "chat" && chatHumanTakeover && (
+                  <Popover open={showAiResume} onOpenChange={setShowAiResume}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="group relative inline-flex items-center justify-center h-[30px] w-[30px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[128px]"
+                        aria-label={t("chat.letAiContinue", "Let AI continue")}
+                      >
+                        <img src="/6. Favicon.svg" alt="AI" className="h-[18px] w-[18px] shrink-0 absolute left-[5px]" />
+                        <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                          {t("chat.letAiContinue", "Let AI continue")}
+                        </span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="end"
+                      side="bottom"
+                      sideOffset={6}
+                      className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+                    >
+                      <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
+                        AI will resume this conversation. You can take over again anytime.
+                      </p>
+                      <div className="flex items-center gap-2 justify-end">
+                        <button type="button" onClick={() => setShowAiResume(false)} className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors">Cancel</button>
+                        <button type="button" onClick={handleChatAiResume} className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors">Confirm</button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
               {chatTab === "summary" ? (
                 <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
                   <LeadSummaryCard lead={lead} tier={tier} status={status} hideHeader />
                 </div>
               ) : (
-                <ConversationWidget lead={lead} showHeader={false} />
+                <ConversationWidget lead={lead} showHeader={false} onTakeoverChange={setChatHumanTakeover} />
               )}
             </div>
           </div>

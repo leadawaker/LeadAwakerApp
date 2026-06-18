@@ -55,10 +55,12 @@ export const USP_OPTIONS: Record<CampaignLang, string[]> = {
   pt: ["", "Materiais de origem natural", "Integração de tecnologia inteligente", "Entrega rápida: cozinha pronta em 6 semanas", "Fabricado na Alemanha", "Fabricado na Itália", "Designer dedicado: do início ao fim", "Garantia estendida: 10 anos"],
 };
 
+// Mirrors the 3 onboarding communication styles (kept deliberately simple — richer
+// tone/style nuance lives in the knowledge base, not in a structured field).
 export const AI_STYLE_OPTIONS: Record<CampaignLang, string[]> = {
-  en: ["", "Professional & consultative", "Warm & educational", "Direct & results-focused", "Friendly & reassuring", "Premium & exclusive"],
-  nl: ["", "Professioneel & adviserend", "Warm & informatief", "Direct & resultaatgericht", "Vriendelijk & geruststellend", "Premium & exclusief"],
-  pt: ["", "Profissional e consultivo", "Acolhedor e educativo", "Direto e focado em resultados", "Amigável e tranquilizador", "Premium e exclusivo"],
+  en: ["", "Personal", "Practical", "Businesslike"],
+  nl: ["", "Persoonlijk", "Praktisch", "Zakelijk"],
+  pt: ["", "Pessoal", "Prático", "Profissional"],
 };
 
 export const WHAT_LEAD_DID_OPTIONS: Record<CampaignLang, string[]> = {
@@ -73,12 +75,19 @@ export const SERVICE_OPTIONS: Record<CampaignLang, string[]> = {
   pt: ["", "Design e fabricação incluindo instalação", "Design e fabricação sem instalação", "Fornecimento e instalação", "Apenas consultoria de design"],
 };
 
+export const FIRST_TOUCH_OPTIONS: Record<CampaignLang, string[]> = {
+  en: ["", "Showroom visit", "Phone call", "Website", "Social media"],
+  nl: ["", "Showroombezoek", "Telefoongesprek", "Website", "Social media"],
+  pt: ["", "Visita ao showroom", "Ligação telefônica", "Website", "Redes sociais"],
+};
+
 // Map dropdown field names to their option tables
 const OPTION_TABLES: Record<string, Record<CampaignLang, string[]>> = {
   campaign_usp: USP_OPTIONS,
   ai_style_override: AI_STYLE_OPTIONS,
   what_lead_did: WHAT_LEAD_DID_OPTIONS,
   service_name: SERVICE_OPTIONS,
+  first_touch: FIRST_TOUCH_OPTIONS,
 };
 
 /**

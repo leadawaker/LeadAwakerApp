@@ -10,7 +10,7 @@ import DesktopTasksView from "../components/DesktopTasksView";
 import MobileTasksView from "../components/MobileTasksView";
 
 export default function TasksPage() {
-  const { data: rawTasks } = useTasks();
+  const { data: rawTasks, isLoading: tasksLoading } = useTasks();
   const tasks = (rawTasks ?? []) as Task[];
   const { data: categories = [] } = useTaskCategories();
   const { data: users = [] } = useAccountUsers();
@@ -37,7 +37,7 @@ export default function TasksPage() {
         {isMobile ? (
           <MobileTasksView tasks={tasks} categories={categories} users={users} todayISO={todayISO} />
         ) : (
-          <DesktopTasksView tasks={tasks} categories={categories} users={users} todayISO={todayISO} currentUserName={currentUserName} />
+          <DesktopTasksView tasks={tasks} categories={categories} users={users} todayISO={todayISO} currentUserName={currentUserName} loading={tasksLoading} />
         )}
       </CrmShell>
     </TagVisibilityContext.Provider>

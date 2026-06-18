@@ -18,6 +18,7 @@ interface OverviewData {
   loadingCampaigns: boolean;
   loadingContracts: boolean;
   loadingTeam: boolean;
+  onRefresh: () => void;
 }
 
 function OverviewRegular(p: OverviewData) {
@@ -25,10 +26,10 @@ function OverviewRegular(p: OverviewData) {
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       <AccountDetailsPanel account={p.account} onSave={p.onSave} cols={2} />
       <div style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: 22, alignItems: "start" }}>
-        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} />
+        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} />
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          <TeamPanel team={p.team} loading={p.loadingTeam} />
-          <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} />
+          <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} />
+          <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} />
         </div>
       </div>
     </div>
@@ -43,13 +44,17 @@ function OverviewUltra(p: OverviewData) {
         <IntegrationsPanel account={p.account} d={p.d} onSave={p.onSave} fieldCols={2} stacked />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} />
-        <TeamPanel team={p.team} loading={p.loadingTeam} />
-        <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} />
+        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} />
+        <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} />
+        <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} />
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, height: "100%" }}>
-        <KBPanel accountId={p.accountId} />
-        <CommunicationProfilePanel accountId={p.accountId} fill={false} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 20, height: "100%", alignSelf: "stretch", minHeight: 0 }}>
+        <div style={{ flex: "1.6 1 0", minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <KBPanel accountId={p.accountId} />
+        </div>
+        <div style={{ flex: "1 1 0", minHeight: 320, display: "flex", flexDirection: "column" }}>
+          <CommunicationProfilePanel accountId={p.accountId} niche={p.account.business_niche} accountName={p.account.name} accountLogoUrl={p.account.logo_url} fill={false} fillHeight />
+        </div>
       </div>
     </div>
   );
@@ -59,9 +64,9 @@ function OverviewMobile(p: OverviewData) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <AccountDetailsPanel account={p.account} onSave={p.onSave} cols={1} />
-      <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} />
-      <TeamPanel team={p.team} loading={p.loadingTeam} />
-      <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} />
+      <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} />
+      <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} />
+      <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} />
     </div>
   );
 }
@@ -75,7 +80,7 @@ export function TabContent({ tab, ultra, isMobile, data }: {
   }
   if (tab === "integrations") return <IntegrationsPanel account={data.account} d={data.d} onSave={data.onSave} fieldCols={isMobile ? 1 : 3} stacked={isMobile} />;
   if (tab === "knowledge") return <KBPanel accountId={data.accountId} />;
-  if (tab === "communication") return <CommunicationProfilePanel accountId={data.accountId} />;
+  if (tab === "communication") return <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} />;
   return null;
 }
 

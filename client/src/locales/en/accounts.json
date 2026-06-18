@@ -309,9 +309,68 @@
       "new": "New",
       "invite": "Invite",
       "add": "Add",
+      "open": "Open",
       "viewAllCampaigns": "View all campaigns",
       "addIntegration": "Add integration",
       "addCategory": "Add category"
+    },
+    "bulk": {
+      "selected": "{{count}} selected",
+      "setStatus": "Set status",
+      "delete": "Delete",
+      "clear": "Clear",
+      "status": {
+        "Active": "Active",
+        "Paused": "Paused",
+        "Draft": "Draft",
+        "Archived": "Archived"
+      }
+    },
+    "invite": {
+      "title": "Add team member",
+      "loading": "Loading…",
+      "empty": "No more users to add"
+    },
+    "contractLink": {
+      "title": "Link a contract",
+      "empty": "No unlinked contracts",
+      "createNew": "Create contract"
+    },
+    "preflightReady": "Ready to activate",
+    "preflightNotReady": "Not ready to activate"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "provider": "Provider",
+    "providers": {
+      "google": "Google Calendar",
+      "outlook": "Outlook",
+      "calcom": "Cal.com",
+      "calendly": "Calendly",
+      "ical": "iCal / ICS URL"
+    },
+    "url": "Feed URL",
+    "urlPlaceholder": "Public iCal / ICS feed URL",
+    "apiKey": "API key",
+    "apiKeyPlaceholder": "Paste your API key / token",
+    "connect": "Connect",
+    "connectWith": "Connect {{provider}}",
+    "disconnect": "Disconnect",
+    "readOnlyNote": "Read-only: used for availability, can't create events",
+    "comingSoon": "Setup coming soon",
+    "booking": {
+      "title": "Booking page",
+      "explainer": "Create a ready-to-book Cal.diy page for this client in one click. They just log in and connect their own calendar.",
+      "provision": "Provision booking page",
+      "provisioning": "Provisioning…",
+      "bookingUrl": "Booking URL",
+      "username": "Username",
+      "password": "Password",
+      "copy": "Copy",
+      "copied": "Copied",
+      "reveal": "Reveal",
+      "regenerate": "Regenerate password",
+      "sendHint": "Send these credentials to your client so they can log in and connect their calendar."
     }
   },
   "pills": {

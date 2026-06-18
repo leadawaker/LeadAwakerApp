@@ -5,8 +5,7 @@ import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
-import { MessageSquare, Bell, AlertTriangle, Cpu, ChevronRight } from "lucide-react";
+import { MessageSquare, Bell, AlertTriangle, Cpu } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
   type NotificationPreferences,
@@ -28,7 +27,6 @@ export function NotificationsSection() {
   const [telegramChatIdInput, setTelegramChatIdInput] = useState("");
   const [pushDevices, setPushDevices] = useState<PushDevice[]>([]);
   const [isSubscribingPush, setIsSubscribingPush] = useState(false);
-  const [overridesOpen, setOverridesOpen] = useState(false);
 
   // ── Load preferences + push subscriptions ──────────────────────────
   useEffect(() => {
@@ -93,10 +91,19 @@ export function NotificationsSection() {
     if (session.status !== "authenticated") return;
     setIsSubscribingPush(true);
     try {
-      // 0. Check browser permission status
-      if (typeof Notification !== "undefined" && Notification.permission === "denied") {
-        toast({ variant: "destructive", title: t("notifications.push.permissionDenied", "Notifications are blocked. Please allow them in your browser settings.") });
-        return;
+      // 0. Ensure browser notification permission. A "default" state must be
+      //    actively requested; only a hard "denied" cannot be reset from JS.
+      if (typeof Notification !== "undefined") {
+        if (Notification.permission === "default") {
+          const result = await Notification.requestPermission();
+          if (result !== "granted") {
+            toast({ variant: "destructive", title: t("notifications.push.permissionDismissed", "Notification permission was not granted. Click Enable again to retry.") });
+            return;
+          }
+        } else if (Notification.permission === "denied") {
+          toast({ variant: "destructive", title: t("notifications.push.permissionDenied", "Notifications are blocked. Reset this site's notification permission in your browser settings (address bar lock icon → Site settings → Notifications → Allow), then try again.") });
+          return;
+        }
       }
 
       // 1. Get VAPID key
@@ -123,10 +130,10 @@ export function NotificationsSection() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: uid,
-          account_id: aid,
+          userId: uid,
+          accountId: aid,
           subscription: subscription.toJSON(),
-          device_label: navigator.userAgent,
+          deviceLabel: navigator.userAgent,
         }),
       });
 
@@ -220,13 +227,14 @@ export function NotificationsSection() {
                 value={telegramChatIdInput}
                 onChange={(e) => setTelegramChatIdInput(e.target.value)}
                 placeholder={t("notifications.telegram.chatIdPlaceholder")}
-                className="h-10 flex-1 rounded-xl border border-border/40 bg-white dark:bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40 transition-shadow duration-200"
+                style={{ borderRadius: "var(--r-button)" }}
+                className="h-10 flex-1 neu-inset-crisp text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 transition-shadow duration-200"
                 data-testid="input-telegram-chat-id"
               />
               <button
                 type="button"
                 onClick={handleSaveTelegramChatId}
-                className="h-10 px-4 rounded-xl bg-brand-indigo text-white text-[13px] font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-150 shrink-0"
+                className="la-btn la-btn--wine h-10 shrink-0"
                 data-testid="button-save-telegram"
               >
                 {t("notifications.telegram.save")}
@@ -267,7 +275,7 @@ export function NotificationsSection() {
             type="button"
             onClick={handleEnablePush}
             disabled={isSubscribingPush || !("serviceWorker" in navigator)}
-            className="h-9 px-4 rounded-full bg-brand-indigo text-white text-[12px] font-semibold hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shrink-0"
+            className="la-btn la-btn--wine la-btn--pill h-9 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             data-testid="button-enable-push"
           >
             {isSubscribingPush ? t("notifications.push.subscribing") : t("notifications.push.enable")}
@@ -322,33 +330,19 @@ export function NotificationsSection() {
         )}
       </div>
 
-      {/* ── Section C: Per-Type Overrides ────────────────────── */}
+      {/* ── Section C: Per-Type Overrides (always open) ──────── */}
       <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-type-overrides">
-        <button
-          type="button"
-          onClick={() => setOverridesOpen((o) => !o)}
-          className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/60 transition-colors duration-150"
-          data-testid="button-toggle-overrides"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
-              <Cpu className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="text-left">
-              <span className="text-sm font-semibold block">{t("notifications.overrides.title")}</span>
-              <span className="text-[11px] text-muted-foreground/60">{t("notifications.overrides.subtitle", "Fine-tune per notification type")}</span>
-            </div>
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <div className="h-8 w-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+            <Cpu className="h-4 w-4 text-muted-foreground" />
           </div>
-          <ChevronRight
-            className={cn(
-              "h-4 w-4 text-muted-foreground/50 transition-transform duration-200",
-              overridesOpen && "rotate-90"
-            )}
-          />
-        </button>
+          <div className="text-left">
+            <span className="text-sm font-semibold block">{t("notifications.overrides.title")}</span>
+            <span className="text-[11px] text-muted-foreground/60">{t("notifications.overrides.subtitle", "Fine-tune per notification type")}</span>
+          </div>
+        </div>
 
-        {overridesOpen && (
-          <div className="px-4 pb-4 pt-2 border-t border-border/15">
+        <div className="px-4 pb-4 pt-2 border-t border-border/15">
             {/* Column headers */}
             <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 mb-2.5 px-1">
               <div />
@@ -411,7 +405,6 @@ export function NotificationsSection() {
               })}
             </div>
           </div>
-        )}
       </div>
 
     </div>

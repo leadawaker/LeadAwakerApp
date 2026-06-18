@@ -9,8 +9,15 @@
     "profile": "My Profile",
     "security": "Security",
     "notifications": "Notifications",
-    "dashboard": "Dashboard",
     "team": "Team"
+  },
+  "team": {
+    "people": "People",
+    "table": "Table",
+    "back": "Back",
+    "editProfile": "Edit Profile",
+    "editMyProfile": "Edit My Profile",
+    "title": "Team"
   },
   "account": {
     "saved": "Saved",
@@ -45,12 +52,9 @@
     "profileSavedDescription": "Your changes have been saved.",
     "saveFailed": "Save failed",
     "saveFailedDescription": "Could not save profile.",
-    "onboardingTutorial": "Onboarding Tutorial",
-    "onboardingDescription": "Restart the guided setup walkthrough",
-    "restartTutorial": "Restart Tutorial",
-    "tutorialRestarted": "Tutorial restarted",
-    "tutorialRestartedDescription": "The intro video is now playing.",
-    "tutorialRestartFailed": "Failed to restart tutorial",
+    "impersonation": "View as",
+    "impersonationDescription": "Switch your view to see the app as another role. Use the topbar to exit impersonation.",
+    "viewAsAdmin": "View as Admin",
     "lastLogin": "Last login"
   },
   "notifications": {
@@ -97,15 +101,6 @@
       "criticalAutomationFailure": "Critical Automation Failure",
       "campaignFinished": "Campaign Finished"
     }
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "description": "Configure dashboard behavior and auto-refresh intervals.",
-    "autoRefresh": "Auto-Refresh Interval",
-    "current": "Current:",
-    "refreshUpdated": "Refresh interval updated",
-    "autoRefreshDisabled": "Auto-refresh disabled.",
-    "refreshEvery": "Refreshes every {{interval}}."
   },
   "hub": {
     "back": "Back",

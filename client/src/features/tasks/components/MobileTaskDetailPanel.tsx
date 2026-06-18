@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { ChevronLeft, Check, Trash2, Plus, ChevronUp, ChevronDown, Smile } from "lucide-react";
 import {
   Popover,
@@ -35,10 +35,11 @@ const TYPE_KEY: Record<string, string> = {
 
 interface Props {
   taskId: number;
+  open: boolean;
   onBack: () => void;
 }
 
-export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
+export default function MobileTaskDetailPanel({ taskId, open, onBack }: Props) {
   const { t } = useTranslation("tasks");
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
@@ -176,18 +177,14 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
   };
   const labelCls = "block text-[11px] font-semibold uppercase tracking-wider";
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[200] flex flex-col animate-in slide-in-from-right duration-200 ease-out"
-      style={{ height: "100dvh", background: "var(--bg)" }}
-      data-testid="mobile-task-detail-panel"
-    >
+  return (
+    <MobileSheet open={open} onClose={onBack} data-testid="mobile-task-detail-panel">
       {/* ── Header ── */}
       <div
         className="shrink-0"
         style={{
           background: "var(--bg)", borderBottom: "1px solid var(--line)",
-          paddingTop: "max(env(safe-area-inset-top, 0px), 18px)",
+          paddingTop: 8,
           paddingLeft: 16, paddingRight: 16, paddingBottom: 16,
         }}
       >
@@ -537,7 +534,6 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
           </button>
         </div>
       )}
-    </div>,
-    document.body,
+    </MobileSheet>
   );
 }

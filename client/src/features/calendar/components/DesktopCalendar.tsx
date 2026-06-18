@@ -6,11 +6,14 @@ import type { TFunction } from "i18next";
 import {
   ChevronLeft, ChevronRight, Clock, Video, Phone, Mail, Check,
   Calendar as CalIcon, CalendarDays, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
-  PanelLeft, PanelLeftClose, X, MoreVertical, RefreshCw, XCircle,
-  Info, AlertCircle, Target, ShieldQuestion, ArrowRight,
+  PanelLeft, PanelLeftClose, X, MoreVertical, RefreshCw, XCircle, Search,
+  Info, AlertCircle, Target, ShieldQuestion, ArrowRight, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
+import { MobileListHeader, MobileTabSeg, MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useSession } from "@/hooks/useSession";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
@@ -28,10 +31,11 @@ import {
 } from "@/components/ui/popover";
 import type { Interaction } from "@/features/conversations/hooks/useConversationsData";
 import {
-  type Appointment, CARD_STYLE, HEADER_H, HOUR0, HOUR1, SPAN,
+  type Appointment, CARD_STYLE, HEADER_H, HOUR0, HOUR1, SPAN, PX_PER_HOUR,
   statusMetaOf, statusKeyOf, channelOf, apptHm, endClockOf, dateKeyOf,
 } from "../lib/calendarDesign";
 import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
+import { AiSummaryView } from "@/components/crm/AiSummaryView";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
 
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]; // indexed by Date.getDay()
@@ -54,9 +58,26 @@ const FILTER_KEYS: Record<ApptFilterStatus, string> = { no_show: "filter.noShow"
 
 const NAV_BTN: CSSProperties = {
   width: 34, height: 34, borderRadius: "var(--r-button)", border: "none", cursor: "pointer",
-  background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", display: "flex",
+  background: "var(--bg-2)", display: "flex",
   alignItems: "center", justifyContent: "center", color: "var(--mute)",
+  transition: "transform 80ms",
 };
+
+function NavBtn({ onClick, children, style, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) {
+  const [pressed, setPressed] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      style={{ ...NAV_BTN, transform: pressed ? "scale(0.91)" : "scale(1)", ...style }}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
 const MONO: CSSProperties = { fontFamily: "var(--mono)" };
 const SERIF: CSSProperties = { fontFamily: "var(--serif)" };
 
@@ -99,8 +120,8 @@ export interface DesktopCalendarProps {
   todayStr: string;
   viewLabel: string;
   weekLabel: string;
-  viewMode: "week" | "month";
-  setViewMode: (v: "week" | "month") => void;
+  viewMode: "week" | "month" | "list";
+  setViewMode: (v: "week" | "month" | "list") => void;
   onNavigate: (dir: number) => void;
   onNavigateWeek: (dir: number) => void;
   onSelectMonth: (monthIndex: number) => void;
@@ -134,6 +155,17 @@ export interface DesktopCalendarProps {
   showClose?: boolean;
   // ultra-wide (>= 1700px): week + month shown side by side, toggle hidden
   ultra?: boolean;
+  // Availability overlay (free/busy from the account's connected calendars).
+  // busySlots are merged busy intervals (ISO); free windows are the gaps within
+  // the business-hours band [availStart, availEnd).
+  busySlots?: { start: string; end: string }[];
+  showAvailability?: boolean;
+  setShowAvailability?: (v: boolean) => void;
+  availStart?: number;
+  availEnd?: number;
+  setAvailStart?: (v: number) => void;
+  setAvailEnd?: (v: number) => void;
+  onRefresh?: () => void;
 }
 
 // Toolbar dropdown trigger (wine soft icon button)
@@ -141,14 +173,218 @@ function toolBtnClass(active: boolean) {
   return cn("la-btn la-btn--soft la-btn--icon", active && "!text-[var(--wine)]");
 }
 
+// Calendar settings popover — availability overlay toggle + business hours +
+// hide weekends. Reached via the gear button in the top toolbar.
+function CalendarSettingsPopover({ p }: { p: DesktopCalendarProps }) {
+  const { t } = p;
+  const active = !!p.showAvailability || p.hideWeekends;
+  const hourOptions: number[] = [];
+  for (let h = HOUR0; h <= HOUR1; h++) hourOptions.push(h);
+  const fmtHour = (h: number) => `${h === 0 ? 12 : h <= 12 ? h : h - 12}${h < 12 ? "am" : "pm"}`;
+  const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "7px 0" }}>
+      <span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{label}</span>
+      {children}
+    </div>
+  );
+  const Toggle = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
+    <button onClick={onClick} aria-pressed={on} style={{
+      width: 38, height: 22, borderRadius: 999, flexShrink: 0, position: "relative", cursor: "pointer",
+      background: on ? "var(--wine)" : "var(--mute-2)", transition: "background 130ms", border: "none",
+    }}>
+      <span style={{ position: "absolute", top: 2, left: on ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "var(--paper)", transition: "left 130ms", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
+    </button>
+  );
+  const selectStyle: React.CSSProperties = { fontSize: 12, padding: "4px 8px", borderRadius: "var(--r-button)" };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className={toolBtnClass(active)} title={t("design.settings.title", { defaultValue: "Calendar settings" })}>
+          <Settings className="h-4 w-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 p-3">
+        <div style={{ ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, marginBottom: 4 }}>
+          {t("design.settings.title", { defaultValue: "Calendar settings" })}
+        </div>
+        {p.setShowAvailability && (
+          <Row label={t("design.settings.availability", { defaultValue: "Show availability" })}>
+            <Toggle on={!!p.showAvailability} onClick={() => p.setShowAvailability!(!p.showAvailability)} />
+          </Row>
+        )}
+        {p.showAvailability && p.setAvailStart && p.setAvailEnd && (
+          <Row label={t("design.settings.hours", { defaultValue: "Business hours" })}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <select className="neu-input" style={selectStyle} value={p.availStart ?? 9} onChange={(e) => p.setAvailStart!(Number(e.target.value))}>
+                {hourOptions.map((h) => <option key={h} value={h}>{fmtHour(h)}</option>)}
+              </select>
+              <span style={{ color: "var(--mute-2)", fontSize: 11 }}>–</span>
+              <select className="neu-input" style={selectStyle} value={p.availEnd ?? 17} onChange={(e) => p.setAvailEnd!(Number(e.target.value))}>
+                {hourOptions.map((h) => <option key={h} value={h}>{fmtHour(h)}</option>)}
+              </select>
+            </div>
+          </Row>
+        )}
+        <div className="rule" style={{ margin: "6px 0" }} />
+        <Row label={t("design.weekends.hide", { defaultValue: "Hide weekends" })}>
+          <Toggle on={p.hideWeekends} onClick={() => p.setHideWeekends(!p.hideWeekends)} />
+        </Row>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Top toolbar (title · view toggle · collapse button · search/sort/filter/group/new)
 // ════════════════════════════════════════════════════════════════════════════
 function TopToolbar(p: DesktopCalendarProps) {
   const { t } = p;
+  const isMobile = useIsMobile(768);
   const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
   const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
   const activeMonth = p.month.getMonth();
+
+  // Shared action controls (icon buttons + dropdowns), reused by the desktop
+  // and mobile toolbar layouts so behavior never drifts between the two.
+  const actionsMenu = p.selectedBooking ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="la-btn la-btn--soft la-btn--icon" title={t("design.detail.actions")}><MoreVertical className="h-4 w-4" /></button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-[12px] p-0">
+          <ReschedulePopover
+            ev={p.selectedBooking}
+            onReschedule={p.onReschedule}
+            t={t}
+            trigger={
+              <button className="flex items-center gap-2 w-full px-2 py-1.5 text-[12px] text-left hover:bg-muted/50 rounded">
+                <RefreshCw className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                {t("design.detail.reschedule")}
+              </button>
+            }
+          />
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={() => p.selectedBooking && p.onCancelCall(p.selectedBooking.id)}
+          className="text-[12px] flex items-center gap-2 text-destructive focus:text-destructive"
+        >
+          <XCircle className="h-3.5 w-3.5 shrink-0" />
+          {t("design.detail.cancelCall")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : null;
+
+  const filterMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className={toolBtnClass(p.apptFilterStatuses.length > 0)} title={t("filter.label")}><Filter className="h-4 w-4" /></button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-48">
+        {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
+          <DropdownMenuItem
+            key={opt}
+            onSelect={(e) => { e.preventDefault(); p.setApptFilterStatuses(p.apptFilterStatuses.includes(opt) ? p.apptFilterStatuses.filter((s) => s !== opt) : [...p.apptFilterStatuses, opt]); }}
+            className="flex items-center gap-2 text-[12px]"
+          >
+            <span className="flex-1">{t(FILTER_KEYS[opt])}</span>
+            {p.apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const sortMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className={toolBtnClass(p.apptSortBy !== "time_desc")} title={t("sort.label")}><ArrowUpDown className="h-4 w-4" /></button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-44">
+        {SORT_GROUPS.map((g) => {
+          const isActive = p.apptSortBy === g.asc || p.apptSortBy === g.desc;
+          const dir: "asc" | "desc" = p.apptSortBy === g.asc ? "asc" : "desc";
+          return (
+            <DropdownMenuItem key={g.key} onSelect={(e) => { e.preventDefault(); p.setApptSortBy(isActive ? p.apptSortBy : g.desc); }} className="text-[12px] flex items-center gap-2">
+              <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t(g.label)}</span>
+              {isActive && (
+                <>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptSortBy(g.asc); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "asc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortAscending")}><ArrowUp className="h-3 w-3" /></button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptSortBy(g.desc); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "desc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortDescending")}><ArrowDown className="h-3 w-3" /></button>
+                </>
+              )}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const groupMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className={toolBtnClass(p.apptGroupBy !== "date")} title={t("group.label")}><Layers className="h-4 w-4" /></button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-44">
+        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+          <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.setApptGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
+            <span className={cn("flex-1", p.apptGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_KEYS[opt])}</span>
+            {p.apptGroupBy === opt && opt !== "none" && (
+              <>
+                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptGroupDirection("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.apptGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortAscending")}><ArrowUp className="h-3 w-3" /></button>
+                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptGroupDirection("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.apptGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortDescending")}><ArrowDown className="h-3 w-3" /></button>
+              </>
+            )}
+            {p.apptGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const bookButton = (
+    <BookAppointmentPopover
+      leads={p.leads}
+      refetchLeads={p.refetchLeads}
+      trigger={<button className="la-btn la-btn--soft la-btn--icon" title={t("book.newAppointment")}><Plus className="h-4 w-4" /></button>}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <MobileListHeader
+        title={t("title")}
+        tabSwitcher={(
+          <MobileTabSeg
+            tabs={(["week", "month", "list"] as const).map((k) => ({ id: k, label: t(`views.${k}`) }))}
+            activeId={p.viewMode}
+            onChange={(id) => p.setViewMode(id as "week" | "month" | "list")}
+          />
+        )}
+        searchValue={p.searchQuery}
+        onSearchChange={p.setSearchQuery}
+        searchPlaceholder={t("search.placeholder")}
+        filterControl={filterMenu}
+        extraActions={(
+          <>
+            <MobileHeaderIconBtn
+              onClick={p.onToday}
+              aria-label={t("navigation.today")}
+              title={t("navigation.today")}
+              style={{ background: "var(--wine)", color: "var(--paper)" }}
+              data-testid="mobile-calendar-today"
+            >
+              <CalIcon className="h-4 w-4" />
+            </MobileHeaderIconBtn>
+            {bookButton}
+            <CalendarSettingsPopover p={p} />
+          </>
+        )}
+      />
+    );
+  }
 
   return (
     <div style={{ height: 60, flexShrink: 0, padding: "0 14px", background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18 }}>
@@ -213,44 +449,10 @@ function TopToolbar(p: DesktopCalendarProps) {
       {/* Search / Filter / Sort / Group / New — top-right */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         {/* Appointment actions (reschedule / cancel) — only with a selection */}
-        {p.selectedBooking && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="la-btn la-btn--soft la-btn--icon" title={t("design.detail.actions")}><MoreVertical className="h-4 w-4" /></button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-[12px] p-0">
-                <ReschedulePopover
-                  ev={p.selectedBooking}
-                  onReschedule={p.onReschedule}
-                  t={t}
-                  trigger={
-                    <button className="flex items-center gap-2 w-full px-2 py-1.5 text-[12px] text-left hover:bg-muted/50 rounded">
-                      <RefreshCw className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      {t("design.detail.reschedule")}
-                    </button>
-                  }
-                />
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => p.selectedBooking && p.onCancelCall(p.selectedBooking.id)}
-                className="text-[12px] flex items-center gap-2 text-destructive focus:text-destructive"
-              >
-                <XCircle className="h-3.5 w-3.5 shrink-0" />
-                {t("design.detail.cancelCall")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        {actionsMenu}
 
-        {/* Hide / show weekends — affects both week and month views */}
-        <button
-          className={toolBtnClass(p.hideWeekends)}
-          onClick={() => p.setHideWeekends(!p.hideWeekends)}
-          title={p.hideWeekends ? t("design.weekends.show") : t("design.weekends.hide")}
-        >
-          <CalendarDays className="h-4 w-4" />
-        </button>
+        {/* Calendar settings — availability overlay, business hours, hide weekends */}
+        <CalendarSettingsPopover p={p} />
 
         {/* Search */}
         <div style={{ position: "relative" }}>
@@ -271,72 +473,10 @@ function TopToolbar(p: DesktopCalendarProps) {
           )}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={toolBtnClass(p.apptFilterStatuses.length > 0)} title={t("filter.label")}><Filter className="h-4 w-4" /></button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
-              <DropdownMenuItem
-                key={opt}
-                onSelect={(e) => { e.preventDefault(); p.setApptFilterStatuses(p.apptFilterStatuses.includes(opt) ? p.apptFilterStatuses.filter((s) => s !== opt) : [...p.apptFilterStatuses, opt]); }}
-                className="flex items-center gap-2 text-[12px]"
-              >
-                <span className="flex-1">{t(FILTER_KEYS[opt])}</span>
-                {p.apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={toolBtnClass(p.apptSortBy !== "time_desc")} title={t("sort.label")}><ArrowUpDown className="h-4 w-4" /></button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-44">
-            {SORT_GROUPS.map((g) => {
-              const isActive = p.apptSortBy === g.asc || p.apptSortBy === g.desc;
-              const dir: "asc" | "desc" = p.apptSortBy === g.asc ? "asc" : "desc";
-              return (
-                <DropdownMenuItem key={g.key} onSelect={(e) => { e.preventDefault(); p.setApptSortBy(isActive ? p.apptSortBy : g.desc); }} className="text-[12px] flex items-center gap-2">
-                  <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t(g.label)}</span>
-                  {isActive && (
-                    <>
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptSortBy(g.asc); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "asc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortAscending")}><ArrowUp className="h-3 w-3" /></button>
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptSortBy(g.desc); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "desc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortDescending")}><ArrowDown className="h-3 w-3" /></button>
-                    </>
-                  )}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={toolBtnClass(p.apptGroupBy !== "date")} title={t("group.label")}><Layers className="h-4 w-4" /></button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-44">
-            {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
-              <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.setApptGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
-                <span className={cn("flex-1", p.apptGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_KEYS[opt])}</span>
-                {p.apptGroupBy === opt && opt !== "none" && (
-                  <>
-                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptGroupDirection("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.apptGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortAscending")}><ArrowUp className="h-3 w-3" /></button>
-                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.setApptGroupDirection("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.apptGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} aria-label={t("a11y.sortDescending")}><ArrowDown className="h-3 w-3" /></button>
-                  </>
-                )}
-                {p.apptGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <BookAppointmentPopover
-          leads={p.leads}
-          refetchLeads={p.refetchLeads}
-          trigger={<button className="la-btn la-btn--soft la-btn--icon" title={t("book.newAppointment")}><Plus className="h-4 w-4" /></button>}
-        />
+        {filterMenu}
+        {sortMenu}
+        {groupMenu}
+        {bookButton}
       </div>
     </div>
   );
@@ -456,6 +596,7 @@ function AgendaList(p: DesktopCalendarProps) {
 // ════════════════════════════════════════════════════════════════════════════
 function CenterHeader(p: DesktopCalendarProps) {
   const { t } = p;
+  const isMobile = useIsMobile(768);
   const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
   const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
 
@@ -463,20 +604,46 @@ function CenterHeader(p: DesktopCalendarProps) {
   if (p.ultra) {
     return (
       <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 12 }}>
+        <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
         <button onClick={p.onToday} className="la-btn la-btn--soft">{t("navigation.today")}</button>
-        <button onClick={() => p.onNavigateWeek(-1)} style={NAV_BTN} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></button>
+        <NavBtn onClick={() => p.onNavigateWeek(-1)} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></NavBtn>
         <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{p.weekLabel}</span>
-        <button onClick={() => p.onNavigateWeek(1)} style={NAV_BTN} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></button>
+        <NavBtn onClick={() => p.onNavigateWeek(1)} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></NavBtn>
+      </div>
+    );
+  }
+
+  // Mobile: the absolute-positioned Today/KPI corners from the desktop layout
+  // collide with the centered label on a phone-width screen — stack them instead.
+  if (isMobile) {
+    return (
+      <div style={{ flexShrink: 0, borderBottom: "1px solid var(--line)", padding: "10px 14px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></NavBtn>
+          <span style={{ ...SERIF, fontSize: 18, color: "var(--ink)", letterSpacing: "-0.01em", textAlign: "center", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
+          <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></NavBtn>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+          <button onClick={p.onToday} className="la-btn la-btn--soft la-btn--sm">{t("navigation.today")}</button>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ ...SERIF, fontSize: 16, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+            <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
-      <button onClick={p.onToday} className="la-btn la-btn--soft" style={{ position: "absolute", left: 14 }}>{t("navigation.today")}</button>
-      <button onClick={() => p.onNavigate(-1)} style={NAV_BTN} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></button>
+      {/* Refresh + Today — left-anchored */}
+      <div style={{ position: "absolute", left: 14, display: "flex", alignItems: "center", gap: 8 }}>
+        <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
+        <button onClick={p.onToday} className="la-btn la-btn--soft">{t("navigation.today")}</button>
+      </div>
+      <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></NavBtn>
       <span style={{ ...SERIF, fontSize: 24, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
-      <button onClick={() => p.onNavigate(1)} style={NAV_BTN} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></button>
+      <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></NavBtn>
       {/* Meetings this week — right-aligned in header */}
       <div style={{ position: "absolute", right: 14, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
         <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
@@ -490,7 +657,7 @@ function WeekEvent({ ev, dayIdx, nCols, active, onClick, t }: { ev: Appointment;
   const sm = statusMetaOf(ev, t);
   const startH = Math.min(Math.max(apptHm(ev), HOUR0), HOUR1);
   const topPct = ((startH - HOUR0) / SPAN) * 100;
-  const hPct = Math.max(((ev.callDurationMinutes || 60) / 60 / SPAN) * 100, 4.2);
+  const hPct = Math.max(((ev.callDurationMinutes || 60) / 60 / SPAN) * 100, 1.5);
   const left = `calc(56px + (100% - 56px) * ${dayIdx} / ${nCols} + 3px)`;
   const width = `calc((100% - 56px) / ${nCols} - 6px)`;
   const faded = ev.no_show;
@@ -518,6 +685,59 @@ function WeekEvent({ ev, dayIdx, nCols, active, onClick, t }: { ev: Appointment;
   );
 }
 
+// Dims time outside business hours and shades connected-calendar busy intervals.
+// The un-shaded area inside the business-hours band = bookable free windows.
+function AvailabilityOverlay({ p, days, nCols }: { p: DesktopCalendarProps; days: Date[]; nCols: number }) {
+  const availStart = Math.max(HOUR0, Math.min(p.availStart ?? 9, HOUR1));
+  const availEnd = Math.max(availStart, Math.min(p.availEnd ?? 17, HOUR1));
+  const pct = (h: number) => ((h - HOUR0) / SPAN) * 100;
+  const colLeft = (di: number) => `calc(56px + (100% - 56px) * ${di} / ${nCols})`;
+  const colWidth = `calc((100% - 56px) / ${nCols})`;
+
+  // Bucket busy slots by local day key.
+  const byDay = new Map<string, { s: number; e: number }[]>();
+  for (const slot of p.busySlots ?? []) {
+    const start = new Date(slot.start), end = new Date(slot.end);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+    const key = dateKeyOf(start);
+    const s = start.getHours() + start.getMinutes() / 60;
+    const e = end.getHours() + end.getMinutes() / 60;
+    const arr = byDay.get(key) ?? [];
+    arr.push({ s, e });
+    byDay.set(key, arr);
+  }
+
+  const stripeStyle = "repeating-linear-gradient(45deg, rgba(60,45,25,0.068), rgba(60,45,25,0.068) 4px, transparent 4px, transparent 14px)";
+  return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+      {/* business-hours dim bands (before open / after close) — diagonal stripe */}
+      {availStart > HOUR0 && (
+        <div style={{ position: "absolute", top: 0, height: `${pct(availStart)}%`, left: 56, right: 0, background: stripeStyle }} />
+      )}
+      {availEnd < HOUR1 && (
+        <div style={{ position: "absolute", top: `${pct(availEnd)}%`, bottom: 0, left: 56, right: 0, background: stripeStyle }} />
+      )}
+      {/* busy blocks per day */}
+      {days.map((d, di) => {
+        const slots = byDay.get(dateKeyOf(d)) ?? [];
+        return slots.map((b, i) => {
+          const s = Math.max(b.s, HOUR0), e = Math.min(b.e, HOUR1);
+          if (e <= s) return null;
+          return (
+            <div key={`${di}-${i}`} title="Busy" style={{
+              position: "absolute", top: `${pct(s)}%`, height: `${Math.max(pct(e) - pct(s), 1.2)}%`,
+              left: `calc(${colLeft(di)} + 2px)`, width: `calc(${colWidth} - 4px)`,
+              borderRadius: "var(--r-flush)",
+              background: "repeating-linear-gradient(45deg, rgba(94,34,48,0.10), rgba(94,34,48,0.10) 5px, rgba(94,34,48,0.04) 5px, rgba(94,34,48,0.04) 10px)",
+              border: "1px solid rgba(94,34,48,0.12)",
+            }} />
+          );
+        });
+      })}
+    </div>
+  );
+}
+
 function WeekGrid(p: DesktopCalendarProps) {
   const { t } = p;
   const days = useMemo(
@@ -532,56 +752,95 @@ function WeekGrid(p: DesktopCalendarProps) {
   const nowPct = nowH >= HOUR0 && nowH <= HOUR1 ? ((nowH - HOUR0) / SPAN) * 100 : null;
   const todayIdx = days.findIndex((d) => dateKeyOf(d) === p.todayStr);
 
+  // Scroll to 9am on mount so business hours are immediately visible.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const totalH = SPAN * PX_PER_HOUR;
+    el.scrollTop = ((7.5 - HOUR0) / SPAN) * totalH;
+  }, []);
+
+  // Drag-to-navigate (horizontal swipe on the grid)
+  const dragOrigin = useRef<{ x: number; y: number } | null>(null);
+  const onGridPointerDown = (e: React.PointerEvent) => { dragOrigin.current = { x: e.clientX, y: e.clientY }; };
+  const onGridPointerUp = (e: React.PointerEvent) => {
+    if (!dragOrigin.current) return;
+    const dx = e.clientX - dragOrigin.current.x;
+    const dy = e.clientY - dragOrigin.current.y;
+    dragOrigin.current = null;
+    if (Math.abs(dx) > 60 && Math.abs(dy) < 80) p.onNavigate(dx < 0 ? 1 : -1);
+  };
+
   return (
-    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <div
+      style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}
+      onPointerDown={onGridPointerDown}
+      onPointerUp={onGridPointerUp}
+    >
       {/* Day header row */}
       <div style={{ display: "grid", gridTemplateColumns: gridCols, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
         <div />
         {days.map((d) => {
           const iso = dateKeyOf(d), isToday = iso === p.todayStr;
           return (
-            <div key={iso} style={{ padding: "9px 6px 11px", textAlign: "center", borderLeft: "1px solid var(--line)" }}>
-              <div style={{ ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: isToday ? "var(--wine)" : "var(--mute-2)", fontWeight: 700 }}>{t(`days.short.${DAY_KEYS[d.getDay()]}`)}</div>
-              <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 30, height: 30, borderRadius: "var(--r-button)", ...SERIF, fontSize: 18, color: isToday ? "var(--paper)" : "var(--ink)", background: isToday ? "var(--wine)" : "transparent", boxShadow: isToday ? "var(--sh-raised-crisp)" : "none" }}>{d.getDate()}</div>
+            <div key={iso} style={{ padding: "9px 6px 11px", textAlign: "center", borderLeft: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {isToday ? (
+                <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 3, background: "var(--wine)", borderRadius: "var(--r-surface)", padding: "4px 8px" }}>
+                  <div style={{ ...MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--paper)", fontWeight: 700 }}>{t(`days.short.${DAY_KEYS[d.getDay()]}`)}</div>
+                  <div style={{ ...SERIF, fontSize: 22, color: "var(--paper)", lineHeight: 1 }}>{d.getDate()}</div>
+                </div>
+              ) : (
+                <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                  <div style={{ ...MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700 }}>{t(`days.short.${DAY_KEYS[d.getDay()]}`)}</div>
+                  <div style={{ ...SERIF, fontSize: 22, color: "var(--ink)", lineHeight: 1 }}>{d.getDate()}</div>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Body — % positioned events */}
-      <div style={{ flex: 1, position: "relative", minHeight: 0, overflow: "hidden" }}>
-        {/* vertical separators + today tint */}
-        <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: gridCols }}>
-          <div />
-          {days.map((d) => {
-            const iso = dateKeyOf(d), isToday = iso === p.todayStr;
-            return <div key={iso} style={{ borderLeft: "1px solid var(--line)", background: isToday ? "rgba(94,34,48,0.022)" : "transparent" }} />;
-          })}
-        </div>
-        {/* horizontal hour lines + gutter labels */}
-        {hours.map((h, i) => {
-          const pct = (i / SPAN) * 100;
-          return (
-            <div key={h}>
-              {i > 0 && <div style={{ position: "absolute", top: `${pct}%`, left: 56, right: 0, borderTop: "1px solid var(--line)" }} />}
-              <div style={{ position: "absolute", top: `calc(${pct}% - 6px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 8.5, color: "var(--mute-2)" }}>{h <= 12 ? h : h - 12}{h < 12 ? "a" : "p"}</div>
-            </div>
-          );
-        })}
-        {/* events */}
-        {days.map((d, di) => {
-          const iso = dateKeyOf(d);
-          return (p.apptsByDate.get(iso) ?? []).map((e) => (
-            <WeekEvent key={e.id} ev={e} dayIdx={di} nCols={nCols} active={p.selectedBooking?.id === e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} t={t} />
-          ));
-        })}
-        {/* current-time line */}
-        {nowPct != null && (
-          <div style={{ position: "absolute", top: `${nowPct}%`, left: 56, right: 0, height: 0, borderTop: "1.5px solid var(--wine)", zIndex: 5, pointerEvents: "none" }}>
-            <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px rgba(94,34,48,0.18)" }} />
-            {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc((100% - 0px) * ${todayIdx} / ${nCols})`, top: -7, ...MONO, fontSize: 8, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "1px 5px", transform: "translateX(6px)" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+      {/* Scrollable body — starts at 9am, 83px per hour row */}
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <div style={{ minHeight: `${SPAN * PX_PER_HOUR}px`, position: "relative" }}>
+          {/* vertical separators + today tint */}
+          <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: gridCols }}>
+            <div />
+            {days.map((d) => {
+              const iso = dateKeyOf(d), isToday = iso === p.todayStr;
+              return <div key={iso} style={{ borderLeft: "1px solid var(--line)", background: isToday ? "rgba(94,34,48,0.04)" : "transparent" }} />;
+            })}
           </div>
-        )}
+          {/* horizontal hour lines + half-hour dashed lines + gutter labels */}
+          {hours.map((h, i) => {
+            const pct = (i / SPAN) * 100;
+            const halfPct = ((i + 0.5) / SPAN) * 100;
+            return (
+              <div key={h}>
+                {i > 0 && <div style={{ position: "absolute", top: `${pct}%`, left: 56, right: 0, borderTop: "1px solid var(--line)" }} />}
+                {i < SPAN && <div style={{ position: "absolute", top: `${halfPct}%`, left: 56, right: 0, borderTop: "1px dashed var(--line)", opacity: 0.5 }} />}
+                <div style={{ position: "absolute", top: `calc(${pct}% - 6px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 8.5, color: "var(--mute-2)" }}>{h <= 12 ? h : h - 12}{h < 12 ? "a" : "p"}</div>
+              </div>
+            );
+          })}
+          {/* availability overlay: dim outside business hours + shade busy time */}
+          {p.showAvailability && <AvailabilityOverlay p={p} days={days} nCols={nCols} />}
+          {/* events */}
+          {days.map((d, di) => {
+            const iso = dateKeyOf(d);
+            return (p.apptsByDate.get(iso) ?? []).map((e) => (
+              <WeekEvent key={e.id} ev={e} dayIdx={di} nCols={nCols} active={p.selectedBooking?.id === e.id} onClick={(ev) => { ev.stopPropagation(); p.onSelectBooking(e); }} t={t} />
+            ));
+          })}
+          {/* current-time line */}
+          {nowPct != null && (
+            <div style={{ position: "absolute", top: `${nowPct}%`, left: 56, right: 0, height: 0, borderTop: "1.5px solid var(--wine)", zIndex: 5, pointerEvents: "none" }}>
+              <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px rgba(94,34,48,0.18)" }} />
+              {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc((100% - 0px) * ${todayIdx} / ${nCols})`, top: -7, ...MONO, fontSize: 8, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "1px 5px", transform: "translateX(6px)" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -595,23 +854,28 @@ function MonthGrid(p: DesktopCalendarProps) {
   const nCols = visibleDows.length;
   const colTemplate = `repeat(${nCols},1fr)`;
   const filterCell = (c: { date: Date }) => !p.hideWeekends || !isWeekendDay(c.date);
+  const todayDow = new Date().getDay();
 
   const weeks: { date: Date; count: number }[][] = [];
   for (let i = 0; i < p.days.length; i += 7) weeks.push(p.days.slice(i, i + 7).filter(filterCell));
 
   return (
     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {/* Weekday header — +4px font, bold today's column */}
       <div style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
-        {visibleDows.map((dow, i) => (
-          <div key={dow} style={{ padding: "10px 0", textAlign: "center", ...MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, borderLeft: i ? "1px solid var(--line)" : "none" }}>{t(`days.short.${DAY_KEYS[dow]}`)}</div>
-        ))}
+        {visibleDows.map((dow, i) => {
+          const isToday = dow === todayDow;
+          return (
+            <div key={dow} style={{ padding: "10px 0", textAlign: "center", ...MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: isToday ? "var(--wine)" : "var(--mute-2)", fontWeight: 700, borderLeft: i ? "1px solid var(--line)" : "none" }}>{t(`days.short.${DAY_KEYS[dow]}`)}</div>
+          );
+        })}
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
         {weeks.map((wk, wi) => {
           // Highlight the week currently shown in the left/week panel (top + bottom rule)
           const isCurrentWeek = wk.some((c) => weekKeys.has(dateKeyOf(c.date)));
           return (
-          <div key={wi} style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: !isCurrentWeek && wi < weeks.length - 1 ? "1px solid var(--line)" : "none", boxShadow: isCurrentWeek ? "inset 0 2px 0 0 var(--wine), inset 0 -2px 0 0 var(--wine)" : "none" }}>
+          <div key={wi} style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: !isCurrentWeek && wi < weeks.length - 1 ? "1px solid var(--line)" : "none", boxShadow: isCurrentWeek ? "inset 0 1px 0 0 rgba(94,34,48,0.5), inset 0 -1px 0 0 rgba(94,34,48,0.5)" : "none", background: !isCurrentWeek ? "rgba(0,0,0,0.025)" : "transparent" }}>
             {wk.map((cell, di) => {
               const iso = dateKeyOf(cell.date), inMonth = cell.date.getMonth() === m, isToday = iso === p.todayStr;
               const items = p.apptsByDate.get(iso) ?? [];
@@ -624,7 +888,7 @@ function MonthGrid(p: DesktopCalendarProps) {
                   style={{ borderLeft: di ? "1px solid var(--line)" : "none", padding: "7px 8px", minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3, background: isToday ? "rgba(94,34,48,0.03)" : "transparent", opacity: inMonth ? 1 : 0.38 }}
                 >
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 14, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "var(--wine)" : "transparent" }}>{cell.date.getDate()}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 18, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "#c0384f" : "transparent" }}>{cell.date.getDate()}</span>
                   </div>
                   {items.slice(0, 4).map((e) => {
                     const active = p.selectedBooking?.id === e.id;
@@ -785,7 +1049,7 @@ function DetailPanel(p: DesktopCalendarProps) {
           </div>
         </button>
         {p.showClose && (
-          <button onClick={() => p.onSelectBooking(null)} style={{ ...NAV_BTN, flexShrink: 0 }} title={t("design.detail.close")} aria-label={t("design.detail.close")}><X className="h-3.5 w-3.5" /></button>
+          <NavBtn onClick={() => p.onSelectBooking(null)} style={{ flexShrink: 0 }} title={t("design.detail.close")} aria-label={t("design.detail.close")}><X className="h-3.5 w-3.5" /></NavBtn>
         )}
       </div>
 
@@ -821,7 +1085,7 @@ function DetailPanel(p: DesktopCalendarProps) {
           <div>
             <div style={{ ...MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700, marginBottom: 9 }}>{t("design.detail.aiSummary")}</div>
             {typeof summary === "string" ? (
-              <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>{summary}</p>
+              <AiSummaryView text={summary} />
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {summary.map((sec) => (
@@ -944,6 +1208,7 @@ const DETAIL_W = 372;
 
 export function DesktopCalendar(p: DesktopCalendarProps) {
   const { state: leftPanelState, cycle } = useListPanelState();
+  const isMobile = useIsMobile(768);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [rootWidth, setRootWidth] = useState(0);
@@ -957,17 +1222,20 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
     return () => ro.disconnect();
   }, []);
 
-  const leftWidth = leftPanelState === "hidden" ? 0 : leftPanelState === "compact" ? 64 : 318;
+  // The agenda rail and the cycle-panel toggle don't make sense on a phone —
+  // mobile always gets the full-width week/month grid with detail in a bottom sheet.
+  const effectiveLeftPanelState: ListPanelState = isMobile ? "hidden" : leftPanelState;
+  const leftWidth = effectiveLeftPanelState === "hidden" ? 0 : effectiveLeftPanelState === "compact" ? 64 : 318;
   const ultra = rootWidth >= 1700;
 
   return (
     <div ref={rootRef} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
-      <TopToolbar {...p} leftPanelState={leftPanelState} onCyclePanel={cycle} ultra={ultra} />
+      <TopToolbar {...p} leftPanelState={effectiveLeftPanelState} onCyclePanel={isMobile ? undefined : cycle} ultra={ultra} />
       <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden", position: "relative" }}>
-        {/* LEFT — agenda (full | minimized | hidden) */}
-        {leftPanelState !== "hidden" && (
+        {/* LEFT — agenda (full | minimized | hidden); never shown on mobile */}
+        {effectiveLeftPanelState !== "hidden" && (
           <div style={{ ...CARD_STYLE, width: leftWidth, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
-            {leftPanelState === "compact" ? (
+            {effectiveLeftPanelState === "compact" ? (
               <CompactAgendaList {...p} />
             ) : (
               <>
@@ -979,18 +1247,32 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
         )}
         {/* CENTER — calendar (no rounded corners, flush edges). Ultra-wide: week + month split */}
         <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)", borderRadius: 0 }}>
-          <CenterHeader {...p} ultra={ultra} />
-          {ultra
-            ? <WeekMonthSplit {...p} />
-            : p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
+          {p.viewMode === "list" && isMobile ? (
+            // List view (mobile only — desktop already has the agenda in its left
+            // panel). Full-height agenda of all appointments grouped by date, no
+            // week-nav header (the list isn't week-scoped).
+            <AgendaList {...p} />
+          ) : (
+            <>
+              <CenterHeader {...p} ultra={ultra} />
+              {ultra
+                ? <WeekMonthSplit {...p} />
+                : p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
+            </>
+          )}
         </div>
-        {/* RIGHT — detail: floating slide-over at every width */}
-        {p.selectedBooking && (
+        {/* RIGHT — detail: floating slide-over, desktop/tablet only (mobile uses the bottom sheet below) */}
+        {!isMobile && p.selectedBooking && (
           <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
             <DetailPanel {...p} showClose />
           </div>
         )}
       </div>
+
+      {/* Mobile detail — bottom sheet rising over the grid, drag down to close */}
+      <MobileSheet open={!!p.selectedBooking} onClose={() => p.onSelectBooking(null)} data-testid="mobile-calendar-detail-sheet">
+        {p.selectedBooking && <DetailPanel {...p} showClose />}
+      </MobileSheet>
     </div>
   );
 }

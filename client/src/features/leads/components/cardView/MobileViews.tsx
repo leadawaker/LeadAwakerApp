@@ -4,9 +4,8 @@
 // hooks/props are preserved; only the presentation matches the reference.
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import {
   Plus,
   Loader2,
@@ -337,19 +336,21 @@ export function MobileNotesTab({
 type MLTabKey = "chat" | "summary" | "score" | "info";
 
 export function MobileLeadDetailPanel({
+  open,
   lead,
   onBack,
   onRefresh,
 }: {
-  lead: Record<string, any>;
+  open: boolean;
+  lead: Record<string, any> | null;
   onBack: () => void;
   onRefresh?: () => void;
 }) {
   const { t } = useTranslation("leads");
-  const name   = getFullName(lead);
-  const status = getStatus(lead);
-  const leadId = getLeadId(lead);
-  const score  = getScore(lead);
+  const name   = lead ? getFullName(lead) : "";
+  const status = lead ? getStatus(lead) : "";
+  const leadId = lead ? getLeadId(lead) : null;
+  const score  = lead ? getScore(lead) : 0;
   const temp   = scoreTemp(score);
   const stageIdx = stageIndex(status);
   const isBooked = status === "Booked";
@@ -389,29 +390,21 @@ export function MobileLeadDetailPanel({
     { key: "info",    label: t("mobileDetail.tabs.info") },
   ];
 
-  const lastActivity =
-    lead.last_message_at || lead.lastMessageAt || lead.updated_at || lead.UpdatedAt || lead.created_at || lead.CreatedAt || null;
+  const lastActivity = lead
+    ? lead.last_message_at || lead.lastMessageAt || lead.updated_at || lead.UpdatedAt || lead.created_at || lead.CreatedAt || null
+    : null;
   const activityLabel = lastActivity
     ? new Date(lastActivity).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     : "—";
 
-  return createPortal(
-    <motion.div
-      variants={{
-        initial: { x: "100%" },
-        animate: { x: 0, transition: { type: "tween", duration: 0.3, ease: [0.0, 0.0, 0.2, 1] } },
-        exit:    { x: "100%", transition: { type: "tween", duration: 0.3, ease: [0.4, 0.0, 1, 1] } },
-      }}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="lg:hidden fixed inset-0 z-[200] flex flex-col"
-      style={{ height: "100dvh", background: "var(--bg)" }}
-    >
+  return (
+    <MobileSheet open={open && !!lead} onClose={onBack} data-testid="mobile-lead-detail-panel">
+      {lead && (
+      <>
       {/* ── Hero ── */}
       <div
         style={{ flexShrink: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)", padding: "0 16px",
-          paddingTop: "max(env(safe-area-inset-top, 0px), 16px)" }}
+          paddingTop: 8 }}
       >
         <div className="row" style={{ gap: 12, alignItems: "center" }}>
           <button
@@ -510,8 +503,9 @@ export function MobileLeadDetailPanel({
             : <><Phone className="h-4 w-4" />{t("mobileDetail.bookCall", "Book call")}</>}
         </button>
       </div>
-    </motion.div>,
-    document.body
+      </>
+      )}
+    </MobileSheet>
   );
 }
 

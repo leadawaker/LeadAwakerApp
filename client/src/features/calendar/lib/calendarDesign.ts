@@ -45,6 +45,8 @@ export const CARD_STYLE: CSSProperties = {
 export const HOUR0 = 6;
 export const HOUR1 = 21;
 export const SPAN = HOUR1 - HOUR0;
+// Height per hour row — 30% taller than the original 64px.
+export const PX_PER_HOUR = 83;
 
 // ── Meeting lifecycle status (filter dimension) ──────────────────────────────
 export type StatusKey = "booked" | "noshow" | "rescheduled";

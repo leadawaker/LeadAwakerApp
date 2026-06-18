@@ -44,7 +44,8 @@
   "views": {
     "month": "Maand",
     "week": "Week",
-    "day": "Dag"
+    "day": "Dag",
+    "list": "Lijst"
   },
   "navigation": {
     "previous": "Vorige",
@@ -216,6 +217,11 @@
     "weekends": {
       "hide": "Weekenden verbergen",
       "show": "Weekenden tonen"
+    },
+    "settings": {
+      "title": "Agenda-instellingen",
+      "availability": "Beschikbaarheid tonen",
+      "hours": "Kantooruren"
     }
   }
 }

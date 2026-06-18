@@ -450,8 +450,7 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
   // inbound (lead) = carved-in neumorphic inset.
   const bubbleStyle: React.CSSProperties = inbound
     ? {
-        background: "var(--bg)",
-        boxShadow: "var(--sh-inset-crisp)",
+        background: "var(--paper)",
         borderRadius: "13px 13px 13px 3px",
         color: "var(--ink-soft)",
       }
@@ -488,12 +487,21 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
         {(() => {
           const content = item.content || (item as any).Content || "";
           const attachRaw = item.attachment ?? (item as any).Attachment;
+          const itemType = ((item as any).type || (item as any).Type || "").toLowerCase();
           const hasAudioAttachment = typeof attachRaw === "string" && attachRaw.length > 0 && getAttachmentType(attachRaw) === "audio";
-          const isVoiceNote = (item as any).type === "voice_note" || (item as any).Type === "voice_note" || hasAudioAttachment;
+          // Human-takeover voice memos store the data URL inline in content (type "audio"),
+          // while lead voice notes carry it as an attachment (type "voice_note").
+          const isInlineAudio = content.startsWith("data:audio/") || itemType === "audio";
+          const isVoiceNote = itemType === "voice_note" || hasAudioAttachment || isInlineAudio;
           if (!isVoiceNote) return <div className="whitespace-pre-wrap leading-relaxed break-words">{content}</div>;
           const VOICE_PREFIX = "[Voice Note]: ";
-          const transcription = content.startsWith(VOICE_PREFIX) ? content.slice(VOICE_PREFIX.length).trim() : content.trim();
-          const audioUrl = typeof attachRaw === "string" && (attachRaw.startsWith("data:audio/") || getAttachmentType(attachRaw) === "audio") ? attachRaw : null;
+          const audioUrl = isInlineAudio && content.startsWith("data:audio/")
+            ? content
+            : typeof attachRaw === "string" && (attachRaw.startsWith("data:audio/") || getAttachmentType(attachRaw) === "audio") ? attachRaw : null;
+          // When the audio lives in content, don't echo the base64 blob as transcription text.
+          const transcription = isInlineAudio
+            ? ""
+            : content.startsWith(VOICE_PREFIX) ? content.slice(VOICE_PREFIX.length).trim() : content.trim();
           const voiceColor = aiMsg ? "#2050ff" : humanAgentMsg ? "#22C55E" : "#0ABFA3";
           return (
             <div className={cn("flex flex-col gap-1.5", outbound && "items-end")}>

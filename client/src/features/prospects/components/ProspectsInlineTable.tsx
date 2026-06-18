@@ -243,11 +243,11 @@ function getProspectId(p: ProspectRow): number {
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
+      <div className="h-8 bg-primary/10 rounded animate-pulse mb-2" />
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="h-9 bg-card/70 rounded-xl animate-pulse"
+          className="h-9 bg-primary/5 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}

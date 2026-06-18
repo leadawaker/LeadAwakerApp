@@ -241,8 +241,7 @@ export default function MobileTaskListCard({ task, category, todayISO, dueLabels
   const dueISO = dueToISO(task.dueDate);
 
   return (
-    <button
-      type="button"
+    <div
       onClick={onClick}
       data-testid="mobile-task-card"
       style={{
@@ -293,7 +292,7 @@ export default function MobileTaskListCard({ task, category, todayISO, dueLabels
         </div>
       </div>
       {task.assigneeName && <MTAvatar name={task.assigneeName} size={26} />}
-    </button>
+    </div>
   );
 }
 

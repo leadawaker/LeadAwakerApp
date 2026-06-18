@@ -372,6 +372,7 @@ export function LeadsTable() {
       if (el) {
         el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
         el.classList.add("px-1", "md:px-1");
+        el.style.overflow = "visible";
       }
     };
     setFullWidth();
@@ -379,6 +380,7 @@ export function LeadsTable() {
       const el = document.getElementById("crm-content-wrapper");
       if (el) {
         el.classList.remove("px-1", "md:px-1", "px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
+        el.style.overflow = "";
       }
     };
   }, []);
@@ -1122,7 +1124,7 @@ export function LeadsTable() {
 
       {/* ── List view ── */}
       {viewMode === "list" && (
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <LeadsCardView
             leads={filteredLeads}
             loading={loading}

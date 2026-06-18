@@ -333,9 +333,10 @@ export function DetailViewHeader({
       {/* Meta chips — always below title, spaced like the reference hero */}
       <div className="flex flex-wrap items-start" style={{ gap: 32, marginTop: 22 }}>
         {channelLabel && renderMetaChip(t("meta.channel"), <span>{channelLabel}</span>, mobileChannelIcon)}
-        {campaign.daily_lead_limit != null && renderMetaChip(t("meta.dailyLimit"),
-          dailyStats != null ? `${dailyStats.sentToday} / ${campaign.daily_lead_limit}` : `${campaign.daily_lead_limit}`
-        )}
+        {dailyStats != null
+          ? renderMetaChip(t("meta.dailyLimit"), `${dailyStats.sentToday} / ${dailyStats.dailyLimit}`)
+          : renderMetaChip(t("meta.dailyLimit"), "— / 500")
+        }
         {(campaign.active_hours_start || (campaign as any).activeHoursStart) && renderMetaChip(t("meta.activeHours"),
           `${((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)} – ${((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "-"}`
         )}

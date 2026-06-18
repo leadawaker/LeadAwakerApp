@@ -11,18 +11,12 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = ["Active", "Trial", "Inactive", "Suspended"];
-const TYPE_OPTIONS = ["Agency", "Client"];
 
 const STATUS_I18N_KEY: Record<string, string> = {
   Active: "status.active",
   Trial: "status.trial",
   Inactive: "status.inactive",
   Suspended: "status.suspended",
-};
-
-const TYPE_I18N_KEY: Record<string, string> = {
-  Agency: "type.agency",
-  Client: "type.client",
 };
 
 interface AccountCreatePanelProps {
@@ -115,28 +109,16 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                   <p className="text-[11px] text-red-500 mt-1">{nameError}</p>
                 )}
               </div>
-              {/* Status + Type row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-foreground/60 mb-1">{t("fields.status")}</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => set("status", e.target.value)}
-                    className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
-                  >
-                    {STATUS_OPTIONS.map((o) => <option key={o} value={o}>{t(STATUS_I18N_KEY[o])}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-foreground/60 mb-1">{t("fields.type")}</label>
-                  <select
-                    value={form.type}
-                    onChange={(e) => set("type", e.target.value)}
-                    className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
-                  >
-                    {TYPE_OPTIONS.map((o) => <option key={o} value={o}>{t(TYPE_I18N_KEY[o])}</option>)}
-                  </select>
-                </div>
+              {/* Status (Type is fixed to Client — only Lead Awaker is the agency) */}
+              <div>
+                <label className="block text-[11px] font-medium text-foreground/60 mb-1">{t("fields.status")}</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => set("status", e.target.value)}
+                  className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+                >
+                  {STATUS_OPTIONS.map((o) => <option key={o} value={o}>{t(STATUS_I18N_KEY[o])}</option>)}
+                </select>
               </div>
               {/* Business Niche */}
               <div>

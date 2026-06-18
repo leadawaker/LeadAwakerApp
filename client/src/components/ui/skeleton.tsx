@@ -304,93 +304,307 @@ function SkeletonLeadDetail({ className, ...props }: React.HTMLAttributes<HTMLDi
 }
 
 /**
- * Right-panel detail skeleton for Campaigns split-pane view.
- * Mirrors CampaignDetailView layout: toolbar, tab bar, 3×2 card grid.
+ * Panel-surface placeholder that mirrors PanelShell's variants so the skeleton
+ * reflects whether the real panel is raised (white card + shadow), inset
+ * (recessed beige) or flat (transparent), and uses that panel's base colour.
  */
-function SkeletonCampaignPanel() {
+function PanelSkel({
+  variant = "raised",
+  className,
+  style,
+  children,
+}: {
+  variant?: "raised" | "inset" | "flat-beige" | "flat";
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const surfaceStyle: React.CSSProperties =
+    variant === "inset"
+      ? { background: "var(--bg)", boxShadow: "var(--sh-inset-crisp), inset 0 0 0 1px rgba(0,0,0,0.07)" }
+      : variant === "flat-beige"
+      ? { background: "var(--surface)" }
+      : {};
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-white dark:from-card to-amber-50/30 dark:to-transparent rounded-lg overflow-hidden">
-      {/* Toolbar row */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-black/[0.06] shrink-0">
-        <div className="flex items-center gap-1.5">
-          {[64, 32, 32, 32, 32].map((w, i) => (
-            <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {[32, 32, 32].map((_, i) => (
-            <Skeleton key={i} className="h-9 w-9 rounded-full bg-primary/10" />
-          ))}
-        </div>
+    <div
+      className={cn(
+        "w-full h-full rounded-[var(--r-card,16px)] p-5 flex flex-col gap-3",
+        variant === "raised" && "bg-card shadow-[var(--card-glow)]",
+        className,
+      )}
+      style={{ ...surfaceStyle, ...style }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Title + chart-block + lines content used inside a summary panel skeleton. */
+function PanelSkelContent({ chartH = 24, lines = 2 }: { chartH?: number; lines?: number }) {
+  return (
+    <>
+      <Skeleton className="h-4 w-2/3 rounded bg-primary/10" />
+      <Skeleton className="w-full rounded-lg bg-primary/10" style={{ height: chartH * 4 }} />
+      {Array.from({ length: lines }).map((_, i) => (
+        <Skeleton key={i} className={cn("h-3 rounded bg-primary/10", i === lines - 1 ? "w-4/5" : "w-full")} />
+      ))}
+    </>
+  );
+}
+
+/**
+ * Summary-tab body skeleton — mirrors CampaignMetricsPanel. Reuses the real
+ * `.summary-*` layout classes (so widths/gaps/margins match) AND each panel's
+ * real surface: AI strip = flat, Performance = inset, Pipeline = flat,
+ * AI Activity = flat beige, Next = raised white, Bumps = inset, A/B = flat.
+ */
+function CampaignSummaryBodySkeleton() {
+  return (
+    <div className="summary-root w-full flex flex-col">
+      {/* AI Read strip — flat row, no card */}
+      <div className="px-1 py-2 flex items-center gap-3">
+        <Skeleton className="h-8 w-8 rounded-[var(--r-surface,10px)] bg-primary/10 shrink-0" />
+        <Skeleton className="h-3.5 w-[60%] rounded bg-primary/10" />
       </div>
-      {/* Tab bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-black/[0.06] shrink-0">
-        {[80, 110, 60].map((w, i) => (
-          <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
-        ))}
-      </div>
-      {/* 3×2 card grid */}
-      <div className="flex-1 min-h-0 p-3 grid grid-cols-3 grid-rows-2 gap-[3px]">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-6 flex flex-col gap-3">
-            <Skeleton className="h-4 w-2/3 rounded bg-primary/10" />
-            <Skeleton className="h-8 w-1/2 rounded bg-primary/10" />
-            <Skeleton className="h-3 w-full rounded bg-primary/10" />
-            <Skeleton className="h-3 w-4/5 rounded bg-primary/10" />
+
+      {/* Performance (inset, top) + the three panels row */}
+      <div className="summary-grid">
+        <div className="summary-perf">
+          <PanelSkel variant="inset" className="gap-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-32 rounded bg-primary/10" />
+              <Skeleton className="h-8 w-36 rounded-full bg-primary/10" />
+            </div>
+            <Skeleton className="h-40 w-full rounded-lg bg-primary/10" />
+          </PanelSkel>
+        </div>
+        <div className="summary-panels">
+          {/* Pipeline — flat */}
+          <div className="summary-cell">
+            <PanelSkel variant="flat"><PanelSkelContent /></PanelSkel>
           </div>
-        ))}
+          {/* AI Activity — flat beige */}
+          <div className="summary-cell summary-cell--rail">
+            <PanelSkel variant="flat-beige"><PanelSkelContent lines={3} /></PanelSkel>
+          </div>
+          {/* Next — raised white */}
+          <div className="summary-cell summary-cell--rail">
+            <PanelSkel variant="raised"><PanelSkelContent /></PanelSkel>
+          </div>
+        </div>
+      </div>
+
+      {/* Bumps Today (inset) + A/B (flat) row — 22px gap + top margin from CSS */}
+      <div className="summary-bumps-row">
+        <div className="summary-bumps-cell">
+          <PanelSkel variant="inset"><PanelSkelContent chartH={16} lines={1} /></PanelSkel>
+        </div>
+        <div className="summary-ab-cell">
+          <PanelSkel variant="flat"><PanelSkelContent chartH={16} lines={1} /></PanelSkel>
+        </div>
       </div>
     </div>
   );
 }
 
 /**
- * Right-panel detail skeleton for Leads split-pane view.
- * Mirrors LeadDetailPanel layout: toolbar, identity row, pipeline tube, content lines.
+ * Configurations-tab body skeleton — mirrors CampaignSettingsLayout:
+ * 190px left section nav (3 items) + large content card with editorial heading,
+ * stacked form fields, and prev/next nav.
  */
-function SkeletonLeadPanel() {
+function CampaignConfigBodySkeleton() {
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-white dark:from-card to-amber-50/30 dark:to-transparent rounded-lg overflow-hidden">
-      {/* Toolbar row */}
-      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
-        {[80, 80, 80].map((w, i) => (
-          <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+    <div className="flex items-start pt-2" style={{ gap: "var(--gap, 22px)" }}>
+      {/* Left section nav (190px, 3 items) */}
+      <div className="hidden md:flex w-[190px] shrink-0 flex-col gap-1.5">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "rounded-[var(--r-surface,14px)] px-6 py-4 flex flex-col gap-1.5",
+              // First item mimics the active (raised paper) nav button; the rest are flat.
+              i === 0 ? "bg-card shadow-[var(--card-glow)]" : "",
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-3 w-5 rounded bg-primary/10" />
+              <Skeleton className="h-3.5 w-24 rounded bg-primary/10" />
+            </div>
+            <Skeleton className="h-2.5 w-full rounded bg-primary/10" />
+          </div>
         ))}
       </div>
-      {/* Identity row */}
-      <div className="flex items-center gap-4 px-5 py-4 border-b border-black/[0.06] shrink-0">
-        <Skeleton className="h-[65px] w-[65px] rounded-full bg-primary/10 shrink-0" />
-        <div className="flex flex-col gap-2 flex-1">
-          <Skeleton className="h-[27px] w-48 rounded bg-primary/10" />
-          <div className="flex items-center gap-1.5">
-            <Skeleton className="h-6 w-20 rounded-full bg-primary/10" />
-            <Skeleton className="h-6 w-16 rounded-full bg-primary/10" />
+      {/* Content card */}
+      <div className="flex-1 min-w-0 rounded-[var(--r-card,16px)] bg-card shadow-[var(--card-glow)] p-9 flex flex-col gap-6">
+        {/* Editorial heading */}
+        <div className="flex flex-col gap-3 pb-6 border-b border-border">
+          <Skeleton className="h-3 w-12 rounded bg-primary/10" />
+          <Skeleton className="h-10 w-2/3 rounded bg-primary/10" />
+          <Skeleton className="h-3.5 w-3/4 rounded bg-primary/10" />
+        </div>
+        {/* Form fields */}
+        <div className="flex flex-col gap-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-3 w-28 rounded bg-primary/10" />
+              <Skeleton className="h-9 w-full rounded-lg bg-primary/10" />
+            </div>
+          ))}
+        </div>
+        {/* Prev / Next nav */}
+        <div className="flex items-center justify-between pt-6 border-t border-border">
+          <Skeleton className="h-9 w-24 rounded-full bg-primary/10" />
+          <Skeleton className="h-9 w-28 rounded-full bg-primary/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Right-panel detail skeleton for the Campaigns split-pane view.
+ * Mirrors CampaignDetailView: a rounded "paper" header panel (avatar + name +
+ * toolbar) above a tab-aware body (summary dashboard vs configurations form).
+ * Pass the active tab so the loading shape matches what's about to render.
+ */
+function SkeletonCampaignPanel({ tab = "summary" }: { tab?: "summary" | "configurations" }) {
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header panel */}
+      <div className="shrink-0" style={{ padding: "var(--space-sm) var(--space-xl)" }}>
+        <div
+          className="px-6 pt-6 pb-7 border border-border bg-card"
+          style={{ borderRadius: "var(--r-panel, 22px)", boxShadow: "var(--sh-raised-large)" }}
+        >
+          <div className="flex items-start gap-3">
+            {/* Avatar */}
+            <Skeleton className="h-16 w-16 rounded-2xl bg-primary/10 shrink-0" />
+            {/* Name + meta */}
+            <div className="flex-1 min-w-0 flex flex-col gap-2.5 pt-1">
+              <Skeleton className="h-6 w-1/2 rounded bg-primary/10" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-20 rounded-full bg-primary/10" />
+                <Skeleton className="h-5 w-28 rounded-full bg-primary/10" />
+              </div>
+            </div>
+            {/* Toolbar actions */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-9 rounded-full bg-primary/10" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-      {/* Pipeline tube */}
-      <div className="px-5 py-3 border-b border-black/[0.06] shrink-0">
-        <div className="relative h-[46px] bg-black/[0.06] rounded-full w-full overflow-visible">
-          <div className="absolute inset-0 flex items-center justify-around px-3">
+      {/* Tab-aware body — L/R padding matches DetailViewBody (3px summary,
+          --space-xl configurations); the summary's inner padding comes from
+          .summary-root, so total margins line up with the real dashboard. */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto"
+        style={{
+          paddingLeft: tab === "configurations" ? "var(--space-xl)" : 3,
+          paddingRight: tab === "configurations" ? "var(--space-xl)" : 3,
+          paddingBottom: 3,
+        }}
+      >
+        {tab === "configurations" ? <CampaignConfigBodySkeleton /> : <CampaignSummaryBodySkeleton />}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Right-panel detail skeleton for the Leads split-pane view.
+ * Mirrors LeadDetailView: a detached hero card (avatar + name + meta + more
+ * button + pipeline dash bar) above a 3-column row (200px Contact · flexible
+ * Chat · 200px Score), matching the real gaps/widths.
+ */
+function SkeletonLeadPanel() {
+  return (
+    <div className="relative flex flex-col h-full overflow-hidden" style={{ gap: 14, paddingTop: 14, paddingBottom: 14 }}>
+      {/* Hero card */}
+      <div
+        className="shrink-0 overflow-hidden bg-card shadow-[var(--card-glow)]"
+        style={{ borderRadius: "var(--r-card, 16px)" }}
+      >
+        <div className="flex items-center gap-4" style={{ padding: "16px 20px" }}>
+          {/* Avatar */}
+          <Skeleton className="h-[50px] w-[50px] rounded-[14px] bg-primary/10 shrink-0" />
+          {/* Name + meta */}
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-40 rounded bg-primary/10" />
+              <Skeleton className="h-4 w-12 rounded-full bg-primary/10" />
+              <Skeleton className="h-4 w-14 rounded bg-primary/10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-2.5 w-20 rounded bg-primary/10" />
+              <Skeleton className="h-2.5 w-24 rounded bg-primary/10" />
+              <Skeleton className="h-2.5 w-16 rounded bg-primary/10" />
+            </div>
+          </div>
+          {/* More button */}
+          <Skeleton className="h-[34px] w-[34px] rounded-full bg-primary/10 shrink-0" />
+        </div>
+        {/* Pipeline dash bar */}
+        <div style={{ padding: "10px 20px 12px" }}>
+          <div className="flex items-end gap-1" style={{ height: 18 }}>
+            {[7, 9, 16, 9, 5, 5, 5].map((h, i) => (
+              <Skeleton key={i} className="flex-1 rounded-full bg-primary/10" style={{ height: h }} />
+            ))}
+          </div>
+          <div className="flex gap-1 mt-1.5">
             {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} className="h-7 w-7 rounded-full bg-primary/10 shrink-0" />
+              <Skeleton key={i} className="flex-1 h-2 rounded bg-primary/10" />
             ))}
           </div>
         </div>
       </div>
-      {/* Content lines */}
-      <div className="flex-1 min-h-0 px-5 py-4 flex flex-col gap-4 overflow-hidden">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-3 w-24 rounded bg-primary/10" />
-          {[100, 80, 90].map((pct, i) => (
-            <Skeleton key={i} className="h-4 rounded bg-primary/10" style={{ width: `${pct}%` }} />
-          ))}
+
+      {/* Columns: 200 Contact · flex Chat · 200 Score */}
+      <div className="flex-1 min-h-0 w-full flex flex-row" style={{ gap: 14 }}>
+        {/* Contact — flat card (Card variant="flat") */}
+        <div className="shrink-0 flex" style={{ width: 200 }}>
+          <div className="w-full p-4 flex flex-col gap-3">
+            <Skeleton className="h-16 w-16 rounded-2xl bg-primary/10 self-center" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <Skeleton className="h-2.5 w-12 rounded bg-primary/10" />
+                <Skeleton className="h-3.5 w-full rounded bg-primary/10" />
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-3 w-24 rounded bg-primary/10" />
-          {[100, 70].map((pct, i) => (
-            <Skeleton key={i} className="h-4 rounded bg-primary/10" style={{ width: `${pct}%` }} />
-          ))}
+        {/* Chat (agency view) */}
+        <div className="flex-1 min-w-0 flex">
+          <div className="w-full rounded-[var(--r-card,16px)] bg-card shadow-[var(--card-glow)] flex flex-col overflow-hidden">
+            {/* Conversations / Summary toggle */}
+            <div className="flex items-center gap-1.5 p-2 shrink-0">
+              <Skeleton className="h-8 w-28 rounded-full bg-primary/10" />
+              <Skeleton className="h-8 w-20 rounded-full bg-primary/10" />
+            </div>
+            {/* Chat bubbles */}
+            <div className="flex-1 min-h-0 p-4 flex flex-col gap-3 overflow-hidden">
+              {([["left", "w-40"], ["right", "w-52"], ["left", "w-32"], ["right", "w-44"], ["left", "w-48"]] as const).map(([side, w], i) => (
+                <div key={i} className={cn("flex", side === "right" ? "justify-end" : "justify-start")}>
+                  <Skeleton className={cn("h-10 rounded-2xl bg-primary/10", w)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Score — flat (no card surface) */}
+        <div className="shrink-0 flex" style={{ width: 200 }}>
+          <div className="w-full p-4 flex flex-col gap-3">
+            <Skeleton className="h-3 w-20 rounded bg-primary/10" />
+            <Skeleton className="h-24 w-24 rounded-full bg-primary/10 self-center" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <Skeleton className="h-2.5 w-16 rounded bg-primary/10" />
+                <Skeleton className="h-2 w-full rounded-full bg-primary/10" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -399,35 +613,40 @@ function SkeletonLeadPanel() {
 
 /**
  * Right-panel detail skeleton for Accounts split-pane view.
- * Mirrors AccountDetailView layout: toolbar, identity row, 3×2 card grid.
+ * Mirrors AccountDetailView layout: transparent toolbar + identity row above
+ * a 3-column row of raised-white widget cards (basic info / campaigns / users),
+ * matching the real `bg-card shadow-[var(--card-glow)]` widget surfaces.
  */
 function SkeletonAccountPanel() {
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-white dark:from-card to-amber-50/30 dark:to-transparent rounded-lg overflow-hidden">
-      {/* Toolbar row */}
-      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
-        {[80, 60, 60].map((w, i) => (
-          <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
-        ))}
-      </div>
-      {/* Identity row */}
-      <div className="flex items-center gap-4 px-5 py-4 border-b border-black/[0.06] shrink-0">
-        <Skeleton className="h-[72px] w-[72px] rounded-full bg-primary/10 shrink-0" />
-        <div className="flex flex-col gap-2 flex-1">
-          <Skeleton className="h-6 w-40 rounded bg-primary/10" />
-          <div className="flex items-center gap-1.5">
-            <Skeleton className="h-5 w-16 rounded-full bg-primary/10" />
-            <Skeleton className="h-5 w-20 rounded-full bg-primary/10" />
+    <div className="relative flex flex-col h-full overflow-hidden">
+      {/* Header — transparent toolbar + identity row */}
+      <div className="shrink-0 px-4 pt-2 pb-4 space-y-3">
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1" />
+          {[36, 36, 36].map((w, i) => (
+            <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+          ))}
+        </div>
+        <div className="flex items-start gap-3">
+          <Skeleton className="h-[72px] w-[72px] rounded-full bg-primary/10 shrink-0" />
+          <div className="flex flex-col gap-2 flex-1 pt-1">
+            <Skeleton className="h-6 w-40 rounded bg-primary/10" />
+            <div className="flex items-center gap-1.5">
+              <Skeleton className="h-5 w-16 rounded-full bg-primary/10" />
+              <Skeleton className="h-5 w-20 rounded-full bg-primary/10" />
+            </div>
           </div>
         </div>
       </div>
-      {/* 3×2 card grid */}
-      <div className="flex-1 min-h-0 p-3 grid grid-cols-3 grid-rows-2 gap-[3px]">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col gap-3">
-            <Skeleton className="h-3 w-2/3 rounded bg-primary/10" />
-            <Skeleton className="h-7 w-1/2 rounded bg-primary/10" />
-            <Skeleton className="h-3 w-full rounded bg-primary/10" />
+      {/* 3-column row of raised white widget cards (basic / campaigns / users) */}
+      <div className="flex-1 min-h-0 overflow-hidden px-4 pb-4 grid grid-cols-3 gap-1.5">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="bg-card shadow-[var(--card-glow)] rounded-xl p-4 flex flex-col gap-3 min-h-0 overflow-hidden">
+            <Skeleton className="h-3.5 w-1/2 rounded bg-primary/10" />
+            {Array.from({ length: 5 }).map((_, j) => (
+              <Skeleton key={j} className="h-3 rounded bg-primary/10" style={{ width: `${85 - j * 8}%` }} />
+            ))}
           </div>
         ))}
       </div>

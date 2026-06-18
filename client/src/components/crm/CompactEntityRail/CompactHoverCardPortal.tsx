@@ -26,7 +26,10 @@ export function CompactHoverCardPortal({ rect, width = 300, onMouseEnter, onMous
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div className="shadow-xl rounded-xl overflow-hidden border border-black/[0.06]">
+      <div
+        className="shadow-xl rounded-xl overflow-hidden border border-black/[0.06]"
+        style={{ background: "var(--bone)" }}
+      >
         {children}
       </div>
     </div>,

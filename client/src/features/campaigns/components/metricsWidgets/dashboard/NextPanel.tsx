@@ -16,21 +16,27 @@ function ChannelChip({ kind }: { kind: CallItem["kind"] }) {
 }
 
 function TodayRow({ c, imminent }: { c: CallItem; imminent: boolean }) {
+  // The imminent (next-up) call is highlighted by a wine-tinted card with a left
+  // accent instead of a separate "UP NEXT" pill.
   return (
-    <div className="row" style={{ gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)", alignItems: "center" }}>
-      <div className="display" style={{ fontSize: 18, color: "var(--ink)", minWidth: 50 }}>{c.time}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{c.name}</span>
-          <ChannelChip kind={c.kind} />
-        </div>
-        <div style={{ fontSize: 11, color: "var(--mute)", fontFamily: "var(--mono)", letterSpacing: "0.06em", marginTop: 2 }}>
-          STAGE · {String(c.stage).toUpperCase()}
-        </div>
+    <div
+      className="row"
+      style={{
+        gap: 16,
+        padding: imminent ? "11px 12px" : "11px 0",
+        margin: imminent ? "2px 0" : 0,
+        borderBottom: imminent ? "none" : "1px solid var(--line)",
+        borderRadius: imminent ? "var(--r-button)" : 0,
+        borderLeft: imminent ? "3px solid var(--wine)" : "none",
+        background: imminent ? "color-mix(in srgb, var(--wine) 9%, transparent)" : "transparent",
+        alignItems: "center",
+      }}
+    >
+      <div className="display" style={{ fontSize: 18, color: imminent ? "var(--wine)" : "var(--ink)", minWidth: 50 }}>{c.time}</div>
+      <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{c.name}</span>
       </div>
-      {imminent && (
-        <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", padding: "3px 9px", borderRadius: "var(--r-pill)", whiteSpace: "nowrap", background: "var(--warn)", color: "#fff" }}>UP NEXT</span>
-      )}
+      <ChannelChip kind={c.kind} />
     </div>
   );
 }

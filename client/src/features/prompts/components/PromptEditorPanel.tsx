@@ -61,7 +61,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   onTokenEstimate?: (n: number) => void;
 }, ref: React.Ref<PromptEditorPanelHandle>) {
   const { toast } = useToast();
-  const { t } = useTranslation("prompts");
+  const { t, i18n } = useTranslation("prompts");
   const [saving, setSaving] = useState(false);
 
   const publishEntity = usePublishEntityData();
@@ -216,8 +216,8 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
 
   const varMap = useMemo(() => {
     const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
-    return buildMap(selectedCampaign, sampleLead, null);
-  }, [form.campaignsId, campaigns, sampleLead]);
+    return buildMap(selectedCampaign, sampleLead, null, i18n.language);
+  }, [form.campaignsId, campaigns, sampleLead, i18n.language]);
 
   // Headings for the outline strip
   const headings = useMemo(() => {
@@ -434,11 +434,11 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     const sections: Section[] = rawSections.map((s) => ({
       headingLineIndex: s.headingLineIndex,
       headingHtmlLine: s.headingRawLine !== null
-        ? resolveVariablesHtml(s.headingRawLine, selectedCampaign, sampleLead)
+        ? resolveVariablesHtml(s.headingRawLine, selectedCampaign, sampleLead, null, i18n.language)
         : null,
       headingLevel: s.headingLevel,
       bodyLines: s.bodyRawLines.length > 0
-        ? resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead)
+        ? resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead, null, i18n.language)
             .split("\n")
             .map((htmlLine, j) => ({ htmlLine, lineIndex: j }))
         : [],

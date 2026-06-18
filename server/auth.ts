@@ -147,7 +147,9 @@ const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "";
 
 // Login email aliases — alternate addresses that resolve to a canonical account.
 const EMAIL_ALIASES: Record<string, string> = {
-  "gabriel@leadawaker.com": "leadawaker@gmail.com",
+  // old email → canonical DB email (so old credentials still work after display-email updates)
+  "leadawaker@gmail.com": "gabriel@leadawaker.com",
+  "furion@sent.com": "finn@leadawaker.com",
 };
 function resolveLoginEmail(email: string): string {
   const lower = email.toLowerCase().trim();
@@ -287,6 +289,10 @@ export function registerAuthRoutes(app: Express) {
         }
         req.logIn(user, (loginErr) => {
           if (loginErr) return next(loginErr);
+          // Record last login timestamp (server-side Date object — never an ISO string).
+          // Fire-and-forget: don't block the login response on this write.
+          storage.updateAppUser(user.id, { lastLoginAt: new Date() } as any)
+            .catch((e) => console.error("[auth] failed to record last login:", e?.message));
           // Return safe user object (exclude passwordHash)
           const { passwordHash: _, ...safeUser } = user;
           res.json({ user: safeUser });

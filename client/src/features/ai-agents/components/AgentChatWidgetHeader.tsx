@@ -286,15 +286,18 @@ export function AgentChatWidgetHeader({
           </div>
         </>
       )}
-      <button
-        onClick={onToggleDock}
-        className="inline-flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
-        title={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
-        aria-label={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
-        data-testid="agent-widget-dock-toggle"
-      >
-        {dockMode ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
-      </button>
+      {/* Dock/fold toggle — desktop only (no docking on a phone) */}
+      {!isMobile && (
+        <button
+          onClick={onToggleDock}
+          className="inline-flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+          title={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
+          aria-label={dockMode ? t("agentWidget.undock") : t("agentWidget.dockToSide")}
+          data-testid="agent-widget-dock-toggle"
+        >
+          {dockMode ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
+        </button>
+      )}
       <button
         onClick={closeWidget}
         className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"

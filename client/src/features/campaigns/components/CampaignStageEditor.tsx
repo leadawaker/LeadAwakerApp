@@ -22,6 +22,8 @@ export interface CampaignStageEditorProps {
 export function CampaignStageEditor({
   campaign, isEditing, draft, setDraft,
   linkedContract,
+  conversationPrompts,
+  compact,
   focusField, onStartEditField,
 }: CampaignStageEditorProps) {
   return (
@@ -32,6 +34,8 @@ export function CampaignStageEditor({
       setDraft={setDraft}
       focusField={focusField}
       onStartEditField={onStartEditField}
+      conversationPrompts={conversationPrompts}
+      compact={compact}
     />
   );
 }

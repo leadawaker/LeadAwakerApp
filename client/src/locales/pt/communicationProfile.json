@@ -11,7 +11,9 @@
     "finish": "Concluir",
     "saving": "Salvando…",
     "selectUpTo": "Escolha até {{max}}",
-    "recommended": "Recomendado"
+    "recommended": "Recomendado",
+    "nope": "Não",
+    "saveDraft": "Salvar rascunho"
   },
   "summary": {
     "title": "Perfil de comunicação",
@@ -79,16 +81,16 @@
     "objections": {
       "label": "Objeções comuns e respostas",
       "help": "Liste as objeções que os clientes mais levantam e a resposta que o assistente deve dar. Adicione quantas quiser.",
-      "questionPlaceholder": "Objeção ou pergunta",
-      "answerPlaceholder": "Como o assistente deve responder",
+      "questionPlaceholder": "Objeção {{n}}",
+      "answerPlaceholder": "Resposta {{n}}",
       "add": "Adicionar linha",
       "remove": "Remover"
     },
     "faq": {
       "label": "Perguntas frequentes",
       "help": "Liste perguntas que os clientes fazem com frequência e a resposta que o assistente deve dar. Adicione quantas quiser.",
-      "questionPlaceholder": "Pergunta",
-      "answerPlaceholder": "Resposta",
+      "questionPlaceholder": "Pergunta {{n}}",
+      "answerPlaceholder": "Resposta {{n}}",
       "add": "Adicionar linha",
       "remove": "Remover"
     },
@@ -114,10 +116,24 @@
   },
   "facts": {
     "placeholder": "Digite a resposta aqui…",
-    "negotiation": { "label": "Margem para negociação", "help": "Costuma haver margem para negociação? O assistente pode sugerir que o preço é flexível, e até onde pode ir?" },
-    "financing": { "label": "Financiamento", "help": "Vocês oferecem financiamento? Por meio de quem, e o que o assistente deve dizer sobre isso?" },
-    "installments": { "label": "Parcelamento", "help": "Os clientes podem pagar parcelado? Quais condições (número de parcelas, entrada)?" },
-    "deliveryTime": { "label": "Prazo de entrega", "help": "Vocês têm um prazo de entrega padrão? Ele consta no orçamento? Se sim, o assistente remete ao orçamento; se não, o que ele pode dizer ao cliente?" },
-    "guarantees": { "label": "Garantias", "help": "Quais garantias vocês oferecem? Algo que o assistente possa mencionar para gerar confiança?" }
+    "negotiation": { "label": "Margem para negociação", "help": "Costuma haver margem para negociação? O assistente pode sugerir que o preço é flexível, e até onde pode ir?", "negative": "Não temos margem para negociar o preço." },
+    "financing": { "label": "Financiamento", "help": "Vocês oferecem financiamento? Por meio de quem, e o que o assistente deve dizer sobre isso?", "negative": "Não oferecemos financiamento." },
+    "installments": { "label": "Parcelamento", "help": "Os clientes podem pagar parcelado? Quais condições (número de parcelas, entrada)?", "negative": "Não oferecemos pagamento parcelado." },
+    "deliveryTime": { "label": "Prazo de entrega", "help": "Vocês têm um prazo de entrega padrão? Ele consta no orçamento? Se sim, o assistente remete ao orçamento; se não, o que ele pode dizer ao cliente?", "negative": "Não temos um prazo de entrega padrão — depende do projeto." },
+    "guarantees": { "label": "Garantias", "help": "Quais garantias vocês oferecem? Algo que o assistente possa mencionar para gerar confiança?", "negative": "Não oferecemos garantias específicas além do mínimo legal." },
+    "sensitiveTopics": {
+      "label": "Temas sensíveis",
+      "help": "Há temas que a IA deve evitar ou tratar com cuidado? Por exemplo: comparações de preço com concorrentes, produtos que vocês não oferecem mais, ou situações que possam gerar uma conversa difícil."
+    }
+  },
+  "preview": {
+    "title": "Prévia ao vivo",
+    "subtitle": "Como o assistente pode iniciar uma conversa",
+    "name": "{{name}} · WhatsApp",
+    "templates": {
+      "personal": "Oi {{firstName}}, sou {{agentName}} 👋 Vimos que faz um tempo desde que falamos sobre o seu {{project}}. Como estão as coisas?",
+      "project": "Oi {{firstName}}, aqui é {{agentName}}. Passando para checar — como está o seu {{project}}?",
+      "business": "Olá {{firstName}}, {{agentName}} aqui. Retorno rápido sobre o seu {{project}}. Ainda está considerando avançar?"
+    }
   }
 }

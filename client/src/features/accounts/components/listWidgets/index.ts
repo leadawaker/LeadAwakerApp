@@ -2,4 +2,4 @@ export { getAccountId, formatRelativeTime, GROUP_TKEYS, SORT_TKEYS, STATUS_I18N_
 export type { VirtualListItem } from "./accountListConstants";
 export { AccountListCard } from "./AccountListCard";
 export { GroupHeader } from "./GroupHeader";
-export { ListSkeleton } from "./ListSkeleton";
+export { ListSkeleton, CompactListSkeleton } from "./ListSkeleton";

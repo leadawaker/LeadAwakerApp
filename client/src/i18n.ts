@@ -10,8 +10,6 @@ import enBookDemo from "./locales/en/bookDemo.json";
 import enIntakeDemo from "./locales/en/intakeDemo.json";
 import enTermsOfService from "./locales/en/termsOfService.json";
 import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
-import enOnboarding from "./locales/en/onboarding.json";
-
 import enDocs from "./locales/en/docs.json";
 
 // Import translation files — CRM pages
@@ -41,8 +39,6 @@ import ptBookDemo from "./locales/pt/bookDemo.json";
 import ptIntakeDemo from "./locales/pt/intakeDemo.json";
 import ptTermsOfService from "./locales/pt/termsOfService.json";
 import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
-import ptOnboarding from "./locales/pt/onboarding.json";
-
 import ptCrm from "./locales/pt/crm.json";
 import ptSettings from "./locales/pt/settings.json";
 import ptLeads from "./locales/pt/leads.json";
@@ -69,8 +65,6 @@ import nlBookDemo from "./locales/nl/bookDemo.json";
 import nlIntakeDemo from "./locales/nl/intakeDemo.json";
 import nlTermsOfService from "./locales/nl/termsOfService.json";
 import nlPrivacyPolicy from "./locales/nl/privacyPolicy.json";
-import nlOnboarding from "./locales/nl/onboarding.json";
-
 import nlCrm from "./locales/nl/crm.json";
 import nlSettings from "./locales/nl/settings.json";
 import nlLeads from "./locales/nl/leads.json";
@@ -99,7 +93,6 @@ const resources = {
     intakeDemo: enIntakeDemo,
     termsOfService: enTermsOfService,
     privacyPolicy: enPrivacyPolicy,
-    onboarding: enOnboarding,
     crm: enCrm,
     settings: enSettings,
     leads: enLeads,
@@ -127,7 +120,6 @@ const resources = {
     intakeDemo: ptIntakeDemo,
     termsOfService: ptTermsOfService,
     privacyPolicy: ptPrivacyPolicy,
-    onboarding: ptOnboarding,
     crm: ptCrm,
     settings: ptSettings,
     leads: ptLeads,
@@ -155,7 +147,6 @@ const resources = {
     intakeDemo: nlIntakeDemo,
     termsOfService: nlTermsOfService,
     privacyPolicy: nlPrivacyPolicy,
-    onboarding: nlOnboarding,
     crm: nlCrm,
     settings: nlSettings,
     leads: nlLeads,
@@ -195,7 +186,6 @@ i18n
       "login",
       "termsOfService",
       "privacyPolicy",
-      "onboarding",
       "crm",
       "settings",
       "leads",

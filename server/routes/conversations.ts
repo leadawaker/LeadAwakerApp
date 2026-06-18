@@ -118,8 +118,8 @@ export function registerConversationsRoutes(app: Express): void {
           if (!leadId) return;
           const lead = await storage.getLeadById(leadId);
           if (!lead) return;
-          const channelId = (lead as any).channelIdentifier;
-          if (!channelId) {
+          const rawChannelId = (lead as any).channelIdentifier;
+          if (!rawChannelId) {
             console.log(`[channel-sender] No channel_identifier for lead ${leadId}, skipping delivery`);
             return;
           }
@@ -134,6 +134,15 @@ export function registerConversationsRoutes(app: Express): void {
               campaignBotToken = (campaign as any).botToken ?? undefined;
             }
           }
+
+          // WhatsApp delivery is keyed by the lead's phone, not the channel_identifier
+          // (demo leads store an opaque "wa-demo:<hash>" identifier, never a phone).
+          const isWhatsApp =
+            campaignChannel === "whatsapp" ||
+            campaignChannel === "whatsapp_cloud" ||
+            rawChannelId.startsWith("wa:") ||
+            rawChannelId.startsWith("wa-demo:");
+          const channelId = isWhatsApp ? ((lead as any).phone || rawChannelId) : rawChannelId;
 
           const content = (interaction as any).content ?? "";
           const isAudio = (parsed.data as any).type === "audio" || content.startsWith("data:audio/");

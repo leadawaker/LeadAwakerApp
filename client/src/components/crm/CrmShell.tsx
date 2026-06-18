@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { RightSidebar } from "./RightSidebar";
-import { Topbar } from "@/components/crm/Topbar";
 import { SupportChat } from "@/components/crm/SupportChat";
 import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
@@ -16,6 +15,7 @@ import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun, Instagram, Facebook
 import { useTheme } from "@/hooks/useTheme";
 import { logout } from "@/hooks/useSession";
 import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
+import { MobileChromeProvider } from "@/contexts/MobileChromeContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { PAGE_ACCENTS, PAGE_ACCENTS_DARK } from "@/lib/pageAccents";
@@ -180,6 +180,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TopbarActionsProvider>
+    <MobileChromeProvider>
     <div
       className={cn("min-h-svh bg-background", isAgencyView && "agency-mode", isMobileMenuOpen && "mobile-scroll-lock")}
       data-testid="shell-crm"
@@ -212,19 +213,10 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           }}
         />
       )}
-      <Topbar
-        onOpenPanel={(p) => setActivePanel(p)}
-        collapsed={false}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
-        onLogout={handleLogout}
-        hideDesktop
-      />
       <div className="fixed left-0 bottom-0 z-40" style={{ top: "var(--banner-h, 0px)" }} data-testid="wrap-left-nav">
         <RightSidebar
           collapsed={false}
           onCollapse={handleCollapse}
-          onOpenSupport={() => setActivePanel('support')}
           onOpenAi={toggleAiWidget}
           onOpenNotifications={() => setActivePanel('notifications')}
           onToggleHelp={() => setActivePanel('help')}
@@ -283,7 +275,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         className={cn(
           "h-svh flex flex-col transition-[padding-left] duration-150 overflow-hidden",
           "md:pl-[188px]",
-          "pt-[calc(var(--topbar-h)_+_var(--banner-h,_0px))] md:pt-[var(--banner-h,_0px)]"
+          // Global mobile topbar removed: each list page renders its own MobileListHeader.
+          "pt-[var(--banner-h,_0px)]"
         )}
         style={{
           background: "var(--surface)",
@@ -302,7 +295,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       >
         <ConnectionBanner />
         <div id="crm-content-wrapper" className="h-full w-full pb-0 overflow-y-auto">
-          <ErrorBoundary>
+          <ErrorBoundary key={location}>
             <PageTransition>
               {children}
             </PageTransition>
@@ -316,6 +309,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       {/* CRM color customization tool — dev only, opened by the nav Paint button */}
       {import.meta.env.DEV && <ColorPickerWidget open={colorPickerOpen} onClose={() => setColorPickerOpen(false)} />}
     </div>
+    </MobileChromeProvider>
     </TopbarActionsProvider>
   );
 }

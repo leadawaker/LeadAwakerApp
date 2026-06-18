@@ -41,21 +41,20 @@ const ROLE_BADGE: Record<string, string> = {
   Viewer:   "bg-muted text-muted-foreground",
 };
 
-// ── Group header solid background colors ─────────────────────────────────────
-// Light pastel tints — fully opaque so they don't darken over the #D8D8D8 bg
+// ── Group header tints (design-system CSS variables — dark-mode aware) ───────
 const GROUP_HEADER_BG: Record<string, string> = {
-  Admin:    "#FEF3C7", // warm yellow tint
-  Operator: "#FFEDD5", // soft orange tint
-  Manager:  "#DBEAFE", // light blue tint
-  Agent:    "#F3E8FF", // soft purple tint
-  Viewer:   "#E8E8E8", // neutral gray tint
-  Active:   "#D1FAE5", // light emerald tint
-  Invited:  "#FEF3C7", // warm amber tint
-  Inactive: "#E8E8E8", // neutral gray tint
+  Admin:    "var(--warn-tint)",
+  Operator: "var(--warn-tint)",
+  Manager:  "var(--wine-tint)",
+  Agent:    "var(--wine-tint)",
+  Viewer:   "var(--surface)",
+  Active:   "var(--good-tint)",
+  Invited:  "var(--warn-tint)",
+  Inactive: "var(--surface)",
 };
 
 function getGroupHeaderBg(label: string): string {
-  return GROUP_HEADER_BG[label] || "#E8E8E8";
+  return GROUP_HEADER_BG[label] || "var(--surface)";
 }
 
 function isActiveStatus(status: string | null | undefined): boolean {
@@ -93,11 +92,11 @@ function formatShortDate(dateStr: string | null | undefined): string {
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
+      <div className="h-8 bg-muted rounded animate-pulse mb-2" />
       {Array.from({ length: 9 }).map((_, i) => (
         <div
           key={i}
-          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-primary/10 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -336,26 +335,26 @@ export function UsersInlineTable({
   let rowIdx = 0;
 
   return (
-    <div ref={tableContainerRef} className="h-full flex flex-col overflow-hidden bg-[#D8D8D8] relative">
+    <div ref={tableContainerRef} className="h-full flex flex-col overflow-hidden relative">
 
       {/* ── Table ── */}
-      <div className="flex-1 min-h-0 overflow-auto">
-        <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 700 }}>
+      <div className="flex-1 min-h-0 overflow-auto" style={{ background: "var(--card)" }}>
+        <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 700 }}>
 
-          {/* Sticky column header */}
+          {/* Sticky column header — recessed bar with stronger contrast */}
           <thead className="sticky top-0 z-20">
             <tr>
               {/* Checkbox column header */}
-              <th className="py-2 w-[36px] px-0 bg-[#D8D8D8] border-b border-black/[0.06] sticky left-0 z-30" />
+              <th className="h-[42px] w-[36px] px-0 sticky left-0 z-30" style={{ background: "var(--bg-2)", borderBottom: "2px solid var(--line)" }} />
 
               {visibleColumns.map((col, ci) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-[#D8D8D8] border-b border-black/[0.06]",
+                    "px-3 h-[42px] text-left text-[10px] font-bold uppercase tracking-wider whitespace-nowrap select-none",
                     ci === 0 && "sticky left-[36px] z-30",
                   )}
-                  style={{ width: col.width, minWidth: col.width }}
+                  style={{ width: col.width, minWidth: col.width, background: "var(--bg-2)", borderBottom: "2px solid var(--line)", color: "var(--mute)" }}
                 >
                   {col.label}
                 </th>
@@ -438,8 +437,8 @@ export function UsersInlineTable({
                 <tr
                   key={uid}
                   className={cn(
-                    "group/row cursor-pointer h-[52px] animate-card-enter",
-                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] dark:bg-card hover:bg-[#FAFAFA] dark:hover:bg-card-hover",
+                    "group/row cursor-pointer h-[52px] animate-card-enter [&>td]:border-b [&>td]:border-[color:var(--line)]",
+                    isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                   )}
                   style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                   onClick={(e) => handleRowClick(user, e)}
@@ -449,7 +448,7 @@ export function UsersInlineTable({
                   {/* Checkbox cell — sticky left */}
                   <td className={cn(
                     "w-[36px] px-0 sticky left-0 z-10",
-                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] dark:bg-card group-hover/row:bg-[#FAFAFA] dark:group-hover/row:bg-card-hover",
+                    isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover",
                   )}>
                     <div className="flex items-center justify-center h-full">
                       <div
@@ -477,7 +476,7 @@ export function UsersInlineTable({
                     const isFirst = ci === 0;
                     const tdClass = cn(
                       isFirst && "sticky left-[36px] z-10",
-                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] dark:bg-card group-hover/row:bg-[#FAFAFA] dark:group-hover/row:bg-card-hover"),
+                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
                     );
 
                     // ── Name cell (sticky, with avatar) ──

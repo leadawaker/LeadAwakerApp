@@ -23,6 +23,7 @@ import {
   startCampaignFinishedNotifier,
 } from "./ai-agents";
 import { registerGmailRoutes } from "./gmail";
+import { registerCalendarRoutes } from "./calendar";
 import { registerDemoRoutes } from "./demo";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
@@ -63,6 +64,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerBillingRoutes(app);
   registerAiAgentsRoutes(app);
   registerGmailRoutes(app);
+  registerCalendarRoutes(app);
   registerDemoRoutes(app);
   registerTwilioVoiceRoutes(app);
   registerUserSettingsRoutes(app);

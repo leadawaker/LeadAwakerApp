@@ -45,7 +45,7 @@ const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
 const VALID_MODELS = [
   "claude-sonnet-4-6",
   "claude-opus-4-8",
-  "claude-haiku-235-20241022",
+  "claude-haiku-4-5-20251001",
 ];
 
 // ─── File upload constants ─────────────────────────────────────────────────
@@ -510,92 +510,6 @@ export function registerAiAgentsRoutes(app: Express): void {
     broadcast(1, "founder_reply", { sessionId, message: replyMsg });
 
     res.json({ message: replyMsg });
-  }));
-
-  // ─── Onboarding Tutorial ────────────────────────────────────────────
-
-  function parseOnboarding(user: { preferences?: string | Record<string, unknown> | null }) {
-    const defaults = {
-      completed: false,
-      skipped: false,
-      currentStage: 1,
-      currentStep: 0,
-      completedStages: [] as number[],
-      startedAt: null as string | null,
-      completedAt: null as string | null,
-    };
-    if (!user.preferences) return defaults;
-    try {
-      const prefs = typeof user.preferences === "string"
-        ? JSON.parse(user.preferences)
-        : user.preferences;
-      return { ...defaults, ...prefs?.onboarding };
-    } catch {
-      return defaults;
-    }
-  }
-
-  async function saveOnboarding(userId: number, currentPrefs: any, onboarding: Record<string, unknown>) {
-    let prefs: Record<string, any> = {};
-    if (currentPrefs) {
-      try {
-        prefs = typeof currentPrefs === "string" ? JSON.parse(currentPrefs) : { ...currentPrefs };
-      } catch {}
-    }
-    prefs.onboarding = { ...(prefs.onboarding || {}), ...onboarding };
-    const updated = await storage.updateAppUser(userId, { preferences: JSON.stringify(prefs) } as any);
-    if (updated) invalidateUserCache(userId);
-    return updated;
-  }
-
-  // GET /api/onboarding/status
-  app.get("/api/onboarding/status", requireAuth, wrapAsync(async (req, res) => {
-    res.json(parseOnboarding(req.user!));
-  }));
-
-  // PATCH /api/onboarding/progress
-  app.patch("/api/onboarding/progress", requireAuth, wrapAsync(async (req, res) => {
-    const { currentStage, currentStep, completedStages, startedAt } = req.body;
-    const update: Record<string, unknown> = {};
-    if (currentStage !== undefined) update.currentStage = currentStage;
-    if (currentStep !== undefined) update.currentStep = currentStep;
-    if (completedStages !== undefined) update.completedStages = completedStages;
-    if (startedAt !== undefined) update.startedAt = startedAt;
-    const updated = await saveOnboarding(req.user!.id!, req.user!.preferences, update);
-    if (!updated) return res.status(500).json({ message: "Failed to update onboarding" });
-    res.json(parseOnboarding(updated));
-  }));
-
-  // POST /api/onboarding/complete
-  app.post("/api/onboarding/complete", requireAuth, wrapAsync(async (req, res) => {
-    const updated = await saveOnboarding(req.user!.id!, req.user!.preferences, {
-      completed: true,
-      completedAt: new Date().toISOString(),
-    });
-    if (!updated) return res.status(500).json({ message: "Failed to complete onboarding" });
-    res.json(parseOnboarding(updated));
-  }));
-
-  // POST /api/onboarding/skip
-  app.post("/api/onboarding/skip", requireAuth, wrapAsync(async (req, res) => {
-    const updated = await saveOnboarding(req.user!.id!, req.user!.preferences, { skipped: true });
-    if (!updated) return res.status(500).json({ message: "Failed to skip onboarding" });
-    res.json(parseOnboarding(updated));
-  }));
-
-  // POST /api/onboarding/restart
-  app.post("/api/onboarding/restart", requireAuth, wrapAsync(async (req, res) => {
-    const updated = await saveOnboarding(req.user!.id!, req.user!.preferences, {
-      completed: false,
-      skipped: false,
-      currentStage: 1,
-      currentStep: 0,
-      completedStages: [],
-      startedAt: null,
-      completedAt: null,
-    });
-    if (!updated) return res.status(500).json({ message: "Failed to restart onboarding" });
-    res.json(parseOnboarding(updated));
   }));
 
   // ─── AI Agents: /api/ai-agents ───────────────────────────────────────

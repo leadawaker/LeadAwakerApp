@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { requireAuth, requireAgency } from "../auth";
+import { requireAuth, requireAgency, requireOwner } from "../auth";
 import { wrapAsync } from "./_helpers";
 import { broadcast } from "../sse";
 import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, getSignatureForLanguage } from "../gmail";
@@ -8,7 +8,7 @@ import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, getSignatureFo
 export function registerGmailRoutes(app: Express): void {
   // ─── Gmail OAuth ─────────────────────────────────────────────────────
 
-  app.get("/api/gmail/oauth/authorize", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+  app.get("/api/gmail/oauth/authorize", requireOwner, wrapAsync(async (_req, res) => {
     const url = getAuthUrl();
     res.redirect(url);
   }));
@@ -44,7 +44,7 @@ export function registerGmailRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/gmail/oauth/status", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+  app.get("/api/gmail/oauth/status", requireOwner, wrapAsync(async (_req, res) => {
     const state = await storage.getGmailSyncState("leadawaker@gmail.com");
     if (state?.oauthTokensEncrypted) {
       res.json({ connected: true, email: state.accountEmail });
@@ -53,7 +53,7 @@ export function registerGmailRoutes(app: Express): void {
     }
   }));
 
-  app.post("/api/gmail/oauth/disconnect", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
+  app.post("/api/gmail/oauth/disconnect", requireOwner, wrapAsync(async (_req, res) => {
     await storage.deleteGmailSyncState("leadawaker@gmail.com");
     res.json({ ok: true });
   }));

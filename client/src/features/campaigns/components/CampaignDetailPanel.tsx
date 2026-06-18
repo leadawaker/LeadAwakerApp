@@ -257,7 +257,7 @@ export function CampaignDetailPanel({
               />
               <InfoRow
                 label={t("panel.dailyLeadLimit")}
-                value={campaign.daily_lead_limit?.toLocaleString() || "—"}
+                value={(campaign.daily_lead_limit ?? 500).toLocaleString()}
               />
               <InfoRow
                 label={t("panel.messageInterval")}

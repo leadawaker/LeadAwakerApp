@@ -127,6 +127,14 @@
 .la-seg--fill { display: flex; }
 .la-seg--fill .la-seg-btn { flex: 1; }
 
+/* Compact (mobile) campaign config: collapse the desktop 2-column field grids
+   to a single column so fields are full-width on narrow sheets. The field
+   sections use inline `grid-template-columns: 1fr 1fr`, so override with
+   !important scoped to the compact wrapper only (desktop untouched). */
+.la-config-compact [style*="grid-template-columns"] {
+  grid-template-columns: 1fr !important;
+}
+
 /* ─── Input ──────────────────────────────────────────────────── */
 
 .la-input {

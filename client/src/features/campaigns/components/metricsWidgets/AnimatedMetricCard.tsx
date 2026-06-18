@@ -6,15 +6,21 @@ import { cn } from "@/lib/utils";
 function useCountUp(target: number, duration = 900, trigger = 0): number {
   const [value, setValue] = useState(0);
   const rafRef = useRef<number | null>(null);
+  // Latest displayed value — the animation starts from here so switching
+  // timeframes tweens from the current number to the new one (e.g. 5 → 10)
+  // instead of always restarting at 0.
+  const valueRef = useRef(0);
   useEffect(() => {
-    if (target === 0) { setValue(0); return; }
     const start = performance.now();
-    const from = 0;
+    const from = valueRef.current;
+    if (from === target) return; // nothing to animate
     const animate = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(from + (target - from) * eased));
+      const next = Math.round(from + (target - from) * eased);
+      valueRef.current = next;
+      setValue(next);
       if (progress < 1) rafRef.current = requestAnimationFrame(animate);
     };
     if (rafRef.current) cancelAnimationFrame(rafRef.current);

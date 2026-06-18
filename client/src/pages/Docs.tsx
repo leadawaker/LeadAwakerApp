@@ -1,14 +1,12 @@
 /**
- * DocsPage — In-app documentation for LeadAwaker.
+ * DocsPage: in-app documentation for LeadAwaker.
  * Agency Documentation (Admin/Operator) and User Documentation (Manager/Viewer).
- * Split-pane layout: left sidebar navigation + right scrollable content.
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { Link } from "wouter";
 import {
   BookOpen,
@@ -24,17 +22,16 @@ import {
   Wrench,
   Globe,
   Star,
-  Search,
   Copy,
   Check,
   Sparkles,
-  X,
   ExternalLink,
   FileText,
   Receipt,
   User,
 } from "lucide-react";
-import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
+import { PIPELINE_HEX } from "@/lib/avatarUtils";
+import { Pill } from "@/components/crm/primitives";
 import {
   Sheet,
   SheetContent,
@@ -49,12 +46,55 @@ function isOperatorRole(): boolean {
   return role === "Admin";
 }
 
-// ── Search helper ─────────────────────────────────────────────────────────────
+// ── Status colors ─────────────────────────────────────────────────────────────
+// Pipeline-stage colors come from the shared PIPELINE_HEX map so the docs match
+// the live app. The locale uses lowercase keys; bridge them to PIPELINE_HEX's
+// TitleCase keys here, then read everything through STAGE_HEX.
+const STAGE_KEYS = [
+  "new", "contacted", "responded", "multipleResponses",
+  "qualified", "booked", "closed", "lost", "dnd",
+] as const;
 
-function matchesSearch(keywords: string, q: string): boolean {
-  if (!q.trim()) return true;
-  return keywords.toLowerCase().includes(q.toLowerCase().trim());
-}
+const STAGE_KEY_TO_HEX: Record<string, string> = {
+  new:               PIPELINE_HEX.New,
+  contacted:         PIPELINE_HEX.Contacted,
+  responded:         PIPELINE_HEX.Responded,
+  multipleResponses: PIPELINE_HEX["Multiple Responses"],
+  qualified:         PIPELINE_HEX.Qualified,
+  booked:            PIPELINE_HEX.Booked,
+  closed:            PIPELINE_HEX.Closed,
+  lost:              PIPELINE_HEX.Lost,
+  dnd:               PIPELINE_HEX.DND,
+};
+
+// Automation-status colors have no shared constant: keep one local map.
+const AUTOMATION_HEX: Record<string, string> = {
+  paused:    PIPELINE_HEX.Closed,
+  queued:    PIPELINE_HEX.Contacted,
+  active:    PIPELINE_HEX["Multiple Responses"],
+  completed: PIPELINE_HEX.Qualified,
+  dnd:       PIPELINE_HEX.Lost,
+};
+
+// Calendar-illustration accents, mapped onto the shared palette.
+const CAL_HEX = {
+  booked:    PIPELINE_HEX.Booked,
+  confirmed: PIPELINE_HEX["Multiple Responses"],
+  upcoming:  "hsl(var(--brand-indigo))",
+};
+
+// Highlighted day cell: soft tint bg + ring, full-strength text.
+const calDayStyle = (hex: string): React.CSSProperties => ({
+  backgroundColor: `color-mix(in srgb, ${hex} 18%, transparent)`,
+  color: hex,
+  boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${hex} 30%, transparent)`,
+});
+
+// Legend swatch: slightly stronger tint + ring.
+const calSwatchStyle = (hex: string): React.CSSProperties => ({
+  backgroundColor: `color-mix(in srgb, ${hex} 30%, transparent)`,
+  boxShadow: `0 0 0 1px color-mix(in srgb, ${hex} 40%, transparent)`,
+});
 
 // ── Changelog data ────────────────────────────────────────────────────────────
 
@@ -65,35 +105,6 @@ const CHANGELOG_KEYS = [
   { version: "v1.2", key: "v12" },
 ];
 
-// ── TOC anchor data ───────────────────────────────────────────────────────────
-
-type TocItem = { id: string; labelKey: string; icon: React.ElementType };
-
-const OPERATOR_TOC: TocItem[] = [
-  { id: "sec-setup",        labelKey: "toc.setup",           icon: Settings },
-  { id: "sec-campaign",     labelKey: "toc.campaign",        icon: Megaphone },
-  { id: "sec-lifecycle",    labelKey: "toc.lifecycle",       icon: Zap },
-  { id: "sec-webhooks",     labelKey: "toc.webhooks",        icon: Globe },
-  { id: "sec-instagram",    labelKey: "toc.instagram",       icon: Globe },
-  { id: "sec-analytics",    labelKey: "toc.analytics",       icon: BarChart2 },
-  { id: "sec-users",        labelKey: "toc.userManagement",  icon: Users },
-  { id: "sec-prompts",      labelKey: "toc.promptLibrary",   icon: FileText },
-  { id: "sec-billing",      labelKey: "toc.billing",         icon: Receipt },
-  { id: "sec-troubleshoot", labelKey: "toc.troubleshoot",    icon: Wrench },
-];
-
-const CLIENT_TOC: TocItem[] = [
-  { id: "sec-getting-started", labelKey: "toc.gettingStarted",  icon: Sparkles },
-  { id: "sec-what",            labelKey: "toc.whatIsIt",         icon: BookOpen },
-  { id: "sec-leads",           labelKey: "toc.yourLeads",        icon: Users },
-  { id: "sec-conversations",   labelKey: "toc.conversations",    icon: MessageSquare },
-  { id: "sec-score",           labelKey: "toc.leadScore",        icon: Star },
-  { id: "sec-bookings",        labelKey: "toc.bookings",         icon: CalendarCheck },
-  { id: "sec-account-mgmt",   labelKey: "toc.yourAccount",      icon: User },
-  { id: "sec-reports",         labelKey: "toc.reportsInsights",  icon: BarChart2 },
-  { id: "sec-faq",             labelKey: "toc.faq",              icon: AlertCircle },
-];
-
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function DocSection({
@@ -101,21 +112,18 @@ function DocSection({
   icon: Icon,
   title,
   children,
-  hidden,
 }: {
   id?: string;
   icon: React.ElementType;
   title: string;
   children: React.ReactNode;
-  hidden?: boolean;
 }) {
   const [open, setOpen] = useState(true);
-  if (hidden) return null;
   return (
-    <div id={id} className="rounded-xl bg-white/60 dark:bg-white/[0.06] overflow-hidden scroll-mt-6">
+    <div id={id} className="neu-raised overflow-hidden scroll-mt-6" style={{ borderRadius: "var(--r-card)" }}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-card transition-colors text-left"
+        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-foreground/[0.03] transition-colors text-left"
       >
         <Icon className="h-4 w-4 text-brand-indigo shrink-0" />
         <span className="font-semibold text-sm flex-1">{title}</span>
@@ -128,7 +136,7 @@ function DocSection({
       </button>
       {open && (
         <div
-          style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }}
+          style={{ borderTop: "1px solid var(--line)" }}
           className="px-5 py-5 space-y-4 text-sm text-foreground/80 leading-relaxed"
         >
           {children}
@@ -153,20 +161,12 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 
 function Tip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-800 dark:text-amber-200">
+    <div className="flex gap-2 p-3 rounded-[var(--r-button)] bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-800 dark:text-amber-200">
       <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
       {typeof children === "string"
         ? <span dangerouslySetInnerHTML={{ __html: children }} />
         : <span>{children}</span>}
     </div>
-  );
-}
-
-function Badge({ label, color }: { label: string; color: string }) {
-  return (
-    <span className={cn("inline-block px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0", color)}>
-      {label}
-    </span>
   );
 }
 
@@ -193,14 +193,14 @@ function CopyableBlock({ label, text }: { label: string; text: string }) {
   }
 
   return (
-    <div className="rounded-lg bg-popover px-4 py-3 flex items-start gap-3 group">
+    <div className="rounded-[var(--r-button)] bg-popover px-4 py-3 flex items-start gap-3 group">
       <div className="flex-1 min-w-0">
         <p className="font-medium text-xs mb-1">{label}</p>
         <code className="text-[11px] text-muted-foreground break-all font-mono">{text}</code>
       </div>
       <button
         onClick={handleCopy}
-        className="flex-shrink-0 h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mt-0.5 opacity-0 group-hover:opacity-100"
+        className="flex-shrink-0 h-7 w-7 rounded-[var(--r-button)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mt-0.5 opacity-0 group-hover:opacity-100"
         title={t("copy")}
       >
         {copied
@@ -218,7 +218,7 @@ function RolesTable() {
   const { t } = useTranslation("docs");
   const roleKeys = ["admin", "operator", "manager", "viewer"] as const;
   return (
-    <div className="rounded-lg overflow-hidden border border-black/[0.06] dark:border-white/[0.06]">
+    <div className="rounded-[var(--r-button)] overflow-hidden border border-black/[0.06] dark:border-white/[0.06]">
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-popover">
@@ -243,38 +243,16 @@ function RolesTable() {
 
 // ── Operator Manual (Agency Documentation) ───────────────────────────────────
 
-function OperatorManual({ search }: { search: string }) {
+function OperatorManual() {
   const { t } = useTranslation("docs");
-  const q = search;
-
-  const sectionMatches = [
-    matchesSearch("account setup twilio api key business hours timezone daily send limit webhook secret number type toll-free local short code a2p 10dlc registration", q),
-    matchesSearch("campaign first message follow-up bumps active hours prompt library template channel sms whatsapp pros cons template approval", q),
-    matchesSearch("lead lifecycle status paused queued active completed dnd automation stop", q),
-    matchesSearch("source adapters crm webhooks gohighlevel facebook hubspot generic intake url", q),
-    matchesSearch("instagram dm contacts sync meta graph api business account access token profile", q),
-    matchesSearch("analytics reporting lead scores campaign metrics automation logs response rate booking cost", q),
-    matchesSearch("user management roles admin operator manager viewer invite team permissions access control", q),
-    matchesSearch("prompt library ai persona template variables tone script system message personality", q),
-    matchesSearch("billing invoicing contracts expenses revenue btw vat payments", q),
-    matchesSearch("troubleshoot messages delivery language ai replies duplicate leads twilio sending status spam flagged template not approved score not updating", q),
-  ];
-  const noResults = q.trim() !== "" && sectionMatches.every((m) => !m);
 
   return (
     <div className="space-y-6 pb-8">
-      {noResults && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          {t("noResults", { query: q })}
-        </p>
-      )}
-
       {/* 1 - Account Setup */}
       <DocSection
         id="sec-setup"
         icon={Settings}
         title={t("operator.setup.title")}
-        hidden={!sectionMatches[0]}
       >
         <Step n={1}>{t("operator.setup.step1")}</Step>
         <Step n={2}>{t("operator.setup.step2")}</Step>
@@ -290,10 +268,9 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-campaign"
         icon={Megaphone}
         title={t("operator.campaign.title")}
-        hidden={!sectionMatches[1]}
       >
         <Step n={1}>{t("operator.campaign.step1")}</Step>
-        <div className="rounded-lg bg-popover px-4 py-3 text-xs space-y-1.5">
+        <div className="rounded-[var(--r-button)] bg-popover px-4 py-3 text-xs space-y-1.5">
           <p className="font-semibold">{t("operator.campaign.smsVsWhatsapp.title")}</p>
           <p className="text-muted-foreground">{t("operator.campaign.smsVsWhatsapp.sms")}</p>
           <p className="text-muted-foreground">{t("operator.campaign.smsVsWhatsapp.whatsapp")}</p>
@@ -311,56 +288,39 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-lifecycle"
         icon={Zap}
         title={t("operator.lifecycle.title")}
-        hidden={!sectionMatches[2]}
       >
         <p className="font-semibold">{t("operator.lifecycle.pipelineTitle")}</p>
         <p>{t("operator.lifecycle.pipelineDescription")}</p>
         <div className="space-y-1.5 mt-2">
-          {([
-            ["new",                "#7C3AED"],
-            ["contacted",          "#818CF8"],
-            ["responded",          "#3ACBDF"],
-            ["multipleResponses",  "#31D35C"],
-            ["qualified",          "#AED62E"],
-            ["booked",             "#F7BF0E"],
-            ["closed",             "#6B7280"],
-            ["lost",               "#DC2626"],
-            ["dnd",                "#722F37"],
-          ] as const).map(([key, hex]) => (
-            <div key={key} className="flex gap-3 items-center">
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
-                style={{ backgroundColor: `${hex}20`, color: hex }}
-              >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                {t(`operator.lifecycle.stageLabels.${key}`)}
-              </span>
-              <span className="text-xs text-muted-foreground">{t(`operator.lifecycle.stages.${key}`)}</span>
-            </div>
-          ))}
+          {STAGE_KEYS.map((key) => {
+            const hex = STAGE_KEY_TO_HEX[key];
+            return (
+              <div key={key} className="flex gap-3 items-center">
+                <Pill color={hex} tone="soft" className="gap-1.5 font-semibold shrink-0">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
+                  {t(`operator.lifecycle.stageLabels.${key}`)}
+                </Pill>
+                <span className="text-xs text-muted-foreground">{t(`operator.lifecycle.stages.${key}`)}</span>
+              </div>
+            );
+          })}
         </div>
 
         <p className="font-semibold mt-4">{t("operator.lifecycle.automationTitle")}</p>
         <p>{t("operator.lifecycle.automationDescription")}</p>
         <div className="space-y-1.5 mt-2">
-          {([
-            ["paused",    "#6B7280"],
-            ["queued",    "#7A73FF"],
-            ["active",    "#31D35C"],
-            ["completed", "#8B5CF6"],
-            ["dnd",       "#DC2626"],
-          ] as const).map(([key, hex]) => (
-            <div key={key} className="flex gap-3 items-center">
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
-                style={{ backgroundColor: `${hex}20`, color: hex }}
-              >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                {key}
-              </span>
-              <span className="text-xs text-muted-foreground">{t(`operator.lifecycle.${key}`)}</span>
-            </div>
-          ))}
+          {(["paused", "queued", "active", "completed", "dnd"] as const).map((key) => {
+            const hex = AUTOMATION_HEX[key];
+            return (
+              <div key={key} className="flex gap-3 items-center">
+                <Pill color={hex} tone="soft" className="gap-1.5 font-semibold shrink-0">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
+                  {key}
+                </Pill>
+                <span className="text-xs text-muted-foreground">{t(`operator.lifecycle.${key}`)}</span>
+              </div>
+            );
+          })}
         </div>
         <Tip>{t("operator.lifecycle.tip")}</Tip>
       </DocSection>
@@ -370,7 +330,6 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-webhooks"
         icon={Globe}
         title={t("operator.webhooks.title")}
-        hidden={!sectionMatches[3]}
       >
         <p>{t("operator.webhooks.description")}</p>
         <div className="space-y-2 mt-1">
@@ -395,7 +354,6 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-instagram"
         icon={Globe}
         title={t("operator.instagram.title")}
-        hidden={!sectionMatches[4]}
       >
         <p>{t("operator.instagram.description")}</p>
         <Step n={1}>{t("operator.instagram.step1")}</Step>
@@ -409,7 +367,6 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-analytics"
         icon={BarChart2}
         title={t("operator.analytics.title")}
-        hidden={!sectionMatches[5]}
       >
         <Step n={1}>{t("operator.analytics.step1")}</Step>
         <Step n={2}>{t("operator.analytics.step2")}</Step>
@@ -422,7 +379,6 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-users"
         icon={Users}
         title={t("operator.users.title")}
-        hidden={!sectionMatches[6]}
       >
         <p>{t("operator.users.description")}</p>
         <RolesTable />
@@ -437,7 +393,6 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-prompts"
         icon={FileText}
         title={t("operator.prompts.title")}
-        hidden={!sectionMatches[7]}
       >
         <p>{t("operator.prompts.description")}</p>
         <Step n={1}>{t("operator.prompts.step1")}</Step>
@@ -452,7 +407,6 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-billing"
         icon={Receipt}
         title={t("operator.billing.title")}
-        hidden={!sectionMatches[8]}
       >
         <p>{t("operator.billing.description")}</p>
         <Step n={1}>{t("operator.billing.step1")}</Step>
@@ -466,11 +420,10 @@ function OperatorManual({ search }: { search: string }) {
         id="sec-troubleshoot"
         icon={Wrench}
         title={t("operator.troubleshoot.title")}
-        hidden={!sectionMatches[9]}
       >
         <div className="space-y-2.5">
           {(["1", "2", "3", "4", "5", "6", "7", "8"] as const).map((num) => (
-            <div key={num} className="rounded-lg bg-popover px-4 py-3">
+            <div key={num} className="rounded-[var(--r-button)] bg-popover px-4 py-3">
               <p className="font-semibold text-xs mb-1">{t(`operator.troubleshoot.items.${num}.problem`)}</p>
               <p className="text-xs text-muted-foreground">{t(`operator.troubleshoot.items.${num}.solution`)}</p>
             </div>
@@ -483,37 +436,17 @@ function OperatorManual({ search }: { search: string }) {
 
 // ── Client Guide (User Documentation) ────────────────────────────────────────
 
-function ClientGuide({ search }: { search: string }) {
+function ClientGuide() {
   const { t } = useTranslation("docs");
-  const q = search;
-
-  const sectionMatches = [
-    matchesSearch("getting started first login dashboard navigation overview how to begin", q),
-    matchesSearch("what is leadawaker ai powered whatsapp lead follow-up autopilot book calls", q),
-    matchesSearch("leads status new contacted responded qualified call booked not interested funnel", q),
-    matchesSearch("conversations messages inbound outbound ai label manual takeover chat history sent delivered read status icons", q),
-    matchesSearch("lead score 0 100 funnel stage engagement recency warm intent priority", q),
-    matchesSearch("bookings calendar call booked appointment confirmed status", q),
-    matchesSearch("account profile settings notifications timezone preferences manage", q),
-    matchesSearch("reports insights campaign performance metrics response rate booking rate cost analytics", q),
-    matchesSearch("faq frequently asked questions stop bot manual message bump reply does not respond export customize tone business hours assign campaigns", q),
-  ];
-  const noResults = q.trim() !== "" && sectionMatches.every((m) => !m);
 
   return (
     <div className="space-y-6 pb-8">
-      {noResults && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          {t("noResults", { query: q })}
-        </p>
-      )}
 
       {/* Getting Started */}
       <DocSection
         id="sec-getting-started"
         icon={Sparkles}
         title={t("client.gettingStarted.title")}
-        hidden={!sectionMatches[0]}
       >
         <p>{t("client.gettingStarted.description")}</p>
         <Step n={1}>{t("client.gettingStarted.step1")}</Step>
@@ -527,7 +460,6 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-what"
         icon={BookOpen}
         title={t("client.what.title")}
-        hidden={!sectionMatches[1]}
       >
         <p>{t("client.what.p1")}</p>
         <p>{t("client.what.p2")}</p>
@@ -538,57 +470,51 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-leads"
         icon={Users}
         title={t("client.leads.title")}
-        hidden={!sectionMatches[2]}
       >
         <p>{t("client.leads.description")}</p>
         <div className="space-y-1.5 mt-2">
-          {([
-            ["new",                "#7C3AED"],
-            ["contacted",          "#818CF8"],
-            ["responded",          "#3ACBDF"],
-            ["multipleResponses",  "#31D35C"],
-            ["qualified",          "#AED62E"],
-            ["booked",             "#F7BF0E"],
-            ["closed",             "#6B7280"],
-            ["lost",               "#DC2626"],
-            ["dnd",                "#722F37"],
-          ] as const).map(([key, hex]) => (
-            <div key={key} className="flex gap-3 items-center">
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0"
-                style={{ backgroundColor: `${hex}20`, color: hex }}
-              >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                {t(`client.leads.stageLabels.${key}`)}
-              </span>
-              <span className="text-xs text-muted-foreground">{t(`client.leads.stages.${key}`)}</span>
-            </div>
-          ))}
+          {STAGE_KEYS.map((key) => {
+            const hex = STAGE_KEY_TO_HEX[key];
+            return (
+              <div key={key} className="flex gap-3 items-center">
+                <Pill color={hex} tone="soft" className="gap-1.5 font-semibold shrink-0">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: hex }} />
+                  {t(`client.leads.stageLabels.${key}`)}
+                </Pill>
+                <span className="text-xs text-muted-foreground">{t(`client.leads.stages.${key}`)}</span>
+              </div>
+            );
+          })}
         </div>
       </DocSection>
 
-      {/* Conversations */}
+      {/* Campaign Dashboard */}
+      <DocSection
+        id="sec-campaign-dashboard"
+        icon={Megaphone}
+        title={t("client.campaignDashboard.title")}
+      >
+        <p>{t("client.campaignDashboard.description")}</p>
+        <Step n={1}>{t("client.campaignDashboard.step1")}</Step>
+        <Step n={2}>{t("client.campaignDashboard.step2")}</Step>
+        <Step n={3}>{t("client.campaignDashboard.step3")}</Step>
+        <Step n={4}>{t("client.campaignDashboard.step4")}</Step>
+        <Step n={5}>{t("client.campaignDashboard.step5")}</Step>
+        <Step n={6}>{t("client.campaignDashboard.step6")}</Step>
+        <Tip>{t("client.campaignDashboard.tip")}</Tip>
+      </DocSection>
+
+      {/* Lead Summaries */}
       <DocSection
         id="sec-conversations"
         icon={MessageSquare}
         title={t("client.conversations.title")}
-        hidden={!sectionMatches[3]}
       >
+        <p>{t("client.conversations.intro")}</p>
         <Step n={1}>{t("client.conversations.step1")}</Step>
         <Step n={2}>{t("client.conversations.step2")}</Step>
         <Step n={3}>{t("client.conversations.step3")}</Step>
         <Step n={4}>{t("client.conversations.step4")}</Step>
-        <div className="space-y-1.5 ml-9">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-gray-400 shrink-0" /> <strong>{t("client.conversations.statusSent")}</strong> — {t("client.conversations.statusSentDesc")}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" /> <strong>{t("client.conversations.statusDelivered")}</strong> — {t("client.conversations.statusDeliveredDesc")}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" /> <strong>{t("client.conversations.statusRead")}</strong> — {t("client.conversations.statusReadDesc")}
-          </div>
-        </div>
         <Step n={5}>{t("client.conversations.step5")}</Step>
         <Tip>{t("client.conversations.tip")}</Tip>
       </DocSection>
@@ -598,7 +524,6 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-score"
         icon={Star}
         title={t("client.score.title")}
-        hidden={!sectionMatches[4]}
       >
         <p>{t("client.score.description")}</p>
         <ul className="list-disc pl-4 space-y-1 mt-1">
@@ -612,10 +537,10 @@ function ClientGuide({ search }: { search: string }) {
         <p>{t("client.score.scoreRingsDescription")}</p>
         <div className="flex items-center gap-4 mt-2 flex-wrap">
           {[
-            { score: 15, labelKey: "cold" as const, color: "#6B7280" },
-            { score: 45, labelKey: "warming" as const, color: "#3ACBDF" },
-            { score: 72, labelKey: "hot" as const, color: "#AED62E" },
-            { score: 93, labelKey: "onFire" as const, color: "#F7BF0E" },
+            { score: 15, labelKey: "cold" as const, color: PIPELINE_HEX.Closed },
+            { score: 45, labelKey: "warming" as const, color: PIPELINE_HEX.Responded },
+            { score: 72, labelKey: "hot" as const, color: PIPELINE_HEX["Multiple Responses"] },
+            { score: 93, labelKey: "onFire" as const, color: PIPELINE_HEX.Booked },
           ].map(({ score, labelKey, color }) => {
             const r = 18;
             const circ = 2 * Math.PI * r;
@@ -643,7 +568,7 @@ function ClientGuide({ search }: { search: string }) {
         {/* Score gauges (detail panel view) */}
         <p className="font-semibold mt-4">{t("client.score.scoreBreakdownTitle")}</p>
         <p>{t("client.score.scoreBreakdownDescription")}</p>
-        <div className="rounded-xl border border-border/40 bg-muted/20 px-4 py-4 flex flex-col gap-3 mt-2">
+        <div className="rounded-[var(--r-button)] border border-border/40 bg-muted/20 px-4 py-4 flex flex-col gap-3 mt-2">
           {[
             { labelKey: "gaugeLeadScore" as const, value: 72, bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
             { labelKey: "gaugeEngagement" as const, value: 58, bar: "bg-amber-400", text: "text-amber-600 dark:text-amber-400" },
@@ -677,13 +602,12 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-bookings"
         icon={CalendarCheck}
         title={t("client.bookings.title")}
-        hidden={!sectionMatches[5]}
       >
         <p>{t("client.bookings.p1")}</p>
         <p>{t("client.bookings.p2")}</p>
 
         {/* Mini calendar illustration */}
-        <div className="rounded-xl border border-border/40 bg-muted/20 p-4 mt-1">
+        <div className="rounded-[var(--r-button)] border border-border/40 bg-muted/20 p-4 mt-1">
           <div className="grid grid-cols-7 gap-1 text-center">
             {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
               <span key={i} className="text-[10px] font-bold text-muted-foreground/50 pb-1">{d}</span>
@@ -694,32 +618,32 @@ function ClientGuide({ search }: { search: string }) {
             ))}
             {/* Row 2 */}
             {[5, 6, 7, 8, 9, 10, 11].map((d) => (
-              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 9 ? "bg-[#F7BF0E]/20 text-[#F7BF0E] font-bold ring-1 ring-[#F7BF0E]/30" : "text-muted-foreground")}>{d}</span>
+              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 9 ? "font-bold" : "text-muted-foreground")} style={d === 9 ? calDayStyle(CAL_HEX.booked) : undefined}>{d}</span>
             ))}
             {/* Row 3 */}
             {[12, 13, 14, 15, 16, 17, 18].map((d) => (
-              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 14 ? "bg-[#31D35C]/20 text-[#31D35C] font-bold ring-1 ring-[#31D35C]/30" : d === 17 ? "bg-[#F7BF0E]/20 text-[#F7BF0E] font-bold ring-1 ring-[#F7BF0E]/30" : "text-muted-foreground")}>{d}</span>
+              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 14 || d === 17 ? "font-bold" : "text-muted-foreground")} style={d === 14 ? calDayStyle(CAL_HEX.confirmed) : d === 17 ? calDayStyle(CAL_HEX.booked) : undefined}>{d}</span>
             ))}
             {/* Row 4 */}
             {[19, 20, 21, 22, 23, 24, 25].map((d) => (
-              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 22 ? "bg-[#31D35C]/20 text-[#31D35C] font-bold ring-1 ring-[#31D35C]/30" : "text-muted-foreground")}>{d}</span>
+              <span key={d} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 22 ? "font-bold" : "text-muted-foreground")} style={d === 22 ? calDayStyle(CAL_HEX.confirmed) : undefined}>{d}</span>
             ))}
             {/* Row 5 */}
             {[26, 27, 28, 29, 30, null, null].map((d, i) => (
-              <span key={`r5-${i}`} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 28 ? "bg-[#7A73FF]/20 text-[#7A73FF] font-bold ring-1 ring-[#7A73FF]/30" : d ? "text-muted-foreground" : "")}>{d || ""}</span>
+              <span key={`r5-${i}`} className={cn("text-[11px] rounded-md h-7 flex items-center justify-center", d === 28 ? "font-bold" : d ? "text-muted-foreground" : "")} style={d === 28 ? calDayStyle(CAL_HEX.upcoming) : undefined}>{d || ""}</span>
             ))}
           </div>
           <div className="flex items-center gap-4 mt-3 pt-2 border-t border-border/20">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#F7BF0E]/30 ring-1 ring-[#F7BF0E]/40" />
+              <span className="w-2.5 h-2.5 rounded-sm" style={calSwatchStyle(CAL_HEX.booked)} />
               <span className="text-[10px] text-muted-foreground">{t("client.bookings.legendBooked")}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#31D35C]/30 ring-1 ring-[#31D35C]/40" />
+              <span className="w-2.5 h-2.5 rounded-sm" style={calSwatchStyle(CAL_HEX.confirmed)} />
               <span className="text-[10px] text-muted-foreground">{t("client.bookings.legendConfirmed")}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#7A73FF]/30 ring-1 ring-[#7A73FF]/40" />
+              <span className="w-2.5 h-2.5 rounded-sm" style={calSwatchStyle(CAL_HEX.upcoming)} />
               <span className="text-[10px] text-muted-foreground">{t("client.bookings.legendUpcoming")}</span>
             </div>
           </div>
@@ -733,7 +657,6 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-account-mgmt"
         icon={User}
         title={t("client.accountMgmt.title")}
-        hidden={!sectionMatches[6]}
       >
         <p>{t("client.accountMgmt.description")}</p>
         <Step n={1}>{t("client.accountMgmt.step1")}</Step>
@@ -747,7 +670,6 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-reports"
         icon={BarChart2}
         title={t("client.reports.title")}
-        hidden={!sectionMatches[7]}
       >
         <p>{t("client.reports.description")}</p>
 
@@ -759,7 +681,7 @@ function ClientGuide({ search }: { search: string }) {
             ["costPerLead", "costPerLeadDesc"],
             ["avgReplyTime", "avgReplyTimeDesc"],
           ] as const).map(([metricKey, descKey]) => (
-            <div key={metricKey} className="rounded-lg bg-popover px-4 py-3">
+            <div key={metricKey} className="rounded-[var(--r-button)] bg-popover px-4 py-3">
               <p className="font-semibold text-xs mb-1">{t(`client.reports.${metricKey}`)}</p>
               <p className="text-xs text-muted-foreground">{t(`client.reports.${descKey}`)}</p>
             </div>
@@ -771,13 +693,14 @@ function ClientGuide({ search }: { search: string }) {
         <p>{t("client.reports.pipelineFunnelDescription")}</p>
         <div className="mt-2 space-y-1">
           {([
-            ["new",                "#7C3AED", 120],
-            ["contacted",          "#818CF8", 98],
-            ["responded",          "#3ACBDF", 54],
-            ["multipleResponses",  "#31D35C", 32],
-            ["qualified",          "#AED62E", 18],
-            ["booked",             "#F7BF0E", 11],
-          ] as const).map(([key, hex, count]) => {
+            ["new",                120],
+            ["contacted",          98],
+            ["responded",          54],
+            ["multipleResponses",  32],
+            ["qualified",          18],
+            ["booked",             11],
+          ] as const).map(([key, count]) => {
+            const hex = STAGE_KEY_TO_HEX[key];
             const pct = (count / 120) * 100;
             return (
               <div key={key} className="flex items-center gap-2">
@@ -799,11 +722,12 @@ function ClientGuide({ search }: { search: string }) {
         <p>{t("client.reports.scoreDistributionDescription")}</p>
         <div className="flex items-center gap-4 mt-2 flex-wrap">
           {([
-            { score: 15, statusKey: "new" as const, color: "#6B7280" },
-            { score: 42, statusKey: "responded" as const, color: "#3ACBDF" },
-            { score: 78, statusKey: "qualified" as const, color: "#AED62E" },
-            { score: 95, statusKey: "booked" as const, color: "#F7BF0E" },
-          ]).map(({ score, statusKey, color }) => {
+            { score: 15, statusKey: "new" as const },
+            { score: 42, statusKey: "responded" as const },
+            { score: 78, statusKey: "qualified" as const },
+            { score: 95, statusKey: "booked" as const },
+          ]).map(({ score, statusKey }) => {
+            const color = STAGE_KEY_TO_HEX[statusKey];
             const r = 18;
             const circ = 2 * Math.PI * r;
             const offset = circ - (score / 100) * circ;
@@ -835,11 +759,10 @@ function ClientGuide({ search }: { search: string }) {
         id="sec-faq"
         icon={AlertCircle}
         title={t("client.faq.title")}
-        hidden={!sectionMatches[8]}
       >
         <div className="space-y-2.5">
           {(["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const).map((num) => (
-            <div key={num} className="rounded-lg bg-popover px-4 py-3">
+            <div key={num} className="rounded-[var(--r-button)] bg-popover px-4 py-3">
               <p className="font-semibold text-xs mb-1">{t(`client.faq.q${num}`)}</p>
               <p className="text-xs text-muted-foreground">{t(`client.faq.a${num}`)}</p>
             </div>
@@ -894,305 +817,68 @@ function WhatsNewSheet({ open, onClose }: { open: boolean; onClose: () => void }
 
 export default function DocsPage() {
   const { t } = useTranslation("docs");
-  const isMobile = useIsMobile();
   const isOperator = isOperatorRole();
   const [tab, setTab] = useState<"operator" | "client">(
     isOperator ? "operator" : "client"
   );
-  const [search, setSearch] = useState("");
   const [whatsNew, setWhatsNew] = useState(false);
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
-
-  // ── Gradient tester state (agency only) ────────────────────────────
-  const GRADIENT_KEY = "la:gradient:docs";
-  const [savedGradient, setSavedGradient] = useState<GradientLayer[] | null>(() => {
-    try { const raw = localStorage.getItem(GRADIENT_KEY); return raw ? JSON.parse(raw) as GradientLayer[] : null; } catch { return null; }
-  });
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
-  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientDragMode, setGradientDragMode] = useState(false);
-
-  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
-    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
-    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
-    if (id === -2) { setGradientLayers(prev => prev.filter(l => l.id !== (patch as GradientLayer).id)); return; }
-    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
-  }, []);
-  const resetGradientLayers = useCallback(() => {
-    setGradientLayers(DEFAULT_LAYERS);
-    setGradientDragMode(false);
-  }, []);
-  const handleApplyGradient = useCallback(() => {
-    localStorage.setItem(GRADIENT_KEY, JSON.stringify(gradientLayers));
-    setSavedGradient(gradientLayers);
-    setGradientTesterOpen(false);
-  }, [gradientLayers]);
-
-  // Listen for the global gradient toggle dispatched by the nav menu button
-  useEffect(() => {
-    const handler = () => setGradientTesterOpen(prev => {
-      if (!prev) {
-        try {
-          const raw = localStorage.getItem(GRADIENT_KEY);
-          setGradientLayers(raw ? JSON.parse(raw) as GradientLayer[] : DEFAULT_LAYERS);
-        } catch { /* keep current layers */ }
-      }
-      return !prev;
-    });
-    window.addEventListener("toggle-gradient-tester", handler);
-    return () => window.removeEventListener("toggle-gradient-tester", handler);
-  }, [GRADIENT_KEY]);
-
-  const currentToc = tab === "operator" ? OPERATOR_TOC : CLIENT_TOC;
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // IntersectionObserver: highlight sidebar item matching the visible section
-  useEffect(() => {
-    const container = contentRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Find the topmost visible section
-        const visible = entries
-          .filter(e => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length > 0) {
-          setActiveSectionId(visible[0].target.id);
-        }
-      },
-      {
-        root: container,
-        rootMargin: "-10% 0px -70% 0px",
-        threshold: 0,
-      }
-    );
-
-    // Observe all section elements
-    currentToc.forEach(({ id }) => {
-      const el = container.querySelector(`#${id}`);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [currentToc, tab]);
-
-  function handleSectionClick(id: string) {
-    setActiveSectionId(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
 
   return (
     <CrmShell>
       <div className="h-full flex flex-col pt-4" data-testid="page-docs">
-        <div className={cn(
-          "flex-1 gap-0 min-h-0 overflow-hidden",
-          isMobile ? "flex flex-col" : "flex"
-        )}>
-          {/* ── Left sidebar ── */}
-          <nav
-            className={cn(
-              isMobile
-                ? "flex flex-row gap-1 px-3 py-2 overflow-x-auto [scrollbar-width:none] border-b border-border/20 shrink-0 bg-background"
-                : "w-[340px] shrink-0 bg-muted rounded-lg overflow-y-auto"
-            )}
-            data-testid="docs-nav"
-          >
-            {!isMobile && (
-              <>
-                {/* Title */}
-                <div className="pl-[17px] pr-3.5 pt-10 pb-3 flex items-center justify-between">
-                  <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h1>
+        <div className="flex-1 min-h-0 overflow-y-auto" data-testid="docs-content">
+          <div className="pl-[17px] pr-3.5 pt-10 pb-3 flex items-center justify-between flex-wrap gap-3">
+            <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+              {tab === "operator" ? t("agencyDocumentation") : t("userDocumentation")}
+            </h1>
 
-                  {/* What's New — operator only */}
-                  {isOperator && (
-                    <button
-                      onClick={() => setWhatsNew(true)}
-                      className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
-                    >
-                      <Sparkles className="h-4 w-4 shrink-0" />
-                      <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("whatsNew")}</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* Tab switcher — agency view only */}
-                {isOperator && (
-                  <div className="flex gap-1 pl-[17px] pr-3.5 pt-1 pb-2">
-                    <button
-                      onClick={() => { setTab("operator"); setActiveSectionId(null); setSearch(""); }}
-                      className={cn(
-                        "h-9 px-4 rounded-full inline-flex items-center text-[13px] font-medium transition-colors",
-                        tab === "operator"
-                          ? "bg-card border border-black/[0.125] dark:border-white/[0.125] text-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-card/60 border border-transparent"
-                      )}
-                    >
-                      {t("agencyDocs")}
-                    </button>
-                    <button
-                      onClick={() => { setTab("client"); setActiveSectionId(null); setSearch(""); }}
-                      className={cn(
-                        "h-9 px-4 rounded-full inline-flex items-center text-[13px] font-medium transition-colors",
-                        tab === "client"
-                          ? "bg-card border border-black/[0.125] dark:border-white/[0.125] text-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-card/60 border border-transparent"
-                      )}
-                    >
-                      {t("userDocs")}
-                    </button>
-                  </div>
-                )}
-
-                {/* Search */}
-                <div className="pl-[17px] pr-3.5 pb-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder={t("searchPlaceholder")}
-                      className="w-full h-9 pl-9 pr-8 rounded-full bg-card border border-black/[0.125] dark:border-white/[0.125] text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-brand-indigo/40 transition-[border-color]"
-                    />
-                    {search && (
-                      <button
-                        onClick={() => setSearch("")}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                      >
-                        <X className="h-3 w-3 text-muted-foreground" />
-                      </button>
+            <div className="flex items-center gap-2">
+              {/* Tab switcher: agency view only */}
+              {isOperator && (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setTab("operator")}
+                    className={cn(
+                      "h-9 px-4 rounded-full inline-flex items-center text-[13px] font-medium transition-colors",
+                      tab === "operator"
+                        ? "bg-card border border-black/[0.125] dark:border-white/[0.125] text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-card/60 border border-transparent"
                     )}
-                  </div>
+                  >
+                    {t("agencyDocs")}
+                  </button>
+                  <button
+                    onClick={() => setTab("client")}
+                    className={cn(
+                      "h-9 px-4 rounded-full inline-flex items-center text-[13px] font-medium transition-colors",
+                      tab === "client"
+                        ? "bg-card border border-black/[0.125] dark:border-white/[0.125] text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-card/60 border border-transparent"
+                    )}
+                  >
+                    {t("userDocs")}
+                  </button>
                 </div>
+              )}
 
-                {/* Section nav items */}
-                <div className="flex flex-col gap-[3px] py-1 px-[3px]">
-                  {currentToc.map(({ id, labelKey, icon: Icon }) => {
-                    const isActive = activeSectionId === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => handleSectionClick(id)}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150",
-                          isActive
-                            ? "bg-white dark:bg-white/10 shadow-sm border border-black/[0.06] dark:border-white/[0.06] text-foreground font-semibold"
-                            : "bg-card hover:bg-card-hover text-muted-foreground hover:text-foreground border border-transparent"
-                        )}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span>{t(labelKey)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            {/* Mobile: horizontal pill bar */}
-            {isMobile && (
-              <div className="flex flex-row gap-1">
-                {isOperator && (
-                  <>
-                    <button
-                      onClick={() => { setTab("operator"); setActiveSectionId(null); }}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-medium whitespace-nowrap shrink-0 transition-colors duration-150",
-                        tab === "operator" ? "bg-[#FFF9D9] text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {t("agency")}
-                    </button>
-                    <button
-                      onClick={() => { setTab("client"); setActiveSectionId(null); }}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-medium whitespace-nowrap shrink-0 transition-colors duration-150",
-                        tab === "client" ? "bg-[#FFF9D9] text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {t("user")}
-                    </button>
-                    <div className="w-px bg-border/30 shrink-0 my-1.5" />
-                  </>
-                )}
-                {currentToc.map(({ id, labelKey, icon: Icon }) => {
-                  const isActive = activeSectionId === id;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => handleSectionClick(id)}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-medium whitespace-nowrap shrink-0 transition-colors duration-150",
-                        isActive ? "bg-white dark:bg-white/10 shadow-sm border border-black/[0.06] dark:border-white/[0.06] text-foreground font-semibold" : "text-muted-foreground hover:text-foreground border border-transparent"
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5 shrink-0" />
-                      {t(labelKey)}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </nav>
-
-          {/* ── Right content area ── */}
-          <div
-            ref={contentRef}
-            className={cn(
-              "flex-1 relative bg-card rounded-lg w-full overflow-y-auto",
-              !isMobile && "ml-1.5"
-            )}
-            data-testid="docs-content"
-          >
-            {/* Gradient background — sticky so it stays fixed while scrolling */}
-            {gradientTesterOpen ? (
-              <div className="sticky top-0 left-0 right-0 h-0 z-0">
-                {gradientLayers.map(layer => {
-                  const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0 h-[200vh]" style={style} /> : null;
-                })}
-                {gradientDragMode && (
-                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-                )}
-              </div>
-            ) : savedGradient ? (
-              <div className="sticky top-0 left-0 right-0 h-0 z-0">
-                {savedGradient.map((layer: GradientLayer) => {
-                  const style = layerToStyle(layer);
-                  return style ? <div key={layer.id} className="absolute inset-0 h-[200vh]" style={style} /> : null;
-                })}
-              </div>
-            ) : null}
-
-            <div className="relative">
-              <div className="pl-[17px] pr-3.5 pt-10 pb-3 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-                  {tab === "operator" ? t("agencyDocumentation") : t("userDocumentation")}
-                </h2>
-              </div>
-              <div className="px-6 pb-8">
-                {tab === "operator"
-                  ? <OperatorManual search={search} />
-                  : <ClientGuide search={search} />
-                }
-              </div>
+              {/* What's New: operator only */}
+              {isOperator && (
+                <button
+                  onClick={() => setWhatsNew(true)}
+                  className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("whatsNew")}</span>
+                </button>
+              )}
             </div>
+          </div>
+
+          <div className="px-6 pb-8">
+            {tab === "operator" ? <OperatorManual /> : <ClientGuide />}
           </div>
         </div>
       </div>
-
-      {/* Gradient tester panel */}
-      <GradientTester
-        open={gradientTesterOpen}
-        onClose={() => setGradientTesterOpen(false)}
-        layers={gradientLayers}
-        onUpdateLayer={updateGradientLayer}
-        onResetLayers={resetGradientLayers}
-        dragMode={gradientDragMode}
-        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
-        onApply={handleApplyGradient}
-      />
 
       <WhatsNewSheet open={whatsNew} onClose={() => setWhatsNew(false)} />
     </CrmShell>

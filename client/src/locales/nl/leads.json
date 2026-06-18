@@ -310,6 +310,13 @@
     "summaryLockedHint": "Verschijnt hier wanneer de lead boekt of de chat sluit",
     "outcome": "Uitkomst",
     "keyPoints": "Kernpunten",
+    "summarySections": {
+      "interest": "Interesse",
+      "painPoints": "Pijnpunten",
+      "qualification": "Kwalificatie",
+      "sentiment": "Sentiment",
+      "outcome": "Uitkomst"
+    },
     "gradientTester": "Gradiënt-tester"
   },
   "contact": {

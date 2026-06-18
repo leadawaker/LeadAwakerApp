@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { Trash2, X } from "lucide-react";
+import { Trash2, X, Plus } from "lucide-react";
+import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useListPanelState } from "@/hooks/useListPanelState";
@@ -278,6 +279,24 @@ export function BillingWorkspace(p: Props) {
 
   return (
     <div className="flex flex-col h-full w-full" data-testid="billing-workspace">
+      <MobileListHeader
+        title={t("page.title")}
+        tabSwitcher={(
+          <MobileTabSeg
+            tabs={(["invoices", "contracts", "expenses"] as const).map((tab) => ({ id: tab, label: t(`tabs.${tab}`) }))}
+            activeId={p.activeTab}
+            onChange={(id) => p.onTabChange(id as Tab)}
+          />
+        )}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("toolbar.searchPlaceholder", "Search...")}
+        extraActions={p.isOwner ? (
+          <MobileHeaderIconBtn onClick={handleCreate} aria-label={t("toolbar.add", "Add")} data-testid="mobile-billing-add">
+            <Plus className="h-4 w-4" />
+          </MobileHeaderIconBtn>
+        ) : undefined}
+      />
       <BillingTopBar
         tab={p.activeTab}
         onTabChange={p.onTabChange}
@@ -469,7 +488,9 @@ export function BillingWorkspace(p: Props) {
     if (p.activeTab === "contracts") {
       return (
         <div className="flex-1 min-h-0 overflow-hidden">
-          {p.selectedContract ? (
+          {p.contractsLoading && !p.selectedContract ? (
+            <BillingDetailSkeleton isNarrow={isNarrow} />
+          ) : p.selectedContract ? (
             <ContractDetailPanel
               contract={p.selectedContract}
               isAgencyUser={p.isAgencyUser}
@@ -511,7 +532,9 @@ export function BillingWorkspace(p: Props) {
       <div className="flex-1 min-h-0 overflow-y-auto" style={{ padding: isNarrow ? "16px 16px 40px" : "24px 30px 40px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           {showStatCards && <BillingStatCards tab="invoices" invoices={filteredInvoices} contracts={[]} expenses={[]} />}
-          {p.selectedInvoice ? (
+          {p.invoicesLoading && !p.selectedInvoice ? (
+            <BillingDetailSkeleton isNarrow={isNarrow} />
+          ) : p.selectedInvoice ? (
             <InvoiceDetailPanel
               invoice={p.selectedInvoice}
               account={invoiceAccount}
@@ -527,6 +550,34 @@ export function BillingWorkspace(p: Props) {
       </div>
     );
   }
+}
+
+// Loading placeholder for the invoice/contract detail card — mirrors the real
+// `neu-raised` white card (border-radius var(--r-card), background var(--card))
+// so the right panel doesn't sit empty while data is still loading.
+function BillingDetailSkeleton({ isNarrow }: { isNarrow: boolean }) {
+  return (
+    <div style={{ padding: isNarrow ? "16px 16px 40px" : "24px 30px 40px" }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div
+          className="neu-raised animate-pulse"
+          style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="h-5 w-40 rounded bg-primary/10" />
+            <div className="h-6 w-20 rounded-full bg-primary/10" />
+          </div>
+          <div className="h-px w-full bg-border/40" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div className="h-3 w-24 rounded bg-primary/10" />
+              <div className="h-3.5 rounded bg-primary/10" style={{ width: `${30 + (i % 3) * 10}%` }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Shared comparator for invoice/contract sorting.

@@ -112,6 +112,9 @@ export const campaignsStorage = {
   },
 
   async getCampaignById(id: number): Promise<Campaigns | undefined> {
+    // Guard against NaN/undefined ids (e.g. a `/api/campaigns/undefined` request):
+    // Postgres rejects "NaN" for an integer column and throws. Treat as not-found.
+    if (!Number.isFinite(id)) return undefined;
     const [row] = await db.select().from(campaigns).where(eq(campaigns.id, id));
     return row;
   },

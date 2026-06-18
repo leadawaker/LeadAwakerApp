@@ -85,7 +85,7 @@ export function CampaignMetricsPanel({
       */}
       <div className="summary-grid">
         <div className="summary-perf">
-          <PerformancePanel metrics={allMetrics} animTrigger={animTrigger} />
+          <PerformancePanel leads={leadList} campaignId={campaignId} accountId={accountId} animTrigger={animTrigger} />
         </div>
 
         <div className="summary-panels">

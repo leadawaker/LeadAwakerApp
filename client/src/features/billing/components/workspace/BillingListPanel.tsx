@@ -189,7 +189,13 @@ export function BillingListPanel({
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (
-            <div className="flex items-center justify-center py-6"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
+            <div className="flex flex-col items-center gap-0">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-center py-1 mx-1 animate-pulse" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div className="h-11 w-11 rounded-[10px] bg-primary/10" />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-0">
               {flatItems.map((it) => {
@@ -215,7 +221,22 @@ export function BillingListPanel({
         <>
           <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area px-2 pt-1.5 pb-2">
             {loading ? (
-              <div className="flex items-center justify-center py-10"><div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" /></div>
+              <div className="flex flex-col gap-[6px] pb-2">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-2.5 py-2.5 rounded-[var(--r-surface,10px)] animate-pulse"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
+                    <div className="h-9 w-9 rounded-[var(--r-surface,10px)] bg-primary/10 shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="h-3 w-2/3 rounded-full bg-primary/10" />
+                      <div className="h-2.5 w-1/2 rounded-full bg-primary/5" />
+                    </div>
+                    <div className="h-3.5 w-12 rounded bg-primary/10 shrink-0" />
+                  </div>
+                ))}
+              </div>
             ) : paginatedItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                 <EmptyIcon className="w-8 h-8 text-muted-foreground/30 mb-3" />

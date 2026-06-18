@@ -24,6 +24,8 @@ export function LocalizedCombo({
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState(displayValue);
   const [activeIdx, setActiveIdx] = useState(-1);
+  // Tracks whether the user has typed since the dropdown opened (vs just navigating)
+  const [userTyped, setUserTyped] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const listId = useId();
@@ -52,15 +54,18 @@ export function LocalizedCombo({
     return () => document.removeEventListener("mousedown", handler);
   }, [open, input]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered = options.filter(o =>
-    !input || o.label.toLowerCase().includes(input.toLowerCase())
-  );
+  // Only filter by input text when the user has actually typed — opening the
+  // dropdown should show ALL options regardless of what's currently in the field
+  const filtered = userTyped
+    ? options.filter(o => !input || o.label.toLowerCase().includes(input.toLowerCase()))
+    : options;
 
   const selectOption = useCallback((opt: { label: string; store: string }) => {
     setInput(opt.label);
     onChange(opt.store);
     setOpen(false);
     setActiveIdx(-1);
+    setUserTyped(false);
   }, [onChange]);
 
   const commitCustom = useCallback(() => {
@@ -108,8 +113,8 @@ export function LocalizedCombo({
         aria-autocomplete="list"
         aria-controls={open ? listId : undefined}
         aria-expanded={open}
-        onChange={e => { setInput(e.target.value); setOpen(true); setActiveIdx(-1); }}
-        onFocus={() => { setOpen(true); setActiveIdx(-1); }}
+        onChange={e => { setInput(e.target.value); setUserTyped(true); setOpen(true); setActiveIdx(-1); }}
+        onFocus={() => { setUserTyped(false); setOpen(true); setActiveIdx(-1); }}
         onKeyDown={handleKeyDown}
         onBlur={e => {
           // Only commit if focus left the whole wrapper
@@ -123,7 +128,7 @@ export function LocalizedCombo({
         type="button"
         tabIndex={-1}
         aria-label="Open options"
-        onClick={() => { inputRef.current?.focus(); setOpen(o => !o); }}
+        onClick={() => { inputRef.current?.focus(); setUserTyped(false); setOpen(o => !o); }}
         style={{
           position: "absolute", right: "0.5rem", top: "50%",
           transform: "translateY(-50%)", background: "none", border: "none",

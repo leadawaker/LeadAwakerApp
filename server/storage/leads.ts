@@ -134,7 +134,14 @@ export const leadsStorage = {
   },
 
   async createLead(data: InsertLeads): Promise<Leads> {
-    const [row] = await db.insert(leads).values(data as any).returning();
+    // Default the automation lifecycle so the lead is actually reachable by the
+    // engine: a lead with a campaign must be 'queued' (the launcher only claims
+    // queued leads), otherwise 'paused'. Never overrides an explicit value.
+    const values: any = { ...data };
+    if (values.automationStatus == null) {
+      values.automationStatus = values.campaignsId ? "queued" : "paused";
+    }
+    const [row] = await db.insert(leads).values(values).returning();
     return row;
   },
 

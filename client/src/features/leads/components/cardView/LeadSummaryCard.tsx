@@ -9,6 +9,7 @@
 import { useTranslation } from "react-i18next";
 import { Sparkles } from "lucide-react";
 import { CardLabel, HEAD_H } from "./designPrimitives";
+import { AiSummaryView } from "@/components/crm/AiSummaryView";
 
 export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Record<string, any>; tier?: string | null; status?: string; hideHeader?: boolean }) {
   const { t } = useTranslation("leads");
@@ -108,7 +109,7 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Reco
               {status && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--paper)", background: "var(--wine-grad)" }}>{status}</span>}
               {tier && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>{tier}</span>}
             </div>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--ink-soft)", whiteSpace: "pre-wrap", textWrap: "pretty" }}>{summaryText}</p>
+            <AiSummaryView text={summaryText} />
           </>
         )}
       </div>
