@@ -21,39 +21,22 @@ interface OverviewData {
   onRefresh: () => void;
 }
 
-function OverviewRegular(p: OverviewData) {
+function OverviewRegular(p: OverviewData & { readOnly?: boolean }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <AccountDetailsPanel account={p.account} onSave={p.onSave} cols={2} />
-      <div style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: 22, alignItems: "start" }}>
-        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} />
-          <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} />
-        </div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, height: "100%" }}>
+      {/* Left panel — fills height, scrolls independently.
+          8px horizontal padding preserves neumorphic shadow room (request 6). */}
+      <div style={{ overflowY: "auto", padding: "4px 8px 16px", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <AccountDetailsPanel account={p.account} onSave={p.readOnly ? async () => {} : p.onSave} cols={1} style={{ flex: 1, background: "var(--bone)" }} readOnly={p.readOnly} />
       </div>
-    </div>
-  );
-}
-
-function OverviewUltra(p: OverviewData) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr)", gap: 20, alignItems: "start" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <AccountDetailsPanel account={p.account} onSave={p.onSave} cols={2} />
-        <IntegrationsPanel account={p.account} d={p.d} onSave={p.onSave} fieldCols={2} stacked />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} />
-        <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} />
-        <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, height: "100%", alignSelf: "stretch", minHeight: 0 }}>
-        <div style={{ flex: "1.6 1 0", minHeight: 0, display: "flex", flexDirection: "column" }}>
-          <KBPanel accountId={p.accountId} />
-        </div>
-        <div style={{ flex: "1 1 0", minHeight: 320, display: "flex", flexDirection: "column" }}>
-          <CommunicationProfilePanel accountId={p.accountId} niche={p.account.business_niche} accountName={p.account.name} accountLogoUrl={p.account.logo_url} fill={false} fillHeight />
+      {/* Right panel — fills height, scrolls independently. */}
+      <div style={{ overflowY: "auto", padding: "4px 8px 16px", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div className="neu-inset" style={{ borderRadius: "var(--r-card)", overflow: "hidden", flex: 1 }}>
+          <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} naked />
+          <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
+          <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} naked />
+          <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
+          <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} naked />
         </div>
       </div>
     </div>
@@ -71,16 +54,22 @@ function OverviewMobile(p: OverviewData) {
   );
 }
 
-export function TabContent({ tab, ultra, isMobile, data }: {
-  tab: WorkspaceTab; ultra: boolean; isMobile: boolean; data: OverviewData;
+export function TabContent({ tab, isMobile, data, readOnly = false }: {
+  tab: WorkspaceTab; isMobile: boolean; data: OverviewData; readOnly?: boolean;
 }) {
   if (tab === "overview") {
     if (isMobile) return <OverviewMobile {...data} />;
-    return ultra ? <OverviewUltra {...data} /> : <OverviewRegular {...data} />;
+    return <OverviewRegular {...data} readOnly={readOnly} />;
   }
-  if (tab === "integrations") return <IntegrationsPanel account={data.account} d={data.d} onSave={data.onSave} fieldCols={isMobile ? 1 : 3} stacked={isMobile} />;
-  if (tab === "knowledge") return <KBPanel accountId={data.accountId} />;
-  if (tab === "communication") return <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} />;
+  if (tab === "integrations") return (
+    <IntegrationsPanel account={data.account} d={data.d} onSave={data.onSave} fieldCols={isMobile ? 1 : 3} stacked={isMobile} readOnly={readOnly} />
+  );
+  if (tab === "communication") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+      <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} readOnly={readOnly} />
+      {!readOnly && <KBPanel accountId={data.accountId} collapsible defaultCollapsed titleOverride="Company Intel" insetCrisp />}
+    </div>
+  );
   return null;
 }
 
