@@ -653,7 +653,7 @@ export function CampaignListView({
           on narrow-but-not-mobile (tablet, 768–1024px) it still collapses to the classic split-panel. */}
       <MobileRecede open={isMobile768 && mobilePanelOpen} fill={isMobile768}>
       <div className={cn(
-        "flex-col bg-panel-list-bg overflow-hidden border-r border-[var(--line)] min-h-0",
+        "flex-col h-full bg-panel-list-bg overflow-hidden border-r border-[var(--line)] min-h-0",
         isListHidden
           ? cn((isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex", "lg:hidden")
           : isListCompact
