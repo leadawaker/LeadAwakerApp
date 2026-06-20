@@ -180,8 +180,10 @@ export function CampaignListView({
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const DETAIL_TABS: TabDef[] = useMemo(() =>
-    DETAIL_TAB_DEFS.map((tab) => ({ ...tab, label: t(tab.labelKey) })),
-  [t]);
+    DETAIL_TAB_DEFS
+      .filter((tab) => isAgencyUser || tab.id !== "configurations")
+      .map((tab) => ({ ...tab, label: t(tab.labelKey) })),
+  [t, isAgencyUser]);
 
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 20;
@@ -651,7 +653,7 @@ export function CampaignListView({
           on narrow-but-not-mobile (tablet, 768–1024px) it still collapses to the classic split-panel. */}
       <MobileRecede open={isMobile768 && mobilePanelOpen} fill={isMobile768}>
       <div className={cn(
-        "flex-col bg-panel-list-bg overflow-hidden border-r border-[var(--line)]",
+        "flex-col bg-panel-list-bg overflow-hidden border-r border-[var(--line)] min-h-0",
         isListHidden
           ? cn((isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex", "lg:hidden")
           : isListCompact
@@ -703,11 +705,7 @@ export function CampaignListView({
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-              <Megaphone className="w-8 h-8 text-muted-foreground/30 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">{t("empty.noCampaignsFound")}</p>
-              {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">{t("empty.tryDifferentSearch")}</p>}
-            </div>
+            <div />
           ) : (
             <div
               key={`page-${currentPage}`}
@@ -847,7 +845,7 @@ export function CampaignListView({
               mainColumnRef={compactObserverRef}
             />
           ) : (
-            <CampaignDetailViewEmpty />
+            <CampaignDetailViewEmpty showNoCampaigns={totalCampaigns === 0} />
           )}
         </div>
       </div>
