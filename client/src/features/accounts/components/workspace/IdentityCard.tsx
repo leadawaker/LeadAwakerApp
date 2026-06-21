@@ -21,10 +21,12 @@ function MetaChip({ m }: { m: MetaChipData }) {
   );
 }
 
-export function IdentityCard({ d, metrics, onSave }: {
+export function IdentityCard({ d, metrics, onSave, compact = false }: {
   d: AccountDetail;
   metrics: MetaChipData[];
   onSave: (field: string, value: string) => Promise<void>;
+  /** Compact mode: tighter padding, no metrics row (used in mobile sheet). */
+  compact?: boolean;
 }) {
   const { t } = useTranslation("accounts");
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -55,30 +57,35 @@ export function IdentityCard({ d, metrics, onSave }: {
     await onSave("logo_url", "");
   }, [onSave]);
 
+  // Compact mode (mobile sheet): smaller logo, tighter padding, no metrics.
+  const logoSize = compact ? 40 : 56;
+  const nameFontSize = compact ? 22 : 31;
+  const outerPad = compact ? "14px 16px" : "22px 26px";
+
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-panel)", padding: "22px 26px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
-      <div className="row" style={{ gap: 16, minWidth: 0 }}>
+    <div className="neu-raised" style={{ borderRadius: compact ? "var(--r-card)" : "var(--r-panel)", padding: outerPad, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div className="row" style={{ gap: 12, minWidth: 0 }}>
         {/* Logo circle — click to upload */}
         <div className="group" style={{ position: "relative", flexShrink: 0 }}>
           <div
             onClick={() => logoInputRef.current?.click()}
             title={t("detail.clickToUploadLogo")}
             style={{
-              width: 56, height: 56, borderRadius: "var(--r-card)", overflow: "hidden", cursor: "pointer",
+              width: logoSize, height: logoSize, borderRadius: "var(--r-card)", overflow: "hidden", cursor: "pointer",
               background: d.logoUrl ? "var(--bg)" : "var(--wine-grad)",
               boxShadow: "var(--sh-raised-medium), inset 0 1px 0 rgba(255,255,255,0.12)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--paper)", fontFamily: '"Yeseva One", serif', fontSize: 25, paddingBottom: d.logoUrl ? 0 : 2,
+              color: "var(--paper)", fontFamily: '"Yeseva One", serif', fontSize: compact ? 18 : 25, paddingBottom: d.logoUrl ? 0 : 2,
             }}
           >
             {d.logoUrl ? (
               <img src={d.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
-              d.mono || <Building2 className="w-6 h-6" />
+              d.mono || <Building2 className={compact ? "w-4 h-4" : "w-6 h-6"} />
             )}
           </div>
           <div className="opacity-0 group-hover:opacity-100" style={{ position: "absolute", inset: 0, borderRadius: "var(--r-card)", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity 150ms", pointerEvents: "none" }}>
-            <Camera className="w-5 h-5" style={{ color: "#fff" }} />
+            <Camera className={compact ? "w-4 h-4" : "w-5 h-5"} style={{ color: "#fff" }} />
           </div>
           {d.logoUrl && !cropSrc && (
             <button
@@ -94,20 +101,24 @@ export function IdentityCard({ d, metrics, onSave }: {
         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFile} />
 
         <div style={{ minWidth: 0 }}>
-          <div className="row" style={{ gap: 12, marginBottom: 5 }}>
-            <h1 className="serif" style={{ margin: 0, fontSize: 31, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.015em" }}>{d.name}</h1>
+          <div className="row" style={{ gap: 10, marginBottom: 4 }}>
+            <h1 className="serif" style={{ margin: 0, fontSize: nameFontSize, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.015em" }}>{d.name}</h1>
             <AccountStatusPill status={d.status} label={statusLabel} />
           </div>
-          <div className="row" style={{ gap: 9, fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>
+          <div className="row" style={{ gap: 9, fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>
             {d.type && <><span>{d.type}</span><span style={{ color: "var(--mute-2)" }}>·</span></>}
             {d.niche && <><span>{d.niche}</span><span style={{ color: "var(--mute-2)" }}>·</span></>}
             <span style={{ color: "var(--mute-2)" }}>#{d.id}</span>
           </div>
         </div>
       </div>
-      <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-        {metrics.map((m) => <MetaChip key={m.key} m={m} />)}
-      </div>
+
+      {/* Metrics row: hidden on mobile/compact (request 2) */}
+      {!compact && (
+        <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+          {metrics.map((m) => <MetaChip key={m.key} m={m} />)}
+        </div>
+      )}
 
       {cropSrc && <LogoCropModal srcUrl={cropSrc} onSave={handleCropSave} onCancel={handleCropCancel} />}
     </div>

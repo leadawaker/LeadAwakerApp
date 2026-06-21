@@ -46,7 +46,7 @@ export function EntityAvatar({
     return (
       <div
         className={cn("rounded-full overflow-hidden shrink-0", isNamed ? sizeClass.split(" ").slice(0, 2).join(" ") : (SIZE_MAP[size as number] ? sizeClass.split(" ").slice(0, 2).join(" ") : undefined), className)}
-        style={sizeStyle}
+        style={{ backgroundColor: bgColor, ...sizeStyle }}
       >
         <img
           src={photoUrl}

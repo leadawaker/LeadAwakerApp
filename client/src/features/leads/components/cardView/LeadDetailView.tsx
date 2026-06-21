@@ -3,11 +3,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
-  FileText,
-  MoreHorizontal,
   Calendar,
-  Trash2,
-  Palette,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -51,13 +47,6 @@ import { ContactWidget } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
 import { TempBadge } from "./designPrimitives";
 import { LeadSummaryCard } from "./LeadSummaryCard";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // ── Alias used inside this file ──────────────────────────────────────────────
@@ -367,36 +356,6 @@ export function LeadDetailView({
               {campName && <>{sep}<span>{campName}{campaignNumber ? ` #${campaignNumber}` : ""}</span></>}
               {!isNarrow && acctName && <>{sep}<span>{acctName}</span></>}
             </div>
-          </div>
-          <div style={{ display: "flex", gap: 7, alignItems: "center", flexShrink: 0 }}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="la-btn la-btn--soft la-btn--icon" style={{ width: 34, height: 34 }} title={t("common.more", "More")}><MoreHorizontal className="h-3.5 w-3.5" /></button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handlePdf}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  {t("detailView.toPdf", "Export PDF")}
-                </DropdownMenuItem>
-                {isAgencyUser && (
-                  <DropdownMenuItem onClick={toggleGradientTester}>
-                    <Palette className="h-4 w-4 mr-2" />
-                    {t("detail.gradientTester", "Gradient tester")}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    if (deleteConfirm) { handleDelete(); }
-                    else { setDeleteConfirm(true); }
-                  }}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {deleteConfirm ? t("confirm.yes", "Confirm delete") : t("detailView.deleteLead", "Delete lead")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
         {status && <PipelineDashBar status={status} />}

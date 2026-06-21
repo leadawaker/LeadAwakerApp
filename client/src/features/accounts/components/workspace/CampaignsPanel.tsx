@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { Plus, ChevronRight, MoreHorizontal, MessageCircle, Check, Trash2, ExternalLink, Tag } from "lucide-react";
+import { Plus, MoreHorizontal, MessageCircle, Check, Trash2, ExternalLink, Tag } from "lucide-react";
 import { CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -47,10 +47,10 @@ function CampaignRow({ c, onOpen, selected, onToggleSelect, onDelete, leadsLabel
         aria-checked={selected}
         style={{
           width: 38, height: 38, fontFamily: "var(--mono)", fontSize: 12, cursor: "pointer",
-          background: selected ? "var(--surface)" : "var(--bg)",
-          boxShadow: selected ? "none" : "var(--sh-inset-crisp)",
+          background: selected ? "var(--surface)" : (CAMPAIGN_STATUS_HEX[c.status] || "var(--mute-2)"),
+          boxShadow: selected ? "none" : "var(--sh-raised-crisp)",
           border: selected ? "2px solid var(--wine)" : "none",
-          color: selected ? "var(--wine)" : "var(--mute)",
+          color: selected ? "var(--wine)" : "var(--paper)",
         }}
       >
         {selected ? <Check size={18} /> : c.mono}
@@ -70,7 +70,7 @@ function CampaignRow({ c, onOpen, selected, onToggleSelect, onDelete, leadsLabel
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="la-btn la-btn--inset la-btn--icon" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}><MoreHorizontal size={14} /></button>
+          <button className="la-btn la-btn--icon" style={{ flexShrink: 0, background: "transparent", boxShadow: "none", color: "var(--mute-2)" }} onClick={(e) => e.stopPropagation()}><MoreHorizontal size={14} /></button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40 bg-white" onClick={(e) => e.stopPropagation()}>
           <DropdownMenuItem onClick={(e) => { e.preventDefault(); onOpen(); }} className="flex items-center gap-2 text-[12px]">
@@ -86,7 +86,7 @@ function CampaignRow({ c, onOpen, selected, onToggleSelect, onDelete, leadsLabel
   );
 }
 
-export function CampaignsPanel({ campaigns, loading, onRefresh }: { campaigns: CampaignRowData[]; loading?: boolean; onRefresh?: () => void }) {
+export function CampaignsPanel({ campaigns, loading, onRefresh, inset = false, naked = false }: { campaigns: CampaignRowData[]; loading?: boolean; onRefresh?: () => void; inset?: boolean; naked?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -127,7 +127,7 @@ export function CampaignsPanel({ campaigns, loading, onRefresh }: { campaigns: C
   };
 
   return (
-    <Panel eyebrow="02" title={t("panels.campaigns")} count={t("metrics.nActive", { count: campaigns.length })}
+    <Panel eyebrow="02" title={t("panels.campaigns")} count={t("metrics.nActive", { count: campaigns.length })} inset={inset} naked={naked}
       action={<PanelAction wine icon={<Plus size={12} />} onClick={() => setLocation(`${ROUTE_PREFIX}/campaigns`)}>{t("panels.actions.new")}</PanelAction>}>
 
       {selected.size > 0 && (
@@ -183,9 +183,6 @@ export function CampaignsPanel({ campaigns, loading, onRefresh }: { campaigns: C
           ))}
         </div>
       )}
-      <button className="la-btn la-btn--soft" style={{ alignSelf: "center", marginTop: 12 }} onClick={() => setLocation(`${ROUTE_PREFIX}/campaigns`)}>
-        {t("panels.actions.viewAllCampaigns")}<ChevronRight size={12} />
-      </button>
     </Panel>
   );
 }

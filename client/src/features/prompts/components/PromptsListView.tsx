@@ -735,7 +735,7 @@ export function PromptsListView({
         </div>
 
         {/* Panel collapse toggle */}
-        <div className="hidden md:flex items-center" style={{ flexShrink: 0 }}>
+        <div className="hidden lg:flex items-center" style={{ flexShrink: 0 }}>
           <button
             className="la-btn la-btn--soft la-btn--icon"
             onClick={cyclePanel}
@@ -752,7 +752,7 @@ export function PromptsListView({
         {selectedPrompt && (
           MODEL_OPTIONS.includes(selectedPrompt.model) ? (
             <select
-              className="hidden md:block text-[11px] font-mono outline-none cursor-pointer shrink-0"
+              className="hidden lg:block text-[11px] font-mono outline-none cursor-pointer shrink-0"
               style={{
                 background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
                 color: "var(--mute)", borderRadius: "var(--r-pill)",
@@ -765,7 +765,7 @@ export function PromptsListView({
             </select>
           ) : (
             <span
-              className="hidden md:inline-block text-[11px] font-mono shrink-0"
+              className="hidden lg:inline-block text-[11px] font-mono shrink-0"
               style={{
                 background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
                 color: "var(--mute-2)", borderRadius: "var(--r-pill)",
@@ -778,7 +778,7 @@ export function PromptsListView({
         )}
 
         {/* Controls */}
-        <div className="hidden md:flex items-center gap-1.5">
+        <div className="hidden lg:flex items-center gap-1.5">
 
           {/* Edit actions — left of search, only when prompt selected */}
           {selectedPrompt && (
@@ -1091,21 +1091,23 @@ export function PromptsListView({
 
         {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
         {leftPanelHidden ? (
-          <div className="hidden md:flex md:flex-col min-h-0 overflow-hidden" />
+          <div className="hidden lg:flex lg:flex-col min-h-0 overflow-hidden" />
         ) : leftPanelCompact ? (
-          <CompactPromptRail
-            items={tabFilteredPrompts}
-            selectedId={selectedId}
-            onSelect={(p) => { setSelectedPrompt(p); setMobileView("detail"); }}
-            campaigns={campaigns}
-            accountMap={accountMap}
-          />
+          <div className="hidden lg:flex">
+            <CompactPromptRail
+              items={tabFilteredPrompts}
+              selectedId={selectedId}
+              onSelect={(p) => { setSelectedPrompt(p); setMobileView("detail"); }}
+              campaigns={campaigns}
+              accountMap={accountMap}
+            />
+          </div>
         ) : (
           <div
             className={cn(
               "min-h-0 overflow-hidden flex-col",
-              mobileView === "detail" ? "hidden md:flex" : "flex",
-              "w-full md:w-[300px] md:shrink-0",
+              mobileView === "detail" ? "hidden lg:flex" : "flex",
+              "w-full lg:w-[var(--toolbar-w)] lg:shrink-0",
             )}
             style={{ borderRight: "1px solid var(--line)", background: "var(--bg)" }}
           >
@@ -1141,7 +1143,7 @@ export function PromptsListView({
         {/* ── RIGHT PANEL ──────────────────────────────────────────────── */}
         <div className={cn(
           "flex-1 min-h-0 flex flex-col overflow-hidden relative",
-          mobileView === "list" ? "hidden md:flex" : "flex",
+          mobileView === "list" ? "hidden lg:flex" : "flex",
         )} style={{ background: "var(--surface)" }}>
           {selectedPrompt ? (
             <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0" style={{ padding: 8, gap: 8 }}>

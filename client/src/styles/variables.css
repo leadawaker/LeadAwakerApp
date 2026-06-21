@@ -11,6 +11,7 @@
   --foreground: 300 14% 10%;          /* #1F1A14 — warm near-black text */
   --bg-main: 36 71% 99%;             /* matches background */
   --bg-2: 38 29% 85%;                /* #E4DCCC — sidebar / nav rail */
+  --footer-bg: 38 40% 93%;           /* #F2EADE — mobile bottom bar: creamier/lighter than --bg-2 */
 
   --card: 0 0% 100%;                 /* #FFFFFF — white cards */
   --card-foreground: 30 14% 10%;
@@ -150,67 +151,11 @@
   --neu-dark: rgba(105, 75, 40, 0.40);
   --neu-light: rgb(255, 253, 245);
 
-  /* ── Shadow offset/blur tiers ── */
-  --d-crisp-o: 5px;
-  --d-crisp-b: 13px;
-  --d-medium-o: 10px;
-  --d-medium-b: 28px;
-  --d-large-o: 18px;
-  --d-large-b: 48px;
-
-  /* ── RAISED — bilateral neumorphic (extruded from surface) ── */
-  --sh-raised-crisp:
-    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
-    calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) var(--neu-light);
-  --sh-raised-medium:
-    calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
-    calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) var(--neu-light);
-  --sh-raised-large:
-    calc(var(--lx) * var(--d-large-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o) * var(--light-strength) * -1) var(--d-large-b) var(--neu-dark),
-    calc(var(--lx) * var(--d-large-o) * var(--light-strength)) calc(var(--ly) * var(--d-large-o) * var(--light-strength)) var(--d-large-b) var(--neu-light);
-
-  /* ── INSET — pressed in (raised inverted) ── */
-  --sh-inset-crisp:
-    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) var(--neu-light);
-  --sh-inset-medium:
-    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) var(--neu-light);
-  --sh-inset-large:
-    inset calc(var(--lx) * var(--d-large-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-large-o) * var(--light-strength) * -1) var(--d-large-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-large-o) * var(--light-strength)) calc(var(--ly) * var(--d-large-o) * var(--light-strength)) var(--d-large-b) var(--neu-light);
-
-  /* ── POLISHED — drop shadows + rim highlights (richer multi-layer) ── */
-  --sh-polished-crisp:
-    calc(var(--lx) * var(--d-crisp-o) * var(--depth-polished) * -1)
-    calc(var(--ly) * var(--d-crisp-o) * var(--depth-polished) * -1)
-    calc(var(--d-crisp-b) * 0.2 * var(--depth-polished))
-    calc(var(--d-crisp-o) * -0.1)
-    rgba(101, 66, 24, 0.06),
-    inset calc(var(--lx) * var(--d-crisp-o) * 1.3) calc(var(--ly) * var(--d-crisp-o) * 1.3) 0px 0 rgba(255, 253, 245, 0.95),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
-
-  --sh-polished-medium:
-    calc(var(--lx) * var(--d-crisp-o) * 2 * var(--depth-polished) * -2)
-    calc(var(--ly) * var(--d-crisp-o) * 2 * var(--depth-polished) * -2)
-    calc(var(--d-crisp-b) * var(--depth-polished))
-    calc(var(--d-crisp-o) * -0.2)
-    rgba(101, 66, 24, 0.06),
-    0 calc(var(--d-large-o) * 1.2 * var(--depth-polished)) calc(var(--d-large-b) * var(--depth-polished)) calc(var(--d-large-o) * -0.3) rgba(95, 70, 40, 0.10),
-    inset calc(var(--lx) * var(--d-large-o) * 1.5) calc(var(--ly) * var(--d-large-o) * 1.5) 1px 0 rgba(255, 253, 245, 0.95),
-    inset calc(var(--lx) * var(--d-large-o) * -1.5) calc(var(--ly) * var(--d-large-o) * -1.5) 10px 0 rgba(255, 253, 245, 0.35),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
-
-  --sh-polished-large:
-    calc(var(--lx) * var(--d-large-o) * 3.5 * var(--depth-polished) * -1)
-    calc(var(--ly) * var(--d-large-o) * 3.5 * var(--depth-polished) * -1)
-    calc(var(--d-large-b) * 2.0 * var(--depth-polished))
-    calc(var(--d-large-o) * -0.2)
-    rgba(151, 119, 81, 0.15),
-    0 calc(var(--d-large-o) * 1.6 * var(--depth-polished)) calc(var(--d-large-b) * 1.4 * var(--depth-polished)) calc(var(--d-large-o) * -0.4) rgba(95, 70, 40, 0.10),
-    inset calc(var(--lx) * var(--d-large-o) * 1.8) calc(var(--ly) * var(--d-large-o) * 1.8) 1px 0 rgba(255, 253, 245, 0.95),
-    inset calc(var(--lx) * var(--d-large-o) * -1.8) calc(var(--ly) * var(--d-large-o) * -1.8) 30px 0 rgba(255, 253, 245, 0.35),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  /* Shadow offset/blur tiers + all --sh-raised/inset/polished tokens live in
+     design-system.css's later :root, which overrides anything set here. They
+     used to be duplicated in this file; removed to keep one source of truth.
+     The --neu-dark/--neu-light base colors above stay live (design-system.css
+     does not redefine them). */
 
   /* ── Glass tokens ── */
   --glass-bg: rgba(255, 250, 240, 0.55);
@@ -242,7 +187,7 @@
 
   /* ── Surface primitive tokens ── */
   --list-card-radius: 0.75rem;
-  --list-card-radius-mobile: 1.5rem;
+  --list-card-radius-mobile: 0.75rem;
   --list-card-pad-x: 0.625rem;
   --list-card-pad-y: 0.5rem;
   --list-card-min-h: 3.5rem;
@@ -276,6 +221,7 @@
   --foreground: 36 20% 90%;           /* #EAE3D7 — warm off-white text */
   --bg-main: 30 12% 8%;
   --bg-2: 30 12% 11%;                 /* nav rail / sidebar chrome */
+  --footer-bg: 30 12% 14%;            /* mobile bottom bar — slightly lifted from bg-2 in dark */
 
   --card: 30 11% 13%;                 /* #241F1B — elevated card surface */
   --card-foreground: 36 20% 90%;

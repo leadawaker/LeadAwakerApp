@@ -17,6 +17,7 @@
     "tasks": "Taken",
     "automations": "Automatiseringen",
     "settings": "Instellingen",
+    "editProfile": "Profiel bewerken",
     "more": "Meer",
     "paint": "Verven",
     "support": "Ondersteuning",
@@ -25,8 +26,12 @@
     "language": "Taal",
     "themeLight": "Lichte modus",
     "themeDark": "Donkere modus",
-    "themeSystem": "Systeem volgen",
+    "themeSystem": "Systeemthema",
     "messageFounder": "Bericht aan Gabriel",
+    "helpAndDocs": "Help & docs",
+    "documentation": "Documentatie",
+    "socialMedia": "Sociale media",
+    "founderInbox": "Inbox",
     "logout": "Uitloggen"
   },
   "sidebarSections": {
@@ -39,6 +44,9 @@
   "sidebarSubmenu": {
     "summary": "Overzicht",
     "configurations": "Instellingen"
+  },
+  "help": {
+    "assistance": "Assistentie"
   },
   "topbar": {
     "search": "Zoeken",
@@ -253,5 +261,14 @@
   "agentWidget": {
     "dockToSide": "Dokken aan zijkant",
     "undock": "Losmaken"
+  },
+  "voiceNote": {
+    "title": "Spraaknotitie",
+    "start": "Opname starten",
+    "stop": "Stoppen en transcriberen",
+    "recording": "Opnemen…",
+    "transcribing": "Transcriberen…",
+    "copied": "Gekopieerd naar klembord",
+    "failed": "Spraaknotitie mislukt"
   }
 }

@@ -55,7 +55,10 @@
     "impersonation": "Weergeven als",
     "impersonationDescription": "Wissel je weergave om de app als een andere rol te bekijken. Gebruik de topbar om de weergave te verlaten.",
     "viewAsAdmin": "Weergeven als Admin",
-    "lastLogin": "Laatste login"
+    "lastLogin": "Laatste login",
+    "outreachPages": "Outreach-pagina's",
+    "outreachPagesDescription": "Toon de Inbox-, Prospects- en Cadence-pagina's in de navigatiebalk.",
+    "outreachPagesToggle": "Tonen in navigatiebalk"
   },
   "notifications": {
     "title": "Meldingen",

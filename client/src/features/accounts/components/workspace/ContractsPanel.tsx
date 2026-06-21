@@ -120,7 +120,7 @@ function AddContractPopover({ accountId, onLinked }: { accountId: number; onLink
   );
 }
 
-export function ContractsPanel({ contracts, loading, accountId, onRefresh }: { contracts: ContractRowData[]; loading?: boolean; accountId: number; onRefresh?: () => void }) {
+export function ContractsPanel({ contracts, loading, accountId, onRefresh, inset = false, naked = false }: { contracts: ContractRowData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
 
@@ -131,7 +131,7 @@ export function ContractsPanel({ contracts, loading, accountId, onRefresh }: { c
   const statusLabel = (s: string) => t(`contractStatus.${s}`, { defaultValue: s });
 
   return (
-    <Panel eyebrow="04" title={t("panels.contracts")} count={contracts.length}
+    <Panel eyebrow="04" title={t("panels.contracts")} count={contracts.length} inset={inset} naked={naked}
       action={<AddContractPopover accountId={accountId} onLinked={() => onRefresh?.()} />}>
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

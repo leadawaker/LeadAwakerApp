@@ -1,7 +1,7 @@
 // Left lead-list panel for the card view: compact avatar rail, mobile list
 // chrome (header/tabs/search/filters), the paginated card list, and the mobile
 // simplified kanban. Extracted from LeadsCardViewMain.tsx.
-import type { RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Users,
@@ -12,19 +12,39 @@ import {
   List,
   Plus,
   X,
-  Calendar,
   Kanban,
+  MessageSquare,
+  MoreHorizontal,
+  Trash2,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useDeleteAction } from "@/hooks/useDeleteAction";
+import { resolveColor } from "@/features/tags/types";
 import { CompactLeadCard } from "./CompactLeadCard";
 import { GroupHeader, ListSkeleton } from "./atoms";
 import { LeadListCard } from "./LeadListCard";
 import { MobileSimpleKanban } from "./MobileViews";
-import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
-import { getLeadId } from "./leadUtils";
-import type { ViewMode } from "./types";
+import {
+  MobileListHeader,
+  MobileHeaderIconBtn,
+  MobileTabSeg,
+  MobileDrawerOption,
+  MobileDrawerSubheading,
+  DrawerMainButton,
+} from "@/components/crm/mobile/MobileListHeader";
+import { getLeadId, getFullName, getStatus, getPhone } from "./leadUtils";
+import { ALL_LEAD_FILTER_STAGES, PIPELINE_HEX } from "./constants";
+import type { ViewMode, GroupByOption, SortByOption } from "./types";
 
 type ViewTab = { id: string; label: string; icon: any };
 
@@ -54,8 +74,6 @@ export function LeadsListPanel({
   onViewModeChange,
   listSearch,
   onListSearchChange,
-  upcomingCallsOnly,
-  setUpcomingCallsOnly,
   leads,
   leadTagsInfo,
   leadsPullDistance,
@@ -66,10 +84,27 @@ export function LeadsListPanel({
   pageSize,
   campaignsById,
   peekOn,
+  setPeekOn,
   handleOpenConversation,
   openQuickAction,
   toggleLeadSelection,
   selectedLeadIds,
+  sortBy,
+  onSortByChange,
+  groupBy,
+  onGroupByChange,
+  isSortNonDefault,
+  isGroupNonDefault,
+  onToggleFilterStatus,
+  onToggleFilterTag,
+  allTags,
+  availableAccounts,
+  availableCampaigns,
+  setFilterAccount,
+  setFilterCampaign,
+  accountsById,
+  bulkBusy,
+  handleListBulkDelete,
 }: {
   isHidden: boolean;
   isCompact: boolean;
@@ -108,13 +143,163 @@ export function LeadsListPanel({
   pageSize: number;
   campaignsById?: Map<number, any>;
   peekOn: boolean;
+  setPeekOn: (fn: (p: boolean) => boolean) => void;
   handleOpenConversation: (leadId: number | string) => void;
   openQuickAction: (lead: any, type: "status" | "note" | "delete") => void;
   toggleLeadSelection: (id: number) => void;
   selectedLeadIds: Set<number>;
+  sortBy: SortByOption;
+  onSortByChange: (v: SortByOption) => void;
+  groupBy: GroupByOption;
+  onGroupByChange: (v: GroupByOption) => void;
+  isSortNonDefault: boolean;
+  isGroupNonDefault: boolean;
+  onToggleFilterStatus: (s: string) => void;
+  onToggleFilterTag: (t: string) => void;
+  allTags: { name: string; color: string }[];
+  availableAccounts: { id: string; name: string }[];
+  availableCampaigns: { id: string; name: string }[];
+  setFilterAccount: (v: string) => void;
+  setFilterCampaign: (v: string) => void;
+  accountsById?: Map<number, string>;
+  bulkBusy: boolean;
+  handleListBulkDelete: () => Promise<void> | void;
 }) {
   const { t } = useTranslation("leads");
+  const { label: deleteLabel } = useDeleteAction("lead");
   const filterOn = isFilterActive || filterStatus.length > 0 || filterTags.length > 0;
+  const [moreDeleteConfirm, setMoreDeleteConfirm] = useState(false);
+  const hasSelection = selectedLeadIds.size > 0;
+  const pdfPrintRef = useRef<HTMLDivElement>(null);
+
+  // ── Mobile bulk "..." menu: export the selected leads as a printable PDF ──
+  const handleExportSelectedPdf = () => {
+    const id = "__pdf_leads_selected__";
+    if (pdfPrintRef.current) pdfPrintRef.current.id = id;
+    const style = document.createElement("style");
+    style.id = "__pdf_print_style__";
+    style.textContent = `
+      @media print {
+        body > * { display: none !important; }
+        #${id} { display: block !important; position: fixed !important; inset: 0 !important; width: 100vw !important; padding: 24px !important; z-index: 9999 !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    window.print();
+    setTimeout(() => document.getElementById("__pdf_print_style__")?.remove(), 1200);
+  };
+
+  const selectedLeads = leads.filter((l) => selectedLeadIds.has(getLeadId(l)));
+
+  // ── Filter / Sort / Group drill-in panels for the mobile header drawer ──
+  const sortOptions: { value: SortByOption; label: string }[] = [
+    { value: "recent",         label: t("sort.mostRecent") },
+    { value: "latest_message", label: t("sort.latestMessage") },
+    { value: "name_asc",       label: t("sort.nameAZ") },
+    { value: "name_desc",      label: t("sort.nameZA") },
+    { value: "score_desc",     label: t("sort.scoreDown") },
+    { value: "score_asc",      label: t("sort.scoreUp") },
+  ];
+  const groupOptions: { value: GroupByOption; label: string }[] = [
+    { value: "date",     label: t("sort.mostRecent") },
+    { value: "status",   label: t("group.status") },
+    { value: "campaign", label: t("group.campaign") },
+  ];
+
+  // Tags table has leftover conversion-status/sentiment entries that were never
+  // real tags — never show them as filter options (Gabriel, 2026-06-21).
+  const NON_TAG_NAMES = new Set(["responded", "contacted", "qualified", "negative sentiment", "positive sentiment"]);
+  const realTags = allTags.filter((tag) => !NON_TAG_NAMES.has(tag.name.toLowerCase()));
+
+  const leadsFilterPanel = (
+    <>
+      <MobileDrawerSubheading>{t("group.status", "Status")}</MobileDrawerSubheading>
+      {ALL_LEAD_FILTER_STAGES.map((s) => (
+        <MobileDrawerOption
+          key={s}
+          label={
+            <span className="row" style={{ alignItems: "center", gap: 7 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: PIPELINE_HEX[s] ?? "#6B7280", flexShrink: 0 }} />
+              {t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}
+            </span>
+          }
+          selected={filterStatus.includes(s)}
+          onClick={() => onToggleFilterStatus(s)}
+        />
+      ))}
+      {realTags.length > 0 && (
+        <>
+          <MobileDrawerSubheading>{t("detail.sections.tags", "Tags")}</MobileDrawerSubheading>
+          {realTags.map((tag) => (
+            <MobileDrawerOption
+              key={tag.name}
+              label={
+                <span className="row" style={{ alignItems: "center", gap: 7 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: resolveColor(tag.color), flexShrink: 0 }} />
+                  {tag.name}
+                </span>
+              }
+              selected={filterTags.includes(tag.name)}
+              onClick={() => onToggleFilterTag(tag.name)}
+            />
+          ))}
+        </>
+      )}
+      {availableAccounts.length > 0 && (
+        <>
+          <MobileDrawerSubheading>{t("detail.fields.account", "Account")}</MobileDrawerSubheading>
+          <MobileDrawerOption
+            label={t("filters.allAccounts", "All Accounts")}
+            selected={!filterAccount}
+            onClick={() => { setFilterAccount(""); setFilterCampaign(""); }}
+          />
+          {availableAccounts.map((a) => (
+            <MobileDrawerOption
+              key={a.id}
+              label={a.name}
+              selected={filterAccount === a.id}
+              onClick={() => { if (filterAccount === a.id) { setFilterAccount(""); } else { setFilterAccount(a.id); setFilterCampaign(""); } }}
+            />
+          ))}
+        </>
+      )}
+      {availableCampaigns.length > 0 && (
+        <>
+          <MobileDrawerSubheading>{t("detailView.campaign", "Campaign")}</MobileDrawerSubheading>
+          <MobileDrawerOption
+            label={t("filters.allCampaigns", "All Campaigns")}
+            selected={!filterCampaign}
+            onClick={() => setFilterCampaign("")}
+          />
+          {availableCampaigns.map((c) => (
+            <MobileDrawerOption
+              key={c.id}
+              label={c.name}
+              selected={filterCampaign === c.id}
+              onClick={() => setFilterCampaign(filterCampaign === c.id ? "" : c.id)}
+            />
+          ))}
+        </>
+      )}
+    </>
+  );
+
+  const leadsSortPanel = (
+    <>
+      {sortOptions.map((opt) => (
+        <MobileDrawerOption key={opt.value} label={opt.label} selected={sortBy === opt.value} onClick={() => onSortByChange(opt.value)} />
+      ))}
+    </>
+  );
+
+  const leadsGroupPanel = (
+    <>
+      {groupOptions.map((opt) => (
+        <MobileDrawerOption key={opt.value} label={opt.label} selected={groupBy === opt.value} onClick={() => onGroupByChange(opt.value)} />
+      ))}
+    </>
+  );
+
   return (
     <div
       className={cn(
@@ -184,16 +369,68 @@ export function LeadsListPanel({
             searchValue={listSearch}
             onSearchChange={onListSearchChange}
             searchPlaceholder={t("toolbar.searchPlaceholder")}
-            onFilterClick={() => setFilterSheetOpen(true)}
+            filterPanel={leadsFilterPanel}
             filterActive={filterOn}
-            extraActions={(
-              <MobileHeaderIconBtn
-                onClick={() => setMobileAddOpen(true)}
-                aria-label={t("toolbar.add", "Add Lead")}
-                data-testid="mobile-add-lead-button"
-              >
-                <Plus className="h-4 w-4" />
-              </MobileHeaderIconBtn>
+            filterLabel={t("toolbar.filter")}
+            sortPanel={leadsSortPanel}
+            sortActive={isSortNonDefault}
+            sortLabel={t("toolbar.sort")}
+            groupPanel={leadsGroupPanel}
+            groupActive={isGroupNonDefault}
+            groupLabel={t("toolbar.group")}
+            leftActions={(
+              <DrawerMainButton
+                label={t("toolbar.chats", "Chats")}
+                icon={MessageSquare}
+                active={peekOn}
+                variant="solid"
+                onClick={() => setPeekOn((p) => !p)}
+              />
+            )}
+            mainRowTrailing={(
+              <DropdownMenu onOpenChange={(o) => { if (!o) setMoreDeleteConfirm(false); }}>
+                <DropdownMenuTrigger asChild>
+                  <MobileHeaderIconBtn
+                    aria-label={t("toolbar.more", "More")}
+                    data-testid="mobile-leads-more-button"
+                    style={{ width: 36, height: 36 }}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </MobileHeaderIconBtn>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-white">
+                  <DropdownMenuItem
+                    onClick={() => setMobileAddOpen(true)}
+                    data-testid="mobile-add-lead-menu-item"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t("toolbar.add", "Add Lead")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {!hasSelection && (
+                    <div className="px-2 py-1.5 text-[12px] text-muted-foreground">
+                      {t("selection.selectLeadsFirst", "Select leads to enable actions")}
+                    </div>
+                  )}
+                  <DropdownMenuItem disabled={!hasSelection} onClick={handleExportSelectedPdf}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t("selection.exportPdfSelected", "Export selected as PDF")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={!hasSelection}
+                    onSelect={(e) => {
+                      if (!moreDeleteConfirm) { e.preventDefault(); setMoreDeleteConfirm(true); return; }
+                      handleListBulkDelete();
+                      setMoreDeleteConfirm(false);
+                    }}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {bulkBusy ? "…" : moreDeleteConfirm ? t("common.confirm", "Confirm") : `${deleteLabel} (${selectedLeadIds.size})`}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           />
 
@@ -297,24 +534,6 @@ export function LeadsListPanel({
             </div>
           </div>
 
-          {/* Upcoming calls filter chip — mobile only */}
-          <div className="px-2 pb-1 flex gap-2">
-            <button
-              onClick={() => setUpcomingCallsOnly(!upcomingCallsOnly)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold transition-colors"
-              style={{
-                borderRadius: 'var(--r-pill)',
-                border: `1px solid ${upcomingCallsOnly ? 'var(--wine)' : 'var(--line)'}`,
-                background: upcomingCallsOnly ? 'var(--wine-tint)' : 'transparent',
-                color: upcomingCallsOnly ? 'var(--wine)' : 'var(--mute)',
-              }}
-              data-testid="upcoming-calls-filter-chip"
-            >
-              <Calendar className="h-3 w-3" />
-              {t("toolbar.upcomingCalls")}
-              {upcomingCallsOnly && <X className="h-3 w-3 ml-0.5" />}
-            </button>
-          </div>
         </>
       )}
 
@@ -405,6 +624,39 @@ export function LeadsListPanel({
         )}
       </div>
       </>}
+
+      {/* Hidden printable sheet for the "..." → Export selected as PDF action.
+          Shown only inside @media print via handleExportSelectedPdf (see top of file). */}
+      <div ref={pdfPrintRef} style={{ display: "none" }}>
+        <h1 style={{ fontSize: 18, marginBottom: 16 }}>{t("page.title")} — {selectedLeads.length}</h1>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr>
+              {["Name", "Phone", "Email", t("group.status", "Status"), t("detailView.campaign", "Campaign"), t("detail.fields.account", "Account")].map((h) => (
+                <th key={h} style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: "6px 8px" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {selectedLeads.map((lead) => {
+              const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
+              const aId = Number(lead.Accounts_id || lead.account_id || lead.accounts_id || 0);
+              const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
+              const accountName = (aId && accountsById?.get(aId)) || "";
+              return (
+                <tr key={getLeadId(lead)}>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "6px 8px" }}>{getFullName(lead)}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "6px 8px" }}>{getPhone(lead)}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "6px 8px" }}>{lead.email || lead.Email || ""}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "6px 8px" }}>{getStatus(lead)}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "6px 8px" }}>{campaignName}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "6px 8px" }}>{accountName}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
     </div>
   );

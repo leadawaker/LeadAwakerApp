@@ -2,8 +2,9 @@ import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
-import { User, Send, Loader2, ChevronLeft, Mic, Square } from "lucide-react";
+import { User, Send, Loader2, ChevronLeft, Mic, Trash2, Paperclip, MessageSquare } from "lucide-react";
 import { hapticSend } from "@/lib/haptics";
+import { VoiceMemo } from "@/components/crm/SupportChatHelpers";
 
 interface FounderSession {
   id: number;
@@ -49,6 +50,26 @@ function formatRelativeTime(iso?: string): string {
   return `${days}d`;
 }
 
+function UserAvatar({ size = 36 }: { size?: number }) {
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "var(--r-pill)",
+        flexShrink: 0,
+        background: "var(--wine-tint)",
+        border: "1.5px solid var(--wine-glow)",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <User style={{ width: size * 0.44, height: size * 0.44, color: "var(--wine)" }} />
+    </span>
+  );
+}
+
 function SessionRow({
   session,
   isSelected,
@@ -65,28 +86,65 @@ function SessionRow({
       onClick={onClick}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
       className={cn(
-        "flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors",
-        isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+        "flex items-center gap-2.5 cursor-pointer transition-[box-shadow,background-color] duration-150",
+        isSelected ? "neu-inset" : "neu-raised-crisp hover:bg-[var(--card-hover)]",
       )}
+      style={{
+        padding: "10px 12px",
+        borderRadius: "var(--r-surface)",
+        background: isSelected ? "var(--wine-tint)" : "var(--surface)",
+        borderLeft: isSelected ? "3px solid var(--wine)" : "3px solid transparent",
+      }}
     >
-      <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-        <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-      </div>
+      <UserAvatar size={36} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[14px] font-semibold leading-tight truncate text-foreground">
+          <p
+            className="text-[14px] font-semibold leading-tight truncate"
+            style={{ color: "var(--ink)" }}
+          >
             {session.userName}
           </p>
-          <span className="text-[10px] text-muted-foreground shrink-0">
+          <span
+            className="text-[10px] shrink-0 tabular-nums"
+            style={{ fontFamily: "var(--mono)", color: "var(--mute-2)" }}
+          >
             {formatRelativeTime(session.lastMessageAt || session.createdAt)}
           </span>
         </div>
         {session.lastMessage && (
-          <p className="text-[12px] text-muted-foreground leading-tight truncate mt-0.5">
-            {session.lastMessage}
+          <p
+            className="text-[12px] leading-tight truncate mt-0.5"
+            style={{ color: "var(--mute)" }}
+          >
+            {session.lastMessage.startsWith("data:audio") ? "🎤 Voice message"
+              : session.lastMessage.startsWith("data:image") ? "📷 Photo"
+              : session.lastMessage.startsWith("data:") ? "📎 Attachment"
+              : session.lastMessage}
           </p>
         )}
       </div>
+      {session.unreadCount > 0 && (
+        <span
+          style={{
+            minWidth: 18,
+            height: 18,
+            padding: "0 5px",
+            borderRadius: "var(--r-pill)",
+            background: "var(--wine-grad)",
+            color: "#fff",
+            fontSize: 10,
+            fontWeight: 700,
+            fontFamily: "var(--mono)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {session.unreadCount > 9 ? "9+" : session.unreadCount}
+        </span>
+      )}
     </div>
   );
 }
@@ -106,8 +164,21 @@ function FounderChatView({
 
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const canceledRef = useRef(false);
+  const attachInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAttachFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { const d = ev.target?.result as string; if (d) sendReply(d); };
+    reader.readAsDataURL(file);
+  };
 
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ["founder-messages", session.sessionId],
@@ -125,11 +196,8 @@ function FounderChatView({
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text || sending) return;
-    setInput("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  const sendReply = async (content: string) => {
+    if (!content || sending) return;
     setSending(true);
     hapticSend();
 
@@ -137,7 +205,7 @@ function FounderChatView({
       await apiFetch("/api/support-chat/founder/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: session.sessionId, content: text }),
+        body: JSON.stringify({ sessionId: session.sessionId, content }),
       });
       queryClient.invalidateQueries({ queryKey: ["founder-messages", session.sessionId] });
       queryClient.invalidateQueries({ queryKey: ["founder-sessions"] });
@@ -146,6 +214,14 @@ function FounderChatView({
     } finally {
       setSending(false);
     }
+  };
+
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    await sendReply(text);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -167,42 +243,31 @@ function FounderChatView({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       audioChunksRef.current = [];
+      canceledRef.current = false;
       recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+        setRecordingSeconds(0);
+        setRecording(false);
+        if (canceledRef.current) { canceledRef.current = false; return; }
         const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
         setTranscribing(true);
         try {
           const reader = new FileReader();
           reader.onload = async (ev) => {
             const dataUrl = ev.target?.result as string;
-            try {
-              const res = await apiFetch("/api/support-chat/transcribe", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ audio_data: dataUrl, mime_type: recorder.mimeType }),
-              });
-              if (res.ok) {
-                const { transcription } = await res.json() as { transcription: string };
-                if (transcription) {
-                  setInput(transcription);
-                  if (textareaRef.current) {
-                    textareaRef.current.style.height = "auto";
-                    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
-                    textareaRef.current.focus();
-                  }
-                }
-              }
-            } catch { /* silent */ }
+            if (dataUrl) await sendReply(dataUrl);
             setTranscribing(false);
           };
           reader.readAsDataURL(blob);
         } catch { setTranscribing(false); }
-        setRecording(false);
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       setRecording(true);
+      setRecordingSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
     } catch { /* mic permission denied */ }
   };
 
@@ -211,62 +276,138 @@ function FounderChatView({
     mediaRecorderRef.current = null;
   };
 
+  const cancelRecording = () => {
+    canceledRef.current = true;
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+  };
+
+  const sendBtnStyle: React.CSSProperties = {
+    width: 36,
+    height: 36,
+    borderRadius: "var(--r-pill)",
+    flexShrink: 0,
+    border: "none",
+    cursor: "pointer",
+    background: "var(--wine-grad)",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "var(--sh-raised-crisp)",
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: "var(--bg)" }}>
       {/* Header */}
-      <div className="shrink-0 bg-white dark:bg-card border-b border-black/[0.06] px-4 py-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+      <div
+        className="shrink-0 flex items-center gap-3 px-4 py-3"
+        style={{ background: "var(--bg)", borderBottom: "1px solid var(--line)" }}
+      >
+        <button
+          onClick={onBack}
+          className="neu-raised-crisp active:scale-95 transition-transform"
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: "var(--r-pill)",
+            flexShrink: 0,
+            border: "none",
+            cursor: "pointer",
+            background: "var(--surface)",
+            color: "var(--mute)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <UserAvatar size={36} />
+        <div className="min-w-0 flex-1">
+          <p
+            className="text-[15px] font-semibold leading-tight truncate"
+            style={{ color: "var(--ink)" }}
           >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-            <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold text-foreground leading-tight truncate">
-              {session.userName}
+            {session.userName}
+          </p>
+          {session.userEmail && (
+            <p
+              className="text-[11px] leading-tight truncate"
+              style={{ fontFamily: "var(--mono)", color: "var(--mute-2)", fontSize: 10, letterSpacing: "0.05em" }}
+            >
+              {session.userEmail}
             </p>
-            {session.userEmail && (
-              <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                {session.userEmail}
-              </p>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-4 pb-4 flex flex-col gap-1.5 bg-muted/30">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 pt-4 pb-4 flex flex-col gap-1.5"
+        style={{ background: "var(--bg-main, hsl(var(--muted) / 0.4))" }}
+      >
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--wine)" }} />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-[13px]">
+          <div
+            className="flex-1 flex items-center justify-center text-[13px]"
+            style={{ color: "var(--mute)" }}
+          >
             No messages yet
           </div>
         ) : (
           messages.map((msg) => {
             const isFromUser = msg.role === "user";
+            const content = typeof msg.content === "string" ? msg.content : "";
+            const isAudio = content.startsWith("data:audio");
+            const isImage = content.startsWith("data:image");
+            const isFile = !isAudio && !isImage && content.startsWith("data:");
             return (
               <div key={msg.id} className={cn("flex flex-col", isFromUser ? "items-start" : "items-end")}>
                 <div
-                  className={cn(
-                    "max-w-[80%] px-3 pt-2 pb-1 text-[13px] leading-relaxed whitespace-pre-wrap shadow-sm rounded-lg",
-                    isFromUser
-                      ? "bg-white dark:bg-card text-foreground rounded-tl-none"
-                      : "bg-emerald-600 text-white rounded-tr-none",
-                  )}
+                  className="max-w-[80%] text-[13px] leading-relaxed whitespace-pre-wrap"
+                  style={{
+                    padding: "8px 12px 6px",
+                    borderRadius: isFromUser
+                      ? "var(--r-surface) var(--r-surface) var(--r-surface) var(--r-button)"
+                      : "var(--r-surface) var(--r-surface) var(--r-button) var(--r-surface)",
+                    background: isFromUser
+                      ? "var(--surface)"
+                      : "var(--wine-grad)",
+                    color: isFromUser ? "var(--ink)" : "#fff",
+                    boxShadow: isFromUser
+                      ? "var(--sh-raised-crisp)"
+                      : "0 2px 8px var(--wine-glow)",
+                  }}
                 >
-                  <span>{msg.content}</span>
+                  {isAudio ? (
+                    <VoiceMemo src={content} onDark={!isFromUser} />
+                  ) : isImage ? (
+                    <a href={content} target="_blank" rel="noopener noreferrer">
+                      <img src={content} alt="attachment" className="rounded-lg max-w-[220px] my-1 block" />
+                    </a>
+                  ) : isFile ? (
+                    <a
+                      href={content}
+                      download
+                      style={{ color: isFromUser ? "var(--wine)" : "rgba(255,255,255,0.85)", textDecoration: "underline" }}
+                      className="my-1 inline-block"
+                    >
+                      Download attachment
+                    </a>
+                  ) : (
+                    <span>{content}</span>
+                  )}
                   <span
-                    className={cn(
-                      "float-right text-[9px] ml-2 mt-2 leading-none select-none",
-                      isFromUser ? "text-muted-foreground/50" : "text-white/50",
-                    )}
+                    className="float-right ml-2 mt-1 leading-none select-none tabular-nums"
+                    style={{
+                      fontSize: 9,
+                      color: isFromUser ? "var(--mute-2)" : "rgba(255,255,255,0.5)",
+                    }}
                   >
                     {formatTime(msg.createdAt)}
                   </span>
@@ -277,56 +418,116 @@ function FounderChatView({
         )}
       </div>
 
-      {/* Input */}
-      <div className="px-3 pb-3 pt-2 shrink-0 bg-white dark:bg-card border-t border-black/[0.04]">
-        <div className="flex items-center gap-1.5 bg-muted/50 rounded-lg border border-black/[0.08] pl-3 pr-4 py-[3px] min-h-[62px]">
-          <textarea
-            ref={textareaRef}
-            rows={1}
-            value={input}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Reply as founder..."
-            disabled={sending}
-            className="flex-1 text-[17px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 leading-5 pl-1 pr-2"
-            style={{ maxHeight: "120px" }}
-          />
-          {input.trim() ? (
-            <button
-              onClick={handleSend}
-              disabled={sending}
-              className="h-9 w-9 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 disabled:opacity-40 shrink-0 transition-colors"
-              title="Send reply"
-            >
-              {sending ? (
-                <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Send className="h-4 w-4 text-white" />
-              )}
-            </button>
-          ) : transcribing ? (
-            <button disabled className="h-9 w-9 rounded-full bg-emerald-600/40 text-white flex items-center justify-center shrink-0">
-              <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            </button>
-          ) : recording ? (
-            <button
-              onClick={stopRecording}
-              className="h-9 w-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
-              title="Stop recording"
-            >
-              <Square className="h-3.5 w-3.5 fill-white text-white" />
-            </button>
+      {/* Input bar */}
+      <div
+        className="px-3 pb-3 pt-2 shrink-0"
+        style={{ background: "var(--bg)", borderTop: "1px solid var(--line)" }}
+      >
+        <div
+          className="flex items-center gap-1.5"
+          style={{
+            background: "var(--surface)",
+            borderRadius: "var(--r-card)",
+            boxShadow: "var(--sh-inset-crisp)",
+            padding: "4px 4px 4px 12px",
+            minHeight: 52,
+          }}
+        >
+          {recording ? (
+            <>
+              <button
+                type="button"
+                onClick={cancelRecording}
+                style={{
+                  width: 36, height: 36, borderRadius: "var(--r-pill)", flexShrink: 0,
+                  border: "none", cursor: "pointer", background: "transparent",
+                  color: "#C0392B", display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+                title="Cancel recording"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+              <div className="flex-1 flex items-center gap-2 pl-1">
+                <span
+                  className="h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ background: "#C0392B", animation: "micPulse 1s ease-in-out infinite" }}
+                />
+                <span
+                  className="text-[15px] font-medium tabular-nums"
+                  style={{ color: "var(--ink)" }}
+                >
+                  {`${Math.floor(recordingSeconds / 60)}:${String(recordingSeconds % 60).padStart(2, "0")}`}
+                </span>
+                <span className="text-[12px]" style={{ color: "var(--mute)" }}>Recording…</span>
+              </div>
+              <button
+                onClick={stopRecording}
+                style={sendBtnStyle}
+                title="Send voice message"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </>
           ) : (
-            <button
-              onClick={startRecording}
-              disabled={sending}
-              className="h-9 w-9 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 disabled:opacity-40 shrink-0 transition-colors"
-              title="Record voice message"
-            >
-              <Mic className="h-4 w-4 text-white" />
-            </button>
+            <>
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={input}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Reply as founder…"
+                disabled={sending}
+                className="flex-1 text-[15px] bg-transparent resize-none focus:outline-none disabled:opacity-50 leading-5 pr-2"
+                style={{
+                  color: "var(--ink)",
+                  maxHeight: "120px",
+                  fontFamily: "var(--font-sans, Manrope, sans-serif)",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => attachInputRef.current?.click()}
+                style={{
+                  width: 34, height: 34, borderRadius: "var(--r-pill)", flexShrink: 0,
+                  border: "none", cursor: "pointer", background: "transparent",
+                  color: "var(--mute-2)", display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+                title="Attach file"
+              >
+                <Paperclip className="h-4 w-4" />
+              </button>
+              {input.trim() ? (
+                <button
+                  onClick={handleSend}
+                  disabled={sending}
+                  style={{ ...sendBtnStyle, opacity: sending ? 0.4 : 1 }}
+                  title="Send reply"
+                >
+                  {sending ? (
+                    <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </button>
+              ) : transcribing ? (
+                <button disabled style={{ ...sendBtnStyle, opacity: 0.4 }}>
+                  <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                </button>
+              ) : (
+                <button
+                  onClick={startRecording}
+                  disabled={sending}
+                  style={{ ...sendBtnStyle, opacity: sending ? 0.4 : 1 }}
+                  title="Record voice message"
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+              )}
+            </>
           )}
         </div>
+        <input ref={attachInputRef} type="file" className="hidden" onChange={handleAttachFile} />
       </div>
     </div>
   );
@@ -356,28 +557,66 @@ export function FounderInbox() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-3 py-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-black/[0.04] shrink-0">
-        <User className="h-3 w-3" />
-        Founder Direct Messages
+    <div className="flex flex-col h-full" style={{ background: "var(--bg)" }}>
+      {/* Header */}
+      <div
+        className="px-4 py-3 shrink-0 flex items-center gap-2"
+        style={{ borderBottom: "1px solid var(--line)" }}
+      >
+        <span
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "var(--r-surface)",
+            background: "var(--wine-tint)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <MessageSquare style={{ width: 14, height: 14, color: "var(--wine)" }} />
+        </span>
+        <span
+          className="font-semibold"
+          style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}
+        >
+          Inbox
+        </span>
       </div>
-      <div className="flex-1 overflow-y-auto p-[3px]">
+
+      {/* Session list */}
+      <div className="flex-1 overflow-y-auto" style={{ padding: "8px 12px 24px" }}>
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--wine)" }} />
           </div>
         ) : sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-2">
-              <User className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex flex-col items-center justify-center py-10 text-center px-4 gap-3">
+            <span
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "var(--r-card)",
+                background: "var(--wine-tint)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MessageSquare style={{ width: 22, height: 22, color: "var(--wine)" }} />
+            </span>
+            <div>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                No messages yet
+              </p>
+              <p className="text-[11px] mt-1" style={{ color: "var(--mute)" }}>
+                When users message you, they'll appear here
+              </p>
             </div>
-            <p className="text-[13px] text-muted-foreground">No founder messages yet</p>
-            <p className="text-[11px] text-muted-foreground/70 mt-1">
-              When users message you directly, they will appear here
-            </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-[3px]">
+          <div className="flex flex-col gap-2">
             {sessions.map((s) => (
               <SessionRow
                 key={s.id}

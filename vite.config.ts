@@ -67,6 +67,10 @@ export default defineConfig({
     open: false,
     cors: true,
     allowedHosts: true,
+    watch: {
+      usePolling: true,
+      interval: 1500,
+    },
     hmr: {
       host: "app.leadawaker.com",
       protocol: "wss",

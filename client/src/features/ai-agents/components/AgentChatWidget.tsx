@@ -85,6 +85,19 @@ export function AgentChatWidget() {
   const draggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number; right: number; bottom: number } | null>(null);
 
+  // A position/size saved from a larger window can push the panel above the
+  // current viewport's top edge (fixed positioning clips it there, leaving only
+  // the bottom sliver visible). Re-clamp whenever the viewport changes size.
+  useEffect(() => {
+    const reclamp = () => {
+      setWidgetPos((pos) => clampPos(pos, widgetSize.width, widgetSize.height));
+    };
+    reclamp();
+    window.addEventListener("resize", reclamp);
+    return () => window.removeEventListener("resize", reclamp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widgetSize.width, widgetSize.height]);
+
   const isDocked = dockMode && isWideViewport;
 
   const dockResizeRef = useRef(false);

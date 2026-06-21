@@ -62,7 +62,7 @@
   box-shadow: var(--sh-raised-crisp), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .la-btn--wine:hover { transform: translateY(-1px); }
-.la-btn--wine:active { transform: translateY(0); box-shadow: var(--sh-inset-crisp); }
+.la-btn--wine:active { transform: translateY(0); box-shadow: var(--sh-inset-super-crisp); }
 
 .la-btn--soft {
   background: var(--surface);
@@ -74,7 +74,7 @@
 .la-btn--inset {
   background: hsl(var(--background));
   color: var(--muted-foreground);
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
 }
 .la-btn--inset:hover { color: var(--wine); }
 
@@ -89,7 +89,7 @@
   gap: 3px;
   padding: 3px;
   background: hsl(var(--background));
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
   border-radius: var(--r-surface);
 }
 
@@ -174,7 +174,7 @@
 
 .la-camp-card {
   padding: 10px 10px 10px 11px;
-  border-radius: 14px;
+  border-radius: var(--list-card-radius);
   background: transparent;
   box-shadow: none;
   display: flex;
@@ -187,8 +187,10 @@
 .la-camp-card:hover { background: var(--wine-tint); }
 .la-camp-card.active,
 .la-camp-card.active:hover {
-  background: #FFFFFF;
-  box-shadow: 0 2px 4px rgba(96, 78, 52, 0.15);
+  /* White, not the warm-cream --surface: the selected card should read as
+     visibly "lifted paper" against the page, easy to spot in a long list. */
+  background: var(--card);
+  box-shadow: var(--sh-raised-crisp);
 }
 .la-camp-card.active::before {
   content: '';
@@ -201,6 +203,23 @@
   width: 3px;
   background: var(--wine);
   border-radius: 0 3px 3px 0;
+}
+
+/* ─── Mobile: billing-style side margins + raised-crisp list cards ─── */
+@media (max-width: 768px) {
+  .la-list-area {
+    padding: 10px 16px;
+  }
+  .la-list-area > .la-cards,
+  .la-cards {
+    gap: 10px;
+  }
+  /* Campaign cards become standalone raised-crisp surfaces (active keeps its
+     white + wine-bar treatment from the rules above). */
+  .la-camp-card:not(.active) {
+    background: var(--surface);
+    box-shadow: var(--sh-raised-crisp);
+  }
 }
 
 /* ─── Mono tile ──────────────────────────────────────────────── */
@@ -249,7 +268,7 @@
   padding: 3px 9px;
   border-radius: 999px;
   background: hsl(var(--background));
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
   color: var(--muted-foreground);
 }
 .la-status.paused { color: var(--warn); }
@@ -340,7 +359,7 @@
   border-radius: 10px;
   border: none; cursor: pointer;
   background: var(--bg-main);
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
   font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 10px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-soft);

@@ -57,7 +57,7 @@ export type WorkspaceState = {
 };
 
 /** Pages visible to client users (Manager/Agent/Viewer) — no chat/conversations */
-const CLIENT_PAGES = ["contacts", "leads", "campaigns", "calendar", "billing"];
+const CLIENT_PAGES = ["contacts", "leads", "campaigns", "calendar", "billing", "accounts"];
 /** All pages (for agency users: Owner/Admin) */
 const ALL_PAGES = [
   "contacts", "leads", "campaigns", "conversations",

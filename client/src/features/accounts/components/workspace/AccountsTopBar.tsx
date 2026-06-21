@@ -3,12 +3,13 @@ import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
-  Building2, Link2, BookOpen, MessagesSquare,
+  Building2, Link2, MessagesSquare,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import {
   STATUS_FILTER_OPTIONS, STATUS_I18N_KEY, GROUP_TKEYS,
@@ -17,11 +18,10 @@ import type { ListPanelState } from "@/hooks/useListPanelState";
 import type { WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const TABS: WorkspaceTab[] = ["overview", "integrations", "knowledge", "communication"];
+const TABS: WorkspaceTab[] = ["overview", "integrations", "communication"];
 const TAB_ICONS: Record<WorkspaceTab, ReactNode> = {
   overview: <Building2 size={13} />,
   integrations: <Link2 size={13} />,
-  knowledge: <BookOpen size={13} />,
   communication: <MessagesSquare size={13} />,
 };
 const SORT_OPTIONS: AccountSortBy[] = ["recent", "name_asc", "name_desc"];
@@ -58,6 +58,7 @@ const wineDot = (
 
 export function AccountsTopBar(p: Props) {
   const { t } = useTranslation("accounts");
+  const { isAgencyUser } = useWorkspace();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   const handleDelete = () => {
@@ -173,22 +174,24 @@ export function AccountsTopBar(p: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Overflow menu — left of Create */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="la-btn la-btn--soft la-btn--icon"><MoreHorizontal className="h-4 w-4" /></button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44 bg-white">
-          <DropdownMenuItem onClick={(e) => { e.preventDefault(); handleDelete(); }} disabled={!p.hasSelection} className={cn("flex items-center gap-2 text-[12px]", deleteConfirm ? "text-red-600" : "text-destructive")}>
-            <Trash2 className="h-3.5 w-3.5" />{deleteConfirm ? t("detail.confirm") : t("toolbar.delete")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Create account — icon-only wine button */}
-      <button className="la-btn la-btn--wine la-btn--icon" onClick={p.onCreate} title={t("workspace.createAccount")}>
-        <Plus className="h-4 w-4" />
-      </button>
+      {/* Overflow menu and Create — agency only */}
+      {isAgencyUser && (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="la-btn la-btn--soft la-btn--icon"><MoreHorizontal className="h-4 w-4" /></button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44 bg-white">
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); handleDelete(); }} disabled={!p.hasSelection} className={cn("flex items-center gap-2 text-[12px]", deleteConfirm ? "text-red-600" : "text-destructive")}>
+                <Trash2 className="h-3.5 w-3.5" />{deleteConfirm ? t("detail.confirm") : t("toolbar.delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button className="la-btn la-btn--wine la-btn--icon" onClick={p.onCreate} title={t("workspace.createAccount")}>
+            <Plus className="h-4 w-4" />
+          </button>
+        </>
+      )}
     </div>
   );
 }

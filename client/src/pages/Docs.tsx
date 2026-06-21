@@ -817,64 +817,75 @@ function WhatsNewSheet({ open, onClose }: { open: boolean; onClose: () => void }
 
 export default function DocsPage() {
   const { t } = useTranslation("docs");
+  const { t: tc } = useTranslation("crm");
   const isOperator = isOperatorRole();
   const [tab, setTab] = useState<"operator" | "client">(
     isOperator ? "operator" : "client"
   );
   const [whatsNew, setWhatsNew] = useState(false);
 
+  function openFounderChat() {
+    window.dispatchEvent(new CustomEvent("open-founder-chat"));
+  }
+
   return (
     <CrmShell>
-      <div className="h-full flex flex-col pt-4" data-testid="page-docs">
-        <div className="flex-1 min-h-0 overflow-y-auto" data-testid="docs-content">
-          <div className="pl-[17px] pr-3.5 pt-10 pb-3 flex items-center justify-between flex-wrap gap-3">
-            <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-              {tab === "operator" ? t("agencyDocumentation") : t("userDocumentation")}
-            </h1>
+      <div className="la-page" data-testid="page-docs">
+        {/* ── Topbar ─────────────────────────────────────────────────────── */}
+        <div className="la-page-header flex items-center gap-3">
+          <span className="serif shrink-0" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>
+            {t("title")}
+          </span>
 
-            <div className="flex items-center gap-2">
-              {/* Tab switcher: agency view only */}
-              {isOperator && (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setTab("operator")}
-                    className={cn(
-                      "h-9 px-4 rounded-full inline-flex items-center text-[13px] font-medium transition-colors",
-                      tab === "operator"
-                        ? "bg-card border border-black/[0.125] dark:border-white/[0.125] text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-card/60 border border-transparent"
-                    )}
-                  >
-                    {t("agencyDocs")}
-                  </button>
-                  <button
-                    onClick={() => setTab("client")}
-                    className={cn(
-                      "h-9 px-4 rounded-full inline-flex items-center text-[13px] font-medium transition-colors",
-                      tab === "client"
-                        ? "bg-card border border-black/[0.125] dark:border-white/[0.125] text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-card/60 border border-transparent"
-                    )}
-                  >
-                    {t("userDocs")}
-                  </button>
-                </div>
-              )}
-
-              {/* What's New: operator only */}
-              {isOperator && (
-                <button
-                  onClick={() => setWhatsNew(true)}
-                  className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
-                >
-                  <Sparkles className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("whatsNew")}</span>
-                </button>
-              )}
+          {/* Tab switcher: operator view only */}
+          {isOperator && (
+            <div className="la-seg shrink-0" role="tablist">
+              <button
+                role="tab"
+                aria-selected={tab === "operator"}
+                className={cn("la-seg-btn", tab === "operator" && "on")}
+                onClick={() => setTab("operator")}
+              >
+                {t("agencyDocs")}
+              </button>
+              <button
+                role="tab"
+                aria-selected={tab === "client"}
+                className={cn("la-seg-btn", tab === "client" && "on")}
+                onClick={() => setTab("client")}
+              >
+                {t("userDocs")}
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="px-6 pb-8">
+          {/* Right-side actions */}
+          <div className="flex items-center gap-2 ml-auto">
+            {/* Chat with Gabriel */}
+            <button
+              onClick={openFounderChat}
+              className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[160px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
+            >
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{tc("messageFounder")}</span>
+            </button>
+
+            {/* What's New: operator only */}
+            {isOperator && (
+              <button
+                onClick={() => setWhatsNew(true)}
+                className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
+              >
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("whatsNew")}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Scrollable content ──────────────────────────────────────────── */}
+        <div className="flex-1 min-h-0 overflow-y-auto" data-testid="docs-content">
+          <div className="px-6 pb-8 pt-4">
             {tab === "operator" ? <OperatorManual /> : <ClientGuide />}
           </div>
         </div>

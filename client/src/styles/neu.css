@@ -40,6 +40,13 @@
   border-radius: 8px;
 }
 
+/* Shallowest inset — small buttons, tags, chips that shouldn't read deep */
+.neu-inset-super-crisp {
+  background: hsl(var(--background));
+  box-shadow: var(--sh-inset-super-crisp);
+  border-radius: var(--r-button);
+}
+
 .neu-polished {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 40%),

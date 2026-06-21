@@ -366,6 +366,11 @@ These components live in `client/src/components/ui/` and MUST be used instead of
 - Full slide-over panel (LeadDetailPanel): Sheet component.
 - Detail panel header bloom effect: use `--highlight-active` (`#FFF28D`), not lime yellow.
 
+**Never let a parent container clip a card's neumorphic shadow/highlight.** This bug recurs every time a new list panel is built:
+- Any flex child that scrolls (`overflow-y-auto`) must also have `overflow-hidden`'s sibling/ancestor wired with `min-h-0` — without it, the child refuses to shrink, overflows its flex parent, and the parent's `overflow-hidden` silently clips the raised/inset shadow on cards (usually only noticed on the selected/active card, since that's the one with the visible shadow). Audit pattern: `cn("flex-col h-full min-h-0 ... overflow-hidden", widthClass)` on the panel root, `flex-1 overflow-y-auto la-list-area` on the scroll child.
+- If a card needs its own `overflow-hidden` wrapper (e.g. for a swipe gesture), do **not** put the active-state `box-shadow` inside that wrapper — emit it on the wrapper's own inline style instead, or it gets clipped by its own clipping context. See `LeadListCard.tsx`'s outer swipe wrapper for the pattern.
+- Reference implementation with no clipping: the Calendar page's agenda cards (`DesktopCalendar.tsx`). When building a new neumorphic list/grid, copy its scroll-container structure, not just its shadow tokens.
+
 ### 5.4 Tables (DataTable pattern)
 
 - Row height: `h-[52px]` (standard for all tables).

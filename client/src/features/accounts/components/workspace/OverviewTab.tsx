@@ -23,21 +23,14 @@ interface OverviewData {
 
 function OverviewRegular(p: OverviewData & { readOnly?: boolean }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, height: "100%" }}>
-      {/* Left panel — fills height, scrolls independently.
-          8px horizontal padding preserves neumorphic shadow room (request 6). */}
-      <div style={{ overflowY: "auto", padding: "4px 8px 16px", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <AccountDetailsPanel account={p.account} onSave={p.readOnly ? async () => {} : p.onSave} cols={1} style={{ flex: 1, background: "var(--bone)" }} readOnly={p.readOnly} />
-      </div>
-      {/* Right panel — fills height, scrolls independently. */}
-      <div style={{ overflowY: "auto", padding: "4px 8px 16px", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div className="neu-inset" style={{ borderRadius: "var(--r-card)", overflow: "hidden", flex: 1 }}>
-          <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} naked />
-          <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
-          <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} naked />
-          <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
-          <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} naked />
-        </div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+      <AccountDetailsPanel account={p.account} onSave={p.readOnly ? async () => {} : p.onSave} cols={1} style={{ background: "var(--bone)" }} readOnly={p.readOnly} />
+      <div className="neu-inset" style={{ borderRadius: "var(--r-card)", overflow: "hidden" }}>
+        <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} naked />
+        <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
+        <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} naked />
+        <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
+        <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} naked />
       </div>
     </div>
   );

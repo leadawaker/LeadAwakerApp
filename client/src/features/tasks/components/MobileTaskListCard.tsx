@@ -4,6 +4,7 @@
 // mobile branch: avatars, status pill, checkbox, due label, group bar.
 import type { Task, TaskCategory } from "@shared/schema";
 import { PRIORITY_COLORS, STATUS_COLORS, type TaskPriority, type TaskStatus } from "../types";
+import { getUserAvatarColor } from "@/lib/avatarUtils";
 
 // ── Date helpers (UTC, mirrors the reference) ────────────────────────────────
 const MT_MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -52,13 +53,8 @@ export function initials(name: string | null | undefined): string {
     .toUpperCase();
 }
 
-// Deterministic wine-family avatar colour from a name string.
-const AVATAR_COLORS = ["#5E2230", "#3D2A66", "#2F5E4A", "#5E4A22", "#7A2E3E"];
 export function avatarColor(name: string | null | undefined): string {
-  if (!name) return "var(--mute)";
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+  return getUserAvatarColor(name);
 }
 
 // ── Avatar ───────────────────────────────────────────────────────────────────

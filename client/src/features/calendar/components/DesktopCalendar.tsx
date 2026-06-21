@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
-import { MobileListHeader, MobileTabSeg, MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
+import { MobileListHeader, MobileTabSeg, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useSession } from "@/hooks/useSession";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
@@ -35,6 +35,7 @@ import {
   statusMetaOf, statusKeyOf, channelOf, apptHm, endClockOf, dateKeyOf,
 } from "../lib/calendarDesign";
 import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
+import { PipelineLeadPanel } from "@/features/leads/components/cardView/PipelineLeadPanel";
 import { AiSummaryView } from "@/components/crm/AiSummaryView";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
 
@@ -58,23 +59,68 @@ const FILTER_KEYS: Record<ApptFilterStatus, string> = { no_show: "filter.noShow"
 
 const NAV_BTN: CSSProperties = {
   width: 34, height: 34, borderRadius: "var(--r-button)", border: "none", cursor: "pointer",
-  background: "var(--bg-2)", display: "flex",
+  background: "var(--bg)", display: "flex",
   alignItems: "center", justifyContent: "center", color: "var(--mute)",
-  transition: "transform 80ms",
+  transition: "transform 80ms, box-shadow 80ms",
+  boxShadow: "var(--sh-raised-crisp)",
 };
 
-function NavBtn({ onClick, children, style, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) {
+function NavBtn({ onClick, children, style, forcePressed, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode; forcePressed?: boolean }) {
   const [pressed, setPressed] = useState(false);
+  const isPressed = pressed || forcePressed;
   return (
     <button
       onClick={onClick}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
-      style={{ ...NAV_BTN, transform: pressed ? "scale(0.91)" : "scale(1)", ...style }}
+      style={{ ...NAV_BTN, transition: "transform 140ms, box-shadow 140ms", transform: isPressed ? "scale(0.91)" : "scale(1)", boxShadow: isPressed ? "var(--sh-inset-crisp)" : "var(--sh-raised-crisp)", ...style }}
       {...rest}
     >
       {children}
+    </button>
+  );
+}
+
+/** Brief inset "press" flash on the prev/next arrows when the grid is swiped.
+ *  Grids dispatch `la-cal-swipe` with { dir }; -1 = prev, 1 = next. */
+const CAL_SWIPE_EVENT = "la-cal-swipe";
+function emitCalSwipe(dir: -1 | 1) {
+  window.dispatchEvent(new CustomEvent(CAL_SWIPE_EVENT, { detail: { dir } }));
+}
+function useSwipeFlash() {
+  const [flashDir, setFlashDir] = useState<-1 | 1 | null>(null);
+  useEffect(() => {
+    const onSwipe = (e: Event) => {
+      const dir = (e as CustomEvent<{ dir: -1 | 1 }>).detail?.dir;
+      if (dir !== -1 && dir !== 1) return;
+      setFlashDir(dir);
+      window.setTimeout(() => setFlashDir((cur) => (cur === dir ? null : cur)), 240);
+    };
+    window.addEventListener(CAL_SWIPE_EVENT, onSwipe);
+    return () => window.removeEventListener(CAL_SWIPE_EVENT, onSwipe);
+  }, []);
+  return flashDir;
+}
+
+/** A labeled (icon + text) calendar action/toggle row for the mobile settings sheet. */
+function CalSettingRow({ icon, label, active, onClick, "data-testid": testId }: { icon: React.ReactNode; label: string; active?: boolean; onClick: () => void; "data-testid"?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      data-testid={testId}
+      style={{
+        display: "flex", alignItems: "center", gap: 12, width: "100%",
+        padding: "13px 14px", borderRadius: "var(--r-button)", border: "none", cursor: "pointer",
+        background: "var(--surface)",
+        boxShadow: active ? "var(--sh-inset-crisp)" : "var(--sh-raised-crisp)",
+        color: "var(--ink)", fontSize: 14.5, fontWeight: 600, textAlign: "left",
+      }}
+    >
+      <span style={{ color: active ? "var(--wine)" : "var(--mute)", display: "flex" }}>{icon}</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {active && <Check className="h-4 w-4" style={{ color: "var(--wine)" }} />}
     </button>
   );
 }
@@ -353,6 +399,48 @@ function TopToolbar(p: DesktopCalendarProps) {
   );
 
   if (isMobile) {
+    const mobileFilterPanel = (
+      <>
+        <MobileDrawerSubheading>{t("filter.label")}</MobileDrawerSubheading>
+        {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
+          <MobileDrawerOption
+            key={opt}
+            label={t(FILTER_KEYS[opt])}
+            selected={p.apptFilterStatuses.includes(opt)}
+            onClick={() => p.setApptFilterStatuses(p.apptFilterStatuses.includes(opt) ? p.apptFilterStatuses.filter((s) => s !== opt) : [...p.apptFilterStatuses, opt])}
+          />
+        ))}
+      </>
+    );
+    const mobileSortPanel = (
+      <>
+        {SORT_GROUPS.map((g) => {
+          const isAsc = p.apptSortBy === g.asc;
+          const isDesc = p.apptSortBy === g.desc;
+          const isActive = isAsc || isDesc;
+          return (
+            <MobileDrawerOption
+              key={g.key}
+              label={t(g.label)}
+              selected={isActive}
+              onClick={() => p.setApptSortBy(isActive ? (isAsc ? g.desc : g.asc) : g.desc)}
+            />
+          );
+        })}
+      </>
+    );
+    const mobileGroupPanel = (
+      <>
+        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+          <MobileDrawerOption
+            key={opt}
+            label={t(GROUP_KEYS[opt])}
+            selected={p.apptGroupBy === opt}
+            onClick={() => p.setApptGroupBy(opt)}
+          />
+        ))}
+      </>
+    );
     return (
       <MobileListHeader
         title={t("title")}
@@ -366,21 +454,37 @@ function TopToolbar(p: DesktopCalendarProps) {
         searchValue={p.searchQuery}
         onSearchChange={p.setSearchQuery}
         searchPlaceholder={t("search.placeholder")}
-        filterControl={filterMenu}
+        filterPanel={mobileFilterPanel}
+        filterActive={p.apptFilterStatuses.length > 0}
+        sortPanel={mobileSortPanel}
+        sortActive={p.apptSortBy !== "time_desc"}
+        groupPanel={mobileGroupPanel}
+        groupActive={p.apptGroupBy !== "date"}
         extraActions={(
-          <>
-            <MobileHeaderIconBtn
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+            <CalSettingRow
+              icon={<CalIcon className="h-[18px] w-[18px]" />}
+              label={t("navigation.today")}
               onClick={p.onToday}
-              aria-label={t("navigation.today")}
-              title={t("navigation.today")}
-              style={{ background: "var(--wine)", color: "var(--paper)" }}
               data-testid="mobile-calendar-today"
-            >
-              <CalIcon className="h-4 w-4" />
-            </MobileHeaderIconBtn>
-            {bookButton}
-            <CalendarSettingsPopover p={p} />
-          </>
+            />
+            {p.setShowAvailability && (
+              <CalSettingRow
+                icon={<Clock className="h-[18px] w-[18px]" />}
+                label={t("design.settings.availability", { defaultValue: "Show availability" })}
+                active={!!p.showAvailability}
+                onClick={() => p.setShowAvailability!(!p.showAvailability)}
+                data-testid="mobile-calendar-availability"
+              />
+            )}
+            <CalSettingRow
+              icon={<CalendarDays className="h-[18px] w-[18px]" />}
+              label={t("design.weekends.hide", { defaultValue: "Hide weekends" })}
+              active={p.hideWeekends}
+              onClick={() => p.setHideWeekends(!p.hideWeekends)}
+              data-testid="mobile-calendar-weekends"
+            />
+          </div>
         )}
       />
     );
@@ -410,41 +514,14 @@ function TopToolbar(p: DesktopCalendarProps) {
             {p.leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
         )}
-        {/* Meetings-this-week KPI — moves to the topbar on ultra-wide */}
-        {p.ultra && (
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 4 }}>
-            <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
-            <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
-          </div>
-        )}
+        {/* Meetings-this-week KPI — always next to the fold button */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 4 }}>
+          <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+          <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
+        </div>
       </div>
 
       <div style={{ flex: 1 }} />
-
-      {/* Month tags — top-right, ultra-wide only; active month is an inset tag */}
-      {p.ultra && (
-        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
-          {MONTH_KEYS.map((mk, i) => {
-            const on = i === activeMonth;
-            return (
-              <button
-                key={mk}
-                onClick={() => p.onSelectMonth(i)}
-                style={{
-                  ...MONO, fontSize: 8.5, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700,
-                  padding: "4px 6px", borderRadius: "var(--r-button)", cursor: "pointer", whiteSpace: "nowrap",
-                  background: on ? "var(--bg)" : "transparent",
-                  boxShadow: on ? "var(--sh-inset-crisp)" : "none",
-                  border: on ? "1px solid transparent" : "1px solid var(--line)",
-                  color: on ? "var(--wine)" : "var(--mute-2)",
-                }}
-              >
-                {t(`months.short.${mk}`)}
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {/* Search / Filter / Sort / Group / New — top-right */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -538,16 +615,28 @@ function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boole
   const statusKey = ev.no_show ? "Lost" : (ev.status || "Contacted");
   const av = getLeadStatusAvatarColor(statusKey);
   const initials = ev.lead_name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
+  const isMobile = useIsMobile(768);
+  const avatarSize = isMobile ? 40 : 36;
+  const nameFontSize = isMobile ? 15 : 13;
+  const cardStyle: React.CSSProperties = isMobile
+    ? {
+        position: "relative", cursor: "pointer",
+        borderRadius: "var(--list-card-radius-mobile)", padding: "11px 12px 11px 14px",
+        background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)",
+        borderLeft: active ? "3px solid var(--wine)" : "3px solid transparent",
+        transition: "border-color 130ms", display: "flex", gap: 11, alignItems: "center",
+      }
+    : {
+        position: "relative", cursor: "pointer", borderRadius: "var(--r-surface)", padding: "11px 12px 11px 14px",
+        background: active ? "var(--card)" : "transparent", boxShadow: active ? "var(--sh-raised-crisp)" : "none",
+        transition: "box-shadow 130ms, background 130ms", display: "flex", gap: 11, alignItems: "center",
+      };
   return (
-    <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()} style={{
-      position: "relative", cursor: "pointer", borderRadius: "var(--r-surface)", padding: "11px 12px 11px 14px",
-      background: active ? "var(--card)" : "transparent", boxShadow: active ? "var(--sh-raised-crisp)" : "none",
-      transition: "box-shadow 130ms, background 130ms", display: "flex", gap: 11, alignItems: "center",
-    }}>
-      {active && <div style={{ position: "absolute", left: 0, top: 11, bottom: 11, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />}
-      <div style={{ width: 36, height: 36, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
+    <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()} style={cardStyle}>
+      {!isMobile && active && <div style={{ position: "absolute", left: 0, top: 11, bottom: 11, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />}
+      <div style={{ width: avatarSize, height: avatarSize, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, flexShrink: 0, boxShadow: "var(--sh-raised-crisp)" }}>{initials}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
+        <div style={{ fontSize: nameFontSize, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
         {ev.campaign_name && <div style={{ fontSize: 10.5, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
           <span style={{ ...MONO, fontSize: 9.5, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 4 }}><Clock className="h-3 w-3" />{ev.time}</span>
@@ -568,17 +657,17 @@ function AgendaList(p: DesktopCalendarProps) {
     return <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", ...MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t("design.detail.noMeetings")}</div>;
   }
   return (
-    <div ref={p.apptListRef} style={{ flex: 1, overflowY: "auto", padding: "6px 9px 16px" }}>
+    <div ref={p.apptListRef} style={{ flex: 1, overflowY: "auto", padding: "6px 16px 16px" }}>
       {p.groupedAppts.map((g, gi) => (
-        <div key={gi} data-group-wrapper style={{ marginBottom: 4 }}>
+        <div key={gi} data-group-wrapper style={{ marginBottom: 8 }}>
           {g.label && (
-            <div data-group-header style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 6px 5px" }}>
+            <div data-group-header style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 2px 6px" }}>
               <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-soft)", fontWeight: 700 }}>{g.label}</span>
               <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
               <span style={{ ...MONO, fontSize: 9, color: "var(--mute-2)" }}>{g.items.length}</span>
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {g.items.map((a) => (
               <div key={a.id} data-appt-id={a.id}>
                 <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} />
@@ -599,35 +688,76 @@ function CenterHeader(p: DesktopCalendarProps) {
   const isMobile = useIsMobile(768);
   const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
   const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
+  const activeMonth = p.month.getMonth();
+  const flashDir = useSwipeFlash();
 
-  // Ultra-wide: date nav sits next to Today (left), week-only stepping, KPI lives in the topbar.
+  // Today button: inset shadow when viewing the current week/month, plain raised when navigated away.
+  const now = new Date();
+  const onTodayView = p.viewMode === "month"
+    ? (p.month.getMonth() === now.getMonth() && p.month.getFullYear() === now.getFullYear())
+    : p.weekDays.some((d) => dateKeyOf(d) === p.todayStr);
+  const todayBtnStyle: CSSProperties = onTodayView
+    ? { boxShadow: "var(--sh-inset-crisp)" }
+    : { boxShadow: "var(--sh-raised-crisp)" };
+
+  const monthButtons = (
+    <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
+      {MONTH_KEYS.map((mk, i) => {
+        const on = i === activeMonth;
+        return (
+          <button
+            key={mk}
+            onClick={() => p.onSelectMonth(i)}
+            style={{
+              ...MONO, fontSize: 8.5, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700,
+              padding: "4px 6px", borderRadius: "var(--r-button)", cursor: "pointer", whiteSpace: "nowrap",
+              background: on ? "var(--bg)" : "transparent",
+              boxShadow: on ? "var(--sh-inset-super-crisp)" : "none",
+              border: on ? "1px solid transparent" : "1px solid var(--line)",
+              color: on ? "var(--wine)" : "var(--mute-2)",
+            }}
+          >
+            {t(`months.short.${mk}`)}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // Ultra-wide: date nav sits next to Today (left), week-only stepping, month buttons on right.
   if (p.ultra) {
     return (
       <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 12 }}>
         <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
-        <button onClick={p.onToday} className="la-btn la-btn--soft">{t("navigation.today")}</button>
-        <NavBtn onClick={() => p.onNavigateWeek(-1)} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></NavBtn>
-        <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{p.weekLabel}</span>
-        <NavBtn onClick={() => p.onNavigateWeek(1)} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></NavBtn>
+        <button onClick={p.onToday} className="la-btn la-btn--soft" style={todayBtnStyle}>{t("navigation.today")}</button>
+        <NavBtn onClick={() => p.onNavigateWeek(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
+        <span style={{ ...SERIF, fontSize: 26, color: "var(--ink)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{p.weekLabel}</span>
+        <NavBtn onClick={() => p.onNavigateWeek(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
+        <div style={{ flex: 1 }} />
+        {monthButtons}
       </div>
     );
   }
 
-  // Mobile: the absolute-positioned Today/KPI corners from the desktop layout
-  // collide with the centered label on a phone-width screen — stack them instead.
+  // Mobile: single-row layout — [Today] ‹ Date › [KPI]
   if (isMobile) {
     return (
-      <div style={{ flexShrink: 0, borderBottom: "1px solid var(--line)", padding: "10px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></NavBtn>
-          <span style={{ ...SERIF, fontSize: 18, color: "var(--ink)", letterSpacing: "-0.01em", textAlign: "center", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
-          <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></NavBtn>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
-          <button onClick={p.onToday} className="la-btn la-btn--soft la-btn--sm">{t("navigation.today")}</button>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <span style={{ ...SERIF, fontSize: 16, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
-            <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
+      <div style={{ flexShrink: 0, borderBottom: "1px solid var(--line)", padding: "8px 10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {/* Today button — left edge */}
+          <button onClick={p.onToday} className="la-btn la-btn--soft la-btn--sm" style={{ flexShrink: 0, ...todayBtnStyle }}>{t("navigation.today")}</button>
+          {/* Prev arrow */}
+          <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")} style={{ flexShrink: 0 }} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
+          {/* Date label — centered, fills remaining space */}
+          <span style={{ ...SERIF, fontSize: 19, color: "var(--ink)", letterSpacing: "-0.01em", textAlign: "center", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
+          {/* Next arrow */}
+          <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")} style={{ flexShrink: 0 }} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
+          {/* Meetings-this-week KPI — right edge: big number + 3-line stacked label */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <span style={{ ...SERIF, fontSize: 28, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+            <span style={{ ...MONO, fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", lineHeight: 1.15, display: "flex", flexDirection: "column" }}>
+              {t("design.kpi.meetings").split(" ").map((w, i) => <span key={i}>{w}</span>)}
+            </span>
           </div>
         </div>
       </div>
@@ -639,15 +769,14 @@ function CenterHeader(p: DesktopCalendarProps) {
       {/* Refresh + Today — left-anchored */}
       <div style={{ position: "absolute", left: 14, display: "flex", alignItems: "center", gap: 8 }}>
         <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
-        <button onClick={p.onToday} className="la-btn la-btn--soft">{t("navigation.today")}</button>
+        <button onClick={p.onToday} className="la-btn la-btn--soft" style={todayBtnStyle}>{t("navigation.today")}</button>
       </div>
-      <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")}><ChevronLeft className="h-4 w-4" /></NavBtn>
-      <span style={{ ...SERIF, fontSize: 24, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
-      <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")}><ChevronRight className="h-4 w-4" /></NavBtn>
-      {/* Meetings this week — right-aligned in header */}
-      <div style={{ position: "absolute", right: 14, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-        <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
-        <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", lineHeight: 1.3 }}>{t("design.kpi.meetings")}</span>
+      <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
+      <span style={{ ...SERIF, fontSize: 28, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
+      <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
+      {/* Month buttons — always visible, right-aligned in header */}
+      <div style={{ position: "absolute", right: 14 }}>
+        {monthButtons}
       </div>
     </div>
   );
@@ -752,16 +881,18 @@ function WeekGrid(p: DesktopCalendarProps) {
   const nowPct = nowH >= HOUR0 && nowH <= HOUR1 ? ((nowH - HOUR0) / SPAN) * 100 : null;
   const todayIdx = days.findIndex((d) => dateKeyOf(d) === p.todayStr);
 
-  // Scroll to 9am on mount so business hours are immediately visible.
+  // On tall screens show from 7:30am; on shorter screens start exactly at 9am
+  // so 5pm remains visible without scrolling.
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const totalH = SPAN * PX_PER_HOUR;
-    el.scrollTop = ((7.5 - HOUR0) / SPAN) * totalH;
+    const startHour = el.clientHeight >= 800 ? 7.5 : 9;
+    el.scrollTop = ((startHour - HOUR0) / SPAN) * totalH;
   }, []);
 
-  // Drag-to-navigate (horizontal swipe on the grid)
+  // Drag-to-navigate (horizontal swipe on the grid — pointer events for desktop)
   const dragOrigin = useRef<{ x: number; y: number } | null>(null);
   const onGridPointerDown = (e: React.PointerEvent) => { dragOrigin.current = { x: e.clientX, y: e.clientY }; };
   const onGridPointerUp = (e: React.PointerEvent) => {
@@ -769,22 +900,41 @@ function WeekGrid(p: DesktopCalendarProps) {
     const dx = e.clientX - dragOrigin.current.x;
     const dy = e.clientY - dragOrigin.current.y;
     dragOrigin.current = null;
-    if (Math.abs(dx) > 60 && Math.abs(dy) < 80) p.onNavigate(dx < 0 ? 1 : -1);
+    if (Math.abs(dx) > 60 && Math.abs(dy) < 80) { const dir = dx < 0 ? 1 : -1; emitCalSwipe(dir); p.onNavigate(dir); }
+  };
+
+  // Touch swipe — mobile only. pan-y lets the scroll container handle vertical
+  // scroll; we only intercept a clearly horizontal gesture (dx > 50, dy < 60).
+  const touchOrigin = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (t) touchOrigin.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchOrigin.current) return;
+    const t = e.changedTouches[0];
+    if (!t) { touchOrigin.current = null; return; }
+    const dx = t.clientX - touchOrigin.current.x;
+    const dy = t.clientY - touchOrigin.current.y;
+    touchOrigin.current = null;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 60) { const dir = dx < 0 ? 1 : -1; emitCalSwipe(dir); p.onNavigate(dir); }
   };
 
   return (
     <div
-      style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}
+      style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0, background: "var(--bg)", touchAction: "pan-y" }}
       onPointerDown={onGridPointerDown}
       onPointerUp={onGridPointerUp}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       {/* Day header row */}
-      <div style={{ display: "grid", gridTemplateColumns: gridCols, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: gridCols, borderBottom: "1px solid var(--line-strong)", flexShrink: 0 }}>
         <div />
         {days.map((d) => {
           const iso = dateKeyOf(d), isToday = iso === p.todayStr;
           return (
-            <div key={iso} style={{ padding: "9px 6px 11px", textAlign: "center", borderLeft: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div key={iso} style={{ padding: "9px 6px 11px", textAlign: "center", borderLeft: "1px solid var(--line-strong)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {isToday ? (
                 <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 3, background: "var(--wine)", borderRadius: "var(--r-surface)", padding: "4px 8px" }}>
                   <div style={{ ...MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--paper)", fontWeight: 700 }}>{t(`days.short.${DAY_KEYS[d.getDay()]}`)}</div>
@@ -809,7 +959,7 @@ function WeekGrid(p: DesktopCalendarProps) {
             <div />
             {days.map((d) => {
               const iso = dateKeyOf(d), isToday = iso === p.todayStr;
-              return <div key={iso} style={{ borderLeft: "1px solid var(--line)", background: isToday ? "rgba(94,34,48,0.04)" : "transparent" }} />;
+              return <div key={iso} style={{ borderLeft: "1px solid var(--line-strong)", background: isToday ? "rgba(94,34,48,0.04)" : "transparent" }} />;
             })}
           </div>
           {/* horizontal hour lines + half-hour dashed lines + gutter labels */}
@@ -818,9 +968,9 @@ function WeekGrid(p: DesktopCalendarProps) {
             const halfPct = ((i + 0.5) / SPAN) * 100;
             return (
               <div key={h}>
-                {i > 0 && <div style={{ position: "absolute", top: `${pct}%`, left: 56, right: 0, borderTop: "1px solid var(--line)" }} />}
-                {i < SPAN && <div style={{ position: "absolute", top: `${halfPct}%`, left: 56, right: 0, borderTop: "1px dashed var(--line)", opacity: 0.5 }} />}
-                <div style={{ position: "absolute", top: `calc(${pct}% - 6px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 8.5, color: "var(--mute-2)" }}>{h <= 12 ? h : h - 12}{h < 12 ? "a" : "p"}</div>
+                {i > 0 && <div style={{ position: "absolute", top: `${pct}%`, left: 56, right: 0, borderTop: "1px solid var(--line-strong)" }} />}
+                {i < SPAN && <div style={{ position: "absolute", top: `${halfPct}%`, left: 56, right: 0, borderTop: "1px dashed var(--line-strong)", opacity: 0.5 }} />}
+                <div style={{ position: "absolute", top: `calc(${pct}% - 7px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 13, color: "var(--mute-2)" }}>{h <= 12 ? h : h - 12}{h < 12 ? "am" : "pm"}</div>
               </div>
             );
           })}
@@ -837,7 +987,7 @@ function WeekGrid(p: DesktopCalendarProps) {
           {nowPct != null && (
             <div style={{ position: "absolute", top: `${nowPct}%`, left: 56, right: 0, height: 0, borderTop: "1.5px solid var(--wine)", zIndex: 5, pointerEvents: "none" }}>
               <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px rgba(94,34,48,0.18)" }} />
-              {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc((100% - 0px) * ${todayIdx} / ${nCols})`, top: -7, ...MONO, fontSize: 8, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "1px 5px", transform: "translateX(6px)" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+              {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc(100% * ${todayIdx + 1} / ${nCols})`, top: -9, ...MONO, fontSize: 11, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "2px 6px", transform: "translateX(calc(-100% - 6px))" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
             </div>
           )}
         </div>
@@ -849,7 +999,10 @@ function WeekGrid(p: DesktopCalendarProps) {
 function MonthGrid(p: DesktopCalendarProps) {
   const { t } = p;
   const m = p.month.getMonth();
-  const weekKeys = useMemo(() => new Set(p.weekDays.map(dateKeyOf)), [p.weekDays]);
+  // Only highlight the *real* current week, and only while viewing the *current*
+  // month — never the same week-row replicated across other months.
+  const nowDate = new Date();
+  const isCurrentMonth = p.month.getMonth() === nowDate.getMonth() && p.month.getFullYear() === nowDate.getFullYear();
   const visibleDows = DOW_ORDER.filter((dow) => !p.hideWeekends || (dow !== 0 && dow !== 6));
   const nCols = visibleDows.length;
   const colTemplate = `repeat(${nCols},1fr)`;
@@ -859,8 +1012,28 @@ function MonthGrid(p: DesktopCalendarProps) {
   const weeks: { date: Date; count: number }[][] = [];
   for (let i = 0; i < p.days.length; i += 7) weeks.push(p.days.slice(i, i + 7).filter(filterCell));
 
+  // Touch swipe to navigate months on mobile
+  const monthTouchOrigin = useRef<{ x: number; y: number } | null>(null);
+  const onMonthTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) monthTouchOrigin.current = { x: touch.clientX, y: touch.clientY };
+  };
+  const onMonthTouchEnd = (e: React.TouchEvent) => {
+    if (!monthTouchOrigin.current) return;
+    const touch = e.changedTouches[0];
+    if (!touch) { monthTouchOrigin.current = null; return; }
+    const dx = touch.clientX - monthTouchOrigin.current.x;
+    const dy = touch.clientY - monthTouchOrigin.current.y;
+    monthTouchOrigin.current = null;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 60) { const dir = dx < 0 ? 1 : -1; emitCalSwipe(dir); p.onNavigate(dir); }
+  };
+
   return (
-    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <div
+      style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0, background: "var(--surface)", touchAction: "pan-y" }}
+      onTouchStart={onMonthTouchStart}
+      onTouchEnd={onMonthTouchEnd}
+    >
       {/* Weekday header — +4px font, bold today's column */}
       <div style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: "1px solid var(--line)", flexShrink: 0 }}>
         {visibleDows.map((dow, i) => {
@@ -872,10 +1045,10 @@ function MonthGrid(p: DesktopCalendarProps) {
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
         {weeks.map((wk, wi) => {
-          // Highlight the week currently shown in the left/week panel (top + bottom rule)
-          const isCurrentWeek = wk.some((c) => weekKeys.has(dateKeyOf(c.date)));
+          // Highlight only the week containing today, and only in the current month.
+          const isCurrentWeek = isCurrentMonth && wk.some((c) => dateKeyOf(c.date) === p.todayStr);
           return (
-          <div key={wi} style={{ display: "grid", gridTemplateColumns: colTemplate, borderBottom: !isCurrentWeek && wi < weeks.length - 1 ? "1px solid var(--line)" : "none", boxShadow: isCurrentWeek ? "inset 0 1px 0 0 rgba(94,34,48,0.5), inset 0 -1px 0 0 rgba(94,34,48,0.5)" : "none", background: !isCurrentWeek ? "rgba(0,0,0,0.025)" : "transparent" }}>
+          <div key={wi} style={{ display: "grid", gridTemplateColumns: colTemplate, borderTop: isCurrentWeek ? "1px solid var(--wine)" : "1px solid transparent", borderBottom: isCurrentWeek ? "1px solid var(--wine)" : "1px solid transparent", background: isCurrentWeek ? "transparent" : "rgba(60,45,25,0.02)" }}>
             {wk.map((cell, di) => {
               const iso = dateKeyOf(cell.date), inMonth = cell.date.getMonth() === m, isToday = iso === p.todayStr;
               const items = p.apptsByDate.get(iso) ?? [];
@@ -888,7 +1061,7 @@ function MonthGrid(p: DesktopCalendarProps) {
                   style={{ borderLeft: di ? "1px solid var(--line)" : "none", padding: "7px 8px", minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3, background: isToday ? "rgba(94,34,48,0.03)" : "transparent", opacity: inMonth ? 1 : 0.38 }}
                 >
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 18, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "#c0384f" : "transparent" }}>{cell.date.getDate()}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 18, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "var(--wine)" : "transparent" }}>{cell.date.getDate()}</span>
                   </div>
                   {items.slice(0, 4).map((e) => {
                     const active = p.selectedBooking?.id === e.id;
@@ -1028,6 +1201,20 @@ function DetailPanel(p: DesktopCalendarProps) {
   if (!ev) {
     return <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", ...MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t("design.detail.selectMeeting")}</div>;
   }
+
+  // Reuse the pipeline lead panel for the full lead view (same as the Leads
+  // pipeline). Falls back to the calendar-specific layout if no lead is linked.
+  if (ev.rawLead) {
+    return (
+      <PipelineLeadPanel
+        lead={ev.rawLead}
+        onRefresh={p.onRefresh}
+        accountTimezone={ev.timezone}
+        onClose={() => p.onSelectBooking(null)}
+      />
+    );
+  }
+
   const sm = statusMetaOf(ev, t);
   const av = getLeadStatusAvatarColor(ev.no_show ? "Lost" : (ev.status || "Contacted"));
   const aiSummaryRaw = ev.rawLead?.ai_summary ?? ev.rawLead?.aiSummary ?? null;
@@ -1042,7 +1229,7 @@ function DetailPanel(p: DesktopCalendarProps) {
           title={t("design.detail.openInLead")}
           style={{ display: "flex", gap: 11, alignItems: "center", flex: 1, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
         >
-          <div style={{ width: 38, height: 38, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{ev.lead_name.split(/\s+/).slice(0, 2).map(s => s[0]).join("").toUpperCase()}</div>
+          <div style={{ width: 38, height: 38, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, flexShrink: 0, boxShadow: "var(--sh-raised-crisp)" }}>{ev.lead_name.split(/\s+/).slice(0, 2).map(s => s[0]).join("").toUpperCase()}</div>
           <div style={{ minWidth: 0 }}>
             <div style={{ ...SERIF, fontSize: 18, color: "var(--ink)", lineHeight: 1.15, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
             {ev.campaign_name && <div style={{ fontSize: 11, color: "var(--mute)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.campaign_name}</div>}
@@ -1193,8 +1380,8 @@ function WeekMonthSplit(p: DesktopCalendarProps) {
       >
         <div style={{ width: 3, height: 50, borderRadius: 2, background: "var(--line-strong)" }} />
       </div>
-      {/* Month side — darker warm tint to distinguish it */}
-      <div style={{ flex: 1, minWidth: 0, display: frac === 1 ? "none" : "flex", flexDirection: "column", minHeight: 0, background: "rgba(94,34,48,0.045)" }}>
+      {/* Month side — lighter surface to distinguish from week side */}
+      <div style={{ flex: 1, minWidth: 0, display: frac === 1 ? "none" : "flex", flexDirection: "column", minHeight: 0, background: "var(--surface)" }}>
         <MonthGrid {...p} />
       </div>
     </div>
@@ -1208,7 +1395,7 @@ const DETAIL_W = 372;
 
 export function DesktopCalendar(p: DesktopCalendarProps) {
   const { state: leftPanelState, cycle } = useListPanelState();
-  const isMobile = useIsMobile(768);
+  const isMobile = useIsMobile(1024);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [rootWidth, setRootWidth] = useState(0);
@@ -1245,8 +1432,8 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
             )}
           </div>
         )}
-        {/* CENTER — calendar (no rounded corners, flush edges). Ultra-wide: week + month split */}
-        <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg-2)", borderRadius: 0 }}>
+        {/* CENTER — calendar. Ultra-wide: week + month split */}
+        <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg)", borderRadius: 0, display: "flex", flexDirection: "column" }}>
           {p.viewMode === "list" && isMobile ? (
             // List view (mobile only — desktop already has the agenda in its left
             // panel). Full-height agenda of all appointments grouped by date, no
@@ -1255,9 +1442,14 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
           ) : (
             <>
               <CenterHeader {...p} ultra={ultra} />
-              {ultra
-                ? <WeekMonthSplit {...p} />
-                : p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
+              {/* Chart area — inset with rounded corners and breathing room */}
+              <div style={{ flex: 1, minHeight: 0, margin: 8, borderRadius: "var(--r-surface)", overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
+                {ultra
+                  ? <WeekMonthSplit {...p} />
+                  : p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
+                {/* Overlay so inset shadow renders on top of child backgrounds */}
+                <div style={{ position: "absolute", inset: 0, borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", pointerEvents: "none", zIndex: 20 }} />
+              </div>
             </>
           )}
         </div>

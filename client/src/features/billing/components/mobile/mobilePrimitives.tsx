@@ -322,7 +322,7 @@ export function SheetHead({ eyebrow, title, onClose }: { eyebrow: string; title:
 export function MBInvoiceCard({ inv, onClick, t }: { inv: InvoiceRow; onClick: () => void; t: (k: string, o?: any) => string }) {
   const status = displayStatus(inv);
   return (
-    <div onClick={onClick} className="neu-raised" style={{ padding: 15, borderRadius: "var(--r-card)", cursor: "pointer", marginBottom: 10 }}>
+    <div onClick={onClick} className="neu-raised-crisp" style={{ padding: 15, borderRadius: "var(--r-card)", cursor: "pointer", marginBottom: 10 }}>
       <div className="row" style={{ gap: 12 }}>
         <BAvatar name={inv.account_name} size={40} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -350,7 +350,7 @@ export function MBInvoiceCard({ inv, onClick, t }: { inv: InvoiceRow; onClick: (
 export function MBContractCard({ ctr, onClick, t }: { ctr: ContractRow; onClick: () => void; t: (k: string, o?: any) => string }) {
   const value = num(ctr.fixed_fee_amount) || num(ctr.monthly_fee) || num(ctr.value_per_booking) || num(ctr.deposit_amount);
   return (
-    <div onClick={onClick} className="neu-raised" style={{ padding: 15, borderRadius: "var(--r-card)", cursor: "pointer", marginBottom: 10 }}>
+    <div onClick={onClick} className="neu-raised-crisp" style={{ padding: 15, borderRadius: "var(--r-card)", cursor: "pointer", marginBottom: 10 }}>
       <div className="row" style={{ gap: 12 }}>
         <BAvatar name={ctr.account_name} size={40} />
         <div style={{ flex: 1, minWidth: 0 }}>

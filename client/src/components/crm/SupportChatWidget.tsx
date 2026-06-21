@@ -55,6 +55,8 @@ interface SupportChatWidgetProps {
   onOpenAgent?: (id: number) => void;
   /** Founder direct message channel */
   founderChat?: FounderChatProps;
+  /** Lock the widget to the founder channel only (no AI bot, no channel switcher). */
+  founderOnly?: boolean;
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
@@ -76,11 +78,12 @@ export function SupportChatWidget({
   aiAgents,
   onOpenAgent,
   founderChat,
+  founderOnly = false,
 }: SupportChatWidgetProps) {
   const isAgencyUser = isAdmin;
   const isInline = mode === "inline";
 
-  const [channel, setChannel] = useState<"bot" | "founder">("bot");
+  const [channel, setChannel] = useState<"bot" | "founder">(founderOnly ? "founder" : "bot");
   const founderInitializedRef = useRef(false);
 
   // Listen for external channel-switch events (from InboxPanel navigation)
@@ -125,23 +128,43 @@ export function SupportChatWidget({
   // Voice recording
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const canceledRef = useRef(false);
+
+  const stopRecordTimer = () => {
+    if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+  };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       audioChunksRef.current = [];
+      canceledRef.current = false;
       recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        stopRecordTimer();
+        setRecordingSeconds(0);
+        setRecording(false);
+        // Discarded by the cancel (red bin) button — drop it, send nothing.
+        if (canceledRef.current) { canceledRef.current = false; return; }
         const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
+        const isFounder = channel === "founder";
         setTranscribing(true);
         try {
           const reader = new FileReader();
           reader.onload = async (ev) => {
             const dataUrl = ev.target?.result as string;
+            // Founder channel: send the recording as a voice memo (no transcription).
+            if (isFounder) {
+              if (dataUrl) activeSendMessage(dataUrl);
+              setTranscribing(false);
+              return;
+            }
             try {
               const { apiFetch } = await import("@/lib/apiUtils");
               const res = await apiFetch("/api/support-chat/transcribe", {
@@ -165,17 +188,38 @@ export function SupportChatWidget({
           };
           reader.readAsDataURL(blob);
         } catch { setTranscribing(false); }
-        setRecording(false);
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       setRecording(true);
+      setRecordingSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
     } catch { /* mic permission denied */ }
   };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     mediaRecorderRef.current = null;
+  };
+
+  const cancelRecording = () => {
+    canceledRef.current = true;
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+  };
+
+  // File attachment — sends the picked file as a data-URL message.
+  const attachInputRef = useRef<HTMLInputElement>(null);
+  const handleAttachFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) activeSendMessage(dataUrl);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Background / doodle — shared with ChatPanel via localStorage
@@ -289,7 +333,7 @@ export function SupportChatWidget({
   // Avatar size: 36px for inline (full chat), 28px for floating (compact)
   const avatarSize = isInline ? 36 : 28;
   // In inline mode the header already shows the bot — don't repeat avatar on every bubble
-  const showBubbleAvatar = !isInline;
+  const showBubbleAvatar = !isInline && !founderOnly;
 
   return (
     <>
@@ -307,10 +351,12 @@ export function SupportChatWidget({
 
       <section
         className={cn(
-          "flex flex-col overflow-hidden relative h-full",
+          "flex flex-col overflow-hidden relative",
           isInline
-            ? "rounded-lg"
-            : "fixed bottom-6 right-6 z-[60] rounded-2xl w-[340px] max-h-[600px] min-h-[460px] shadow-xl border border-border/40 dark:border-border/20",
+            ? "rounded-lg h-full"
+            // Mobile: fill the screen but stop above the bottom footer bar (don't overlay it).
+            // Desktop (md+): floating card anchored bottom-right.
+            : "fixed z-[110] shadow-xl border border-border/40 dark:border-border/20 top-0 left-0 right-0 bottom-[var(--bottombar-h)] rounded-none md:z-[60] md:h-full md:inset-auto md:bottom-6 md:right-6 md:rounded-2xl md:w-[340px] md:max-h-[600px] md:min-h-[460px]",
         )}
       >
         {/* ── Gradient background (inline only — floating keeps plain bg) ── */}
@@ -347,6 +393,7 @@ export function SupportChatWidget({
             isInline={isInline}
             isAgencyUser={isAgencyUser}
             founderChat={founderChat}
+            founderOnly={founderOnly}
             botPhotoInputRef={botPhotoInputRef}
             handlePhotoChange={handlePhotoChange}
             editingName={editingName}
@@ -355,11 +402,6 @@ export function SupportChatWidget({
             saveEditName={saveEditName}
             handleNameKeyDown={handleNameKeyDown}
             startEditName={startEditName}
-            handleClearContext={handleClearContext}
-            clearing={clearing}
-            loading={loading}
-            doodleConfig={doodleConfig}
-            setDoodleConfig={setDoodleConfig}
             handleClose={handleClose}
             onOpenInChats={onOpenInChats}
             aiAgents={aiAgents}
@@ -393,8 +435,8 @@ export function SupportChatWidget({
                 {activeMessages.length === 0 && (
                   <div className="flex flex-col items-start">
                     <div className="flex gap-1.5 justify-start">
-                      {!isInline && channel === "bot" && <BotAvatarFull config={botConfig} size={avatarSize} />}
-                      {!isInline && channel === "founder" && (
+                      {!isInline && !founderOnly && channel === "bot" && <BotAvatarFull config={botConfig} size={avatarSize} />}
+                      {!isInline && !founderOnly && channel === "founder" && (
                         <div
                           className="rounded-full shrink-0 overflow-hidden flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30"
                           style={{ width: avatarSize, height: avatarSize }}
@@ -402,7 +444,7 @@ export function SupportChatWidget({
                           <User className="text-emerald-600 dark:text-emerald-400" style={{ width: avatarSize * 0.44, height: avatarSize * 0.44 }} />
                         </div>
                       )}
-                      <div className="max-w-[80%] px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-tl-none text-[13px] leading-relaxed shadow-sm">
+                      <div className="max-w-[80%] px-3 pt-2 pb-2 bg-white dark:bg-card text-foreground rounded-lg rounded-bl-none text-[13px] leading-relaxed shadow-sm">
                         {channel === "founder"
                           ? "Hi! I'm Gabriel, the founder of Lead Awaker. Send me a message and I'll get back to you as soon as I can."
                           : `Hi! I'm ${botConfig.name}, your Lead Awaker assistant. How can I help you today?`}
@@ -447,7 +489,18 @@ export function SupportChatWidget({
             handleSend={handleSend}
             startRecording={startRecording}
             stopRecording={stopRecording}
+            recordingSeconds={recordingSeconds}
+            cancelRecording={cancelRecording}
+            onAttachClick={() => attachInputRef.current?.click()}
+            doodleConfig={doodleConfig}
+            setDoodleConfig={setDoodleConfig}
+            handleClearContext={handleClearContext}
+            clearing={clearing}
+            loading={activeLoading}
+            founderOnly={founderOnly}
+            isInline={isInline}
           />
+          <input ref={attachInputRef} type="file" className="hidden" onChange={handleAttachFile} />
 
         </div>
       </section>

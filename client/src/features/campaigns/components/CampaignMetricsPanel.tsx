@@ -70,6 +70,31 @@ export function CampaignMetricsPanel({
   const { leads } = useLeads(undefined, campaignId);
   const leadList = useMemo(() => leads as Record<string, any>[], [leads]);
 
+  // Horizontal rule between stacked panels on mobile.
+  const Divider = () => <div style={{ borderTop: "1px solid var(--line)", margin: "18px 0" }} />;
+
+  // ── Mobile compact: single vertical stack, "Up next" right after the metrics,
+  //    with a divider between every panel. ──
+  if (compact) {
+    return (
+      <div className={cn("summary-root w-full flex flex-col")}>
+        <AISummaryWidget summary={localAiSummary} generatedAt={localAiSummaryAt} onRefresh={onRefreshSummary} isRefreshing={isRefreshingSummary} />
+        <Divider />
+        <PerformancePanel leads={leadList} campaignId={campaignId} accountId={accountId} animTrigger={animTrigger} compact />
+        <Divider />
+        <NextPanel leads={leadList} />
+        <Divider />
+        <PipelinePanel leads={leadList} />
+        <Divider />
+        <AIActivityPanel campaign={campaign} accountId={accountId} />
+        <Divider />
+        <BumpsTodayPanel campaign={campaign} />
+        <Divider />
+        <ABTestCard campaign={campaign} mockStats={isDemoMode ? DEMO_AB_STATS : undefined} />
+      </div>
+    );
+  }
+
   return (
     <div className={cn("summary-root w-full flex flex-col")}>
 
@@ -85,7 +110,7 @@ export function CampaignMetricsPanel({
       */}
       <div className="summary-grid">
         <div className="summary-perf">
-          <PerformancePanel leads={leadList} campaignId={campaignId} accountId={accountId} animTrigger={animTrigger} />
+          <PerformancePanel leads={leadList} campaignId={campaignId} accountId={accountId} animTrigger={animTrigger} compact={compact} />
         </div>
 
         <div className="summary-panels">
@@ -101,10 +126,7 @@ export function CampaignMetricsPanel({
         </div>
       </div>
 
-      {/* Bumps Today + A/B test — full width row. The Bumps card is sized to
-          match the Conversion Pipeline panel above; because the panels row is
-          1/3-each when stacked but 1/4.15 at ultrawide, the flex ratio flips in
-          design-system.css. Gap matches the 22px used everywhere else. */}
+      {/* Bumps Today + A/B test — full width row on desktop. */}
       <div className="summary-bumps-row">
         <div className="summary-bumps-cell">
           <BumpsTodayPanel campaign={campaign} />

@@ -60,10 +60,11 @@ export const ListCard = React.forwardRef<HTMLElement, ListCardProps>(function Li
         // hover bg only when not selected (selected keeps its tint)
         interactive && !selected && "hover:bg-card-hover",
         selected && "bg-[hsl(var(--highlight-selected))]",
-        // Mobile: every card reads the same flat beige surface — no neumorphic
-        // shadow, no wine left line. The tapped card opens a detail panel, so a
-        // persistent selected highlight isn't needed on a phone.
-        "max-md:bg-[var(--bone)] max-md:shadow-none max-md:border-l-0",
+        // Mobile: every card is a white/paper raised-crisp tile, selected or not —
+        // selection shows only as a wine left bar, never the desktop amber tint.
+        "max-md:shadow-[var(--sh-raised-crisp)] max-md:rounded-[var(--list-card-radius-mobile)]",
+        "max-md:bg-[var(--surface)]",
+        selected && "max-md:border-l-[3px] max-md:border-l-[var(--wine)]",
         className,
       )}
       style={accentColor ? { borderLeft: `3px solid ${accentColor}`, ...style } : style}

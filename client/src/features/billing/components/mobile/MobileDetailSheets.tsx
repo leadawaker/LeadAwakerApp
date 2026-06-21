@@ -130,8 +130,8 @@ export function MobileExpenseDetail({
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: exp.nlBtwDeductible ? "var(--good)" : "var(--mute-2)" }} />
             {exp.nlBtwDeductible ? t("expenses.detail.nlBtwDeductible") : t("expenses.detail.nlBtwNonDeductible")}
           </span>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", padding: "3px 9px" }}>{cur}</span>
-          {q && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", padding: "3px 9px" }}>{q} {exp.year ?? ""}</span>}
+          <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", padding: "3px 9px" }}>{cur}</span>
+          {q && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", padding: "3px 9px" }}>{q} {exp.year ?? ""}</span>}
         </div>
 
         {exp.description && <div style={{ fontSize: 15, color: "var(--ink)", lineHeight: 1.45, marginBottom: 18 }}>{exp.description}</div>}

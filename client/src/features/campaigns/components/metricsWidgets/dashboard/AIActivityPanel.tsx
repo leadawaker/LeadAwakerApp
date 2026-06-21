@@ -64,11 +64,13 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
   };
 
   return (
-    <div className="surface-panel" style={{
+    <div style={{
       height: "100%",
       display: "flex",
       flexDirection: "column",
-      padding: "20px 18px"
+      padding: "28px 26px",
+      background: "transparent",
+      borderRadius: "var(--r-card)",
     }} data-testid="campaign-detail-view-activity">
       <SectionHead
         eyebrow={
@@ -90,7 +92,7 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
             style={{
               width: 30, height: 30, borderRadius: "var(--r-button)", flexShrink: 0,
               alignItems: "center", justifyContent: "center", cursor: "pointer",
-              background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)",
+              background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)",
               color: compact ? "var(--wine)" : "var(--mute)", border: "none",
             }}
           >
@@ -115,7 +117,7 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
               className="row"
               style={{ gap: 14, padding: "11px 6px", borderBottom: "1px solid var(--line)", alignItems: "flex-start", textAlign: "left", background: "transparent", border: "none", borderBottomWidth: 1, borderRadius: "var(--r-button)", cursor: "pointer", width: "100%", transition: "background 0.12s" }}
             >
-              <div style={{ position: "relative", width: 30, height: 30, borderRadius: "var(--r-button)", flexShrink: 0, marginTop: 1, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", display: "flex", alignItems: "center", justifyContent: "center", color }}>
+              <div style={{ position: "relative", width: 30, height: 30, borderRadius: "var(--r-button)", flexShrink: 0, marginTop: 1, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", display: "flex", alignItems: "center", justifyContent: "center", color }}>
                 <Icon className="h-3.5 w-3.5" />
                 {r.stacked > 1 && (
                   <span style={{ position: "absolute", top: -6, right: -6, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: "var(--wine)", color: "#fff", fontSize: 9, fontWeight: 700, fontFamily: "var(--mono)", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>

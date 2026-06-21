@@ -86,7 +86,7 @@ export function UsersCardGrid({
             )}
             <div
               className="grid gap-2.5"
-              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
             >
               {section.users.map((u) => {
                 const role = u.role || "Viewer";
@@ -106,7 +106,9 @@ export function UsersCardGrid({
                     )}
                     style={{
                       animationDelay: `${Math.min(cardIdx++, 15) * 30}ms`,
-                      ...(isSelected ? { outline: "2px solid var(--wine)", outlineOffset: "0px", background: "var(--card)" } : {}),
+                      ...(isSelected
+                        ? { outline: "2px solid var(--wine)", outlineOffset: "0px", background: "var(--card)" }
+                        : { boxShadow: "var(--sh-inset-crisp)", borderRadius: "6px" }),
                     }}
                     data-testid={`user-card-${u.id}`}
                   >
@@ -122,7 +124,7 @@ export function UsersCardGrid({
                         photoUrl={u.avatarUrl}
                         bgColor={color.bg}
                         textColor={color.text}
-                        size={88}
+                        size={62}
                       />
                       {canMultiSelect && isChecked && (
                         <div

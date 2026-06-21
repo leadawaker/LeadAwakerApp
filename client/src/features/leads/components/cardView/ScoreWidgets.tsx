@@ -318,7 +318,7 @@ function DetailScoreBar({ label, value, max, color, note }: { label: string; val
         <span style={{ fontSize: 12, fontWeight: 500, color: "var(--ink-soft)" }}>{label}</span>
         <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)" }}>{Math.round(value)}/{max}</span>
       </div>
-      <div style={{ height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden", marginBottom: note ? 4 : 0 }}>
+      <div style={{ height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden", marginBottom: note ? 4 : 0 }}>
         <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: "var(--r-pill)", transition: "width 500ms" }} />
       </div>
       {note && <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.04em" }}>{note}</span>}
@@ -359,7 +359,7 @@ export function ScoreWidget({ score, lead, status }: { score: number; lead?: Rec
                 <span style={{ fontFamily: "var(--serif)", fontSize: 64, lineHeight: 1, color: "var(--ink)", letterSpacing: "-0.02em" }}>{score}</span>
                 <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--mute-2)" }}>/100</span>
               </div>
-              <div style={{ height: 6, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden", marginTop: 12 }}>
+              <div style={{ height: 6, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden", marginTop: 12 }}>
                 <div style={{ width: `${score}%`, height: "100%", background: sColor, borderRadius: "var(--r-pill)", transition: "width 500ms" }} />
               </div>
             </div>
@@ -367,7 +367,7 @@ export function ScoreWidget({ score, lead, status }: { score: number; lead?: Rec
             {/* Sparkline — real score history inside an inset well */}
             <div>
               <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>{t("score.trend", "Score trend")}</div>
-              <div style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-button)", padding: "6px 6px 0" }}>
+              <div style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-button)", padding: "6px 6px 0" }}>
                 <ScoreHistoryChart data={history} tierColor={tierColor} score={score} leadId={leadId ? Number(leadId) : null} />
               </div>
             </div>

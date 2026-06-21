@@ -10,9 +10,7 @@ import {
   Plus,
   Loader2,
   FileText,
-  ChevronLeft,
   Calendar,
-  Phone,
   Star,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
@@ -407,17 +405,6 @@ export function MobileLeadDetailPanel({
           paddingTop: 8 }}
       >
         <div className="row" style={{ gap: 12, alignItems: "center" }}>
-          <button
-            onClick={onBack}
-            aria-label="Back"
-            style={{
-              width: 38, height: 38, borderRadius: "var(--r-pill)", flexShrink: 0, border: "none", cursor: "pointer",
-              background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--ink)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
           <MLAvatar name={name} status={status} size={46} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="row" style={{ gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
@@ -489,20 +476,6 @@ export function MobileLeadDetailPanel({
         )}
       </div>
 
-      {/* ── Action bar ── */}
-      <div style={{ flexShrink: 0, borderTop: "1px solid var(--line)", padding: "14px 18px", display: "flex", gap: 10,
-        paddingBottom: "calc(14px + var(--safe-bottom))" }}>
-        <button style={{
-          flex: 1, height: 48, borderRadius: "var(--r-surface)", border: "none", cursor: "pointer",
-          background: "var(--wine-grad)", boxShadow: "var(--sh-raised-medium)",
-          color: "var(--paper)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9,
-          fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700,
-        }}>
-          {isBooked
-            ? <><Calendar className="h-4 w-4" />{t("mobileDetail.viewBooking", "View booking")}</>
-            : <><Phone className="h-4 w-4" />{t("mobileDetail.bookCall", "Book call")}</>}
-        </button>
-      </div>
       </>
       )}
     </MobileSheet>

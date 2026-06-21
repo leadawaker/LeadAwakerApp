@@ -368,15 +368,7 @@ export function CampaignDetailView({
 
       {/* ── Header outer wrapper ── */}
       <div className="shrink-0 relative z-10" style={{ padding: 'var(--space-sm) var(--space-xl)' }}>
-        <div className="relative px-6 pt-6 pb-7 space-y-3 w-full" style={{
-          borderRadius: 'var(--r-panel)',
-          border: '1px solid var(--line)',
-          background: `
-            radial-gradient(ellipse 55% 90% at 96% -25%, rgba(255, 226, 168, 0.40), transparent 62%),
-            radial-gradient(ellipse 42% 70% at 1% 125%, rgba(94, 34, 48, 0.05), transparent 70%),
-            var(--paper)`,
-          boxShadow: 'var(--sh-raised-large)',
-        }}>
+        <div className="neu-raised-large relative px-6 pt-6 pb-7 space-y-3 w-full">
 
           {/* Header row: Avatar + Name on left, toolbar actions on right */}
           <div className="flex items-start gap-3">
@@ -411,6 +403,9 @@ export function CampaignDetailView({
             compact={compact}
             t={t}
             onSaveName={async (name) => { if (campaign.id) await onSave(campaign.id, { name }); }}
+            readinessTag={isAgencyUser && campaignId ? (
+              <CampaignPreflight campaignId={Number(campaignId)} refreshKey={status} t={t} />
+            ) : null}
           />
             </div>
 
@@ -435,9 +430,6 @@ export function CampaignDetailView({
                 onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
                 t={t}
               />
-              {isAgencyUser && campaignId && (
-                <CampaignPreflight campaignId={Number(campaignId)} refreshKey={status} t={t} />
-              )}
             </div>
           </div>
         </div>
@@ -522,7 +514,7 @@ export function CampaignDetailView({
                   )}
                   style={
                     open
-                      ? { color: "var(--wine)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }
+                      ? { color: "var(--wine)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)" }
                       : { background: "transparent", boxShadow: "none" }
                   }
                   title={`${open ? "Hide" : "Show"} ${label}`}

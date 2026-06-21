@@ -239,7 +239,13 @@ export function LeadListCard({
   return (
     <div
       ref={cardWrapRef}
-      className="relative overflow-hidden rounded-[var(--list-card-radius)] max-md:rounded-[var(--list-card-radius-mobile)]"
+      className="relative overflow-x-hidden rounded-[var(--list-card-radius)] max-md:rounded-[var(--list-card-radius-mobile)] max-md:shadow-[var(--sh-raised-crisp)]"
+      // overflow-x-hidden (not overflow-hidden): the swipe gesture only needs
+      // horizontal clipping. A plain overflow-hidden here would clip this
+      // element's OWN box-shadow too — overflow:hidden clips a box-shadow on
+      // the same element, regardless of which side the shadow extends past.
+      // That's what was silently eating the active card's shadow.
+      style={isActive ? { boxShadow: "var(--sh-raised-crisp)" } : undefined}
       data-testid={`swipe-card-${getLeadId(lead)}`}
     >
       {/* Inbox icon revealed behind card as it slides right (Feature #40) */}
@@ -342,6 +348,7 @@ export function LeadListCard({
               background: selected ? '#FFFFFF' : avatarBg,
               color: selected ? 'var(--wine)' : avatarText,
               border: selected ? '2px solid var(--wine)' : 'none',
+              boxShadow: 'var(--sh-raised-crisp)',
               fontFamily: "'Geist Mono', ui-monospace, monospace",
               fontWeight: 700,
               opacity: isPastCall ? 0.4 : 1,
@@ -465,6 +472,25 @@ export function LeadListCard({
             >
               {peekText}
             </span>
+            {unreadCount > 0 && (
+              <span
+                className="shrink-0 flex items-center justify-center"
+                style={{
+                  minWidth: 16,
+                  height: 16,
+                  padding: '0 4px',
+                  borderRadius: 9999,
+                  background: 'var(--wine)',
+                  color: '#FFFFFF',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                }}
+                aria-label={`${unreadCount} unread`}
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </div>
         )}
 

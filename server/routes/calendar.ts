@@ -1,10 +1,8 @@
 import type { Express } from "express";
-import { execFile as execFileCb } from "node:child_process";
-import { promisify } from "node:util";
 import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { wrapAsync } from "./_helpers";
-import { encryptSecret, decryptSecret } from "../calendar/crypto";
+import { decryptSecret } from "../calendar/crypto";
 import {
   getAdapter,
   getFreeBusyForAccount,
@@ -15,16 +13,9 @@ import {
   PROVIDER_META,
   CalendarNotConfiguredError,
 } from "../calendar";
-
-const execFile = promisify(execFileCb);
+import { provisionCaldiyForAccount } from "../calendar/caldiy";
 
 const OAUTH_PROVIDERS = new Set(["google", "outlook"]);
-
-interface CaldiyCredentials {
-  username: string;
-  password: string;
-  bookingUrl: string;
-}
 
 function frontendBase(req: import("express").Request): string {
   return process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
@@ -184,33 +175,8 @@ export function registerCalendarRoutes(app: Express): void {
     if (!account) return res.status(404).json({ message: "Account not found" });
     if (!account.ownerEmail) return res.status(400).json({ message: "Account has no owner email set" });
 
-    const { stdout } = await execFile(
-      "/home/gabriel/caldiy/provision-leadawaker.sh",
-      [],
-      {
-        env: {
-          ...process.env,
-          LA_EMAIL: account.ownerEmail,
-          LA_NAME: account.name || account.ownerEmail,
-          LA_TIMEZONE: account.timezone || "Europe/Amsterdam",
-          LA_WEBHOOK_URL: "https://webhooks.leadawaker.com/webhooks/booking",
-          LA_WEBAPP_URL: "https://cal.leadawaker.com",
-        },
-        timeout: 60000,
-      },
-    );
-    const lastLine = stdout.trim().split("\n").pop() || "";
-    const creds: CaldiyCredentials = JSON.parse(lastLine);
-
-    await storage.upsertCalendarConnection({
-      accountId: Number(accountId),
-      provider: "caldiy",
-      status: "connected",
-      externalId: creds.username,
-      displayName: creds.bookingUrl,
-      apiKeyEncrypted: encryptSecret(creds.password),
-    } as any);
-
+    const creds = await provisionCaldiyForAccount(Number(accountId));
+    if (!creds) return res.status(500).json({ message: "Failed to provision booking page" });
     res.json(creds);
   }));
 

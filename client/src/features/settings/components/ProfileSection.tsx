@@ -8,15 +8,24 @@ import { apiFetch, API_BASE } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
 import {
   Mail, Globe, User, Shield, Clock,
-  Phone, Camera, X, ChevronDown, Eye,
+  Phone, Camera, X, ChevronDown, Eye, Compass,
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { SkeletonSettingsSection } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import type { UserProfile } from "../types";
 import { Field, PasswordField } from "./SettingsFields";
+
+function parsePrefs(raw: UserProfile["preferences"]): Record<string, any> {
+  try {
+    return typeof raw === "string" ? JSON.parse(raw || "{}") : (raw ?? {});
+  } catch {
+    return {};
+  }
+}
 
 export function ProfileSection() {
   const { t } = useTranslation("settings");
@@ -125,6 +134,36 @@ export function ProfileSection() {
   const [gmailStatus, setGmailStatus] = useState<{ connected: boolean; email?: string } | null>(null);
   const [gmailLoading, setGmailLoading] = useState(false);
 
+  // ── Outreach pages nav toggle (Owner-only) ────────────────────────
+  const [showOutreachPages, setShowOutreachPages] = useState(false);
+  const [outreachToggleSaving, setOutreachToggleSaving] = useState(false);
+
+  const handleToggleOutreachPages = async (checked: boolean) => {
+    if (!profile) return;
+    setOutreachToggleSaving(true);
+    const prevValue = showOutreachPages;
+    setShowOutreachPages(checked);
+    try {
+      const existingPrefs = parsePrefs(profile.preferences);
+      const newPrefs = { ...existingPrefs, showOutreachPages: checked };
+      const res = await apiFetch(`/api/users/${profile.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: JSON.stringify(newPrefs) }),
+      });
+      if (!res.ok) throw new Error();
+      const updated: UserProfile = await res.json();
+      setProfile(updated);
+      localStorage.setItem("leadawaker_show_outreach_pages", checked ? "1" : "0");
+      window.dispatchEvent(new Event("leadawaker-prefs-changed"));
+    } catch {
+      setShowOutreachPages(prevValue);
+      toast({ variant: "destructive", title: t("profile.saveFailed"), description: t("profile.saveFailedDescription") });
+    } finally {
+      setOutreachToggleSaving(false);
+    }
+  };
+
   // ── Gmail integration effects & handlers ─────────────────────────
   useEffect(() => {
     apiFetch("/api/gmail/oauth/status")
@@ -174,6 +213,7 @@ export function ProfileSection() {
         setPhone(data.phone ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
         setTimezone(data.timezone ?? "");
+        setShowOutreachPages(!!parsePrefs(data.preferences).showOutreachPages);
       })
       .catch((err) => {
         setProfileError(err.message || "Failed to load profile");
@@ -618,7 +658,25 @@ export function ProfileSection() {
               ? `View as Client: ${selectedAccount.name}`
               : "View as Client (sandbox)";
             return (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                {/* Outreach pages nav toggle */}
+                <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+                    <Compass className="h-4 w-4 text-muted-foreground" />
+                    {t("profile.outreachPages")}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t("profile.outreachPagesDescription")}</p>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-medium text-foreground">{t("profile.outreachPagesToggle")}</span>
+                    <Switch
+                      checked={showOutreachPages}
+                      onCheckedChange={handleToggleOutreachPages}
+                      disabled={outreachToggleSaving}
+                      data-testid="switch-outreach-pages"
+                    />
+                  </div>
+                </div>
+
                 {/* View As */}
                 <div className="rounded-lg border border-border bg-card p-4 space-y-3">
                   <div className="flex items-center gap-2 text-foreground font-semibold text-sm">

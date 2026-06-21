@@ -1,6 +1,7 @@
 // Full-width desktop top bar for the Leads card view — title, view tabs, bulk
 // controls, chats-peek toggle, list-collapse, search, and filter/sort/group menus.
 // Extracted from LeadsCardViewMain.tsx to keep that file focused.
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
@@ -17,6 +18,9 @@ import {
   Download,
   PanelLeftClose,
   PanelLeft,
+  MoreHorizontal,
+  FileText,
+  Palette,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -81,6 +85,7 @@ export function LeadsDesktopToolbar({
   groupBy,
   onGroupByChange,
   onCreateLead,
+  showLeadActions,
 }: {
   leadsCount: number;
   viewTabs: ViewTab[];
@@ -126,8 +131,11 @@ export function LeadsDesktopToolbar({
   groupBy: string;
   onGroupByChange: (v: any) => void;
   onCreateLead?: () => void;
+  /** When true (agency + a lead is open), show the per-lead "..." actions menu. */
+  showLeadActions?: boolean;
 }) {
   const { t } = useTranslation("leads");
+  const [leadDeleteConfirm, setLeadDeleteConfirm] = useState(false);
   return (
     <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
       <div className="flex items-baseline gap-2 shrink-0">
@@ -258,6 +266,39 @@ export function LeadsDesktopToolbar({
       </button>
       <div className="flex-1 min-w-0" />
       <div className="shrink-0 flex items-center gap-[5px]">
+      {/* Per-lead actions ("...") — relocated here from the lead's header. Acts
+          on the open lead via window events handled in LeadDetailView. */}
+      {showLeadActions && (
+        <DropdownMenu onOpenChange={(o) => { if (!o) setLeadDeleteConfirm(false); }}>
+          <DropdownMenuTrigger asChild>
+            <button className="la-btn la-btn--soft la-btn--icon" title={t("common.more", "More")}>
+              <MoreHorizontal size={13} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-white">
+            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("lead-export-pdf"))}>
+              <FileText className="h-4 w-4 mr-2" />
+              {t("detailView.toPdf", "Export PDF")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("toggle-gradient-tester"))}>
+              <Palette className="h-4 w-4 mr-2" />
+              {t("detail.gradientTester", "Gradient tester")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={(e) => {
+                if (!leadDeleteConfirm) { e.preventDefault(); setLeadDeleteConfirm(true); }
+                else { window.dispatchEvent(new CustomEvent("lead-delete")); setLeadDeleteConfirm(false); }
+              }}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {leadDeleteConfirm ? t("confirm.yes", "Confirm delete") : t("detailView.deleteLead", "Delete lead")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
       <div className="relative" style={{ width: 160 }}>
         <input
           value={listSearch}

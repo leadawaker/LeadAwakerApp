@@ -446,26 +446,32 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
     ? `In: ${aiPrompt.toLocaleString()} / Out: ${aiCompletion.toLocaleString()}, $${aiCostVal.toFixed(4)}`
     : undefined;
 
-  // Approved design (ChatMsg): outbound (our AI/agent) = white + dark text,
-  // inbound (lead) = carved-in neumorphic inset.
+  // inbound (lead) = crisp neumorphic balloon; AI (our) = solid wine widget
+  // (not neumorphic); human agent = white raised card.
   const bubbleStyle: React.CSSProperties = inbound
     ? {
-        background: "var(--paper)",
+       
+        boxShadow: "var(--sh-inset-crisp)",
         borderRadius: "13px 13px 13px 3px",
         color: "var(--ink-soft)",
       }
-    : {
-        boxShadow: "var(--sh-raised-crisp)",
-        borderRadius: "13px 13px 3px 13px",
-      };
-  // Outbound bg/text via classes so dark mode can flip them (light unchanged:
-  // white + ink). Dark: AI → wine balloon + white text; human agent → dark card.
+    : aiMsg
+      ? {
+          background: "var(--wine-grad)",
+          borderRadius: "13px 13px 3px 13px",
+          color: "#fff",
+        }
+      : {
+          boxShadow: "var(--sh-inset-crisp)",
+          borderRadius: "13px 13px 3px 13px",
+        };
+  // AI → white text on wine (both modes); human agent → white + ink (dark flips).
   const bubbleColorClass = inbound
     ? ""
     : aiMsg
-      ? "bg-white text-[color:var(--ink)] dark:bg-[#5E2230] dark:text-white"
+      ? "text-white"
       : "bg-white text-[color:var(--ink)] dark:bg-card dark:text-[color:var(--ink-soft)]";
-  const timeColor = inbound ? "var(--mute-2)" : "var(--muted-foreground)";
+  const timeColor = inbound ? "var(--mute-2)" : aiMsg ? "rgba(255,255,255,0.72)" : "var(--muted-foreground)";
 
   return (
     <div

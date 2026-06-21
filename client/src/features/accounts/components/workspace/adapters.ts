@@ -138,6 +138,7 @@ export function toTeamMember(u: any): TeamMemberData {
     email: s(u.email),
     role: s(u.role ?? u.Role),
     init: getInitials(name) || "?",
+    avatarUrl: s(u.avatarUrl ?? u.avatar_url) || null,
   };
 }
 

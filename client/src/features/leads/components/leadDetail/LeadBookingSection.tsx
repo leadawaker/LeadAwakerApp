@@ -1,6 +1,6 @@
 // Booking block for LeadDetailPanel: call date, reschedule, no-show, summary.
 // Extracted verbatim (Session C).
-import { PhoneCall, RefreshCw, X, Bot } from "lucide-react";
+import { PhoneCall, RefreshCw, Bot } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatBookedDate } from "@/features/leads/components/cardView/formatUtils";
 import { SectionTitle, InfoRow } from "./atoms";
@@ -29,21 +29,6 @@ export function LeadBookingSection({ lead, accountTimezone }: LeadBookingSection
         )}
         <InfoRow label={t("detail.fields.callDate")} value={formatBookedDate(lead.booked_call_date, accountTimezone)} />
         <InfoRow label={t("detail.fields.confirmedAt")} value={fmtDateTime(lead.booking_confirmed_at)} />
-        {/* No-show indicator */}
-        <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-          <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.noShow")}</span>
-          {lead.no_show ? (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-red-600 dark:text-red-400"
-              data-testid="no-show-badge"
-            >
-              <X className="h-3 w-3" />
-              {t("detail.fields.noShow")}
-            </span>
-          ) : (
-            <span className="text-[12px] text-muted-foreground">{"2014"}</span>
-          )}
-        </div>
         {/* Reschedule count */}
         {lead.re_scheduled_count != null && lead.re_scheduled_count > 0 && (
           <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">

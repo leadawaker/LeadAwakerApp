@@ -32,7 +32,7 @@ function TeamRow({ m, onOpen }: { m: TeamMemberData; onOpen: () => void }) {
       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--wine-tint)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
-      <Avatar init={m.init} size={38} tone={isOwner ? "wine" : "bark"} />
+      <Avatar init={m.init} size={38} tone={isOwner ? "wine" : "bark"} src={m.avatarUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
         {m.email && <div style={{ fontSize: 11.5, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.email}</div>}
@@ -131,7 +131,7 @@ function InvitePopover({ accountId, onAssigned }: { accountId: number; onAssigne
   );
 }
 
-export function TeamPanel({ team, loading, accountId, onRefresh }: { team: TeamMemberData[]; loading?: boolean; accountId: number; onRefresh?: () => void }) {
+export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, naked = false }: { team: TeamMemberData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
 
@@ -144,7 +144,7 @@ export function TeamPanel({ team, loading, accountId, onRefresh }: { team: TeamM
   };
 
   return (
-    <Panel eyebrow="03" title={t("panels.team")} count={t("metrics.nMembers", { count: team.length })}
+    <Panel eyebrow="03" title={t("panels.team")} count={t("metrics.nMembers", { count: team.length })} inset={inset} naked={naked}
       action={<InvitePopover accountId={accountId} onAssigned={() => onRefresh?.()} />}>
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

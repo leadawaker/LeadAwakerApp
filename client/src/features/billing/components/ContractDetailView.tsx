@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
-  Download, Link, FileSignature, Trash2,
-  Eye, Calendar, FileText, Copy, Check, Plus, Upload,
+  Download, Link, FileSignature,
+  Eye, Calendar, FileText, Copy, Check, Upload,
   Pencil, Send, X, ExternalLink,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -457,12 +457,6 @@ export function ContractDetailView({
 
           {isAgencyUser && (
             <div className="flex flex-wrap gap-2 shrink-0">
-              {onNew && (
-                <button onClick={onNew} className="la-btn la-btn--soft gap-1.5">
-                  <Plus className="h-3.5 w-3.5 shrink-0" />
-                  {t("contracts.actions.new")}
-                </button>
-              )}
               {contract.file_data && (
                 <button onClick={handleDownloadPdf} className="la-btn la-btn--soft gap-1.5">
                   <Download className="h-3.5 w-3.5 shrink-0" />
@@ -481,7 +475,7 @@ export function ContractDetailView({
                       {t("contracts.actions.edit")}
                     </button>
                   )}
-                  <button onClick={handleSend} disabled={sending} className="la-btn la-btn--wine gap-1.5 disabled:opacity-50">
+                  <button onClick={handleSend} disabled={sending} className="la-btn la-btn--soft gap-1.5 disabled:opacity-50">
                     <Link className="h-3.5 w-3.5 shrink-0" />
                     {sending ? t("contracts.actions.sending") : t("contracts.actions.markSent")}
                   </button>
@@ -499,14 +493,6 @@ export function ContractDetailView({
                   {markingSigned ? t("contracts.actions.updating") : t("contracts.actions.markSigned")}
                 </button>
               )}
-              <button
-                onClick={handleDelete}
-                className="la-btn la-btn--soft gap-1.5"
-                style={deleteConfirm ? { borderColor: "var(--warn)", color: "var(--warn)" } : {}}
-              >
-                <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                {deleteConfirm ? t("contracts.actions.confirm") : t("contracts.actions.delete")}
-              </button>
             </div>
           )}
         </div>
@@ -587,8 +573,8 @@ export function ContractDetailView({
       </div>
 
       {/* ── Two-column content area ── */}
-      <div className="relative z-10 flex-1 min-h-0 px-[24px] pb-[30px] overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[16px] max-w-[1386px] w-full mx-auto md:min-h-full">
+      <div className="relative z-10 flex-1 min-h-0 px-[24px] pb-[30px] overflow-y-auto md:overflow-hidden md:pb-0">
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[16px] max-w-[1386px] w-full mx-auto md:h-full">
 
           {/* ── LEFT column: full-height contract widget ── */}
           <div
@@ -632,15 +618,15 @@ export function ContractDetailView({
                   </>
                 ) : (
                   <>
-                    {canEdit && (
-                      <button type="button" onClick={handleStartEdit} className="la-btn la-btn--soft gap-1" style={{ height: 28, fontSize: 11 }}>
-                        <Pencil className="h-3 w-3" />{t("contracts.actions.editText")}
-                      </button>
-                    )}
                     {(contract.contract_text || isEditing) && (
-                      <button type="button" onClick={handleCopyContractText} className="la-btn la-btn--soft gap-1" style={{ height: 28, fontSize: 11 }}>
-                        {copied ? <Check className="h-3 w-3" style={{ color: "var(--good)" }} /> : <Copy className="h-3 w-3" />}
-                        {copied ? t("contracts.actions.copied") : t("contracts.actions.copyText")}
+                      <button
+                        type="button"
+                        onClick={handleCopyContractText}
+                        className="h-7 w-7 flex items-center justify-center rounded-md transition-colors"
+                        style={{ color: copied ? "var(--good)" : "var(--mute)" }}
+                        title={t("contracts.actions.copyText")}
+                      >
+                        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                       </button>
                     )}
                   </>
@@ -723,7 +709,7 @@ export function ContractDetailView({
           </div>
 
           {/* ── RIGHT column: single consolidated info panel ── */}
-          <div className={cn("flex flex-col gap-[3px]", mobileTab === "terms" ? "hidden md:flex" : "flex")}>
+          <div className={cn("flex flex-col gap-[3px] md:min-h-0 md:overflow-y-auto md:pb-[30px]", mobileTab === "terms" ? "hidden md:flex" : "flex")}>
 
             {/* Single inset panel: Status + Dates + Deal Structure + Attach PDF */}
             <div className="neu-inset flex-1" style={{ borderRadius: "var(--r-card)", background: "var(--bg)" }}>

@@ -8,7 +8,7 @@ import { ProfileWizard } from "./ProfileWizard";
 import { ProfileSummary } from "./ProfileSummary";
 import { EMPTY_ANSWERS, recommendStatus, recommendedDefaults, type ProfileAnswers, type FactValues } from "./profileConstants";
 
-export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean }) {
+export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false, readOnly = false }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean; readOnly?: boolean }) {
   const { t } = useTranslation("communicationProfile");
   const { profile, loading, saving, save } = useCommunicationProfile(accountId);
   const { values: factValues, grids, loading: factsLoading, saveAll } = useOnboardingFacts(accountId);
@@ -39,7 +39,7 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
     <Panel
       icon={<MessagesSquare size={18} />}
       title={t("panel.title")}
-      action={showSummary ? (
+      action={showSummary && !readOnly ? (
         <button className="la-btn la-btn--soft" onClick={() => openEditAt(0)}>
           <Pencil size={12} />{t("summary.edit")}
         </button>
@@ -59,7 +59,9 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           <button className="la-btn la-btn--wine" style={{ marginTop: 6 }} onClick={() => setCelebrate(false)}>{t("done.button")}</button>
         </div>
       ) : showSummary ? (
-        <ProfileSummary answers={profile!.answers} facts={factValues} grids={grids} onEditStep={openEditAt} />
+        <ProfileSummary answers={profile!.answers} facts={factValues} grids={grids} onEditStep={readOnly ? undefined : openEditAt} />
+      ) : readOnly ? (
+        <div style={{ padding: "24px 0", textAlign: "center", color: "var(--mute-2)", fontSize: 12.5, fontStyle: "italic" }}>No profile set up yet.</div>
       ) : (
         <ProfileWizard
           initial={profile?.answers ?? { ...EMPTY_ANSWERS, ...recommendedDefaults(niche) }}

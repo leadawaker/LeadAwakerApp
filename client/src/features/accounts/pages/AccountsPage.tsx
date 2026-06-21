@@ -20,7 +20,7 @@ export type AccountGroupBy = "status" | "type" | "none";
 export type AccountSortBy = "recent" | "name_asc" | "name_desc";
 
 export default function AccountsPage() {
-  const { currentAccountId } = useWorkspace();
+  const { currentAccountId, isAgencyUser } = useWorkspace();
   const isMobile = useIsMobile(768);
 
   // Clear any global topbar actions — the workspace owns its own top bar.
@@ -61,12 +61,15 @@ export default function AccountsPage() {
     rows as AccountRow[],
   );
 
-  // Auto-select first account when none is chosen. On mobile we stay list-first
-  // (no auto-open): the user taps an account to open its detail panel.
+  // Auto-select first account when none is chosen.
+  // - Desktop: always auto-select for quick preview.
+  // - Mobile non-agency (client): auto-select immediately so the sheet opens directly,
+  //   since clients only ever have one account and the list adds no value for them.
+  // - Mobile agency: stay list-first, user taps to open.
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobile && isAgencyUser) return;
     if (!selectedAccount && rows.length > 0) setSelectedAccount(rows[0] as AccountRow);
-  }, [rows, selectedAccount, setSelectedAccount, isMobile]);
+  }, [rows, selectedAccount, setSelectedAccount, isMobile, isAgencyUser]);
 
   // ── Breadcrumb ─────────────────────────────────────────────────────────────
   const { setCrumb } = useBreadcrumb();
@@ -121,16 +124,16 @@ export default function AccountsPage() {
   }, [setFilterStatus, setGroupBy, setGroupDirection, setSortBy]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full">
       <AccountsWorkspace
         accounts={rows as AccountRow[]}
         loading={loading}
         selectedAccount={selectedAccount}
         onSelectAccount={setSelectedAccount}
         count={rows.length}
-        onCreate={handleCreate}
-        onSave={handleFieldSave}
-        onDelete={handleDeleteAccount}
+        onCreate={isAgencyUser ? handleCreate : async () => {}}
+        onSave={isAgencyUser ? handleFieldSave : async () => {}}
+        onDelete={isAgencyUser ? handleDeleteAccount : () => {}}
         listSearch={listSearch}
         onListSearchChange={setListSearch}
         filterStatus={filterStatus}

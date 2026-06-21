@@ -331,6 +331,8 @@ export function ConversationPanelWithEvents({
         onClearElement={onClearElement}
         selectionLocked={selectionLocked}
         onToggleSelectionLock={onToggleSelectionLock}
+        activeSession={session}
+        activePageAwareness={pageAwarenessEnabled}
       />
     </div>
   );

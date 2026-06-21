@@ -16,13 +16,18 @@ export function TwilioLogo({ size = 36 }: { size?: number }) {
 export function GoogleCalLogo({ size = 36 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-      <rect width="36" height="36" rx="7" fill="white" />
-      <rect x="6" y="8" width="24" height="21" rx="2.5" fill="white" stroke="#e0e0e0" strokeWidth="1" />
-      <rect x="6" y="8" width="24" height="8" rx="2.5" fill="#4285F4" />
-      <rect x="6" y="13" width="24" height="3" fill="#4285F4" />
-      <circle cx="12.5" cy="8.5" r="2" fill="#EA4335" />
-      <circle cx="23.5" cy="8.5" r="2" fill="#EA4335" />
-      <text x="18" y="26" textAnchor="middle" fontFamily="sans-serif" fontSize="9.5" fontWeight="700" fill="#1a73e8">26</text>
+      {/* White card body */}
+      <rect x="4" y="4" width="28" height="28" rx="4" fill="white" />
+      {/* Blue header */}
+      <rect x="4" y="4" width="28" height="11" rx="4" fill="#1A73E8" />
+      <rect x="4" y="11" width="28" height="4" fill="#1A73E8" />
+      {/* Month label in header */}
+      <text x="18" y="13" textAnchor="middle" fontFamily="'Google Sans','Roboto',sans-serif" fontSize="5.5" fontWeight="500" fill="white" letterSpacing="0.8">OCT</text>
+      {/* Red ring binders */}
+      <rect x="11" y="2" width="2.5" height="6" rx="1.25" fill="#EA4335" />
+      <rect x="22.5" y="2" width="2.5" height="6" rx="1.25" fill="#EA4335" />
+      {/* Date number */}
+      <text x="18" y="28" textAnchor="middle" fontFamily="'Google Sans','Roboto',sans-serif" fontSize="13" fontWeight="700" fill="#1A73E8">26</text>
     </svg>
   );
 }

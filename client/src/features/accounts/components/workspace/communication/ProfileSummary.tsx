@@ -58,7 +58,7 @@ const SECTION_COLUMNS: SectionKey[][][] = [
 ];
 
 export function ProfileSummary({ answers, facts, grids, onEditStep }: {
-  answers: ProfileAnswers; facts: FactValues; grids: QAGrids; onEditStep: (stepIndex: number) => void;
+  answers: ProfileAnswers; facts: FactValues; grids: QAGrids; onEditStep?: (stepIndex: number) => void;
 }) {
   const { t } = useTranslation("communicationProfile");
   const notSet = t("summary.notSet");
@@ -171,10 +171,10 @@ export function ProfileSummary({ answers, facts, grids, onEditStep }: {
                         <button
                           type="button"
                           key={s.key}
-                          onClick={() => onEditStep(i)}
+                          onClick={onEditStep ? () => onEditStep(i) : undefined}
                           style={{
                             textAlign: "left", width: "100%", padding: "10px 6px", background: "transparent",
-                            border: "none", cursor: "pointer", display: "flex", gap: 14, alignItems: "center",
+                            border: "none", cursor: onEditStep ? "pointer" : "default", display: "flex", gap: 14, alignItems: "center",
                           }}
                         >
                           <span style={{ position: "relative", flexShrink: 0 }}>

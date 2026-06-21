@@ -1,14 +1,9 @@
-import { type RefObject, type KeyboardEvent } from "react";
-import { type ChatDoodleConfig } from "@/hooks/useChatDoodle";
-import { Headphones, Loader2, X, Maximize2, Camera, Pencil, Eraser, Wallpaper, User } from "lucide-react";
+import { useState, useEffect, type RefObject, type KeyboardEvent } from "react";
+import { Headphones, X, Maximize2, Camera, Pencil, User, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SupportBotConfig } from "@/hooks/useSupportChat";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { type ChatBgStyle } from "@/hooks/useChatDoodle";
-import { DOODLE_PATTERNS } from "@/components/ui/doodle-patterns";
 import { BotAvatarFull } from "./SupportChatHelpers";
+import founderPhoto from "@/assets/founder-photo.webp";
 
 // Matches FounderChatProps in SupportChatWidget — kept local to avoid circular import
 interface FounderChatRef {
@@ -29,6 +24,7 @@ export interface SupportChatHeaderProps {
   isInline: boolean;
   isAgencyUser: boolean;
   founderChat?: FounderChatRef;
+  founderOnly?: boolean;
   botPhotoInputRef: RefObject<HTMLInputElement | null>;
   handlePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   editingName: boolean;
@@ -37,11 +33,6 @@ export interface SupportChatHeaderProps {
   saveEditName: () => void;
   handleNameKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
   startEditName: () => void;
-  handleClearContext: () => void;
-  clearing: boolean;
-  loading: boolean;
-  doodleConfig: ChatDoodleConfig;
-  setDoodleConfig: (updates: Partial<ChatDoodleConfig>) => void;
   handleClose: () => void;
   onOpenInChats?: () => void;
   aiAgents?: { id: number; name: string }[];
@@ -56,6 +47,7 @@ export function SupportChatHeader({
   isInline,
   isAgencyUser,
   founderChat,
+  founderOnly,
   botPhotoInputRef,
   handlePhotoChange,
   editingName,
@@ -64,20 +56,25 @@ export function SupportChatHeader({
   saveEditName,
   handleNameKeyDown,
   startEditName,
-  handleClearContext,
-  clearing,
-  loading,
-  doodleConfig,
-  setDoodleConfig,
   handleClose,
   onOpenInChats,
   aiAgents,
   onOpenAgent,
 }: SupportChatHeaderProps) {
+  // Founder avatar follows the owner's selected profile avatar (live), falling
+  // back to the bundled photo for everyone else (e.g. clients).
+  const [personalAvatar, setPersonalAvatar] = useState<string>(() => localStorage.getItem("leadawaker_user_avatar") || "");
+  useEffect(() => {
+    const handler = () => setPersonalAvatar(localStorage.getItem("leadawaker_user_avatar") || "");
+    window.addEventListener("leadawaker-avatar-changed", handler);
+    return () => window.removeEventListener("leadawaker-avatar-changed", handler);
+  }, []);
+  const founderSrc = isAgencyUser && personalAvatar ? personalAvatar : founderPhoto;
+
   return (
     <div className="shrink-0 bg-white dark:bg-card border-b border-black/[0.06] dark:border-border/30">
-      {/* ── Channel tabs (floating mode only) ── */}
-      {founderChat && !isInline && (
+      {/* ── Channel tabs (floating mode only; hidden when locked to founder) ── */}
+      {founderChat && !isInline && !founderOnly && (
         <div className="px-4 pt-3 pb-0 flex gap-1">
           <button
             onClick={() => setChannel("bot")}
@@ -112,7 +109,7 @@ export function SupportChatHeader({
           {/* Avatar */}
           {channel === "founder" ? (
             <img
-              src="/founder-photo.webp"
+              src={founderSrc}
               alt="Gabriel"
               className="rounded-full shrink-0 object-cover"
               style={{ width: isInline ? 45 : 36, height: isInline ? 45 : 36 }}
@@ -195,95 +192,15 @@ export function SupportChatHeader({
 
           {/* Action buttons cluster */}
           <div className={cn("flex items-center gap-1.5", isInline ? "ml-6" : "ml-auto")}>
-            {/* Clear context */}
-            <button
-              onClick={handleClearContext}
-              disabled={clearing || loading}
-              className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
-              title="Clear conversation"
-            >
-              {clearing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Eraser className="h-4 w-4" />
-              )}
-            </button>
-
-            {/* Wallpaper button (inline only) */}
-            {isInline && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
-                    title="Chat background"
-                  >
-                    <Wallpaper className="h-4 w-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 p-3 space-y-3">
-                  <div className="space-y-1.5">
-                    <span className="text-[12px] font-semibold">Background</span>
-                    <div className="grid grid-cols-5 gap-1">
-                      {(["crm", "social1", "social2", "social3", "social4"] as ChatBgStyle[]).map((style) => (
-                        <button
-                          key={style}
-                          type="button"
-                          onClick={() => setDoodleConfig({ bgStyle: style })}
-                          className={cn(
-                            "h-8 rounded-md border text-[10px] font-medium transition-colors",
-                            doodleConfig.bgStyle === style || (!doodleConfig.bgStyle && style === "social1")
-                              ? "border-brand-indigo text-brand-indigo bg-brand-indigo/5"
-                              : "border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
-                          )}
-                        >
-                          {style === "crm" ? "CRM" : `#${style.replace("social", "")}`}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold">Doodle Overlay</span>
-                    <Switch
-                      checked={doodleConfig.enabled}
-                      onCheckedChange={(enabled) => setDoodleConfig({ enabled })}
-                    />
-                  </div>
-                  {doodleConfig.enabled && (
-                    <>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">Pattern</span>
-                          <span className="text-[11px] font-semibold tabular-nums text-foreground/70">
-                            #{(DOODLE_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1}
-                          </span>
-                        </div>
-                        <Slider
-                          value={[(DOODLE_PATTERNS.findIndex(p => p.id === doodleConfig.patternId) + 1) || 1]}
-                          onValueChange={([v]) => {
-                            const entry = DOODLE_PATTERNS[v - 1];
-                            if (entry) setDoodleConfig({ patternId: entry.id, size: entry.size });
-                          }}
-                          min={1}
-                          max={42}
-                          step={1}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">Opacity</span>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.color}%</span>
-                        </div>
-                        <Slider
-                          value={[doodleConfig.color]}
-                          onValueChange={([v]) => setDoodleConfig({ color: v })}
-                          min={0} max={100} step={1}
-                        />
-                      </div>
-                    </>
-                  )}
-                </PopoverContent>
-              </Popover>
+            {/* Email Gabriel — founder chat only */}
+            {founderOnly && (
+              <a
+                href="mailto:gabriel@leadawaker.com"
+                className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+                title="Email Gabriel"
+              >
+                <Mail className="h-4 w-4" />
+              </a>
             )}
 
             {/* Open in Chats (floating mode only) */}

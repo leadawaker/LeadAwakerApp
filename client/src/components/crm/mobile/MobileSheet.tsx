@@ -1,6 +1,31 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+
+/**
+ * While the sheet is open, push a sentinel history entry so the phone/browser
+ * Back button closes the sheet first (returning to the list) instead of leaving
+ * the page. Closing the sheet by tap/drag pops the sentinel back off so history
+ * never accumulates.
+ */
+export function useBackButtonClose(open: boolean, onClose: () => void) {
+  const cbRef = useRef(onClose);
+  cbRef.current = onClose;
+  useEffect(() => {
+    if (!open) return;
+    const id = Math.random().toString(36).slice(2);
+    window.history.pushState({ __laSheet: id }, "");
+    const onPop = () => cbRef.current?.();
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // Closed by tap/drag (not Back): remove the sentinel we added.
+      if ((window.history.state as { __laSheet?: string } | null)?.__laSheet === id) {
+        window.history.back();
+      }
+    };
+  }, [open]);
+}
 
 /**
  * MobileSheet — the canonical mobile "variation B" detail surface.
@@ -29,6 +54,9 @@ export function MobileSheet({
   /** Gap above the sheet (px) so the receding list peeks at the very top. */
   topGap = 18,
   zIndex = 200,
+  /** When true, the sheet sizes to its content from the bottom instead of
+   *  filling the full height. Useful for short action lists. */
+  fitContent = false,
   "data-testid": testId,
 }: {
   open: boolean;
@@ -36,8 +64,11 @@ export function MobileSheet({
   children: ReactNode;
   topGap?: number;
   zIndex?: number;
+  fitContent?: boolean;
   "data-testid"?: string;
 }) {
+  useBackButtonClose(open, onClose);
+
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
     if (info.offset.y > DRAG_CLOSE_OFFSET || info.velocity.y > DRAG_CLOSE_VELOCITY) {
       onClose();
@@ -70,7 +101,19 @@ export function MobileSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.6 }}
             onDragEnd={handleDragEnd}
-            style={{
+            style={fitContent ? {
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              maxHeight: `calc(90vh - ${topGap}px)`,
+              borderRadius: "var(--r-panel) var(--r-panel) 0 0",
+              overflow: "auto",
+              background: "var(--bg)",
+              boxShadow: "0 -10px 40px rgba(60,45,25,0.20)",
+              display: "flex",
+              flexDirection: "column",
+            } : {
               position: "absolute",
               left: 0,
               right: 0,

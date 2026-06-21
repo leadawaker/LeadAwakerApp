@@ -12,6 +12,7 @@ export type UserProfile = {
   status: string | null;
   accountsId: number | null;
   lastLoginAt: string | null;
+  preferences?: string | Record<string, unknown> | null;
 };
 
 // ── Notification types ───────────────────────────────────────────────

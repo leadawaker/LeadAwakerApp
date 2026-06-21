@@ -36,6 +36,7 @@ interface DetailViewHeaderProps {
   compact: boolean;
   t: (...args: any[]) => any;
   onSaveName: (name: string) => Promise<void>;
+  readinessTag?: React.ReactNode;
 }
 
 function statusClass(status: string, isDraft: boolean, isPaused: boolean, isInactive: boolean) {
@@ -84,6 +85,7 @@ export function DetailViewHeader({
   compact,
   t,
   onSaveName,
+  readinessTag,
 }: DetailViewHeaderProps) {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(campaign.name);
@@ -183,8 +185,9 @@ export function DetailViewHeader({
           </span>
         )}
         <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, color: 'var(--mute)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-          {t("detail.campaignLabel", "Campaign")} · #{campaignNumber} · {t("detail.liveMonitor", "Live Monitor")}
+          {t("detail.campaignLabel", "Campaign")} · #{campaignNumber}
         </span>
+        {readinessTag}
       </div>
 
       {/* Title row: Avatar + Name */}
@@ -328,21 +331,21 @@ export function DetailViewHeader({
           )}
         </div>
 
-      </div>
+        {/* Meta chips — to the right of the title, reclaiming the header whitespace */}
+        <div className="flex flex-wrap items-center justify-end shrink-0 ml-auto" style={{ gap: 28, rowGap: 12 }}>
+          {channelLabel && renderMetaChip(t("meta.channel"), <span>{channelLabel}</span>, mobileChannelIcon)}
+          {dailyStats != null
+            ? renderMetaChip(t("meta.dailyLimit"), `${dailyStats.sentToday} / ${dailyStats.dailyLimit}`)
+            : renderMetaChip(t("meta.dailyLimit"), "— / 500")
+          }
+          {(campaign.active_hours_start || (campaign as any).activeHoursStart) && renderMetaChip(t("meta.activeHours"),
+            `${((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)} – ${((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "-"}`
+          )}
+          {campaign.type && renderMetaChip(t("meta.type"), campaign.type)}
+          {campaignCreatedAt && renderMetaChip(t("meta.started"), formatDate(campaignCreatedAt))}
+          {campaign.account_name && renderMetaChip(t("meta.owner"), campaign.account_name, renderMobileAccountAvatar(campaign.account_name, (campaign as any).account_logo_url))}
+        </div>
 
-      {/* Meta chips — always below title, spaced like the reference hero */}
-      <div className="flex flex-wrap items-start" style={{ gap: 32, marginTop: 22 }}>
-        {channelLabel && renderMetaChip(t("meta.channel"), <span>{channelLabel}</span>, mobileChannelIcon)}
-        {dailyStats != null
-          ? renderMetaChip(t("meta.dailyLimit"), `${dailyStats.sentToday} / ${dailyStats.dailyLimit}`)
-          : renderMetaChip(t("meta.dailyLimit"), "— / 500")
-        }
-        {(campaign.active_hours_start || (campaign as any).activeHoursStart) && renderMetaChip(t("meta.activeHours"),
-          `${((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)} – ${((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "-"}`
-        )}
-        {campaign.type && renderMetaChip(t("meta.type"), campaign.type)}
-        {campaignCreatedAt && renderMetaChip(t("meta.started"), formatDate(campaignCreatedAt))}
-        {campaign.account_name && renderMetaChip(t("meta.owner"), campaign.account_name, renderMobileAccountAvatar(campaign.account_name, (campaign as any).account_logo_url))}
       </div>
     </>
   );

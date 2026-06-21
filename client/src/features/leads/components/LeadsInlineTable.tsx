@@ -802,7 +802,7 @@ export function LeadsInlineTable({
                               ? <ChevronRight className="h-3.5 w-3.5" style={{ color: "var(--mute-2)" }} />
                               : <ChevronDown className="h-3.5 w-3.5" style={{ color: "var(--mute-2)" }} />}
                             <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: "var(--ink-soft)" }}>{item.label}</span>
-                            <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "1px 6px", borderRadius: "var(--r-pill)" }}>{item.count}</span>
+                            <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", padding: "1px 6px", borderRadius: "var(--r-pill)" }}>{item.count}</span>
                           </div>
                         </td>
 
@@ -953,7 +953,7 @@ export function LeadsInlineTable({
                               {score > 0 ? (
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                   <span style={{ fontFamily: "var(--mono)", fontSize: 12, fontWeight: 700, color: "var(--ink)", width: 20 }}>{score}</span>
-                                  <div style={{ flex: 1, height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
+                                  <div style={{ flex: 1, height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
                                     <div style={{ width: `${Math.min(100, score)}%`, height: "100%", background: scoreColor, borderRadius: "var(--r-pill)" }} />
                                   </div>
                                 </div>

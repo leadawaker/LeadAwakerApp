@@ -55,7 +55,10 @@
     "impersonation": "View as",
     "impersonationDescription": "Switch your view to see the app as another role. Use the topbar to exit impersonation.",
     "viewAsAdmin": "View as Admin",
-    "lastLogin": "Last login"
+    "lastLogin": "Last login",
+    "outreachPages": "Outreach pages",
+    "outreachPagesDescription": "Show the Inbox, Prospects and Cadence pages in the nav bar.",
+    "outreachPagesToggle": "Show in nav bar"
   },
   "notifications": {
     "title": "Notifications",

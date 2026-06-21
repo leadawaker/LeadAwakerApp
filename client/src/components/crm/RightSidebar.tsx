@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import {
   HelpCircle,
+  Inbox,
   MessageSquare,
   Megaphone,
   Calendar,
@@ -33,9 +34,12 @@ import {
   SunMoon,
   ArrowLeft,
   Globe,
+  Mic,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
+import { useVoiceRecorderState, toggleVoiceRecording, MAX_RECORDING_SECONDS } from "@/lib/voiceRecorder";
+import { useToast } from "@/hooks/use-toast";
 
 const NAV_LANGUAGES = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -85,6 +89,8 @@ export function RightSidebar({
   onOpenAi,
   onOpenNotifications,
   onToggleHelp,
+  onOpenFounderChat,
+  onOpenFounderInbox,
   onOpenSettings,
   notificationsCount,
   isMobileMenuOpen = false,
@@ -100,6 +106,8 @@ export function RightSidebar({
   onOpenAi?: () => void;
   onOpenNotifications: () => void;
   onToggleHelp: () => void;
+  onOpenFounderChat?: () => void;
+  onOpenFounderInbox?: () => void;
   onOpenSettings?: () => void;
   notificationsCount?: number;
   isMobileMenuOpen?: boolean;
@@ -180,6 +188,7 @@ export function RightSidebar({
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Read current user info from localStorage
   const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
@@ -191,6 +200,35 @@ export function RightSidebar({
     window.addEventListener("leadawaker-avatar-changed", handler);
     return () => window.removeEventListener("leadawaker-avatar-changed", handler);
   }, []);
+
+  // Owner-only preference: outreach pages (Inbox/Prospects/Cadence) are hidden from the
+  // nav by default and only show once the Owner opts back in from Settings > Edit Profile.
+  const [showOutreachPages, setShowOutreachPages] = useState(
+    () => localStorage.getItem("leadawaker_show_outreach_pages") === "1"
+  );
+  useEffect(() => {
+    const handler = () => setShowOutreachPages(localStorage.getItem("leadawaker_show_outreach_pages") === "1");
+    window.addEventListener("leadawaker-prefs-changed", handler);
+    return () => window.removeEventListener("leadawaker-prefs-changed", handler);
+  }, []);
+
+  // Owner-only voice memo mic — recording state lives outside React (see voiceRecorder.ts)
+  // so it survives navigation between pages, since every page remounts CrmShell.
+  const { toast } = useToast();
+  const voiceState = useVoiceRecorderState();
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ text?: string; error?: string }>).detail;
+      if (detail?.text) {
+        toast({ variant: "success", title: t("voiceNote.copied"), description: detail.text.length > 120 ? `${detail.text.slice(0, 120)}…` : detail.text, className: "!bg-[var(--glass-bg)] !border-[var(--glass-border)] text-foreground" });
+      } else if (detail?.error) {
+        toast({ variant: "destructive", title: t("voiceNote.failed"), description: detail.error });
+      }
+    };
+    window.addEventListener("leadawaker-voice-note-result", handler);
+    return () => window.removeEventListener("leadawaker-voice-note-result", handler);
+  }, [toast, t]);
+  const formatVoiceTimer = (secs: number) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
   const userInitials = userName
     .split(" ")
     .map((w) => w[0])
@@ -230,6 +268,7 @@ export function RightSidebar({
     agencyOnly?: boolean;
     agencyViewOnly?: boolean;
     ownerOnly?: boolean;
+    outreachOnly?: boolean;
   }[] = [
     { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
@@ -248,8 +287,6 @@ export function RightSidebar({
       labelKey: "Accounts",
       icon: Building2,
       testId: "nav-accounts",
-      agencyOnly: true,
-      agencyViewOnly: true,
     },
     {
       href: `${prefix}/prompt-library`,
@@ -259,10 +296,10 @@ export function RightSidebar({
       testId: "nav-library",
       agencyOnly: true,
     },
-    { href: `${prefix}/billing`, label: t("sidebar.billing"), labelKey: "Billing", icon: Receipt, testId: "nav-billing", agencyOnly: true },
-    { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true },
-    { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", ownerOnly: true },
-    { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", ownerOnly: true },
+    { href: `${prefix}/billing`, label: t("sidebar.billing"), labelKey: "Billing", icon: Receipt, testId: "nav-billing" },
+    { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true, outreachOnly: true },
+    { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", ownerOnly: true, outreachOnly: true },
+    { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", ownerOnly: true, outreachOnly: true },
     {
       href: `${prefix}/automation-logs`,
       label: t("sidebar.automations"),
@@ -276,6 +313,7 @@ export function RightSidebar({
   // Filter nav items based on user role and current view context
   const visibleNavItems = navItems.filter((it) => {
     if (it.ownerOnly && !isOwner) return false;
+    if (it.outreachOnly && !showOutreachPages) return false;
     if (it.adminOnly && !isAgencyUser) return false;
     if (it.agencyOnly && !isAgencyUser) return false;
     if (it.agencyViewOnly && !isAgencyView) return false;
@@ -378,7 +416,7 @@ export function RightSidebar({
           height: "var(--bottombar-h)",
           paddingTop: 7,
           paddingBottom: "calc(var(--safe-bottom) + 9px)",
-          background: "var(--bg-2)",
+          background: "hsl(var(--footer-bg))",
           borderTop: "1px solid var(--line)",
         }}
         data-testid="mobile-bottom-bar"
@@ -398,7 +436,12 @@ export function RightSidebar({
           return (
             <button
               key={tab.key}
-              onClick={() => { triggerHaptic(); setLocation(tab.href); }}
+              onClick={() => {
+                triggerHaptic();
+                // Close founder chat when switching pages
+                window.dispatchEvent(new CustomEvent("close-founder-chat"));
+                setLocation(tab.href);
+              }}
               className="flex flex-col items-center justify-center gap-[5px] mx-[5px] h-full"
               style={{
                 borderRadius: "var(--r-card)",
@@ -414,7 +457,7 @@ export function RightSidebar({
               <span
                 style={{
                   fontFamily: "var(--mono)",
-                  fontSize: 10,
+                  fontSize: 11,
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   color: active ? "var(--wine)" : "var(--mute-2)",
@@ -430,7 +473,11 @@ export function RightSidebar({
 
         {/* More — opens the slide-in drawer (Settings + secondary nav live inside) */}
         <button
-          onClick={() => { triggerHaptic(); onToggleMobileMenu?.(); }}
+          onClick={() => {
+            triggerHaptic();
+            window.dispatchEvent(new CustomEvent("close-founder-chat"));
+            onToggleMobileMenu?.();
+          }}
           className="flex flex-col items-center justify-center gap-[5px] mx-[5px] h-full"
           style={{
             borderRadius: "var(--r-card)",
@@ -582,6 +629,33 @@ export function RightSidebar({
           padding: "12px 12px 14px",
           borderTop: "1px solid var(--line)",
         }}>
+          {/* Voice memo mic — Owner only. Records, then copies the transcription to clipboard. */}
+          {isOwner && (
+            <button
+              type="button"
+              className="la-notif-btn"
+              style={{ marginBottom: 6, ...(voiceState.recording ? { background: "var(--wine-tint)", color: "var(--wine)" } : {}) }}
+              title={voiceState.recording ? t("voiceNote.stop") : t("voiceNote.start")}
+              data-testid="nav-voice-note"
+              onClick={toggleVoiceRecording}
+              disabled={voiceState.transcribing}
+            >
+              <Mic size={14} className={voiceState.recording ? "animate-pulse" : undefined} />
+              <span style={{ flex: 1, textAlign: "left", fontSize: 12, fontWeight: 600 }}>
+                {voiceState.transcribing
+                  ? t("voiceNote.transcribing")
+                  : voiceState.recording
+                  ? t("voiceNote.recording")
+                  : t("voiceNote.title")}
+              </span>
+              {voiceState.recording && (
+                <span style={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                  {formatVoiceTimer(voiceState.elapsedSeconds)}
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Notifications button — full-width pill with bell + label + badge */}
           <Popover open={notifOpen} onOpenChange={setNotifOpen}>
             <PopoverTrigger asChild>
@@ -631,9 +705,42 @@ export function RightSidebar({
                   <activeTheme.icon size={14} />
                   {t(activeTheme.labelKey)}
                 </button>
-                <button className="la-profile-menu-item" onClick={onToggleHelp}>
-                  <HelpCircle size={14} />Help &amp; docs
-                </button>
+                <Popover open={helpOpen} onOpenChange={setHelpOpen}>
+                  <PopoverTrigger asChild>
+                    <button className="la-profile-menu-item">
+                      <HelpCircle size={14} />
+                      <span style={{ flex: 1, textAlign: "left" }}>{t("sidebar.helpAndDocs")}</span>
+                      <ChevronRight size={14} style={{ color: "var(--muted-foreground)" }} />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent side="right" align="start" sideOffset={4} className="w-56 p-1 rounded-2xl shadow-xl border-border bg-background">
+                    <button
+                      onClick={() => { setHelpOpen(false); setProfileOpen(false); setLocation(`${prefix}/docs`); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm hover:bg-muted/50 transition-colors"
+                    >
+                      <BookOpen size={14} />
+                      <span className="flex-1 text-left">{t("sidebar.documentation")}</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setHelpOpen(false); setProfileOpen(false); onOpenFounderChat?.(); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm hover:bg-muted/50 transition-colors"
+                    >
+                      <MessageSquare size={14} />
+                      <span className="flex-1 text-left">{t("sidebar.messageFounder")}</span>
+                    </button>
+
+                    {isOwner && (
+                      <button
+                        onClick={() => { setHelpOpen(false); setProfileOpen(false); onOpenFounderInbox?.(); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm hover:bg-muted/50 transition-colors"
+                      >
+                        <Inbox size={14} />
+                        <span className="flex-1 text-left">{t("sidebar.founderInbox")}</span>
+                      </button>
+                    )}
+                  </PopoverContent>
+                </Popover>
                 <Popover open={langOpen} onOpenChange={setLangOpen}>
                   <PopoverTrigger asChild>
                     <button className="la-profile-menu-item">

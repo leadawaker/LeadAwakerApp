@@ -82,7 +82,7 @@ function Bars({ stages, hovered, onHover }: { stages: PipeStage[]; hovered: stri
               </span>
               <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: s.star ? "var(--ink)" : "var(--mute)", fontWeight: s.star ? 700 : 400 }}>{s.count}</span>
             </div>
-            <div style={{ height: s.star ? 10 : 8, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
+            <div style={{ height: s.star ? 10 : 8, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
               <div style={{ width: `${s.pct}%`, height: "100%", background: s.color, borderRadius: "var(--r-pill)", transition: "width 400ms" }} />
             </div>
           </div>
@@ -134,7 +134,7 @@ export function PipelinePanel({ leads }: { leads: Record<string, any>[] }) {
   const pipe = useMemo(() => pipelineFromLeads(leads), [leads]);
 
   return (
-    <PanelShell variant="flat" testId="campaign-detail-view-funnel" style={{ height: "100%", overflowY: "auto", minHeight: 0 }}>
+    <PanelShell variant="flat" testId="campaign-detail-view-funnel" style={{ height: "100%", overflowY: "auto", minHeight: 0, padding: "28px 26px" }}>
       <SectionHead eyebrow={t("summary.eyebrows.conversion")} title={t("summary.pipeline")} titleSize={32} />
       <div className="pipeline-layout" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Donut total={pipe.total} stages={pipe.stages} hovered={hovered} onHover={setHovered} />

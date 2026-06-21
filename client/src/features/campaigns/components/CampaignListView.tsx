@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
 import { MobileCampaignDetailPanel } from "./MobileCampaignDetailPanel";
 import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
-import { MobileListHeader, MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
+import { MobileListHeader, MobileHeaderIconBtn, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
 import { SkeletonCampaignPanel } from "@/components/ui/skeleton";
 import { CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -404,7 +404,10 @@ export function CampaignListView({
         sibling = sibling.previousElementSibling;
       }
       const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-      container.scrollTo({ top: cardTop - headerHeight - 3, behavior: "smooth" });
+      // 14px, not 3px: the sticky header (z-index 5, opaque background) paints
+      // over anything closer than that, clipping the top of the selected
+      // card's raised-crisp shadow (~12px tall).
+      container.scrollTo({ top: cardTop - headerHeight - 14, behavior: "smooth" });
     };
     const raf = requestAnimationFrame(run);
     return () => cancelAnimationFrame(raf);
@@ -508,6 +511,68 @@ export function CampaignListView({
     </DropdownMenuContent>
   );
 
+  // ── Mobile drawer panels (flat option lists, built from MobileDrawerOption) ──
+  const mobileFilterPanel = (
+    <>
+      <MobileDrawerSubheading>{t("filter.status")}</MobileDrawerSubheading>
+      {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+        <MobileDrawerOption
+          key={s}
+          label={t(`statusLabels.${s}`, s)}
+          selected={filterStatus.includes(s)}
+          onClick={() => onToggleFilterStatus(s)}
+        />
+      ))}
+      {availableAccounts.length > 0 && (
+        <>
+          <MobileDrawerSubheading>{t("filter.account", "Account")}</MobileDrawerSubheading>
+          <MobileDrawerOption
+            label={t("filter.allAccounts", "All accounts")}
+            selected={!filterAccount}
+            onClick={() => onFilterAccountChange?.("")}
+          />
+          {availableAccounts.map((a) => (
+            <MobileDrawerOption
+              key={a}
+              label={a}
+              selected={filterAccount === a}
+              onClick={() => onFilterAccountChange?.(filterAccount === a ? "" : a)}
+            />
+          ))}
+        </>
+      )}
+      {onShowDemoCampaignsChange && (
+        <>
+          <MobileDrawerSubheading>{t("config.showDemoCampaigns")}</MobileDrawerSubheading>
+          <MobileDrawerOption
+            label={t("config.showDemoCampaigns")}
+            selected={showDemoCampaigns !== null}
+            onClick={() => onShowDemoCampaignsChange(showDemoCampaigns === null ? true : showDemoCampaigns === true ? false : null)}
+          />
+        </>
+      )}
+      {isFilterActive && (
+        <MobileDrawerOption
+          label={<span style={{ color: "var(--destructive)" }}>{t("filter.clearAllFilters", "Clear all filters")}</span>}
+          onClick={onResetControls}
+        />
+      )}
+    </>
+  );
+
+  const mobileSortPanel = (
+    <>
+      {(["recent", "name_asc", "name_desc", "leads_desc", "response_desc"] as CampaignSortBy[]).map((s) => (
+        <MobileDrawerOption
+          key={s}
+          label={t(DETAIL_SORT_LABEL_KEYS[s])}
+          selected={sortBy === s}
+          onClick={() => onSortByChange(s)}
+        />
+      ))}
+    </>
+  );
+
   return (
     <div className="flex flex-col h-full w-full" data-testid="campaign-list-view">
 
@@ -517,26 +582,10 @@ export function CampaignListView({
         searchValue={listSearch}
         onSearchChange={onListSearchChange}
         searchPlaceholder={t("toolbar.searchPlaceholder", "Search...")}
-        filterControl={(
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <MobileHeaderIconBtn dot={isFilterActive} active={isFilterActive} aria-label={t("filter.title", "Filter")} data-testid="mobile-header-filter">
-                <Filter className="h-4 w-4" />
-              </MobileHeaderIconBtn>
-            </DropdownMenuTrigger>
-            {filterMenuContent}
-          </DropdownMenu>
-        )}
-        sortControl={(
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <MobileHeaderIconBtn active={isSortNonDefault} aria-label={t("sort.title", "Sort")} data-testid="mobile-header-sort">
-                <ArrowUpDown className="h-4 w-4" />
-              </MobileHeaderIconBtn>
-            </DropdownMenuTrigger>
-            {sortMenuContent}
-          </DropdownMenu>
-        )}
+        filterPanel={mobileFilterPanel}
+        filterActive={isFilterActive}
+        sortPanel={mobileSortPanel}
+        sortActive={isSortNonDefault}
         extraActions={isAgencyUser ? (
           <MobileHeaderIconBtn onClick={onCreateCampaign} aria-label={t("toolbar.add", "New campaign")} data-testid="mobile-header-add">
             <Plus className="h-4 w-4" />

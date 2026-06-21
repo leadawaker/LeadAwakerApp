@@ -17,6 +17,7 @@
     "tasks": "Tasks",
     "automations": "Automations",
     "settings": "Settings",
+    "editProfile": "Edit profile",
     "more": "More",
     "paint": "Paint",
     "support": "Support",
@@ -25,8 +26,12 @@
     "language": "Language",
     "themeLight": "Light Mode",
     "themeDark": "Dark Mode",
-    "themeSystem": "Follow System",
+    "themeSystem": "System Theme",
     "messageFounder": "Message Gabriel",
+    "helpAndDocs": "Help & docs",
+    "documentation": "Documentation",
+    "socialMedia": "Social Media",
+    "founderInbox": "Inbox",
     "logout": "Log out"
   },
   "sidebarSections": {
@@ -39,6 +44,9 @@
   "sidebarSubmenu": {
     "summary": "Summary",
     "configurations": "Settings"
+  },
+  "help": {
+    "assistance": "Assistance"
   },
   "topbar": {
     "search": "Search",
@@ -253,5 +261,14 @@
   "agentWidget": {
     "dockToSide": "Dock to side",
     "undock": "Undock"
+  },
+  "voiceNote": {
+    "title": "Voice note",
+    "start": "Start recording",
+    "stop": "Stop and transcribe",
+    "recording": "Recording…",
+    "transcribing": "Transcribing…",
+    "copied": "Copied to clipboard",
+    "failed": "Voice note failed"
   }
 }

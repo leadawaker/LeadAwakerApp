@@ -10,6 +10,7 @@ export type SessionUser = {
   avatarUrl: string | null;
   notificationEmail: boolean | null;
   notificationSms: boolean | null;
+  preferences?: string | Record<string, unknown> | null;
 };
 
 type SessionState =
@@ -43,6 +44,14 @@ export function useSession(): SessionState {
           }
           localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
           window.dispatchEvent(new Event("leadawaker-avatar-changed"));
+          // Owner-only preference: whether the outreach pages (Inbox/Prospects/Cadence) show in the nav
+          try {
+            const prefs = typeof user.preferences === "string" ? JSON.parse(user.preferences || "{}") : (user.preferences ?? {});
+            localStorage.setItem("leadawaker_show_outreach_pages", prefs?.showOutreachPages ? "1" : "0");
+          } catch {
+            localStorage.setItem("leadawaker_show_outreach_pages", "0");
+          }
+          window.dispatchEvent(new Event("leadawaker-prefs-changed"));
           // Only set account ID if not already stored (preserve explicit user selections).
           // For agency users (Admin), default to 0 (all-accounts view).
           // For client users, default to their linked account.

@@ -11,7 +11,7 @@ import { Sparkles } from "lucide-react";
 import { CardLabel, HEAD_H } from "./designPrimitives";
 import { AiSummaryView } from "@/components/crm/AiSummaryView";
 
-export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Record<string, any>; tier?: string | null; status?: string; hideHeader?: boolean }) {
+export function LeadSummaryCard({ lead, tier, status, hideHeader, sidePad = 16 }: { lead: Record<string, any>; tier?: string | null; status?: string; hideHeader?: boolean; sidePad?: number }) {
   const { t } = useTranslation("leads");
   const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
   const memoryStr = lead?.ai_memory || lead?.aiMemory || "";
@@ -54,7 +54,7 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Reco
     return (
       <div style={{ flex: 1, minWidth: 0, width: "100%", height: "100%", borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
         {!hideHeader && header}
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: `16px ${sidePad}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="flex flex-col items-center gap-2 text-center">
             <Sparkles className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-xs text-muted-foreground">
@@ -69,13 +69,13 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Reco
   return (
     <div className={hideHeader ? "" : "glass-strong"} style={{ flex: 1, minWidth: 0, width: "100%", height: "100%", borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
       {!hideHeader && header}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: `16px ${sidePad}px 20px`, display: "flex", flexDirection: "column", gap: 16 }}>
         {structured ? (
           <>
             {/* (a) outcome / sentiment pills */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               {structured.outcome && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--paper)", background: "var(--wine-grad)" }}>{structured.outcome}</span>}
-              {structured.sentiment && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>{structured.sentiment}</span>}
+              {structured.sentiment && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)" }}>{structured.sentiment}</span>}
             </div>
             {/* (b) serif headline */}
             {structured.headline && <p className="serif" style={{ margin: 0, fontSize: 19, lineHeight: 1.4, color: "var(--ink)", letterSpacing: "-0.01em", textWrap: "pretty" }}>{structured.headline}</p>}
@@ -107,7 +107,7 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader }: { lead: Reco
             {/* Plain-text fallback (current behavior) */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               {status && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--paper)", background: "var(--wine-grad)" }}>{status}</span>}
-              {tier && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>{tier}</span>}
+              {tier && <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)" }}>{tier}</span>}
             </div>
             <AiSummaryView text={summaryText} />
           </>

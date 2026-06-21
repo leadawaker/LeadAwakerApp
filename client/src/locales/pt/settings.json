@@ -55,7 +55,10 @@
     "impersonation": "Ver como",
     "impersonationDescription": "Alterne sua visualizacao para ver o app como outro papel. Use a barra superior para sair da visualizacao.",
     "viewAsAdmin": "Ver como Admin",
-    "lastLogin": "Ultimo login"
+    "lastLogin": "Ultimo login",
+    "outreachPages": "Paginas de prospeccao",
+    "outreachPagesDescription": "Mostrar as paginas Inbox, Prospects e Cadence na barra de navegacao.",
+    "outreachPagesToggle": "Mostrar na barra de navegacao"
   },
   "notifications": {
     "title": "Notificacoes",

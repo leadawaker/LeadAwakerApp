@@ -1,8 +1,10 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import type { LucideIcon } from "lucide-react";
-import { Search, SlidersHorizontal, ArrowDownUp, Settings2, X, ChevronRight } from "lucide-react";
-import { MobileSheet } from "./MobileSheet";
+import { Search, SlidersHorizontal, ArrowDownUp, Layers, X, Check } from "lucide-react";
+import { useBackButtonClose } from "./MobileSheet";
 
 interface HeaderIconBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   dot?: boolean;
@@ -64,6 +66,8 @@ export interface MobileTabDef<T extends string = string> {
   id: T;
   label: string;
   icon?: LucideIcon;
+  /** Custom leading element (e.g. a colored avatar circle) — takes priority over `icon`. */
+  iconNode?: React.ReactNode;
 }
 
 /**
@@ -91,7 +95,7 @@ export function MobileTabSeg<T extends string>({
             className={`la-seg-btn${activeId === tab.id ? " on" : ""}`}
             style={{ padding: "8px 13px", fontSize: 12.5, letterSpacing: "0.08em" }}
           >
-            {Icon && <span className="flex items-center"><Icon size={14} /></span>}
+            {tab.iconNode ?? (Icon && <span className="flex items-center"><Icon size={14} /></span>)}
             {tab.label}
           </button>
         );
@@ -100,45 +104,244 @@ export function MobileTabSeg<T extends string>({
   );
 }
 
-/** One labeled row inside the Settings sheet. Either renders a page-provided
- *  control (e.g. a dropdown trigger) on the right, or a chevron button that
- *  fires `onClick` (and closes the sheet). */
-function SettingsRow({
+/** A single selectable row inside a drill-in option panel (filter/sort/group
+ *  content). Pages build their `filterPanel`/`sortPanel`/`groupPanel` nodes
+ *  out of these instead of DropdownMenuItem. */
+export function MobileDrawerOption({
   label,
   icon: Icon,
-  control,
+  selected,
   onClick,
-  dot,
+}: {
+  label: React.ReactNode;
+  icon?: LucideIcon;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="row"
+      style={{
+        width: "100%",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 10,
+        padding: "12px 4px",
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
+        borderBottom: "1px solid var(--line)",
+        textAlign: "left",
+      }}
+    >
+      <span className="row" style={{ gap: 10, alignItems: "center", minWidth: 0 }}>
+        {Icon && <Icon size={15} style={{ color: "var(--mute)", flexShrink: 0 }} />}
+        <span style={{ fontSize: 14, fontWeight: selected ? 700 : 600, color: selected ? "var(--wine)" : "var(--ink)" }}>{label}</span>
+      </span>
+      {selected && <Check size={15} style={{ color: "var(--wine)", flexShrink: 0 }} />}
+    </button>
+  );
+}
+
+/** Small uppercase label that groups rows within a drill-in panel. */
+export function MobileDrawerSubheading({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute-2)", padding: "12px 4px 4px" }}>
+      {children}
+    </span>
+  );
+}
+
+/** Narrow raised-crisp button in the drawer's main view (Filter / Sort / Group
+ *  triggers, plus any page-specific `extraActions`). Exported so pages can
+ *  build their own toggle-style buttons (e.g. a peek/chat toggle) that match. */
+export function DrawerMainButton({
+  label,
+  icon: Icon,
+  active,
+  onClick,
+  variant = "tint",
 }: {
   label: string;
   icon: LucideIcon;
-  control?: React.ReactNode;
+  active?: boolean;
   onClick?: () => void;
-  dot?: boolean;
+  /** "tint" (default) = wine-tint bg + wine text when active, used for Filter/Sort/Group.
+   *  "solid" = solid wine bg + cream text when active, used for toggle-style buttons (e.g. Chats). */
+  variant?: "tint" | "solid";
 }) {
+  const solidActive = variant === "solid" && active;
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       className="row"
-      style={{ justifyContent: "space-between", alignItems: "center", gap: 12, padding: "13px 2px", borderBottom: "1px solid var(--line)" }}
+      style={{
+        gap: 7,
+        alignItems: "center",
+        padding: "9px 14px",
+        borderRadius: "var(--r-pill)",
+        border: "none",
+        cursor: "pointer",
+        flexShrink: 0,
+        background: solidActive ? "var(--wine)" : active ? "var(--wine-tint)" : "var(--surface)",
+        boxShadow: "var(--sh-raised-crisp)",
+        color: solidActive ? "var(--surface)" : active ? "var(--wine)" : "var(--ink)",
+        fontSize: 13,
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+      }}
     >
-      <span className="row" style={{ gap: 11, alignItems: "center", minWidth: 0 }}>
-        <Icon size={17} style={{ color: "var(--mute)", flexShrink: 0 }} />
-        <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>{label}</span>
-        {dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--wine)", flexShrink: 0 }} />}
-      </span>
-      {control ? (
-        <span className="row" style={{ gap: 8, flexShrink: 0 }}>{control}</span>
-      ) : (
-        <button
-          type="button"
-          onClick={onClick}
-          aria-label={label}
-          style={{ width: 36, height: 36, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}
-        >
-          <ChevronRight size={16} />
-        </button>
+      <Icon size={14} />
+      {label}
+      {active && variant === "tint" && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--wine)" }} />}
+    </button>
+  );
+}
+
+type DrillId = "filter" | "sort" | "group";
+
+/**
+ * The drawer that lowers from the top of the header, sized to its content.
+ * The Filter / Sort / Group (+ leftActions/mainRowTrailing) button row stays
+ * fixed at the top; tapping a button extends the drawer downward to show
+ * that control's option list in the same panel (no view-swap). Phone Back
+ * closes the whole drawer (reuses MobileSheet's history-sentinel pattern).
+ */
+function TopDrawer({
+  open,
+  onClose,
+  filterPanel,
+  filterActive,
+  filterLabel,
+  sortPanel,
+  sortActive,
+  sortLabel,
+  groupPanel,
+  groupActive,
+  groupLabel,
+  leftActions,
+  mainRowTrailing,
+  extraActions,
+}: {
+  open: boolean;
+  onClose: () => void;
+  filterPanel?: React.ReactNode;
+  filterActive?: boolean;
+  filterLabel: string;
+  sortPanel?: React.ReactNode;
+  sortActive?: boolean;
+  sortLabel: string;
+  groupPanel?: React.ReactNode;
+  groupActive?: boolean;
+  groupLabel: string;
+  /** Extra toggle-style buttons rendered in the same row as Filter/Sort/Group (left side). */
+  leftActions?: React.ReactNode;
+  /** Buttons pinned to the right edge of the Filter/Sort/Group row (e.g. + and ...). */
+  mainRowTrailing?: React.ReactNode;
+  extraActions?: React.ReactNode;
+}) {
+  const [drill, setDrill] = useState<DrillId | null>(null);
+
+  const close = () => {
+    setDrill(null);
+    onClose();
+  };
+  useBackButtonClose(open, close);
+
+  useEffect(() => {
+    if (!open) setDrill(null);
+  }, [open]);
+
+  const drillPanel = drill === "filter" ? filterPanel : drill === "sort" ? sortPanel : drill === "group" ? groupPanel : null;
+  const drillLabel = drill === "filter" ? filterLabel : drill === "sort" ? sortLabel : drill === "group" ? groupLabel : "";
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <div className="md:hidden" style={{ position: "fixed", inset: 0, zIndex: 200 }} data-testid="mobile-header-drawer">
+          <motion.div
+            onClick={close}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ position: "absolute", inset: 0, background: "rgba(31,26,20,0.32)" }}
+          />
+          <motion.div
+            initial={{ y: "-100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "-100%" }}
+            transition={{ type: "tween", duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              maxHeight: "80vh",
+              display: "flex",
+              flexDirection: "column",
+              borderRadius: "0 0 var(--r-panel) var(--r-panel)",
+              overflow: "hidden",
+              background: "var(--bg)",
+              boxShadow: "0 10px 40px rgba(60,45,25,0.20)",
+              paddingTop: "var(--safe-top)",
+            }}
+          >
+            {/* Button row stays put as a fixed header; tapping a button extends
+                the drawer downward to show that control's options in the same
+                panel (Gabriel, 2026-06-21) — no view-swap, no back arrow. */}
+            <div style={{ flexShrink: 0, padding: "14px 18px 10px" }}>
+              <div className="row" style={{ gap: 8, flexWrap: "nowrap", justifyContent: mainRowTrailing ? "space-between" : "flex-start" }}>
+                <div className="row" style={{ gap: 8, flexWrap: "nowrap", overflowX: "auto", minWidth: 0 }}>
+                  {leftActions}
+                  {filterPanel && (
+                    <DrawerMainButton label={filterLabel} icon={SlidersHorizontal} active={filterActive || drill === "filter"} onClick={() => setDrill(drill === "filter" ? null : "filter")} />
+                  )}
+                  {sortPanel && (
+                    <DrawerMainButton label={sortLabel} icon={ArrowDownUp} active={sortActive || drill === "sort"} onClick={() => setDrill(drill === "sort" ? null : "sort")} />
+                  )}
+                  {groupPanel && (
+                    <DrawerMainButton label={groupLabel} icon={Layers} active={groupActive || drill === "group"} onClick={() => setDrill(drill === "group" ? null : "group")} />
+                  )}
+                </div>
+                {mainRowTrailing && (
+                  <div className="row" style={{ gap: 8, flexWrap: "nowrap", flexShrink: 0 }}>
+                    {mainRowTrailing}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", padding: "0 18px calc(16px + var(--safe-bottom))" }}>
+              {drill && (
+                <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, marginBottom: extraActions ? 14 : 0 }}>
+                  <div className="row" style={{ alignItems: "center", justifyContent: "space-between", padding: "0 4px 6px" }}>
+                    <span className="serif" style={{ fontSize: 17, color: "var(--ink)", letterSpacing: "-0.02em" }}>{drillLabel}</span>
+                    <button
+                      type="button"
+                      onClick={() => setDrill(null)}
+                      aria-label="Close"
+                      style={{ width: 26, height: 26, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--surface)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>{drillPanel}</div>
+                </div>
+              )}
+              {extraActions && (
+                <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+                  {extraActions}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
       )}
-    </div>
+    </AnimatePresence>,
+    document.body,
   );
 }
 
@@ -150,26 +353,34 @@ export interface MobileListHeaderProps {
   searchValue?: string;
   onSearchChange?: (v: string) => void;
   searchPlaceholder?: string;
-  onFilterClick?: () => void;
+  /** Drill-in option list (built from MobileDrawerOption rows). Omit to hide the Filter button. */
+  filterPanel?: React.ReactNode;
   filterActive?: boolean;
-  /** Alternatively, render a custom filter control (e.g. a dropdown trigger). */
-  filterControl?: React.ReactNode;
-  /** Simple sort button. */
-  onSortClick?: () => void;
-  /** Alternatively, render a custom sort control (e.g. a dropdown trigger). */
-  sortControl?: React.ReactNode;
-  /** Extra action buttons (e.g. add / group / toggle) — surfaced in the Settings sheet. */
+  filterLabel?: string;
+  /** Drill-in option list. Omit to hide the Sort button. */
+  sortPanel?: React.ReactNode;
+  sortActive?: boolean;
+  sortLabel?: string;
+  /** Drill-in option list. Omit to hide the Group button. */
+  groupPanel?: React.ReactNode;
+  groupActive?: boolean;
+  groupLabel?: string;
+  /** Extra toggle-style buttons rendered in the same row as Filter/Sort/Group (left side). */
+  leftActions?: React.ReactNode;
+  /** Buttons pinned to the right edge of the Filter/Sort/Group row (e.g. + and ...). */
+  mainRowTrailing?: React.ReactNode;
+  /** Extra action buttons (e.g. add / chats) — rendered in the drawer's main view. */
   extraActions?: React.ReactNode;
 }
 
 /**
  * MobileListHeader — shared single-row header for every mobile list page.
  *
- * Layout: serif page title (left) · view-tab switcher (middle) · Search + Settings
- * buttons (right). The header only ever shows two icon buttons; filter, sort,
- * group, add and any page-specific actions are consolidated behind the Settings
- * (gear) button, which opens a bottom sheet. Notifications live in the More page,
- * not here.
+ * Layout: serif page title (left) · view-tab switcher (middle) · Search +
+ * Settings buttons (right). Settings opens a drawer that lowers from the top
+ * of the header, sized to its content: Filter / Sort / Group buttons (+ any
+ * page-specific extraActions) on the main view, drilling in to that control's
+ * option list with a title + back arrow. Notifications live in the More page.
  */
 export function MobileListHeader({
   title,
@@ -177,11 +388,17 @@ export function MobileListHeader({
   searchValue,
   onSearchChange,
   searchPlaceholder,
-  onFilterClick,
+  filterPanel,
   filterActive,
-  filterControl,
-  onSortClick,
-  sortControl,
+  filterLabel,
+  sortPanel,
+  sortActive,
+  sortLabel,
+  groupPanel,
+  groupActive,
+  groupLabel,
+  leftActions,
+  mainRowTrailing,
   extraActions,
 }: MobileListHeaderProps) {
   const { t } = useTranslation("crm");
@@ -199,9 +416,8 @@ export function MobileListHeader({
     setSearchOpen(false);
   };
 
-  const hasFilter = !!filterControl || typeof onFilterClick === "function";
-  const hasSort = !!sortControl || typeof onSortClick === "function";
-  const hasSettings = hasFilter || hasSort || !!extraActions;
+  const hasSettings = !!filterPanel || !!sortPanel || !!groupPanel || !!extraActions || !!leftActions || !!mainRowTrailing;
+  const settingsActive = !!filterActive || !!sortActive || !!groupActive;
 
   return (
     <div
@@ -216,7 +432,7 @@ export function MobileListHeader({
               className="row"
               style={{
                 flex: 1, minWidth: 0, gap: 8, padding: "7px 12px",
-                background: "var(--surface)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)",
+                background: "var(--surface)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)",
               }}
             >
               <Search size={15} style={{ color: "var(--mute)", flexShrink: 0 }} />
@@ -254,12 +470,12 @@ export function MobileListHeader({
               {hasSettings && (
                 <MobileHeaderIconBtn
                   onClick={() => setSettingsOpen(true)}
-                  dot={filterActive}
-                  active={filterActive}
+                  dot={settingsActive}
+                  active={settingsActive}
                   aria-label={t("settings.title", "Settings")}
                   data-testid="mobile-header-settings"
                 >
-                  <Settings2 size={16} />
+                  <SlidersHorizontal size={16} />
                 </MobileHeaderIconBtn>
               )}
             </div>
@@ -267,38 +483,23 @@ export function MobileListHeader({
         )}
       </div>
 
-      {/* Settings bottom sheet — holds filter / sort / group / add and any
-          page-specific actions, keeping the header itself to two buttons. */}
       {hasSettings && (
-        <MobileSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} data-testid="mobile-header-settings-sheet">
-          <div style={{ padding: "2px 18px calc(18px + var(--safe-bottom))", display: "flex", flexDirection: "column" }}>
-            <span className="serif" style={{ fontSize: 21, color: "var(--ink)", letterSpacing: "-0.02em", padding: "0 2px 8px" }}>
-              {t("settings.title", "Settings")}
-            </span>
-            {hasFilter && (
-              <SettingsRow
-                label={t("filter.title", "Filter")}
-                icon={SlidersHorizontal}
-                control={filterControl}
-                onClick={onFilterClick ? () => { setSettingsOpen(false); onFilterClick(); } : undefined}
-                dot={filterActive}
-              />
-            )}
-            {hasSort && (
-              <SettingsRow
-                label={t("sort.title", "Sort")}
-                icon={ArrowDownUp}
-                control={sortControl}
-                onClick={onSortClick ? () => { setSettingsOpen(false); onSortClick(); } : undefined}
-              />
-            )}
-            {extraActions && (
-              <div className="row" style={{ gap: 10, paddingTop: 14, flexWrap: "wrap" }}>
-                {extraActions}
-              </div>
-            )}
-          </div>
-        </MobileSheet>
+        <TopDrawer
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          filterPanel={filterPanel}
+          filterActive={filterActive}
+          filterLabel={filterLabel ?? t("filter.title", "Filter")}
+          sortPanel={sortPanel}
+          sortActive={sortActive}
+          sortLabel={sortLabel ?? t("sort.title", "Sort")}
+          groupPanel={groupPanel}
+          groupActive={groupActive}
+          groupLabel={groupLabel ?? t("groupBy.title", "Group")}
+          leftActions={leftActions}
+          mainRowTrailing={mainRowTrailing}
+          extraActions={extraActions}
+        />
       )}
     </div>
   );

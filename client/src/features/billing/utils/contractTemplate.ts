@@ -315,5 +315,103 @@ ${"─".repeat(60)}
   Lead Awaker | gabriel@leadawaker.com | +55 84 8111 8224
   Christiaan Huygensweg 32, s'Hertogenbosch, NL | KVK 99366738
 ${"─".repeat(60)}
+
+${"─".repeat(60)}
+ANNEX A — DATA PROCESSING AGREEMENT (Article 28 GDPR)
+${"─".repeat(60)}
+
+This Data Processing Agreement ("DPA") forms an integral part of the Service
+Agreement above and governs the processing of personal data by Lead Awaker
+on behalf of the Client.
+
+A.1  ROLES
+  Data Controller: ${clientName}
+  Data Processor:  Gabriel Barbosa Fronza (trading as "Lead Awaker")
+
+A.2  SUBJECT-MATTER AND DURATION
+  Lead Awaker processes personal data strictly to perform the services
+  described in Section 1 of this Agreement. Processing continues for the
+  duration of the Agreement and ceases upon termination, subject to A.7.
+
+A.3  NATURE AND PURPOSE OF PROCESSING
+  Processing activities include: storing lead contact data, sending automated
+  messages via WhatsApp and/or other platforms, analysing message responses,
+  and generating AI-assisted follow-up communications for the purpose of
+  lead reactivation on behalf of the Client.
+
+A.4  TYPES OF PERSONAL DATA
+  The personal data processed may include: full name, phone number (WhatsApp),
+  e-mail address, social media identifiers, conversation history, and any
+  additional information provided by the Client or the data subjects.
+
+A.5  CATEGORIES OF DATA SUBJECTS
+  The data subjects are the Client's existing leads, prospects, and former
+  customers whose contact data is supplied to Lead Awaker by the Client.
+
+A.6  OBLIGATIONS OF LEAD AWAKER (PROCESSOR)
+  Lead Awaker shall:
+  a) Process personal data only on documented instructions from the Client.
+  b) Ensure that persons authorised to process the data are bound by
+     confidentiality obligations.
+  c) Implement appropriate technical and organisational security measures
+     (Article 32 GDPR) to protect personal data against unauthorised access,
+     loss, or disclosure.
+  d) Engage sub-processors only with the Client's general written authorisation
+     (see A.9) and notify the Client of any intended changes in advance,
+     giving the Client the opportunity to object.
+  e) Assist the Client in responding to requests from data subjects exercising
+     their rights under Chapter III of the GDPR.
+  f) Assist the Client in fulfilling its obligations under Articles 32–36 GDPR
+     (security, breach notification, impact assessments).
+  g) At the Client's choice, delete or return all personal data upon termination
+     of the Agreement, and delete existing copies unless EU law requires storage.
+  h) Make available to the Client all information necessary to demonstrate
+     compliance with Article 28 GDPR, and allow for and contribute to audits.
+
+A.7  DATA RETENTION AND DELETION
+  Personal data will be retained only for as long as necessary to provide the
+  services. Upon termination of the Agreement, Lead Awaker will, at the
+  Client's written request, securely delete or return all personal data within
+  30 (thirty) days, unless applicable law requires longer retention.
+
+A.8  OBLIGATIONS OF THE CLIENT (CONTROLLER)
+  The Client represents and warrants that:
+  a) It holds a valid and documented legal basis under the GDPR for providing
+     personal data to Lead Awaker and for the processing described in this DPA.
+  b) It has fulfilled all applicable transparency obligations toward data
+     subjects (e.g. privacy notices).
+  c) It will promptly notify Lead Awaker of any data subject request, complaint,
+     or supervisory authority inquiry that relates to processing under this DPA.
+  d) It will provide instructions to Lead Awaker that are lawful and compliant
+     with the GDPR.
+
+A.9  SUB-PROCESSORS
+  The Client grants general authorisation for Lead Awaker to engage the
+  following sub-processors, subject to the obligations in A.6(d):
+
+  - OpenAI Ireland Ltd. (AI conversation generation — EU data residency endpoint)
+  - Meta Platforms Ireland Ltd. (WhatsApp message delivery)
+  - Hosting and infrastructure providers (server and database services)
+
+  Lead Awaker will inform the Client of any planned changes to this list
+  at least 14 days in advance. The Client may object in writing within
+  that period; if no objection is received, the change is deemed accepted.
+
+A.10 INTERNATIONAL TRANSFERS
+  Lead Awaker processes personal data within the European Economic Area (EEA)
+  where possible. Where sub-processors are located outside the EEA, Lead Awaker
+  ensures appropriate safeguards are in place (e.g. Standard Contractual
+  Clauses under Article 46 GDPR).
+
+A.11 SECURITY INCIDENTS
+  In the event of a personal data breach, Lead Awaker shall notify the Client
+  without undue delay and in any case within 72 hours of becoming aware,
+  providing sufficient information for the Client to meet its own notification
+  obligations under Articles 33 and 34 GDPR.
+
+${"─".repeat(60)}
+  Lead Awaker | gabriel@leadawaker.com | +55 84 8111 8224
+  Christiaan Huygensweg 32, s'Hertogenbosch, NL | KVK 99366738
+${"─".repeat(60)}
 `;
 }

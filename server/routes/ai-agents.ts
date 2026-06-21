@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { requireAuth, requireAgency, invalidateUserCache } from "../auth";
+import { requireAuth, requireAgency, requireOwner, invalidateUserCache } from "../auth";
 import {
   aiAgents,
   aiSessions,
@@ -446,7 +446,8 @@ export function registerAiAgentsRoutes(app: Express): void {
     const chatId = process.env.TELEGRAM_FOUNDER_CHAT_ID;
     if (botToken && chatId) {
       const userName = user.fullName1 || user.email;
-      const text = `New message from ${userName}:\n\n${content}\n\nSession: ${sessionId}`;
+      const preview = typeof content === "string" && content.startsWith("data:audio") ? "🎤 [voice message]" : content;
+      const text = `New message from ${userName}:\n\n${preview}\n\nSession: ${sessionId}`;
       fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -463,8 +464,8 @@ export function registerAiAgentsRoutes(app: Express): void {
     res.json({ message: userMsg });
   }));
 
-  // GET /api/support-chat/founder/sessions — admin lists all active founder sessions
-  app.get("/api/support-chat/founder/sessions", requireAgency, wrapAsync(async (_req, res) => {
+  // GET /api/support-chat/founder/sessions — owner-only: lists all active founder sessions
+  app.get("/api/support-chat/founder/sessions", requireOwner, wrapAsync(async (_req, res) => {
     const sessions = await storage.getFounderSessions();
     const enriched = await Promise.all(sessions.map(async (s) => {
       const user = await storage.getAppUserById(s.userId);
@@ -484,8 +485,8 @@ export function registerAiAgentsRoutes(app: Express): void {
     res.json(enriched);
   }));
 
-  // POST /api/support-chat/founder/reply — admin replies to a founder session
-  app.post("/api/support-chat/founder/reply", requireAgency, wrapAsync(async (req, res) => {
+  // POST /api/support-chat/founder/reply — owner-only: replies to a founder session
+  app.post("/api/support-chat/founder/reply", requireOwner, wrapAsync(async (req, res) => {
     const admin = req.user!;
     const { sessionId, content } = req.body;
     if (!sessionId || !content) {
@@ -1585,8 +1586,6 @@ export function registerAiAgentsRoutes(app: Express): void {
         systemPrompt += crmToolsPrompt;
       }
 
-      systemPrompt += GOG_INSTRUCTIONS;
-
       const hasCliSession = !!session.cliSessionId;
 
       let fullPrompt = "";
@@ -1653,6 +1652,37 @@ export function registerAiAgentsRoutes(app: Express): void {
       let pendingConfirmationFired = false;
 
       let turnFinalized = false;
+
+      // Save whatever was accumulated if the client disconnects before the stream finishes.
+      req.on("close", async () => {
+        if (turnFinalized) return;
+        turnFinalized = true;
+        const partial = aggregated.text.trim();
+        if (partial) {
+          try {
+            await storage.createAiMessage({
+              sessionId,
+              role: "assistant",
+              content: partial + "\n\n_(Response interrupted)_",
+              metadata: {
+                model: sessionModel,
+                inputTokens: aggregated.usage.inputTokens,
+                outputTokens: aggregated.usage.outputTokens,
+                costUsd: aggregated.usage.costUsd,
+              },
+            });
+            if (aggregated.usage.inputTokens > 0 || aggregated.usage.outputTokens > 0) {
+              await storage.updateAiSession(session.id, {
+                totalInputTokens: (session.totalInputTokens || 0) + aggregated.usage.inputTokens,
+                totalOutputTokens: (session.totalOutputTokens || 0) + aggregated.usage.outputTokens,
+              } as any);
+            }
+          } catch (err) {
+            console.error("[Agent] Failed to save partial message on disconnect:", err);
+          }
+        }
+      });
+
       const runIteration = (iterationPrompt: string, iterationAppendSystemPrompt: string | undefined, iteration: number): void => {
         // Emit a fresh "thinking" activity at the start of every iteration so the
         // client pill shows immediately and stays fresh across loop boundaries.

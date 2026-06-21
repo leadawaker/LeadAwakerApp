@@ -71,7 +71,7 @@ export function ExpenseDetailPanel({ expense, onEdit, onDeleted, onNew }: Props)
             <div className="row" style={{ gap: 10, marginTop: 8, flexWrap: "wrap" }}>
               {expense.invoiceNumber && <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>#{expense.invoiceNumber}</span>}
               {expense.country && (
-                <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "3px 8px", borderRadius: "var(--r-pill)" }}>{expense.country}</span>
+                <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", padding: "3px 8px", borderRadius: "var(--r-pill)" }}>{expense.country}</span>
               )}
               <button onClick={handleToggleBtw} disabled={togglingBtw} title={t("expenses.detail.toggleNlBtw")} style={{
                 display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", borderRadius: "var(--r-pill)", border: "none", cursor: "pointer",

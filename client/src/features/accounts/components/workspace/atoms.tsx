@@ -4,21 +4,25 @@ import type { IntegrationField as IntegrationFieldData } from "./types";
 
 // ── Panel — titled neumorphic card ────────────────────────────────────────────
 export function Panel({
-  icon, eyebrow, title, count, action, children, pad = 24, style, bodyStyle,
+  icon, eyebrow, title, count, action, children, pad = 24, style, bodyStyle, inset = false, insetCrisp = false, naked = false, onTitleClick,
 }: {
   icon?: ReactNode; eyebrow?: ReactNode; title?: ReactNode; count?: ReactNode;
-  action?: ReactNode; children?: ReactNode; pad?: number; style?: CSSProperties; bodyStyle?: CSSProperties;
+  action?: ReactNode; children?: ReactNode; pad?: number; style?: CSSProperties; bodyStyle?: CSSProperties; inset?: boolean; insetCrisp?: boolean; naked?: boolean; onTitleClick?: () => void;
 }) {
+  const cls = naked ? undefined : insetCrisp ? "neu-inset-crisp" : inset ? "neu-inset" : "neu-raised";
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", ...style }}>
+    <section className={cls} style={{ borderRadius: naked ? undefined : "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", ...style }}>
       {(title || action) && (
         <header style={{ display: "flex", alignItems: "center", gap: 12, padding: `${pad - 6}px ${pad}px ${pad - 12}px` }}>
           {icon && <span style={{ color: "var(--wine)", display: "flex" }}>{icon}</span>}
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10, flex: 1, minWidth: 0 }}>
+          <div
+            style={{ display: "flex", alignItems: "baseline", gap: 10, flex: 1, minWidth: 0, cursor: onTitleClick ? "pointer" : undefined }}
+            onClick={onTitleClick}
+          >
             {eyebrow && <div className="eyebrow eyebrow-sm" style={{ marginRight: 2 }}>{eyebrow}</div>}
             <h3 className="serif" style={{ margin: 0, fontSize: 23, color: "var(--ink-soft)", lineHeight: 1, letterSpacing: "-0.01em" }}>{title}</h3>
             {count != null && (
-              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.08em", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "2px 9px", borderRadius: "var(--r-pill)" }}>{count}</span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.08em", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", padding: "2px 9px", borderRadius: "var(--r-pill)" }}>{count}</span>
             )}
           </div>
           {action}
@@ -61,8 +65,8 @@ export function FieldRow({ label, value, mono, dropdown, muted, editChild }: {
       {editChild ? (
         <div style={{ flex: 1, minWidth: 0 }}>{editChild}</div>
       ) : (
-        <div className="neu-inset-crisp" style={{
-          flex: 1, minWidth: 0, padding: "9px 13px", borderRadius: "var(--r-button)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        <div style={{
+          flex: 1, minWidth: 0, padding: "5px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
           fontSize: 13, color: muted ? "var(--mute-2)" : "var(--ink-soft)", fontFamily: mono ? "var(--mono)" : "var(--sans)",
         }}>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value || <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>—</span>}</span>
@@ -73,10 +77,15 @@ export function FieldRow({ label, value, mono, dropdown, muted, editChild }: {
   );
 }
 
-// ── Avatar (initials) ─────────────────────────────────────────────────────────
-export function Avatar({ init, size = 36, radius = "var(--r-surface)", tone = "bark" }: {
-  init: string; size?: number; radius?: string; tone?: "wine" | "bark";
+// ── Avatar (initials or photo) ────────────────────────────────────────────────
+export function Avatar({ init, size = 36, radius = "var(--r-surface)", tone = "bark", src }: {
+  init: string; size?: number; radius?: string; tone?: "wine" | "bark"; src?: string | null;
 }) {
+  if (src) {
+    return (
+      <img src={src} alt={init} style={{ width: size, height: size, borderRadius: radius, flexShrink: 0, objectFit: "cover", boxShadow: "var(--sh-raised-crisp)", display: "block" }} />
+    );
+  }
   const bg = tone === "wine" ? "var(--wine-grad)" : "linear-gradient(145deg, #8a6e4a, #5a4530)";
   return (
     <span style={{
@@ -94,7 +103,7 @@ export function RolePill({ role }: { role: string }) {
     <span style={{
       fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
       padding: "3px 9px", borderRadius: "var(--r-pill)", color: owner ? "var(--wine)" : "var(--mute)",
-      background: owner ? "var(--wine-tint)" : "var(--bg)", boxShadow: owner ? "inset 0 0 0 1px rgba(94,34,48,0.18)" : "var(--sh-inset-crisp)",
+      background: owner ? "var(--wine-tint)" : "var(--bg)", boxShadow: owner ? "inset 0 0 0 1px rgba(94,34,48,0.18)" : "var(--sh-inset-super-crisp)",
     }}>{role}</span>
   );
 }
@@ -111,7 +120,7 @@ export function ContractPill({ status, label }: { status: string; label: string 
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5, fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700,
       letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 9px", borderRadius: "var(--r-pill)",
-      color: tone.c, background: tone.tint, boxShadow: status === "expired" ? "var(--sh-inset-crisp)" : "none",
+      color: tone.c, background: tone.tint, boxShadow: status === "expired" ? "var(--sh-inset-super-crisp)" : "none",
     }}>
       <span className="dot" style={{ background: tone.c }} />{label}
     </span>
@@ -123,7 +132,7 @@ export function ConnectedPill({ on = true, connectedLabel, notSetLabel }: { on?:
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700,
       letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: "var(--r-pill)",
-      color: on ? "var(--good)" : "var(--mute-2)", background: on ? "var(--good-tint)" : "var(--bg)", boxShadow: on ? "none" : "var(--sh-inset-crisp)",
+      color: on ? "var(--good)" : "var(--mute-2)", background: on ? "var(--good-tint)" : "var(--bg)", boxShadow: on ? "none" : "var(--sh-inset-super-crisp)",
     }}>
       <span className="dot" style={{ background: on ? "var(--good)" : "var(--mute-2)" }} />{on ? connectedLabel : notSetLabel}
     </span>
@@ -143,7 +152,7 @@ export function AccountStatusPill({ status, label }: { status: string; label?: s
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 700,
       letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 11px", borderRadius: "var(--r-pill)",
-      color: tone.c, background: tone.tint, boxShadow: tone.inset ? "var(--sh-inset-crisp)" : "none",
+      color: tone.c, background: tone.tint, boxShadow: tone.inset ? "var(--sh-inset-super-crisp)" : "none",
     }}>
       <span className="dot" style={{ background: tone.c }} />{label || status}
     </span>
@@ -189,7 +198,7 @@ export function IntegrationField({ f }: { f: IntegrationFieldData }) {
       <div className="row" style={{ gap: 6, marginBottom: 5 }}>
         <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)" }}>{f.label}</span>
       </div>
-      <div className="neu-inset-crisp" style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 11px", borderRadius: "var(--r-button)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0" }}>
         <span style={{
           flex: 1, minWidth: 0, fontFamily: f.mono ? "var(--mono)" : "var(--sans)", fontSize: 11.5,
           color: f.value ? (f.secret && !revealed ? "var(--mute)" : "var(--ink-soft)") : "var(--mute-2)",
@@ -223,9 +232,9 @@ export function ComingSoonChip({ init, label, comingSoonLabel }: { init: string;
   );
 }
 
-// Soft inline "Edit" button used in panel/card headers.
+// Raised "Edit" button used in panel/card headers.
 export function EditButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <button className="la-btn la-btn--inset" onClick={onClick}><Pencil size={12} />{label}</button>
+    <button className="la-btn la-btn--soft" onClick={onClick}><Pencil size={12} />{label}</button>
   );
 }

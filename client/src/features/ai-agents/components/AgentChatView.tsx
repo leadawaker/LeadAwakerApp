@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Brain, Terminal, Search, FileCode, Globe, MousePointerClick, Lock, LockOpen, Pencil, GitFork, RotateCcw } from "lucide-react";
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent, type ComponentType } from "react";
+import { Send, Loader2, Paperclip, Mic, Square, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X, Download, Volume2, File as FileIcon, Sparkles, AlertTriangle, ShieldAlert, Trash2, Brain, Terminal, Search, FileCode, Globe, MousePointerClick, Lock, LockOpen, Pencil, GitFork, RotateCcw, Settings, MapPin, MapPinOff, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -12,10 +12,13 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import type { AiAgent, AgentMessage, AgentFile, PendingConfirmation } from "../hooks/useAgentChat";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { AiAgent, AgentMessage, AgentFile, PendingConfirmation, AiSession } from "../hooks/useAgentChat";
 import type { SelectedElementInfo } from "../hooks/useElementPicker";
 import { SubAgentPill } from "./SubAgentPill";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { MODEL_OPTIONS } from "./ModelSwitcher";
+import { THINKING_OPTIONS } from "./ThinkingToggle";
 
 // ─── Slash commands ──────────────────────────────────────────────────────────
 
@@ -87,7 +90,7 @@ function TypingDots() {
   return (
     <div className="flex justify-start">
       <div className="relative">
-        <div className="bg-white dark:bg-card rounded-2xl rounded-bl-none px-3 py-2 shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
+        <div className="bg-[hsl(var(--footer-bg))] dark:bg-[hsl(var(--footer-bg))] rounded-[4px] px-3 py-2 shadow-[var(--sh-inset-crisp)]">
           <div className="flex gap-1 items-center h-4">
             {[0, 1, 2].map((i) => (
               <span
@@ -104,7 +107,6 @@ function TypingDots() {
             `}</style>
           </div>
         </div>
-        <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
       </div>
     </div>
   );
@@ -191,7 +193,7 @@ function FilePreview({ file, isUser }: { file: AgentFile; isUser: boolean }) {
   };
 
   const baseClass = cn(
-    "flex items-center gap-2 rounded-lg cursor-pointer transition-colors mt-1.5 overflow-hidden",
+    "flex items-center gap-2 rounded-[4px] cursor-pointer transition-colors mt-1.5 overflow-hidden",
     isUser
       ? "bg-white/15 hover:bg-white/25 p-2"
       : "bg-muted/60 hover:bg-muted p-2",
@@ -201,7 +203,7 @@ function FilePreview({ file, isUser }: { file: AgentFile; isUser: boolean }) {
     return (
       <div className="mt-1.5">
         <div
-          className="cursor-pointer rounded-lg overflow-hidden"
+          className="cursor-pointer rounded-[4px] overflow-hidden"
           onClick={handleClick}
           title={expanded ? "Click to collapse" : "Click to expand"}
         >
@@ -209,7 +211,7 @@ function FilePreview({ file, isUser }: { file: AgentFile; isUser: boolean }) {
             src={thumbnailUrl}
             alt={file.filename}
             className={cn(
-              "rounded-lg object-cover transition-all",
+              "rounded-[4px] object-cover transition-all",
               expanded ? "max-w-full max-h-[400px]" : "max-w-[200px] max-h-[150px]",
             )}
           />
@@ -382,7 +384,7 @@ function MessageBubble({
             <div className="flex items-center gap-1.5 justify-end">
               <button
                 onClick={() => setEditing(false)}
-                className="px-2.5 py-1 text-[11px] rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/50 transition-colors"
+                className="px-2.5 py-1 text-[11px] rounded-[4px] border border-border/60 text-muted-foreground hover:bg-muted/50 transition-colors"
               >Cancel</button>
               <button
                 onClick={() => {
@@ -391,7 +393,7 @@ function MessageBubble({
                     setEditing(false);
                   }
                 }}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors"
+                className="px-2.5 py-1 text-[11px] rounded-[4px] bg-brand-indigo text-white hover:bg-brand-indigo/90 transition-colors"
               >Send</button>
             </div>
           </div>
@@ -399,14 +401,12 @@ function MessageBubble({
         <div
           className={cn(
             "px-3 pt-2 pb-1.5 text-[15px] relative",
-            "rounded-2xl",
-            isLastInStreak && isUser && "rounded-br-none",
-            isLastInStreak && !isUser && "rounded-bl-none",
+            "rounded-[4px]",
             isUser
               ? "bg-brand-indigo text-white shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]"
               : isSkillError
                 ? "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 text-foreground"
-                : "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]",
+                : "bg-[hsl(var(--footer-bg))] dark:bg-[hsl(var(--footer-bg))] text-gray-900 dark:text-foreground shadow-[var(--sh-inset-crisp)]",
           )}
         >
           {/* Skill badge indicator */}
@@ -437,7 +437,7 @@ function MessageBubble({
                 return (
                   <div className="flex flex-col gap-1.5">
                     {selMatch && (
-                      <div className="inline-flex items-center gap-1.5 self-start px-2 py-1 bg-violet-100/80 dark:bg-violet-900/30 border border-violet-300/60 dark:border-violet-700/60 rounded-md text-violet-900 dark:text-violet-200 max-w-full">
+                      <div className="inline-flex items-center gap-1.5 self-start px-2 py-1 bg-violet-100/80 dark:bg-violet-900/30 border border-violet-300/60 dark:border-violet-700/60 rounded-[4px] text-violet-900 dark:text-violet-200 max-w-full">
                         <MousePointerClick className="h-3 w-3 shrink-0" />
                         <span className="font-mono text-[10px] font-semibold shrink-0">{selLabel}</span>
                         {selSnippet && (
@@ -481,19 +481,12 @@ function MessageBubble({
             {campaignUpdate && onApplyCampaign && (
               <button
                 onClick={() => onApplyCampaign(campaignUpdate.campaignId, campaignUpdate.fields)}
-                className="mt-2 w-full text-[11px] font-semibold bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo rounded-md px-3 py-1.5 transition-colors"
+                className="mt-2 w-full text-[11px] font-semibold bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo rounded-[4px] px-3 py-1.5 transition-colors"
               >
                 Apply to Campaign #{campaignUpdate.campaignId}
               </button>
             )}
           </div>
-          {/* Tails — side-pointing, bottom-aligned, only on last in streak */}
-          {isLastInStreak && isUser && (
-            <span aria-hidden="true" className="absolute bottom-0 -right-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px] border-l-brand-indigo" />
-          )}
-          {isLastInStreak && !isUser && !isSkillError && (
-            <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
-          )}
         </div>
         )}
       </div>
@@ -508,12 +501,11 @@ function StreamingBubble({ text, agent, sealed }: { text: string; agent: AiAgent
   return (
     <div className="flex justify-start">
       <div className="relative w-full" style={{ maxWidth: "100%" }}>
-        <div className="px-3 pt-2 pb-1.5 text-[15px] relative rounded-2xl rounded-bl-none bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
+        <div className="px-3 pt-2 pb-1.5 text-[15px] relative rounded-[4px] bg-[hsl(var(--footer-bg))] dark:bg-[hsl(var(--footer-bg))] text-gray-900 dark:text-foreground shadow-[var(--sh-inset-crisp)]">
           <div className="agent-markdown-content min-w-0 overflow-hidden">
             <MarkdownRenderer content={text} />
           </div>
           {!sealed && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />}
-          <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
         </div>
       </div>
     </div>
@@ -543,6 +535,8 @@ export function AgentChatView({
   onClearElement,
   selectionLocked,
   onToggleSelectionLock,
+  activeSession,
+  activePageAwareness,
 }: {
   agent: AiAgent;
   messages: AgentMessage[];
@@ -565,9 +559,10 @@ export function AgentChatView({
   selectionLocked?: boolean;
   onToggleSelectionLock?: () => void;
   onClearElement?: () => void;
+  activeSession?: AiSession | null;
+  activePageAwareness?: boolean;
 }) {
   const [input, setInput] = useState("");
-  const [isMultiline, setIsMultiline] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [transcribing, setTranscribing] = useState(false);
@@ -580,6 +575,7 @@ export function AgentChatView({
   const [commandFeedback, setCommandFeedback] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordingCancelledRef = useRef(false);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -613,8 +609,6 @@ export function AgentChatView({
     ta.style.height = "auto";
     const newH = Math.min(ta.scrollHeight, maxH);
     ta.style.height = `${newH}px`;
-    // Multi-line = textarea taller than a single line at base font (21px line-height + small slack)
-    setIsMultiline(newH > 26);
   }, [input]);
 
   // Auto-dismiss command feedback
@@ -1008,6 +1002,7 @@ export function AgentChatView({
 
       const recorder = new MediaRecorder(stream, recorderOptions);
       audioChunksRef.current = [];
+      recordingCancelledRef.current = false;
 
       console.log("[Voice Recording] Starting recording with mime type:", mimeType, "Recorder mime:", recorder.mimeType);
 
@@ -1044,6 +1039,11 @@ export function AgentChatView({
         setRecording(false);
 
         // Build blob from chunks using the actual recorder mimeType
+        if (recordingCancelledRef.current) {
+          recordingCancelledRef.current = false;
+          return;
+        }
+
         const actualMime = recorder.mimeType || mimeType || "audio/webm";
         const blob = new Blob(audioChunksRef.current, { type: actualMime });
 
@@ -1134,7 +1134,8 @@ export function AgentChatView({
 
   // Cancel recording — discard audio
   const cancelRecording = useCallback(() => {
-    // Stop recorder without processing (clear chunks first)
+    // Flag cancellation before stopping so onstop skips transcription
+    recordingCancelledRef.current = true;
     audioChunksRef.current = [];
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
@@ -1168,9 +1169,8 @@ export function AgentChatView({
             {messages.length === 0 && !streaming && !isCodeRunner && (
               <div className="flex justify-start">
                 <div className="relative" style={{ maxWidth: "100%" }}>
-                  <div className="px-3 pt-2 pb-2 text-[15px] relative bg-white dark:bg-card text-gray-900 dark:text-foreground rounded-2xl rounded-bl-none leading-relaxed shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]">
+                  <div className="px-3 pt-2 pb-2 text-[15px] relative bg-[hsl(var(--footer-bg))] dark:bg-[hsl(var(--footer-bg))] text-gray-900 dark:text-foreground rounded-[4px] leading-relaxed shadow-[var(--sh-inset-crisp)]">
                     {`Hi! I'm the ${agent.name}. I can help craft and improve your campaign messages. Share a campaign name or paste a URL for me to reference.`}
-                    <span aria-hidden="true" className="absolute bottom-0 -left-[6px] w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-r-[6px] border-r-white dark:border-r-card" />
                   </div>
                 </div>
               </div>
@@ -1188,7 +1188,7 @@ export function AgentChatView({
               return (
                 <div
                   key={msg.id ?? `msg-${i}`}
-                  style={{ marginTop: i === 0 ? 0 : sameAsPrev ? 3 : 8 }}
+                  style={{ marginTop: i === 0 ? 0 : sameAsPrev ? 6 : 12 }}
                 >
                   <MessageBubble
                     msg={msg}
@@ -1203,9 +1203,9 @@ export function AgentChatView({
             });
             })()}
             {streaming && (
-              <div style={{ marginTop: messages.filter((m) => (m.role as string) !== "tool").slice(-1)[0]?.role === "assistant" ? 3 : 8 }}>
+              <div style={{ marginTop: messages.filter((m) => (m.role as string) !== "tool").slice(-1)[0]?.role === "assistant" ? 6 : 12 }}>
                 {streamingBubbles.map((text, i) => (
-                  <div key={i} className={i > 0 ? "mt-[3px]" : ""}>
+                  <div key={i} className={i > 0 ? "mt-[6px]" : ""}>
                     <StreamingBubble text={text} agent={agent} sealed />
                   </div>
                 ))}
@@ -1232,7 +1232,7 @@ export function AgentChatView({
         <div>
         {/* Pending file indicator */}
         {pendingFile && (
-          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg text-[12px]">
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-[4px] text-[12px]">
             {pendingFile.fileType === "image" && pendingFile.thumbnailUrl ? (
               <img
                 src={pendingFile.thumbnailUrl}
@@ -1258,7 +1258,7 @@ export function AgentChatView({
         )}
         {/* Pending voice file indicator (after transcription) */}
         {pendingVoiceFile && (
-          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-lg text-[12px]">
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-[4px] text-[12px]">
             <Mic className="h-3.5 w-3.5 text-red-500 shrink-0" />
             <span className="truncate text-foreground/80">{pendingVoiceFile.name}</span>
             <span className="text-muted-foreground/60 text-[10px]">transcribed</span>
@@ -1273,7 +1273,7 @@ export function AgentChatView({
         )}
         {/* Selected element indicator */}
         {selectedElement && (
-          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800/30 rounded-lg text-[12px]">
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800/30 rounded-[4px] text-[12px]">
             <MousePointerClick className="h-3.5 w-3.5 text-violet-500 shrink-0" />
             <span className="font-mono text-[11px] text-violet-700 dark:text-violet-300 shrink-0">
               {selectedElement.componentName || `<${selectedElement.tagName}>`}
@@ -1361,10 +1361,10 @@ export function AgentChatView({
           </div>
         )}
 
-        <div className={cn(
-          "bg-white dark:bg-card rounded-lg border border-black/[0.1] dark:border-border/30 shadow-sm px-3 min-h-[62px]",
-          isMultiline ? "flex flex-col pt-2 pb-1.5" : "flex items-center gap-1.5 py-1.5",
-        )}>
+        {/* Divider line above input */}
+        <div className="h-px bg-border/40"></div>
+
+        <div className="bg-white dark:bg-card rounded-[4px] border border-black/[0.1] dark:border-border/30 shadow-[var(--sh-inset-crisp)] overflow-hidden">
           {/* Hidden file input — file picker (documents, images from gallery) */}
           <input
             ref={fileInputRef}
@@ -1383,120 +1383,224 @@ export function AgentChatView({
             className="hidden"
           />
 
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => {
-              const val = e.target.value;
-              setInput(val);
-              if (val.startsWith("/") && !val.includes("\n")) {
-                setSlashMenuOpen(true);
-                setSlashMenuIndex(0);
-              } else {
-                setSlashMenuOpen(false);
-              }
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder={recording ? "Recording..." : isCodeRunner ? "Type / for commands..." : "Ask about campaigns..."}
-            rows={1}
-            disabled={loading || recording}
-            className="w-full bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 px-0.5"
-            style={{ maxHeight: "50vh", fontSize: "17px", lineHeight: "21px" }}
-          />
-
-          <div className={cn(
-            "flex items-center gap-1.5 shrink-0",
-            isMultiline && "justify-end mt-1 self-end",
-          )}>
-            {/* Attach file button (hidden during recording to keep the bar clean) */}
-            {!recording && (
+          {recording ? (
+            /* ── Recording mode — takes over the full bar ── */
+            <div className="flex items-center gap-1 px-2 py-2 min-h-[44px]">
               <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={streaming || loading || uploading}
-                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
-                title={isMobile ? "Attach file or photo" : "Attach file (PDF, image, or spreadsheet)"}
-                data-testid="attach-file-btn"
+                onClick={cancelRecording}
+                className="h-9 w-9 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 shrink-0 transition-colors"
+                data-testid="recording-cancel"
+                title="Discard recording"
               >
-                <Paperclip className="h-4 w-4 max-md:h-5 max-md:w-5" />
+                <Trash2 className="h-4 w-4 max-md:h-5 max-md:w-5" />
               </button>
-            )}
-
-            {/* Stop button — visible during streaming when no text input */}
-            {streaming && !input.trim() && !recording && onAbort && (
-              <button
-                onClick={onAbort}
-                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
-                title="Stop response"
-                data-testid="stop-button"
-              >
-                <Square className="h-3 w-3 max-md:h-4 max-md:w-4 fill-white" />
-              </button>
-            )}
-
-            {/* Send / Mic / Recording group */}
-            {input.trim() ? (
-              <button
-                onClick={handleSend}
-                disabled={loading}
-                className={cn(
-                  "h-8 w-8 max-md:h-10 max-md:w-10 rounded-full text-white flex items-center justify-center shrink-0 transition-colors",
-                  streaming ? "bg-orange-500 hover:bg-orange-600" : "bg-brand-indigo hover:bg-brand-indigo/90",
-                  loading && "opacity-40",
-                )}
-                data-testid="send-button"
-                title={streaming ? "Interrupt & send" : "Send message"}
-              >
-                <Send className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
-              </button>
-            ) : transcribing ? (
-              <button
-                disabled
-                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full bg-brand-indigo/40 text-white flex items-center justify-center shrink-0"
-              >
-                <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              </button>
-            ) : recording ? (
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Discard recording */}
-                <button
-                  onClick={cancelRecording}
-                  className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 shrink-0 transition-colors"
-                  data-testid="recording-cancel"
-                  title="Discard recording"
-                >
-                  <Trash2 className="h-4 w-4 max-md:h-5 max-md:w-5" />
-                </button>
-                {/* Expanded mic pill: timer + send-on-click */}
-                <button
-                  onClick={stopRecording}
-                  className="h-8 max-md:h-10 px-3 rounded-full bg-red-500 text-white flex items-center gap-2 hover:bg-red-600 shrink-0 transition-colors"
+              <div className="flex-1 flex items-center gap-2 pl-1">
+                <span
+                  className="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0"
                   style={{ animation: "micPulseAgent 1s ease-in-out infinite" }}
-                  data-testid="mic-stop-button"
-                  title="Stop recording and transcribe"
-                >
-                  <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-                  </span>
-                  <span className="text-[12px] font-mono tabular-nums" data-testid="recording-duration">
-                    {formatDuration(recordingDuration)}
-                  </span>
-                  <style>{`@keyframes micPulseAgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
-                </button>
+                />
+                <span className="text-[14px] font-medium tabular-nums text-foreground">{formatDuration(recordingDuration)}</span>
+                <span className="text-[12px] text-muted-foreground">Recording…</span>
               </div>
-            ) : (
               <button
-                onClick={startRecording}
-                disabled={loading}
-                className="h-8 w-8 max-md:h-10 max-md:w-10 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
-                data-testid="mic-button"
+                onClick={stopRecording}
+                className="h-9 w-9 max-md:h-11 max-md:w-11 rounded bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 shrink-0 transition-colors"
+                data-testid="mic-stop-button"
+                title="Stop recording and transcribe"
               >
-                <Mic className="h-3.5 w-3.5 max-md:h-5 max-md:w-5" />
+                <Square className="h-4 w-4 max-md:h-5 max-md:w-5 fill-white" />
               </button>
-            )}
-          </div>
+              <style>{`@keyframes micPulseAgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
+            </div>
+          ) : (
+            /* ── Normal mode: textarea row + button row ── */
+            <div className="flex flex-col">
+              {/* Row 1: Textarea — full width */}
+              <div className="px-3 pt-2.5 pb-1.5 min-h-[44px]">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setInput(val);
+                    if (val.startsWith("/") && !val.includes("\n")) {
+                      setSlashMenuOpen(true);
+                      setSlashMenuIndex(0);
+                    } else {
+                      setSlashMenuOpen(false);
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder={isCodeRunner ? "Type / for commands..." : "Ask anything…"}
+                  rows={1}
+                  disabled={loading}
+                  className="w-full bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 rounded-none"
+                  style={{ maxHeight: "40vh", fontSize: "15px", lineHeight: "22px" }}
+                />
+              </div>
+
+              {/* Row 2: Buttons — [settings][attach] on left, [mic][send/stop] on right */}
+              <div className="flex items-center gap-1 pl-1 pr-1.5 pt-1 pb-1 border-t border-border/20 bg-muted rounded-b-[inherit]">
+                {/* Settings popover — left */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="h-9 w-9 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      title="Settings"
+                    >
+                      <Settings className="h-5 w-5" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" side="top" className="p-1.5 min-w-0 w-auto z-[10000]">
+                    {activeSession && (() => {
+                      const modelOpts = MODEL_OPTIONS as unknown as { id: string; label: string; shortLabel: string; icon: ComponentType<{ className?: string }>; color: string }[];
+                      const thinkingOpts = THINKING_OPTIONS as unknown as { id: string; label: string; icon: ComponentType<{ className?: string }>; color: string }[];
+                      const curModel = modelOpts.find((m) => m.id === activeSession.model) || modelOpts[0];
+                      const curThinking = thinkingOpts.find((t) => t.id === activeSession.thinkingLevel) || thinkingOpts[2];
+                      const ModelIcon = curModel.icon;
+                      const ThinkingIcon = curThinking.icon;
+                      const nextModel = modelOpts[(modelOpts.indexOf(curModel) + 1) % modelOpts.length];
+                      const nextThinking = thinkingOpts[(thinkingOpts.indexOf(curThinking) + 1) % thinkingOpts.length];
+                      return (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => window.dispatchEvent(new CustomEvent("agent-model-change", { detail: { agentId: agent.id, model: nextModel.id } }))}
+                            disabled={streaming}
+                            className="flex items-center gap-1.5 rounded-lg border border-border/50 px-2.5 py-2 max-md:py-2.5 text-[10px] font-medium transition-colors hover:bg-muted/50 hover:border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={`Model: ${curModel.label} — tap to switch to ${nextModel.label}`}
+                          >
+                            <ModelIcon className={cn("h-3.5 w-3.5 shrink-0", curModel.color)} />
+                            <span>{curModel.shortLabel}</span>
+                          </button>
+                          <button
+                            onClick={() => window.dispatchEvent(new CustomEvent("agent-thinking-change", { detail: { agentId: agent.id, thinkingLevel: nextThinking.id } }))}
+                            disabled={streaming}
+                            className="flex items-center gap-1.5 rounded-lg border border-border/50 px-2.5 py-2 max-md:py-2.5 text-[10px] font-medium transition-colors hover:bg-muted/50 hover:border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={`Thinking: ${curThinking.label} — tap to switch to ${nextThinking.label}`}
+                          >
+                            <ThinkingIcon className={cn("h-3.5 w-3.5 shrink-0", curThinking.color)} />
+                            <span>{curThinking.label}</span>
+                          </button>
+                          <button
+                            onClick={() => window.dispatchEvent(new CustomEvent("agent-page-awareness-toggle-request", { detail: { agentId: agent.id } }))}
+                            className={cn(
+                              "flex items-center justify-center rounded-lg border px-2 py-2 max-md:py-2.5 transition-colors",
+                              activePageAwareness
+                                ? "border-brand-indigo/30 bg-brand-indigo/5 text-brand-indigo"
+                                : "border-border/50 text-muted-foreground hover:bg-muted/50",
+                            )}
+                            title={activePageAwareness ? "Page awareness ON — tap to disable" : "Page awareness OFF — tap to enable"}
+                          >
+                            {activePageAwareness ? <MapPin className="h-3.5 w-3.5" /> : <MapPinOff className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => window.dispatchEvent(new CustomEvent("agent-retry-last", { detail: { agentId: agent.id } }))}
+                            disabled={streaming}
+                            className="flex items-center justify-center rounded-lg border border-border/50 px-2 py-2 max-md:py-2.5 transition-colors text-muted-foreground hover:bg-muted/50 hover:border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Retry last response"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => window.dispatchEvent(new CustomEvent("agent-new-session", { detail: { agentId: agent.id } }))}
+                            className="flex items-center justify-center rounded-lg border border-border/50 px-2 py-2 max-md:py-2.5 text-muted-foreground hover:bg-muted/50 hover:border-border transition-colors"
+                            title="New conversation"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </PopoverContent>
+                </Popover>
+
+                {/* Attach file — left */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={streaming || loading || uploading}
+                  className="h-9 w-9 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center shrink-0 text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 transition-colors"
+                  title={isMobile ? "Attach file or photo" : "Attach file (PDF, image, or spreadsheet)"}
+                  data-testid="attach-file-btn"
+                >
+                  <Paperclip className="h-5 w-5" />
+                </button>
+
+                {/* Token counter — total (input + output) vs context window */}
+                {activeSession && ((activeSession.totalInputTokens || 0) + (activeSession.totalOutputTokens || 0)) > 0 && (() => {
+                  const model = activeSession.model || "";
+                  const maxTokens = model.includes("opus") ? 1_000_000 : 200_000;
+                  const total = (activeSession.totalInputTokens || 0) + (activeSession.totalOutputTokens || 0);
+                  const pct = Math.min(100, Math.round((total / maxTokens) * 100));
+                  const label = total >= 1000 ? `${(total / 1000).toFixed(0)}k` : `${total}`;
+                  const maxLabel = maxTokens >= 1000 ? `${(maxTokens / 1000).toFixed(0)}k` : `${maxTokens}`;
+                  const color = pct > 80 ? "text-red-400" : pct > 50 ? "text-amber-400" : "text-muted-foreground/40";
+                  return (
+                    <span
+                      className={cn("text-xs font-mono tabular-nums select-none shrink-0", color)}
+                      title={`Context: ${total.toLocaleString()} / ${maxTokens.toLocaleString()} tokens (${pct}%) — input + output`}
+                    >
+                      {label}/{maxLabel}
+                    </span>
+                  );
+                })()}
+
+                {/* Spacer */}
+                <div className="flex-1" />
+
+                {/* Mic or transcribing spinner — right */}
+                {transcribing ? (
+                  <button
+                    disabled
+                    className="h-9 w-9 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center shrink-0 text-muted-foreground/50"
+                    title="Transcribing…"
+                  >
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    disabled={loading}
+                    className="h-9 w-9 max-md:h-11 max-md:w-11 rounded-full flex items-center justify-center shrink-0 text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 transition-colors"
+                    title="Voice — transcribes to text"
+                    data-testid="mic-button"
+                  >
+                    <Mic className="h-5 w-5" />
+                  </button>
+                )}
+
+                {/* Send / Stop — right */}
+                {streaming && !input.trim() && onAbort ? (
+                  <button
+                    onClick={onAbort}
+                    className="h-9 w-9 max-md:h-11 max-md:w-11 rounded bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shrink-0 transition-colors"
+                    title="Stop response"
+                    data-testid="stop-button"
+                  >
+                    <Square className="h-3.5 w-3.5 max-md:h-4 max-md:w-4 fill-white" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSend}
+                    disabled={loading || !input.trim()}
+                    className={cn(
+                      "h-7 w-7 max-md:h-9 max-md:w-9 rounded text-white flex items-center justify-center shrink-0 transition-colors",
+                      streaming && input.trim() ? "bg-orange-500 hover:bg-orange-600" : "bg-brand-indigo hover:bg-brand-indigo/90",
+                      (loading || !input.trim()) && "opacity-40",
+                    )}
+                    data-testid="send-button"
+                    title={streaming && input.trim() ? "Interrupt & send" : "Send message"}
+                  >
+                    <Send className="h-3.5 w-3.5 max-md:h-4 max-md:w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+
         </div>
       </div>
 
@@ -1522,7 +1626,7 @@ export function AgentChatView({
                   {pendingConfirmation?.actions?.map((action, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50"
+                      className="flex items-center gap-2 p-2.5 rounded-[4px] bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50"
                     >
                       <Trash2 className="h-4 w-4 text-red-500 shrink-0" />
                       <span className="text-sm font-medium text-red-700 dark:text-red-400">

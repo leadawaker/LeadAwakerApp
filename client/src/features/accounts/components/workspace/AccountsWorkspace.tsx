@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Building2, Filter, ArrowUpDown, Check, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Building2, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { MobileListHeader, MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MobileListHeader, MobileHeaderIconBtn, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
+import { MobileSheet, MobileRecede } from "@/components/crm/mobile/MobileSheet";
 import { STATUS_FILTER_OPTIONS, STATUS_I18N_KEY } from "../listWidgets/accountListConstants";
 import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
@@ -14,7 +14,6 @@ import { AccountsTopBar } from "./AccountsTopBar";
 import { AccountsListPanel } from "./AccountsListPanel";
 import { IdentityCard } from "./IdentityCard";
 import { TabContent } from "./OverviewTab";
-import { useUltraWide } from "./useUltraWide";
 import { useAccountDetailData } from "./useAccountDetailData";
 import { toAccountDetail, deriveMetrics } from "./adapters";
 import { AccountCreatePanel } from "../AccountCreatePanel";
@@ -22,7 +21,7 @@ import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "knowledge", "communication"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication"];
 
 interface Props {
   accounts: AccountRow[];
@@ -53,6 +52,7 @@ interface Props {
 export function AccountsWorkspace(p: Props) {
   const { t } = useTranslation("accounts");
   const isNarrow = useIsMobile(1024);
+  const { isAgencyUser, isAdmin } = useWorkspace();
 
   const [tab, setTab] = useState<WorkspaceTab>("overview");
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
@@ -62,10 +62,7 @@ export function AccountsWorkspace(p: Props) {
   const isListCompact = !isNarrow && (listPanelState === "compact" || (listPanelState === "full" && rightPanelNarrow));
   const isListHidden = !isNarrow && listPanelState === "hidden";
 
-  const detailRef = useRef<HTMLDivElement | null>(null);
-  const ultra = useUltraWide(detailRef);
   const setDetailNode = useCallback((node: HTMLDivElement | null) => {
-    detailRef.current = node;
     compactObserverRef(node);
   }, [compactObserverRef]);
 
@@ -99,12 +96,116 @@ export function AccountsWorkspace(p: Props) {
     });
   }, [publishEntity, accountId, account]);
 
-  // In ultra-wide every panel is on one screen, so the tab switcher is hidden and
-  // the content is always the full overview.
-  const effectiveTab: WorkspaceTab = ultra ? "overview" : tab;
-  const maxW = effectiveTab === "overview" ? (ultra ? undefined : 1180) : effectiveTab === "integrations" ? 1120 : 1080;
+  const maxW = 1120;
 
-  const showDetailArea = !(isNarrow && !p.selectedAccount && panelMode === "view");
+  // On mobile: account detail is shown as a slide-up MobileSheet (drag down to dismiss).
+  // Clients (non-agency) instead get a solid, footer-preserving page (no sheet).
+  const isClient = !isAgencyUser;
+  const mobileSheetOpen = isNarrow && !isClient && !!p.selectedAccount && panelMode !== "create";
+  const showDetailArea = !isNarrow;
+
+  // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
+  const mobileTabSeg = (
+    <div className="la-seg la-seg--fill">
+      {ACCOUNT_TABS.map((k) => (
+        <button
+          key={k}
+          onClick={() => setTab(k)}
+          className={`la-seg-btn${tab === k ? " on" : ""}`}
+          style={{ padding: "9px 0", fontSize: 11, letterSpacing: "0.08em" }}
+          data-testid={`account-tab-${k}`}
+        >
+          {t(`workspace.tabs.${k}`)}
+        </button>
+      ))}
+    </div>
+  );
+  const mobileFrozenIdentity = account && d ? (
+    <div className="shrink-0" style={{ padding: "12px 16px" }}>
+      <IdentityCard d={d} metrics={metrics} onSave={p.onSave} compact />
+    </div>
+  ) : null;
+  const mobileScrollData = account && d ? (
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "14px 16px 32px" }}>
+      <TabContent
+        tab={tab}
+        isMobile
+        readOnly={!isAdmin}
+        data={{
+          account, d, accountId, onSave: p.onSave,
+          campaigns: detailData.campaigns,
+          contracts: detailData.contracts,
+          team: detailData.team,
+          loadingCampaigns: detailData.loadingCampaigns,
+          loadingContracts: detailData.loadingContracts,
+          loadingTeam: detailData.loadingTeam,
+          onRefresh: detailData.refresh,
+        }}
+      />
+    </div>
+  ) : null;
+
+  // ── Client mobile view: solid page (topbar title + tabs · frozen header · data) ──
+  if (isNarrow && isClient) {
+    return (
+      <div className="flex flex-col h-full w-full" data-testid="accounts-workspace-client">
+        {/* Topbar: "Accounts" title + the 3 tabs next to it */}
+        <div
+          className="shrink-0"
+          style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "14px 16px 12px", borderBottom: "1px solid var(--line)", background: "var(--bg)",
+            paddingTop: "max(env(safe-area-inset-top, 0px), 14px)",
+          }}
+        >
+          <span className="serif" style={{ fontSize: 26, color: "var(--ink)", letterSpacing: "-0.02em", flexShrink: 0 }}>
+            {t("page.title")}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>{mobileTabSeg}</div>
+        </div>
+        {account && d ? (
+          <div className="flex flex-col flex-1 min-h-0">
+            {mobileFrozenIdentity}
+            {mobileScrollData}
+          </div>
+        ) : (
+          <div className="flex flex-1 items-center justify-center" style={{ color: "var(--mute)" }}>
+            <Building2 className="w-8 h-8" style={{ color: "var(--mute-2)" }} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const accountsFilterPanel = (
+    <>
+      <MobileDrawerSubheading>{t("page.title")}</MobileDrawerSubheading>
+      {STATUS_FILTER_OPTIONS.map((s) => (
+        <MobileDrawerOption
+          key={s}
+          label={t(STATUS_I18N_KEY[s] ?? s)}
+          selected={p.filterStatus.includes(s)}
+          onClick={() => p.onToggleFilterStatus(s)}
+        />
+      ))}
+      {p.isFilterActive && (
+        <MobileDrawerOption label={t("toolbar.clearAllFilters")} onClick={p.onResetControls} />
+      )}
+    </>
+  );
+
+  const accountsSortPanel = (
+    <>
+      {(["recent", "name_asc", "name_desc"] as const).map((opt) => (
+        <MobileDrawerOption
+          key={opt}
+          label={t(`sort.${opt === "recent" ? "mostRecent" : opt === "name_asc" ? "nameAZ" : "nameZA"}`, opt)}
+          selected={p.sortBy === opt}
+          onClick={() => p.onSortByChange(opt)}
+        />
+      ))}
+    </>
+  );
 
   return (
     <div className="flex flex-col h-full w-full" data-testid="accounts-workspace">
@@ -113,57 +214,20 @@ export function AccountsWorkspace(p: Props) {
         searchValue={p.listSearch}
         onSearchChange={p.onListSearchChange}
         searchPlaceholder={t("page.searchPlaceholder", "Search accounts...")}
-        filterControl={(
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <MobileHeaderIconBtn dot={p.isFilterActive} active={p.isFilterActive} aria-label="Filter" data-testid="mobile-accounts-filter">
-                <Filter className="h-4 w-4" />
-              </MobileHeaderIconBtn>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {STATUS_FILTER_OPTIONS.map((s) => (
-                <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); p.onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }} />
-                  <span className={cn("flex-1", p.filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(STATUS_I18N_KEY[s] ?? s)}</span>
-                  {p.filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-              {p.isFilterActive && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={p.onResetControls} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        sortControl={(
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <MobileHeaderIconBtn active={p.isSortNonDefault} aria-label="Sort" data-testid="mobile-accounts-sort">
-                <ArrowUpDown className="h-4 w-4" />
-              </MobileHeaderIconBtn>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {(["recent", "name_asc", "name_desc"] as const).map((opt) => (
-                <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.onSortByChange(opt); }} className="text-[12px] flex items-center gap-2">
-                  <span className={cn("flex-1", p.sortBy === opt && "font-semibold !text-brand-indigo")}>{t(`sort.${opt === "recent" ? "mostRecent" : opt === "name_asc" ? "nameAZ" : "nameZA"}`, opt)}</span>
-                  {p.sortBy === opt && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        extraActions={(
+        filterPanel={accountsFilterPanel}
+        filterActive={p.isFilterActive}
+        sortPanel={accountsSortPanel}
+        sortActive={p.isSortNonDefault}
+        extraActions={isAgencyUser ? (
           <MobileHeaderIconBtn onClick={() => setPanelMode("create")} aria-label={t("toolbar.add", "New account")} data-testid="mobile-accounts-add">
             <Plus className="h-4 w-4" />
           </MobileHeaderIconBtn>
-        )}
+        ) : undefined}
       />
       <AccountsTopBar
         tab={tab}
         onTabChange={setTab}
-        showTabs={!ultra}
+        showTabs={!isNarrow}
         count={p.count}
         listPanelState={listPanelState}
         onCycle={cycle}
@@ -186,82 +250,109 @@ export function AccountsWorkspace(p: Props) {
         hasSelection={!!p.selectedAccount}
       />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        <AccountsListPanel
-          accounts={p.accounts}
-          loading={p.loading}
-          selectedAccount={p.selectedAccount}
-          onSelectAccount={(a) => { p.onSelectAccount(a); setPanelMode("view"); }}
-          listSearch={p.listSearch}
-          filterStatus={p.filterStatus}
-          sortBy={p.sortBy}
-          groupBy={p.groupBy}
-          groupDirection={p.groupDirection}
-          isListCompact={isListCompact}
-          isListHidden={isListHidden}
-          isNarrow={isNarrow}
-        />
+      {/* Mobile: create account sheet */}
+      {isNarrow && panelMode === "create" && (
+        <MobileSheet open onClose={() => setPanelMode("view")} data-testid="account-create-sheet">
+          <div style={{ overflowY: "auto", flex: 1, padding: "0 16px 32px" }}>
+            <AccountCreatePanel
+              onCreate={async (data) => { await p.onCreate(data); setPanelMode("view"); }}
+              onClose={() => setPanelMode("view")}
+            />
+          </div>
+        </MobileSheet>
+      )}
 
-        <div
-          ref={setDetailNode}
-          className={cn("flex-1 min-w-0 overflow-y-auto", showDetailArea ? "block" : "hidden")}
-          style={{ background: "var(--bg)", padding: isNarrow ? "16px 16px 40px" : "24px 30px 40px" }}
-        >
-          {panelMode === "create" ? (
-            <div style={{ maxWidth: 720, margin: "0 auto" }} className="bg-card rounded-xl overflow-hidden neu-raised">
-              <AccountCreatePanel
-                onCreate={async (data) => { await p.onCreate(data); setPanelMode("view"); }}
-                onClose={() => setPanelMode("view")}
-              />
+      {/* Mobile: account detail sheet — drag down to dismiss */}
+      <MobileSheet
+        open={mobileSheetOpen}
+        onClose={() => p.onSelectAccount(null)}
+        topGap={18}
+        data-testid="account-detail-sheet"
+      >
+        {account && d && (
+          <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+            {/* Frozen header — identity card stays pinned */}
+            {mobileFrozenIdentity}
+            {/* Tab switcher below the header (also frozen) */}
+            <div
+              className="shrink-0"
+              style={{ padding: "0 16px 10px", borderBottom: "1px solid var(--line)" }}
+            >
+              {mobileTabSeg}
             </div>
-          ) : account && d ? (
-            <div style={{ maxWidth: maxW ?? "none", margin: "0 auto", display: "flex", flexDirection: "column", gap: 22 }}>
-              {isNarrow && (
-                <button onClick={() => p.onSelectAccount(null)} className="la-btn la-btn--soft" style={{ alignSelf: "flex-start" }}>
-                  <ChevronLeft className="h-4 w-4" />{t("detail.close")}
-                </button>
-              )}
-              <IdentityCard d={d} metrics={metrics} onSave={p.onSave} />
-              {/* Mobile detail tab switcher — desktop uses the AccountsTopBar tabs
-                  (hidden on mobile); mirror the leads mobile detail tab style. */}
-              {isNarrow && !ultra && (
-                <div className="la-seg la-seg--fill md:hidden">
-                  {ACCOUNT_TABS.map((k) => (
-                    <button
-                      key={k}
-                      onClick={() => setTab(k)}
-                      className={`la-seg-btn${tab === k ? " on" : ""}`}
-                      style={{ padding: "9px 0", fontSize: 11, letterSpacing: "0.08em" }}
-                      data-testid={`account-tab-${k}`}
-                    >
-                      {t(`workspace.tabs.${k}`)}
-                    </button>
-                  ))}
+            {/* Scrollable data */}
+            {mobileScrollData}
+          </div>
+        )}
+      </MobileSheet>
+
+      <div className="flex flex-1 min-h-0">
+        <MobileRecede open={mobileSheetOpen} fill={isNarrow}>
+          <AccountsListPanel
+            accounts={p.accounts}
+            loading={p.loading}
+            // On mobile the detail is in a MobileSheet portal, so the list stays visible.
+            // Pass null so AccountsListPanel doesn't hide itself when an account is selected.
+            selectedAccount={isNarrow ? null : p.selectedAccount}
+            onSelectAccount={(a) => { p.onSelectAccount(a); setPanelMode("view"); }}
+            listSearch={p.listSearch}
+            filterStatus={p.filterStatus}
+            sortBy={p.sortBy}
+            groupBy={p.groupBy}
+            groupDirection={p.groupDirection}
+            isListCompact={isListCompact}
+            isListHidden={isListHidden}
+            isNarrow={isNarrow}
+          />
+        </MobileRecede>
+
+        {/* Desktop detail panel — this div is the single scroll container; 48px h-padding keeps shadows (22.5px reach) within the clip boundary */}
+        {showDetailArea && (
+          <div
+            ref={setDetailNode}
+            className="flex-1 min-w-0 min-h-0"
+            style={{ background: "var(--bg)", padding: "0 48px 16px", overflowY: "auto" }}
+          >
+            {panelMode === "create" ? (
+              <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 24 }}>
+                <div className="bg-card rounded-xl overflow-hidden neu-raised">
+                  <AccountCreatePanel
+                    onCreate={async (data) => { await p.onCreate(data); setPanelMode("view"); }}
+                    onClose={() => setPanelMode("view")}
+                  />
                 </div>
-              )}
-              <TabContent
-                tab={effectiveTab}
-                ultra={ultra}
-                isMobile={isNarrow}
-                data={{
-                  account, d, accountId, onSave: p.onSave,
-                  campaigns: detailData.campaigns,
-                  contracts: detailData.contracts,
-                  team: detailData.team,
-                  loadingCampaigns: detailData.loadingCampaigns,
-                  loadingContracts: detailData.loadingContracts,
-                  loadingTeam: detailData.loadingTeam,
-                  onRefresh: detailData.refresh,
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center" style={{ height: "100%", color: "var(--mute)" }}>
-              <Building2 className="w-10 h-10 mb-3" style={{ color: "var(--mute-2)" }} />
-              <p style={{ fontSize: 14 }}>{t("detail.selectExecution", { defaultValue: "Select an account" })}</p>
-            </div>
-          )}
-        </div>
+              </div>
+            ) : account && d ? (
+              <div style={{ maxWidth: maxW, margin: "0 auto", width: "100%" }}>
+                <div style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 10, paddingTop: 24 }}>
+                  <IdentityCard d={d} metrics={metrics} onSave={p.onSave} />
+                </div>
+                <div style={{ height: 32 }} />
+                <TabContent
+                  tab={tab}
+                  isMobile={false}
+                  readOnly={!isAdmin}
+                  data={{
+                    account, d, accountId, onSave: p.onSave,
+                    campaigns: detailData.campaigns,
+                    contracts: detailData.contracts,
+                    team: detailData.team,
+                    loadingCampaigns: detailData.loadingCampaigns,
+                    loadingContracts: detailData.loadingContracts,
+                    loadingTeam: detailData.loadingTeam,
+                    onRefresh: detailData.refresh,
+                  }}
+                />
+                <div style={{ height: 16 }} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center" style={{ height: "100%", color: "var(--mute)" }}>
+                <Building2 className="w-10 h-10 mb-3" style={{ color: "var(--mute-2)" }} />
+                <p style={{ fontSize: 14 }}>{t("detail.selectExecution", { defaultValue: "Select an account" })}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Mic, Play, Upload, X, RefreshCw } from "lucide-react";
+import { Mic, Play, Upload, X, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
 import { PanelAction } from "./atoms";
 import { useVoiceClone, type VoiceLang } from "./useVoiceClone";
 import type { AccountRow, VoiceSlot } from "./types";
@@ -31,7 +31,7 @@ function VoiceRow({ v, vc, t }: { v: VoiceSlot; vc: ReturnType<typeof useVoiceCl
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: "var(--r-surface)", background: v.ready ? "var(--surface)" : "var(--bg)", boxShadow: v.ready ? "var(--sh-raised-crisp)" : "var(--sh-inset-crisp)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>
       <div className="row" style={{ gap: 13 }}>
         <span style={{ width: 34, height: 34, borderRadius: "var(--r-button)", flexShrink: 0, background: "var(--card)", boxShadow: "var(--sh-raised-crisp)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>{v.flag}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -85,6 +85,7 @@ export function VoiceCloneSection({ account, voices, onSave, stacked = false }: 
   stacked?: boolean;
 }) {
   const { t } = useTranslation("accounts");
+  const [expanded, setExpanded] = useState(false);
   const voiceIds = {
     en: account.tts_voice_id_en ?? null,
     pt: account.tts_voice_id_pt ?? null,
@@ -95,16 +96,24 @@ export function VoiceCloneSection({ account, voices, onSave, stacked = false }: 
 
   return (
     <div style={{ marginTop: 4, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
-      <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
+      <div className="row" style={{ justifyContent: "space-between", marginBottom: expanded ? 12 : 0 }}>
         <div className="row" style={{ gap: 9 }}>
           <span style={{ color: "var(--wine)", display: "flex" }}><Mic size={16} /></span>
           <h4 className="serif" style={{ margin: 0, fontSize: 18, color: "var(--ink-soft)", fontWeight: 400 }}>{t("panels.voiceClone")}</h4>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "2px 8px", borderRadius: "var(--r-pill)" }}>{t("voice.ratioReady", { ready, total: voices.length })}</span>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", background: "var(--bg)", padding: "2px 8px", borderRadius: "var(--r-pill)" }}>{t("voice.ratioReady", { ready, total: voices.length })}</span>
         </div>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          style={{ background: "transparent", boxShadow: "none", border: "none", cursor: "pointer", color: "var(--mute-2)", display: "flex", padding: 4 }}
+        >
+          {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+        </button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: stacked ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
-        {voices.map((v) => <VoiceRow key={v.lang} v={v} vc={vc} t={t} />)}
-      </div>
+      {expanded && (
+        <div style={{ display: "grid", gridTemplateColumns: stacked ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+          {voices.map((v) => <VoiceRow key={v.lang} v={v} vc={vc} t={t} />)}
+        </div>
+      )}
     </div>
   );
 }

@@ -23,7 +23,8 @@ import TasksWeekCalendar, {
   addDays, isoToUTC, utcToISO,
 } from "./TasksWeekCalendar";
 import { SORT_OPTIONS, sortTasks, type SortOption, type Task } from "../types";
-import { loadLocal, saveLocal, AVATAR_BG } from "../lib/taskViewUtils";
+import { loadLocal, saveLocal } from "../lib/taskViewUtils";
+import { getUserAvatarColor } from "@/lib/avatarUtils";
 
 type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl: string | null };
 
@@ -381,8 +382,8 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
               <button className={`la-seg-btn${desktopWho === 'all' ? ' on' : ''}`} onClick={() => handleDesktopWho('all')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: '100%' }}>
                 <Users size={12} /> Everyone
               </button>
-              {users.map((u, i) => {
-                const bg = AVATAR_BG[i % AVATAR_BG.length];
+              {users.map((u) => {
+                const bg = getUserAvatarColor(u.fullName1 || u.email || "");
                 return (
                   <button key={u.id} className={`la-seg-btn${String(u.id) === desktopWho ? ' on' : ''}`} onClick={() => handleDesktopWho(String(u.id))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: '100%' }}>
                     <span style={{ position: 'relative', width: 19, height: 19, borderRadius: '50%', background: bg, boxShadow: `0 0 7px ${bg}99`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>

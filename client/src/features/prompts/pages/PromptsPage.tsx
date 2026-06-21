@@ -426,11 +426,11 @@ export default function PromptsPage() {
               <div className="h-8 w-20 bg-primary/5 rounded-full animate-pulse" />
             </div>
             {/* Panel toggle icon */}
-            <div className="h-8 w-8 bg-primary/5 rounded animate-pulse hidden md:block" />
+            <div className="h-8 w-8 bg-primary/5 rounded animate-pulse hidden lg:block" />
             {/* Spacer */}
             <div className="flex-1" />
             {/* Right action buttons */}
-            <div className="hidden md:flex items-center gap-1.5">
+            <div className="hidden lg:flex items-center gap-1.5">
               <div className="h-8 w-8 bg-primary/5 rounded animate-pulse" />
               <div className="h-8 w-8 bg-primary/5 rounded animate-pulse" />
               <div className="h-8 w-[180px] bg-primary/5 rounded animate-pulse" />
@@ -447,7 +447,7 @@ export default function PromptsPage() {
                 (full=300px list, compact=52px bot-icon rail, hidden=none) */}
             {leftPanelState === "hidden" ? null : leftPanelState === "compact" ? (
               <div
-                className="shrink-0 hidden md:flex flex-col min-h-0 overflow-hidden items-center"
+                className="shrink-0 hidden lg:flex flex-col min-h-0 overflow-hidden items-center"
                 style={{ width: 52, borderRight: "1px solid var(--line)", background: "var(--bg)" }}
               >
                 <div className="flex-1 min-h-0 overflow-hidden flex flex-col items-center gap-1.5 py-2">
@@ -462,7 +462,7 @@ export default function PromptsPage() {
               </div>
             ) : (
               <div
-                className="shrink-0 hidden md:flex flex-col min-h-0 overflow-hidden w-[300px]"
+                className="shrink-0 hidden lg:flex flex-col min-h-0 overflow-hidden w-[300px]"
                 style={{ borderRight: "1px solid var(--line)", background: "var(--bg)" }}
               >
                 <div className="flex-1 min-h-0 overflow-hidden" style={{ padding: "8px 10px 16px" }}>
@@ -543,7 +543,7 @@ export default function PromptsPage() {
                   <div className="bg-primary/5 rounded" style={{ height: 9, width: 110 }} />
                 </div>
                 {/* Right controls */}
-                <div className="hidden md:flex items-center gap-2 shrink-0">
+                <div className="hidden lg:flex items-center gap-2 shrink-0">
                   <div className="bg-primary/5 rounded" style={{ height: 10, width: 80 }} />
                   <div style={{ width: 1, height: 22, background: "var(--line)" }} />
                   <div className="bg-primary/5 rounded" style={{ height: 32, width: 90 }} />

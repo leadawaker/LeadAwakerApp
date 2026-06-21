@@ -18,6 +18,7 @@ import {
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { pool, db } from "../db";
 import { and, isNotNull, lte, not, inArray } from "drizzle-orm";
+import { provisionCaldiyForAccount } from "../calendar/caldiy";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl, frontendBaseUrl, setFrontendUrlWarned } from "./_helpers";
 import { storage as storageImport } from "../storage";
 import { sendInviteEmail } from "../email";
@@ -42,7 +43,14 @@ export function registerAccountsRoutes(app: Express): void {
   // ─── Accounts ─────────────────────────────────────────────────────
   // Only the agency can manage accounts
 
-  app.get("/api/accounts", requireAgency, wrapAsync(async (req, res) => {
+  app.get("/api/accounts", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const isAgency = user.role === "Owner" || user.role === "Admin" || user.accountsId === 1;
+    if (!isAgency) {
+      // Client users see only their own account
+      const account = await storage.getAccountById(user.accountsId);
+      return res.json(account ? toDbKeysArray([account] as any, accounts) : []);
+    }
     const pagination = getPagination(req);
     if (pagination) {
       const result = await paginatedQuery(accounts, pagination);
@@ -69,6 +77,7 @@ export function registerAccountsRoutes(app: Express): void {
     const parsed = insertAccountsSchema.safeParse(fromDbKeys(req.body, accounts));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const account = await storage.createAccount(parsed.data);
+    provisionCaldiyForAccount(account.id);
     res.status(201).json(toDbKeys(account as any, accounts));
   }));
 
@@ -81,7 +90,9 @@ export function registerAccountsRoutes(app: Express): void {
   }));
 
   app.delete("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
-    const ok = await storage.deleteAccount(Number(req.params.id));
+    const accountId = Number(req.params.id);
+    await storage.deleteCalendarConnection(accountId, "caldiy");
+    const ok = await storage.deleteAccount(accountId);
     if (!ok) return res.status(404).json({ message: "Account not found" });
     res.status(204).end();
   }));
@@ -516,6 +527,7 @@ export function registerAccountsRoutes(app: Express): void {
       status: "trial",
       businessNiche: prospect.niche || null,
     });
+    provisionCaldiyForAccount(account.id);
 
     // Link prospect to the new account and set status to Converted
     const updatedProspect = await storage.updateProspect(Number(req.params.id), {

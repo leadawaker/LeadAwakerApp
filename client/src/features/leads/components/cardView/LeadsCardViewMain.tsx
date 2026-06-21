@@ -1,6 +1,6 @@
 // LeadsCardView main component extracted from LeadsCardView.tsx
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
@@ -167,40 +167,10 @@ export function LeadsCardView({
     onRefresh: async () => { onRefresh?.(); },
   });
 
-  // Shared scroll helper — finds the card in the DOM and positions it just below its group header.
-  const scrollToLead = useCallback((id: number, behavior: ScrollBehavior) => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const el = container.querySelector(`[data-lead-id="${id}"]`) as HTMLElement | null;
-    if (!el) return;
-    let headerHeight = 0;
-    let sibling = el.previousElementSibling;
-    while (sibling) {
-      if (sibling.getAttribute("data-group-header") === "true") {
-        headerHeight = (sibling as HTMLElement).offsetHeight;
-        break;
-      }
-      sibling = sibling.previousElementSibling;
-    }
-    const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-    container.scrollTo({ top: cardTop - headerHeight - 3, behavior });
-  }, []);
-
-  // Initial load: snap to the selected card instantly (no slide-down artifact).
-  const initialScrollDoneRef = useRef(false);
-  useEffect(() => {
-    if (!selectedLead || initialScrollDoneRef.current) return;
-    const id = getLeadId(selectedLead);
-    // Use setTimeout so the card is in the DOM before we query it
-    const t = window.setTimeout(() => {
-      initialScrollDoneRef.current = true;
-      scrollToLead(id, "instant");
-    }, 0);
-    return () => window.clearTimeout(t);
-  }, [selectedLead, scrollToLead]);
-
-  // Selecting a card no longer moves the list. Press F to bring the selected
-  // lead to the top on demand (useFKeyScrollToSelected below).
+  // Selecting a card no longer moves the list, and the list always opens at
+  // its natural scroll position (top) rather than snapping to whichever lead
+  // was last selected (per Gabriel, 2026-06-21). Press F to bring the
+  // selected lead to the top on demand (useFKeyScrollToSelected below).
 
   // ── List-view UI controls (display toggles, selection, bulk actions) ──────
   const {
@@ -256,8 +226,15 @@ export function LeadsCardView({
     setFilterAccount(state.filterAccount);
   }, [sortBy, filterStatus, filterTags, onSortByChange, onToggleFilterStatus, onToggleFilterTag, setFilterCampaign, setFilterAccount]);
 
-  // Reset to page 0 whenever the filtered/sorted list changes + bump anim key to re-trigger entrance
-  useEffect(() => { setCurrentPage(0); setCardAnimKey((k) => k + 1); }, [flatItems]);
+  // Reset to page 0 whenever the filtered/sorted list changes + bump anim key to re-trigger entrance.
+  // Keyed on row composition/order (not flatItems identity) so a background leads
+  // refetch (e.g. marking a conversation read on select) doesn't remount every
+  // card and replay the entrance animation — that's what made cards "shrink" on click.
+  const flatItemsSignature = useMemo(
+    () => flatItems.map((it) => (it.kind === "lead" ? `l${getLeadId(it.lead)}` : `h${it.label}`)).join(","),
+    [flatItems],
+  );
+  useEffect(() => { setCurrentPage(0); setCardAnimKey((k) => k + 1); }, [flatItemsSignature]);
 
   // ── Export all currently-filtered leads to CSV ──────────────────────────────
   const handleExportCsv = useCallback(() => {
@@ -365,6 +342,7 @@ export function LeadsCardView({
           groupBy={groupBy}
           onGroupByChange={onGroupByChange}
           onCreateLead={onCreateLead}
+          showLeadActions={isAgencyUser && !!selectedLead}
         />
       )}
 
@@ -372,7 +350,7 @@ export function LeadsCardView({
       <div className="relative flex flex-1 min-h-0 w-full" style={{ gap: "var(--panel-gap)", paddingLeft: 0, paddingRight: isNarrow ? 0 : "var(--panel-gap)" }}>
 
       {/* ── LEFT: Lead List ── */}
-      <MobileRecede open={mobileView === "detail" && !!selectedLead} fill={isNarrow}>
+      <MobileRecede open={isNarrow && mobileView === "detail" && !!selectedLead} fill={isNarrow}>
         <LeadsListPanel
           isHidden={isHidden}
           isCompact={isCompact}
@@ -411,10 +389,27 @@ export function LeadsCardView({
           pageSize={PAGE_SIZE}
           campaignsById={campaignsById}
           peekOn={peekOn}
+          setPeekOn={setPeekOn}
           handleOpenConversation={handleOpenConversation}
           openQuickAction={openQuickAction}
           toggleLeadSelection={toggleLeadSelection}
           selectedLeadIds={selectedLeadIds}
+          sortBy={sortBy}
+          onSortByChange={onSortByChange}
+          groupBy={groupBy}
+          onGroupByChange={onGroupByChange}
+          isSortNonDefault={isSortNonDefault}
+          isGroupNonDefault={isGroupNonDefault}
+          onToggleFilterStatus={onToggleFilterStatus}
+          onToggleFilterTag={onToggleFilterTag}
+          allTags={allTags}
+          availableAccounts={availableAccounts}
+          availableCampaigns={availableCampaigns}
+          setFilterAccount={setFilterAccount}
+          setFilterCampaign={setFilterCampaign}
+          accountsById={accountsById}
+          bulkBusy={bulkBusy}
+          handleListBulkDelete={handleListBulkDelete}
         />
       </MobileRecede>
 

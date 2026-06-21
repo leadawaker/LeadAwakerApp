@@ -1,19 +1,19 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Check, SlidersHorizontal, ArrowDownUp } from "lucide-react";
+import { Plus, Check, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
-import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { MobileListHeader, MobileTabSeg, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
 import { useUpdateTask } from "../api/tasksApi";
-import { MobileTaskBoardCard } from "./MobileTaskListCard";
+import { MobileTaskBoardCard, initials } from "./MobileTaskListCard";
 import MobileTaskDetailPanel from "./MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "./MobileTaskCreatePanel";
 import MobileTaskWeekStrip from "./MobileTaskWeekStrip";
 import { sortTasks, SORT_OPTIONS, type SortOption, type Task, type TaskStatus } from "../types";
 import { loadLocal, saveLocal, applyDesktopFilter, type DesktopFilter } from "../lib/taskViewUtils";
+import { getUserAvatarColor } from "@/lib/avatarUtils";
 
-type AccountUser = { id: number; fullName1: string | null; email: string | null };
+type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl?: string | null };
 
 interface Props {
   tasks: Task[];
@@ -84,63 +84,67 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
       <MobileRecede open={selectedTaskId !== null}>
       <div className="relative h-full min-h-0 flex flex-col overflow-hidden" style={{ background: 'var(--bg)' }} data-testid="page-tasks">
 
-        {/* Top bar: shared mobile header — assignee tabs (title row) + status filter + sort */}
+        {/* Top bar: shared mobile header — assignee tabs (title row) + filter/sort drawers */}
         <MobileListHeader
           title={t("page.title")}
           tabSwitcher={(
             <MobileTabSeg
               tabs={[
-                { id: "all", label: t("assignee.everyone") },
-                ...users.map((u) => ({
-                  id: String(u.id),
-                  label: (u.fullName1 ?? u.email ?? "?").split(/\s+/)[0],
-                })),
+                { id: "all", label: t("assignee.everyone"), icon: Users },
+                ...users.map((u) => {
+                  const name = u.fullName1 ?? u.email ?? "?";
+                  const bg = getUserAvatarColor(name);
+                  return {
+                    id: String(u.id),
+                    label: name.split(/\s+/)[0],
+                    iconNode: (
+                      <span style={{
+                        position: "relative", width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                        background: bg, boxShadow: `0 0 6px ${bg}99`,
+                        display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                      }}>
+                        {u.avatarUrl ? (
+                          <img src={u.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <span style={{ color: "#fff", fontFamily: "var(--mono)", fontSize: 7, fontWeight: 700 }}>{initials(name)}</span>
+                        )}
+                      </span>
+                    ),
+                  };
+                }),
               ]}
               activeId={mobileWho}
               onChange={handleMobileWho}
             />
           )}
-          filterControl={(
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <MobileHeaderIconBtn
-                  dot={mobileFilter !== "all"}
-                  active={mobileFilter !== "all"}
-                  aria-label={t("filter.title", "Filter")}
-                  data-testid="mobile-tasks-filter"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                </MobileHeaderIconBtn>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-[var(--mute-2)]">{t("filter.title", "Filter")}</DropdownMenuLabel>
-                {filterChips.map(([k, lbl]) => (
-                  <DropdownMenuItem key={k} onSelect={(e) => { e.preventDefault(); handleMobileFilter(k); }} className="text-[12px] flex items-center gap-2">
-                    <span className={cn("flex-1", mobileFilter === k && "font-semibold !text-brand-indigo")}>{lbl}</span>
-                    <span className="text-[10px] text-[var(--mute-2)]">{chipCounts[k]}</span>
-                    {mobileFilter === k && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          filterPanel={(
+            <>
+              <MobileDrawerSubheading>{t("filter.title", "Filter")}</MobileDrawerSubheading>
+              {filterChips.map(([k, lbl]) => (
+                <MobileDrawerOption
+                  key={k}
+                  label={`${lbl}  ${chipCounts[k]}`}
+                  selected={mobileFilter === k}
+                  onClick={() => handleMobileFilter(k)}
+                />
+              ))}
+            </>
           )}
-          sortControl={(
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <MobileHeaderIconBtn active={sort !== "due_date_asc"} aria-label={t("sort.title", "Sort")} data-testid="mobile-tasks-sort">
-                  <ArrowDownUp className="h-4 w-4" />
-                </MobileHeaderIconBtn>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                {SORT_OPTIONS.map((opt) => (
-                  <DropdownMenuItem key={opt.value} onSelect={(e) => { e.preventDefault(); handleSort(opt.value); }} className="text-[12px] flex items-center gap-2">
-                    <span className={cn("flex-1", sort === opt.value && "font-semibold !text-brand-indigo")}>{t(`sortOptions.${opt.value}`, opt.label)}</span>
-                    {sort === opt.value && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          sortPanel={(
+            <>
+              <MobileDrawerSubheading>{t("sort.title", "Sort")}</MobileDrawerSubheading>
+              {SORT_OPTIONS.map((opt) => (
+                <MobileDrawerOption
+                  key={opt.value}
+                  label={t(`sortOptions.${opt.value}`, opt.label)}
+                  selected={sort === opt.value}
+                  onClick={() => handleSort(opt.value)}
+                />
+              ))}
+            </>
           )}
+          filterActive={mobileFilter !== "all"}
+          sortActive={sort !== "due_date_asc"}
         />
 
         {/* Content: weekly task calendar (top) then kanban (below), one vertical scroll */}

@@ -16,7 +16,7 @@ function CadenceLadder({ cadence }: { cadence: CadenceRow[] }) {
       {cadence.map((c, i) => (
         <div key={c.key} className="row" style={{ gap: 10 }}>
           <div style={{ width: 80, fontSize: 12, color: "var(--ink-soft)", fontWeight: 500, flexShrink: 0 }}>{c.label}</div>
-          <div style={{ flex: 1, height: 22, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
+          <div style={{ flex: 1, height: 22, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
             <div style={{ width: `${(c.count / max) * 100}%`, height: "100%", background: LADDER_COLORS[i] || "var(--mute-2)", borderRadius: "var(--r-pill)", transition: "width 400ms" }} />
           </div>
           <div style={{ width: 28, textAlign: "right", fontFamily: "var(--mono)", fontSize: 13, color: "var(--ink)", flexShrink: 0 }}>{c.count}</div>

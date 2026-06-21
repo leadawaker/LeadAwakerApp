@@ -525,6 +525,26 @@ export function getProspectLogoUrl(
   return null;
 }
 
+// ── Per-user avatar color (named overrides + deterministic fallback) ──────────
+const USER_AVATAR_OVERRIDES: Record<string, string> = {
+  "Finn": "#5E2230",       // wine
+  "Gabriel": "#1E3A5F",    // navy
+  "Gabriel Fronza": "#1E3A5F",
+};
+const USER_AVATAR_COLORS = ["#5E2230", "#3D2A66", "#2F5E4A", "#5E4A22", "#7A2E3E"];
+function _userAvatarHash(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return h;
+}
+export function getUserAvatarColor(name: string | null | undefined): string {
+  if (!name) return "var(--mute)";
+  if (USER_AVATAR_OVERRIDES[name]) return USER_AVATAR_OVERRIDES[name];
+  const firstName = name.split(" ")[0];
+  if (USER_AVATAR_OVERRIDES[firstName]) return USER_AVATAR_OVERRIDES[firstName];
+  return USER_AVATAR_COLORS[_userAvatarHash(name) % USER_AVATAR_COLORS.length];
+}
+
 /** Returns a deterministic icon color + circle bg for a prompt, based on its name. */
 export function getPromptIconColor(name: string): { icon: string; bg: string } {
   const idx = hashString(name || "P") % PROMPT_ICON_PALETTE.length;

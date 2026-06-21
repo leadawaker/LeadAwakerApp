@@ -185,7 +185,7 @@ export function BillingListPanel({
       : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedId != null ? "hidden" : "flex");
 
   return (
-    <div className={cn("flex-col bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
+    <div className={cn("flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (

@@ -108,7 +108,7 @@ function PageLoader() {
             ))}
           </div>
           {/* Content area */}
-          <div className="flex flex-1 items-center justify-center p-6">
+          <div className="flex flex-1 items-center justify-center p-6 bg-muted">
             <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function AppArea() {
 
           {/* Agency-only routes (admin pages) */}
           <Route path="/platform/accounts">
-            <AgencyOnly prefix="/platform"><AppAccounts /></AgencyOnly>
+            <AppAccounts />
           </Route>
           <Route path="/platform/prospects/:id" component={ProspectDetailPage} />
           <Route path="/platform/prospects">

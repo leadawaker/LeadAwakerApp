@@ -27,10 +27,13 @@ function EditArea({ value, onChange, placeholder, rows = 3 }: { value: string; o
   return <textarea className="neu-input" style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5, fontFamily: "var(--sans)" }} rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
 }
 
-export function AccountDetailsPanel({ account, onSave, cols = 2 }: {
+export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, style, readOnly = false }: {
   account: AccountRow;
   onSave: (field: string, value: string) => Promise<void>;
   cols?: 1 | 2;
+  inset?: boolean;
+  style?: React.CSSProperties;
+  readOnly?: boolean;
 }) {
   const { t } = useTranslation("accounts");
   const { isEditing, saving, startEdit, cancelEdit, set, val, save } = useAccountEdit(account, onSave);
@@ -76,7 +79,7 @@ export function AccountDetailsPanel({ account, onSave, cols = 2 }: {
         {isEditing ? (
           <EditArea value={val("business_description")} onChange={(v) => set("business_description", v)} placeholder="Business description…" rows={3} />
         ) : (
-          <div className="neu-inset-crisp" style={{ padding: "11px 13px", borderRadius: "var(--r-button)", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>
+          <div style={{ padding: "4px 0", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>
             {val("business_description") || <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>—</span>}
           </div>
         )}
@@ -84,7 +87,7 @@ export function AccountDetailsPanel({ account, onSave, cols = 2 }: {
     </div>
   );
 
-  const action = isEditing ? (
+  const action = readOnly ? null : isEditing ? (
     <div className="row" style={{ gap: 8 }}>
       <PanelAction onClick={cancelEdit} disabled={saving} icon={<X size={12} />}>{t("detail.cancel")}</PanelAction>
       <PanelAction wine onClick={save} disabled={saving} icon={<Check size={12} />}>{saving ? t("detail.saving") : t("detail.save")}</PanelAction>
@@ -94,7 +97,7 @@ export function AccountDetailsPanel({ account, onSave, cols = 2 }: {
   );
 
   return (
-    <Panel eyebrow="01" title={t("panels.accountDetails")} action={action}>
+    <Panel eyebrow="01" title={t("panels.accountDetails")} action={action} inset={inset} style={style}>
       {cols === 2
         ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30 }}>{ColA}{ColB}</div>
         : <div>{ColA}<div style={{ height: 10 }} />{ColB}</div>}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLeadsData } from "../hooks/useLeadsData";
@@ -23,15 +23,16 @@ import {
 import { LeadsInlineTable } from "./LeadsInlineTable";
 import { LeadsKanban } from "./LeadsKanban";
 import { LeadDetailPanel } from "./LeadDetailPanel";
+import { PipelineLeadPanel } from "./cardView/PipelineLeadPanel";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { createLead, bulkDeleteLeads, bulkUpdateLeads, updateLead } from "../api/leadsApi";
+import { createLead, bulkDeleteLeads, bulkUpdateLeads, updateLead, deleteLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import {
   Table2, List, Kanban,
   Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Pencil,
   FileSpreadsheet, Eye, Check, Upload, Download,
   Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag, Settings, Rows3, Shrink, Expand,
-  ArrowUp, ArrowDown,
+  ArrowUp, ArrowDown, MoreHorizontal,
 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { SearchPill } from "@/components/ui/search-pill";
@@ -180,7 +181,7 @@ export function LeadsTable() {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
   const VIEW_TABS: TabDef[] = useMemo(() => VIEW_TAB_KEYS.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t]);
-  const { currentAccountId, isAgencyView } = useWorkspace();
+  const { currentAccountId, isAgencyView, isAgencyUser } = useWorkspace();
   const filterAccountId = currentAccountId > 0 ? currentAccountId : undefined;
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
 
@@ -233,6 +234,10 @@ export function LeadsTable() {
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // Non-agency users (clients) only see pipeline view
+    const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
+    const isClient = role !== "Owner" && role !== "Admin";
+    if (isClient) return "pipeline";
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
       if (stored && ["list", "table", "pipeline"].includes(stored)) return stored as ViewMode;
@@ -390,10 +395,11 @@ export function LeadsTable() {
   /* ── Campaigns (id → { name, accountId }) ──────────────────────────────── */
   const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null; bookingMode: string | null }>>(new Map());
 
-  /* ── Persist view mode ───────────────────────────────────────────────────── */
+  /* ── Persist view mode (agency only) ────────────────────────────────────── */
   useEffect(() => {
+    if (!isAgencyUser) return;
     try { localStorage.setItem(VIEW_MODE_KEY, viewMode); } catch {}
-  }, [viewMode]);
+  }, [viewMode, isAgencyUser]);
 
   /* ── Persist visible columns ────────────────────────────────────────────── */
   useEffect(() => {
@@ -434,6 +440,9 @@ export function LeadsTable() {
           const list = Array.isArray(data) ? data : data?.list || [];
           const byId = new Map<number, string>();
           list.forEach((a: any) => {
+            // Skip soft-deleted accounts — they shouldn't clutter filter dropdowns
+            // or show up as labels (Gabriel, 2026-06-21).
+            if (String(a.status || a.Status || "").toLowerCase() === "archived") return;
             const id = a.id ?? a.Id;
             byId.set(Number(id), a.name || a.Name || `Account ${id}`);
           });
@@ -454,6 +463,9 @@ export function LeadsTable() {
           const list = Array.isArray(data) ? data : data?.list || [];
           const byId = new Map<number, { name: string; accountId: number | null; bookingMode: string | null }>();
           list.forEach((c: any) => {
+            // Skip soft-deleted campaigns — they shouldn't clutter filter dropdowns
+            // or show up as labels (Gabriel, 2026-06-21).
+            if (String(c.status || c.Status || "").toLowerCase() === "archived") return;
             const id = c.id ?? c.Id;
             byId.set(Number(id), {
               name: c.name || c.Name || c.campaign_name || `Campaign ${id}`,
@@ -564,6 +576,19 @@ export function LeadsTable() {
     const kanbanId = selectedKanbanLead?.Id ?? selectedKanbanLead?.id;
     if (id !== kanbanId) setSelectedKanbanLead(selectedLead);
   }, [selectedLead, viewMode]);
+
+  // Auto-select the first "Booked" lead for non-agency users in pipeline view
+  const clientAutoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (isAgencyUser || viewMode !== "pipeline" || clientAutoSelectedRef.current) return;
+    if (filteredPipelineLeads.length === 0) return;
+    clientAutoSelectedRef.current = true;
+    const booked = filteredPipelineLeads.find(
+      (l: any) => (l.conversion_status || l.Conversion_Status || "") === "Booked"
+    );
+    if (booked) setSelectedKanbanLead(booked);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredPipelineLeads.length, isAgencyUser, viewMode]);
 
   /* ── Derived data for table filter dropdowns ─────────────────────────────── */
   const availableAccounts = useMemo(() => {
@@ -687,7 +712,10 @@ export function LeadsTable() {
   }, [leadTagsInfo]);
 
   const isGroupNonDefault     = groupBy !== "date";
-  const isSortNonDefault      = sortBy !== "recent";
+  // "recent" and "latest_message" are both treated as the default sort (most
+  // recent activity) — persisted prefs from before this option existed may
+  // still hold "latest_message" (Gabriel, 2026-06-21).
+  const isSortNonDefault      = sortBy !== "recent" && sortBy !== "latest_message";
   const isFilterActive        = filterStatus.length > 0 || filterTags.length > 0;
   const hasNonDefaultControls = isGroupNonDefault || isSortNonDefault || isFilterActive;
 
@@ -1464,22 +1492,67 @@ export function LeadsTable() {
               <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
               <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
             </div>
-            <div className="la-seg shrink-0">
-              {VIEW_TAB_KEYS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleViewSwitch(tab.id as ViewMode)}
-                  className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
-                  style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
-                >
-                  <span className="flex items-center"><tab.icon size={13} /></span>
-                  {t(tab.tKey)}
-                </button>
-              ))}
-            </div>
+            {/* View tabs — agency only */}
+            {isAgencyUser && (
+              <div className="la-seg shrink-0">
+                {VIEW_TAB_KEYS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleViewSwitch(tab.id as ViewMode)}
+                    className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
+                    style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
+                  >
+                    <span className="flex items-center"><tab.icon size={13} /></span>
+                    {t(tab.tKey)}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex-1 min-w-0" />
             <div className="shrink-0 flex items-center gap-[5px]">
-              {/* Search — same as list view */}
+              {/* Compact toggle — left of search */}
+              <button
+                onClick={() => setCompactMode((v) => !v)}
+                className={cn("la-btn la-btn--soft", compactMode && "on")}
+                title={t("toolbar.compactView")}
+                style={{ fontSize: 11 }}
+              >
+                {compactMode ? <Expand size={13} /> : <Shrink size={13} />}
+                {t("toolbar.compactView")}
+              </button>
+              {/* Fold / Unfold — left of search */}
+              <button
+                onClick={() => { if (hasAnyCollapsed) { setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 })); } else { setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 })); } }}
+                className="la-btn la-btn--soft"
+                title={hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
+                style={{ fontSize: 11 }}
+              >
+                <Rows3 size={13} />
+                {hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
+              </button>
+              {/* More actions (...) — left of search, for selected lead */}
+              {selectedKanbanLead && isAgencyUser && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="la-btn la-btn--soft la-btn--icon" title={t("common.more", "More")}>
+                      <MoreHorizontal size={13} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44 bg-white">
+                    <DropdownMenuItem onClick={async () => {
+                      const id = selectedKanbanLead.Id ?? selectedKanbanLead.id;
+                      if (!id) return;
+                      await deleteLead(id);
+                      setSelectedKanbanLead(null);
+                      handleRefresh();
+                    }} className="text-red-600 focus:text-red-600 text-[12px]">
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      {t("detailView.deleteLead", "Delete lead")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {/* Search */}
               <div className="relative" style={{ width: 160 }}>
                 <input
                   value={kanbanSearchQuery}
@@ -1566,30 +1639,6 @@ export function LeadsTable() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {/* Compact toggle — neumorphic button */}
-              <button
-                onClick={() => setCompactMode((v) => !v)}
-                className={cn("la-btn la-btn--soft", compactMode && "on")}
-                title={t("toolbar.compactView")}
-                style={{ fontSize: 11 }}
-              >
-                {compactMode ? <Expand size={13} /> : <Shrink size={13} />}
-                {t("toolbar.compactView")}
-              </button>
-              {/* Fold / Unfold — neumorphic button */}
-              <button
-                onClick={() => { if (hasAnyCollapsed) { setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 })); } else { setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 })); } }}
-                className="la-btn la-btn--soft"
-                title={hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
-                style={{ fontSize: 11 }}
-              >
-                <Rows3 size={13} />
-                {hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
-              </button>
-              {/* +Add */}
-              <button onClick={handleAddLead} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
-                <Plus className="h-[14px] w-[14px] shrink-0" />
-              </button>
             </div>{/* close controls */}
           </div>{/* close top bar */}
 
@@ -1613,12 +1662,10 @@ export function LeadsTable() {
             </div>
             {selectedKanbanLead && (
               <div className="shrink-0 flex flex-col overflow-hidden" style={{ flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
-                <LeadDetailView
+                <PipelineLeadPanel
                   lead={selectedKanbanLead}
-                  onClose={handleCloseKanbanPanel}
-                  leadTags={leadTagsInfo.get(getLeadIdHelper(selectedKanbanLead)) || []}
                   onRefresh={handleRefresh}
-                  campaignsById={campaignsById}
+                  onClose={() => setSelectedKanbanLead(null)}
                 />
               </div>
             )}

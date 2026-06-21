@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft } from "lucide-react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { useCampaignDetail } from "./useCampaignDetail";
@@ -58,15 +57,8 @@ function MobileCampaignDetailContent({
       {/* Header */}
       <div
         className="border-b border-[var(--line)] flex items-center gap-2 px-3 shrink-0"
-        style={{ paddingTop: "0.25rem", paddingBottom: "0.75rem" }}
+        style={{ paddingTop: "0.5rem", paddingBottom: "0.75rem" }}
       >
-        <button
-          onClick={onClose}
-          className="flex items-center justify-center w-9 h-9 rounded-full text-foreground/70 hover:text-foreground hover:bg-muted transition-colors shrink-0 touch-target"
-          aria-label={t("toolbar.cancel")}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
         <h2 className="flex-1 min-w-0 text-[17px] font-semibold truncate text-foreground">
           {String(campaign.name || t("detail.unnamed"))}
         </h2>

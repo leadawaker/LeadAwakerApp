@@ -246,7 +246,7 @@ export function ABTestCard({ campaign, mockStats }: { campaign: Campaign; mockSt
                       className="flex-1 h-2 transition-all duration-400 relative"
                       style={{
                         background: "var(--bg)",
-                        boxShadow: "var(--sh-inset-crisp)",
+                        boxShadow: "var(--sh-inset-super-crisp)",
                         borderRadius: "var(--r-pill)",
                         overflow: "hidden",
                         boxSizing: "border-box",

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Trash2, Check, User, ChevronDown } from "lucide-react";
+import { X, Trash2, Check, User, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -10,16 +10,31 @@ import { cn, relativeTime } from "@/lib/utils";
 import { useTasks, useUpdateTask, useDeleteTask, useTaskCategories, useAccountUsers, useCreateTask } from "../api/tasksApi";
 import { CommentsSection, AttachmentsSection, SubtaskSection } from "./TaskDetailSections";
 import { ActivitySection } from "./ActivitySection";
-import { STATUS_OPTIONS, PRIORITY_OPTIONS } from "../types";
+import { STATUS_OPTIONS, PRIORITY_OPTIONS, STATUS_COLORS, PRIORITY_COLORS, type TaskStatus, type TaskPriority } from "../types";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 
 // ── i18n key maps ─────────────────────────────────────────────────────────────
-const STATUS_I18N_KEY: Record<string, string> = {
+const STATUS_I18N_KEY_DESKTOP: Record<string, string> = {
   todo: "status.todo",
   in_progress: "status.inProgress",
+  waiting: "status.waiting",
   done: "status.done",
   cancelled: "status.cancelled",
 };
+
+// ── Priority bars icon ────────────────────────────────────────────────────────
+const PRIORITY_LEVEL: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 };
+function PriorityBars({ priority }: { priority: string }) {
+  const level = PRIORITY_LEVEL[priority] ?? 2;
+  const color = PRIORITY_COLORS[priority as TaskPriority] ?? PRIORITY_COLORS.medium;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "flex-end", gap: 1.5, flexShrink: 0 }} title={priority}>
+      {[1, 2, 3, 4].map(i => (
+        <span key={i} style={{ width: 2.5, height: 3 + i * 2.5, borderRadius: 1, background: i <= level ? color : "var(--line)", flexShrink: 0 }} />
+      ))}
+    </span>
+  );
+}
 
 const PRIORITY_I18N_KEY: Record<string, string> = {
   low: "priority.low",
@@ -83,6 +98,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const [assigneeName, setAssigneeName] = useState<string | null>(null);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [priorityOpen, setPriorityOpen] = useState(false);
 
   const descRef = useRef<HTMLTextAreaElement>(null);
 
@@ -211,9 +227,20 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   }
 
   // Inset fields — recessed neumorphic, slightly square radius.
-  const inputCls = "w-full h-9 px-3 rounded-[5px] bg-[var(--bg)] shadow-[var(--sh-inset-crisp)] border-none text-[13px] text-[var(--ink)] outline-none transition-shadow";
+  const inputCls = "w-full h-9 px-3 rounded-[var(--r-button)] bg-[hsl(var(--background))] shadow-[var(--sh-inset-crisp)] border-none text-[13px] text-[var(--ink)] outline-none transition-shadow";
   const selectCls = inputCls;
   const labelCls = "text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--mute-2)]";
+
+  // Status slider helpers
+  const statusIdx = STATUS_OPTIONS.findIndex(o => o.value === status);
+  const handleStatusPrev = () => {
+    const next = STATUS_OPTIONS[(statusIdx - 1 + STATUS_OPTIONS.length) % STATUS_OPTIONS.length];
+    setStatus(next.value);
+  };
+  const handleStatusNext = () => {
+    const next = STATUS_OPTIONS[(statusIdx + 1) % STATUS_OPTIONS.length];
+    setStatus(next.value);
+  };
 
   // Assignee initials for display
   const assigneeInitials = assigneeName
@@ -300,24 +327,64 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
           {/* ── Right: all controls ── */}
           <div className="w-64 shrink-0 px-4 pt-2 pb-6 flex flex-col gap-4">
 
-            {/* Status */}
+            {/* Status — slider/stepper */}
             <div className="space-y-1.5">
               <label className={labelCls}>{t("fields.status")}</label>
-              <select className={selectCls} value={status} onChange={(e) => setStatus(e.target.value)}>
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{t(STATUS_I18N_KEY[o.value] ?? o.value)}</option>
-                ))}
-              </select>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleStatusPrev}
+                  aria-label={t("status.prev", "Previous status")}
+                  className="neu-raised-crisp shrink-0 flex items-center justify-center"
+                  style={{ width: 28, height: 28, borderRadius: "var(--r-button)", border: "none", cursor: "pointer", color: "var(--mute)" }}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <div className="flex-1 flex items-center justify-center gap-1.5 shadow-[var(--sh-inset-crisp)] rounded-[var(--r-button)]" style={{ height: 36, background: "hsl(var(--background))" }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: STATUS_COLORS[status as TaskStatus] ?? "var(--mute)", flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{t(STATUS_I18N_KEY_DESKTOP[status] ?? status)}</span>
+                </div>
+                <button
+                  onClick={handleStatusNext}
+                  aria-label={t("status.next", "Next status")}
+                  className="neu-raised-crisp shrink-0 flex items-center justify-center"
+                  style={{ width: 28, height: 28, borderRadius: "var(--r-button)", border: "none", cursor: "pointer", color: "var(--mute)" }}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
 
-            {/* Priority */}
+            {/* Priority — icon picker */}
             <div className="space-y-1.5">
               <label className={labelCls}>{t("fields.priority")}</label>
-              <select className={selectCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
-                {PRIORITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{t(PRIORITY_I18N_KEY[o.value] ?? o.value)}</option>
-                ))}
-              </select>
+              <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(inputCls, "flex items-center gap-2 cursor-pointer text-left")}
+                  >
+                    <PriorityBars priority={priority} />
+                    <span className="flex-1 text-[13px]">{t(PRIORITY_I18N_KEY[priority] ?? priority)}</span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-44 p-1 bg-white border-none shadow-md" side="bottom" align="start">
+                  {PRIORITY_OPTIONS.map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => { setPriority(o.value); setPriorityOpen(false); }}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[5px] text-[12px] transition-colors",
+                        priority === o.value ? "bg-muted font-medium" : "hover:bg-muted/50"
+                      )}
+                    >
+                      <PriorityBars priority={o.value} />
+                      <span>{t(PRIORITY_I18N_KEY[o.value] ?? o.label)}</span>
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Due Date */}

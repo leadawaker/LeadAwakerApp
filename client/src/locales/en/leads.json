@@ -52,7 +52,9 @@
     "filterLeads": "Filter leads",
     "switchToList": "Switch to list view",
     "switchToKanban": "Switch to kanban view",
-    "upcomingCalls": "Upcoming calls"
+    "upcomingCalls": "Upcoming calls",
+    "more": "More",
+    "exportPdf": "Export PDF"
   },
   "sort": {
     "sortBy": "Sort by",
@@ -202,6 +204,15 @@
       }
     },
     "dropHere": "Drop here",
+    "foldColumn": "Click to fold",
+    "panelTabs": {
+      "summary": "Summary",
+      "chat": "Chat",
+      "score": "Score",
+      "notes": "Notes"
+    },
+    "openInCalendar": "Open in calendar",
+    "callWith": "Call with {{name}}",
     "moveLeadTo": "Move lead to {{stage}}",
     "loadMore": "Load {{count}} more",
     "leadMoved": "Lead moved",
@@ -598,12 +609,16 @@
   },
   "selection": {
     "countSelected": "{{count}} selected",
-    "clearSelection": "Clear selection"
+    "clearSelection": "Clear selection",
+    "deleteSelected": "Delete selected",
+    "exportPdfSelected": "Export selected as PDF",
+    "selectLeadsFirst": "Select leads to enable actions"
   },
   "common": {
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "clear": "Clear"
+    "clear": "Clear",
+    "close": "Close"
   },
   "addLead": {
     "title": "Add Lead",

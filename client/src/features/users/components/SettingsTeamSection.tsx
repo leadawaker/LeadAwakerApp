@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   ArrowUpDown, Filter, Check, Search, X, Plus,
   Mail, Phone, Copy, Clock, User, Shield, Calendar,
-  Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal,
+  Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal, Eye,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ProfileSection } from "@/features/settings/components/ProfileSection";
@@ -16,6 +16,7 @@ import type { AppUser, AccountMap } from "../types";
 import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSession } from "@/hooks/useSession";
+import { useImpersonation } from "@/hooks/useImpersonation";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -207,6 +208,7 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
   const isMobile = useIsMobile();
   const { currentAccountId, isOwner } = useWorkspace();
   const session = useSession();
+  const { impersonate } = useImpersonation();
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -749,17 +751,11 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
         return slotEl ? createPortal(toolbarInner, slotEl) : toolbarInner;
       })()}
 
-      {/* ── White panel: the whole Team section lives on one surface ── */}
-      <div className="neu-raised rounded-2xl bg-card flex flex-col flex-1 min-h-0 overflow-hidden">
-        {/* Team title — top-left inside the panel */}
-        <div className="flex items-center gap-2 px-5 pt-4 pb-3 shrink-0">
-          <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("team.title", "Team")}</span>
-          <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{flatItems.filter((i) => i.kind === "user").length}</span>
-        </div>
-
+      {/* ── Team section lives directly on the page background ── */}
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Pending invites */}
         {(isAdmin || isOwner) && pendingInvites.length > 0 && (
-          <div className="pb-2 px-5 shrink-0">
+          <div className="pb-2 shrink-0 px-2">
             <PendingInvitesSection
               invites={pendingInvites}
               accounts={accounts}
@@ -772,18 +768,33 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
           </div>
         )}
 
-        {/* Split: detail (left, flat) + cards (right) */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* Detail — flat, on the left */}
+        {/* Team title */}
+        <div className="px-2 pb-3 shrink-0">
+          <div className="px-3.5">
+            <span className="serif" style={{ fontSize: 24, color: "var(--ink)", letterSpacing: "0.02em", fontWeight: 400, lineHeight: 1 }}>{t("team.title", "Team")}</span>
+          </div>
+        </div>
+
+        {/* Split: cards (left) + detail (right, raised white panel) */}
+        <div className="flex flex-1 min-h-0 gap-4 flex-row-reverse">
+          {/* Detail — its own raised white panel, on the right */}
           {viewingUser && (
-            <div className="shrink-0 flex flex-col min-h-0 overflow-hidden border-r" style={{ width: 600, borderColor: "var(--line)" }}>
+            <div className="neu-raised rounded-2xl bg-card shrink-0 flex flex-col min-h-0" style={{ width: 600 }}>
               {/* Header: big name + badges + close */}
               <div className="px-6 pt-5 pb-4 shrink-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="text-[34px] font-bold font-heading text-foreground leading-[1.05] truncate">
-                      {viewingUser.fullName1 || <span className="text-muted-foreground italic text-2xl">No name set</span>}
-                    </h3>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex items-start gap-4">
+                    <EntityAvatar
+                      name={getUserName(viewingUser)}
+                      photoUrl={viewingUser.avatarUrl}
+                      bgColor={ROLE_AVATAR[viewingUser.role || "Viewer"]?.bg}
+                      textColor={ROLE_AVATAR[viewingUser.role || "Viewer"]?.text}
+                      size={120}
+                    />
+                    <div className="min-w-0 pt-1">
+                      <h3 className="text-[34px] font-heading text-foreground leading-[1.05] truncate" style={{ fontWeight: 300, fontStyle: "italic", letterSpacing: "-0.015em" }}>
+                        {viewingUser.fullName1 || <span className="text-muted-foreground italic text-2xl">No name set</span>}
+                      </h3>
                     <div className="flex flex-wrap items-center gap-2 mt-3">
                       {viewingUser.role && (
                         <span className={cn("px-2.5 py-1 rounded-md text-[12px] font-semibold", ROLE_STYLES[viewingUser.role] ?? "bg-muted text-muted-foreground")}>
@@ -799,15 +810,23 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                         </span>
                       )}
                     </div>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setViewingUser(null)}
-                    className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0 mt-1"
-                    aria-label="Close panel"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  {(isAdmin || isOwner || viewingUser.email === currentUserEmail) && (
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-md inline-flex items-center justify-center gap-2 text-[13px] font-semibold shrink-0"
+                      style={{ background: "var(--bg)", boxShadow: "0 2px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", color: "var(--ink)" }}
+                      onClick={() => {
+                        const u = viewingUser;
+                        if (u.email === currentUserEmail) setEditingSelf(true);
+                        else { setViewingUser(null); setEditingUser(u); }
+                      }}
+                    >
+                      <User className="h-4 w-4" />
+                      Edit Profile
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -848,23 +867,6 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                   ))}
                 </div>
 
-                {/* Edit — light wine button, right below user info */}
-                {(isAdmin || isOwner || viewingUser.email === currentUserEmail) && (
-                  <button
-                    type="button"
-                    className="w-full h-10 mt-5 rounded-full inline-flex items-center justify-center gap-2 text-[13px] font-semibold transition-[filter] duration-150 hover:brightness-95"
-                    style={{ background: "var(--wine-tint)", color: "var(--wine)" }}
-                    onClick={() => {
-                      const u = viewingUser;
-                      if (u.email === currentUserEmail) setEditingSelf(true);
-                      else { setViewingUser(null); setEditingUser(u); }
-                    }}
-                  >
-                    <User className="h-4 w-4" />
-                    {viewingUser.email === currentUserEmail ? t("team.editMyProfile", "Edit My Profile") : t("team.editProfile", "Edit Profile")}
-                  </button>
-                )}
-
                 {/* Takeovers */}
                 <div className="mt-5 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-1.5 flex items-center gap-1.5">
@@ -904,22 +906,59 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                     </div>
                   )}
                 </div>
+
+                {/* Impersonation — Owner only, at the bottom */}
+                {isOwner && viewingUser.email === currentUserEmail && (
+                  <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-3 flex items-center gap-1.5">
+                      <Eye className="w-3.5 h-3.5" />View As
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => impersonate("Admin")}
+                        className="w-full h-9 rounded-lg inline-flex items-center justify-center gap-2.5 text-[12px] font-semibold border"
+                        style={{ background: "var(--bg)", borderColor: "var(--line)", color: "var(--ink)" }}
+                      >
+                        <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-primary text-primary-foreground">A</div>
+                        Admin
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const selectedAccount = currentAccountId > 0 ? accounts.find(a => a.id === currentAccountId) : null;
+                          const clientLabel = selectedAccount
+                            ? `Client: ${selectedAccount.name}`
+                            : "Client (sandbox)";
+                          impersonate("Manager", selectedAccount ? currentAccountId : undefined);
+                        }}
+                        className="w-full h-9 rounded-lg inline-flex items-center justify-center gap-2.5 text-[12px] font-semibold border"
+                        style={{ background: "var(--bg)", borderColor: "var(--line)", color: "var(--ink)" }}
+                      >
+                        <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-muted-foreground/20 text-muted-foreground">C</div>
+                        View as Client
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Cards — right side */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <UsersCardGrid
-              flatItems={flatItems}
-              loading={loading}
-              accounts={accounts}
-              selectedUserId={viewingUser?.id ?? null}
-              onSelectUser={u => setViewingUser(u)}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelectUser}
-              canMultiSelect={isOwner}
-            />
+          {/* Cards — left side */}
+          <div className="flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden px-2">
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <UsersCardGrid
+                flatItems={flatItems}
+                loading={loading}
+                accounts={accounts}
+                selectedUserId={viewingUser?.id ?? null}
+                onSelectUser={u => setViewingUser(u)}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelectUser}
+                canMultiSelect={isOwner}
+              />
+            </div>
           </div>
         </div>
       </div>

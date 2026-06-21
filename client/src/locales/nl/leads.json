@@ -52,7 +52,9 @@
     "filterLeads": "Leads filteren",
     "switchToList": "Lijstweergave",
     "switchToKanban": "Kanbanweergave",
-    "upcomingCalls": "Aankomende gesprekken"
+    "upcomingCalls": "Aankomende gesprekken",
+    "more": "Meer",
+    "exportPdf": "PDF exporteren"
   },
   "sort": {
     "sortBy": "Sorteren op",
@@ -202,6 +204,15 @@
       }
     },
     "dropHere": "Hier neerzetten",
+    "foldColumn": "Klik om in te klappen",
+    "panelTabs": {
+      "summary": "Samenvatting",
+      "chat": "Chat",
+      "score": "Score",
+      "notes": "Notities"
+    },
+    "openInCalendar": "Openen in agenda",
+    "callWith": "Gesprek met {{name}}",
     "moveLeadTo": "Lead verplaatsen naar {{stage}}",
     "loadMore": "{{count}} meer laden",
     "leadMoved": "Lead verplaatst",
@@ -598,12 +609,16 @@
   },
   "selection": {
     "countSelected": "{{count}} geselecteerd",
-    "clearSelection": "Selectie wissen"
+    "clearSelection": "Selectie wissen",
+    "deleteSelected": "Selectie verwijderen",
+    "exportPdfSelected": "Selectie exporteren als PDF",
+    "selectLeadsFirst": "Selecteer leads om acties te activeren"
   },
   "common": {
     "confirm": "Bevestigen",
     "cancel": "Annuleren",
-    "clear": "Wissen"
+    "clear": "Wissen",
+    "close": "Sluiten"
   },
   "addLead": {
     "title": "Lead toevoegen",

@@ -120,6 +120,8 @@ export function streamClaudeResponse(opts: {
   suppressDone?: boolean;
   /** If true, skip calling onDone. Used for intermediate iterations in an agent loop where only the final iteration should persist. */
   suppressOnDone?: boolean;
+  /** Called with each new text token as it streams — useful for tracking partial output on disconnect. */
+  onToken?: (text: string) => void;
 }): void {
   const args: string[] = [];
 

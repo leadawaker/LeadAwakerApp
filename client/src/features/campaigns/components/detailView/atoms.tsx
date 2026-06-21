@@ -501,29 +501,28 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-export function CampaignDetailViewEmpty({ compact = false }: { compact?: boolean }) {
+export function CampaignDetailViewEmpty({ compact = false, showNoCampaigns = false }: { compact?: boolean; showNoCampaigns?: boolean }) {
   const { t } = useTranslation("campaigns");
   return (
-    <div className="relative h-full flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
-      <div className="absolute inset-0 bg-popover dark:bg-background" />
-      <>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#F5EEE0_0%,transparent_30%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(150,80,100,0.3)_0%,transparent_69%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#EFE4CF_5%,transparent_30%)] dark:opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(200,160,140,0.5)_0%,transparent_66%)] dark:opacity-[0.08]" />
-      </>
+    <div className="relative h-full flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden bg-panel-list-bg">
       <div className="relative z-10">
         <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 flex items-center justify-center ring-1 ring-amber-200/50 dark:ring-amber-700/30">
           <Megaphone className="h-10 w-10 text-amber-400" />
         </div>
       </div>
       <div className="relative z-10 space-y-1.5">
-        <p className="text-sm font-semibold text-foreground/70">{t("empty.selectCampaign")}</p>
-        <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">{t("empty.selectCampaignDesc")}</p>
+        <p className="text-sm font-semibold text-foreground/70">
+          {showNoCampaigns ? t("empty.noCampaignsFound") : t("empty.selectCampaign")}
+        </p>
+        {!showNoCampaigns && (
+          <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">{t("empty.selectCampaignDesc")}</p>
+        )}
       </div>
-      <div className="relative z-10 flex items-center gap-1.5 text-[11px] text-amber-500 font-medium">
-        <span>{t("empty.chooseFromList")}</span>
-      </div>
+      {!showNoCampaigns && (
+        <div className="relative z-10 flex items-center gap-1.5 text-[11px] text-amber-500 font-medium">
+          <span>{t("empty.chooseFromList")}</span>
+        </div>
+      )}
     </div>
   );
 }

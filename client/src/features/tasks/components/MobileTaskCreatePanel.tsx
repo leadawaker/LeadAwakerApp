@@ -1,29 +1,36 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Check, Smile } from "lucide-react";
+import { ChevronLeft, Check } from "lucide-react";
+
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useCreateTask, useTaskCategories, useTasks } from "../api/tasksApi";
-import { PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
+import { useCreateTask, useTaskCategories } from "../api/tasksApi";
+import { PRIORITY_OPTIONS, PRIORITY_COLORS, type TaskPriority } from "../types";
 import { hapticSave } from "@/lib/haptics";
 
-const EMOJI_OPTIONS = [
-  "📋", "📁", "📌", "⭐", "🎯", "🔥", "💡", "🚀",
-  "📊", "🎨", "🔧", "📝", "💬", "📅", "🏷️", "✅",
-  "🐛", "🔒", "📦", "🏠", "💰", "📞", "🎉", "⚡",
-  "🌐", "🛠️", "📱", "🖥️", "👤", "🤝", "📈", "🔔",
-];
+// ── Priority bars icon ────────────────────────────────────────────────────────
+const PRIORITY_LEVEL: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 };
+function PriorityBars({ priority }: { priority: string }) {
+  const level = PRIORITY_LEVEL[priority] ?? 2;
+  const color = PRIORITY_COLORS[priority as TaskPriority] ?? PRIORITY_COLORS.medium;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "flex-end", gap: 1.5, flexShrink: 0 }} title={priority}>
+      {[1, 2, 3, 4].map(i => (
+        <span key={i} style={{ width: 2.5, height: 3 + i * 2.5, borderRadius: 1, background: i <= level ? color : "var(--line)", flexShrink: 0 }} />
+      ))}
+    </span>
+  );
+}
 
 const PRIORITY_KEY: Record<string, string> = {
   low: "priority.low", medium: "priority.medium", high: "priority.high", urgent: "priority.urgent",
-};
-const TYPE_KEY: Record<string, string> = {
-  follow_up: "taskType.followUp", call: "taskType.call", review: "taskType.review", admin: "taskType.admin", custom: "taskType.custom",
 };
 
 interface Props {
@@ -35,22 +42,16 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const { t } = useTranslation("tasks");
   const createMutation = useCreateTask();
   const { data: categories = [] } = useTaskCategories();
-  const { data: allTasks = [] } = useTasks();
 
   // ── Form state ───────────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [taskType, setTaskType] = useState("admin");
   const [assigneeName, setAssigneeName] = useState("");
   const [leadName, setLeadName] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [parentTaskId, setParentTaskId] = useState<number | null>(null);
-  const [emoji, setEmoji] = useState("");
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
-  const [estimateHours, setEstimateHours] = useState("");
-  const [estimateMinutes, setEstimateMinutes] = useState("");
+  const [priorityOpen, setPriorityOpen] = useState(false);
 
   const canCreate = title.trim().length > 0 && !createMutation.isPending;
 
@@ -72,13 +73,11 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
         leadName: leadName.trim() || null,
         status: "todo",
         priority,
-        taskType,
+        taskType: "admin",
         dueDate: dueDate ? new Date(dueDate) : null,
         assigneeName: assigneeName.trim() || null,
         categoryId,
-        parentTaskId,
-        emoji: emoji || null,
-        timeEstimate: (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) || null,
+        emoji: null,
       });
       try {
         const body = await res.json();
@@ -95,18 +94,21 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
     }
   };
 
-  // ── Shared field styles (design tokens) ──────────────────────────────────────
+  // ── Shared field styles (neumorphic inset) ───────────────────────────────────
   const inputStyle: React.CSSProperties = {
-    width: "100%", height: 40, padding: "0 12px", borderRadius: "var(--r-surface)",
-    background: "var(--surface)", border: "1px solid var(--line)", color: "var(--ink)",
-    fontSize: 14, outline: "none",
+    width: "100%", height: 40, padding: "0 12px", borderRadius: "var(--r-button)",
+    background: "hsl(var(--background))", boxShadow: "var(--sh-inset-crisp)",
+    border: "none", color: "var(--ink)", fontSize: 14, outline: "none",
   };
   const labelCls = "block text-[11px] font-semibold uppercase tracking-wider";
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[200] flex flex-col animate-in slide-in-from-right duration-200 ease-out"
-      style={{ height: "100dvh", background: "var(--bg)" }}
+    <motion.div
+      className="fixed inset-0 z-[200] flex flex-col"
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      transition={{ type: "tween", duration: 0.28, ease: EASE_OUT }}
+      style={{ height: "100dvh", background: "var(--bg)", willChange: "transform" }}
       data-testid="mobile-task-create-panel"
     >
       {/* ── Header ── */}
@@ -166,43 +168,6 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
             <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("create.taskTitle")} autoFocus data-testid="mobile-task-create-title" />
           </div>
 
-          {/* Emoji picker */}
-          <div className="space-y-1.5">
-            <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.emoji")}</label>
-            <div className="flex items-center gap-2">
-              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
-                <PopoverTrigger asChild>
-                  <button type="button" style={{ ...inputStyle, width: "auto", display: "flex", alignItems: "center", gap: 8, color: emoji ? "var(--ink)" : "var(--mute)" }} data-testid="mobile-task-create-emoji-trigger">
-                    {emoji ? <span className="text-xl">{emoji}</span> : <Smile className="h-5 w-5" />}
-                    <span>{emoji ? t("fields.changeEmoji") : t("fields.pickEmoji")}</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-2 bg-white" side="bottom" align="start">
-                  <div className="grid grid-cols-8 gap-1" data-testid="mobile-task-emoji-grid">
-                    {EMOJI_OPTIONS.map((e) => (
-                      <button
-                        key={e}
-                        type="button"
-                        onClick={() => { setEmoji(e); setEmojiPickerOpen(false); }}
-                        className={cn(
-                          "h-9 w-9 rounded-lg flex items-center justify-center text-xl hover:bg-foreground/[0.06] transition-colors",
-                          emoji === e && "bg-brand-indigo/10 ring-1 ring-brand-indigo/30"
-                        )}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-              {emoji && (
-                <button type="button" onClick={() => setEmoji("")} className="h-10 px-2 rounded-xl text-[13px] active:scale-95" style={{ color: "var(--mute)" }} data-testid="mobile-task-create-emoji-clear">
-                  {t("fields.clearEmoji")}
-                </button>
-              )}
-            </div>
-          </div>
-
           {/* Description */}
           <div className="space-y-1.5">
             <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.description")}</label>
@@ -221,37 +186,37 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
             <input type="datetime-local" style={inputStyle} value={dueDate} onChange={(e) => setDueDate(e.target.value)} data-testid="mobile-task-create-due-date" />
           </div>
 
-          {/* Time estimate */}
+          {/* Priority */}
           <div className="space-y-1.5">
-            <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.timeEstimate")}</label>
-            <div className="flex gap-2 items-center">
-              <input type="number" min="0" style={{ ...inputStyle, width: 80 }} value={estimateHours}
-                onChange={(e) => setEstimateHours(e.target.value.replace(/[^0-9]/g, ""))} placeholder="0" data-testid="mobile-task-create-estimate-hours" />
-              <span className="text-[13px]" style={{ color: "var(--mute)" }}>{t("fields.hours")}</span>
-              <input type="number" min="0" max="59" style={{ ...inputStyle, width: 80 }} value={estimateMinutes}
-                onChange={(e) => setEstimateMinutes(e.target.value.replace(/[^0-9]/g, ""))} placeholder="0" data-testid="mobile-task-create-estimate-minutes" />
-              <span className="text-[13px]" style={{ color: "var(--mute)" }}>{t("fields.minutes")}</span>
-            </div>
-          </div>
-
-          {/* Priority + Type */}
-          <div className="flex gap-3">
-            <div className="flex-1 space-y-1.5">
-              <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.priority")}</label>
-              <select style={inputStyle} value={priority} onChange={(e) => setPriority(e.target.value)} data-testid="mobile-task-create-priority">
+            <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.priority")}</label>
+            <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  style={{ ...inputStyle, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", textAlign: "left" }}
+                  data-testid="mobile-task-create-priority"
+                >
+                  <PriorityBars priority={priority} />
+                  <span style={{ flex: 1, fontSize: 13, color: "var(--ink)" }}>{t(PRIORITY_KEY[priority] ?? priority)}</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-44 p-1 bg-white" side="bottom" align="start">
                 {PRIORITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{t(PRIORITY_KEY[o.value] ?? o.label)}</option>
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => { setPriority(o.value); setPriorityOpen(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[6px] text-[13px] transition-colors",
+                      priority === o.value ? "bg-muted font-medium" : "hover:bg-muted/50"
+                    )}
+                  >
+                    <PriorityBars priority={o.value} />
+                    <span>{t(PRIORITY_KEY[o.value] ?? o.label)}</span>
+                  </button>
                 ))}
-              </select>
-            </div>
-            <div className="flex-1 space-y-1.5">
-              <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.type")}</label>
-              <select style={inputStyle} value={taskType} onChange={(e) => setTaskType(e.target.value)} data-testid="mobile-task-create-type">
-                {TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{t(TYPE_KEY[o.value] ?? o.label)}</option>
-                ))}
-              </select>
-            </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Category */}
@@ -277,20 +242,9 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
             <input style={inputStyle} value={leadName} onChange={(e) => setLeadName(e.target.value)} placeholder={t("fields.optional")} data-testid="mobile-task-create-lead" />
           </div>
 
-          {/* Parent task */}
-          <div className="space-y-1.5">
-            <label className={labelCls} style={{ color: "var(--mute-2)" }}>{t("fields.parentTask")}</label>
-            <select style={inputStyle} value={parentTaskId ?? ""} onChange={(e) => setParentTaskId(e.target.value ? Number(e.target.value) : null)} data-testid="mobile-task-create-parent">
-              <option value="">{t("fields.noParent")}</option>
-              {(allTasks as any[]).map((tk: any) => (
-                <option key={tk.id} value={tk.id}>{tk.title}</option>
-              ))}
-            </select>
-          </div>
-
         </div>
       </div>
-    </div>,
+    </motion.div>,
     document.body,
   );
 }

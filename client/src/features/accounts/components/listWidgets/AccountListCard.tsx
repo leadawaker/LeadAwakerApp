@@ -41,10 +41,12 @@ export function AccountListCard({
   return (
     <div
       className={cn(
-        "group rounded-xl cursor-pointer",
+        "group rounded-[var(--list-card-radius-mobile)] cursor-pointer relative",
         "transition-[background-color,box-shadow] duration-150 ease-out",
-        "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
+        "shadow-[var(--sh-raised-crisp)]",
+        "bg-[var(--surface)]",
+        !isActive && "hover:bg-[var(--card)]",
+        isActive && "border-l-[3px] border-l-[var(--wine)]",
       )}
       onClick={onClick}
       role="button"
@@ -61,6 +63,7 @@ export function AccountListCard({
             photoUrl={account.logo_url}
             bgColor={avatarColor.bg}
             textColor={avatarColor.text}
+            size={44}
           />
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-start justify-between gap-1.5">

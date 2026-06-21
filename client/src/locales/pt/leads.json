@@ -52,7 +52,9 @@
     "filterLeads": "Filtrar leads",
     "switchToList": "Ver em lista",
     "switchToKanban": "Ver em kanban",
-    "upcomingCalls": "Próximas chamadas"
+    "upcomingCalls": "Próximas chamadas",
+    "more": "Mais",
+    "exportPdf": "Exportar PDF"
   },
   "sort": {
     "sortBy": "Ordenar por",
@@ -202,6 +204,15 @@
       }
     },
     "dropHere": "Soltar aqui",
+    "foldColumn": "Clique para recolher",
+    "panelTabs": {
+      "summary": "Resumo",
+      "chat": "Chat",
+      "score": "Score",
+      "notes": "Notas"
+    },
+    "openInCalendar": "Abrir no calendário",
+    "callWith": "Ligação com {{name}}",
     "moveLeadTo": "Mover lead para {{stage}}",
     "loadMore": "Carregar mais {{count}}",
     "leadMoved": "Lead movido",
@@ -598,12 +609,16 @@
   },
   "selection": {
     "countSelected": "{{count}} selecionado(s)",
-    "clearSelection": "Limpar seleção"
+    "clearSelection": "Limpar seleção",
+    "deleteSelected": "Excluir selecionados",
+    "exportPdfSelected": "Exportar selecionados como PDF",
+    "selectLeadsFirst": "Selecione leads para ativar as ações"
   },
   "common": {
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "clear": "Limpar"
+    "clear": "Limpar",
+    "close": "Fechar"
   },
   "addLead": {
     "title": "Adicionar Lead",

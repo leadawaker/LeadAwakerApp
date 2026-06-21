@@ -59,11 +59,13 @@ export function NextPanel({ leads }: { leads: Record<string, any>[] }) {
   const future = calls.filter((c) => !c.isToday);
 
   return (
-    <div className="panel-glass-animate" style={{
+    <div style={{
       height: "100%",
       display: "flex",
       flexDirection: "column",
-      padding: "20px 18px"
+      padding: "28px 26px",
+      background: "transparent",
+      borderRadius: "var(--r-card)",
     }} data-testid="campaign-detail-view-agenda">
       <SectionHead
         eyebrow={t("summary.eyebrows.callsHandoffs")}

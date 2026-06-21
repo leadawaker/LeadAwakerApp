@@ -344,31 +344,49 @@ export function NotificationsSection() {
 
         <div className="px-4 pb-4 pt-2 border-t border-border/15">
             {/* Column headers */}
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 mb-2.5 px-1">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 mb-1 px-2">
               <div />
-              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center">
+              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center w-11">
                 {t("notifications.overrides.telegram")}
               </div>
-              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center">
+              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center w-11">
                 {t("notifications.overrides.webPush")}
               </div>
             </div>
 
-            <div className="space-y-px">
+            <div className="space-y-0">
               {NOTIF_TYPE_KEYS.map((nt) => {
                 const override = notifPrefs.type_overrides[nt.key] ?? { telegram: true, web_push: true };
                 const Icon = nt.icon;
                 return (
                   <div
                     key={nt.key}
-                    className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 items-center rounded-lg px-1 py-2 hover:bg-background/40 transition-colors duration-150 group"
+                    className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-center rounded-xl px-2 py-3 hover:bg-background/40 transition-colors duration-150 group"
+                    style={{ minHeight: 52 }}
                     data-testid={`row-override-${nt.key}`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-muted-foreground shrink-0 transition-colors duration-150" />
-                      <span className="text-[13px] truncate">{t(nt.labelKey)}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Icon className="h-4 w-4 text-muted-foreground/60 group-hover:text-muted-foreground shrink-0 transition-colors duration-150" />
+                      <span className="text-[13px] truncate leading-snug">{t(nt.labelKey)}</span>
                     </div>
-                    <div className="flex justify-center">
+                    {/* Telegram toggle — large tap target */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateNotifPrefs((p) => ({
+                          ...p,
+                          type_overrides: {
+                            ...p.type_overrides,
+                            [nt.key]: { ...override, telegram: !override.telegram },
+                          },
+                        }))
+                      }
+                      aria-label={`${t(nt.labelKey)} telegram`}
+                      aria-pressed={override.telegram}
+                      data-testid={`check-${nt.key}-telegram`}
+                      className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-150 hover:bg-muted/60 active:scale-95"
+                      style={{ transition: "background-color 150ms, transform 150ms" }}
+                    >
                       <Checkbox
                         checked={override.telegram}
                         onCheckedChange={(checked) =>
@@ -380,11 +398,29 @@ export function NotificationsSection() {
                             },
                           }))
                         }
-                        aria-label={`${t(nt.labelKey)} telegram`}
-                        data-testid={`check-${nt.key}-telegram`}
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        className="pointer-events-none"
                       />
-                    </div>
-                    <div className="flex justify-center">
+                    </button>
+                    {/* Web push toggle — large tap target */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateNotifPrefs((p) => ({
+                          ...p,
+                          type_overrides: {
+                            ...p.type_overrides,
+                            [nt.key]: { ...override, web_push: !override.web_push },
+                          },
+                        }))
+                      }
+                      aria-label={`${t(nt.labelKey)} web push`}
+                      aria-pressed={override.web_push}
+                      data-testid={`check-${nt.key}-push`}
+                      className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-150 hover:bg-muted/60 active:scale-95"
+                      style={{ transition: "background-color 150ms, transform 150ms" }}
+                    >
                       <Checkbox
                         checked={override.web_push}
                         onCheckedChange={(checked) =>
@@ -396,10 +432,11 @@ export function NotificationsSection() {
                             },
                           }))
                         }
-                        aria-label={`${t(nt.labelKey)} web push`}
-                        data-testid={`check-${nt.key}-push`}
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        className="pointer-events-none"
                       />
-                    </div>
+                    </button>
                   </div>
                 );
               })}

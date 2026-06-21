@@ -7,14 +7,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Receipt, Wallet, PenLine, LayoutList, LayoutGrid, Plus, Search,
+  Receipt, Wallet, PenLine, Plus, Search,
   Clock, AlertTriangle, CheckCircle2, Coins, CreditCard,
 } from "lucide-react";
 import { isOverdue } from "../../types";
 import type { InvoiceRow, ContractRow, ExpenseRow } from "../../types";
 import { useExpensesData } from "../ExpensesListView";
 import {
-  MBSegment, MBViewToggle, MBStatStrip, MBChips, MBSection, MobSheet,
+  MBSegment, MBStatStrip, MBChips, MBSection, MobSheet,
   MBInvoiceCard, MBContractCard, money0, money, num, dateShort, displayStatus,
   type SegOption, type StatCard, type Chip,
 } from "./mobilePrimitives";
@@ -61,7 +61,6 @@ export function MobileBillingView({
   onEditInvoice, onNewInvoice, onNewContract, listSearch, setListSearch,
 }: MobileBillingViewProps) {
   const { t } = useTranslation("billing");
-  const [view, setView] = useState<"list" | "table">("list");
   const [filter, setFilter] = useState("all");
   const [sel, setSel] = useState<Selection>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -221,7 +220,7 @@ export function MobileBillingView({
         <div key={key}>
           <MBSection label={`${year} · ${quarter}`} count={group.length} amount={money0(totalEur)} />
           {group.map((exp) => (
-            <div key={exp.id} onClick={() => setSel({ kind: "expense", data: exp })} className="neu-raised" style={{ padding: 15, borderRadius: "var(--r-card)", cursor: "pointer", marginBottom: 10 }}>
+            <div key={exp.id} onClick={() => setSel({ kind: "expense", data: exp })} className="neu-raised-crisp" style={{ padding: 15, borderRadius: "var(--r-card)", cursor: "pointer", marginBottom: 10 }}>
               <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exp.description || exp.supplier || t("expenses.detail.unknownSupplier")}</div>
@@ -259,44 +258,47 @@ export function MobileBillingView({
 
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: "var(--bg)", overflow: "hidden" }}>
-      {/* Top bar */}
+      {/* Top bar — big leads-style segment fills the row (search moved down to the chips row) */}
       <div style={{ flexShrink: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end", padding: "16px 18px 12px" }}>
-          <span className="serif" style={{ fontSize: 32, color: "var(--ink)", letterSpacing: "-0.02em" }}>{t("page.title")}</span>
-          <button onClick={() => setSearchOpen((o) => !o)} aria-label={t("toolbar.searchInvoices")} style={{ width: 38, height: 38, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Search size={16} />
-          </button>
-        </div>
-        {searchOpen && (
-          <div style={{ padding: "0 16px 12px" }}>
-            <div className="neu-inset" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", borderRadius: "var(--r-pill)" }}>
-              <Search size={14} style={{ color: "var(--mute-2)" }} />
-              <input
-                autoFocus
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                placeholder={activeTab === "invoices" ? t("toolbar.searchInvoices") : activeTab === "expenses" ? t("toolbar.searchExpenses") : t("toolbar.searchContracts")}
-                style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 13, color: "var(--ink)" }}
-              />
-            </div>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 12, padding: "14px 18px 12px" }}>
+          <span className="serif" style={{ fontSize: 28, color: "var(--ink)", letterSpacing: "-0.02em", flexShrink: 0 }}>{t("page.title")}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <MBSegment value={activeTab} onChange={onTabChange} options={tabOpts} />
           </div>
-        )}
-      </div>
-
-      {/* Tabs */}
-      <div style={{ flexShrink: 0, padding: "12px 16px 0" }}>
-        <MBSegment value={activeTab} onChange={onTabChange} options={tabOpts} />
+        </div>
       </div>
 
       {/* Scroll body */}
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "calc(28px + var(--safe-bottom))" }}>
         <div style={{ marginTop: 14 }}><MBStatStrip cards={cards} /></div>
 
-        <div className="row" style={{ gap: 10, margin: "14px 0 4px", alignItems: "center" }}>
-          <div style={{ flex: 1, minWidth: 0 }}><MBChips chips={chips} value={filter} onChange={setFilter} /></div>
-          <div style={{ paddingRight: 16, flexShrink: 0 }}>
-            <MBViewToggle value={view} onChange={(v) => setView(v as "list" | "table")} opts={[["list", LayoutList], ["table", LayoutGrid]]} />
+        <div style={{ margin: "14px 0 4px" }}>
+          <div className="row" style={{ alignItems: "center", gap: 6, paddingRight: 16 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <MBChips chips={chips} value={filter} onChange={setFilter} />
+            </div>
+            <button
+              onClick={() => setSearchOpen((o) => !o)}
+              aria-label={t("toolbar.searchInvoices")}
+              style={{ width: 36, height: 36, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: searchOpen ? "var(--wine)" : "var(--surface)", boxShadow: searchOpen ? "none" : "var(--sh-raised-crisp)", color: searchOpen ? "var(--paper)" : "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <Search size={15} />
+            </button>
           </div>
+          {searchOpen && (
+            <div style={{ padding: "10px 16px 0" }}>
+              <div className="neu-inset" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", borderRadius: "var(--r-pill)" }}>
+                <Search size={14} style={{ color: "var(--mute-2)" }} />
+                <input
+                  autoFocus
+                  value={listSearch}
+                  onChange={(e) => setListSearch(e.target.value)}
+                  placeholder={activeTab === "invoices" ? t("toolbar.searchInvoices") : activeTab === "expenses" ? t("toolbar.searchExpenses") : t("toolbar.searchContracts")}
+                  style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 13, color: "var(--ink)" }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ padding: "0 16px" }}>

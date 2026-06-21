@@ -17,6 +17,7 @@
     "tasks": "Tarefas",
     "automations": "Automações",
     "settings": "Configurações",
+    "editProfile": "Editar perfil",
     "more": "Mais",
     "paint": "Pintar",
     "support": "Suporte",
@@ -25,8 +26,12 @@
     "language": "Idioma",
     "themeLight": "Modo Claro",
     "themeDark": "Modo Escuro",
-    "themeSystem": "Seguir Sistema",
+    "themeSystem": "Tema do Sistema",
     "messageFounder": "Mensagem para Gabriel",
+    "helpAndDocs": "Ajuda e docs",
+    "documentation": "Documentação",
+    "socialMedia": "Redes sociais",
+    "founderInbox": "Caixa de entrada",
     "logout": "Sair"
   },
   "sidebarSections": {
@@ -39,6 +44,9 @@
   "sidebarSubmenu": {
     "summary": "Resumo",
     "configurations": "Configurações"
+  },
+  "help": {
+    "assistance": "Assistência"
   },
   "topbar": {
     "search": "Buscar",
@@ -253,5 +261,14 @@
   "agentWidget": {
     "dockToSide": "Fixar ao lado",
     "undock": "Desfixar"
+  },
+  "voiceNote": {
+    "title": "Nota de voz",
+    "start": "Iniciar gravacao",
+    "stop": "Parar e transcrever",
+    "recording": "Gravando…",
+    "transcribing": "Transcrevendo…",
+    "copied": "Copiado para a area de transferencia",
+    "failed": "Falha na nota de voz"
   }
 }

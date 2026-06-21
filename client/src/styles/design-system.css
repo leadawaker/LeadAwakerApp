@@ -60,7 +60,25 @@
   --depth-polished: 1;
   --inset-highlight-scale: 0.3                                     ;
 
+  /* Highlight offset scale — multiplies ONLY the light-side offset of the
+     inset tokens. The dark side keeps the full offset (so its band decays
+     monotonically from the rim). Shrinking the light offset below its blur
+     pulls the bright band's peak onto the wall/rim instead of leaving it
+     stranded mid-fillet (the "sine bump"). 1 = symmetric with the shadow,
+     toward 0 = bright peak hugs the rim. */
+  --highlight-offset-scale: 1;
+
+  /* Inset rim — a crisp (zero-blur) highlight line pinned to the lit edge of
+     inset surfaces. A blurred highlight always smears its peak onto the
+     fillet; this hairline sits exactly on the rim and is what makes the card
+     read sharp. Follows the light direction (--lx/--ly), so it lands on the
+     same two walls as the soft highlight. Width in px, color = brightness. */
+  --inset-rim-w: 2px;
+  --inset-rim-color: rgba(255, 255, 255, 1);
+
   /* Offset/Blur Tiers */
+  --d-supercrisp-o: 3px;  /* shallowest press — small buttons, tags, chips */
+  --d-supercrisp-b: 4px;
   --d-crisp-o: 8px;
   --d-crisp-b: 8px;
   --d-medium-o: 15px;
@@ -182,11 +200,20 @@ body, html { margin: 0; padding: 0; }
 
   --sh-inset-crisp:
     inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) var(--neu-light);
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * var(--highlight-offset-scale)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * var(--highlight-offset-scale)) var(--d-crisp-b) var(--neu-light),
+    inset calc(var(--lx) * var(--inset-rim-w)) calc(var(--ly) * var(--inset-rim-w)) 0 0 var(--inset-rim-color);
 
   --sh-inset-medium:
     inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) var(--neu-light);
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * var(--highlight-offset-scale)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * var(--highlight-offset-scale)) var(--d-medium-b) var(--neu-light),
+    inset calc(var(--lx) * var(--inset-rim-w)) calc(var(--ly) * var(--inset-rim-w)) 0 0 var(--inset-rim-color);
+
+  /* Shallowest inset — small buttons, tags, chips (uses a 1px rim since a 2px
+     rim would dominate a 3px-deep press). Mirrors --sh-inset-crisp otherwise. */
+  --sh-inset-super-crisp:
+    inset calc(var(--lx) * var(--d-supercrisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-supercrisp-o) * var(--light-strength) * -1) var(--d-supercrisp-b) var(--neu-dark),
+    inset calc(var(--lx) * var(--d-supercrisp-o) * var(--light-strength) * var(--highlight-offset-scale)) calc(var(--ly) * var(--d-supercrisp-o) * var(--light-strength) * var(--highlight-offset-scale)) var(--d-supercrisp-b) var(--neu-light),
+    inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 var(--inset-rim-color);
   --sh-polished-crisp:
     calc(var(--lx) * var(--d-crisp-o)  * 1 * var(--depth-polished) * -1)
     calc(var(--ly) * var(--d-crisp-o)  * 1 * var(--depth-polished) * -1)
@@ -391,6 +418,14 @@ body, html { margin: 0; padding: 0; }
   animation: surface-to-inset 600ms ease-out both;
 }
 
+/* Static inset surface — same end-state as panel-inset-animate, no mount animation */
+.panel-inset {
+  background: var(--bg);
+  border-radius: var(--r-card);
+  border: 2px solid transparent;
+  box-shadow: var(--sh-inset-crisp), inset 0 0 0 1px rgba(0,0,0,0.07);
+}
+
 .neu-inset, .neu-inset-medium {
   background: var(--bg);
   box-shadow: var(--sh-inset-medium);
@@ -544,7 +579,7 @@ body, html { margin: 0; padding: 0; }
   box-shadow: var(--sh-raised-crisp), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .la-btn--wine:hover { transform: translateY(-1px); }
-.la-btn--wine:active { transform: translateY(0); box-shadow: var(--sh-inset-crisp); }
+.la-btn--wine:active { transform: translateY(0); box-shadow: var(--sh-inset-super-crisp); }
 /* Soft — raised paper secondary / inactive toggle */
 .la-btn--soft {
   background: var(--surface); color: var(--mute);
@@ -560,7 +595,7 @@ body, html { margin: 0; padding: 0; }
 /* Inset — recessed icon / utility button on the bone ground */
 .la-btn--inset {
   background: var(--bg); color: var(--mute);
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
 }
 .la-btn--inset:hover { color: var(--wine); }
 /* Shape / size modifiers */
@@ -577,7 +612,7 @@ body, html { margin: 0; padding: 0; }
      --fill  items stretch to equal width (full-bleed mobile tabs) */
 .la-seg {
   display: inline-flex; gap: 3px; padding: 3px;
-  background: var(--bg); box-shadow: var(--sh-inset-crisp);
+  background: var(--bg); box-shadow: var(--sh-inset-super-crisp);
   border-radius: var(--r-surface);
 }
 .la-seg-btn {
@@ -597,6 +632,9 @@ body, html { margin: 0; padding: 0; }
 .la-seg--pill .la-seg-btn { padding: 6px 15px; }
 .la-seg--fill { display: flex; }
 .la-seg--fill .la-seg-btn { flex: 1; }
+/* --lg: a slightly larger track + items, for use as a panel's primary control */
+.la-seg--lg { padding: 4px; gap: 4px; }
+.la-seg--lg .la-seg-btn { padding: 9px 18px; font-size: 11px; letter-spacing: 0.14em; }
 
 /* ─── Tasks merged view — board primary + calendar ───────────────────
    Default (< 1800px): weekly calendar stacks above the board.
@@ -731,52 +769,6 @@ body, html { margin: 0; padding: 0; }
   padding: 18px 14px 8px;
 }
 
-/* ─── Campaign list card ─────────────────────────────────────── */
-
-.la-camp-card {
-  padding: 10px 10px 10px 11px;
-  border-radius: 14px;
-  background: transparent;
-  box-shadow: none;
-  display: flex; gap: 14px; align-items: center;
-  cursor: pointer;
-  transition: background 130ms, box-shadow 130ms;
-  position: relative;
-}
-.la-camp-card:hover { background: var(--wine-tint); }
-.la-camp-card.active,
-.la-camp-card.active:hover {
-  background: var(--card);
-  box-shadow: 0 2px 4px rgba(96, 78, 52, 0.15);
-}
-.la-camp-card.active::before {
-  content: '';
-  position: absolute; left: 0; top: 50%; bottom: auto; transform: translateY(-50%);
-  height: 60%; width: 3px;
-  background: var(--wine); border-radius: 0 3px 3px 0;
-}
-/* Unselected cards read flat: mute the floating mono tile so only the
-   selected card has elevation (matches the Leads list treatment). */
-.la-camp-card:not(.active) .la-mono-tile {
-  background: var(--bg);
-  box-shadow: var(--sh-inset-crisp);
-  color: var(--mute);
-}
-
-/* Mobile: every card reads the same flat beige surface — no neumorphic
-   shadow, no wine left line. On a phone the tapped card opens a detail panel,
-   so a persistent highlighted "selected" row isn't needed. */
-@media (max-width: 767px) {
-  .la-camp-card,
-  .la-camp-card:hover,
-  .la-camp-card.active,
-  .la-camp-card.active:hover {
-    background: var(--bone);
-    box-shadow: none;
-  }
-  .la-camp-card.active::before { display: none; }
-}
-
 .la-mono-tile {
   width: 44px; height: 44px;
   border-radius: 10px;
@@ -811,7 +803,7 @@ body, html { margin: 0; padding: 0; }
   padding: 3px 9px;
   border-radius: 999px;
   background: var(--bg);
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
   color: var(--mute);
 }
 .la-status.paused { color: var(--warn); }
@@ -833,7 +825,6 @@ body, html { margin: 0; padding: 0; }
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /*
@@ -875,7 +866,7 @@ body, html { margin: 0; padding: 0; }
   border-radius: 10px;
   border: none; cursor: pointer;
   background: var(--bg);
-  box-shadow: var(--sh-inset-crisp);
+  box-shadow: var(--sh-inset-super-crisp);
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-soft);
   transition: box-shadow 120ms, color 120ms;
@@ -964,14 +955,18 @@ body, html { margin: 0; padding: 0; }
   .summary-root { padding: 12px 12px 24px; }
 }
 
-/* Performance: metrics + chart side by side (default); hairline divider between */
+/* Performance: header+metrics column on the left, full-height chart on the
+   right (default); hairline divider between. The chart stretches to the row
+   height (= header + metrics) so it's taller than the metrics block alone. */
 .bold-metrics-row { display: flex; gap: 16px; align-items: stretch; flex-wrap: nowrap; }
 .bold-metrics-rule { display: none; }
+.perf-left { display: flex; flex-direction: column; flex: 1 1 45%; min-width: 240px; }
+.perf-chart { display: flex; flex-direction: column; flex: 1 1 40%; min-width: 180px; }
 
 /* Grid: Performance on top, then the panels row. Stacked by default. */
-.summary-grid { display: flex; flex-direction: column; gap: 22px; }
+.summary-grid { display: flex; flex-direction: column; gap: 32px; }
 .summary-perf { min-width: 0; }
-.summary-panels { display: flex; flex-direction: column; gap: 22px; }
+.summary-panels { display: flex; flex-direction: column; gap: 32px; }
 .summary-cell { flex: 1 1 0; min-width: 0; display: flex; }
 .summary-cell > * { width: 100%; }
 /* When stacked (narrow), live rail cards stay bounded and scroll internally. */
@@ -988,42 +983,54 @@ body, html { margin: 0; padding: 0; }
   .summary-cell--rail > * { max-height: none; }
 }
 
-/* ≥1400px (ultrawide): all four panels side by side, equal height; Performance
+/* ≥1900px (ultrawide): all four panels side by side, equal height; Performance
    turns vertical so its chart grows as tall as the neighbouring panels.
-   Pipeline also goes side-by-side (donut left, bars right). */
-@container summary (min-width: 1400px) {
+   Pipeline also goes side-by-side (donut left, bars right). Breakpoint is set
+   high so Performance only joins the row once there's real width to spare —
+   otherwise it (and the Next panel) come in cramped. */
+@container summary (min-width: 1900px) {
   .summary-grid { flex-direction: row; align-items: stretch; height: var(--summary-rail-h); }
   .summary-perf { flex: 1.15 1 0; display: flex; }
   .summary-perf > * { width: 100%; }
   .summary-panels { flex: 3 1 0; height: 100%; }
   .summary-perf .bold-metrics-row { flex-direction: column; gap: 16px; flex: 1 1 auto; min-height: 0; }
-  .summary-perf .perf-metrics { flex: 0 0 auto; }
+  .summary-perf .perf-left { flex: 0 0 auto; }
+  /* 2×2 metrics so each card stays roughly square instead of tall+thin, which
+     also frees vertical space for a taller trend chart below. */
+  .summary-perf .perf-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .summary-perf .perf-chart { flex: 1 1 auto; min-height: 0; }
   .bold-metrics-rule { display: none; }
   .pipeline-layout { flex-direction: row !important; align-items: flex-start !important; }
 }
 
-/* AB Testing: always the vertical-column style (metrics side by side, bars pointing up). */
+/* AB Testing: vertical-column style on desktop (metrics side by side, bars up). */
 .ab-layout { --ab-mode: vertical; }
 .ab-bars-vertical { display: flex; }
 .ab-bars-horizontal { display: none; }
 
+/* Mobile: switch to full-width horizontal bars, each comparison stacked
+   vertically — reads better on a tall phone screen. */
+@media (max-width: 768px) {
+  .ab-bars-vertical { display: none; }
+  .ab-bars-horizontal { display: block; }
+}
+
 /* A/B variants gap: narrow (4px by default, 0.25rem on ultrawide) */
 .ab-variants { gap: 0.25rem; }
-@container summary (min-width: 1400px) {
+@container summary (min-width: 1900px) {
   .ab-variants { gap: 0.125rem; }
 }
 
 /* Bumps Today + A/B row. Bumps is sized to match the Conversion Pipeline panel
    above it. When the three panels are stacked in one row each is 1/3 width, so
    bumps:1 / ab:2 → bumps = 1/3. */
-.summary-bumps-row { display: flex; gap: 22px; width: 100%; margin-top: 22px; }
+.summary-bumps-row { display: flex; gap: 32px; width: 100%; margin-top: 32px; }
 .summary-bumps-cell { flex: 1 1 0; min-width: 0; }
 .summary-ab-cell { flex: 2 1 0; min-width: 0; }
 
-/* ≥1400px (ultrawide): the grid is a single row of perf(1.15) + panels(3), so
+/* ≥1900px (ultrawide): the grid is a single row of perf(1.15) + panels(3), so
    the Pipeline panel is 1/4.15 of the width. Match it: bumps:1 / ab:3.15. */
-@container summary (min-width: 1400px) {
+@container summary (min-width: 1900px) {
   .summary-ab-cell { flex: 3.15 1 0; }
 }
 
@@ -1099,6 +1106,9 @@ body, html { margin: 0; padding: 0; }
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-edge: rgba(255, 255, 255, 0.12);
 
+  /* Inset rim — much fainter in dark mode (a bright white line would blow out) */
+  --inset-rim-color: rgba(255, 240, 220, 0.10);
+
   /* ─── Shadow tokens — same geometry, dark cast + faint warm light edge ─── */
   --sh-raised-crisp:
     calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
@@ -1114,11 +1124,18 @@ body, html { margin: 0; padding: 0; }
 
   --sh-inset-crisp:
     inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * -1) var(--d-crisp-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength)) var(--d-crisp-b) var(--neu-light);
+    inset calc(var(--lx) * var(--d-crisp-o) * var(--light-strength) * var(--highlight-offset-scale)) calc(var(--ly) * var(--d-crisp-o) * var(--light-strength) * var(--highlight-offset-scale)) var(--d-crisp-b) var(--neu-light),
+    inset calc(var(--lx) * var(--inset-rim-w)) calc(var(--ly) * var(--inset-rim-w)) 0 0 var(--inset-rim-color);
 
   --sh-inset-medium:
     inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * -1) var(--d-medium-b) var(--neu-dark),
-    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength)) var(--d-medium-b) var(--neu-light);
+    inset calc(var(--lx) * var(--d-medium-o) * var(--light-strength) * var(--highlight-offset-scale)) calc(var(--ly) * var(--d-medium-o) * var(--light-strength) * var(--highlight-offset-scale)) var(--d-medium-b) var(--neu-light),
+    inset calc(var(--lx) * var(--inset-rim-w)) calc(var(--ly) * var(--inset-rim-w)) 0 0 var(--inset-rim-color);
+
+  --sh-inset-super-crisp:
+    inset calc(var(--lx) * var(--d-supercrisp-o) * var(--light-strength) * -1) calc(var(--ly) * var(--d-supercrisp-o) * var(--light-strength) * -1) var(--d-supercrisp-b) var(--neu-dark),
+    inset calc(var(--lx) * var(--d-supercrisp-o) * var(--light-strength) * var(--highlight-offset-scale)) calc(var(--ly) * var(--d-supercrisp-o) * var(--light-strength) * var(--highlight-offset-scale)) var(--d-supercrisp-b) var(--neu-light),
+    inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 var(--inset-rim-color);
 
   --sh-polished-crisp:
     calc(var(--lx) * var(--d-crisp-o) * 1 * var(--depth-polished) * -1)

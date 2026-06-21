@@ -29,7 +29,7 @@ export function ScopeChip({ scope, campaigns, allLabel, hiddenLabel }: {
   const styles = {
     all: { color: "var(--wine)", bg: "var(--wine-tint)", sh: "inset 0 0 0 1px rgba(94,34,48,0.14)" },
     some: { color: "var(--warn)", bg: "var(--warn-tint)", sh: "none" },
-    hidden: { color: "var(--mute)", bg: "var(--bg)", sh: "var(--sh-inset-crisp)" },
+    hidden: { color: "var(--mute)", bg: "var(--bg)", sh: "var(--sh-inset-super-crisp)" },
   }[kind];
   return (
     <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", padding: "2px 7px", borderRadius: "var(--r-flush)", color: styles.color, background: styles.bg, boxShadow: styles.sh, whiteSpace: "nowrap" }}>{label}</span>

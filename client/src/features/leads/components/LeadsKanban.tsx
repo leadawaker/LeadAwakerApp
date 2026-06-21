@@ -165,7 +165,7 @@ function stageKey(stage: string): string {
 }
 
 /* ─────────── Infinite scroll batch size ─────────── */
-const COLUMN_BATCH_SIZE = 20;
+const COLUMN_BATCH_SIZE = 30;
 
 /* ─────────── Score arc — mini donut (matches design ScoreArc) ─────────── */
 
@@ -400,7 +400,7 @@ function KanbanCardContent({
           bgColor={status === "DND" ? "#1a1a1a" : avatarColor.bg}
           textColor={(isClosedStatus || status === "DND") ? "#ffffff" : avatarColor.text}
           size={24}
-          className={cn("shrink-0", isSelected && "ring-2 ring-brand-indigo")}
+          className={cn("shrink-0 shadow-[var(--sh-raised-crisp)]", isSelected && "ring-2 ring-brand-indigo")}
         />
       </div>
     );
@@ -448,7 +448,7 @@ function KanbanCardContent({
               </div>
               {/* Score bar — under name */}
               {showScoreBar && (
-                <div className="mt-0.5 h-[4px] overflow-hidden" style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)" }}>
+                <div className="mt-0.5 h-[4px] overflow-hidden" style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)" }}>
                   <div className="h-full" style={{ width: `${Math.min(100, score)}%`, borderRadius: "var(--r-pill)", background: score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)" }} />
                 </div>
               )}
@@ -458,7 +458,7 @@ function KanbanCardContent({
                   <span className={cn("text-[9px] tabular-nums leading-none", isBookedToday ? "text-amber-600 font-bold" : bookedDatePassed ? "text-red-500 font-medium" : "text-muted-foreground/60")}>
                     {isBookedToday ? `Today ${new Date(bookedDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : bookedDateStr}
                   </span>
-                  {bookedDatePassed && <div className="ml-auto">{actionButtons}</div>}
+                  {/* actionButtons (mark passed booked call as Lost) intentionally unwired — kept for future use */}
                 </div>
               )}
             </div>
@@ -522,7 +522,7 @@ function KanbanCardContent({
               <span className={cn("text-[10px] tabular-nums leading-none", isBookedToday ? "text-amber-600 font-bold" : bookedDatePassed ? "text-red-500 font-medium" : "text-muted-foreground/60")}>
                 {isBookedToday ? `Today ${new Date(bookedDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : bookedDateStr}
               </span>
-              {bookedDatePassed && <div className="ml-auto">{actionButtons}</div>}
+              {/* actionButtons (mark passed booked call as Lost) intentionally unwired — kept for future use */}
             </div>
           )}
         </div>
@@ -682,18 +682,17 @@ function KanbanColumn({
         title={`${t(`kanban.stageLabels.${stageKey(stage)}`)} (${leads.length})`}
         onClick={() => onToggleCollapse?.(stage)}
       >
-        {/* Top section: expand arrow + icon + title + count — all at the TOP */}
+        {/* Top section: expand arrow + colored circle + count — all at the TOP */}
         <div className="pt-2 pb-1 flex flex-col items-center gap-1.5 w-full">
           <ChevronRight
             className="h-3.5 w-3.5 text-muted-foreground shrink-0"
             data-testid={`kanban-column-expand-${stage}`}
           />
+          {/* Colored circle with conversion stage color */}
           <div
-            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: iconBg, color: iconText }}
-          >
-            <StageIcon className="h-3 w-3" />
-          </div>
+            className="w-4 h-4 rounded-full flex-shrink-0"
+            style={{ backgroundColor: hex }}
+          />
           <span
             className="text-[10px] font-bold tabular-nums shrink-0"
             style={{ color: hex }}
@@ -729,8 +728,8 @@ function KanbanColumn({
           : cn(
               "flex-shrink-0",
               isBookedStage
-                ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] snap-start snap-always"
-                : "w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] md:max-w-[300px] snap-start snap-always",
+                ? "w-[calc(100vw-24px)] md:w-[225px] min-w-[calc(100vw-24px)] md:min-w-[210px] md:max-w-[240px] snap-start snap-always"
+                : "w-[calc(100vw-24px)] md:w-[210px] min-w-[calc(100vw-24px)] md:min-w-[195px] md:max-w-[225px] snap-start snap-always",
             ),
       )}
       data-testid={`kanban-column-${stage}`}
@@ -739,7 +738,7 @@ function KanbanColumn({
       data-visible-count={visibleCount}
       data-total-count={leads.length}
     >
-      {/* Column Header — stage dot + mono uppercase label + count pill */}
+      {/* Column Header — stage dot + mono uppercase label + count pill. Click the label to fold the column. */}
       <div
         className={cn("flex items-center shrink-0", useCompactCards ? "gap-1.5 px-1 pb-2" : "gap-2 px-1 pb-2.5")}
         data-testid={`kanban-column-header-${stage}`}
@@ -747,9 +746,12 @@ function KanbanColumn({
         {/* Stage color dot */}
         <span style={{ width: 9, height: 9, borderRadius: 3, background: hex, flexShrink: 0 }} />
 
-        {/* Stage label — mono uppercase */}
+        {/* Stage label — mono uppercase — click to fold the column */}
         <span
-          className="truncate"
+          className="truncate cursor-pointer select-none"
+          onClick={() => onToggleCollapse?.(stage)}
+          title={t("kanban.foldColumn", "Click to fold")}
+          data-testid={`kanban-column-fold-${stage}`}
           style={{
             fontFamily: "var(--mono)",
             fontSize: useCompactCards ? 9 : 10,
@@ -787,7 +789,7 @@ function KanbanColumn({
             fontSize: 9,
             color: "var(--mute-2)",
             background: "var(--bg)",
-            boxShadow: "var(--sh-inset-crisp)",
+            boxShadow: "var(--sh-inset-super-crisp)",
             padding: "1px 7px",
             borderRadius: "var(--r-pill)",
             marginLeft: "auto",
@@ -1178,7 +1180,7 @@ export function LeadsKanban({
           return (
             <div
               key={stage}
-              className="flex flex-col bg-card rounded-lg w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] flex-shrink-0 snap-start snap-always"
+              className="flex flex-col bg-card rounded-lg w-[calc(100vw-24px)] md:w-[210px] min-w-[calc(100vw-24px)] md:min-w-[195px] flex-shrink-0 snap-start snap-always"
               data-testid="kanban-skeleton-column"
             >
               {/* Header skeleton */}
@@ -1197,17 +1199,23 @@ export function LeadsKanban({
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="mx-0.5 my-0.5 rounded-xl bg-card px-2.5 pt-2 pb-1.5 space-y-1.5 animate-pulse"
+                    className="mx-0.5 my-0.5 rounded-xl bg-card px-2.5 pt-2 pb-1.5 animate-pulse"
                     data-testid="kanban-skeleton-card"
                     style={{ animationDelay: `${i * 80}ms` }}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-foreground/10 shrink-0" />
-                      <div className="flex-1 space-y-1.5">
-                        <div className="h-3 bg-foreground/10 rounded-full w-3/4" />
-                        <div className="h-2 bg-foreground/8 rounded-full w-1/2" />
+                    <div className="flex items-stretch gap-2">
+                      <div className="w-10 h-10 rounded-full bg-foreground/10 shrink-0 self-start mt-0.5" />
+                      <div className="flex-1 min-w-0 pt-0.5 space-y-[5px]">
+                        <div className="h-[14px] bg-foreground/10 rounded w-3/4" />
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-1.5 w-1.5 rounded-full bg-foreground/10 shrink-0" />
+                          <div className="h-2 bg-foreground/8 rounded-full w-2/5" />
+                        </div>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-foreground/10 shrink-0" />
+                      <div className="shrink-0 flex flex-col items-end justify-between py-0.5">
+                        <div className="h-2 w-8 bg-foreground/8 rounded-full" />
+                        <div className="h-6 w-6 rounded-full bg-foreground/10 mt-1" />
+                      </div>
                     </div>
                   </div>
                 ))}

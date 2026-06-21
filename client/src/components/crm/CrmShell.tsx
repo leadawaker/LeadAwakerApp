@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { RightSidebar } from "./RightSidebar";
-import { SupportChat } from "@/components/crm/SupportChat";
+import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
+import { FounderInbox } from "@/components/crm/FounderInbox";
+import { useSupportChat } from "@/hooks/useSupportChat";
+import { useFounderChat } from "@/hooks/useFounderChat";
 import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
 import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
@@ -11,7 +14,7 @@ import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ImpersonationBanner } from "@/components/crm/ImpersonationBanner";
 import { cn } from "@/lib/utils";
-import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun, Instagram, Facebook, Mail, Phone, ChevronDown, Sparkles, Tag, BarChart3 } from "lucide-react";
+import { X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { logout } from "@/hooks/useSession";
 import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
@@ -75,14 +78,50 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const isAgencyView = isAgencyUser;
   const { isDark, toggleTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [founderChatOpen, setFounderChatOpen] = useState(false);
+  const supportChat = useSupportChat();
+  const founderChat = useFounderChat();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // History sentinel: push a state entry when More opens so the phone Back
+  // button closes the drawer instead of navigating away from the app.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const id = Date.now();
+    window.history.pushState({ __moreMenu: id }, "");
+    const onPop = () => {
+      // Back pressed — sentinel was popped by the browser; just close the drawer.
+      setIsMobileMenuOpen(false);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // Do NOT call history.back() here — it fires popstate asynchronously,
+      // which other sentinels (AgentChatWidget) hear before their own cleanup
+      // runs, causing the widget to close immediately after opening.
+      // The orphaned sentinel entry is harmless once the listener is removed.
+    };
+  }, [isMobileMenuOpen]);
 
   // Paint button (nav) dispatches this to open the CRM color customization tool
   useEffect(() => {
     const handler = () => setColorPickerOpen(prev => !prev);
     window.addEventListener("toggle-color-picker", handler);
     return () => window.removeEventListener("toggle-color-picker", handler);
+  }, []);
+
+  // Any page can dispatch "open-founder-chat" to open the founder chat panel
+  // Any footer nav tap or button can dispatch "close-founder-chat" to close it
+  useEffect(() => {
+    const openHandler = () => setFounderChatOpen(true);
+    const closeHandler = () => setFounderChatOpen(false);
+    window.addEventListener("open-founder-chat", openHandler);
+    window.addEventListener("close-founder-chat", closeHandler);
+    return () => {
+      window.removeEventListener("open-founder-chat", openHandler);
+      window.removeEventListener("close-founder-chat", closeHandler);
+    };
   }, []);
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -220,6 +259,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onOpenAi={toggleAiWidget}
           onOpenNotifications={() => setActivePanel('notifications')}
           onToggleHelp={() => setActivePanel('help')}
+          onOpenFounderChat={() => setFounderChatOpen(true)}
+          onOpenFounderInbox={() => setActivePanel('founder-inbox')}
           onOpenSettings={() => setActivePanel('settings')}
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
@@ -258,11 +299,15 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             <div className="flex-grow overflow-hidden h-full">
               {activePanel === 'settings' && <SettingsPanel />}
               {activePanel === 'help' && (
-                <HelpPanelContent onNavigate={(path) => { closePanel(); setLocation(path); }} prefix="/platform" />
+                <HelpPanelContent
+                  onNavigate={(path) => { closePanel(); setLocation(path); }}
+                  prefix="/platform"
+                  onOpenFounderChat={() => { closePanel(); setFounderChatOpen(true); }}
+                />
               )}
-              {activePanel === 'support' && (
+              {activePanel === 'founder-inbox' && (
                 <div className="h-full">
-                  <SupportChat open={true} onClose={closePanel} inline />
+                  <FounderInbox />
                 </div>
               )}
             </div>
@@ -273,7 +318,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-svh flex flex-col transition-[padding-left] duration-150 overflow-hidden",
+          "h-svh flex flex-col transition-[padding-left] duration-150",
           "md:pl-[188px]",
           // Global mobile topbar removed: each list page renders its own MobileListHeader.
           "pt-[var(--banner-h,_0px)]"
@@ -294,7 +339,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div id="crm-content-wrapper" className="h-full w-full pb-0 overflow-y-auto">
+        <div id="crm-content-wrapper" className="h-full w-full">
           <ErrorBoundary key={location}>
             <PageTransition>
               {children}
@@ -302,6 +347,35 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           </ErrorBoundary>
         </div>
       </main>
+
+      {/* Floating "Talk to Gabriel" chat — founder direct messages, no AI */}
+      {founderChatOpen && (
+        <SupportChatWidget
+          mode="floating"
+          founderOnly
+          founderChat={{
+            messages: founderChat.messages,
+            sending: founderChat.sending,
+            loading: founderChat.loading,
+            initialize: founderChat.initialize,
+            sendMessage: founderChat.sendMessage,
+            closeSession: founderChat.closeSession,
+            clearContext: founderChat.clearContext,
+          }}
+          messages={supportChat.messages}
+          sending={supportChat.sending}
+          loading={supportChat.loading}
+          escalated={supportChat.escalated}
+          botConfig={supportChat.botConfig}
+          initialize={supportChat.initialize}
+          sendMessage={supportChat.sendMessage}
+          closeSession={supportChat.closeSession}
+          clearContext={supportChat.clearContext}
+          updateBotConfig={supportChat.updateBotConfig}
+          isAdmin={isAgencyUser}
+          onClose={() => setFounderChatOpen(false)}
+        />
+      )}
 
       {/* Global Command Palette (Cmd+K / Ctrl+K) */}
       <CommandPalette />
@@ -314,46 +388,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ─── Help Panel Content (social media expandable) ──────────────────────── */
+/* ─── Help Panel Content (mobile help slide-in) ─────────────────────────── */
 
-const SOCIAL_LINKS = [
-  { label: "Instagram", handle: "@leadawaker", href: "https://www.instagram.com/leadawaker/", icon: Instagram, color: "text-pink-600" },
-  { label: "Facebook", handle: "Lead Awaker", href: "https://www.facebook.com/profile.php?id=61552291063345", icon: Facebook, color: "text-blue-600" },
-  { label: "Email", handle: "gabriel@leadawaker.com", href: "mailto:gabriel@leadawaker.com", icon: Mail, color: "text-foreground/70" },
-  { label: "WhatsApp", handle: "+(55) 84 8111-8224", href: "https://wa.me/558481118224", icon: Phone, color: "text-emerald-600" },
-];
-
-const HELP_UPDATES = [
-  {
-    id: "update-pipeline-donut",
-    Icon: BarChart3,
-    iconColor: "text-amber-600",
-    title: "Pipeline Donut Chart",
-    description: "Interactive funnel visualization with click-to-filter stages.",
-    date: "Mar 2026",
-  },
-  {
-    id: "update-ai-analysis",
-    Icon: Sparkles,
-    iconColor: "text-violet-600",
-    title: "AI Campaign Analysis",
-    description: "Get instant AI-generated summaries of campaign performance.",
-    date: "Feb 2026",
-  },
-  {
-    id: "update-campaign-tags",
-    Icon: Tag,
-    iconColor: "text-indigo-500",
-    title: "Campaign Tags",
-    description: "Organize campaigns with custom tag categories and colors.",
-    date: "Feb 2026",
-  },
-];
-
-function HelpPanelContent({ onNavigate, prefix }: { onNavigate: (path: string) => void; prefix: string }) {
-  const [socialOpen, setSocialOpen] = useState(false);
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-
+function HelpPanelContent({ onNavigate, prefix, onOpenFounderChat }: { onNavigate: (path: string) => void; prefix: string; onOpenFounderChat: () => void }) {
   return (
     <div className="p-4 space-y-2 overflow-auto h-full">
       <button
@@ -363,67 +400,12 @@ function HelpPanelContent({ onNavigate, prefix }: { onNavigate: (path: string) =
         Documentation
       </button>
 
-      {/* Social Media — expandable */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setSocialOpen((v) => !v)}
-          className="w-full rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border flex items-center justify-between"
-        >
-          Social Media
-          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", socialOpen && "rotate-180")} />
-        </button>
-        {socialOpen && (
-          <div className="mt-1 ml-2 space-y-0.5">
-            {SOCIAL_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target={link.href.startsWith("mailto:") ? undefined : "_blank"}
-                rel={link.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-muted/30 transition-colors"
-              >
-                <link.icon className={cn("h-4 w-4 shrink-0", link.color)} />
-                <div className="min-w-0">
-                  <span className="font-medium text-foreground">{link.label}</span>
-                  <span className="block text-[12px] text-muted-foreground truncate">{link.handle}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* What's New — expandable */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setWhatsNewOpen((v) => !v)}
-          className="w-full rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border flex items-center justify-between"
-        >
-          What's New
-          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", whatsNewOpen && "rotate-180")} />
-        </button>
-        {whatsNewOpen && (
-          <div className="mt-1 ml-2 space-y-0.5">
-            {HELP_UPDATES.map((update) => (
-              <div key={update.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5">
-                <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center border border-black/[0.125] bg-transparent mt-0.5">
-                  <update.Icon className={cn("h-4 w-4", update.iconColor)} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="font-medium text-foreground text-sm">{update.title}</span>
-                    <span className="text-[11px] text-muted-foreground shrink-0">{update.date}</span>
-                  </div>
-                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">{update.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
+      <button
+        onClick={onOpenFounderChat}
+        className="w-full text-left block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border"
+      >
+        Message Gabriel
+      </button>
     </div>
   );
 }

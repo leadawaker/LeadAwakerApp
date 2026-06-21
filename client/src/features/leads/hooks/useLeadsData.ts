@@ -9,9 +9,13 @@ export function useLeadsData(accountId?: number) {
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const pendingSaves = useRef<Record<string, number>>({});
+  // Only the very first fetch shows the skeleton. Background refreshes (SSE
+  // updates, bot-triggered changes) swap card data in place instead of
+  // unmounting the list back to a skeleton (per Gabriel, 2026-06-21).
+  const hasLoadedOnce = useRef(false);
 
   const handleRefresh = async () => {
-    setLoading(true);
+    if (!hasLoadedOnce.current) setLoading(true);
     setError(null);
 
     try {
@@ -130,6 +134,7 @@ export function useLeadsData(accountId?: number) {
       console.error("Failed to refresh leads", err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
+      hasLoadedOnce.current = true;
       setLoading(false);
     }
   };

@@ -146,7 +146,12 @@ export function AccountsListPanel({
         sibling = sibling.previousElementSibling;
       }
       const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-      container.scrollTo({ top: cardTop - headerHeight - 3, behavior: "smooth" });
+      // 14px, not 3px: the sticky header (z-index 5, opaque background) paints
+      // over anything closer than that, clipping the top of the selected
+      // card's raised-crisp shadow (~12px tall). Bumping the header's own
+      // padding does nothing here — this gap is recomputed from the header's
+      // live height every time, so it always nets out to the same overlap.
+      container.scrollTo({ top: cardTop - headerHeight - 14, behavior: "smooth" });
     };
     const raf = requestAnimationFrame(run);
     return () => cancelAnimationFrame(raf);
@@ -171,7 +176,7 @@ export function AccountsListPanel({
       : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedAccount ? "hidden" : "flex");
 
   return (
-    <div className={cn("flex-col bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
+    <div className={cn("flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (

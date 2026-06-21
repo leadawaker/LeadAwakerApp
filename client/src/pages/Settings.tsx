@@ -122,7 +122,7 @@ function SettingsContent() {
         </div>
         {/* Toolbar portal slot — team toolbar mounts here on the topbar */}
         {activeSection === "team" && (
-          <div id="settings-team-toolbar-slot" className="flex-1 flex items-center gap-1.5 overflow-x-auto min-w-0" />
+          <div id="settings-team-toolbar-slot" className="flex-1 flex items-center justify-end gap-1.5 px-2" style={{ overflow: "visible" }} />
         )}
       </div>
 
@@ -137,14 +137,17 @@ function SettingsContent() {
             activeSection === "team" ? (
               // Team: no outer panel — cards float on page bg
               <div
-                className="flex flex-col min-h-0 overflow-hidden h-[calc(100dvh-13rem)]"
+                className="flex flex-col flex-1 min-h-0"
                 data-testid="settings-panel-team"
               >
                 <SettingsTeamSection isUltrawide={false} />
               </div>
             ) : (
               <div
-                className="neu-raised flex flex-col min-h-0 p-5"
+                className={cn(
+                  "neu-raised flex flex-col min-h-0 p-5",
+                  activeSection === "notifications" && "max-w-[600px]"
+                )}
                 data-testid={`settings-panel-${activeSection}`}
                 key={activeSection}
               >
