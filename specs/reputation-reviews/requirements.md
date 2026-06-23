@@ -112,3 +112,28 @@ Nothing reads or replies to public reviews. v2 adds: connect → poll → draft 
 - Never double-replies; re-poll creates no duplicates; an already-replied review is left alone.
 - Disabling `enable_review_response` stops polling and posting.
 - All steps appear in the Automation Logs page under `review_response`.
+
+## Platform coverage — what we can actually read + reply to via API (reference)
+
+Not all review sites expose an API that lets us read reviews *and* post public replies. This decides
+what we can offer per platform. v1 is **Google-only**; the rest are fast-follows "on request," gated by
+the client connecting/authorizing their own account.
+
+| Platform | Read reviews | Post public reply | Requirement | Our stance |
+|---|---|---|---|---|
+| **Google Business Profile** | ✅ | ✅ | Client authorizes (`business.manage`); they own the location | **v1 — built first** |
+| **Facebook / Meta (Page Recommendations)** | ✅ | ✅ | Client **connects their Facebook Page** to our Meta app (Pages API) | Fast-follow, on request |
+| **Trustpilot** | ✅ | ✅ | Client on a **paid Trustpilot Business plan** + grants API access via their account | On request, gated by *their* subscription |
+| **Yelp** | ⚠️ partial | ❌ | Read-only API, no full text, no reply posting | **Excluded** — not automatable |
+| Niche/industry sites, Trusted Shops, etc. | varies | varies | Mostly no usable reply API | Case-by-case, usually no |
+
+**Key facts to remember:**
+- There is **no universal "all reviews everywhere" feed** — each platform is a separate integration with
+  its own OAuth/auth and its own "can you even reply via API" answer.
+- **Facebook** is doable once the client connects their Page to our Pages API (same connect-your-account
+  pattern as Google).
+- **Trustpilot** is only possible if the client is already a paying Trustpilot Business customer and
+  authorizes us — we can't pull their reviews otherwise.
+- **Sell it as "Google now, Trustpilot/Facebook on request,"** never "all your reviews everywhere."
+- For the premium home-improvement niche, **Google Maps is ~90% of the reputation surface**, so
+  Google-first captures most of the value.
