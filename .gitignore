@@ -95,3 +95,14 @@ client/public/premium/hero-debug.jsx
 client/public/premium/cta-debug.jsx
 client/src/migration/reference.jpg
 client/src/migration/reference.jpg
+
+# Secrets / dev junk
+login.yaml
+login.png
+.env.bak*
+*.bak
+/campaigns-fixed.png
+/campaigns-list.png
+/leads-mobile.png
+/delete-seed-campaigns.js
+/migrate-service-specs-columns.js
