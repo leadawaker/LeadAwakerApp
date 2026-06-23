@@ -520,6 +520,9 @@
     "stopRecording": "Stop recording",
     "recordVoiceMemo": "Record voice memo (transcribe to text)",
     "transcribing": "Transcribing…",
+    "retry": "Retry",
+    "retryTranscription": "Retry transcription",
+    "discardRecording": "Discard recording",
     "saved": "Saved",
     "save": "Save"
   },

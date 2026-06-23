@@ -16,10 +16,6 @@ import {
   fetchMessagingStatus, provisionMessaging, deprovisionMessaging,
   type MessagingStatus,
 } from "../../api/messagingApi";
-import {
-  fetchMessagingStatus, provisionMessaging, deprovisionMessaging,
-  type MessagingStatus,
-} from "../../api/messagingApi";
 import type { AccountRow, AccountDetail, IntegrationField as IField } from "./types";
 import {
   TwilioLogo,

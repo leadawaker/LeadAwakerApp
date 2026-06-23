@@ -573,6 +573,19 @@ export function CampaignListView({
     </>
   );
 
+  const mobileGroupPanel = (
+    <>
+      {(["status", "account", "type", "none"] as CampaignGroupBy[]).map((g) => (
+        <MobileDrawerOption
+          key={g}
+          label={t(DETAIL_GROUP_LABEL_KEYS[g])}
+          selected={groupBy === g}
+          onClick={() => onGroupByChange(g)}
+        />
+      ))}
+    </>
+  );
+
   return (
     <div className="flex flex-col h-full w-full" data-testid="campaign-list-view">
 
@@ -586,7 +599,9 @@ export function CampaignListView({
         filterActive={isFilterActive}
         sortPanel={mobileSortPanel}
         sortActive={isSortNonDefault}
-        extraActions={isAgencyUser ? (
+        groupPanel={mobileGroupPanel}
+        groupActive={isGroupNonDefault}
+        mainRowTrailing={isAgencyUser ? (
           <MobileHeaderIconBtn onClick={onCreateCampaign} aria-label={t("toolbar.add", "New campaign")} data-testid="mobile-header-add">
             <Plus className="h-4 w-4" />
           </MobileHeaderIconBtn>

@@ -520,6 +520,9 @@
     "stopRecording": "Parar gravação",
     "recordVoiceMemo": "Gravar memo de voz (transcrever para texto)",
     "transcribing": "Transcrevendo…",
+    "retry": "Tentar novamente",
+    "retryTranscription": "Repetir transcrição",
+    "discardRecording": "Descartar gravação",
     "saved": "Salvo",
     "save": "Salvar"
   },

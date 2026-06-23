@@ -89,8 +89,11 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     isRecordingVoice,
     recordingSeconds,
     transcribing,
+    transcriptionFailed,
     startVoiceRecording,
     stopVoiceRecording,
+    retryTranscription,
+    dismissFailedTranscription,
   } = useVoiceRecording(leadId, {
     setLocalNotes,
     setNotesDirty,
@@ -471,10 +474,13 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Notes — editable + voice memo + AI notes */}
           <LeadNotesSection
             transcribing={transcribing}
+            transcriptionFailed={transcriptionFailed}
             isRecordingVoice={isRecordingVoice}
             recordingSeconds={recordingSeconds}
             startVoiceRecording={startVoiceRecording}
             stopVoiceRecording={stopVoiceRecording}
+            retryTranscription={retryTranscription}
+            dismissFailedTranscription={dismissFailedTranscription}
             savingNotes={savingNotes}
             notesSaved={notesSaved}
             notesDirty={notesDirty}

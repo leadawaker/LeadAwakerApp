@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import type { LucideIcon } from "lucide-react";
-import { Search, SlidersHorizontal, ArrowDownUp, Layers, X, Check } from "lucide-react";
+import { Search, SlidersHorizontal, ArrowDownUp, Layers, X, Check, MoreHorizontal } from "lucide-react";
 import { useBackButtonClose } from "./MobileSheet";
 
 interface HeaderIconBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -111,13 +111,16 @@ export function MobileDrawerOption({
   label,
   icon: Icon,
   selected,
+  danger,
   onClick,
 }: {
   label: React.ReactNode;
   icon?: LucideIcon;
   selected?: boolean;
+  danger?: boolean;
   onClick?: () => void;
 }) {
+  const textColor = danger ? "var(--bad)" : selected ? "var(--wine)" : "var(--ink)";
   return (
     <button
       type="button"
@@ -137,8 +140,8 @@ export function MobileDrawerOption({
       }}
     >
       <span className="row" style={{ gap: 10, alignItems: "center", minWidth: 0 }}>
-        {Icon && <Icon size={15} style={{ color: "var(--mute)", flexShrink: 0 }} />}
-        <span style={{ fontSize: 14, fontWeight: selected ? 700 : 600, color: selected ? "var(--wine)" : "var(--ink)" }}>{label}</span>
+        {Icon && <Icon size={15} style={{ color: danger ? "var(--bad)" : "var(--mute)", flexShrink: 0 }} />}
+        <span style={{ fontSize: 14, fontWeight: selected ? 700 : 600, color: textColor }}>{label}</span>
       </span>
       {selected && <Check size={15} style={{ color: "var(--wine)", flexShrink: 0 }} />}
     </button>
@@ -201,7 +204,7 @@ export function DrawerMainButton({
   );
 }
 
-type DrillId = "filter" | "sort" | "group";
+type DrillId = "filter" | "sort" | "group" | "more";
 
 /**
  * The drawer that lowers from the top of the header, sized to its content.
@@ -222,6 +225,9 @@ function TopDrawer({
   groupPanel,
   groupActive,
   groupLabel,
+  morePanel,
+  moreLabel,
+  onMoreClose,
   leftActions,
   mainRowTrailing,
   extraActions,
@@ -237,6 +243,11 @@ function TopDrawer({
   groupPanel?: React.ReactNode;
   groupActive?: boolean;
   groupLabel: string;
+  /** Drill-in panel for the auto-rendered "..." button (bulk/extra actions). */
+  morePanel?: React.ReactNode;
+  moreLabel?: string;
+  /** Called when the "more" drill closes so callers can reset transient state (e.g. delete confirm). */
+  onMoreClose?: () => void;
   /** Extra toggle-style buttons rendered in the same row as Filter/Sort/Group (left side). */
   leftActions?: React.ReactNode;
   /** Buttons pinned to the right edge of the Filter/Sort/Group row (e.g. + and ...). */
@@ -244,6 +255,7 @@ function TopDrawer({
   extraActions?: React.ReactNode;
 }) {
   const [drill, setDrill] = useState<DrillId | null>(null);
+  const prevDrillRef = useRef<DrillId | null>(null);
 
   const close = () => {
     setDrill(null);
@@ -255,8 +267,13 @@ function TopDrawer({
     if (!open) setDrill(null);
   }, [open]);
 
-  const drillPanel = drill === "filter" ? filterPanel : drill === "sort" ? sortPanel : drill === "group" ? groupPanel : null;
-  const drillLabel = drill === "filter" ? filterLabel : drill === "sort" ? sortLabel : drill === "group" ? groupLabel : "";
+  useEffect(() => {
+    if (prevDrillRef.current === "more" && drill !== "more") onMoreClose?.();
+    prevDrillRef.current = drill;
+  }, [drill, onMoreClose]);
+
+  const drillPanel = drill === "filter" ? filterPanel : drill === "sort" ? sortPanel : drill === "group" ? groupPanel : drill === "more" ? morePanel : null;
+  const drillLabel = drill === "filter" ? filterLabel : drill === "sort" ? sortLabel : drill === "group" ? groupLabel : drill === "more" ? (moreLabel ?? "") : "";
 
   return createPortal(
     <AnimatePresence>
@@ -293,9 +310,9 @@ function TopDrawer({
             {/* Button row stays put as a fixed header; tapping a button extends
                 the drawer downward to show that control's options in the same
                 panel (Gabriel, 2026-06-21) — no view-swap, no back arrow. */}
-            <div style={{ flexShrink: 0, padding: "14px 18px 10px" }}>
+            <div style={{ flexShrink: 0, padding: "4px 6px 0" }}>
               <div className="row" style={{ gap: 8, flexWrap: "nowrap", justifyContent: mainRowTrailing ? "space-between" : "flex-start" }}>
-                <div className="row" style={{ gap: 8, flexWrap: "nowrap", overflowX: "auto", minWidth: 0 }}>
+                <div className="row" style={{ gap: 8, flexWrap: "nowrap", overflowX: "auto", minWidth: 0, padding: "10px 12px" }}>
                   {leftActions}
                   {filterPanel && (
                     <DrawerMainButton label={filterLabel} icon={SlidersHorizontal} active={filterActive || drill === "filter"} onClick={() => setDrill(drill === "filter" ? null : "filter")} />
@@ -307,9 +324,19 @@ function TopDrawer({
                     <DrawerMainButton label={groupLabel} icon={Layers} active={groupActive || drill === "group"} onClick={() => setDrill(drill === "group" ? null : "group")} />
                   )}
                 </div>
-                {mainRowTrailing && (
-                  <div className="row" style={{ gap: 8, flexWrap: "nowrap", flexShrink: 0 }}>
+                {(mainRowTrailing || morePanel) && (
+                  <div className="row" style={{ gap: 8, flexWrap: "nowrap", flexShrink: 0, padding: "10px 12px 10px 0" }}>
                     {mainRowTrailing}
+                    {morePanel && (
+                      <MobileHeaderIconBtn
+                        onClick={() => setDrill(drill === "more" ? null : "more")}
+                        active={drill === "more"}
+                        aria-label={moreLabel ?? "More"}
+                        style={{ width: 36, height: 36 }}
+                      >
+                        <MoreHorizontal size={16} />
+                      </MobileHeaderIconBtn>
+                    )}
                   </div>
                 )}
               </div>
@@ -365,6 +392,11 @@ export interface MobileListHeaderProps {
   groupPanel?: React.ReactNode;
   groupActive?: boolean;
   groupLabel?: string;
+  /** Drill-in panel for the auto-rendered "..." button. Omit to hide the "..." button. */
+  morePanel?: React.ReactNode;
+  moreLabel?: string;
+  /** Called when the "more" drill panel closes (use to reset transient state like delete confirm). */
+  onMoreClose?: () => void;
   /** Extra toggle-style buttons rendered in the same row as Filter/Sort/Group (left side). */
   leftActions?: React.ReactNode;
   /** Buttons pinned to the right edge of the Filter/Sort/Group row (e.g. + and ...). */
@@ -397,6 +429,9 @@ export function MobileListHeader({
   groupPanel,
   groupActive,
   groupLabel,
+  morePanel,
+  moreLabel,
+  onMoreClose,
   leftActions,
   mainRowTrailing,
   extraActions,
@@ -416,7 +451,7 @@ export function MobileListHeader({
     setSearchOpen(false);
   };
 
-  const hasSettings = !!filterPanel || !!sortPanel || !!groupPanel || !!extraActions || !!leftActions || !!mainRowTrailing;
+  const hasSettings = !!filterPanel || !!sortPanel || !!groupPanel || !!morePanel || !!extraActions || !!leftActions || !!mainRowTrailing;
   const settingsActive = !!filterActive || !!sortActive || !!groupActive;
 
   return (
@@ -496,6 +531,9 @@ export function MobileListHeader({
           groupPanel={groupPanel}
           groupActive={groupActive}
           groupLabel={groupLabel ?? t("groupBy.title", "Group")}
+          morePanel={morePanel}
+          moreLabel={moreLabel ?? t("more.title", "More")}
+          onMoreClose={onMoreClose}
           leftActions={leftActions}
           mainRowTrailing={mainRowTrailing}
           extraActions={extraActions}

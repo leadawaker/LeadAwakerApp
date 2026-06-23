@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Check, Users } from "lucide-react";
+import { PRIORITY_OPTIONS, TYPE_OPTIONS, type TaskPriority, type TaskType } from "../types";
 import { cn } from "@/lib/utils";
 import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
 import { MobileListHeader, MobileTabSeg, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
@@ -28,6 +29,8 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
 
   const [mobileFilter, setMobileFilter] = useState<DesktopFilter>(() => loadLocal<DesktopFilter>("tasks-mobile-filter", "all"));
   const [mobileWho, setMobileWho] = useState<string>(() => loadLocal<string>("tasks-mobile-who", "all"));
+  const [filterPriority, setFilterPriority] = useState<TaskPriority[]>(() => loadLocal<TaskPriority[]>("tasks-mobile-filter-priority", []));
+  const [filterType, setFilterType] = useState<TaskType[]>(() => loadLocal<TaskType[]>("tasks-mobile-filter-type", []));
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const lastTaskIdRef = useRef<number | null>(null);
   const [mobileCreateOpen, setMobileCreateOpen] = useState(false);
@@ -35,6 +38,20 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
 
   const handleMobileFilter = useCallback((f: DesktopFilter) => { setMobileFilter(f); saveLocal("tasks-mobile-filter", f); }, []);
   const handleMobileWho = useCallback((w: string) => { setMobileWho(w); saveLocal("tasks-mobile-who", w); }, []);
+  const toggleFilterPriority = useCallback((p: TaskPriority) => {
+    setFilterPriority((prev) => {
+      const next = prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p];
+      saveLocal("tasks-mobile-filter-priority", next);
+      return next;
+    });
+  }, []);
+  const toggleFilterType = useCallback((tp: TaskType) => {
+    setFilterType((prev) => {
+      const next = prev.includes(tp) ? prev.filter((x) => x !== tp) : [...prev, tp];
+      saveLocal("tasks-mobile-filter-type", next);
+      return next;
+    });
+  }, []);
   const handleSort = useCallback((s: SortOption) => { setSort(s); saveLocal("tasks-sort", s); }, []);
 
   const categoryMap = useMemo(() => new Map((categories ?? []).map(c => [c.id, c])), [categories]);
@@ -50,10 +67,12 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
     return tasks.filter(tk => tk.assignedToUserId === uid || (name && tk.assigneeName === name));
   }, [tasks, mobileWho, users]);
 
-  const filtered = useMemo(
-    () => sortTasks(applyDesktopFilter(baseByWho, mobileFilter, todayISO), sort),
-    [baseByWho, mobileFilter, todayISO, sort]
-  );
+  const filtered = useMemo(() => {
+    let result = applyDesktopFilter(baseByWho, mobileFilter, todayISO);
+    if (filterPriority.length > 0) result = result.filter((tk) => filterPriority.includes(tk.priority as TaskPriority));
+    if (filterType.length > 0) result = result.filter((tk) => filterType.includes(tk.taskType as TaskType));
+    return sortTasks(result, sort);
+  }, [baseByWho, mobileFilter, todayISO, filterPriority, filterType, sort]);
 
   const chipCounts = useMemo(() => ({
     all: baseByWho.length,
@@ -119,13 +138,31 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
           )}
           filterPanel={(
             <>
-              <MobileDrawerSubheading>{t("filter.title", "Filter")}</MobileDrawerSubheading>
+              <MobileDrawerSubheading>{t("filter.title", "Date")}</MobileDrawerSubheading>
               {filterChips.map(([k, lbl]) => (
                 <MobileDrawerOption
                   key={k}
                   label={`${lbl}  ${chipCounts[k]}`}
                   selected={mobileFilter === k}
                   onClick={() => handleMobileFilter(k)}
+                />
+              ))}
+              <MobileDrawerSubheading>{t("columns.priority", "Priority")}</MobileDrawerSubheading>
+              {PRIORITY_OPTIONS.map((opt) => (
+                <MobileDrawerOption
+                  key={opt.value}
+                  label={t(`priority.${opt.value}`, opt.label)}
+                  selected={filterPriority.includes(opt.value)}
+                  onClick={() => toggleFilterPriority(opt.value)}
+                />
+              ))}
+              <MobileDrawerSubheading>{t("columns.type", "Type")}</MobileDrawerSubheading>
+              {TYPE_OPTIONS.map((opt) => (
+                <MobileDrawerOption
+                  key={opt.value}
+                  label={t(`taskType.${opt.value.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())}`, opt.label)}
+                  selected={filterType.includes(opt.value)}
+                  onClick={() => toggleFilterType(opt.value)}
                 />
               ))}
             </>
@@ -143,7 +180,7 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
               ))}
             </>
           )}
-          filterActive={mobileFilter !== "all"}
+          filterActive={mobileFilter !== "all" || filterPriority.length > 0 || filterType.length > 0}
           sortActive={sort !== "due_date_asc"}
         />
 

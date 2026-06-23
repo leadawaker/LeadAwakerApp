@@ -520,6 +520,9 @@
     "stopRecording": "Opname stoppen",
     "recordVoiceMemo": "Spraakmemo opnemen (naar tekst transcriberen)",
     "transcribing": "Transcriberen…",
+    "retry": "Opnieuw",
+    "retryTranscription": "Transcriptie opnieuw proberen",
+    "discardRecording": "Opname verwijderen",
     "saved": "Opgeslagen",
     "save": "Opslaan"
   },

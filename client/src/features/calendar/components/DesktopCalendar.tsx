@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
-import { MobileListHeader, MobileTabSeg, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
+import { MobileListHeader, MobileTabSeg, MobileDrawerOption, MobileDrawerSubheading, DrawerMainButton } from "@/components/crm/mobile/MobileListHeader";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useSession } from "@/hooks/useSession";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
@@ -460,31 +460,25 @@ function TopToolbar(p: DesktopCalendarProps) {
         sortActive={p.apptSortBy !== "time_desc"}
         groupPanel={mobileGroupPanel}
         groupActive={p.apptGroupBy !== "date"}
-        extraActions={(
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-            <CalSettingRow
-              icon={<CalIcon className="h-[18px] w-[18px]" />}
-              label={t("navigation.today")}
-              onClick={p.onToday}
-              data-testid="mobile-calendar-today"
-            />
+        leftActions={(
+          <>
             {p.setShowAvailability && (
-              <CalSettingRow
-                icon={<Clock className="h-[18px] w-[18px]" />}
-                label={t("design.settings.availability", { defaultValue: "Show availability" })}
+              <DrawerMainButton
+                label={t("mobile.availability", "Availability")}
+                icon={Clock}
                 active={!!p.showAvailability}
+                variant="solid"
                 onClick={() => p.setShowAvailability!(!p.showAvailability)}
-                data-testid="mobile-calendar-availability"
               />
             )}
-            <CalSettingRow
-              icon={<CalendarDays className="h-[18px] w-[18px]" />}
-              label={t("design.weekends.hide", { defaultValue: "Hide weekends" })}
+            <DrawerMainButton
+              label={t("mobile.weekends", "Weekends")}
+              icon={CalendarDays}
               active={p.hideWeekends}
+              variant="solid"
               onClick={() => p.setHideWeekends(!p.hideWeekends)}
-              data-testid="mobile-calendar-weekends"
             />
-          </div>
+          </>
         )}
       />
     );

@@ -3,16 +3,19 @@
 // from LeadDetailPanel.tsx; props match the original locals (structural split).
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { StickyNote, Loader2, Square, Mic, CheckCircle2, Save } from "lucide-react";
+import { StickyNote, Loader2, Square, Mic, CheckCircle2, Save, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 interface LeadNotesSectionProps {
   transcribing: boolean;
+  transcriptionFailed: boolean;
   isRecordingVoice: boolean;
   recordingSeconds: number;
   startVoiceRecording: () => void;
   stopVoiceRecording: () => void;
+  retryTranscription: () => void;
+  dismissFailedTranscription: () => void;
   savingNotes: boolean;
   notesSaved: boolean;
   notesDirty: boolean;
@@ -27,10 +30,13 @@ interface LeadNotesSectionProps {
 
 export function LeadNotesSection({
   transcribing,
+  transcriptionFailed,
   isRecordingVoice,
   recordingSeconds,
   startVoiceRecording,
   stopVoiceRecording,
+  retryTranscription,
+  dismissFailedTranscription,
   savingNotes,
   notesSaved,
   notesDirty,
@@ -56,6 +62,24 @@ export function LeadNotesSection({
                   <div className="flex items-center gap-1.5 text-[10px] text-brand-indigo">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     {t("notes.transcribing")}
+                  </div>
+                ) : transcriptionFailed ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={retryTranscription}
+                      className="flex items-center gap-1 h-7 px-2 rounded border border-amber-400/60 bg-amber-500/10 text-amber-600 text-[11px] font-medium hover:bg-amber-500/20 transition-colors"
+                      title={t("notes.retryTranscription")}
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      {t("notes.retry")}
+                    </button>
+                    <button
+                      onClick={dismissFailedTranscription}
+                      className="inline-flex items-center justify-center h-7 w-7 rounded border border-black/[0.1] text-muted-foreground hover:text-foreground transition-colors"
+                      title={t("notes.discardRecording")}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
                 ) : isRecordingVoice ? (
                   <button

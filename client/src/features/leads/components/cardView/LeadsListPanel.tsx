@@ -14,20 +14,12 @@ import {
   X,
   Kanban,
   MessageSquare,
-  MoreHorizontal,
   Trash2,
   FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { resolveColor } from "@/features/tags/types";
 import { CompactLeadCard } from "./CompactLeadCard";
@@ -388,50 +380,37 @@ export function LeadsListPanel({
               />
             )}
             mainRowTrailing={(
-              <DropdownMenu onOpenChange={(o) => { if (!o) setMoreDeleteConfirm(false); }}>
-                <DropdownMenuTrigger asChild>
-                  <MobileHeaderIconBtn
-                    aria-label={t("toolbar.more", "More")}
-                    data-testid="mobile-leads-more-button"
-                    style={{ width: 36, height: 36 }}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </MobileHeaderIconBtn>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white">
-                  <DropdownMenuItem
-                    onClick={() => setMobileAddOpen(true)}
-                    data-testid="mobile-add-lead-menu-item"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("toolbar.add", "Add Lead")}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {!hasSelection && (
-                    <div className="px-2 py-1.5 text-[12px] text-muted-foreground">
-                      {t("selection.selectLeadsFirst", "Select leads to enable actions")}
-                    </div>
-                  )}
-                  <DropdownMenuItem disabled={!hasSelection} onClick={handleExportSelectedPdf}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    {t("selection.exportPdfSelected", "Export selected as PDF")}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    disabled={!hasSelection}
-                    onSelect={(e) => {
-                      if (!moreDeleteConfirm) { e.preventDefault(); setMoreDeleteConfirm(true); return; }
-                      handleListBulkDelete();
-                      setMoreDeleteConfirm(false);
-                    }}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {bulkBusy ? "…" : moreDeleteConfirm ? t("common.confirm", "Confirm") : `${deleteLabel} (${selectedLeadIds.size})`}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <MobileHeaderIconBtn
+                onClick={() => setMobileAddOpen(true)}
+                aria-label={t("toolbar.add", "Add Lead")}
+                data-testid="mobile-add-lead-button"
+              >
+                <Plus className="h-4 w-4" />
+              </MobileHeaderIconBtn>
             )}
+            morePanel={(
+              <>
+                {!hasSelection && (
+                  <MobileDrawerSubheading>{t("selection.selectLeadsFirst", "Select leads to enable actions")}</MobileDrawerSubheading>
+                )}
+                <MobileDrawerOption
+                  label={t("selection.exportPdfSelected", "Export selected as PDF")}
+                  icon={FileText}
+                  onClick={hasSelection ? handleExportSelectedPdf : undefined}
+                />
+                <MobileDrawerOption
+                  label={bulkBusy ? "…" : moreDeleteConfirm ? t("common.confirm", "Confirm") : `${deleteLabel} (${selectedLeadIds.size})`}
+                  icon={Trash2}
+                  danger
+                  onClick={hasSelection ? () => {
+                    if (!moreDeleteConfirm) { setMoreDeleteConfirm(true); return; }
+                    handleListBulkDelete();
+                    setMoreDeleteConfirm(false);
+                  } : undefined}
+                />
+              </>
+            )}
+            onMoreClose={() => setMoreDeleteConfirm(false)}
           />
 
           {/* Tablet chrome (768–1023): legacy header (title + view tabs + actions + search) */}

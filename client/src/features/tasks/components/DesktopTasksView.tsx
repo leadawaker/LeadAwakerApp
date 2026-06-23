@@ -310,7 +310,7 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
                   <span>Category</span>
                   {categoryFilter !== 'all' && <span className="text-[10px] font-mono text-brand-indigo truncate max-w-[60px]">{categories.find((c: any) => c.id === categoryFilter)?.name}</span>}
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-48 glass-strong border-none">
+                <DropdownMenuSubContent className="w-48 glass-strong border-none max-h-[60vh] overflow-y-auto">
                   <DropdownMenuItem onClick={() => handleCategoryFilter('all')} className="flex items-center gap-2">
                     {categoryFilter === 'all' && <Check className="h-3.5 w-3.5 text-brand-indigo" />}
                     <span className={cn(categoryFilter === 'all' ? "font-semibold ml-0" : "ml-[22px]")}>All</span>

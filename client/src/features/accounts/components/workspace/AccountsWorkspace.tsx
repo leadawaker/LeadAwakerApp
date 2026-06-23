@@ -4,7 +4,7 @@ import { Building2, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileListHeader, MobileHeaderIconBtn, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
 import { MobileSheet, MobileRecede } from "@/components/crm/mobile/MobileSheet";
-import { STATUS_FILTER_OPTIONS, STATUS_I18N_KEY } from "../listWidgets/accountListConstants";
+import { STATUS_FILTER_OPTIONS, STATUS_I18N_KEY, GROUP_TKEYS } from "../listWidgets/accountListConstants";
 import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useListPanelState } from "@/hooks/useListPanelState";
@@ -207,6 +207,19 @@ export function AccountsWorkspace(p: Props) {
     </>
   );
 
+  const accountsGroupPanel = (
+    <>
+      {(["status", "type", "none"] as AccountGroupBy[]).map((g) => (
+        <MobileDrawerOption
+          key={g}
+          label={t(GROUP_TKEYS[g])}
+          selected={p.groupBy === g}
+          onClick={() => p.onGroupByChange(g)}
+        />
+      ))}
+    </>
+  );
+
   return (
     <div className="flex flex-col h-full w-full" data-testid="accounts-workspace">
       <MobileListHeader
@@ -218,7 +231,9 @@ export function AccountsWorkspace(p: Props) {
         filterActive={p.isFilterActive}
         sortPanel={accountsSortPanel}
         sortActive={p.isSortNonDefault}
-        extraActions={isAgencyUser ? (
+        groupPanel={accountsGroupPanel}
+        groupActive={p.isGroupNonDefault}
+        mainRowTrailing={isAgencyUser ? (
           <MobileHeaderIconBtn onClick={() => setPanelMode("create")} aria-label={t("toolbar.add", "New account")} data-testid="mobile-accounts-add">
             <Plus className="h-4 w-4" />
           </MobileHeaderIconBtn>

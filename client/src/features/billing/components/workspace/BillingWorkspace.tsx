@@ -291,7 +291,7 @@ export function BillingWorkspace(p: Props) {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder={t("toolbar.searchPlaceholder", "Search...")}
-        extraActions={p.isOwner ? (
+        mainRowTrailing={p.isOwner ? (
           <MobileHeaderIconBtn onClick={handleCreate} aria-label={t("toolbar.add", "Add")} data-testid="mobile-billing-add">
             <Plus className="h-4 w-4" />
           </MobileHeaderIconBtn>

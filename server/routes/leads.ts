@@ -295,11 +295,9 @@ export function registerLeadsRoutes(app: Express): void {
     res.json(toDbKeys(lead as any, leads));
   }));
 
-  // POST /api/leads/:id/transcribe-voice — Groq Whisper transcription
+  // POST /api/leads/:id/transcribe-voice — Groq Whisper (x2 retry) → OpenAI Whisper fallback
   app.post("/api/leads/:id/transcribe-voice", requireAuth, wrapAsync(async (req, res) => {
     const leadId = Number(req.params.id);
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
 
     const lead = await storage.getLeadById(leadId);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
@@ -311,44 +309,68 @@ export function registerLeadsRoutes(app: Express): void {
     const { audio_data, mime_type } = req.body;
     if (!audio_data) return res.status(400).json({ message: "No audio data provided" });
 
-    try {
-      const base64Clean = (audio_data as string).replace(/^data:[^,]+,/, "");
-      const audioBuffer = Buffer.from(base64Clean, "base64");
-      console.log("[transcribe-voice] mime_type:", mime_type, "| audio_data length:", (audio_data as string).length, "| buffer size:", audioBuffer.length, "bytes");
+    const base64Clean = (audio_data as string).replace(/^data:[^,]+,/, "");
+    const audioBuffer = Buffer.from(base64Clean, "base64");
+    console.log("[transcribe-voice] mime_type:", mime_type, "| audio_data length:", (audio_data as string).length, "| buffer size:", audioBuffer.length, "bytes");
 
-      const rawMime = (mime_type || "audio/webm") as string;
-      const mimeBase = rawMime.split(";")[0].trim();
-      const ext = mimeBase.includes("webm") ? "webm" : mimeBase.includes("ogg") ? "ogg" : mimeBase.includes("mp4") ? "mp4" : mimeBase.includes("wav") ? "wav" : "webm";
+    const rawMime = (mime_type || "audio/webm") as string;
+    const mimeBase = rawMime.split(";")[0].trim();
+    const ext = mimeBase.includes("webm") ? "webm" : mimeBase.includes("ogg") ? "ogg" : mimeBase.includes("mp4") ? "mp4" : mimeBase.includes("wav") ? "wav" : "webm";
 
+    async function callWhisper(url: string, apiKey: string, model: string): Promise<string | null> {
       const file = new File([audioBuffer], `recording.${ext}`, { type: mimeBase });
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("model", "whisper-large-v3-turbo");
+      formData.append("model", model);
       formData.append("response_format", "json");
       formData.append("temperature", "0");
 
-      const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        console.error("[transcribe-voice] Groq error:", errBody);
-        return res.status(500).json({ error: "Transcription failed", detail: errBody });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90_000);
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${apiKey}` },
+          body: formData,
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          const errBody = await response.text();
+          console.error(`[transcribe-voice] ${url} error ${response.status}:`, errBody);
+          return null;
+        }
+        const json = await response.json() as any;
+        return json.text?.trim() ?? "";
+      } catch (err) {
+        console.error(`[transcribe-voice] ${url} threw:`, err);
+        return null;
+      } finally {
+        clearTimeout(timeout);
       }
-
-      const json = await response.json() as any;
-      const text = json.text?.trim() ?? "";
-
-      return res.json({ transcription: text });
-    } catch (err) {
-      console.error("[transcribe-voice] Error:", err);
-      return res.status(500).json({ error: "Internal error" });
     }
+
+    const groqKey = process.env.GROQ_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+
+    const attempts: Array<() => Promise<string | null>> = [];
+    if (groqKey) {
+      attempts.push(() => callWhisper("https://api.groq.com/openai/v1/audio/transcriptions", groqKey, "whisper-large-v3-turbo"));
+      attempts.push(() => callWhisper("https://api.groq.com/openai/v1/audio/transcriptions", groqKey, "whisper-large-v3-turbo"));
+    }
+    if (openaiKey) {
+      attempts.push(() => callWhisper("https://api.openai.com/v1/audio/transcriptions", openaiKey, "whisper-1"));
+    }
+
+    if (attempts.length === 0) return res.status(200).json({ error: "NO_TRANSCRIPTION_KEYS" });
+
+    for (let i = 0; i < attempts.length; i++) {
+      console.log(`[transcribe-voice] attempt ${i + 1}/${attempts.length}`);
+      const text = await attempts[i]();
+      if (text !== null) return res.json({ transcription: text });
+    }
+
+    console.error("[transcribe-voice] all attempts failed");
+    return res.status(500).json({ error: "Transcription failed" });
   }));
 
   // ─── Bulk Lead Operations ──────────────────────────────────────────
