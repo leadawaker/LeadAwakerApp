@@ -75,6 +75,9 @@ export const accounts = nocodb.table("Accounts", {
   googleReviewUrl: text("google_review_url"),
   // User id (or channel) that receives negative-feedback alerts.
   reputationAlertTarget: text("reputation_alert_target"),
+  // Reputation v2 — public review response (specs/reputation-reviews).
+  enableReviewResponse: boolean("enable_review_response").default(false),
+  reviewReplyAutoPositive: boolean("review_reply_auto_positive").default(false),
   // Managed messaging provisioning (Twilio subaccount) — see specs/messaging-provisioning.
   // The four twilio_* fields above are populated by provisioning; these track lifecycle + WhatsApp.
   messagingProvisionedAt: timestamp("messaging_provisioned_at", { withTimezone: true }),
@@ -384,6 +387,9 @@ export const campaigns = nocodb.table("Campaigns", {
   maxBumps: bigint("max_bumps", { mode: "number" }),
   stopOnResponse: boolean("stop_on_response"),
   channel: text("channel").default("sms"),
+  // Channel fallback (specs/channel-fallback): primary→fallback delivery routing.
+  channelMode: text("channel_mode").default("whatsapp_then_sms"),
+  fallbackChannel: text("fallback_channel").default("email"),
   firstMessageVoiceNote: boolean("first_message_voice_note").default(false),
   bump1VoiceNote: boolean("bump_1_voice_note").default(false),
   bump2VoiceNote: boolean("bump_2_voice_note").default(false),
@@ -1402,3 +1408,37 @@ export const insertCalendarConnectionSchema = createInsertSchema(calendarConnect
 });
 export type CalendarConnection = typeof calendarConnections.$inferSelect;
 export type InsertCalendarConnection = z.infer<typeof insertCalendarConnectionSchema>;
+
+// ─── Account Reviews ──────────────────────────────────────────────────────────
+// Reputation v2 — public reviews fetched from Google Business Profile and the
+// AI-drafted / human-approved replies posted back. See specs/reputation-reviews.
+// One row per (account, external review id); status drives the approval workflow.
+
+export const accountReviews = nocodb.table("Account_Reviews", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  platform: text("platform").default("google"),      // google (trustpilot/facebook later)
+  externalReviewId: text("external_review_id"),       // provider review id; unique per account
+  authorName: text("author_name"),
+  rating: integer("rating"),                          // 1–5 stars
+  reviewText: text("review_text"),
+  reviewCreatedAt: timestamp("review_created_at", { withTimezone: true }),
+  status: text("status").default("new"),              // new | drafted | approved | posted | skipped
+  draftReply: text("draft_reply"),
+  postedReply: text("posted_reply"),
+  postedAt: timestamp("posted_at", { withTimezone: true }),
+  language: text("language"),                          // en | nl (matches the review)
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("account_reviews_accounts_id_idx").on(t.accountsId),
+  uniqueIndex("account_reviews_account_external_idx").on(t.accountsId, t.externalReviewId),
+]);
+
+export const insertAccountReviewSchema = createInsertSchema(accountReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type AccountReview = typeof accountReviews.$inferSelect;
+export type InsertAccountReview = z.infer<typeof insertAccountReviewSchema>;

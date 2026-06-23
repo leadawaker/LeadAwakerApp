@@ -230,6 +230,19 @@
     "dailyLimit": "Dagelijks limiet",
     "interval": "Interval",
     "channel": "Kanaal",
+    "channelMode": "Kanaalmodus",
+    "channelModes": {
+      "whatsapp_only": "Alleen WhatsApp",
+      "whatsapp_then_sms": "WhatsApp, dan terugval",
+      "sms_first": "Terugval eerst (open op terugval)",
+      "sms_only": "Alleen terugval"
+    },
+    "fallbackChannel": "Terugvalkanaal",
+    "fallbackChannels": {
+      "email": "E-mail",
+      "sms": "SMS",
+      "sms_then_email": "SMS, dan e-mail"
+    },
     "stopOnResponse": "Stoppen bij respons",
     "useAiBumps": "AI-bumps gebruiken",
     "maxBumps": "Max bumps",

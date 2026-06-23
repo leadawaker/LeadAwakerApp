@@ -269,6 +269,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     contract_id: String(c.contract_id || (c as any).contract_id || ""),
     value_per_booking: c.value_per_booking ?? "",
     channel: c.channel || "sms",
+    channel_mode: (c as any).channel_mode || "whatsapp_then_sms",
+    fallback_channel: (c as any).fallback_channel || "email",
     company_name: c.company_name || "",
     demo_client_name: c.demo_client_name || "",
     language: c.language || "",

@@ -230,6 +230,19 @@
     "dailyLimit": "Daily limit",
     "interval": "Interval",
     "channel": "Channel",
+    "channelMode": "Channel Mode",
+    "channelModes": {
+      "whatsapp_only": "WhatsApp only",
+      "whatsapp_then_sms": "WhatsApp, then fallback",
+      "sms_first": "Fallback first (open on fallback)",
+      "sms_only": "Fallback only"
+    },
+    "fallbackChannel": "Fallback Channel",
+    "fallbackChannels": {
+      "email": "Email",
+      "sms": "SMS",
+      "sms_then_email": "SMS, then email"
+    },
     "stopOnResponse": "Stop on response",
     "useAiBumps": "Use AI bumps",
     "maxBumps": "Max bumps",

@@ -148,6 +148,27 @@ export function BehaviorSectionFields({
         />
       </div>
 
+      {/* Channel Mode — WhatsApp / fallback routing policy */}
+      <InfoRow icon={Radio} label={t("config.channelMode")} value={t(`config.channelModes.${campaign.channel_mode || "whatsapp_then_sms"}`)}
+        {...editFor("channel_mode")}
+        editChild={isEditing ? <EditSelect value={String(draft.channel_mode ?? "whatsapp_then_sms")} onChange={(v) => setDraft(d => ({...d, channel_mode: v}))} options={["whatsapp_only", "whatsapp_then_sms", "sms_first", "sms_only"]} labels={{
+          whatsapp_only: t("config.channelModes.whatsapp_only"),
+          whatsapp_then_sms: t("config.channelModes.whatsapp_then_sms"),
+          sms_first: t("config.channelModes.sms_first"),
+          sms_only: t("config.channelModes.sms_only"),
+        }} {...focusFor("channel_mode")} /> : undefined}
+      />
+
+      {/* Fallback Channel — what the fallback / pre-approval leg actually sends */}
+      <InfoRow icon={Radio} label={t("config.fallbackChannel")} value={t(`config.fallbackChannels.${campaign.fallback_channel || "email"}`)}
+        {...editFor("fallback_channel")}
+        editChild={isEditing ? <EditSelect value={String(draft.fallback_channel ?? "email")} onChange={(v) => setDraft(d => ({...d, fallback_channel: v}))} options={["email", "sms", "sms_then_email"]} labels={{
+          email: t("config.fallbackChannels.email"),
+          sms: t("config.fallbackChannels.sms"),
+          sms_then_email: t("config.fallbackChannels.sms_then_email"),
+        }} {...focusFor("fallback_channel")} /> : undefined}
+      />
+
       {/* BoolRows */}
       <BoolRow icon={Pause} label={t("config.stopOnResponse")} value={!!(draft.stop_on_response ?? campaign.stop_on_response)}
         {...editFor("stop_on_response")}
