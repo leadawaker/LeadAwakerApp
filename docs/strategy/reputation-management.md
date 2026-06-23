@@ -38,7 +38,7 @@ Therefore reputation must have its **own lifecycle and its own trigger**, indepe
   [closed-won-status.md](./closed-won-status.md)).
 
 This implies a cross-cutting **`campaign_type` / `service_type`** concept (`reactivation |
-reputation | speed_to_lead | nurture`) set on the campaign and inherited by its leads, so the engine
+reputation | speed_to_lead`) set on the campaign and inherited by its leads, so the engine
 knows which lifecycle a lead is in and the CRM interprets its status correctly. The
 `Conversion_Status` funnel is a *reactivation* lifecycle, not a universal one. See the cross-cutting
 note in [strategy.md](./strategy.md).
@@ -124,11 +124,6 @@ Reuse, don't rebuild. All paths verified against the current tree.
 
 **Small-to-medium.** ~80% reuse. The new surface is one scheduler job, one classifier branch, a
 prompt, ~4 schema fields, and a small account panel. Build **first** — best effort-to-impact ratio
-and it forces the `campaign_type` decoupling that the other detached services also need.
-
-## Open questions
-
-- Service-completed signal for v1: CSV column + manual "mark served" only, or also a webhook?
-- Manager alert channel: in-app notification, WhatsApp to the owner, email, or all three?
+and it forces the `campaign_type` decoupling that the other detached serviee?
 - Do we cap review-request volume per day per account to avoid Google burst-suppression?
 - One reputation campaign per account, or per-location (Dan's True Ninja runs multiple locations)?

@@ -59,13 +59,15 @@ Suggested build order:
    impact, smallest lift (reuses existing conversation engine).
 2. **Speed to Lead (WhatsApp)** — instant WhatsApp reply when a new lead comes in via
    form/webhook. Builds on `inbound_handler.py`.
-3. **Follow-up Sequences** — expose bump scheduling as a standalone configurable feature
-   (not just tied to reactivation campaigns).
-4. **Prospecting / demo-builder tool** (Lead Awaker's own "Sales Wingman") — once 3+ AI
+3. **Prospecting / demo-builder tool** (Lead Awaker's own "Sales Wingman") — once 2-3 AI
    products exist to demo, build the website-scan-to-instant-demo tool for Gabriel's own
    sales process (closing clients faster), not for client self-use.
 
 Plus a small enabling change, **Closed / Won status**, which can ship independently and early.
+
+The client-facing service set is exactly three: **Reactivation** (existing, done), **Reputation**,
+and **Speed-to-Lead**. Follow-up / nurture sequences are **deferred, not a standalone service** —
+see [Explicitly deferred](#explicitly-deferred--not-worth-building-yet).
 
 ## Per-service plans (detailed)
 
@@ -76,9 +78,9 @@ approach with real file paths, platform gaps, sequencing, open questions):
 |---|---------|-----|------|
 | 1 | Reputation Management (WhatsApp) | [reputation-management.md](./reputation-management.md) | Small-Med |
 | 2 | Speed-to-Lead (WhatsApp) | [speed-to-lead.md](./speed-to-lead.md) | Medium |
-| 3 | Follow-up / Nurture Sequences | [follow-up-sequences.md](./follow-up-sequences.md) | Low engine / Med UI |
-| 4 | Demo-Builder / Prospecting tool | [demo-builder.md](./demo-builder.md) | Large (build last) |
+| 3 | Demo-Builder / Prospecting tool (sales tool, not a client service) | [demo-builder.md](./demo-builder.md) | Large (build last) |
 | — | Closed / Won status (enabler) | [closed-won-status.md](./closed-won-status.md) | Smallest |
+| — | Follow-up / Nurture sequences (**deferred** — not a standalone service) | [follow-up-sequences.md](./follow-up-sequences.md) | Parked |
 
 ## Cross-cutting: service-type decoupling (important)
 
@@ -89,7 +91,6 @@ universal trigger. Each service is its **own lifecycle** with its **own entry tr
 
 - `reputation` → trigger on a `service_completed_at` timestamp (import / "mark served" / POS webhook).
 - `speed_to_lead` → trigger on inbound lead arrival (webhook), fired inline.
-- `nurture` → trigger on an event (no-book, neutral feedback, manual enrollment).
 - `reactivation` → the existing cold-database flow; `Conversion_Status` funnel applies here, and
   `Closed/Won` lives here.
 
@@ -109,6 +110,11 @@ and outcomes, not on out-featuring GHL.
 
 ## Explicitly deferred / not worth building yet
 
+- **Follow-up / nurture sequences as a standalone service** — this is the bump engine, already
+  automated and configured via campaign fields. A sequence-builder UI adds no human action, setup
+  surface, or client-facing proof metric on the managed-service model, so it does not earn a screen.
+  Revisit only in a self-serve / rental tier. Plan parked in
+  [follow-up-sequences.md](./follow-up-sequences.md).
 - **"Bring your own AI via API"** — letting clients plug in their own AI to the CRM. Adds real
   complexity (auth, rate limiting, prompt injection surface, support burden) for unvalidated
   demand. Revisit only if a specific paying client asks.

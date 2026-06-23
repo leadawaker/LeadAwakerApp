@@ -1,6 +1,11 @@
 # Follow-up / Nurture Sequences (standalone)
 
-> Part of the [Lead Awaker "Hulk" service set](./strategy.md). Build order: **3rd**.
+> **DEFERRED — not a standalone service.** Parked plan, kept only for the one load-bearing decision
+> ("extend the bump engine, don't fork it"). On the managed-service model this is just the existing
+> bump scheduler configured via campaign fields; it adds no human action, setup surface, or
+> client-facing proof metric, so it does not earn its own screen. Revisit only in a self-serve /
+> rental tier. The active service set is **Reactivation, Reputation, Speed-to-Lead** — see
+> [strategy.md](./strategy.md).
 
 ## Overview
 

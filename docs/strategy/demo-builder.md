@@ -17,7 +17,7 @@ a pitch. This tool changes our sales motion, not just our product.
 ## Where it fits
 
 This is a **prospecting/sales-enablement tool**, not a client-facing service. It only pays off once
-we have **2-3 sellable products to demo** (reputation, speed-to-lead, nurture). Hence: build it
+we have **2-3 sellable products to demo** (reactivation, reputation, speed-to-lead). Hence: build it
 **after** the others exist. It also becomes the front-end for the future platform-rental tier
 (provision a subaccount in one click).
 
@@ -91,7 +91,7 @@ generate demo → install). Logging via `AsyncLogStep("demo_builder", "<step>", 
 
 ## Effort & sequencing
 
-**Large.** Build **last**, after reputation + speed-to-lead + nurture are real (you need products to
+**Large.** Build **last**, after reputation + speed-to-lead are real (you need products to
 demo) and once the subaccount/templating story is solid. v1 can be deliberately thin: scan →
 recommend → single WhatsApp demo, with multi-product + one-click install as fast-follows.
 
