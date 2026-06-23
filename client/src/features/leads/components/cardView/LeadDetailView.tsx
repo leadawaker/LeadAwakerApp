@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Calendar,
+  CheckCircle2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -125,6 +126,28 @@ export function LeadDetailView({
       console.error("Failed to resume AI", err);
     }
   }, [leadId, onRefresh]);
+
+  // ── Reputation: mark service completed (the entry trigger for the feedback ask).
+  //    The timestamp is set server-side by the endpoint, never sent from here. ──
+  const servedAt = lead?.service_completed_at || lead?.serviceCompletedAt || null;
+  const [marking, setMarking] = useState(false);
+  const handleMarkServed = useCallback(async () => {
+    if (!leadId) return;
+    setMarking(true);
+    try {
+      const res = await apiFetch(`/api/leads/${leadId}/mark-served`, { method: "POST" });
+      if (res.ok) {
+        hapticSave();
+        toast({ description: t("detail.markServed.success", "Marked as served") });
+        onRefresh?.();
+      } else {
+        toast({ description: t("detail.markServed.error", "Could not mark as served"), variant: "destructive" });
+      }
+    } catch {
+      toast({ description: t("detail.markServed.error", "Could not mark as served"), variant: "destructive" });
+    }
+    setMarking(false);
+  }, [leadId, onRefresh, t, toast]);
 
   // ── Tag events — fetch junction rows + full tag list, merge by ID ──────────
   const [tagEvents, setTagEvents] = useState<{ name: string; color?: string; appliedAt?: string }[]>([]);
@@ -349,6 +372,20 @@ export function LeadDetailView({
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--warn-tint)", border: "1px solid rgba(196,138,47,0.4)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--stage-booked)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
                   <Calendar className="h-[11px] w-[11px]" />Booked · {formatBookedDate(bookedDate, accountTimezone)}
                 </span>
+              )}
+              {servedAt ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "color-mix(in srgb, var(--primary) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--primary) 35%, transparent)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--primary)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                  <CheckCircle2 className="h-[11px] w-[11px]" />{t("detail.served", "Served")} · {formatBookedDate(servedAt, accountTimezone)}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleMarkServed}
+                  disabled={marking}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: "1px solid var(--line-strong)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--mute)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, cursor: marking ? "default" : "pointer", opacity: marking ? 0.5 : 1 }}
+                >
+                  <CheckCircle2 className="h-[11px] w-[11px]" />{marking ? t("detail.markServed.saving", "Saving…") : t("detail.markServed.label", "Mark served")}
+                </button>
               )}
             </div>
             <div style={{ display: "flex", gap: 12, fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", letterSpacing: "0.1em", textTransform: "uppercase", flexWrap: "wrap" }}>

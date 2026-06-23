@@ -236,6 +236,40 @@
     "description": "Clique em qualquer conta à esquerda para ver seus detalhes e configurações.",
     "chooseFromList": "← Escolha da lista"
   },
+  "messaging": {
+    "title": "Mensagens (WhatsApp e SMS)",
+    "explainer": "Configure o remetente de WhatsApp e SMS deste cliente com um clique. Provisionamos um número dedicado nos bastidores, sem precisar de conta Twilio.",
+    "provision": "Configurar mensagens",
+    "provisioning": "Configurando…",
+    "number": "Número",
+    "sms": "SMS",
+    "whatsapp": "WhatsApp",
+    "whatsappHint": "O SMS está pronto. Ative o WhatsApp para enviar pelo WhatsApp (requer análise da Meta).",
+    "release": "Liberar",
+    "advanced": "Avançado — usar meu próprio Twilio",
+    "state": {
+      "ready": "Pronto",
+      "pending": "Em análise",
+      "rejected": "Rejeitado",
+      "none": "Não configurado"
+    }
+  },
+  "reputation": {
+    "title": "Gestão de Reputação",
+    "description": "Peça feedback automaticamente via WhatsApp aos clientes atendidos. Clientes satisfeitos recebem o link de avaliação do Google; os insatisfeitos são tratados de forma privada e encaminhados para uma pessoa.",
+    "enableLabel": "Ativar gestão de reputação",
+    "enableHint": "Ative o fluxo de feedback para esta conta",
+    "reviewUrlLabel": "Link de avaliação do Google",
+    "reviewUrlPlaceholder": "https://g.page/r/...",
+    "reviewUrlHint": "Enviado aos clientes que relatam uma experiência positiva.",
+    "alertTargetLabel": "Alerta de feedback negativo",
+    "alertTargetOwner": "Dono da conta (padrão)",
+    "alertTargetHint": "Quem é notificado quando um cliente está insatisfeito.",
+    "saved": "Configurações de reputação salvas",
+    "saveError": "Não foi possível salvar as configurações",
+    "saving": "Salvando…",
+    "save": "Salvar"
+  },
   "knowledge": {
     "title": "Base de Conhecimento",
     "entries": "entradas",

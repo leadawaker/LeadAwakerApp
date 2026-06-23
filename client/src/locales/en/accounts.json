@@ -236,6 +236,40 @@
     "description": "Click any account on the left to see its details and configuration.",
     "chooseFromList": "← Choose from the list"
   },
+  "messaging": {
+    "title": "Messaging (WhatsApp & SMS)",
+    "explainer": "Set up this client's WhatsApp + SMS sender in one click. We provision a dedicated number behind the scenes, no Twilio account needed.",
+    "provision": "Set up messaging",
+    "provisioning": "Setting up…",
+    "number": "Number",
+    "sms": "SMS",
+    "whatsapp": "WhatsApp",
+    "whatsappHint": "SMS is ready. Enable WhatsApp to send on WhatsApp (requires Meta review).",
+    "release": "Release",
+    "advanced": "Advanced — use my own Twilio",
+    "state": {
+      "ready": "Ready",
+      "pending": "Pending review",
+      "rejected": "Rejected",
+      "none": "Not set"
+    }
+  },
+  "reputation": {
+    "title": "Reputation Management",
+    "description": "Automatically ask served customers for feedback over WhatsApp. Happy customers get your Google review link; unhappy ones are caught privately and routed to a person.",
+    "enableLabel": "Enable reputation management",
+    "enableHint": "Turn the feedback flow on for this account",
+    "reviewUrlLabel": "Google review link",
+    "reviewUrlPlaceholder": "https://g.page/r/...",
+    "reviewUrlHint": "Sent to customers who report a positive experience.",
+    "alertTargetLabel": "Negative-feedback alert",
+    "alertTargetOwner": "Account owner (default)",
+    "alertTargetHint": "Who gets notified when a customer is unhappy.",
+    "saved": "Reputation settings saved",
+    "saveError": "Could not save settings",
+    "saving": "Saving…",
+    "save": "Save"
+  },
   "knowledge": {
     "title": "Knowledge Base",
     "entries": "entries",

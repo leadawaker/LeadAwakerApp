@@ -70,6 +70,17 @@ export const accounts = nocodb.table("Accounts", {
   supportBotConfig: text("support_bot_config"),
   instagramAccessToken: text("instagram_access_token"),
   instagramUserId: text("instagram_user_id"),
+  // Reputation management service (campaign_type='reputation')
+  enableReputationManagement: boolean("enable_reputation_management").default(false),
+  googleReviewUrl: text("google_review_url"),
+  // User id (or channel) that receives negative-feedback alerts.
+  reputationAlertTarget: text("reputation_alert_target"),
+  // Managed messaging provisioning (Twilio subaccount) — see specs/messaging-provisioning.
+  // The four twilio_* fields above are populated by provisioning; these track lifecycle + WhatsApp.
+  messagingProvisionedAt: timestamp("messaging_provisioned_at", { withTimezone: true }),
+  whatsappSenderStatus: text("whatsapp_sender_status"),  // none | pending | approved | rejected
+  whatsappSenderSid: text("whatsapp_sender_sid"),
+  whatsappDisplayName: text("whatsapp_display_name"),
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
@@ -342,6 +353,11 @@ export const campaigns = nocodb.table("Campaigns", {
   ncOrder: numeric("nc_order"),
   name: text("name"),
   status: text("status"),
+  // Service discriminator: reactivation | reputation | speed_to_lead | nurture.
+  // Reactivation is the default; the engine routes inbound replies by this value.
+  campaignType: text("campaign_type").default("reactivation"),
+  // Reputation: minutes after service_completed_at before the feedback ask is sent.
+  reputationDelayMinutes: integer("reputation_delay_minutes"),
   accountsId: integer("Accounts_id"),
   description: text("description"),
   website: text("website"),
@@ -585,6 +601,10 @@ export const leads = nocodb.table("Leads", {
   aiNotesGeneratedAt: timestamp("ai_notes_generated_at", { withTimezone: true }),
   abVariant: text("ab_variant"),
   demoNiche: text("demo_niche"),
+  // Reputation: when the customer's service was completed (entry trigger),
+  // and when the feedback ask was sent (idempotency gate).
+  serviceCompletedAt: timestamp("service_completed_at", { withTimezone: true }),
+  reviewRequestSentAt: timestamp("review_request_sent_at", { withTimezone: true }),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),

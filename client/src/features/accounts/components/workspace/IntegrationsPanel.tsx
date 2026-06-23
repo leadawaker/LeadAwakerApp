@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Plus, RefreshCw, Check, X, Trash2, Loader2, Copy, Eye, EyeOff,
-  ExternalLink, Calendar, KeyRound, ChevronDown, ChevronRight,
+  ExternalLink, Calendar, KeyRound, ChevronDown, ChevronRight, Smartphone,
 } from "lucide-react";
 import { PanelAction, ConnectedPill, IntegrationField, EditButton, BrandTile } from "./atoms";
 import { useAccountEdit } from "./useAccountEdit";
@@ -12,6 +12,14 @@ import {
   provisionBookingPage, fetchCaldiyCredentials,
   type CalendarProviderId, type CalendarProviderMeta, type CalendarConnection, type CaldiyCredentials,
 } from "../../api/calendarApi";
+import {
+  fetchMessagingStatus, provisionMessaging, deprovisionMessaging,
+  type MessagingStatus,
+} from "../../api/messagingApi";
+import {
+  fetchMessagingStatus, provisionMessaging, deprovisionMessaging,
+  type MessagingStatus,
+} from "../../api/messagingApi";
 import type { AccountRow, AccountDetail, IntegrationField as IField } from "./types";
 import {
   TwilioLogo,
@@ -410,6 +418,121 @@ function TwilioCardWrapper({ account, d, onSave, fieldCols }: { account: Account
   );
 }
 
+// ── Messaging state pill (SMS / WhatsApp) ──────────────────────────────────────
+function StatePill({ label, state }: { label: string; state: string }) {
+  const { t } = useTranslation("accounts");
+  const styles: Record<string, { bg: string; fg: string; key: string }> = {
+    ready:    { bg: "color-mix(in srgb, var(--good) 14%, transparent)", fg: "var(--good)", key: "messaging.state.ready" },
+    approved: { bg: "color-mix(in srgb, var(--good) 14%, transparent)", fg: "var(--good)", key: "messaging.state.ready" },
+    pending:  { bg: "var(--warn-tint)", fg: "var(--stage-booked)", key: "messaging.state.pending" },
+    rejected: { bg: "color-mix(in srgb, var(--wine) 14%, transparent)", fg: "var(--wine)", key: "messaging.state.rejected" },
+    none:     { bg: "color-mix(in srgb, var(--mute) 12%, transparent)", fg: "var(--mute)", key: "messaging.state.none" },
+  };
+  const c = styles[state] || styles.none;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)" }}>{label}</span>
+      <span style={{ background: c.bg, color: c.fg, borderRadius: "var(--r-pill)", padding: "2px 9px", fontSize: 10.5, fontWeight: 700 }}>{t(c.key)}</span>
+    </span>
+  );
+}
+
+// ── Managed messaging (Twilio) provisioning card ───────────────────────────────
+function MessagingCard({ account, d, onSave, fieldCols }: { account: AccountRow; d: AccountDetail; onSave: (field: string, value: string) => Promise<void>; fieldCols: number }) {
+  const { t } = useTranslation("accounts");
+  const accountId = account.Id ?? account.id ?? 0;
+  const [status, setStatus] = useState<MessagingStatus | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    if (!accountId) return;
+    fetchMessagingStatus(accountId).then(setStatus).catch(() => {}).finally(() => setLoaded(true));
+  }, [accountId]);
+
+  const provision = async () => {
+    setBusy(true); setError(null);
+    try { setStatus(await provisionMessaging(accountId)); }
+    catch (e: any) { setError(e.message || "Failed to set up messaging"); }
+    finally { setBusy(false); }
+  };
+
+  const release = async () => {
+    if (!deleteConfirm) { setDeleteConfirm(true); setTimeout(() => setDeleteConfirm(false), 3000); return; }
+    setBusy(true); setError(null);
+    try { await deprovisionMessaging(accountId); setStatus(null); setDeleteConfirm(false); }
+    catch (e: any) { setError(e.message || "Failed to release messaging"); }
+    finally { setBusy(false); }
+  };
+
+  if (!loaded) return null;
+
+  const managed = !!status?.managed;
+  // Has a usable sender either way (managed subaccount or manually-pasted Tier-1 creds).
+  const connected = managed || !!status?.fromNumber || d.twilio.connected;
+
+  return (
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+      <SectionHead>
+        <IconTile><Smartphone size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("messaging.title")}</span>
+        <ConnectedPill on={connected} connectedLabel={t("pills.connected")} notSetLabel={t("pills.notSet")} />
+      </SectionHead>
+
+      {!connected ? (
+        <>
+          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t("messaging.explainer")}</p>
+          <button className="la-btn la-btn--soft" disabled={busy} onClick={provision}>
+            {busy ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+            {busy ? t("messaging.provisioning") : t("messaging.provision")}
+          </button>
+          {error && <p style={{ fontSize: 11.5, color: "var(--wine)", marginTop: 10 }}>{error}</p>}
+        </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {status?.fromNumber && (
+            <FlatRow label={t("messaging.number")} value={status.fromNumber} />
+          )}
+          <div className="row" style={{ gap: 16 }}>
+            <StatePill label={t("messaging.sms")} state={status?.sms === "ready" ? "ready" : "none"} />
+            <StatePill label={t("messaging.whatsapp")} state={status?.whatsapp || "none"} />
+          </div>
+          {status?.sms === "ready" && (!status?.whatsapp || status.whatsapp === "none") && (
+            <p style={{ fontSize: 10.5, color: "var(--mute)", fontStyle: "italic" }}>{t("messaging.whatsappHint")}</p>
+          )}
+          {managed && (
+            <div className="row" style={{ gap: 10 }}>
+              <button className="la-btn la-btn--soft" disabled={busy} onClick={release} style={{ color: deleteConfirm ? "var(--wine)" : undefined }}>
+                <Trash2 size={12} />
+                {deleteConfirm ? t("detail.confirm") : t("messaging.release")}
+              </button>
+              {error && <span style={{ fontSize: 11.5, color: "var(--wine)" }}>{error}</span>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Advanced: use my own Twilio (manual Tier-1 fallback) */}
+      <button
+        onClick={() => setShowAdvanced((v) => !v)}
+        className="la-btn"
+        style={{ background: "transparent", boxShadow: "none", color: "var(--mute-2)", marginTop: 16, paddingLeft: 0, fontSize: 11.5 }}
+      >
+        {showAdvanced ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+        {t("messaging.advanced")}
+      </button>
+      {showAdvanced && (
+        <div style={{ marginTop: 12 }}>
+          <TwilioCardWrapper account={account} d={d} onSave={onSave} fieldCols={fieldCols} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main panel ─────────────────────────────────────────────────────────────────
 export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked = false, withVoice = true, readOnly = false }: {
   account: AccountRow;
@@ -425,7 +548,7 @@ export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked =
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {!readOnly && (
-        <TwilioCardWrapper account={account} d={d} onSave={onSave} fieldCols={fieldCols} />
+        <MessagingCard account={account} d={d} onSave={onSave} fieldCols={fieldCols} />
       )}
 
       {/* Calendar + Booking side by side; booking is owner-only */}

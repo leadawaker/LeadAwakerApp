@@ -223,6 +223,13 @@
     "leadScore": "Pontuação do lead: {{score}}"
   },
   "detail": {
+    "served": "Atendido",
+    "markServed": {
+      "label": "Marcar como atendido",
+      "saving": "Salvando…",
+      "success": "Marcado como atendido",
+      "error": "Não foi possível marcar como atendido"
+    },
     "title": "Detalhes do Lead",
     "leadsOverview": "Visão Geral dos Leads",
     "leadsCount": "{{count}} leads",

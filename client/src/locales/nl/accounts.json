@@ -236,6 +236,40 @@
     "description": "Klik op een account aan de linkerkant om de details en configuratie te bekijken.",
     "chooseFromList": "← Kies uit de lijst"
   },
+  "messaging": {
+    "title": "Berichten (WhatsApp & sms)",
+    "explainer": "Stel de WhatsApp- en sms-afzender van deze klant in met één klik. Wij regelen een eigen nummer op de achtergrond, geen Twilio-account nodig.",
+    "provision": "Berichten instellen",
+    "provisioning": "Bezig met instellen…",
+    "number": "Nummer",
+    "sms": "Sms",
+    "whatsapp": "WhatsApp",
+    "whatsappHint": "Sms is klaar. Schakel WhatsApp in om via WhatsApp te verzenden (vereist Meta-controle).",
+    "release": "Vrijgeven",
+    "advanced": "Geavanceerd — eigen Twilio gebruiken",
+    "state": {
+      "ready": "Klaar",
+      "pending": "In behandeling",
+      "rejected": "Afgewezen",
+      "none": "Niet ingesteld"
+    }
+  },
+  "reputation": {
+    "title": "Reputatiebeheer",
+    "description": "Vraag automatisch via WhatsApp om feedback van klanten na een dienst. Tevreden klanten krijgen je Google-reviewlink; ontevreden klanten worden privé opgevangen en doorgestuurd naar een persoon.",
+    "enableLabel": "Reputatiebeheer inschakelen",
+    "enableHint": "Zet de feedbackflow aan voor dit account",
+    "reviewUrlLabel": "Google-reviewlink",
+    "reviewUrlPlaceholder": "https://g.page/r/...",
+    "reviewUrlHint": "Wordt verzonden naar klanten met een positieve ervaring.",
+    "alertTargetLabel": "Melding bij negatieve feedback",
+    "alertTargetOwner": "Accounteigenaar (standaard)",
+    "alertTargetHint": "Wie een melding krijgt als een klant ontevreden is.",
+    "saved": "Reputatie-instellingen opgeslagen",
+    "saveError": "Kon instellingen niet opslaan",
+    "saving": "Opslaan…",
+    "save": "Opslaan"
+  },
   "knowledge": {
     "title": "Kennisbank",
     "entries": "items",

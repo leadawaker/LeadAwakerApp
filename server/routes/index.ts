@@ -24,6 +24,7 @@ import {
 } from "./ai-agents";
 import { registerGmailRoutes } from "./gmail";
 import { registerCalendarRoutes } from "./calendar";
+import { registerMessagingRoutes } from "./messaging";
 import { registerDemoRoutes } from "./demo";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
@@ -65,6 +66,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerAiAgentsRoutes(app);
   registerGmailRoutes(app);
   registerCalendarRoutes(app);
+  registerMessagingRoutes(app);
   registerDemoRoutes(app);
   registerTwilioVoiceRoutes(app);
   registerUserSettingsRoutes(app);

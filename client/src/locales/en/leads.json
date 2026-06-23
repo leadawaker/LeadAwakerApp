@@ -223,6 +223,13 @@
     "leadScore": "Lead score: {{score}}"
   },
   "detail": {
+    "served": "Served",
+    "markServed": {
+      "label": "Mark served",
+      "saving": "Saving…",
+      "success": "Marked as served",
+      "error": "Could not mark as served"
+    },
     "title": "Lead Detail",
     "leadsOverview": "Leads Overview",
     "leadsCount": "{{count}} leads",

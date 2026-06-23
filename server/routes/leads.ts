@@ -176,6 +176,7 @@ export function registerLeadsRoutes(app: Express): void {
       "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
       "bump1SentAt", "bump2SentAt", "bump3SentAt", "firstMessageSentAt",
       "nextActionAt", "bookingConfirmedAt", "createdAt", "updatedAt",
+      "serviceCompletedAt", "reviewRequestSentAt",
     ];
     const body = coerceDates(fromDbKeys(req.body, leads) as Record<string, unknown>, LEAD_DATE_FIELDS);
     const parsed = insertLeadsSchema.partial().safeParse(body);
@@ -278,6 +279,22 @@ export function registerLeadsRoutes(app: Express): void {
     res.status(204).end();
   }));
 
+  // POST /api/leads/:id/mark-served — reputation entry trigger. Sets
+  // service_completed_at to NOW server-side. Critical: the timestamp is built
+  // here with new Date(), never sent from the client (Drizzle-Zod z.date()
+  // rejects ISO strings silently, reverting the update with no error).
+  app.post("/api/leads/:id/mark-served", requireAuth, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getLeadById(id);
+    if (!existing) return res.status(404).json({ message: "Lead not found" });
+    if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const lead = await storage.updateLead(id, { serviceCompletedAt: new Date() } as any);
+    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    res.json(toDbKeys(lead as any, leads));
+  }));
+
   // POST /api/leads/:id/transcribe-voice — Groq Whisper transcription
   app.post("/api/leads/:id/transcribe-voice", requireAuth, wrapAsync(async (req, res) => {
     const leadId = Number(req.params.id);
@@ -356,7 +373,7 @@ export function registerLeadsRoutes(app: Express): void {
       const LEAD_DATE_FIELDS = [
         "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
         "bump1SentAt", "bump2SentAt", "bump3SentAt", "firstMessageSentAt",
-        "nextActionAt", "bookingConfirmedAt",
+        "nextActionAt", "bookingConfirmedAt", "serviceCompletedAt",
       ];
 
       const created: any[] = [];
