@@ -35,6 +35,10 @@ import {
   ArrowLeft,
   Globe,
   Mic,
+  Home,
+  RefreshCw,
+  Star,
+  Zap,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
@@ -573,6 +577,72 @@ export function RightSidebar({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+
+          {/* Home — the hub landing page */}
+          <Link
+            href={`${prefix}/home`}
+            className={`la-nav-item ${isActive(`${prefix}/home`) ? "active" : ""}`}
+            data-testid="link-home"
+            data-active={isActive(`${prefix}/home`) || undefined}
+          >
+            <span className="icon"><Home size={16} /></span>
+            {t("sidebar.home")}
+          </Link>
+
+          {/* Services group — Reactivation is live (→ Campaigns); Reputation &
+              Speed-to-Lead have no page yet, shown as muted "Soon" placeholders. */}
+          <div>
+            <div className="la-nav-section">{t("sidebar.services")}</div>
+            <Link
+              href={`${prefix}/campaigns`}
+              className="la-nav-item"
+              data-testid="link-service-reactivation"
+            >
+              <span className="icon"><RefreshCw size={16} /></span>
+              {t("sidebar.reactivation")}
+            </Link>
+            {[
+              { key: "reputation", labelKey: "sidebar.reputation", Icon: Star },
+              { key: "speed", labelKey: "sidebar.speedToLead", Icon: Zap },
+            ].map(({ key, labelKey, Icon }) => (
+              <div
+                key={key}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  cursor: "default",
+                }}
+                data-testid={`link-service-${key}`}
+                aria-disabled="true"
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 14, fontWeight: 500, color: "var(--mute-2)" }}>
+                  <span style={{ width: 18, height: 18, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)" }}>
+                    <Icon size={16} />
+                  </span>
+                  {t(labelKey)}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: 8.5,
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--mute-2)",
+                    background: "var(--surface)",
+                    boxShadow: "var(--sh-inset-crisp)",
+                    borderRadius: "var(--r-pill)",
+                    padding: "2px 7px",
+                  }}
+                >
+                  {t("sidebar.soon")}
+                </span>
+              </div>
+            ))}
+          </div>
 
           {/* Nav section groups */}
           {(() => {

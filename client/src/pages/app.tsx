@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/apiUtils";
 
 // Route-level code splitting: each page is its own lazy chunk so the initial
 // CRM bundle stays small. Named exports are unwrapped to { default }.
+const HomePage = lazy(() => import("@/features/home/pages/HomePage"));
 const AppLeads = lazy(() => import("@/features/leads/pages/LeadsPage").then(m => ({ default: m.LeadsPage })));
 const OutreachInbox = lazy(() => import("@/pages/OutreachInbox"));
 const LeadDetailPage = lazy(() => import("@/pages/LeadDetail"));
@@ -129,6 +130,7 @@ export default function AppArea() {
               user's role/session, no longer from the URL prefix. */}
           <Route path="/platform" component={() => <Redirect to="/platform/campaigns" />} />
           <Route path="/platform/dashboard" component={() => <Redirect to="/platform/campaigns" />} />
+          <Route path="/platform/home" component={HomePage} />
           <Route path="/platform/contacts" component={AppLeads} />
           <Route path="/platform/leads" component={AppLeads} />
           {/* Chats page retired — lead chat now lives on the Leads page */}

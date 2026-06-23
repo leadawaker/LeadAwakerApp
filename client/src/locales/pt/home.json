@@ -1,0 +1,82 @@
+{
+  "title": "Início",
+  "today": "Hoje",
+  "greeting": {
+    "morning": "Bom dia",
+    "afternoon": "Boa tarde",
+    "evening": "Boa noite"
+  },
+  "greetingSub": "Veja o que está acontecendo em todos os seus serviços.",
+  "pulse": {
+    "bookings": "Agendamentos",
+    "sent": "Mensagens enviadas",
+    "replies": "Respostas",
+    "reviews": "Avaliações"
+  },
+  "services": {
+    "open": "Abrir",
+    "reactivation": {
+      "name": "Reativação",
+      "northLabel": "Reuniões agendadas",
+      "delta": "+20% vs 7d",
+      "support1": "Taxa de resposta",
+      "support2": "Campanhas ativas"
+    },
+    "reputation": {
+      "name": "Reputação",
+      "northLabel": "Nota média",
+      "delta": "+0,3 vs 30d",
+      "support1": "Avaliações geradas",
+      "support2": "Solicitações enviadas"
+    },
+    "speed": {
+      "name": "Resposta Rápida",
+      "northLabel": "Resposta mediana",
+      "delta": "−18s vs 7d",
+      "support1": "Novos leads hoje",
+      "support2": "Agendados / recebidos"
+    },
+    "nurture": {
+      "name": "Nutrição"
+    }
+  },
+  "needs": {
+    "title": "Requer atenção",
+    "viewAll": "Ver tudo",
+    "action": "Abrir chat",
+    "empty": "Nada requer sua atenção agora.",
+    "samples": {
+      "negFeedback": { "title": "Feedback negativo interceptado", "snippet": "“A equipe atrasou e deixou bagunça.”" },
+      "hotInbound": { "title": "Resposta quente aguardando", "snippet": "“Ótimo, quais são os próximos passos?”" },
+      "aiHandoff": { "title": "IA transferiu para um humano", "snippet": "Pontuação do lead 78" },
+      "stalledLead": { "title": "Lead parado: sem resposta", "snippet": "Visto pela última vez há 2d" },
+      "reviewRisk": { "title": "Risco de avaliação 1 estrela", "snippet": "Insatisfeito com o serviço" }
+    }
+  },
+  "activity": {
+    "title": "Atividade recente",
+    "allServices": "Todos os serviços",
+    "samples": {
+      "newReview": { "title": "Nova avaliação 5 estrelas publicada", "meta": "“Ótimo trabalho no telhado!”" },
+      "bookingConfirmed": { "title": "Agendamento confirmado", "meta": "Inspeção de telhado · 10:00" },
+      "replyReceived": { "title": "Resposta recebida", "meta": "“Parece bom, vamos fazer.”" },
+      "campaignSent": { "title": "Campanha enviada", "meta": "Leads inativos · Reativação" },
+      "sequenceSent": { "title": "Mensagem de sequência enviada", "meta": "Sequência de nutrição · Dia 3" }
+    }
+  },
+  "quick": {
+    "title": "Ações rápidas",
+    "newCampaign": "Nova campanha",
+    "importContacts": "Importar contatos",
+    "newSequence": "Nova sequência"
+  },
+  "explore": {
+    "title": "Explorar serviços",
+    "blurb": "Adicione mais poder ao seu CRM.",
+    "add": "Adicionar este serviço",
+    "upsell": {
+      "voice": { "name": "Assistente de Voz IA", "blurb": "Deixe a IA ligar + atender para agendar serviços sem usar as mãos." },
+      "referral": { "name": "Motor de Indicações", "blurb": "Transforme serviços concluídos em um fluxo constante de indicações." }
+    }
+  }
+}

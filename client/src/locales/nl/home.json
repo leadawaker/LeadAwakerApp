@@ -1,0 +1,82 @@
+{
+  "title": "Home",
+  "today": "Vandaag",
+  "greeting": {
+    "morning": "Goedemorgen",
+    "afternoon": "Goedemiddag",
+    "evening": "Goedenavond"
+  },
+  "greetingSub": "Dit speelt er vandaag binnen al je diensten.",
+  "pulse": {
+    "bookings": "Boekingen",
+    "sent": "Verzonden berichten",
+    "replies": "Reacties",
+    "reviews": "Reviews"
+  },
+  "services": {
+    "open": "Openen",
+    "reactivation": {
+      "name": "Reactivatie",
+      "northLabel": "Geboekte gesprekken",
+      "delta": "+20% t.o.v. 7d",
+      "support1": "Reactiepercentage",
+      "support2": "Actieve campagnes"
+    },
+    "reputation": {
+      "name": "Reputatie",
+      "northLabel": "Gem. beoordeling",
+      "delta": "+0,3 t.o.v. 30d",
+      "support1": "Gegenereerde reviews",
+      "support2": "Verzonden verzoeken"
+    },
+    "speed": {
+      "name": "Speed-to-Lead",
+      "northLabel": "Mediane reactietijd",
+      "delta": "−18s t.o.v. 7d",
+      "support1": "Nieuwe leads vandaag",
+      "support2": "Geboekt / inbound"
+    },
+    "nurture": {
+      "name": "Nurture"
+    }
+  },
+  "needs": {
+    "title": "Vereist aandacht",
+    "viewAll": "Alles bekijken",
+    "action": "Open chat",
+    "empty": "Er vereist nu niets je aandacht.",
+    "samples": {
+      "negFeedback": { "title": "Negatieve feedback onderschept", "snippet": "“Ploeg was laat en liet een rommel achter.”" },
+      "hotInbound": { "title": "Warme inkomende reactie wacht", "snippet": "“Top, wat zijn de volgende stappen?”" },
+      "aiHandoff": { "title": "AI overgedragen aan mens", "snippet": "Leadscore 78" },
+      "stalledLead": { "title": "Vastgelopen lead: geen reactie", "snippet": "Laatst gezien 2d geleden" },
+      "reviewRisk": { "title": "Risico op 1-sterrenreview", "snippet": "Ontevreden over service" }
+    }
+  },
+  "activity": {
+    "title": "Recente activiteit",
+    "allServices": "Alle diensten",
+    "samples": {
+      "newReview": { "title": "Nieuwe 5-sterrenreview geplaatst", "meta": "“Goed werk aan het dak!”" },
+      "bookingConfirmed": { "title": "Boeking bevestigd", "meta": "Dakinspectie · 10:00" },
+      "replyReceived": { "title": "Reactie ontvangen", "meta": "“Klinkt goed, laten we het doen.”" },
+      "campaignSent": { "title": "Campagne verzonden", "meta": "Slapende leads · Reactivatie" },
+      "sequenceSent": { "title": "Sequentiebericht verzonden", "meta": "Nurture-sequentie · Dag 3" }
+    }
+  },
+  "quick": {
+    "title": "Snelle acties",
+    "newCampaign": "Nieuwe campagne",
+    "importContacts": "Contacten importeren",
+    "newSequence": "Nieuwe sequentie"
+  },
+  "explore": {
+    "title": "Diensten verkennen",
+    "blurb": "Voeg meer kracht toe aan je CRM.",
+    "add": "Voeg deze dienst toe",
+    "upsell": {
+      "voice": { "name": "AI-belassistent", "blurb": "Laat AI bellen + opnemen om klussen handsfree te boeken." },
+      "referral": { "name": "Referral Engine", "blurb": "Maak van afgeronde klussen een gestage stroom warme aanbevelingen." }
+    }
+  }
+}

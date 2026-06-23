@@ -1,0 +1,82 @@
+{
+  "title": "Home",
+  "today": "Today",
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  },
+  "greetingSub": "Here's what's happening across your services.",
+  "pulse": {
+    "bookings": "Bookings",
+    "sent": "Messages Sent",
+    "replies": "Replies",
+    "reviews": "Reviews"
+  },
+  "services": {
+    "open": "Open",
+    "reactivation": {
+      "name": "Reactivation",
+      "northLabel": "Calls Booked",
+      "delta": "+20% vs last 7d",
+      "support1": "Response Rate",
+      "support2": "Active Campaigns"
+    },
+    "reputation": {
+      "name": "Reputation",
+      "northLabel": "Avg Rating",
+      "delta": "+0.3 vs last 30d",
+      "support1": "Reviews Generated",
+      "support2": "Requests Sent"
+    },
+    "speed": {
+      "name": "Speed-to-Lead",
+      "northLabel": "Median Response",
+      "delta": "−18s vs last 7d",
+      "support1": "New Leads Today",
+      "support2": "Booked / Inbound"
+    },
+    "nurture": {
+      "name": "Nurture"
+    }
+  },
+  "needs": {
+    "title": "Needs Attention",
+    "viewAll": "View all",
+    "action": "Open Chat",
+    "empty": "Nothing needs your attention right now.",
+    "samples": {
+      "negFeedback": { "title": "Negative feedback intercepted", "snippet": "“Crew was late and left a mess.”" },
+      "hotInbound": { "title": "Hot inbound reply waiting", "snippet": "“Great, what are the next steps?”" },
+      "aiHandoff": { "title": "AI handed off to a human", "snippet": "Lead score 78" },
+      "stalledLead": { "title": "Stalled lead: no reply", "snippet": "Last seen 2d ago" },
+      "reviewRisk": { "title": "1-star review risk", "snippet": "Unhappy with service" }
+    }
+  },
+  "activity": {
+    "title": "Recent Activity",
+    "allServices": "All services",
+    "samples": {
+      "newReview": { "title": "New 5-star review posted", "meta": "“Great job on the roof!”" },
+      "bookingConfirmed": { "title": "Booking confirmed", "meta": "Roof Inspection · 10:00 AM" },
+      "replyReceived": { "title": "Reply received", "meta": "“Sounds good, let's do it.”" },
+      "campaignSent": { "title": "Campaign sent", "meta": "Dormant Leads · Reactivation" },
+      "sequenceSent": { "title": "Sequence message sent", "meta": "Nurture Sequence · Day 3" }
+    }
+  },
+  "quick": {
+    "title": "Quick Actions",
+    "newCampaign": "New Campaign",
+    "importContacts": "Import Contacts",
+    "newSequence": "New Sequence"
+  },
+  "explore": {
+    "title": "Explore services",
+    "blurb": "Add more power to your CRM.",
+    "add": "Add this service",
+    "upsell": {
+      "voice": { "name": "AI Voice Caller", "blurb": "Let AI place + answer calls to book jobs hands-free." },
+      "referral": { "name": "Referral Engine", "blurb": "Turn closed jobs into a steady stream of warm referrals." }
+    }
+  }
+}

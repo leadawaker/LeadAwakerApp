@@ -1,6 +1,12 @@
 {
   "sidebar": {
     "menu": "Menu",
+    "home": "Home",
+    "services": "Diensten",
+    "reactivation": "Reactivatie",
+    "reputation": "Reputatie",
+    "speedToLead": "Speed-to-Lead",
+    "soon": "Binnenkort",
     "campaigns": "Campagnes",
     "accounts": "Accounts",
     "prospects": "Prospects",

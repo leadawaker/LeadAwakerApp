@@ -13,6 +13,7 @@ import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
 import enDocs from "./locales/en/docs.json";
 
 // Import translation files — CRM pages
+import enHome from "./locales/en/home.json";
 import enCrm from "./locales/en/crm.json";
 import enSettings from "./locales/en/settings.json";
 import enLeads from "./locales/en/leads.json";
@@ -39,6 +40,7 @@ import ptBookDemo from "./locales/pt/bookDemo.json";
 import ptIntakeDemo from "./locales/pt/intakeDemo.json";
 import ptTermsOfService from "./locales/pt/termsOfService.json";
 import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
+import ptHome from "./locales/pt/home.json";
 import ptCrm from "./locales/pt/crm.json";
 import ptSettings from "./locales/pt/settings.json";
 import ptLeads from "./locales/pt/leads.json";
@@ -65,6 +67,7 @@ import nlBookDemo from "./locales/nl/bookDemo.json";
 import nlIntakeDemo from "./locales/nl/intakeDemo.json";
 import nlTermsOfService from "./locales/nl/termsOfService.json";
 import nlPrivacyPolicy from "./locales/nl/privacyPolicy.json";
+import nlHome from "./locales/nl/home.json";
 import nlCrm from "./locales/nl/crm.json";
 import nlSettings from "./locales/nl/settings.json";
 import nlLeads from "./locales/nl/leads.json";
@@ -93,6 +96,7 @@ const resources = {
     intakeDemo: enIntakeDemo,
     termsOfService: enTermsOfService,
     privacyPolicy: enPrivacyPolicy,
+    home: enHome,
     crm: enCrm,
     settings: enSettings,
     leads: enLeads,
@@ -120,6 +124,7 @@ const resources = {
     intakeDemo: ptIntakeDemo,
     termsOfService: ptTermsOfService,
     privacyPolicy: ptPrivacyPolicy,
+    home: ptHome,
     crm: ptCrm,
     settings: ptSettings,
     leads: ptLeads,
@@ -147,6 +152,7 @@ const resources = {
     intakeDemo: nlIntakeDemo,
     termsOfService: nlTermsOfService,
     privacyPolicy: nlPrivacyPolicy,
+    home: nlHome,
     crm: nlCrm,
     settings: nlSettings,
     leads: nlLeads,
@@ -186,6 +192,7 @@ i18n
       "login",
       "termsOfService",
       "privacyPolicy",
+      "home",
       "crm",
       "settings",
       "leads",

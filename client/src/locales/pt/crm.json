@@ -1,6 +1,12 @@
 {
   "sidebar": {
     "menu": "Menu",
+    "home": "Início",
+    "services": "Serviços",
+    "reactivation": "Reativação",
+    "reputation": "Reputação",
+    "speedToLead": "Resposta Rápida",
+    "soon": "Em breve",
     "campaigns": "Campanhas",
     "accounts": "Contas",
     "prospects": "Prospectos",
