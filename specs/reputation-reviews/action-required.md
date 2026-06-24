@@ -39,6 +39,39 @@ Steps a human must do that code can't, in rough order. Check off as completed.
 - [ ] If AI drafting runs in the **engine**, `pm2 restart leadawaker-engine --update-env`. If the whole
       loop is in the **CRM server**, it auto-reloads via pm2 watch (no manual restart).
 
+## Build status (Phase 1 implemented 2026-06-23)
+
+Decisions taken during build (matching the spec recommendations):
+- **AI drafting lives in the engine** (`src/automations/review_drafter.py`, prompt in
+  `review_prompts.py`, use_case `review-reply`) via the existing OpenAI **EU** client +
+  Prompt_Library cascade. Registered as scheduler job `review_drafter` (5 min).
+- **Google I/O lives in the CRM** (`server/reviews/google.ts` OAuth+list+reply,
+  `server/reviews/poller.ts` ingest+auto-post, `server/routes/reviews.ts` queue/approve).
+- **GBP connection is stored in `Calendar_Connections` under `provider="gbp"`** (reuses the
+  existing encrypted Google token storage + refresh); `externalId` holds the chosen location
+  `accounts/{a}/locations/{l}`.
+- **Poll (every 20 min), not Pub/Sub** for now. **Auto-post positives off by default**
+  (`review_reply_auto_positive`); negatives/neutrals always queue for human approval.
+- Pipeline coordination is the DB table: engine `new → drafted` (+ manager notify on ≤3★);
+  CRM posts on human approve (route) or auto-posts drafted positives (poller) → `posted`.
+
+Verified this session:
+- ✅ Engine drafter end-to-end against a seeded review: `new → drafted`, empathetic reply in
+  the **review's language** (Dutch reply to a Dutch 1★), logged under `review_response`.
+- ✅ CRM boots cleanly, routes registered, `[reviews poller] started`.
+- ✅ Dedup: the `(accounts_id, external_review_id)` unique index rejects re-polled duplicates.
+
+⚠️ Untestable until Google grants access (Gabriel filing) — flagged, not blocking:
+- **Live poll/post/listLocations** (`listReviews`/`postReply`/`listLocations`) need the approved
+  **Business Profile API + `business.manage` scope** and `GOOGLE_REVIEWS_REDIRECT_URI` registered
+  in the OAuth app. Set **`REVIEWS_MOCK=1`** to exercise the ingest→draft→post flow against fixtures.
+- **OpenAI EU endpoint 401** ("only accessible by projects with geography restrictions enabled")
+  was intermittent on the **dev** key — the project behind `OPENAI_API_KEY` must have EU data
+  residency / geography restrictions enabled in the OpenAI dashboard. One draft succeeded, proving
+  the code path; confirm the production key's project has it enabled. This is an account-config item,
+  not a code change.
+- **`pm2 restart leadawaker-engine`** done (job is live); CRM auto-reloaded via pm2 watch.
+
 ## Open decisions to confirm before build
 - [ ] **Poll vs Pub/Sub** for new-review detection (poll first; Pub/Sub for near-real-time later).
 - [ ] **AI drafting home:** CRM server (direct OpenAI EU) vs engine (Prompt_Library cascade). Recommend

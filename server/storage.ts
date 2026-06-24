@@ -17,6 +17,7 @@ import { billingStorage } from "./storage/billing";
 import { tasksStorage } from "./storage/tasks";
 import { agentsStorage } from "./storage/agents";
 import { calendarStorage } from "./storage/calendar";
+import { reviewsStorage } from "./storage/reviews";
 import { miscStorage } from "./storage/misc";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
@@ -76,5 +77,6 @@ export const storage = {
   ...tasksStorage,
   ...agentsStorage,
   ...calendarStorage,
+  ...reviewsStorage,
   ...miscStorage,
 };

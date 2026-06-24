@@ -14,6 +14,7 @@ import { useLocation } from "wouter";
 import type { AccountRow } from "./AccountDetailsDialog";
 import KnowledgeBasePanel from "./KnowledgeBasePanel";
 import ReputationSettingsPanel from "./ReputationSettingsPanel";
+import ReviewResponsePanel from "./ReviewResponsePanel";
 import { useTranslation } from "react-i18next";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import {
@@ -707,6 +708,13 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
         <div className="w-full mt-1.5">
           <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4" data-testid="account-widget-reputation">
             <ReputationSettingsPanel account={account} accountId={accountId} />
+          </div>
+        </div>
+
+        {/* Public review response (Reputation v2) */}
+        <div className="w-full mt-1.5">
+          <div className="bg-card shadow-[var(--card-glow)] rounded-xl p-4" data-testid="account-widget-review-response">
+            <ReviewResponsePanel account={account} accountId={accountId} />
           </div>
         </div>
 

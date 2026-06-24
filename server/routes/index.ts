@@ -24,6 +24,8 @@ import {
 } from "./ai-agents";
 import { registerGmailRoutes } from "./gmail";
 import { registerCalendarRoutes } from "./calendar";
+import { registerReviewsRoutes } from "./reviews";
+import { startReviewPoller } from "../reviews/poller";
 import { registerMessagingRoutes } from "./messaging";
 import { registerDemoRoutes } from "./demo";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
@@ -66,6 +68,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerAiAgentsRoutes(app);
   registerGmailRoutes(app);
   registerCalendarRoutes(app);
+  registerReviewsRoutes(app);
   registerMessagingRoutes(app);
   registerDemoRoutes(app);
   registerTwilioVoiceRoutes(app);
@@ -85,6 +88,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startBookingReminders();          // booking reminder 1h before call (10min check)
   startAutomationFailureNotifier(); // automation failure check (5min)
   startCampaignFinishedNotifier();  // campaign finished check (10min)
+  startReviewPoller();              // Reputation v2: Google review ingest + auto-post (20min)
 
   return httpServer;
 }
