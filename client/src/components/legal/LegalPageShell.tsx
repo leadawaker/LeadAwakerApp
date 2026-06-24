@@ -1,0 +1,142 @@
+import { useEffect, type ReactNode } from 'react';
+
+/* ------------------------------------------------------------------ */
+/* Premium palette — mirrors client/public/premium/design-tokens.css   */
+/* These pages are public (shown to Google), self-contained, and do    */
+/* not inherit the CRM app shell, so the tokens are inlined here.       */
+/* ------------------------------------------------------------------ */
+const palette = {
+  bg: '#ECE6DA',
+  surface: '#EDE7DB',
+  ink: '#1F1A14',
+  mute: '#6C6354',
+  line: 'rgba(110, 95, 65, 0.14)',
+  wine: '#5E2230',
+  serif: '"Instrument Serif", Georgia, serif',
+  sans: '"Manrope", ui-sans-serif, system-ui, sans-serif',
+  mono: '"Geist Mono", ui-monospace, monospace',
+};
+
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap';
+
+/** Lead Awaker favicon mark — cream rooster + wattle-pink "A" triangle. */
+function FooterMark({ size = 40 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 375 375" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <defs>
+        <clipPath id="lp_fm_c4">
+          <path transform="matrix(.24,0,0,.24,4.56,42.48)" d="M0 0H1516V1386H0Z" clipRule="evenodd" />
+        </clipPath>
+        <clipPath id="lp_fm_c10">
+          <path transform="matrix(.24,0,0,.24,0,0)" d="M0 0H1534.6434V1562.5H0Z" clipRule="evenodd" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#lp_fm_c4)">
+        <path
+          transform="matrix(406.51499,0,0,-406.51499,19.812226,349.96556)"
+          d="M-.027999878 0 .41400147 .7489929 .8560028 0H-.027999878Z"
+          fill="#C08090"
+        />
+      </g>
+      <g clipPath="url(#lp_fm_c10)">
+        <path
+          transform="matrix(.08887662,0,0,-.08887662,-17.935563,403.76365)"
+          d="M1985 4334C1858 4268 1737 4006 1717 3755 1712 3689 1705 3628 1702 3618 1696 3604 1685 3610 1630 3651 1594 3678 1548 3714 1526 3732 1505 3750 1481 3769 1472 3774 1463 3779 1446 3792 1435 3803 1424 3813 1403 3828 1388 3836 1372 3844 1360 3855 1360 3859 1360 3864 1343 3874 1323 3881 1302 3888 1275 3900 1263 3907 1251 3915 1214 3924 1182 3927 1014 3942 970 3814 1057 3566 1080 3500 1103 3444 1107 3441 1111 3438 1130 3403 1149 3363 1168 3323 1189 3289 1197 3286 1220 3277 1212 3250 1186 3250 1172 3250 1158 3246 1155 3240 1152 3235 1138 3230 1125 3230 1060 3230 887 3139 874 3098 870 3086 855 3063 839 3047 790 2998 778 2922 809 2853 824 2822 846 2800 905 2760 971 2716 994 2706 1062 2694 1153 2678 1283 2684 1370 2707 1453 2730 1561 2769 1595 2789 1611 2800 1636 2811 1650 2815 1664 2819 1700 2840 1730 2860 1760 2880 1805 2907 1830 2920 1872 2942 1874 2942 1860 2922 1852 2911 1820 2873 1789 2838 1714 2753 1675 2688 1640 2591 1589 2452 1557 2210 1560 1990 1561 1927 1562 1868 1562 1860 1562 1852 1569 1789 1576 1721 1586 1636 1587 1593 1580 1585 1574 1578 1569 1540 1568 1501 1568 1462 1565 1432 1562 1435 1555 1441 1538 1408 1515 1342 1504 1313 1486 1283 1473 1275 1460 1266 1450 1253 1450 1245 1450 1226 1393 1167 1352 1144 1323 1128 1311 1109 1304 1073 1300 1049 1346 1020 1396 1017 1434 1014 1456 1019 1493 1038 1519 1052 1540 1069 1540 1077 1540 1084 1544 1090 1549 1090 1567 1090 1616 1146 1640 1195 1654 1223 1673 1254 1683 1266 1692 1277 1707 1316 1714 1353 1722 1389 1731 1423 1734 1428 1737 1433 1744 1481 1750 1534 1759 1607 1758 1635 1750 1645 1742 1655 1738 1730 1738 1892 1738 2410 1782 2570 1977 2774 2009 2807 2068 2872 2109 2917L2182 2999 2233 2980C2267 2967 2300 2945 2328 2914 2372 2866 2380 2840 2355 2820 2329 2799 2238 2648 2195 2556 2119 2393 2089 2282 2083 2140 2074 1920 2123 1787 2256 1679 2344 1608 2391 1590 2515 1579 2625 1569 2762 1585 2835 1616L2874 1632 2900 1603C2925 1573 2950 1534 2983 1473 2992 1455 3004 1440 3008 1440 3012 1440 3024 1420 3035 1395 3046 1370 3058 1350 3061 1350 3065 1350 3070 1333 3073 1312 3079 1275 3128 1168 3143 1162 3147 1160 3150 1151 3150 1143 3150 1134 3164 1098 3180 1063 3197 1028 3207 994 3204 988 3200 982 3201 980 3208 984 3218 990 3220 970 3222 858 3223 809 3206 734 3189 708 3178 694 3170 674 3170 665 3170 656 3154 621 3135 589 3092 514 3089 484 3128 477 3143 474 3159 476 3164 481 3170 486 3188 490 3205 490 3232 490 3239 497 3265 545 3282 575 3298 600 3301 600 3307 600 3310 609 3319 645 3320 648 3329 670 3340 695 3351 720 3359 741 3359 743 3358 744 3365 771 3375 802 3386 842 3390 882 3386 937 3382 1011 3346 1148 3328 1161 3323 1164 3322 1174 3326 1183 3329 1193 3327 1200 3321 1200 3315 1200 3310 1208 3310 1218 3310 1244 3222 1410 3209 1410 3206 1410 3195 1430 3184 1455 3174 1480 3162 1500 3158 1500 3154 1500 3150 1506 3150 1514 3150 1521 3134 1548 3115 1573 3096 1598 3080 1623 3080 1629 3080 1634 3072 1641 3062 1644 3033 1654 3014 1696 3030 1715 3037 1723 3048 1730 3054 1730 3065 1730 3190 1849 3230 1896 3263 1936 3282 2031 3260 2045 3254 2049 3243 2066 3236 2085 3228 2103 3209 2127 3193 2137 3165 2155 3129 2183 3104 2208 3097 2214 3088 2220 3083 2220 3068 2220 2976 2272 2895 2327 2800 2391 2740 2454 2661 2570 2611 2643 2540 2769 2540 2784 2540 2794 2668 2880 2684 2880 2706 2880 2705 2874 2665 2802 2635 2746 2632 2732 2637 2689 2640 2659 2648 2640 2655 2640 2662 2640 2670 2633 2674 2625 2677 2616 2692 2610 2709 2610 2740 2610 2763 2634 2788 2692 2806 2736 2868 2797 2927 2831 2957 2848 2986 2873 2992 2885 3006 2917 2995 2957 2967 2971 2955 2978 2939 2991 2932 3001 2926 3010 2896 3026 2867 3036 2764 3070 2623 3047 2523 2980 2498 2963 2475 2948 2470 2947 2466 2946 2427 2974 2384 3010 2340 3046 2293 3083 2278 3093L2252 3109 2280 3162C2326 3249 2350 3380 2360 3605 2366 3731 2366 3808 2360 3814 2354 3820 2350 3845 2350 3871 2350 3924 2304 4113 2289 4118 2284 4120 2280 4127 2280 4133 2280 4153 2207 4255 2170 4287 2090 4355 2047 4366 1985 4334ZM2114 4128C2123 4099 2135 4066 2140 4055 2150 4033 2178 3896 2179 3865 2179 3854 2181 3796 2183 3735 2191 3483 2164 3322 2095 3205 2070 3161 2044 3150 1964 3150 1891 3150 1730 3079 1588 2983 1434 2880 1247 2831 1068 2846 975 2854 954 2866 964 2905 971 2934 1035 3000 1055 3000 1061 3000 1077 3011 1090 3025 1103 3039 1124 3050 1136 3050 1149 3050 1171 3055 1187 3061 1202 3067 1251 3075 1295 3080 1446 3096 1488 3147 1417 3227 1399 3248 1376 3282 1365 3303 1354 3323 1342 3340 1337 3340 1333 3340 1322 3355 1314 3373 1306 3390 1291 3416 1280 3430 1234 3488 1167 3712 1184 3755 1195 3784 1254 3773 1321 3728 1356 3705 1387 3683 1390 3680 1393 3676 1442 3636 1500 3590 1558 3544 1628 3485 1655 3458 1758 3359 1802 3341 1855 3376 1880 3392 1880 3394 1875 3499 1873 3557 1875 3630 1880 3660 1885 3690 1894 3749 1900 3790 1914 3890 1937 3960 1983 4050 2019 4119 2068 4180 2089 4180 2094 4180 2105 4156 2114 4128ZM2499 2572C2521 2534 2554 2484 2572 2460 2616 2403 2771 2250 2785 2250 2791 2250 2803 2242 2812 2233 2833 2209 2906 2157 2951 2132 3020 2093 3034 2085 3048 2073 3055 2066 3066 2060 3071 2060 3084 2060 3029 1981 3000 1957 2988 1947 2955 1922 2927 1902 2898 1882 2873 1863 2870 1859 2859 1845 2703 1771 2662 1760 2526 1725 2389 1730 2336 1771 2267 1825 2229 2029 2258 2185 2271 2258 2350 2476 2375 2510 2381 2518 2396 2545 2409 2570 2433 2615 2450 2640 2456 2640 2458 2640 2477 2609 2499 2572Z"
+          fill="#4c2c36"
+        />
+        <path
+          transform="matrix(.08887662,0,0,-.08887662,-17.935563,403.76365)"
+          d="M1989 2707C1923 2662 1909 2582 1959 2532 2012 2480 2081 2481 2130 2537 2166 2577 2169 2620 2140 2667 2106 2724 2040 2741 1989 2707Z"
+          fill="#4c2c36"
+        />
+      </g>
+    </svg>
+  );
+}
+
+export interface LegalSection {
+  title: string;
+  /** Body paragraphs. Each entry renders as its own <p>. */
+  body: ReactNode[];
+}
+
+interface LegalPageShellProps {
+  eyebrow: string;
+  title: string;
+  lastUpdated: string;
+  sections: LegalSection[];
+  /** Link to the sibling legal page, e.g. { href, label }. */
+  sibling: { href: string; label: string };
+}
+
+export function LegalPageShell({ eyebrow, title, lastUpdated, sections, sibling }: LegalPageShellProps) {
+  // Public page, not under the CRM shell — load premium fonts on demand.
+  useEffect(() => {
+    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = FONT_HREF;
+    document.head.appendChild(link);
+  }, []);
+
+  return (
+    <div style={{ minHeight: '100vh', background: palette.bg, color: palette.ink, fontFamily: palette.sans, WebkitFontSmoothing: 'antialiased' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '64px 24px 96px' }}>
+        <a
+          href="/"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            fontFamily: palette.mono, fontSize: 11, letterSpacing: '0.1em',
+            textTransform: 'uppercase', color: palette.mute, textDecoration: 'none',
+            marginBottom: 56,
+          }}
+        >
+          ← leadawaker.com
+        </a>
+
+        <div style={{ fontFamily: palette.mono, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: palette.mute, marginBottom: 16 }}>
+          {eyebrow}
+        </div>
+        <h1 style={{ fontFamily: palette.serif, fontSize: 'clamp(32px, 5vw, 52px)', lineHeight: 1.05, letterSpacing: '-0.02em', color: palette.ink, margin: '0 0 12px' }}>
+          {title}
+        </h1>
+        <p style={{ fontFamily: palette.mono, fontSize: 12, color: palette.mute, letterSpacing: '0.04em', margin: '0 0 56px' }}>
+          {lastUpdated}
+        </p>
+
+        {sections.map((section, i) => (
+          <section key={i}>
+            <h2 style={{ fontFamily: palette.sans, fontSize: 15, fontWeight: 600, color: palette.ink, margin: '40px 0 10px' }}>
+              {section.title}
+            </h2>
+            {section.body.map((para, j) => (
+              <p key={j} style={{ fontSize: 15, lineHeight: 1.75, color: palette.mute, margin: '0 0 12px' }}>
+                {para}
+              </p>
+            ))}
+          </section>
+        ))}
+
+        {/* Premium footer */}
+        <footer style={{ marginTop: 72, paddingTop: 28, borderTop: `1px solid ${palette.line}`, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+          <a href="/" aria-label="Lead Awaker" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+            <FooterMark size={40} />
+            <span style={{ fontFamily: palette.serif, fontSize: 22, color: palette.ink, letterSpacing: '-0.01em' }}>Lead Awaker</span>
+          </a>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+            <a
+              href={sibling.href}
+              style={{ fontFamily: palette.mono, fontSize: 11, letterSpacing: '0.06em', color: palette.wine, textDecoration: 'none' }}
+            >
+              {sibling.label}
+            </a>
+            <span style={{ fontFamily: palette.mono, fontSize: 11, letterSpacing: '0.06em', color: palette.mute }}>
+              Lead Awaker 2026 — All rights reserved.
+            </span>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}

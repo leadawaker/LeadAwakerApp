@@ -369,8 +369,8 @@ function CTA() {
               </div>
               {/* Terms + Privacy */}
               <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18 }}>
-                <a href="/premium/terms.html" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.terms')}</a>
-                <a href="/premium/privacy.html" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.privacy')}</a>
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.terms')}</a>
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.privacy')}</a>
               </div>
               {/* Copyright */}
               <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#3D2817", whiteSpace: "nowrap" }}>

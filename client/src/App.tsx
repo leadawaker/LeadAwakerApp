@@ -214,6 +214,13 @@ function Router() {
     location.startsWith("/subaccount") ||
     location.startsWith("/intake/");
 
+  /* Legal pages render standalone (premium-styled, self-contained) —
+     no legacy marketing Navbar/Footer. */
+  const pathNoLang = lang ? location.slice(lang.length + 1) : location;
+  const isLegal =
+    pathNoLang.startsWith("/privacy-policy") ||
+    pathNoLang.startsWith("/terms-of-service");
+
   /* Public pages follow system preference; CRM follows the manual toggle */
   useEffect(() => {
     setPublicMode(!isAppArea);
@@ -227,6 +234,12 @@ function Router() {
         /* CRM app — no navbar/footer */
         <main className="flex-grow">
           {!lang && <AppRoutes />}
+        </main>
+      ) : isLegal ? (
+        /* Legal pages — standalone premium chrome, no legacy navbar/footer */
+        <main className="flex-grow">
+          {!lang && <AppRoutes />}
+          {lang && <LanguageRouter lang={lang} />}
         </main>
       ) : (
         /* All public pages (/, /legacy, /faq, /cases, etc.) — wrapped in
