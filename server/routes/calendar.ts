@@ -13,9 +13,11 @@ import {
   PROVIDER_META,
   CalendarNotConfiguredError,
 } from "../calendar";
-import { provisionCaldiyForAccount } from "../calendar/caldiy";
+import { provisionCaldiyForAccount, injectCalendarCredentialToCaldiy } from "../calendar/caldiy";
+import { createOAuthState, consumeOAuthState, saveSessionThen } from "../oauthState";
 
 const OAUTH_PROVIDERS = new Set(["google", "outlook"]);
+const calendarOAuthFlow = (provider: string) => `calendar:${provider}`;
 
 function frontendBase(req: import("express").Request): string {
   return process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
@@ -42,8 +44,9 @@ export function registerCalendarRoutes(app: Express): void {
     if (!OAUTH_PROVIDERS.has(provider)) return res.status(400).json({ message: "Provider is not OAuth-based" });
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     try {
-      const url = getAdapter(provider).getAuthUrl!(accountId);
-      res.redirect(url);
+      const state = createOAuthState(req, calendarOAuthFlow(provider), accountId);
+      const url = getAdapter(provider).getAuthUrl!(state);
+      saveSessionThen(req, () => res.redirect(url));
     } catch (err: any) {
       if (err instanceof CalendarNotConfiguredError) return res.status(501).json({ message: err.message });
       throw err;
@@ -63,12 +66,16 @@ export function registerCalendarRoutes(app: Express): void {
     if (error) return res.redirect(dest("error", `&reason=${encodeURIComponent(error)}`));
 
     const code = req.query.code as string;
-    const accountId = Number(req.query.state);
-    if (!code || !accountId) return res.redirect(dest("error", "&reason=missing_code"));
+    const accountId = consumeOAuthState(req, calendarOAuthFlow(provider), req.query.state);
+    if (!code) return res.redirect(dest("error", "&reason=missing_code"));
+    if (!accountId) return res.redirect(dest("error", "&reason=invalid_state"));
 
     try {
       const fields = await getAdapter(provider).exchangeCode!(code);
       await storage.upsertCalendarConnection({ accountId, ...fields } as any);
+      // Fire-and-forget: wire this calendar into the account's Cal.diy booking page
+      // so availability + booking-event creation happen natively in Cal.com.
+      void injectCalendarCredentialToCaldiy(accountId, provider);
       res.redirect(dest("connected"));
     } catch (err: any) {
       console.error(`[Calendar OAuth ${provider}] callback error:`, err);

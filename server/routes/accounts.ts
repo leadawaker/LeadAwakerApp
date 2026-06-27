@@ -14,11 +14,15 @@ import {
   insertAccountCommunicationProfileSchema,
   users,
   insertUsersSchema,
+  NICHE_WORD_GROUPS,
+  EMPTY_NICHE_GROUPS,
+  type NicheWordGroup,
+  type NicheWordGroups,
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { pool, db } from "../db";
 import { and, isNotNull, lte, not, inArray } from "drizzle-orm";
-import { provisionCaldiyForAccount } from "../calendar/caldiy";
+import { provisionCaldiyForAccount, resyncCaldiySchedule } from "../calendar/caldiy";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl, frontendBaseUrl, setFrontendUrlWarned } from "./_helpers";
 import { storage as storageImport } from "../storage";
 import { sendInviteEmail } from "../email";
@@ -86,6 +90,10 @@ export function registerAccountsRoutes(app: Express): void {
     if (!parsed.success) return handleZodError(res, parsed.error);
     const account = await storage.updateAccount(Number(req.params.id), parsed.data);
     if (!account) return res.status(404).json({ message: "Account not found" });
+    // If working hours changed, re-sync the Cal.diy booking schedule (best-effort).
+    if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data) {
+      void resyncCaldiySchedule(account.id);
+    }
     res.json(toDbKeys(account as any, accounts));
   }));
 
@@ -265,22 +273,104 @@ export function registerAccountsRoutes(app: Express): void {
 
   // ─── Niche Vocabulary ──────────────────────────────────────────────────────
 
+  const isValidGroup = (g: unknown): g is NicheWordGroup =>
+    typeof g === "string" && (NICHE_WORD_GROUPS as readonly string[]).includes(g);
+
+  // All saved niche rows — powers the vocabulary management table.
+  app.get("/api/niche-vocabulary", requireAgency, wrapAsync(async (_req, res) => {
+    res.json(await storage.listNicheVocabularies());
+  }));
+
+  // Resolve a niche's terms for one language (?lang=en|nl, default nl). English
+  // falls back to Dutch per-group when empty. Used by the prompt preview.
   app.get("/api/niche-vocabulary/:niche", requireAuth, wrapAsync(async (req, res) => {
     const niche = req.params.niche;
-    const groups = await storage.getNicheVocabulary(niche);
+    const lang = req.query.lang === "en" ? "en" : "nl";
+    const groups = await storage.getNicheVocabulary(niche, lang);
     res.json(groups);
   }));
 
+  // Return only the three business-profile templates for a niche (requireAuth
+  // so non-agency campaign users can also pre-fill on niche selection).
+  app.get("/api/niche-vocabulary/:niche/template", requireAuth, wrapAsync(async (req, res) => {
+    const niche = req.params.niche.trim();
+    const rows = await storage.listNicheVocabularies();
+    const row = rows.find((r) => r.niche === niche);
+    if (!row) return res.json({ companyNameTemplate: { nl: "", en: "" }, descriptionTemplate: { nl: "", en: "" }, kbTemplate: { nl: "", en: "" } });
+    res.json({
+      companyNameTemplate: row.companyNameTemplate ?? { nl: "", en: "" },
+      descriptionTemplate: row.descriptionTemplate ?? { nl: "", en: "" },
+      kbTemplate: row.kbTemplate ?? { nl: "", en: "" },
+    });
+  }));
+
+  // Coerce an arbitrary object into a clean NicheWordGroups.
+  const coerceGroups = (src: any): NicheWordGroups => {
+    const g: NicheWordGroups = { ...EMPTY_NICHE_GROUPS };
+    for (const grp of NICHE_WORD_GROUPS) {
+      const arr = src?.[grp];
+      g[grp] = Array.isArray(arr) ? arr.filter((w: unknown): w is string => typeof w === "string") : [];
+    }
+    return g;
+  };
+
+  // Replace BOTH languages for a niche (management save / new-niche seed).
+  // Body: { nl: NicheWordGroups, en: NicheWordGroups }.
+  app.put("/api/niche-vocabulary/:niche", requireAgency, wrapAsync(async (req, res) => {
+    const niche = req.params.niche.trim();
+    if (!niche) return res.status(400).json({ error: "niche is required" });
+    const body = req.body ?? {};
+    const both = { nl: coerceGroups(body.nl), en: coerceGroups(body.en) };
+    res.json(await storage.setNicheVocabulary(niche, both));
+  }));
+
+  app.delete("/api/niche-vocabulary/:niche", requireAgency, wrapAsync(async (req, res) => {
+    const ok = await storage.deleteNicheVocabulary(req.params.niche);
+    if (!ok) return res.status(400).json({ error: "cannot delete this niche" });
+    res.json({ ok: true });
+  }));
+
+  const isValidLang = (l: unknown): l is "en" | "nl" => l === "en" || l === "nl";
+
+  // Add/remove a single word in one language. Returns { nl, en } for both langs.
   app.post("/api/niche-vocabulary/:niche/words", requireAgency, wrapAsync(async (req, res) => {
     const niche = req.params.niche;
-    const { group, word } = req.body;
-    if (!group || !word || typeof group !== "string" || typeof word !== "string") {
-      return res.status(400).json({ error: "group and word are required" });
+    const { group, word, lang } = req.body;
+    if (!isValidGroup(group) || !word || typeof word !== "string") {
+      return res.status(400).json({ error: "valid group and word are required" });
     }
-    const validGroups = ["projectTerm", "proposalTerm", "decisionTerm"];
-    if (!validGroups.includes(group)) return res.status(400).json({ error: "invalid group" });
-    const groups = await storage.addNicheWord(niche, group as any, word.trim());
-    res.json({ groups });
+    const l = isValidLang(lang) ? lang : "nl";
+    res.json(await storage.addNicheWord(niche, l, group, word.trim()));
+  }));
+
+  app.delete("/api/niche-vocabulary/:niche/words", requireAgency, wrapAsync(async (req, res) => {
+    const niche = req.params.niche;
+    const { group, word, lang } = req.body;
+    if (!isValidGroup(group) || !word || typeof word !== "string") {
+      return res.status(400).json({ error: "valid group and word are required" });
+    }
+    const l = isValidLang(lang) ? lang : "nl";
+    res.json(await storage.deleteNicheWord(niche, l, group, word));
+  }));
+
+  // Patch the three business-profile templates for a niche. Called when a
+  // campaign saves its company_name / description / kb fields so the niche
+  // template stays in sync for future campaigns.
+  // Body: { companyNameTemplate?, descriptionTemplate?, kbTemplate? } each { nl, en }.
+  app.patch("/api/niche-vocabulary/:niche/template", requireAgency, wrapAsync(async (req, res) => {
+    const niche = req.params.niche.trim();
+    if (!niche) return res.status(400).json({ error: "niche is required" });
+    const clean = (v: unknown) => {
+      if (!v || typeof v !== "object") return undefined;
+      const o = v as Record<string, unknown>;
+      return { nl: String(o.nl ?? ""), en: String(o.en ?? "") };
+    };
+    await storage.setNicheTemplate(niche, {
+      companyNameTemplate: clean(req.body?.companyNameTemplate),
+      descriptionTemplate: clean(req.body?.descriptionTemplate),
+      kbTemplate: clean(req.body?.kbTemplate),
+    });
+    res.json({ ok: true });
   }));
 
   // ─── Prospects ───────────────────────────────────────────────────────

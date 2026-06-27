@@ -449,8 +449,8 @@ export default function CalendarPage() {
     );
   }
 
-  // ── Loading skeleton ─────────────────────────────────────────────────────────
-  if (leadsLoading) {
+  // ── Loading skeleton — only on initial load, not on manual refresh ───────────
+  if (leadsLoading && leads.length === 0) {
     return (
       <CrmShell>
         {/*
