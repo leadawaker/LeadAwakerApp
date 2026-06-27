@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Plus, RefreshCw, Check, X, Trash2, Loader2, Copy, Eye, EyeOff,
-  ExternalLink, Calendar, KeyRound, ChevronDown, ChevronRight, Smartphone,
+  ExternalLink, Calendar, KeyRound, ChevronDown, ChevronRight, Smartphone, Mail,
 } from "lucide-react";
 import { PanelAction, ConnectedPill, IntegrationField, EditButton, BrandTile } from "./atoms";
 import { useAccountEdit } from "./useAccountEdit";
 import { VoiceCloneSection } from "./VoiceCloneSection";
+import { MissedCallCard } from "./MissedCallCard";
 import {
   fetchCalendarProviders, fetchCalendarConnections, startCalendarOAuth, connectCalendarKey, disconnectCalendar,
   provisionBookingPage, fetchCaldiyCredentials,
@@ -16,6 +17,10 @@ import {
   fetchMessagingStatus, provisionMessaging, deprovisionMessaging,
   type MessagingStatus,
 } from "../../api/messagingApi";
+import {
+  fetchEmailSenderStatus, saveEmailSender, verifyEmailDomain,
+  type EmailSenderStatus, type DnsRecord,
+} from "../../api/emailSenderApi";
 import type { AccountRow, AccountDetail, IntegrationField as IField } from "./types";
 import {
   TwilioLogo,
@@ -23,6 +28,9 @@ import {
 } from "./integrationLogos";
 
 const CALENDAR_PROVIDER_ORDER: CalendarProviderId[] = ["google", "outlook", "calcom", "calendly", "ical"];
+// Clients only ever connect via one-click OAuth (Google/Outlook); the token is
+// injected into their Cal.diy booking page automatically.
+const CLIENT_CALENDAR_PROVIDERS: CalendarProviderId[] = ["google", "outlook"];
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 function IntegSection({ children, first = false }: { children: React.ReactNode; first?: boolean }) {
@@ -67,8 +75,9 @@ function FlatRow({ label, value, extra, children }: { label: string; value?: str
 }
 
 // ── Calendar connect ───────────────────────────────────────────────────────────
-function CalendarConnectCard({ accountId, noBorder }: { accountId: number; noBorder?: boolean }) {
+function CalendarConnectCard({ accountId, noBorder, clientMode }: { accountId: number; noBorder?: boolean; clientMode?: boolean }) {
   const { t } = useTranslation("accounts");
+  const providerOrder = clientMode ? CLIENT_CALENDAR_PROVIDERS : CALENDAR_PROVIDER_ORDER;
   const [providers, setProviders] = useState<CalendarProviderMeta[]>([]);
   const [connections, setConnections] = useState<CalendarConnection[]>([]);
   const [provider, setProvider] = useState<CalendarProviderId>("google");
@@ -167,7 +176,7 @@ function CalendarConnectCard({ accountId, noBorder }: { accountId: number; noBor
                 value={provider}
                 onChange={(e) => { setProvider(e.target.value as CalendarProviderId); setSecret(""); setError(null); }}
               >
-                {CALENDAR_PROVIDER_ORDER.map((p) => (
+                {providerOrder.map((p) => (
                   <option key={p} value={p}>{t(`calendar.providers.${p}`)}</option>
                 ))}
               </select>
@@ -310,6 +319,58 @@ function BookingPageCard({ accountId, noBorder }: { accountId: number; noBorder?
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (noBorder) return <>{body}</>;
+  return <IntegSection>{body}</IntegSection>;
+}
+
+// ── Booking page: client view (read-only link) ──────────────────────────────────
+// The client connects their calendar via the CalendarConnectCard (one click); the
+// token is injected into their Cal.diy page automatically. Here we only surface the
+// resulting booking link — no usernames, no separate Cal.diy login.
+function BookingLinkReadOnly({ accountId, noBorder }: { accountId: number; noBorder?: boolean }) {
+  const { t } = useTranslation("accounts");
+  const [creds, setCreds] = useState<CaldiyCredentials | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!accountId) return;
+    fetchCaldiyCredentials(accountId).then(setCreds).catch(() => {}).finally(() => setLoaded(true));
+  }, [accountId]);
+
+  if (!loaded || !creds) return null;
+
+  const copy = (value: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const flatBtn = { background: "transparent", boxShadow: "none", color: "var(--mute-2)" } as React.CSSProperties;
+
+  const body = (
+    <>
+      <SectionHead>
+        <IconTile><Calendar size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("calendar.booking.title")}</span>
+        <ConnectedPill on={true} connectedLabel={t("pills.connected")} notSetLabel={t("pills.notSet")} />
+      </SectionHead>
+
+      <FlatRow
+        label={t("calendar.booking.bookingUrl")}
+        value={creds.bookingUrl}
+        extra={
+          <div className="row" style={{ gap: 2 }}>
+            <button className="la-btn la-btn--icon" onClick={() => window.open(creds.bookingUrl, "_blank")} title={t("calendar.booking.openBookingPage")} style={flatBtn}><ExternalLink size={13} /></button>
+            <button className="la-btn la-btn--icon" onClick={() => copy(creds.bookingUrl)} style={flatBtn}>{copied ? <Check size={13} /> : <Copy size={13} />}</button>
+          </div>
+        }
+      />
+
+      <p style={{ fontSize: 12, color: "var(--mute)", marginTop: 14, lineHeight: 1.5 }}>{t("calendar.booking.clientExplainer")}</p>
     </>
   );
 
@@ -490,7 +551,10 @@ function MessagingCard({ account, d, onSave, fieldCols }: { account: AccountRow;
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {status?.fromNumber && (
-            <FlatRow label={t("messaging.number")} value={status.fromNumber} />
+            <FlatRow
+              label={t("messaging.number")}
+              value={status.sandbox ? `${status.fromNumber}  ·  ${t("messaging.sandboxTag")}` : status.fromNumber}
+            />
           )}
           <div className="row" style={{ gap: 16 }}>
             <StatePill label={t("messaging.sms")} state={status?.sms === "ready" ? "ready" : "none"} />
@@ -529,6 +593,169 @@ function MessagingCard({ account, d, onSave, fieldCols }: { account: AccountRow;
   );
 }
 
+// ── Email sender (per-account From identity) ─────────────────────────────────────
+// Lets a client send fallback/opener email from THEIR own domain instead of the shared
+// Lead Awaker sender. Requires DNS verification (SPF + DKIM + DMARC) before the engine will
+// use it. See server/routes/emailSender.ts + task #676 "step 8".
+function DnsRecordRow({ rec, copied, onCopy }: { rec: DnsRecord; copied: boolean; onCopy: () => void }) {
+  const { t } = useTranslation("accounts");
+  // ok is undefined until a verify attempt has run.
+  const status = rec.ok === undefined ? null : rec.ok;
+  return (
+    <div
+      style={{
+        display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px",
+        borderRadius: "var(--r-button)", background: "var(--card)", boxShadow: "var(--sh-inset)",
+      }}
+    >
+      <div className="row" style={{ gap: 8, justifyContent: "space-between" }}>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)" }}>
+          {rec.kind} · {rec.type}
+        </span>
+        {status !== null && (
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: status ? "var(--good)" : "var(--wine)" }}>
+            {status ? t("emailSender.recordOk") : t("emailSender.recordMissing")}
+          </span>
+        )}
+      </div>
+      <div className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--ink-soft)", wordBreak: "break-all" }}>{rec.host}</div>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--ink)", wordBreak: "break-all", marginTop: 2 }}>{rec.value}</div>
+        </div>
+        <button
+          className="la-btn la-btn--icon"
+          onClick={onCopy}
+          title={t("emailSender.copy")}
+          style={{ background: "transparent", boxShadow: "none", color: "var(--mute-2)" }}
+        >
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EmailSenderCard({ accountId }: { accountId: number }) {
+  const { t } = useTranslation("accounts");
+  const [status, setStatus] = useState<EmailSenderStatus | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!accountId) return;
+    fetchEmailSenderStatus(accountId)
+      .then((s) => { setStatus(s); setName(s.fromName || ""); setAddress(s.fromAddress || ""); })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, [accountId]);
+
+  const copy = (key: string, value: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 1500);
+  };
+
+  const save = async () => {
+    if (!address.trim()) { setError(t("emailSender.addressRequired")); return; }
+    setSaving(true); setError(null);
+    try {
+      const s = await saveEmailSender(accountId, { fromName: name.trim(), fromAddress: address.trim() });
+      setStatus(s);
+    } catch (e: any) { setError(e.message || t("emailSender.saveFailed")); }
+    finally { setSaving(false); }
+  };
+
+  const verify = async () => {
+    setVerifying(true); setError(null);
+    try {
+      const r = await verifyEmailDomain(accountId);
+      setStatus((prev) => prev ? { ...prev, verified: r.verified, verifiedAt: r.verifiedAt, records: r.records } : prev);
+    } catch (e: any) { setError(e.message || t("emailSender.verifyFailed")); }
+    finally { setVerifying(false); }
+  };
+
+  if (!loaded) return null;
+
+  const verified = !!status?.verified;
+  const hasDomain = !!status?.sendingDomain;
+
+  return (
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+      <SectionHead>
+        <IconTile><Mail size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("emailSender.title")}</span>
+        <ConnectedPill on={verified} connectedLabel={t("emailSender.verified")} notSetLabel={t("emailSender.pending")} />
+      </SectionHead>
+
+      <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t("emailSender.explainer")}</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 14px", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("emailSender.fromName")}</div>
+          <input
+            className="neu-input"
+            style={{ fontSize: 12, padding: "8px 11px", width: "100%" }}
+            value={name}
+            placeholder={t("emailSender.fromNamePlaceholder")}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("emailSender.fromAddress")}</div>
+          <input
+            className="neu-input"
+            style={{ fontSize: 12, padding: "8px 11px", width: "100%", fontFamily: "var(--mono)" }}
+            value={address}
+            placeholder={t("emailSender.fromAddressPlaceholder")}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="row" style={{ gap: 10 }}>
+        <button className="la-btn la-btn--soft" disabled={saving} onClick={save}>
+          {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+          {saving ? t("detail.saving") : t("emailSender.save")}
+        </button>
+        {error && <span style={{ fontSize: 11.5, color: "var(--wine)" }}>{error}</span>}
+      </div>
+
+      {hasDomain && (
+        <div style={{ marginTop: 18 }}>
+          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 10, lineHeight: 1.5 }}>
+            {t("emailSender.dnsExplainer", { domain: status!.sendingDomain })}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {status!.records.map((rec) => (
+              <DnsRecordRow
+                key={rec.kind}
+                rec={rec}
+                copied={copied === rec.kind}
+                onCopy={() => copy(rec.kind, rec.value)}
+              />
+            ))}
+          </div>
+          <div className="row" style={{ gap: 10, marginTop: 12 }}>
+            <button className="la-btn la-btn--soft" disabled={verifying} onClick={verify}>
+              {verifying ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+              {verifying ? t("emailSender.verifying") : t("emailSender.verifyDomain")}
+            </button>
+            {verified && status?.verifiedAt && (
+              <span style={{ fontSize: 11.5, color: "var(--good)" }}>{t("emailSender.verifiedNote")}</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main panel ─────────────────────────────────────────────────────────────────
 export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked = false, withVoice = true, readOnly = false }: {
   account: AccountRow;
@@ -547,16 +774,22 @@ export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked =
         <MessagingCard account={account} d={d} onSave={onSave} fieldCols={fieldCols} />
       )}
 
-      {/* Calendar + Booking side by side; booking is owner-only */}
-      <div style={{ display: "grid", gridTemplateColumns: readOnly ? "1fr" : "1fr 1fr", gap: 18 }}>
+      {!readOnly && <EmailSenderCard accountId={accountId} />}
+
+      {!readOnly && <MissedCallCard accountId={accountId} />}
+
+      {/* Calendar + Booking side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
         <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
-          <CalendarConnectCard accountId={accountId} noBorder />
+          <CalendarConnectCard accountId={accountId} noBorder clientMode={readOnly} />
         </div>
-        {!readOnly && (
-          <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+        <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+          {readOnly ? (
+            <BookingLinkReadOnly accountId={accountId} noBorder />
+          ) : (
             <BookingPageCard accountId={accountId} noBorder />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {withVoice && !readOnly && (

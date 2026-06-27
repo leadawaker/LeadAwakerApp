@@ -1,0 +1,171 @@
+{
+  "header": {
+    "title": "Speed-to-Lead",
+    "range": "Last 24 hours",
+    "refresh": "Refresh"
+  },
+  "tabs": {
+    "performance": "Performance",
+    "settings": "Settings"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search...",
+    "filter": "Filter",
+    "sort": "Sort",
+    "group": "Group",
+    "add": "New campaign",
+    "showList": "Show list",
+    "hideList": "Hide list"
+  },
+  "list": {
+    "empty": "No campaigns match"
+  },
+  "card": {
+    "median": "Median",
+    "leads": "Leads",
+    "whatsapp": "WhatsApp"
+  },
+  "detail": {
+    "label": "Speed-to-Lead"
+  },
+  "meta": {
+    "status": "Status",
+    "responseTarget": "Response Target",
+    "responseTargetValue": "<{{seconds}}s",
+    "primaryChannel": "Primary Channel",
+    "fallbackChannel": "Fallback Channel",
+    "statusValues": {
+      "active": "Active",
+      "paused": "Paused",
+      "draft": "Draft"
+    }
+  },
+  "layout": {
+    "title": "Layout",
+    "presetA": "Original 4-up",
+    "presetB": "Balanced 3 / 2 / 2",
+    "presetC": "Compact 3 / 3 / 1"
+  },
+  "weekday": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "median": {
+    "title": "Median First Touch",
+    "target": "Target: <{{seconds}}s"
+  },
+  "channelMix": {
+    "title": "Channel Mix",
+    "shareCount": "{{pct}}% ({{count}})"
+  },
+  "channels": {
+    "whatsapp": "WhatsApp",
+    "smsFallback": "SMS Fallback",
+    "emailFallback": "Email Fallback"
+  },
+  "distribution": {
+    "title": "Response-Time Distribution",
+    "under15s": "Under 15s",
+    "from15to30s": "15–30s",
+    "from30to60s": "30–60s",
+    "from1to5m": "1–5m",
+    "over5m": "5m+"
+  },
+  "totalLeads": {
+    "title": "Total Leads (come in)",
+    "range24h": "24H",
+    "range1w": "1W",
+    "range1m": "1M",
+    "delta": "vs yesterday"
+  },
+  "sources": {
+    "title": "Lead Sources",
+    "webForm": "Web Form",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "hubspot": "HubSpot",
+    "zapier": "Zapier",
+    "other": "Other"
+  },
+  "feed": {
+    "title": "Live First-Touch Feed",
+    "live": "Live",
+    "col": {
+      "lead": "Lead",
+      "source": "Source",
+      "channel": "Channel",
+      "firstTouch": "First Touch Time",
+      "status": "Status",
+      "time": "Time"
+    },
+    "status": {
+      "delivered": "Delivered",
+      "fallback": "Fallback Used"
+    },
+    "agoMin": "{{count}} min ago",
+    "allSystems": "All systems delivering",
+    "viewAll": "View all activity"
+  },
+  "insights": {
+    "title": "AI Operations Insights",
+    "responseSpeed": {
+      "headline": "Response speed improved 12% vs last 7 days",
+      "detail": "Your median first touch time improved from 26s to 23s."
+    },
+    "whatsappShare": {
+      "headline": "WhatsApp delivers 94% of first touches",
+      "detail": "Strong performance across all WhatsApp channels."
+    },
+    "webFormSlower": {
+      "headline": "Web forms average 38s slower than other sources",
+      "detail": "Consider optimizing the web form flow or routing."
+    },
+    "emailFallbacks": {
+      "headline": "7 email fallbacks today",
+      "detail": "Same as yesterday. Ensure email deliverability is healthy."
+    }
+  },
+  "settings": {
+    "message": {
+      "eyebrow": "First Touch",
+      "title": "Instant first message",
+      "body": "The moment a lead lands, the AI sends this. Keep it warm, human and specific. Use variables to personalize, and it adapts the rest of the reply to whatever the lead says next.",
+      "default": "Hi {{lead_name}}! Thanks for reaching out to {{business_name}} 👋 I'm {{agent_name}}, here to help you straight away. To point you in the right direction, what are you looking to get sorted?",
+      "variables": "Insert:",
+      "tone": "Tone",
+      "tones": {
+        "warm": "Warm",
+        "professional": "Professional",
+        "concise": "Concise"
+      },
+      "aiDisclosure": "Disclose AI assistant"
+    },
+    "sla": {
+      "eyebrow": "Response Target",
+      "title": "Speed SLA",
+      "targetLabel": "Respond within",
+      "fallbackLabel": "Fall back if undelivered after",
+      "seconds": "sec",
+      "help": "If WhatsApp isn't delivered within the fallback window, the next enabled channel fires automatically."
+    },
+    "channels": {
+      "eyebrow": "Channels",
+      "title": "Channel order",
+      "primary": "Primary",
+      "help": "WhatsApp leads every conversation. SMS and email are tried in order only when the one above can't be delivered."
+    },
+    "coverage": {
+      "eyebrow": "Coverage",
+      "title": "When it runs",
+      "alwaysOn": "Always on (24/7)",
+      "alwaysOnHelp": "Every lead gets an instant reply day or night, including weekends and holidays.",
+      "businessHours": "Business hours only",
+      "businessHoursHelp": "Outside business hours, leads get a holding message and a human follows up next working day."
+    }
+  }
+}

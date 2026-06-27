@@ -22,21 +22,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { useLocation } from "wouter";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
-/** Convert hex to a desaturated opaque tint (for group header backgrounds).
- *  Reduces saturation by 70%, then blends at 18% over white. */
-function opaqueTint(hex: string): string {
-  let r = parseInt(hex.slice(1, 3), 16);
-  let g = parseInt(hex.slice(3, 5), 16);
-  let b = parseInt(hex.slice(5, 7), 16);
-  // Desaturate: blend each channel 70% toward its luminance gray
-  const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-  r = Math.round(r + (gray - r) * 0.7);
-  g = Math.round(g + (gray - g) * 0.7);
-  b = Math.round(b + (gray - b) * 0.7);
-  // Blend at 18% alpha over white
-  const blend = (c: number) => Math.round(c * 0.18 + 255 * 0.82);
-  return `rgb(${blend(r)}, ${blend(g)}, ${blend(b)})`;
-}
 
 // ── Column definitions ─────────────────────────────────────────────────────────
 type ColKey =
@@ -648,17 +633,9 @@ export function LeadsInlineTable({
   // Reset page when data changes
   useEffect(() => { setTablePage(0); }, [displayItems.length]);
 
-  // Scroll selected row into view (e.g. from search)
-  useEffect(() => {
-    if (!selectedLeadId) return;
-    const raf = requestAnimationFrame(() => {
-      const row = document.querySelector(`tr[data-lead-id="${selectedLeadId}"]`) as HTMLElement | null;
-      if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [selectedLeadId]);
-
   // F shortcut: scroll selected row into view, jumping pages if needed.
+  // (No auto-scroll on plain selection — selecting a lead no longer slides the
+  // list to re-center it; press F to deliberately jump to the selected row.)
   const tableScrollRef = useRef<HTMLDivElement>(null);
   useFKeyScrollToSelected({
     containerRef: tableScrollRef,
@@ -674,29 +651,58 @@ export function LeadsInlineTable({
     },
   });
 
-  const totalPages = Math.ceil(leadCount / TABLE_PAGE_SIZE);
+  // Only leads in expanded (non-collapsed) groups count toward pagination, so
+  // folding a group re-flows the pages instead of leaving blanks.
+  const visibleLeadCount = useMemo(() => {
+    let count = 0;
+    let currentGroup: string | null = null;
+    for (const item of displayItems) {
+      if (item.kind === "header") { currentGroup = item.label; continue; }
+      if (currentGroup && collapsedGroups.has(currentGroup)) continue;
+      count++;
+    }
+    return count;
+  }, [displayItems, collapsedGroups]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleLeadCount / TABLE_PAGE_SIZE));
+
+  // Keep the current page in range when folding shrinks the page count.
+  useEffect(() => {
+    if (tablePage > totalPages - 1) setTablePage(Math.max(0, totalPages - 1));
+  }, [totalPages, tablePage]);
+
   const paginatedItems = useMemo(() => {
-    if (leadCount <= TABLE_PAGE_SIZE) return displayItems;
-    // We need to keep headers and paginate lead items
-    let leadIdx = 0;
+    if (visibleLeadCount <= TABLE_PAGE_SIZE) return displayItems;
     const startIdx = tablePage * TABLE_PAGE_SIZE;
     const endIdx = startIdx + TABLE_PAGE_SIZE;
     const result: typeof displayItems = [];
-    let lastHeader: typeof displayItems[0] | null = null;
+    let vIdx = 0;                                        // visible-lead index
+    let currentGroup: string | null = null;
+    let pendingHeader: typeof displayItems[number] | null = null;
     for (const item of displayItems) {
       if (item.kind === "header") {
-        lastHeader = item;
+        currentGroup = item.label;
+        if (collapsedGroups.has(item.label)) {
+          // Collapsed stub: render on the page where it naturally sits, so it
+          // stays reachable for unfolding without consuming page slots.
+          const groupPage = Math.min(totalPages - 1, Math.floor(vIdx / TABLE_PAGE_SIZE));
+          if (groupPage === tablePage) result.push(item);
+          pendingHeader = null;
+        } else {
+          pendingHeader = item;
+        }
         continue;
       }
-      if (leadIdx >= startIdx && leadIdx < endIdx) {
-        if (lastHeader) { result.push(lastHeader); lastHeader = null; }
+      if (currentGroup && collapsedGroups.has(currentGroup)) continue; // skip folded leads
+      if (vIdx >= startIdx && vIdx < endIdx) {
+        if (pendingHeader) { result.push(pendingHeader); pendingHeader = null; }
         result.push(item);
       }
-      leadIdx++;
-      if (leadIdx >= endIdx) break;
+      vIdx++;
+      if (vIdx >= endIdx) break;
     }
     return result;
-  }, [displayItems, tablePage, leadCount]);
+  }, [displayItems, tablePage, visibleLeadCount, collapsedGroups, totalPages]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
@@ -766,8 +772,13 @@ export function LeadsInlineTable({
                   if (item.kind === "header") {
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
-                    const hexColor    = PIPELINE_HEX[item.label] || "#6B7280";
-                    const groupBg     = opaqueTint(hexColor);
+                    // Slightly darker than the rows, with 1px rules top + bottom so the
+                    // band reads as a divider separating it from the columns.
+                    const groupCellStyle: React.CSSProperties = {
+                      backgroundColor: "color-mix(in srgb, var(--bg-2) 55%, var(--bg) 45%)",
+                      borderTop: "1px solid var(--line-strong)",
+                      borderBottom: "1px solid var(--line-strong)",
+                    };
                     const groupIds = getGroupLeadIds(item.label);
                     const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
                     return (
@@ -779,7 +790,7 @@ export function LeadsInlineTable({
                         {/* Cell 1: Checkbox */}
                         <td
                           className="sticky left-0 z-30 w-[36px] px-0"
-                          style={{ backgroundColor: groupBg }}
+                          style={groupCellStyle}
                         >
                           <div className="flex items-center justify-center h-full">
                             <DesignCheck
@@ -795,7 +806,7 @@ export function LeadsInlineTable({
                         {/* Cell 2: Label (arrow + name + count) */}
                         <td
                           className="sticky left-[36px] z-30 pl-1 pr-3"
-                          style={{ backgroundColor: groupBg }}
+                          style={groupCellStyle}
                         >
                           <div className="flex items-center gap-2">
                             {isCollapsed
@@ -809,7 +820,7 @@ export function LeadsInlineTable({
                         {/* Cell 3: Spacer */}
                         <td
                           colSpan={visibleColumns.length}
-                          style={{ backgroundColor: groupBg }}
+                          style={groupCellStyle}
                         />
                       </tr>
                     );
@@ -827,13 +838,17 @@ export function LeadsInlineTable({
                   const leadStatus       = getStatus(lead);
                   const stageHex         = PIPELINE_HEX[leadStatus] || PIPELINE_HEX.New || "#6C5A8C";
                   const avatarColor      = getLeadStatusAvatarColor(leadStatus);
-                  // Sticky cells need an opaque background that tracks the row state.
-                  // `--row-bg` is updated on hover via inline mouse handlers below.
-                  const rowBg            = isHighlighted ? "var(--card)" : "var(--row-bg, transparent)";
+                  // `--row-bg` is set by the `.la-lead-row` CSS (base/hover/selected),
+                  // so every column — including the frozen sticky ones — paints the
+                  // same surface. Selected rows go bright (--card); base is --bg.
+                  const rowBg            = "var(--row-bg, var(--bg))";
 
                   const isRowEditing = editingCell?.leadId === leadId;
                   const currentRowIdx = rowIdx++;
-                  const stickyCellStyle: React.CSSProperties = {
+                  // Frozen Name cell + trailing fill: opaque background only (no rail).
+                  const stickyCellStyle: React.CSSProperties = { background: rowBg };
+                  // Checkbox cell carries the single selection rail on its left edge.
+                  const checkboxCellStyle: React.CSSProperties = {
                     background: rowBg,
                     boxShadow: isHighlighted ? "inset 3px 0 0 var(--wine)" : undefined,
                   };
@@ -841,28 +856,18 @@ export function LeadsInlineTable({
                     <tr
                       key={leadId}
                       data-lead-id={leadId}
-                      className="group/row cursor-pointer h-[52px] animate-card-enter"
+                      className={cn("la-lead-row group/row cursor-pointer h-[52px] animate-card-enter", isHighlighted && "is-selected")}
                       style={{
                         animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms`,
-                        background: isHighlighted ? "var(--card)" : "transparent",
                         borderBottom: "1px solid var(--line)",
-                        boxShadow: isHighlighted ? "inset 3px 0 0 var(--wine)" : undefined,
                         ...(isRowEditing ? { position: "relative" as const, zIndex: 50 } : {}),
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isHighlighted) e.currentTarget.style.setProperty("--row-bg", "var(--surface)");
-                        if (!isHighlighted) e.currentTarget.style.background = "var(--surface)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isHighlighted) e.currentTarget.style.setProperty("--row-bg", "transparent");
-                        if (!isHighlighted) e.currentTarget.style.background = "transparent";
                       }}
                       onClick={(e) => handleRowClick(lead, e)}
                     >
-                      {/* Checkbox cell — opaque sticky background */}
+                      {/* Checkbox cell — opaque sticky background + selection rail */}
                       <td
                         className="sticky left-0 z-10 w-[36px] px-0"
-                        style={stickyCellStyle}
+                        style={checkboxCellStyle}
                       >
                         <div className="flex items-center justify-center h-full">
                           <DesignCheck
@@ -1021,10 +1026,9 @@ export function LeadsInlineTable({
                                   // Lead chat now opens inline on the Leads page (Chats page retired)
                                   try {
                                     localStorage.setItem("selected-lead-id", String(lid));
-                                    localStorage.setItem("leads-view-mode", "list");
                                   } catch {}
                                   const basePath = "/platform";
-                                  setLocation(`${basePath}/contacts`);
+                                  setLocation(`${basePath}/conversations`);
                                 }}
                                 title={t("conversations.title", "Chats")}
                               >
@@ -1104,7 +1108,7 @@ export function LeadsInlineTable({
 
       {/* ── Pagination footer (when >50 leads) ── */}
       {totalPages > 1 && (
-        <div className="shrink-0 px-3 py-2 flex items-center justify-between gap-2 border-t border-border/20 bg-muted">
+        <div className="shrink-0 px-3 py-2 flex items-center justify-between gap-2 border-t border-border/20" style={{ background: "var(--bg)" }}>
           <button
             onClick={() => setTablePage((p) => Math.max(0, p - 1))}
             disabled={tablePage === 0}

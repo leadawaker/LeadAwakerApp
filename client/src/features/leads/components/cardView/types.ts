@@ -92,6 +92,8 @@ export interface LeadsCardViewProps {
   // View tab switching
   viewMode: ViewMode;
   onViewModeChange: (v: ViewMode) => void;
+  /** Which view tabs are reachable. Omitted = all three. Conversations page = ["list"]. */
+  allowedViews?: ViewMode[];
   // Search popup
   searchOpen: boolean;
   onSearchOpenChange: (v: boolean) => void;

@@ -40,8 +40,8 @@ export interface CalendarAdapter {
   id: CalendarProviderId;
   capabilities: AdapterCapabilities;
 
-  /** OAuth providers: build the consent URL (state carries accountId). */
-  getAuthUrl?(accountId: number): string;
+  /** OAuth providers: build the consent URL from an opaque CSRF state nonce. */
+  getAuthUrl?(state: string): string;
   /** OAuth providers: exchange the code, returning the row fields to persist. */
   exchangeCode?(code: string): Promise<Partial<CalendarConnection>>;
 

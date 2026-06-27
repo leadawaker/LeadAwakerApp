@@ -53,31 +53,31 @@
     "useCasePlaceholder": "bijv. WhatsApp lead heractivering",
     "promptText": "Prompttekst",
     "promptTextRequired": "Prompttekst is verplicht",
-    "promptTextPlaceholder": "Voer de hoofdtekst van de prompt in\u2026",
+    "promptTextPlaceholder": "Voer de hoofdtekst van de prompt in…",
     "promptContent": "Promptinhoud",
-    "mainPromptPlaceholder": "Hoofdtekst prompt\u2026",
+    "mainPromptPlaceholder": "Hoofdtekst prompt…",
     "systemMessage": "Systeembericht",
-    "systemMessagePlaceholder": "Systeeminstructies voor het AI-model (optioneel)\u2026",
-    "systemMessagePlaceholderShort": "Systeeminstructies (optioneel)\u2026",
-    "systemMessagePlaceholderAlt": "Optionele systeem-instructies voor de AI\u2026",
+    "systemMessagePlaceholder": "Systeeminstructies voor het AI-model (optioneel)…",
+    "systemMessagePlaceholderShort": "Systeeminstructies (optioneel)…",
+    "systemMessagePlaceholderAlt": "Optionele systeem-instructies voor de AI…",
     "notes": "Notities",
-    "notesPlaceholder": "Extra notities of context over deze prompt (optioneel)\u2026",
-    "notesPlaceholderShort": "Extra notities (optioneel)\u2026",
-    "notesPlaceholderAlt": "Interne notities over deze prompt\u2026",
+    "notesPlaceholder": "Extra notities of context over deze prompt (optioneel)…",
+    "notesPlaceholderShort": "Extra notities (optioneel)…",
+    "notesPlaceholderAlt": "Interne notities over deze prompt…",
     "temperature": "Temperatuur",
-    "temperatureRange": "(0\u20132)",
-    "temperatureError": "Moet 0\u20132 zijn",
+    "temperatureRange": "(0–2)",
+    "temperatureError": "Moet 0–2 zijn",
     "maxTokens": "Max Tokens",
     "maxTokensError": "Moet een positief geheel getal zijn",
     "selectModel": "Model selecteren",
     "selectStatus": "Status selecteren",
-    "noneOption": "\u2014 Geen \u2014",
+    "noneOption": "— Geen —",
     "noCampaignModel": "Geen campagne geselecteerd",
     "identity": "Identiteit",
     "configuration": "Configuratie",
     "required": "Verplicht",
     "campaign": "Campagne",
-    "noCampaign": "\u2014 Geen campagne gekoppeld"
+    "noCampaign": "— Geen campagne gekoppeld"
   },
   "status": {
     "active": "Actief",
@@ -91,8 +91,8 @@
     "save": "Opslaan",
     "saveChanges": "Wijzigingen Opslaan",
     "createPrompt": "Prompt Aanmaken",
-    "saving": "Opslaan\u2026",
-    "creating": "Aanmaken\u2026",
+    "saving": "Opslaan…",
+    "creating": "Aanmaken…",
     "cancel": "Annuleren",
     "edit": "Bewerken",
     "delete": "Verwijderen"
@@ -101,7 +101,7 @@
     "title": "Prompt Verwijderen",
     "message": "Weet je zeker dat je wilt verwijderen",
     "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
-    "deleting": "Verwijderen\u2026",
+    "deleting": "Verwijderen…",
     "deletePrompt": "Prompt Verwijderen"
   },
   "toast": {
@@ -179,21 +179,21 @@
   },
   "sort": {
     "mostRecent": "Meest Recent",
-    "nameAZ": "Naam A \u2192 Z",
-    "nameZA": "Naam Z \u2192 A",
-    "scoreDesc": "Score \u2193",
-    "scoreAsc": "Score \u2191"
+    "nameAZ": "Naam A → Z",
+    "nameZA": "Naam Z → A",
+    "scoreDesc": "Score ↓",
+    "scoreAsc": "Score ↑"
   },
   "versions": {
     "saveVersion": "Versie Opslaan",
-    "majorVersion": "Hoofd \u2191",
-    "majorVersionHint": "Verhoogt de hoofdversie (bijv. 1.2 \u2192 2.0)",
-    "saving": "Opslaan\u2026",
+    "majorVersion": "Hoofd ↑",
+    "majorVersionHint": "Verhoogt de hoofdversie (bijv. 1.2 → 2.0)",
+    "saving": "Opslaan…",
     "saved": "Versie opgeslagen",
     "saveFailed": "Versie opslaan mislukt",
-    "loading": "Versies laden\u2026",
+    "loading": "Versies laden…",
     "noVersions": "Nog geen versies",
-    "selectVersion": "Versie laden\u2026",
+    "selectVersion": "Versie laden…",
     "loaded": "Versie geladen",
     "deleted": "Versie verwijderd",
     "deleteFailed": "Versie verwijderen mislukt",
@@ -209,5 +209,61 @@
     "versionCount_other": "{{count}} versies",
     "minorUpdate": "Klein (+0.1)",
     "majorUpdate": "Groot (+1.0)"
+  },
+  "preview": {
+    "conditionsTitle": "Voorbeeldcondities",
+    "cond": {
+      "leadStage": "Leadfase",
+      "positioning": "Positionering",
+      "aiDisclosure": "AI-vermelding",
+      "off": "Uit",
+      "on": "Aan",
+      "stage": {
+        "inquired": "Offerte aangevraagd",
+        "visited": "Had een bezoek",
+        "deciding": "Beslissingsfase",
+        "declined": "Afgewezen",
+        "quoted": "Offerte ontvangen (standaard)"
+      },
+      "pos": {
+        "midMarket": "Middensegment",
+        "premium": "Premium"
+      }
+    }
+  },
+  "vocabulary": {
+    "intro": "Woorden per niche die de AI gebruikt om de universele demo-prompt om te vormen. Kies een niche bij een campagne en de prompt wisselt deze termen automatisch in, zodat de AI native klinkt voor dat vakgebied zonder een nieuwe prompt. Het eerste woord in elke groep is het woord dat de prompt gebruikt.",
+    "defaultNiche": "Standaard (terugval)",
+    "addNiche": "Niche toevoegen",
+    "addNichePlaceholder": "Kies een niche…",
+    "deleteNiche": "Niche verwijderen",
+    "saveError": "Opslaan mislukt. Probeer het opnieuw.",
+    "groups": {
+      "projectTerm": "Project / product",
+      "proposalTerm": "Voorstel / offerte",
+      "decisionTerm": "Beslissing",
+      "advisorTerm": "Adviseur",
+      "visitTerm": "Bezoek / locatie"
+    },
+    "title": "Nichewoorden",
+    "lang": {
+      "en": "Engels",
+      "nl": "Nederlands"
+    },
+    "delete": {
+      "title": "Niche verwijderen?",
+      "body": "Hiermee verwijder je alle woorden die voor \"{{niche}}\" zijn opgeslagen. Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Verwijderen",
+      "cancel": "Annuleren"
+    },
+    "addWord": "Woord toevoegen",
+    "showTemplates": "Templates tonen",
+    "hideTemplates": "Templates verbergen",
+    "templates": {
+      "title": "Bedrijfsprofieltemplates",
+      "companyName": "Bedrijfsnaam",
+      "description": "Bedrijfsbeschrijving",
+      "kb": "Kennisbank"
+    }
   }
 }

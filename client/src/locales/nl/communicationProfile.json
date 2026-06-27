@@ -88,6 +88,8 @@
     "preferredWords": {
       "label": "Welke woorden gebruiken jullie zelf het liefst?",
       "short": "Gewenste woorden",
+      "nicheLabel": "Niche",
+      "nicheDefault": "Standaard (keuken)",
       "groups": {
         "projectTerm": "Het project",
         "proposalTerm": "Het voorstel",

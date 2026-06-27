@@ -74,7 +74,7 @@ export function BusinessSectionFields({
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
-      <InfoRow icon={Building2} label={t("config.companyName")} value={campaign.company_name}
+      <InfoRow icon={Building2} label={t("config.companyName")} value={String(draft.company_name ?? campaign.company_name ?? "")}
         {...editFor("company_name")}
         editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
       />
@@ -173,7 +173,7 @@ export function BusinessSectionFields({
       />
 
       <InfoRow icon={Building2} label={t("config.businessDescription")}
-        value={displayText(campaign.description)} richText={true} noBorder
+        value={displayText(draft.description ?? campaign.description)} richText={true} noBorder
         {...editFor("description")}
         editChild={isEditing ? (
           <EditText
@@ -187,7 +187,7 @@ export function BusinessSectionFields({
       />
 
       <InfoRow icon={BookOpen} label={t("config.kb")}
-        value={displayText(campaign.kb)} richText={true}
+        value={displayText(draft.kb ?? campaign.kb)} richText={true}
         {...editFor("kb")}
         editChild={isEditing ? (
           <EditText

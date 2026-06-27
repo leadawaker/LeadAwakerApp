@@ -33,8 +33,9 @@ export function useNicheWords(niche: string | null | undefined) {
         body: JSON.stringify({ group, word: trimmed }),
       });
       if (res.ok) {
+        // The words endpoint now returns { nl, en }; this view edits the Dutch set.
         const data = await res.json();
-        if (data.groups) setGroups(data.groups);
+        if (data.nl) setGroups(data.nl);
       }
     } catch { /* non-fatal */ }
     setAdding(false);

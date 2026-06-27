@@ -1,0 +1,171 @@
+{
+  "header": {
+    "title": "Speed-to-Lead",
+    "range": "Últimas 24 horas",
+    "refresh": "Atualizar"
+  },
+  "tabs": {
+    "performance": "Desempenho",
+    "settings": "Configurações"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Buscar...",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "group": "Agrupar",
+    "add": "Nova campanha",
+    "showList": "Mostrar lista",
+    "hideList": "Ocultar lista"
+  },
+  "list": {
+    "empty": "Nenhuma campanha encontrada"
+  },
+  "card": {
+    "median": "Mediana",
+    "leads": "Leads",
+    "whatsapp": "WhatsApp"
+  },
+  "detail": {
+    "label": "Speed-to-Lead"
+  },
+  "meta": {
+    "status": "Status",
+    "responseTarget": "Meta de resposta",
+    "responseTargetValue": "<{{seconds}}s",
+    "primaryChannel": "Canal principal",
+    "fallbackChannel": "Canal de reserva",
+    "statusValues": {
+      "active": "Ativa",
+      "paused": "Pausada",
+      "draft": "Rascunho"
+    }
+  },
+  "layout": {
+    "title": "Layout",
+    "presetA": "Original 4 colunas",
+    "presetB": "Equilibrado 3 / 2 / 2",
+    "presetC": "Compacto 3 / 3 / 1"
+  },
+  "weekday": {
+    "mon": "seg",
+    "tue": "ter",
+    "wed": "qua",
+    "thu": "qui",
+    "fri": "sex",
+    "sat": "sáb",
+    "sun": "dom"
+  },
+  "median": {
+    "title": "Primeiro contato (mediana)",
+    "target": "Meta: <{{seconds}}s"
+  },
+  "channelMix": {
+    "title": "Mix de canais",
+    "shareCount": "{{pct}}% ({{count}})"
+  },
+  "channels": {
+    "whatsapp": "WhatsApp",
+    "smsFallback": "SMS (reserva)",
+    "emailFallback": "E-mail (reserva)"
+  },
+  "distribution": {
+    "title": "Distribuição do tempo de resposta",
+    "under15s": "Abaixo de 15s",
+    "from15to30s": "15–30s",
+    "from30to60s": "30–60s",
+    "from1to5m": "1–5m",
+    "over5m": "5m+"
+  },
+  "totalLeads": {
+    "title": "Total de leads (recebidos)",
+    "range24h": "24H",
+    "range1w": "1S",
+    "range1m": "1M",
+    "delta": "vs. ontem"
+  },
+  "sources": {
+    "title": "Origens dos leads",
+    "webForm": "Formulário web",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "hubspot": "HubSpot",
+    "zapier": "Zapier",
+    "other": "Outros"
+  },
+  "feed": {
+    "title": "Feed de primeiro contato ao vivo",
+    "live": "Ao vivo",
+    "col": {
+      "lead": "Lead",
+      "source": "Origem",
+      "channel": "Canal",
+      "firstTouch": "Tempo do 1º contato",
+      "status": "Status",
+      "time": "Tempo"
+    },
+    "status": {
+      "delivered": "Entregue",
+      "fallback": "Reserva usada"
+    },
+    "agoMin": "há {{count}} min",
+    "allSystems": "Todos os sistemas entregando",
+    "viewAll": "Ver toda a atividade"
+  },
+  "insights": {
+    "title": "Insights de operação da IA",
+    "responseSpeed": {
+      "headline": "Velocidade de resposta melhorou 12% vs. últimos 7 dias",
+      "detail": "Seu tempo mediano de primeiro contato melhorou de 26s para 23s."
+    },
+    "whatsappShare": {
+      "headline": "WhatsApp entrega 94% dos primeiros contatos",
+      "detail": "Ótimo desempenho em todos os canais de WhatsApp."
+    },
+    "webFormSlower": {
+      "headline": "Formulários web são, em média, 38s mais lentos que outras origens",
+      "detail": "Considere otimizar o fluxo ou o roteamento do formulário web."
+    },
+    "emailFallbacks": {
+      "headline": "7 reservas por e-mail hoje",
+      "detail": "Igual a ontem. Garanta que a entregabilidade de e-mail esteja saudável."
+    }
+  },
+  "settings": {
+    "message": {
+      "eyebrow": "Primeiro contato",
+      "title": "Primeira mensagem instantânea",
+      "body": "No instante em que um lead chega, a IA envia isto. Mantenha caloroso, humano e específico. Use variáveis para personalizar; o restante da resposta se adapta ao que o lead disser em seguida.",
+      "default": "Oi {{lead_name}}! Obrigado por falar com a {{business_name}} 👋 Sou {{agent_name}} e já vou te ajudar. Para te direcionar melhor: o que você está querendo resolver?",
+      "variables": "Inserir:",
+      "tone": "Tom",
+      "tones": {
+        "warm": "Caloroso",
+        "professional": "Profissional",
+        "concise": "Direto"
+      },
+      "aiDisclosure": "Informar que é assistente de IA"
+    },
+    "sla": {
+      "eyebrow": "Meta de resposta",
+      "title": "SLA de velocidade",
+      "targetLabel": "Responder em até",
+      "fallbackLabel": "Usar reserva se não entregue após",
+      "seconds": "seg",
+      "help": "Se o WhatsApp não for entregue dentro da janela de reserva, o próximo canal ativado dispara automaticamente."
+    },
+    "channels": {
+      "eyebrow": "Canais",
+      "title": "Ordem dos canais",
+      "primary": "Principal",
+      "help": "O WhatsApp lidera toda conversa. SMS e e-mail são tentados em ordem apenas quando o canal acima não pode ser entregue."
+    },
+    "coverage": {
+      "eyebrow": "Cobertura",
+      "title": "Quando funciona",
+      "alwaysOn": "Sempre ativo (24/7)",
+      "alwaysOnHelp": "Todo lead recebe resposta instantânea de dia ou de noite, incluindo fins de semana e feriados.",
+      "businessHours": "Apenas horário comercial",
+      "businessHoursHelp": "Fora do horário comercial, os leads recebem uma mensagem de espera e um humano dá retorno no próximo dia útil."
+    }
+  }
+}

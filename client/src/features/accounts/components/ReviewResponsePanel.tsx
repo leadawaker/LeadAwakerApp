@@ -67,17 +67,35 @@ export default function ReviewResponsePanel({ account, accountId }: Props) {
   }, [accountId]);
 
   const loadConnection = useCallback(() => {
-    fetchReviewsConnection(accountId).then(setConn).catch(() => setConn({ connected: false }));
-  }, [accountId]);
+    fetchReviewsConnection(accountId)
+      .then(setConn)
+      .catch(() => {
+        setConn({ connected: false });
+        toast({ description: t("reviewResponse.connectionError", "Could not check connection"), variant: "destructive" });
+      });
+  }, [accountId, t, toast]);
 
   const loadReviews = useCallback(() => {
     fetchReviews(accountId, QUEUE_STATUSES)
       .then((rows) => {
         setReviews(rows);
-        setDrafts(Object.fromEntries(rows.map((r) => [r.id, r.draftReply || ""])));
+        // Merge: keep any in-progress local edits; adopt the AI draft once it lands
+        // (status flips new → drafted). Never seed a 'new' row, or its draft would
+        // never be picked up when the engine fills it in.
+        setDrafts((prev) => {
+          const next: Record<number, string> = {};
+          for (const r of rows) {
+            if (r.id in prev) next[r.id] = prev[r.id];
+            else if (r.status === "new") { /* skip — adopt AI draft when it arrives */ }
+            else next[r.id] = r.draftReply ?? "";
+          }
+          return next;
+        });
       })
-      .catch(() => {});
-  }, [accountId]);
+      .catch(() => {
+        toast({ description: t("reviewResponse.loadError", "Could not load reviews"), variant: "destructive" });
+      });
+  }, [accountId, t, toast]);
 
   useEffect(() => {
     loadConnection();
@@ -164,9 +182,20 @@ export default function ReviewResponsePanel({ account, accountId }: Props) {
       });
     } catch (e: any) {
       toast({ description: e.message || t("reviewResponse.actionError", "Action failed"), variant: "destructive" });
+      // The row may have changed server-side (already posted, skipped); reconcile.
+      loadReviews();
+    } finally {
+      setActingId(null);
     }
-    setActingId(null);
   };
+
+  const skipButton = (review: AccountReview) => (
+    <button onClick={() => handleAction(review, "reject")} disabled={actingId === review.id}
+      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-foreground/60 hover:text-foreground bg-foreground/[0.04] hover:bg-foreground/[0.08] rounded-lg transition-colors disabled:opacity-50">
+      <X className="w-3.5 h-3.5" />
+      {t("reviewResponse.skip", "Skip")}
+    </button>
+  );
 
   const connected = conn?.connected;
   const locationSelected = conn?.locationSelected;
@@ -289,7 +318,7 @@ export default function ReviewResponsePanel({ account, accountId }: Props) {
 
           {reviews.length === 0 ? (
             <div className="text-[12px] text-foreground/40 text-center py-6 rounded-xl border border-dashed border-border/40">
-              {t("reviewResponse.allCaughtUp", "All caught up — nothing needs a reply.")}
+              {t("reviewResponse.allCaughtUp", "All caught up. Nothing needs a reply.")}
             </div>
           ) : (
             reviews.map((review) => {
@@ -304,14 +333,17 @@ export default function ReviewResponsePanel({ account, accountId }: Props) {
                   <p className="text-[12px] text-foreground/60 leading-relaxed whitespace-pre-wrap">{review.reviewText}</p>
 
                   {review.status === "new" ? (
-                    <p className="text-[11px] text-foreground/40 italic flex items-center gap-1.5">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      {t("reviewResponse.drafting", "AI is drafting a reply…")}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-foreground/40 italic flex items-center gap-1.5">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        {t("reviewResponse.drafting", "AI is drafting a reply…")}
+                      </p>
+                      {skipButton(review)}
+                    </div>
                   ) : (
                     <>
                       <p className="text-[10.5px] font-mono uppercase tracking-wide text-foreground/35">
-                        {t("reviewResponse.draftLabel", "AI draft — review before posting")}
+                        {t("reviewResponse.draftLabel", "AI draft: review before posting")}
                       </p>
                       <textarea
                         value={drafts[review.id] ?? ""}
@@ -320,11 +352,7 @@ export default function ReviewResponsePanel({ account, accountId }: Props) {
                         className="w-full text-[12px] bg-background border border-border/40 rounded-lg px-2.5 py-2 outline-none focus:border-primary/50 transition-colors resize-y"
                       />
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleAction(review, "reject")} disabled={actingId === review.id}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-foreground/60 hover:text-foreground bg-foreground/[0.04] hover:bg-foreground/[0.08] rounded-lg transition-colors disabled:opacity-50">
-                          <X className="w-3.5 h-3.5" />
-                          {t("reviewResponse.skip", "Skip")}
-                        </button>
+                        {skipButton(review)}
                         <button onClick={() => handleAction(review, "approve")} disabled={actingId === review.id || !drafts[review.id]?.trim()}
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50">
                           {actingId === review.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}

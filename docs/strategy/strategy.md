@@ -99,6 +99,64 @@ the engine routes to the right automation and the CRM interprets each lead's sta
 lifecycle. `Conversion_Status` (New → … → Closed) is a *reactivation* lifecycle, **not** a universal
 one. Build this alongside service #1.
 
+## Future service catalog (brainstormed 2026-06-23, not yet planned)
+
+Candidate services beyond the three active ones (Reactivation, Reputation, Speed-to-Lead). None are
+committed. The pattern that makes them cheap for us: each is mostly a new trigger source or channel
+adapter feeding the existing conversation engine, inbound handler, and logging, not new AI. Ranked
+roughly by reuse and fit.
+
+### Voice / Missed-Call Recovery (promising, tiered)
+
+A missed call is just another inbound "hot lead" event, so the engine reuses **Speed-to-Lead's
+inline-fire path** (`campaign_type = speed_to_lead`, new webhook source = a telephony missed-call
+event instead of a web form), not a new lifecycle. Package it as its **own tiered product**, because
+the setup (a phone number, call forwarding) and the value story ("never lose a missed call") are
+distinct:
+
+- **Tier 1: Missed-call text-back.** No real-time voice. A missed call triggers an instant WhatsApp
+  opener that drops into the existing engine. Start here: highest ROI, almost no new tech.
+- **Tier 2: Voicemail transcription + AI callback** (a voice note or a scheduled callback). We have
+  Fish Audio for PT voice, but Fish Audio has **no Dutch**, so Dutch callback needs ElevenLabs or the
+  Google voice model currently under research.
+- **Tier 3: Full conversational voice** (AI answers and talks live). Hardest (telephony, sub-second
+  latency, STT/TTS, barge-in). Build last, gated on the Gemini Live / voice-model research.
+
+### Live Chat widget (promising, best provisioning story)
+
+One embeddable, themeable widget: a single `<script>` snippet the client pastes (or installs via
+Google Tag Manager). **No access to the client's codebase needed**; a per-account config controls
+colors/logo/greeting so it matches any site. Messages flow into the same engine via a new `web`
+channel adapter; hand off to WhatsApp by capturing the phone number so the visitor becomes a normal
+CRM lead. Provisioning is the **best of all new channels**: no Meta app review, no OAuth, just a
+snippet plus an account row. Sell as setup + automations + prompt on a monthly retainer; keep the bot
+fresh via the existing knowledge base (`KnowledgeBasePanel`). Exposing that KB editor to the client
+later is the self-serve path.
+
+### Referral engine (bolt-on to Reputation, not its own service)
+
+Ask happy customers to refer a friend at the exact moment they say they're happy: the **positive
+branch of the Reputation handler**. Adds a forwardable WhatsApp referral message plus a small
+`referrals` table to track who referred whom. Near-zero engine cost. Treat as a Phase 4 of
+Reputation.
+
+### No-Show Recovery / Reminders (calendar-triggered, separate from Reactivation)
+
+**NOT part of Reactivation** (different trigger and audience: a booked appointment, not a cold lead).
+Triggered by calendar/appointment state (we already have calendar integration), so it is orthogonal
+to `campaign_type` and can attach to any booking source (reactivation, speed-to-lead, manual). A
+reminder before the appointment plus auto-rebook after a no-show. Low lift; package as a small add-on
+enabled alongside whatever drives bookings.
+
+### Social Media Reply (keep on list, low priority)
+
+AI replies to Instagram/Facebook DMs and the high-ROI "comment X to get the link" auto-DM tactic.
+`instagram_routes.py` is a starting point and the engine reuses. The catch (and the reason to
+deprioritize): **Meta provisioning is the worst of the set**. It needs a Facebook App with advanced
+permissions, a one-time Meta App Review, and each client must OAuth-connect their own page (no clean
+white-label auto-provisioning, and you live inside Meta's apps). Build only if a client specifically
+asks.
+
 ## Strategic note: distribution > features (Dan, `dqPaERmNFho`)
 
 Dan's strongest strategy point across the videos: in an AI market racing to the bottom on features,

@@ -15,9 +15,15 @@ window.TRANSLATIONS.nl.convUI = {
   months_ago:          "mnd. geleden",
   chat_enquired_note:  "aanvraag 6 maanden geleden",
 
-  demo_msg1: "ik heb een goedkopere offerte gekregen",
-  demo_msg2: "Het kan de moeite waard zijn om te checken wat de reden is dat het bedrag lager is. Details en afwerking zijn doorgaans waar het verschil zit.",
-  demo_msg3: "Nu je het zegt, ik zie dat er op sommige onderdelen is bezuinigd.",
+  // Aangevraagd, nog geen offerte
+  demo_inquired_1: "eerlijk gezegd had ik het even op de lange baan geschoven",
+  demo_inquired_2: "Gebeurt zo vaak. Wat houdt het project op dit moment nog het meest tegen?",
+  demo_inquired_3: "eerlijk gezegd nooit de tijd gevonden om de opties goed te vergelijken",
+
+  // Offerte ontvangen, twijfelt nog
+  demo_deciding_1: "ik heb een goedkopere offerte gekregen",
+  demo_deciding_2: "Even checken wat er achter dat bedrag zit. De goedkoopste offerte laat meestal iets weg.",
+  demo_deciding_3: "Nu je het zegt, ik zie dat er op sommige onderdelen is bezuinigd.",
 };
 
 window.TRANSLATIONS.nl.chatMessages = {

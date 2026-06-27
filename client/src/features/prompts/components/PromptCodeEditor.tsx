@@ -72,6 +72,11 @@ function buildTheme(fontSize: number) {
       color: "var(--wine)",
       borderRadius: "2px",
     },
+    ".cm-cond": {
+      color: "var(--wine)",
+      fontWeight: "700",
+      opacity: "0.7",
+    },
     ".cm-h1": { fontSize: `${fontSize + 5}px`, fontWeight: "700" },
     ".cm-h2": { fontSize: `${fontSize + 3}px`, fontWeight: "700" },
     ".cm-h3": { fontWeight: "700" },

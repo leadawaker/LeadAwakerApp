@@ -18,6 +18,9 @@ import {
   ReviewsNotConfiguredError,
 } from "../reviews/google";
 import { pollNow, persistTokensFor } from "../reviews/poller";
+import { createOAuthState, consumeOAuthState, saveSessionThen } from "../oauthState";
+
+const REVIEWS_OAUTH_FLOW = "reviews";
 
 function frontendBase(req: import("express").Request): string {
   return process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
@@ -29,7 +32,9 @@ export function registerReviewsRoutes(app: Express): void {
     const accountId = Number(req.query.accountId);
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     try {
-      res.redirect(getAuthUrl(accountId));
+      const state = createOAuthState(req, REVIEWS_OAUTH_FLOW, accountId);
+      const url = getAuthUrl(state);
+      saveSessionThen(req, () => res.redirect(url));
     } catch (err: any) {
       if (err instanceof ReviewsNotConfiguredError) return res.status(501).json({ message: err.message });
       throw err;
@@ -45,8 +50,9 @@ export function registerReviewsRoutes(app: Express): void {
     if (error) return res.redirect(dest("error", `&reason=${encodeURIComponent(error)}`));
 
     const code = req.query.code as string;
-    const accountId = Number(req.query.state);
-    if (!code || !accountId) return res.redirect(dest("error", "&reason=missing_code"));
+    const accountId = consumeOAuthState(req, REVIEWS_OAUTH_FLOW, req.query.state);
+    if (!code) return res.redirect(dest("error", "&reason=missing_code"));
+    if (!accountId) return res.redirect(dest("error", "&reason=invalid_state"));
 
     try {
       const fields = await exchangeCode(code);
@@ -109,6 +115,8 @@ export function registerReviewsRoutes(app: Express): void {
     const accountId = Number(req.body?.accountId);
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     const ok = await storage.deleteCalendarConnection(accountId, REVIEWS_PROVIDER);
+    // Stop the queue from showing reviews for a now-disconnected location.
+    await storage.skipPendingReviews(accountId);
     res.json({ ok });
   }));
 
@@ -123,8 +131,8 @@ export function registerReviewsRoutes(app: Express): void {
   }));
 
   // ─── Manual poll (the "refresh" button) ───────────────────────────────────
-  app.post("/api/accounts/:id/reviews/poll", requireAuth, requireAgency, wrapAsync(async (_req, res) => {
-    await pollNow();
+  app.post("/api/accounts/:id/reviews/poll", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    await pollNow(Number(req.params.id));
     res.json({ ok: true });
   }));
 
@@ -135,18 +143,14 @@ export function registerReviewsRoutes(app: Express): void {
     const review = await storage.getReviewById(reviewId);
     if (!review) return res.status(404).json({ message: "Review not found" });
 
-    if (action === "edit") {
-      if (typeof draftReply !== "string") return res.status(400).json({ message: "draftReply required" });
-      const updated = await storage.updateReview(reviewId, { draftReply });
-      return res.json(updated);
-    }
-
     if (action === "reject") {
       const updated = await storage.updateReview(reviewId, { status: "skipped" });
       return res.json(updated);
     }
 
     if (action === "approve") {
+      // Idempotency: a second approve (double-click / retry) is a no-op, not a re-post.
+      if (review.status === "posted") return res.json(review);
       const reply = (typeof draftReply === "string" && draftReply.trim()) || review.draftReply || "";
       if (!reply.trim()) return res.status(400).json({ message: "Nothing to post — draft is empty" });
       if (!review.externalReviewId) return res.status(400).json({ message: "Review has no external id" });

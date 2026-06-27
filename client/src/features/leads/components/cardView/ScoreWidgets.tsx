@@ -327,7 +327,7 @@ function DetailScoreBar({ label, value, max, color, note }: { label: string; val
 }
 
 // ── Score widget — design-system "Lead Score" card ─────────────────────────────
-export function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<string, any>; status?: string }) {
+export function ScoreWidget({ score, lead, status, showBreakdown = true }: { score: number; lead?: Record<string, any>; status?: string; showBreakdown?: boolean }) {
   const { t } = useTranslation("leads");
   const leadId = lead?.Id || lead?.id;
   const { breakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
@@ -372,8 +372,8 @@ export function ScoreWidget({ score, lead, status }: { score: number; lead?: Rec
               </div>
             </div>
 
-            {/* Sub-scores */}
-            {breakdown && (
+            {/* Sub-scores (Engagement/Activity/Funnel) — only useful on the Chats page */}
+            {showBreakdown && breakdown && (
               <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
                 <DetailScoreBar label={t("score.engagement", "Engagement")} value={engPts} max={30} color="var(--stage-contacted)" note={cardEngagementContext(lead)} />
                 <DetailScoreBar label={t("score.activity", "Activity")} value={actPts} max={20} color="var(--stage-multi)" note={cardActivityContext(lead)} />

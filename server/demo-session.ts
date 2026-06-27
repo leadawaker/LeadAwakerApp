@@ -5,6 +5,16 @@ import { eq } from "drizzle-orm";
 
 export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 
+/** Scenario picked on the homepage toggle. Maps onto Prompt 93's lead_stage. */
+export type DemoScenario = "inquired" | "deciding" | "declined";
+
+/** Canonical English phrasing per scenario; derive_lead_stage (engine) keys off these. */
+const SCENARIO_WHAT_LEAD_DID: Record<DemoScenario, string> = {
+  inquired: "Inquired about a quote",
+  deciding: "In the decision phase",
+  declined: "Declined / went with another provider",
+};
+
 export interface NicheContext {
   raw: string;
   niche_label: string;
@@ -17,6 +27,41 @@ export interface NicheContext {
   when_label: string;
   niche_question: string;
   first_message: string;
+  // Knowledge-base facts for the conversation prompt ({kb}).
+  kb: string;
+  // Per-niche vocabulary for Prompt 93 substitution.
+  advisor_term: string;
+  project_term: string;
+  proposal_term: string;
+  visit_term: string;
+  // Reactivation context. lead_stage comes from the scenario toggle; the other
+  // three are fixed demo defaults applied in code, not produced by the model.
+  lead_stage: DemoScenario;
+  inquiry_timeframe: string;
+  first_touch: string;
+  ai_style: string;
+}
+
+/** Localized "six months ago" default for {inquiry_timeframe}. */
+const INQUIRY_TIMEFRAME_DEFAULT: Record<string, string> = {
+  en: "six months ago",
+  nl: "zes maanden geleden",
+  pt: "seis meses atrás",
+};
+
+/**
+ * Apply the fixed reactivation defaults Gabriel specified for the universal demo:
+ * AI style = Practical, inquiry timeframe = six months ago, first touch = the
+ * niche's own visit term (e.g. "showroom visit" for kitchens), and the chosen
+ * scenario as both lead_stage and a canonical what_lead_did the engine can map.
+ */
+function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoScenario): NicheContext {
+  ctx.lead_stage = scenario;
+  ctx.what_lead_did = SCENARIO_WHAT_LEAD_DID[scenario];
+  ctx.inquiry_timeframe = INQUIRY_TIMEFRAME_DEFAULT[language] ?? INQUIRY_TIMEFRAME_DEFAULT.en;
+  ctx.first_touch = ctx.visit_term || (language === "nl" ? "bezoek" : language === "pt" ? "visita" : "visit");
+  ctx.ai_style = "Practical";
+  return ctx;
 }
 
 const NICHE_GENERATOR_SYSTEM_FALLBACK = `You generate realistic demo context for a lead reactivation AI demo.
@@ -26,13 +71,22 @@ Given a business niche description, output a JSON object with these exact keys:
 - when_label: a natural time reference (e.g. "een tijdje geleden", "some time ago", "há um tempo")
 - niche_question: ONE sharp qualifying question that reconnects the lead with their original intent (e.g. "Heb je inmiddels een andere tandarts gevonden, of ben je nog op zoek?", "Are you still thinking about going solar this year?")
 - niche_label: a short 1-2 word label for the niche in the output language (e.g. "real estate", "solar", "tandheelkunde")
+- service_name: what this business wants the lead to buy (e.g. "solar panel installation", "a dental check-up")
+- usp: the company's key value proposition in one short phrase
+- business_description: 1-2 sentence company description referencing the USP
+- kb: 4-6 concrete knowledge-base facts the AI should know (numbers, timelines, guarantees, objection rebuttals), newline-separated, NOT an array
+- advisor_term: the human role a lead would book a call/appointment with for this niche (e.g. "solar advisor", "dental hygienist", "personal trainer", "kitchen designer")
+- project_term: what the engagement is about (e.g. "solar installation", "dental treatment", "fitness plan", "kitchen")
+- proposal_term: what this niche calls its offer document (e.g. "quote", "treatment plan", "membership offer", "design proposal")
+- visit_term: the on-location first touch for this niche (e.g. "site visit", "clinic visit", "gym tour", "showroom visit")
 - first_message: the Sophie opener — format exactly: "Hi, this is {agent_name} from [company_name]. Is this the same {first_name} who [what_lead_did] [when_label]?" — adapt to the output language (e.g. Dutch: "Hi, dit is {agent_name} van [company_name]. Ben jij dezelfde {first_name} die [what_lead_did] [when_label]?") — the name {first_name} appears ONLY ONCE in the identity question, never in the greeting
 
-Output language will be specified in the user message. Return ONLY valid JSON, no markdown.`;
+The advisor_term, project_term, proposal_term and visit_term MUST be in the output language and natural for the niche. Output language will be specified in the user message. Return ONLY valid JSON, no markdown.`;
 
 export async function generateNicheContext(
   niche: string,
   language: "en" | "nl" | "pt",
+  scenario: DemoScenario = "inquired",
 ): Promise<NicheContext | null> {
   const apiKey = process.env.OPEN_AI_API_KEY;
   if (!apiKey) return null;
@@ -54,9 +108,17 @@ export async function generateNicheContext(
   }
   system = system + `\n\nOutput language: ${langLabel}.`;
 
+  // Hint the model so what_lead_did / first_message / niche_question match the
+  // scenario the visitor chose. lead_stage itself is set authoritatively in code.
+  const scenarioHint = {
+    inquired: "The lead only INQUIRED and has NOT received a quote/proposal yet.",
+    deciding: "The lead already received a quote/proposal and is actively deciding between options.",
+    declined: "The lead leaned toward another provider or went quiet after comparing.",
+  }[scenario];
+
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
+    const timer = setTimeout(() => controller.abort(), 12000);
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       signal: controller.signal,
@@ -68,9 +130,9 @@ export async function generateNicheContext(
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: system },
-          { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}` },
+          { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nLead scenario: ${scenarioHint}` },
         ],
-        max_tokens: 400,
+        max_tokens: 600,
         temperature: 0.7,
       }),
     });
@@ -80,6 +142,8 @@ export async function generateNicheContext(
     const raw = (json?.choices?.[0]?.message?.content || "").trim();
     const parsed = JSON.parse(raw) as NicheContext;
     parsed.raw = niche;
+    // Coerce kb from array to newline string if the model returned a list.
+    if (Array.isArray((parsed as any).kb)) (parsed as any).kb = (parsed as any).kb.join("\n");
     // Ensure {agent_name} and {first_name} placeholders are present
     if (parsed.first_message && !parsed.first_message.includes("{agent_name}")) {
       parsed.first_message = parsed.first_message.replace(/\bSophie\b/, "{agent_name}");
@@ -98,13 +162,23 @@ export async function generateNicheContext(
           `, is this {first_name}?`;
       }
     }
-    return parsed;
+    // Guarantee niche-term keys exist even if the model omitted them.
+    parsed.advisor_term = (parsed.advisor_term || "").trim();
+    parsed.project_term = (parsed.project_term || parsed.niche_label || niche).trim();
+    parsed.proposal_term = (parsed.proposal_term || "").trim();
+    parsed.visit_term = (parsed.visit_term || "").trim();
+    parsed.kb = (parsed.kb || "").toString();
+    return applyDemoDefaults(parsed, language, scenario);
   } catch {
     return null;
   }
 }
 
-export function buildFallbackNicheContext(niche: string, language: "en" | "nl" | "pt"): NicheContext {
+export function buildFallbackNicheContext(
+  niche: string,
+  language: "en" | "nl" | "pt",
+  scenario: DemoScenario = "inquired",
+): NicheContext {
   const templates = {
     en: {
       first_message: `Hi, this is {agent_name} from our ${niche} team. Is this the same {first_name} who reached out about ${niche} recently?`,
@@ -120,7 +194,8 @@ export function buildFallbackNicheContext(niche: string, language: "en" | "nl" |
     },
   };
   const t = templates[language] ?? templates.en;
-  return {
+  const visit = language === "nl" ? "bezoek" : language === "pt" ? "visita" : "visit";
+  return applyDemoDefaults({
     raw: niche,
     company_name: "",
     service_name: niche,
@@ -132,7 +207,16 @@ export function buildFallbackNicheContext(niche: string, language: "en" | "nl" |
     niche_label: niche,
     niche_question: t.niche_question,
     first_message: t.first_message,
-  };
+    kb: "",
+    advisor_term: language === "nl" ? "adviseur" : language === "pt" ? "consultor" : "advisor",
+    project_term: niche,
+    proposal_term: language === "nl" ? "offerte" : language === "pt" ? "orçamento" : "quote",
+    visit_term: visit,
+    lead_stage: scenario,
+    inquiry_timeframe: "",
+    first_touch: "",
+    ai_style: "",
+  }, language, scenario);
 }
 
 export const DEMO_ACCOUNT_ID = 1;

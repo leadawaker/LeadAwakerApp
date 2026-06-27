@@ -285,7 +285,40 @@ function CampaignsContent() {
     setCampaigns((prev) => prev.map((c) => (c.id === id || c.Id === id) ? { ...c, ...patch } : c));
     setSelectedCampaign((prev) => prev && (prev.id === id || prev.Id === id) ? { ...prev, ...patch } : prev);
     await updateCampaign(id, patch);
-  }, [setCampaigns]);
+
+    // When business profile fields are saved, write them back to the niche
+    // template so future campaigns pre-fill with the latest values.
+    const niche = String(patch.niche ?? campaigns.find((c) => c.id === id || c.Id === id)?.niche ?? "").trim();
+    const hasBusinessFields = "company_name" in patch || "description" in patch || "kb" in patch;
+    if (niche && hasBusinessFields && isAgencyUser) {
+      try {
+        const toTemplate = (raw: unknown): { nl: string; en: string } | undefined => {
+          if (!raw) return undefined;
+          const s = String(raw).trim();
+          if (s.startsWith("{")) {
+            try { return JSON.parse(s); } catch { /* ok */ }
+          }
+          return s ? { nl: s, en: s } : undefined;
+        };
+        const body: Record<string, unknown> = {};
+        if ("company_name" in patch) {
+          const v = String(patch.company_name ?? "").trim();
+          if (v) body.companyNameTemplate = { nl: v, en: v };
+        }
+        if ("description" in patch) body.descriptionTemplate = toTemplate(patch.description);
+        if ("kb" in patch) body.kbTemplate = toTemplate(patch.kb);
+        if (Object.keys(body).length) {
+          await fetch(`/api/niche-vocabulary/${encodeURIComponent(niche)}/template`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        }
+      } catch {
+        // Non-critical — best-effort template sync.
+      }
+    }
+  }, [setCampaigns, campaigns, isAgencyUser]);
 
   // ── List-view control helpers ──────────────────────────────────────────────
   const isGroupNonDefault     = groupBy !== "status";

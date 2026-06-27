@@ -293,7 +293,7 @@ function TypographySection() {
           <div className="eyebrow" style={{ marginBottom: 12 }}>Mono label / timestamp</div>
           <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)', letterSpacing: '0.04em' }}>10:15 AM</span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)', letterSpacing: '0.04em' }}>enquired 7 mo. ago</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)', letterSpacing: '0.04em' }}>inquired 7 mo. ago</span>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute-2)', letterSpacing: '0.04em' }}>Geist Mono · 11px · 0.04em tracked</span>
           </div>
         </div>

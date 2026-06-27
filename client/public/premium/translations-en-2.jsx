@@ -11,11 +11,17 @@ window.TRANSLATIONS.en.convUI = {
   niche_landscaping: "Garden",
   niche_roofing:    "Roofing",
 
-  enquired_ago:        "enquired",
+  enquired_ago:        "inquired",
   months_ago:          "mo. ago",
-  chat_enquired_note:  "enquired 6 months ago",
+  chat_enquired_note:  "inquired 6 months ago",
 
-  demo_msg1: "got a cheaper quote",
-  demo_msg2: "Worth checking what's behind the number. Detailing and finish are usually where the gap is.",
-  demo_msg3: "yeah, I can already see some corners cut",
+  // Inquired, no quote yet
+  demo_inquired_1: "honestly I'd kind of put it on the back burner",
+  demo_inquired_2: "Happens all the time. What's the one thing still holding the project back?",
+  demo_inquired_3: "honestly we just never found the time to compare options properly",
+
+  // Got a quote, still deciding
+  demo_deciding_1: "got a cheaper quote",
+  demo_deciding_2: "Worth checking what's behind the number. The cheapest quote usually leaves something out.",
+  demo_deciding_3: "yeah, I can already see some corners cut",
 };

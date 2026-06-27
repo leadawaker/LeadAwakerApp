@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lead Awaker · Home Hub</title>
+<link rel="stylesheet" href="design-system.css">
+<style>
+  html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: "Manrope", system-ui, sans-serif; }
+
+  .home-tag {
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.13em; text-transform: uppercase; white-space: nowrap;
+    padding: 3px 9px; border-radius: var(--r-flush);
+    background: var(--surface); box-shadow: var(--sh-inset-crisp); flex-shrink: 0;
+  }
+  .home-card { transition: box-shadow 140ms, transform 140ms; }
+  .home-card:hover { transform: translateY(-2px); box-shadow: var(--sh-raised-large); }
+  .home-quick:hover { transform: translateY(-2px); box-shadow: var(--sh-raised-medium) !important; }
+  .home-quick:active { transform: translateY(0); box-shadow: var(--sh-inset-crisp) !important; }
+  .home-quick:hover span:last-child { color: var(--wine); }
+  .home-needs-row:hover, .home-act-row:hover { background: var(--wine-tint); }
+  .home-addbtn:hover { background: var(--wine-tint) !important; }
+  .home-open:hover { gap: 9px !important; }
+  .home-openbtn:hover { transform: translateY(-2px); box-shadow: var(--sh-raised-medium) !important; }
+  .home-openbtn:active { transform: translateY(0); box-shadow: var(--sh-inset-crisp) !important; }
+  .home-upsell { transition: border-color 140ms, background 140ms; }
+  .home-upsell:hover { border-color: var(--wine); background: var(--wine-tint); }
+
+  /* north-star clickable header (icon badge + service name) */
+  .home-nsopen .ns-badge { transition: box-shadow 160ms, transform 160ms; }
+  .home-nsopen .ns-name { transition: color 140ms; }
+  .home-nsopen:hover .ns-badge { box-shadow: var(--sh-raised-tall); transform: translateY(-2px); }
+  .home-nsopen:hover .ns-name { color: var(--wine); }
+  .home-nsopen:focus-visible { outline: none; }
+  .home-nsopen:focus-visible .ns-name { color: var(--wine); }
+  .home-nsopen:focus-visible .ns-badge { box-shadow: var(--sh-raised-tall), 0 0 0 2px var(--wine); }
+
+  /* focus ring per brand spec */
+  .la-app a:focus-visible, .la-app button:focus-visible {
+    outline: 2px solid var(--wine); outline-offset: 2px; border-radius: var(--r-button);
+  }
+
+  /* ─── microanimations (JS-revealed: resting state is always visible) ─── */
+  @media (prefers-reduced-motion: no-preference) {
+    .home-stage .home-rise {
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 0.6s cubic-bezier(.22,.7,.25,1), transform 0.6s cubic-bezier(.22,.7,.25,1);
+    }
+    .home-stage.shown .home-rise { opacity: 1; transform: none; }
+
+    /* sparkline draws itself in once revealed */
+    .home-stage .spark-draw { stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1s cubic-bezier(.4,.1,.2,1) 0.3s; }
+    .home-stage.shown .spark-draw { stroke-dashoffset: 0; }
+    .home-stage .spark-area, .home-stage .spark-dot { opacity: 0; transition: opacity 0.5s ease 0.7s; }
+    .home-stage.shown .spark-area, .home-stage.shown .spark-dot { opacity: 1; }
+
+    /* nav rows + chips slide on hover */
+    .la-nav-item { transition: background 140ms, color 140ms, transform 140ms; }
+    .la-nav-item:hover { transform: translateX(2px); }
+    .home-open svg { transition: transform 160ms; }
+    .home-open:hover svg { transform: translateX(3px); }
+    .la-profile, .la-switcher { transition: box-shadow 140ms, transform 140ms; }
+    .la-profile:hover, .la-switcher:hover { transform: translateY(-1px); }
+  }
+</style>
+<link id="gfont-Libre-Baskerville" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@300;400;500;600;700&amp;display=swap">
+<link id="gfont-Space-Grotesk" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap">
+<link id="gfont-Playfair-Display" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&amp;display=swap">
+<link id="gfont-Merriweather" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;500;600;700&amp;display=swap">
+<link id="gfont-Abril-Fatface" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface:wght@300;400;500;600;700&amp;display=swap">
+</head>
+<body style="font-family: &quot;Libre Baskerville&quot;; font-size: 32px">
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#ECE7DD"/>
+    <rect x="30" y="30" width="40" height="40" rx="8" fill="#5E2230"/>
+    <path d="M38 50 L46 50 M54 50 L62 50" stroke="#FFFBF7" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+</template>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="home-data.js"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="home-shell.jsx"></script>
+<script type="text/babel" src="home-variations.jsx"></script>
+
+<script type="text/babel">
+ReactDOM.createRoot(document.getElementById('root')).render(<HomeHub />);
+</script>
+</body>
+</html>

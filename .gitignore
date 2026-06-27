@@ -106,3 +106,8 @@ login.png
 /leads-mobile.png
 /delete-seed-campaigns.js
 /migrate-service-specs-columns.js
+
+# Dev scratch / screenshots (not part of the app)
+/accounts-list.yaml
+/current-page.png
+/accounts-page.png

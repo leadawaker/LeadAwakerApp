@@ -15,6 +15,14 @@ import { USP_OPTIONS, asCampaignLang } from "@/features/campaigns/components/set
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// Same niche list as the campaign settings dropdown and the vocabulary manager,
+// so the suggested words stay in sync across the app.
+const WIZARD_NICHE_OPTIONS = [
+  "Kitchens", "Bathrooms", "Countertops", "Flooring", "General Contracting",
+  "Solar Panels", "HVAC", "Roofing", "Landscaping", "Windows & Doors",
+  "Painting", "Pest Control", "Pool Installation", "Moving Services",
+];
+
 function OptionCard({ selected, onClick, children, badge }: { selected: boolean; onClick: () => void; children: ReactNode; badge?: ReactNode }) {
   return (
     <button
@@ -105,7 +113,11 @@ export function ProfileWizard({ initial, initialFacts, initialGrids, initialStep
     return g;
   });
   const [newWordInputs, setNewWordInputs] = useState<Partial<Record<PreferredWordGroup, string>>>({});
-  const nicheWords = useNicheWords(niche);
+  // Operator can override the niche on the preferred-words step to re-theme the
+  // suggested vocabulary, independent of the account's stored niche.
+  const [activeNiche, setActiveNiche] = useState<string | null | undefined>(niche);
+  useEffect(() => { setActiveNiche(niche); }, [niche]);
+  const nicheWords = useNicheWords(activeNiche);
 
   // For a NEW profile, default each preferred-word group to the first chip of the
   // account's niche vocabulary once it loads (only if still unset — never clobber).
@@ -188,6 +200,21 @@ export function ProfileWizard({ initial, initialFacts, initialGrids, initialStep
       case "preferredWords":
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Niche selector — re-themes the suggested words to the client's trade */}
+            <div>
+              <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>{t("questions.preferredWords.nicheLabel")}</div>
+              <select
+                value={activeNiche ?? ""}
+                onChange={(e) => setActiveNiche(e.target.value || null)}
+                style={{
+                  padding: "7px 10px", fontSize: 13, borderRadius: "var(--r-button)",
+                  border: "1px solid var(--line)", background: "transparent", color: "var(--ink-soft)",
+                }}
+              >
+                <option value="">{t("questions.preferredWords.nicheDefault")}</option>
+                {WIZARD_NICHE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
             {(["projectTerm", "proposalTerm", "decisionTerm"] as PreferredWordGroup[]).map((group) => {
               const words = nicheWords.groups[group] ?? [];
               const newWord = newWordInputs[group] ?? "";

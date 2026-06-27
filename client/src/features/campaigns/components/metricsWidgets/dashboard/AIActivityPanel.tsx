@@ -58,9 +58,8 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
     if (!leadId) return;
     try {
       localStorage.setItem("selected-lead-id", String(leadId));
-      localStorage.setItem("leads-view-mode", "list");
     } catch { /* ignore */ }
-    setLocation("/platform/contacts");
+    setLocation("/platform/conversations");
   };
 
   return (

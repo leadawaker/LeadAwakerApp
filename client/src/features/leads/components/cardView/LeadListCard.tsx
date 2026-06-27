@@ -15,6 +15,17 @@ import { ScoreArcDonut } from "./atoms";
 // ── Lead list card ─────────────────────────────────────────────────────────────
 const TRAY_WIDTH = 220;
 
+// Inbound-source attribution labels (speed-to-lead). Brand/source names, not
+// translatable. Only recognized inbound sources surface a chip, so reactivation
+// and imported leads stay visually unchanged.
+const SOURCE_LABELS: Record<string, string> = {
+  facebook_lead_ads: "Facebook",
+  instagram_dm: "Instagram",
+  website_form: "Web form",
+  gohighlevel: "GoHighLevel",
+  hubspot: "HubSpot",
+};
+
 export function LeadListCard({
   lead,
   isActive,
@@ -65,6 +76,8 @@ export function LeadListCard({
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
   const isDemo = (lead.source || lead.Source) === "WhatsApp Demo" ||
     (lead.channel_identifier || lead.channelIdentifier || "").startsWith("wa-demo:");
+  const sourceRaw   = String(lead.source || lead.Source || "");
+  const sourceLabel = isDemo ? "" : (SOURCE_LABELS[sourceRaw] || (sourceRaw.startsWith("zapier:") ? "Zapier" : ""));
 
   // ── Chat peek (Feature A): last message under the row when showPeek is on ──
   const peekText   = getLastMessage(lead);
@@ -402,7 +415,7 @@ export function LeadListCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
             <span className="text-[9px] max-md:text-[13px]" style={{ color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}
+              {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}{sourceLabel ? ` · ${sourceLabel}` : ''}
             </span>
           </div>
 

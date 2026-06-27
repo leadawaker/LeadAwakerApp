@@ -80,12 +80,12 @@ function MobDetailBody({ campaign, onBack }) {
 // ─── More menu ─────────────────────────────────────────────────────
 function MobMore({ onNavigate }) {
   const groups = [
-    { section: 'Engage', list: [['Chats', IconChats], ['Prospects', IconProspect]] },
+    { section: 'Engage', list: [['Referrals', IconGift], ['Chats', IconChats], ['Prospects', IconProspect]] },
     { section: 'Outreach', list: [['Cadence', IconCadence], ['Automations', IconAuto]] },
     { section: 'Admin', list: [['Accounts', IconAccts], ['Billing', IconBilling]] },
     { section: 'Backend', list: [['Prompt Library', IconLibrary], ['Settings', IconSettings]] },
   ];
-  const routable = { Billing: 'Billing', Accounts: 'Accounts' };
+  const routable = { Billing: 'Billing', Accounts: 'Accounts', Referrals: 'Referrals' };
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
       <div style={{ flexShrink: 0, background: 'var(--bg)', borderBottom: '1px solid var(--line)', padding: '16px 18px 14px' }}>
@@ -154,10 +154,11 @@ function MobileApp() {
         {tab === 'Calendar'  && <MobCalendarScreen />}
         {tab === 'Billing'   && <MobileBilling embedded />}
         {tab === 'Accounts'  && <MobAccountsScreen onBack={() => setTab('More')} />}
+        {tab === 'Referrals' && <MobReferralsScreen onBack={() => setTab('More')} />}
         {tab === 'More'      && <MobMore onNavigate={setTab} />}
       </div>
-      {/* Billing & Accounts are sub-screens reached from More — keep More lit while there */}
-      <MobBottomNav active={(tab === 'Billing' || tab === 'Accounts') ? 'More' : tab} onTab={setTab} />
+      {/* Billing, Accounts & Referrals are sub-screens reached from More — keep More lit while there */}
+      <MobBottomNav active={(tab === 'Billing' || tab === 'Accounts' || tab === 'Referrals') ? 'More' : tab} onTab={setTab} />
     </div>
   );
 }

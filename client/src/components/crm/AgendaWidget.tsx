@@ -271,9 +271,8 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
     // Lead chat now lives on the Leads page (Chats page retired)
     try {
       localStorage.setItem("selected-lead-id", String(leadId));
-      localStorage.setItem("leads-view-mode", "list");
     } catch {}
-    setLocation(`${prefix}/contacts`);
+    setLocation(`${prefix}/conversations`);
   }, [prefix, setLocation]);
 
   return (

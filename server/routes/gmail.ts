@@ -4,25 +4,37 @@ import { requireAuth, requireAgency, requireOwner } from "../auth";
 import { wrapAsync } from "./_helpers";
 import { broadcast } from "../sse";
 import { getAuthUrl, exchangeCode, encryptTokens, getGmailClient, getSignatureForLanguage } from "../gmail";
+import { createOAuthState, consumeOAuthState, saveSessionThen } from "../oauthState";
+
+// Gmail is owner-only / single-tenant: there is no per-account id to bind, so the
+// nonce is bound to a fixed sentinel. What matters here is that the state existed
+// in *this* session and matches the gmail flow — i.e. the CSRF round-trip is valid.
+const GMAIL_OAUTH_FLOW = "gmail";
+const GMAIL_OAUTH_SENTINEL = 1;
 
 export function registerGmailRoutes(app: Express): void {
   // ─── Gmail OAuth ─────────────────────────────────────────────────────
 
-  app.get("/api/gmail/oauth/authorize", requireOwner, wrapAsync(async (_req, res) => {
-    const url = getAuthUrl();
-    res.redirect(url);
+  app.get("/api/gmail/oauth/authorize", requireOwner, wrapAsync(async (req, res) => {
+    const state = createOAuthState(req, GMAIL_OAUTH_FLOW, GMAIL_OAUTH_SENTINEL);
+    const url = getAuthUrl(state);
+    saveSessionThen(req, () => res.redirect(url));
   }));
 
   app.get("/api/gmail/oauth/callback", wrapAsync(async (req, res) => {
-    console.log("[Gmail OAuth] Callback query params:", JSON.stringify(req.query));
+    const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+    const dest = (status: string, extra = "") => `${base}/platform/settings?gmail=${status}${extra}`;
+
     const error = req.query.error as string;
     if (error) {
       console.error("[Gmail OAuth] Google returned error:", error);
-      const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      return res.redirect(`${base}/platform/settings?gmail=error&reason=${encodeURIComponent(error)}`);
+      return res.redirect(dest("error", `&reason=${encodeURIComponent(error)}`));
     }
+
     const code = req.query.code as string;
-    if (!code) return res.status(400).json({ message: "Missing authorization code" });
+    const valid = consumeOAuthState(req, GMAIL_OAUTH_FLOW, req.query.state);
+    if (!code) return res.redirect(dest("error", "&reason=missing_code"));
+    if (!valid) return res.redirect(dest("error", "&reason=invalid_state"));
 
     try {
       const { tokens, email } = await exchangeCode(code);
@@ -35,12 +47,10 @@ export function registerGmailRoutes(app: Express): void {
         lastFullSyncAt: null,
       });
 
-      const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      res.redirect(`${base}/platform/settings?gmail=connected`);
+      res.redirect(dest("connected"));
     } catch (err: any) {
       console.error("[Gmail OAuth] Callback error:", err);
-      const base = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-      res.redirect(`${base}/platform/settings?gmail=error`);
+      res.redirect(dest("error"));
     }
   }));
 

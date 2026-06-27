@@ -224,7 +224,7 @@ export async function computeCampaignPreflight(
   const accountStatus = String(account?.status || "").toLowerCase();
   const accountActive = !["suspended", "inactive", "disabled", "cancelled", "archived"].includes(accountStatus);
   const maxBumps = Number(campaign.maxBumps || 0);
-  const active = String(campaign.status || "") === "Active";
+  const active = String(campaign.status || "").toLowerCase() === "active";
 
   // An empty queue only blocks when we're about to activate (or the campaign isn't
   // running yet). For a live campaign that has drained its queue, that's "caught up",
@@ -348,7 +348,7 @@ export function registerCampaignsRoutes(app: Express): void {
     if (!parsed.success) return handleZodError(res, parsed.error);
 
     // Hard-block activation if preflight critical checks fail (every activation path enforces this).
-    const activating = parsed.data.status === "Active" && existing.status !== "Active";
+    const activating = parsed.data.status?.toLowerCase() === "active" && existing.status?.toLowerCase() !== "active";
     if (activating) {
       const { ready, checks } = await computeCampaignPreflight({ ...existing, ...parsed.data }, { forActivation: true });
       if (!ready) {

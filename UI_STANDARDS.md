@@ -118,6 +118,11 @@ Depth is communicated through neumorphic directional-light shadows, NOT visible 
 Use `.neu-raised`, `.neu-raised-crisp`, `.neu-inset`, `.neu-polished`, `.glass`, `.glass-strong`
 utility classes. See `neu.css` for the complete shadow token system.
 
+> **Narrow icon buttons** (small square/icon-only triggers like a popover toggle,
+> a settings gear, an inline action icon) use **`.neu-inset-super-crisp`** — the
+> shallowest inset. Never leave them as bare transparent buttons; the shallow inset
+> gives them a tactile, pressable affordance without reading as a deep well.
+
 **Radius tiers:** Six semantic tiers (`--r-flush: 6px`, `--r-button: 8px`, `--r-surface: 11px`,
 `--r-card: 16px`, `--r-panel: 22px`, `--r-pill: 999px`). Snap all corners to these tiers —
 never use ad-hoc px values. The legacy `--radius: 1.5rem` still exists for backwards compatibility

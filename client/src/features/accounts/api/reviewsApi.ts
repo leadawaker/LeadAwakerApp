@@ -30,7 +30,7 @@ export interface AccountReview {
   language: string | null;
 }
 
-export type ReviewAction = "edit" | "approve" | "reject";
+export type ReviewAction = "approve" | "reject";
 
 /** OAuth: full-page redirect to the Google consent screen (business.manage). */
 export const startReviewsOAuth = (accountId: number) => {

@@ -48,7 +48,7 @@ export class ReviewsNotConfiguredError extends Error {}
 export interface RemoteReview {
   externalReviewId: string;
   authorName: string;
-  rating: number;          // 1-5
+  rating: number | null;   // 1-5, or null when Google returns no/unknown star rating
   reviewText: string;
   reviewCreatedAt: Date | null;
   hasReply: boolean;
@@ -66,12 +66,12 @@ function oauthClient() {
   return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 }
 
-export function getAuthUrl(accountId: number): string {
+export function getAuthUrl(state: string): string {
   return oauthClient().generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
     scope: SCOPES,
-    state: String(accountId),
+    state,
   });
 }
 
@@ -122,9 +122,19 @@ async function gfetch(url: string, accessToken: string, init: RequestInit = {}):
     },
   });
   const text = await res.text();
-  const body = text ? JSON.parse(text) : {};
+  let body: any = {};
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = { raw: text };
+    }
+  }
   if (!res.ok) {
-    const msg = body?.error?.message || `Google API ${res.status}`;
+    const msg =
+      body?.error?.message ||
+      (typeof body?.raw === "string" ? body.raw.slice(0, 200) : null) ||
+      `Google API ${res.status}`;
     const err: any = new Error(msg);
     err.status = res.status;
     throw err;
@@ -170,21 +180,23 @@ export async function listReviews(
   const token = await accessTokenFor(conn, persist);
   const reviews: RemoteReview[] = [];
   let pageToken: string | undefined;
+  let pages = 0;
+  const MAX_PAGES = 40; // safety cap (~2000 reviews) so a bad nextPageToken can't loop forever
   do {
-    const url = `${REVIEWS_API}/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${pageToken}` : ""}`;
+    const url = `${REVIEWS_API}/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`;
     const page = await gfetch(url, token);
     for (const r of page.reviews || []) {
       reviews.push({
         externalReviewId: r.reviewId || String(r.name || "").split("/").pop() || "",
         authorName: r.reviewer?.displayName || "",
-        rating: STAR_MAP[r.starRating] ?? 0,
+        rating: STAR_MAP[r.starRating] ?? null,
         reviewText: r.comment || "",
         reviewCreatedAt: r.createTime ? new Date(r.createTime) : null,
         hasReply: !!r.reviewReply,
       });
     }
     pageToken = page.nextPageToken;
-  } while (pageToken);
+  } while (pageToken && ++pages < MAX_PAGES);
   return reviews;
 }
 

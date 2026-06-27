@@ -18,6 +18,8 @@ export interface CampaignForPreview {
   niche?: string | null;
   nicheQuestion?: string | null;
   bookingMode?: string | null;
+  positioning?: string | null;
+  aiDisclosure?: string | null;
   // Campaign-level overrides (no account fallback)
   language?: string | null;
   demoClientName?: string | null;
@@ -54,6 +56,16 @@ function mapTypoFrequency(typoCount: number | null | undefined): string | undefi
   return labels[typoCount] || "Frequent";
 }
 
+// The prompt needs the full language name (the AI writes in it), not the short
+// locale code stored on the campaign. Falls through unknown values unchanged.
+function fullLanguageName(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  const map: Record<string, string> = {
+    en: "English", nl: "Dutch", pt: "Portuguese", "pt-br": "Portuguese",
+  };
+  return map[raw.toLowerCase()] || raw;
+}
+
 function normalizeBookingMode(raw: string | null | undefined): string | null | undefined {
   if (!raw) return raw;
   const lower = raw.toLowerCase().replace(/[\s_]/g, "");
@@ -62,11 +74,21 @@ function normalizeBookingMode(raw: string | null | undefined): string | null | u
   return raw; // keep as-is for unknown values
 }
 
+/** Preview-only knobs: force conditional values and inject per-niche terms the
+ *  client can't derive on its own (those live in the Niche_Vocabulary table). */
+export interface ResolveOpts {
+  /** Overrides for branch variables chosen in the preview (lead_stage, positioning, ai_disclosure). */
+  overrides?: Record<string, string>;
+  /** Resolved niche terms (project_term, proposal_term, …, and _list variants). */
+  nicheTerms?: Record<string, string>;
+}
+
 export function buildMap(
   campaign?: CampaignForPreview | null,
   lead?: LeadForPreview | null,
   _account?: AccountForPreview | null,
   lang?: string,
+  opts?: ResolveOpts,
 ): Record<string, string | undefined | null> {
   const l = (lang || campaign?.language || "en") as Lang;
   const rl = (raw: unknown) => resolveLang(raw, l) || undefined;
@@ -91,7 +113,7 @@ export function buildMap(
     niche: campaign?.niche,
     business_description: rl(campaign?.description),
     ai_style: rl(campaign?.aiStyleOverride) || "Casual, smooth and pro",
-    language: campaign?.language || "English",
+    language: fullLanguageName(campaign?.language) || "English",
     ai_role: rl(campaign?.aiRole) || "sales representative",
     typo_frequency: mapTypoFrequency(campaign?.typoCount) || "Rare",
     today_date: new Date().toLocaleDateString(),
@@ -115,6 +137,16 @@ export function buildMap(
     responded: campaign ? "76" : undefined,
     bookingrate: campaign ? "6%" : undefined,
     booked: campaign ? "18" : undefined,
+    // ── Universal Discovery-Demo vars ──
+    // positioning / ai_disclosure come off the campaign; lead_stage is not derived
+    // here (the engine derives it at runtime) — the preview supplies it via overrides.
+    positioning: campaign?.positioning || "mid_market",
+    ai_disclosure: campaign?.aiDisclosure || "off",
+    lead_stage: "",
+    // Per-niche substitution terms (fetched from the vocabulary API in the preview).
+    ...(opts?.nicheTerms ?? {}),
+    // Preview overrides win over everything above.
+    ...(opts?.overrides ?? {}),
   };
 }
 
@@ -125,10 +157,11 @@ export function resolveVariables(
   lead?: LeadForPreview | null,
   account?: AccountForPreview | null,
   lang?: string,
+  opts?: ResolveOpts,
 ): { resolved: string; missing: string[] } {
   const VAR_PATTERN = /\{(\w+)\}/g;
   const missing: string[] = [];
-  const map = buildMap(campaign, lead, account, lang);
+  const map = buildMap(campaign, lead, account, lang, opts);
 
   const resolved = text.replace(VAR_PATTERN, (match, key) => {
     const val = map[key.toLowerCase()];
@@ -152,20 +185,24 @@ export function resolveVariablesHtml(
   lead?: LeadForPreview | null,
   account?: AccountForPreview | null,
   lang?: string,
+  opts?: ResolveOpts,
 ): string {
-  const map = buildMap(campaign, lead, account, lang);
+  const map = buildMap(campaign, lead, account, lang, opts);
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
   // 1. Escape everything first
   let html = esc(text);
 
-  // 2. Evaluate conditionals — wrap resolved content in amber span so it stays highlighted in preview
+  // 2. Resolve conditionals: pick the branch that matches the (possibly overridden)
+  //    value and inline its content only. The {{#if}}/{{else}}/{{/if}} tags are NOT
+  //    shown in the preview — the preview reflects the final resolved output the AI
+  //    would receive. (Tag highlighting lives in the editor, not here.)
   html = html.replace(CONDITIONAL_RE, (_match, varName, op, compareVal, ifContent, elseContent) => {
     const actual = String(map[varName.toLowerCase()] ?? "");
     const met = op === "==" ? actual === compareVal : actual !== compareVal;
-    const content = met ? ifContent : (elseContent || "");
-    if (!content) return "";
-    return `<span class="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">${content.trim()}</span>`;
+    if (met) return ifContent;
+    if (elseContent != null) return elseContent;
+    return "";
   });
 
   // 3. Resolve {variable} tokens

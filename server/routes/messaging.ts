@@ -24,10 +24,15 @@ const STATUS_URL =
   process.env.ENGINE_STATUS_WEBHOOK_URL || "https://webhooks.leadawaker.com/webhooks/sms/status";
 
 function buildStatus(a: any) {
+  const fromNumber = a.twilioDefaultFromNumber || null;
+  // A `whatsapp:`-prefixed value is the shared Twilio WhatsApp SANDBOX number — it
+  // can't send SMS and isn't a real owned sender. Don't let it read as "SMS ready".
+  const sandbox = !!fromNumber && fromNumber.startsWith("whatsapp:");
   return {
-    sms: a.twilioDefaultFromNumber ? "ready" : "none",
+    sms: fromNumber && !sandbox ? "ready" : "none",
     whatsapp: a.whatsappSenderStatus || "none",
-    fromNumber: a.twilioDefaultFromNumber || null,
+    fromNumber,
+    sandbox,
     displayName: a.whatsappDisplayName || null,
     provisionedAt: a.messagingProvisionedAt || null,
     // managed = we provisioned a subaccount; false = manually-pasted (Tier-1) creds.

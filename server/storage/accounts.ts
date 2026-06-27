@@ -105,9 +105,48 @@ import {
   type InsertGmailSyncState,
   nicheVocabulary,
   type NicheVocabulary,
+  type NicheWordGroup,
+  type NicheWordGroups,
+  EMPTY_NICHE_GROUPS,
 } from "@shared/schema";
 
 import type { NotificationItem, ProspectsListParams } from "./types";
+
+// ─── Niche vocabulary language helpers ───────────────────────────────────────
+type NicheLang = "en" | "nl";
+type NicheTemplate = { nl: string; en: string };
+type NicheRowBoth = {
+  niche: string;
+  nl: NicheWordGroups;
+  en: NicheWordGroups;
+  companyNameTemplate: NicheTemplate;
+  descriptionTemplate: NicheTemplate;
+  kbTemplate: NicheTemplate;
+};
+
+const EMPTY_TEMPLATE: NicheTemplate = { nl: "", en: "" };
+
+function rowToBoth(r: NicheVocabulary): Omit<NicheRowBoth, "niche"> {
+  return {
+    nl: {
+      projectTerm: r.projectTerms ?? [],
+      proposalTerm: r.proposalTerms ?? [],
+      decisionTerm: r.decisionTerms ?? [],
+      advisorTerm: r.advisorTerms ?? [],
+      visitTerm: r.visitTerms ?? [],
+    },
+    en: {
+      projectTerm: r.projectTermsEn ?? [],
+      proposalTerm: r.proposalTermsEn ?? [],
+      decisionTerm: r.decisionTermsEn ?? [],
+      advisorTerm: r.advisorTermsEn ?? [],
+      visitTerm: r.visitTermsEn ?? [],
+    },
+    companyNameTemplate: (r.companyNameTemplate as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+    descriptionTemplate: (r.descriptionTemplate as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+    kbTemplate: (r.kbTemplate as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+  };
+}
 
 export const accountsStorage = {
   // ─── Accounts ───────────────────────────────────────────────────────
@@ -165,49 +204,122 @@ export const accountsStorage = {
 
   // ─── Niche Vocabulary ───────────────────────────────────────────────
 
-  async getNicheVocabulary(niche: string): Promise<{ projectTerm: string[]; proposalTerm: string[]; decisionTerm: string[] }> {
-    const empty = { projectTerm: [], proposalTerm: [], decisionTerm: [] };
+  // Resolve a single niche's terms for ONE language (used by the preview API and
+  // for engine parity). English falls back to the Dutch list per-group when the
+  // English list is empty, then the whole thing falls back to __default__.
+  async getNicheVocabulary(niche: string, lang: NicheLang = "nl"): Promise<NicheWordGroups> {
     const [row] = await db.select().from(nicheVocabulary)
       .where(eq(nicheVocabulary.niche, niche));
     const [def] = row ? [row] : await db.select().from(nicheVocabulary)
       .where(eq(nicheVocabulary.niche, "__default__"));
-    if (!def) return empty;
-    return {
-      projectTerm: def.projectTerms ?? [],
-      proposalTerm: def.proposalTerms ?? [],
-      decisionTerm: def.decisionTerms ?? [],
-    };
+    if (!def) return { ...EMPTY_NICHE_GROUPS };
+    const both = rowToBoth(def);
+    if (lang === "en") {
+      const out = { ...EMPTY_NICHE_GROUPS };
+      for (const g of Object.keys(out) as NicheWordGroup[]) {
+        out[g] = both.en[g].length ? both.en[g] : both.nl[g];
+      }
+      return out;
+    }
+    return both.nl;
   },
 
-  async addNicheWord(niche: string, group: "projectTerm" | "proposalTerm" | "decisionTerm", word: string): Promise<{ projectTerm: string[]; proposalTerm: string[]; decisionTerm: string[] }> {
-    // Resolve the words currently shown for this niche (falls back to the
-    // __default__ row when no niche-specific row exists yet). We seed the new
-    // niche row with ALL of these so adding a word never drops the fallback
-    // vocabulary the user was looking at.
-    const current = await this.getNicheVocabulary(niche);
-    const withWord = (arr: string[]) => (arr.includes(word) ? arr : [...arr, word]);
-    const next = {
-      projectTerm: group === "projectTerm" ? withWord(current.projectTerm) : current.projectTerm,
-      proposalTerm: group === "proposalTerm" ? withWord(current.proposalTerm) : current.proposalTerm,
-      decisionTerm: group === "decisionTerm" ? withWord(current.decisionTerm) : current.decisionTerm,
+  // Every saved niche row (for the vocabulary management table), with BOTH
+  // languages so the UI can toggle EN/NL without refetching.
+  async listNicheVocabularies(): Promise<Array<NicheRowBoth>> {
+    const rows = await db.select().from(nicheVocabulary).orderBy(nicheVocabulary.niche);
+    return rows.map((r) => ({ niche: r.niche, ...rowToBoth(r) }));
+  },
+
+  // Upsert ALL groups for BOTH languages of a niche in one shot. De-dupes/trims.
+  async setNicheVocabulary(niche: string, both: { nl: NicheWordGroups; en: NicheWordGroups }): Promise<{ nl: NicheWordGroups; en: NicheWordGroups }> {
+    const norm = (arr: string[]) => Array.from(new Set((arr ?? []).map((w) => w.trim()).filter(Boolean)));
+    const nl: NicheWordGroups = {
+      projectTerm: norm(both.nl.projectTerm), proposalTerm: norm(both.nl.proposalTerm),
+      decisionTerm: norm(both.nl.decisionTerm), advisorTerm: norm(both.nl.advisorTerm),
+      visitTerm: norm(both.nl.visitTerm),
     };
-    // Upsert the full row so all three columns are persisted for this niche.
+    const en: NicheWordGroups = {
+      projectTerm: norm(both.en.projectTerm), proposalTerm: norm(both.en.proposalTerm),
+      decisionTerm: norm(both.en.decisionTerm), advisorTerm: norm(both.en.advisorTerm),
+      visitTerm: norm(both.en.visitTerm),
+    };
+    const j = (v: string[]) => `${JSON.stringify(v)}`;
     await db.execute(sql`
-      INSERT INTO "p2mxx34fvbf3ll6"."Niche_Vocabulary" (niche, project_terms, proposal_terms, decision_terms, created_at, updated_at)
+      INSERT INTO "p2mxx34fvbf3ll6"."Niche_Vocabulary"
+        (niche, project_terms, proposal_terms, decision_terms, advisor_terms, visit_terms,
+         project_terms_en, proposal_terms_en, decision_terms_en, advisor_terms_en, visit_terms_en,
+         created_at, updated_at)
       VALUES (
         ${niche},
-        ${JSON.stringify(next.projectTerm)}::jsonb,
-        ${JSON.stringify(next.proposalTerm)}::jsonb,
-        ${JSON.stringify(next.decisionTerm)}::jsonb,
+        ${j(nl.projectTerm)}::jsonb, ${j(nl.proposalTerm)}::jsonb, ${j(nl.decisionTerm)}::jsonb, ${j(nl.advisorTerm)}::jsonb, ${j(nl.visitTerm)}::jsonb,
+        ${j(en.projectTerm)}::jsonb, ${j(en.proposalTerm)}::jsonb, ${j(en.decisionTerm)}::jsonb, ${j(en.advisorTerm)}::jsonb, ${j(en.visitTerm)}::jsonb,
         NOW(), NOW()
       )
       ON CONFLICT (niche) DO UPDATE SET
-        project_terms  = ${JSON.stringify(next.projectTerm)}::jsonb,
-        proposal_terms = ${JSON.stringify(next.proposalTerm)}::jsonb,
-        decision_terms = ${JSON.stringify(next.decisionTerm)}::jsonb,
+        project_terms  = ${j(nl.projectTerm)}::jsonb,
+        proposal_terms = ${j(nl.proposalTerm)}::jsonb,
+        decision_terms = ${j(nl.decisionTerm)}::jsonb,
+        advisor_terms  = ${j(nl.advisorTerm)}::jsonb,
+        visit_terms    = ${j(nl.visitTerm)}::jsonb,
+        project_terms_en  = ${j(en.projectTerm)}::jsonb,
+        proposal_terms_en = ${j(en.proposalTerm)}::jsonb,
+        decision_terms_en = ${j(en.decisionTerm)}::jsonb,
+        advisor_terms_en  = ${j(en.advisorTerm)}::jsonb,
+        visit_terms_en    = ${j(en.visitTerm)}::jsonb,
         updated_at = NOW()
     `);
-    return this.getNicheVocabulary(niche);
+    return { nl, en };
+  },
+
+  // Read both languages for a niche, seeding from __default__ when no row exists
+  // yet, so a per-word edit never drops the fallback vocabulary the user saw.
+  async getNicheVocabularyBoth(niche: string): Promise<Omit<NicheRowBoth, "niche">> {
+    const [row] = await db.select().from(nicheVocabulary)
+      .where(eq(nicheVocabulary.niche, niche));
+    if (row) return rowToBoth(row);
+    const [def] = await db.select().from(nicheVocabulary)
+      .where(eq(nicheVocabulary.niche, "__default__"));
+    return def ? rowToBoth(def) : { nl: { ...EMPTY_NICHE_GROUPS }, en: { ...EMPTY_NICHE_GROUPS }, companyNameTemplate: EMPTY_TEMPLATE, descriptionTemplate: EMPTY_TEMPLATE, kbTemplate: EMPTY_TEMPLATE };
+  },
+
+  // Patch only the three business-profile text templates for a niche.
+  async setNicheTemplate(
+    niche: string,
+    templates: { companyNameTemplate?: NicheTemplate; descriptionTemplate?: NicheTemplate; kbTemplate?: NicheTemplate },
+  ): Promise<NicheTemplate[]> {
+    const j = (v: NicheTemplate) => JSON.stringify(v);
+    const cn = templates.companyNameTemplate;
+    const desc = templates.descriptionTemplate;
+    const kb = templates.kbTemplate;
+    await db.execute(sql`
+      UPDATE "p2mxx34fvbf3ll6"."Niche_Vocabulary" SET
+        company_name_template = COALESCE(${cn ? j(cn) : null}::jsonb, company_name_template),
+        description_template  = COALESCE(${desc ? j(desc) : null}::jsonb, description_template),
+        kb_template           = COALESCE(${kb ? j(kb) : null}::jsonb, kb_template),
+        updated_at = NOW()
+      WHERE niche = ${niche}
+    `);
+    return [cn ?? EMPTY_TEMPLATE, desc ?? EMPTY_TEMPLATE, kb ?? EMPTY_TEMPLATE];
+  },
+
+  async addNicheWord(niche: string, lang: NicheLang, group: NicheWordGroup, word: string): Promise<{ nl: NicheWordGroups; en: NicheWordGroups }> {
+    const both = await this.getNicheVocabularyBoth(niche);
+    both[lang] = { ...both[lang], [group]: [...both[lang][group], word] };
+    return this.setNicheVocabulary(niche, both);
+  },
+
+  async deleteNicheWord(niche: string, lang: NicheLang, group: NicheWordGroup, word: string): Promise<{ nl: NicheWordGroups; en: NicheWordGroups }> {
+    const both = await this.getNicheVocabularyBoth(niche);
+    both[lang] = { ...both[lang], [group]: both[lang][group].filter((w) => w !== word) };
+    return this.setNicheVocabulary(niche, both);
+  },
+
+  async deleteNicheVocabulary(niche: string): Promise<boolean> {
+    if (niche === "__default__") return false; // never delete the fallback row
+    const result = await db.delete(nicheVocabulary)
+      .where(eq(nicheVocabulary.niche, niche)).returning();
+    return result.length > 0;
   },
 
   // ─── Users ──────────────────────────────────────────────────────────

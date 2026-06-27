@@ -64,6 +64,8 @@
     },
     "preferredWords": {
       "label": "Quais palavras vocês preferem usar?",
+      "nicheLabel": "Nicho",
+      "nicheDefault": "Padrão (cozinha)",
       "groups": {
         "projectTerm": "O projeto",
         "proposalTerm": "A proposta",

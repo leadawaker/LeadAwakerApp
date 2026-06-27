@@ -53,25 +53,25 @@
     "useCasePlaceholder": "ex. Reativação de lead por WhatsApp",
     "promptText": "Texto do Prompt",
     "promptTextRequired": "Texto do prompt é obrigatório",
-    "promptTextPlaceholder": "Digite o texto principal do prompt\u2026",
+    "promptTextPlaceholder": "Digite o texto principal do prompt…",
     "promptContent": "Conteúdo do Prompt",
-    "mainPromptPlaceholder": "Texto principal do prompt\u2026",
+    "mainPromptPlaceholder": "Texto principal do prompt…",
     "systemMessage": "Mensagem do Sistema",
-    "systemMessagePlaceholder": "Instruções do sistema para o modelo de IA (opcional)\u2026",
-    "systemMessagePlaceholderShort": "Instruções do sistema (opcional)\u2026",
-    "systemMessagePlaceholderAlt": "Instruções opcionais do sistema para a IA\u2026",
+    "systemMessagePlaceholder": "Instruções do sistema para o modelo de IA (opcional)…",
+    "systemMessagePlaceholderShort": "Instruções do sistema (opcional)…",
+    "systemMessagePlaceholderAlt": "Instruções opcionais do sistema para a IA…",
     "notes": "Notas",
-    "notesPlaceholder": "Notas adicionais ou contexto sobre este prompt (opcional)\u2026",
-    "notesPlaceholderShort": "Notas adicionais (opcional)\u2026",
-    "notesPlaceholderAlt": "Notas internas sobre este prompt\u2026",
+    "notesPlaceholder": "Notas adicionais ou contexto sobre este prompt (opcional)…",
+    "notesPlaceholderShort": "Notas adicionais (opcional)…",
+    "notesPlaceholderAlt": "Notas internas sobre este prompt…",
     "temperature": "Temperatura",
-    "temperatureRange": "(0\u20132)",
-    "temperatureError": "Deve ser 0\u20132",
+    "temperatureRange": "(0–2)",
+    "temperatureError": "Deve ser 0–2",
     "maxTokens": "Máx. Tokens",
     "maxTokensError": "Deve ser um número inteiro positivo",
     "selectModel": "Selecionar modelo",
     "selectStatus": "Selecionar status",
-    "noneOption": "\u2014 Nenhum \u2014",
+    "noneOption": "— Nenhum —",
     "noCampaignModel": "Nenhuma campanha selecionada",
     "identity": "Identidade",
     "configuration": "Configuração",
@@ -87,10 +87,10 @@
   },
   "actions": {
     "save": "Salvar",
-    "saveChanges": "Salvar Altera\u00e7\u00f5es",
+    "saveChanges": "Salvar Alterações",
     "createPrompt": "Criar Prompt",
-    "saving": "Salvando\u2026",
-    "creating": "Criando\u2026",
+    "saving": "Salvando…",
+    "creating": "Criando…",
     "cancel": "Cancelar",
     "edit": "Editar",
     "delete": "Excluir"
@@ -99,7 +99,7 @@
     "title": "Excluir Prompt",
     "message": "Tem certeza que deseja excluir",
     "cannotUndo": "Esta ação não pode ser desfeita.",
-    "deleting": "Excluindo\u2026",
+    "deleting": "Excluindo…",
     "deletePrompt": "Excluir Prompt"
   },
   "toast": {
@@ -175,21 +175,21 @@
   },
   "sort": {
     "mostRecent": "Mais Recente",
-    "nameAZ": "Nome A \u2192 Z",
-    "nameZA": "Nome Z \u2192 A",
-    "scoreDesc": "Pontua\u00e7\u00e3o \u2193",
-    "scoreAsc": "Pontua\u00e7\u00e3o \u2191"
+    "nameAZ": "Nome A → Z",
+    "nameZA": "Nome Z → A",
+    "scoreDesc": "Pontuação ↓",
+    "scoreAsc": "Pontuação ↑"
   },
   "versions": {
-    "saveVersion": "Salvar Vers\u00e3o",
-    "majorVersion": "Major \u2191",
-    "majorVersionHint": "Incrementa a vers\u00e3o principal (ex: 1.2 \u2192 2.0)",
-    "saving": "Salvando\u2026",
-    "saved": "Vers\u00e3o salva",
-    "saveFailed": "Falha ao salvar vers\u00e3o",
-    "loading": "Carregando vers\u00f5es\u2026",
-    "noVersions": "Sem vers\u00f5es ainda",
-    "selectVersion": "Carregar uma vers\u00e3o\u2026",
+    "saveVersion": "Salvar Versão",
+    "majorVersion": "Major ↑",
+    "majorVersionHint": "Incrementa a versão principal (ex: 1.2 → 2.0)",
+    "saving": "Salvando…",
+    "saved": "Versão salva",
+    "saveFailed": "Falha ao salvar versão",
+    "loading": "Carregando versões…",
+    "noVersions": "Sem versões ainda",
+    "selectVersion": "Carregar uma versão…",
     "loaded": "Versão carregada",
     "deleted": "Versão excluída",
     "deleteFailed": "Falha ao excluir versão",
@@ -205,5 +205,53 @@
     "versionCount_other": "{{count}} versões",
     "minorUpdate": "Menor (+0.1)",
     "majorUpdate": "Maior (+1.0)"
+  },
+  "preview": {
+    "conditionsTitle": "Condições da prévia",
+    "cond": {
+      "leadStage": "Estágio do lead",
+      "positioning": "Posicionamento",
+      "aiDisclosure": "Aviso de IA",
+      "off": "Desligado",
+      "on": "Ligado",
+      "stage": {
+        "inquired": "Pediu um orçamento",
+        "visited": "Teve uma visita",
+        "deciding": "Em decisão",
+        "declined": "Recusou",
+        "quoted": "Recebeu um orçamento (padrão)"
+      },
+      "pos": {
+        "midMarket": "Mercado intermediário",
+        "premium": "Premium"
+      }
+    }
+  },
+  "vocabulary": {
+    "intro": "Palavras por nicho que a IA usa para readaptar o prompt de demonstracao universal. Escolha um nicho em uma campanha e o prompt troca esses termos automaticamente, para a IA soar nativa daquele setor sem um novo prompt. A primeira palavra de cada grupo e a que o prompt utiliza.",
+    "defaultNiche": "Padrao (fallback)",
+    "addNiche": "Adicionar nicho",
+    "addNichePlaceholder": "Selecione um nicho…",
+    "deleteNiche": "Excluir nicho",
+    "saveError": "Nao foi possivel salvar. Tente novamente.",
+    "groups": {
+      "projectTerm": "Projeto / produto",
+      "proposalTerm": "Proposta / orcamento",
+      "decisionTerm": "Decisao",
+      "advisorTerm": "Consultor",
+      "visitTerm": "Visita / local"
+    },
+    "title": "Palavras por Nicho",
+    "lang": {
+      "en": "Inglês",
+      "nl": "Holandês"
+    },
+    "delete": {
+      "title": "Excluir nicho?",
+      "body": "Isso remove todas as palavras salvas para \"{{niche}}\". Não é possível desfazer.",
+      "confirm": "Excluir",
+      "cancel": "Cancelar"
+    },
+    "addWord": "Adicionar palavra"
   }
 }

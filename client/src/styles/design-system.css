@@ -603,6 +603,16 @@ body, html { margin: 0; padding: 0; }
 .la-btn--lg   { font-size: 11px; padding: 13px 22px; }
 .la-btn--pill { border-radius: var(--r-pill); }
 
+/* ─── Leads table rows — CSS-driven hover/selection ────────────────
+   Hover and selection set --row-bg so the frozen (sticky) columns paint
+   the exact same surface as the scrolling cells. Doing it in CSS (not JS
+   mouse handlers) means no per-hover React re-render and the state always
+   resets cleanly on deselect. Selected rows go bright (--card / white). */
+.la-lead-row { --row-bg: var(--bg); background: var(--row-bg); }
+.la-lead-row:hover { --row-bg: var(--surface); }
+.la-lead-row.is-selected,
+.la-lead-row.is-selected:hover { --row-bg: var(--card); }
+
 /* ─── Segmented controls / tabs — .la-seg ──────────────────────────
    The app's universal tab / view switcher: an inset track holding 2–4
    toggle items; the active item lifts to a raised card and turns wine.

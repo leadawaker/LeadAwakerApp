@@ -41,12 +41,13 @@ export function decryptTokens(encrypted: string): Record<string, unknown> {
 
 // ─── OAuth Flow ──────────────────────────────────────────────────────────────
 
-export function getAuthUrl(): string {
+export function getAuthUrl(state: string): string {
   const client = getOAuth2Client();
   return client.generateAuthUrl({
     access_type: "offline",
     scope: GMAIL_SCOPES,
     prompt: "consent", // force refresh token
+    state, // opaque CSRF nonce, verified on callback
   });
 }
 

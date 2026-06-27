@@ -126,7 +126,7 @@ window.ACCOUNTS_DATA = (function () {
     twilio: {
       connected: true,
       fields: [
-        { label: 'Account SID',   value: 'AC_REDACTED_IN_GIT_HISTORY', mono: true, copy: true },
+        { label: 'Account SID',   value: 'AC787ff8a976e043df8c508714d82f8b62', mono: true, copy: true },
         { label: 'Auth Token',    value: '••••••••••••', secret: true, copy: true },
         { label: 'Service SID',   value: '2014', mono: true, copy: true },
         { label: 'From Number',   value: 'whatsapp:+14155238886', mono: true, copy: true },

@@ -60,12 +60,15 @@ export function LeadDetailView({
   onRefresh,
   campaignsById,
   leadTags,
+  mode,
 }: {
   lead: Record<string, any>;
   onClose: () => void;
   leadTags?: { name: string; color: string }[];
   onRefresh?: () => void;
   campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
+  /** Page context — the score breakdown sub-bars only show on the Chats page. */
+  mode?: string;
 }) {
   const { t } = useTranslation("leads");
   const { toast } = useToast();
@@ -421,7 +424,7 @@ export function LeadDetailView({
         {/* Chat with Conversations / Summary toggle — admin/owner only */}
         {isAgencyUser && (
           <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
-            <div className="glass-strong" style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
               <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 0" }}>
                 <div className="la-seg la-seg--pill">
                   <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
@@ -471,7 +474,7 @@ export function LeadDetailView({
         )}
         {/* Lead Score — same fixed width as Contact */}
         <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
-          <ScoreWidget score={score} lead={lead} status={status} />
+          <ScoreWidget score={score} lead={lead} status={status} showBreakdown={mode !== "contacts"} />
         </div>
       </div>
 

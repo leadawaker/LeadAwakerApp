@@ -40,6 +40,10 @@ interface DonutChartProps extends React.HTMLAttributes<HTMLDivElement> {
   onBackgroundClick?: () => void;
   /** When true, skip entrance animation and only smoothly transition between states */
   skipAnimation?: boolean;
+  /** Stroke cap of each segment. "round" (default) gives pill ends; "butt" gives flat ends. */
+  strokeLinecap?: "round" | "butt";
+  /** When true, give the ring a neumorphic raised drop-shadow. */
+  raised?: boolean;
 }
 
 const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
@@ -57,6 +61,8 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
       onSegmentClick,
       onBackgroundClick,
       skipAnimation,
+      strokeLinecap = "round",
+      raised = false,
       className,
       ...props
     },
@@ -100,6 +106,7 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
           height={size}
           viewBox={`0 0 ${size} ${size}`}
           className="-rotate-90"
+          style={raised ? { filter: "drop-shadow(2px 3px 4px rgba(0,0,0,0.20)) drop-shadow(-1.5px -1.5px 3px rgba(255,255,255,0.65))" } : undefined}
           onMouseLeave={() => onSegmentHover?.(null)}
         >
           {/* Invisible full-area rect — catches clicks on the gap/center to deselect */}
@@ -141,7 +148,7 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
                   strokeWidth={strokeWidth}
                   strokeDasharray={strokeDasharray}
                   strokeDashoffset={-strokeDashoffset}
-                  strokeLinecap="round"
+                  strokeLinecap={strokeLinecap}
                   initial={skipAnimation ? false : { opacity: 0, strokeDashoffset: circumference, stroke: segment.color }}
                   animate={{
                     opacity: 1,

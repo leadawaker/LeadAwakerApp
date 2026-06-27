@@ -87,7 +87,7 @@ async function ingestForAccount(account: any, conn: CalendarConnection, execId: 
         platform: "google",
         externalReviewId: r.externalReviewId,
         authorName: r.authorName || null,
-        rating: r.rating || null,
+        rating: r.rating ?? null,
         reviewText: r.reviewText || null,
         reviewCreatedAt: r.reviewCreatedAt,
         status: "new",
@@ -125,26 +125,42 @@ async function autoPostForAccount(account: any, conn: CalendarConnection, execId
 }
 
 let timer: NodeJS.Timeout | null = null;
+let running = false;
 
-async function runOnce(): Promise<void> {
-  const execId = `review_poll_${Date.now()}`;
-  let accounts: any[];
-  try {
-    accounts = await storage.getAccounts();
-  } catch (err) {
-    console.warn("[reviews poller] getAccounts failed:", (err as Error).message);
+async function runOnce(onlyAccountId?: number): Promise<void> {
+  // Guard against overlapping runs (interval tick colliding with a manual poll),
+  // which would double-post the same drafted reply before status flips to 'posted'.
+  if (running) {
+    console.log("[reviews poller] run already in progress, skipping");
     return;
   }
-  const enabled = accounts.filter((a) => a.enableReviewResponse ?? a.enable_review_response);
-  for (const account of enabled) {
+  running = true;
+  try {
+    const execId = `review_poll_${Date.now()}`;
+    let accounts: any[];
     try {
-      const conn = await storage.getCalendarConnection(account.id, REVIEWS_PROVIDER);
-      if (!conn || !conn.externalId) continue; // not connected / no location selected
-      await ingestForAccount(account, conn, execId);
-      await autoPostForAccount(account, conn, execId);
+      accounts = await storage.getAccounts();
     } catch (err) {
-      console.warn(`[reviews poller] account ${account.id} failed:`, (err as Error).message);
+      console.warn("[reviews poller] getAccounts failed:", (err as Error).message);
+      return;
     }
+    const enabled = accounts.filter(
+      (a) =>
+        (a.enableReviewResponse ?? a.enable_review_response) &&
+        (onlyAccountId == null || a.id === onlyAccountId),
+    );
+    for (const account of enabled) {
+      try {
+        const conn = await storage.getCalendarConnection(account.id, REVIEWS_PROVIDER);
+        if (!conn || !conn.externalId) continue; // not connected / no location selected
+        await ingestForAccount(account, conn, execId);
+        await autoPostForAccount(account, conn, execId);
+      } catch (err) {
+        console.warn(`[reviews poller] account ${account.id} failed:`, (err as Error).message);
+      }
+    }
+  } finally {
+    running = false;
   }
 }
 
@@ -158,6 +174,6 @@ export function startReviewPoller(): void {
 }
 
 /** Trigger an immediate poll (used by the manual "refresh" route). */
-export async function pollNow(): Promise<void> {
-  await runOnce();
+export async function pollNow(accountId?: number): Promise<void> {
+  await runOnce(accountId);
 }

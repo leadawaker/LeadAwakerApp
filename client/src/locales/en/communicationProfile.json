@@ -88,6 +88,8 @@
     "preferredWords": {
       "label": "Which words do you prefer to use?",
       "short": "Preferred words",
+      "nicheLabel": "Niche",
+      "nicheDefault": "Default (kitchen)",
       "groups": {
         "projectTerm": "The project",
         "proposalTerm": "The proposal",

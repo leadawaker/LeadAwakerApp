@@ -268,6 +268,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     bump_4_voice_template: c.bump_4_voice_template || "",
     contract_id: String(c.contract_id || (c as any).contract_id || ""),
     value_per_booking: c.value_per_booking ?? "",
+    campaign_type: (c as any).campaign_type || "reactivation",
+    twilio_first_message_template_sid: (c as any).twilio_first_message_template_sid || "",
     channel: c.channel || "sms",
     channel_mode: (c as any).channel_mode || "whatsapp_then_sms",
     fallback_channel: (c as any).fallback_channel || "email",
@@ -283,6 +285,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     niche: (c as any).niche || "",
     inquiry_timeframe: (c as any).inquiry_timeframe || "",
     typo_count: (c as any).typo_count ?? "",
+    positioning: (c as any).positioning || "premium",
+    ai_disclosure: (c as any).ai_disclosure || "off",
   }), []);
 
   const [draft, setDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));

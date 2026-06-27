@@ -15,6 +15,7 @@ import { NotificationsSection } from "@/features/settings/components/Notificatio
 import { MobileAgencySwitcher } from "@/components/crm/mobile/MobileAgencySwitcher";
 
 // ── Settings sections ────────────────────────────────────────────────
+// (Niche Words moved to the Prompt Library page.)
 type SettingsSection = "notifications" | "team" | "account";
 
 const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.ElementType; agencyOnly?: boolean; scopedOnly?: boolean }[] = [

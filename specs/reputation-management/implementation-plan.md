@@ -99,6 +99,60 @@ campaign, account, inbound_message, exec_id)`:
 - The richer Reputation **workspace** (queue/funnel/stream) is integrated later from the Claude
   Design output — not built here.
 
+## Phase 4 — Referral engine (rides the positive branch) — BUILT 2026-06-23
+
+> Rationale: the best moment to ask for a referral is the exact moment a customer says they're happy,
+> and that moment already exists as the **positive** branch of `reputation_handler.py`. This is NOT a
+> new service or scheduler — it's a second, opt-in action on the existing branch plus a small tracking
+> table. Near-zero marginal engine cost. WhatsApp is ideal: a standalone message is one-tap forwardable.
+
+**Opt-in flag** — `Accounts.enable_referral_ask` (boolean, default `false`). Surfaced to the engine via
+`get_campaign_with_account()` (it already selects the account reputation columns). When `false`, the
+positive branch is byte-for-byte the classic flow (regression-guarded).
+
+**Tracking table** — `Referrals` (created by `scripts/create-referrals.mjs`, the
+`node --env-file=.env` pattern; `db:push` has no TTY on the Pi):
+
+| column | type | notes |
+|---|---|---|
+| `id` | serial PK | |
+| `Accounts_id` | integer NOT NULL | owning account |
+| `Campaigns_id` | integer | reputation campaign |
+| `referrer_lead_id` | integer NOT NULL | the happy customer |
+| `referred_name` | text | captured from the customer's reply |
+| `referred_contact` | text | reserved for a parsed phone/email |
+| `status` | text default `'asked'` | `asked` → `received` → `converted` |
+| `source_channel` | text | e.g. `whatsapp_cloud` |
+| `asked_at` / `received_at` / `converted_at` | timestamptz | set server-side (`NOW()`) |
+| `created_at` / `updated_at` | timestamptz default `now()` | |
+
+Indexes: `Accounts_id`, `referrer_lead_id`, `status`.
+
+**Engine changes** (no new files beyond the DB module; reuses classify/send/tag/log plumbing):
+- `tools/db/referrals.py` (new): `create_referral()`, `get_pending_referral()`, `mark_referral_received()`.
+- `tools/db/constants.py`: `Table.REFERRALS`.
+- `reputation_prompts.py`: `DEFAULT_REFERRAL_ASK` + `DEFAULT_REFERRAL_THANKS` (en/nl), overridable via
+  Prompt_Library use_cases `reputation_referral_ask` / `reputation_referral_thanks`.
+- `reputation_handler.py`:
+  - **Positive branch**: after the review link is sent and tagged, if `enable_referral_ask` →
+    `_send_referral_ask()` sends a separate forwardable message and opens a `Referrals` row
+    (`status='asked'`). Isolated in `try/except` so it can never break the review flow.
+  - **Capture (top of `handle_reply`, gated by the flag)**: `_maybe_capture_referral()` — if a pending
+    `asked` referral exists for this lead and the reply isn't a plain decline, it records
+    `referred_name`, moves the row to `received`, sends a thank-you, fires a `referral_received`
+    notification (`broadcastToUser` via `notify()`), and short-circuits (no re-classification).
+- `tools/notification_service.py`: `referral_received` notification type.
+
+**`converted`** is left for humans/CRM to set later (when a referred person becomes a customer); the
+engine only owns `asked` → `received`.
+
+**Regression guard (verified):** a stubbed-I/O harness runs `handle_reply` on a positive reply with the
+flag **off** and asserts exactly one send (the review link), tags `reputation_positive` +
+`review_requested`, and **zero** referral activity — identical to the pre-Phase-4 behavior. With the
+flag **on** it asserts the extra forwardable send + `create_referral`; with a pending referral it
+asserts capture + that the classifier is never called; a `"no thanks"` reply is not stored. All pass.
+Engine restarted clean (`scheduler.started`, no traceback).
+
 ## Files touched (representative)
 
 New (engine): `src/automations/reputation_scheduler.py`, `src/automations/reputation_handler.py`,

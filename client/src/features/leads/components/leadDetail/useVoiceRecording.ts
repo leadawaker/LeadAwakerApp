@@ -40,16 +40,16 @@ export function useVoiceRecording(
     };
   }, []);
 
-  const transcribeAudio = useCallback(async (dataUrl: string, mimeType: string) => {
+  const transcribeAudio = useCallback(async (dataUrl: string, mimeType: string, useFallback = false) => {
     if (!leadId) return;
     setTranscribing(true);
     setTranscriptionFailed(false);
     try {
-      console.log("[voice] Sending audio:", dataUrl.length, "chars, mime:", mimeType);
+      console.log("[voice] Sending audio:", dataUrl.length, "chars, mime:", mimeType, "fallback:", useFallback);
       const httpRes = await apiFetch(`/api/leads/${leadId}/transcribe-voice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audio_data: dataUrl, mime_type: mimeType }),
+        body: JSON.stringify({ audio_data: dataUrl, mime_type: mimeType, use_fallback: useFallback }),
       });
       const res = await httpRes.json() as any;
       if (!httpRes.ok || res.error) {
@@ -140,7 +140,7 @@ export function useVoiceRecording(
 
   const retryTranscription = useCallback(async () => {
     if (!pendingAudioRef.current) return;
-    await transcribeAudio(pendingAudioRef.current.dataUrl, pendingAudioRef.current.mimeType);
+    await transcribeAudio(pendingAudioRef.current.dataUrl, pendingAudioRef.current.mimeType, true);
   }, [transcribeAudio]);
 
   const dismissFailedTranscription = useCallback(() => {

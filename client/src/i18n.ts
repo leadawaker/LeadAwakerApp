@@ -31,6 +31,7 @@ import enCalendar from "./locales/en/calendar.json";
 import enTags from "./locales/en/tags.json";
 import enSetup from "./locales/en/setup.json";
 import enCommunicationProfile from "./locales/en/communicationProfile.json";
+import enSpeedToLead from "./locales/en/speedToLead.json";
 
 import ptDocs from "./locales/pt/docs.json";
 import ptCommon from "./locales/pt/common.json";
@@ -58,6 +59,7 @@ import ptCalendar from "./locales/pt/calendar.json";
 import ptTags from "./locales/pt/tags.json";
 import ptSetup from "./locales/pt/setup.json";
 import ptCommunicationProfile from "./locales/pt/communicationProfile.json";
+import ptSpeedToLead from "./locales/pt/speedToLead.json";
 
 import nlDocs from "./locales/nl/docs.json";
 import nlCommon from "./locales/nl/common.json";
@@ -85,6 +87,7 @@ import nlCalendar from "./locales/nl/calendar.json";
 import nlTags from "./locales/nl/tags.json";
 import nlSetup from "./locales/nl/setup.json";
 import nlCommunicationProfile from "./locales/nl/communicationProfile.json";
+import nlSpeedToLead from "./locales/nl/speedToLead.json";
 
 const resources = {
   en: {
@@ -114,6 +117,7 @@ const resources = {
     tags: enTags,
     setup: enSetup,
     communicationProfile: enCommunicationProfile,
+    speedToLead: enSpeedToLead,
   },
   pt: {
     common: ptCommon,
@@ -142,6 +146,7 @@ const resources = {
     tags: ptTags,
     setup: ptSetup,
     communicationProfile: ptCommunicationProfile,
+    speedToLead: ptSpeedToLead,
   },
   nl: {
     common: nlCommon,
@@ -170,6 +175,7 @@ const resources = {
     tags: nlTags,
     setup: nlSetup,
     communicationProfile: nlCommunicationProfile,
+    speedToLead: nlSpeedToLead,
   },
 };
 
@@ -209,6 +215,7 @@ i18n
       "tags",
       "setup",
       "communicationProfile",
+      "speedToLead",
     ],
 
     interpolation: {

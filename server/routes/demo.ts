@@ -27,8 +27,10 @@ const createSessionSchema = z.object({
 // Universal (website) flow: free-text niche instead of fixed campaignId
 const universalSessionSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
-  niche: z.string().trim().min(5).max(300),
+  niche: z.string().trim().min(3).max(300),
   language: z.enum(["en", "nl", "pt"]),
+  // Scenario toggle → Prompt 98 lead_stage. Optional; defaults to "inquired".
+  scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
 });
 
 function clientIp(req: Request): string {
@@ -60,8 +62,8 @@ export function registerDemoRoutes(app: Express): void {
         const parsed = universalSessionSchema.safeParse(req.body);
         if (!parsed.success) return handleZodError(res, parsed.error);
 
-        const { firstName, niche, language } = parsed.data;
-        const nicheCtx = (await generateNicheContext(niche, language)) ?? buildFallbackNicheContext(niche, language);
+        const { firstName, niche, language, scenario } = parsed.data;
+        const nicheCtx = (await generateNicheContext(niche, language, scenario)) ?? buildFallbackNicheContext(niche, language, scenario);
         const { token } = generateToken();
 
         await createPendingDemoLead({

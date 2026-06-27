@@ -5,7 +5,15 @@ function Demo() {
   const { t } = window.useI18n();
   const [firstName, setFirstName] = React.useState("");
   const [niche, setNiche] = React.useState("");
+  const [scenario, setScenario] = React.useState("inquired");
   const [sectionRef, sectionInView] = window.useInView();
+
+  const SCENARIOS = [
+    { id: "inquired", label: t('demo.scenario_inquired'), note: t('demo.chat_note_inquired') },
+    { id: "deciding", label: t('demo.scenario_deciding'), note: t('demo.chat_note_deciding') },
+  ];
+  const activeScenario = SCENARIOS.find((s) => s.id === scenario) || SCENARIOS[0];
+  const scenarioNote = activeScenario.note;
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
@@ -22,7 +30,7 @@ function Demo() {
       const res = await fetch("/api/demo/create-session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ firstName: firstName.trim(), niche: niche.trim(), language: "nl" }),
+        body: JSON.stringify({ firstName: firstName.trim(), niche: niche.trim(), language: "nl", scenario }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -105,6 +113,37 @@ function Demo() {
               />
             </div>
 
+            {/* Scenario toggle → drives the AI's lead_stage for a tailored demo.
+                Segmented control inside an inset field, matching the inputs above. */}
+            <div className="neu-inset-crisp" style={{
+              borderRadius: 10, display: "flex", gap: 4, padding: 6
+            }}>
+              {SCENARIOS.map((s) => {
+                const active = scenario === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setScenario(s.id)}
+                    aria-pressed={active}
+                    style={{
+                      flex: "1 1 0", textAlign: "center",
+                      padding: "10px 12px", borderRadius: 7, fontSize: 13,
+                      lineHeight: 1.25, fontFamily: "var(--sans)",
+                      fontWeight: active ? 600 : 500,
+                      cursor: "pointer", border: "none",
+                      background: active ? "var(--paper)" : "transparent",
+                      color: active ? "var(--ink)" : "var(--mute)",
+                      boxShadow: active ? "var(--sh-raised-crisp)" : "none",
+                      transition: "background 0.18s, color 0.18s, box-shadow 0.18s"
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {error && (
               <div style={{ fontSize: 13, color: "var(--wine)", padding: "2px 4px" }}>{error}</div>
             )}
@@ -159,7 +198,7 @@ function Demo() {
                   {firstName.trim() || t('demo.chat_lead_name')}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--mute)", marginTop: 2, fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>
-                  {niche.trim() ? `${niche.trim()} · ${t('convUI.chat_enquired_note')}` : t('demo.chat_lead_sub')}
+                  {niche.trim() ? `${niche.trim()} · ${scenarioNote}` : t('demo.chat_lead_sub')}
                 </div>
               </div>
             </div>
@@ -175,16 +214,16 @@ function Demo() {
             </span>
           </div>
 
-          {/* Messages */}
-<div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-  <div style={window.revealStyle(sectionInView, { delay: window.stagger(0, 120), axis: 'x', distance: 8 })}>
-    <Msg from="homeowner" time="09:14">{t('convUI.demo_msg1')}</Msg>
+          {/* Messages — fixed min-height so the panel doesn't resize between scenarios */}
+<div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: isMobile ? 300 : 312 }}>
+  <div key={`${scenario}-0`} style={window.revealStyle(sectionInView, { delay: window.stagger(0, 120), axis: 'x', distance: 8 })}>
+    <Msg from="homeowner" time="09:14">{t(`convUI.demo_${scenario}_1`)}</Msg>
   </div>
-  <div style={window.revealStyle(sectionInView, { delay: window.stagger(1, 120), axis: 'x', distance: -8 })}>
-    <Msg from="firm" time="09:21" readReceipt={true}>{t('convUI.demo_msg2')}</Msg>
+  <div key={`${scenario}-1`} style={window.revealStyle(sectionInView, { delay: window.stagger(1, 120), axis: 'x', distance: -8 })}>
+    <Msg from="firm" time="09:21" readReceipt={true}>{t(`convUI.demo_${scenario}_2`)}</Msg>
   </div>
-  <div style={window.revealStyle(sectionInView, { delay: window.stagger(2, 120), axis: 'x', distance: 8 })}>
-    <Msg from="homeowner" time="09:22">{t('convUI.demo_msg3')}</Msg>
+  <div key={`${scenario}-2`} style={window.revealStyle(sectionInView, { delay: window.stagger(2, 120), axis: 'x', distance: 8 })}>
+    <Msg from="homeowner" time="09:22">{t(`convUI.demo_${scenario}_3`)}</Msg>
   </div>
   <TypingBubble dir="lead" />
 </div>

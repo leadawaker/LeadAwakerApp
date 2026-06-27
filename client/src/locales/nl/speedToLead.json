@@ -1,0 +1,171 @@
+{
+  "header": {
+    "title": "Speed-to-Lead",
+    "range": "Laatste 24 uur",
+    "refresh": "Vernieuwen"
+  },
+  "tabs": {
+    "performance": "Prestaties",
+    "settings": "Instellingen"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Zoeken...",
+    "filter": "Filteren",
+    "sort": "Sorteren",
+    "group": "Groeperen",
+    "add": "Nieuwe campagne",
+    "showList": "Lijst tonen",
+    "hideList": "Lijst verbergen"
+  },
+  "list": {
+    "empty": "Geen campagnes gevonden"
+  },
+  "card": {
+    "median": "Mediaan",
+    "leads": "Leads",
+    "whatsapp": "WhatsApp"
+  },
+  "detail": {
+    "label": "Speed-to-Lead"
+  },
+  "meta": {
+    "status": "Status",
+    "responseTarget": "Reactiedoel",
+    "responseTargetValue": "<{{seconds}}s",
+    "primaryChannel": "Primair kanaal",
+    "fallbackChannel": "Terugvalkanaal",
+    "statusValues": {
+      "active": "Actief",
+      "paused": "Gepauzeerd",
+      "draft": "Concept"
+    }
+  },
+  "layout": {
+    "title": "Indeling",
+    "presetA": "Origineel 4-op-een-rij",
+    "presetB": "Gebalanceerd 3 / 2 / 2",
+    "presetC": "Compact 3 / 3 / 1"
+  },
+  "weekday": {
+    "mon": "ma",
+    "tue": "di",
+    "wed": "wo",
+    "thu": "do",
+    "fri": "vr",
+    "sat": "za",
+    "sun": "zo"
+  },
+  "median": {
+    "title": "Mediane eerste reactie",
+    "target": "Doel: <{{seconds}}s"
+  },
+  "channelMix": {
+    "title": "Kanaalverdeling",
+    "shareCount": "{{pct}}% ({{count}})"
+  },
+  "channels": {
+    "whatsapp": "WhatsApp",
+    "smsFallback": "SMS terugval",
+    "emailFallback": "E-mail terugval"
+  },
+  "distribution": {
+    "title": "Verdeling reactietijd",
+    "under15s": "Onder 15s",
+    "from15to30s": "15–30s",
+    "from30to60s": "30–60s",
+    "from1to5m": "1–5m",
+    "over5m": "5m+"
+  },
+  "totalLeads": {
+    "title": "Totaal leads (binnengekomen)",
+    "range24h": "24U",
+    "range1w": "1W",
+    "range1m": "1M",
+    "delta": "t.o.v. gisteren"
+  },
+  "sources": {
+    "title": "Leadbronnen",
+    "webForm": "Webformulier",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "hubspot": "HubSpot",
+    "zapier": "Zapier",
+    "other": "Overig"
+  },
+  "feed": {
+    "title": "Live eerste-reactie feed",
+    "live": "Live",
+    "col": {
+      "lead": "Lead",
+      "source": "Bron",
+      "channel": "Kanaal",
+      "firstTouch": "Eerste reactietijd",
+      "status": "Status",
+      "time": "Tijd"
+    },
+    "status": {
+      "delivered": "Afgeleverd",
+      "fallback": "Terugval gebruikt"
+    },
+    "agoMin": "{{count}} min geleden",
+    "allSystems": "Alle systemen leveren",
+    "viewAll": "Alle activiteit bekijken"
+  },
+  "insights": {
+    "title": "AI-operatie-inzichten",
+    "responseSpeed": {
+      "headline": "Reactiesnelheid 12% verbeterd t.o.v. afgelopen 7 dagen",
+      "detail": "Je mediane eerste reactietijd verbeterde van 26s naar 23s."
+    },
+    "whatsappShare": {
+      "headline": "WhatsApp levert 94% van de eerste reacties",
+      "detail": "Sterke prestaties over alle WhatsApp-kanalen."
+    },
+    "webFormSlower": {
+      "headline": "Webformulieren zijn gemiddeld 38s trager dan andere bronnen",
+      "detail": "Overweeg de webformulier-flow of routering te optimaliseren."
+    },
+    "emailFallbacks": {
+      "headline": "7 e-mail-terugvallen vandaag",
+      "detail": "Gelijk aan gisteren. Zorg dat de e-mailaflevering gezond blijft."
+    }
+  },
+  "settings": {
+    "message": {
+      "eyebrow": "Eerste reactie",
+      "title": "Direct eerste bericht",
+      "body": "Zodra een lead binnenkomt, stuurt de AI dit. Houd het warm, menselijk en specifiek. Gebruik variabelen om te personaliseren; de rest van de reactie past zich aan op wat de lead daarna zegt.",
+      "default": "Hoi {{lead_name}}! Bedankt dat je contact opneemt met {{business_name}} 👋 Ik ben {{agent_name}} en help je meteen verder. Om je goed op weg te helpen: waar ben je naar op zoek?",
+      "variables": "Invoegen:",
+      "tone": "Toon",
+      "tones": {
+        "warm": "Warm",
+        "professional": "Professioneel",
+        "concise": "Beknopt"
+      },
+      "aiDisclosure": "AI-assistent vermelden"
+    },
+    "sla": {
+      "eyebrow": "Reactiedoel",
+      "title": "Snelheids-SLA",
+      "targetLabel": "Reageer binnen",
+      "fallbackLabel": "Terugvallen indien niet afgeleverd na",
+      "seconds": "sec",
+      "help": "Als WhatsApp niet binnen het terugvalvenster wordt afgeleverd, vuurt automatisch het volgende ingeschakelde kanaal af."
+    },
+    "channels": {
+      "eyebrow": "Kanalen",
+      "title": "Kanaalvolgorde",
+      "primary": "Primair",
+      "help": "WhatsApp leidt elk gesprek. SMS en e-mail worden op volgorde geprobeerd, alleen als het kanaal erboven niet kan worden afgeleverd."
+    },
+    "coverage": {
+      "eyebrow": "Dekking",
+      "title": "Wanneer het draait",
+      "alwaysOn": "Altijd aan (24/7)",
+      "alwaysOnHelp": "Elke lead krijgt direct een reactie, dag en nacht, ook in het weekend en op feestdagen.",
+      "businessHours": "Alleen kantooruren",
+      "businessHoursHelp": "Buiten kantooruren krijgen leads een wachtbericht en neemt een medewerker de volgende werkdag contact op."
+    }
+  }
+}

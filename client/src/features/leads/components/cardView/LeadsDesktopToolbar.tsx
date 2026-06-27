@@ -142,19 +142,22 @@ export function LeadsDesktopToolbar({
         <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
-      <div className="la-seg shrink-0">
-        {viewTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onViewModeChange(tab.id as ViewMode)}
-            className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
-            style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
-          >
-            {tab.icon && <span className="flex items-center"><tab.icon size={13} /></span>}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Single-view pages (e.g. Conversations) hide the segmented switcher. */}
+      {viewTabs.length > 1 && (
+        <div className="la-seg shrink-0">
+          {viewTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onViewModeChange(tab.id as ViewMode)}
+              className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
+              style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
+            >
+              {tab.icon && <span className="flex items-center"><tab.icon size={13} /></span>}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
       {/* ── Inline bulk-selection controls — shown when any leads are selected ── */}
       {selectedLeadIds.size > 0 && (
         <>

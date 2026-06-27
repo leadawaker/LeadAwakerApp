@@ -53,31 +53,31 @@
     "useCasePlaceholder": "e.g. WhatsApp lead reactivation",
     "promptText": "Prompt Text",
     "promptTextRequired": "Prompt text is required",
-    "promptTextPlaceholder": "Enter the main prompt text\u2026",
+    "promptTextPlaceholder": "Enter the main prompt text…",
     "promptContent": "Prompt Content",
-    "mainPromptPlaceholder": "Main prompt text\u2026",
+    "mainPromptPlaceholder": "Main prompt text…",
     "systemMessage": "System Message",
-    "systemMessagePlaceholder": "System instructions for the AI model (optional)\u2026",
-    "systemMessagePlaceholderShort": "System instructions (optional)\u2026",
-    "systemMessagePlaceholderAlt": "Optional system-level instructions for the AI\u2026",
+    "systemMessagePlaceholder": "System instructions for the AI model (optional)…",
+    "systemMessagePlaceholderShort": "System instructions (optional)…",
+    "systemMessagePlaceholderAlt": "Optional system-level instructions for the AI…",
     "notes": "Notes",
-    "notesPlaceholder": "Additional notes or context about this prompt (optional)\u2026",
-    "notesPlaceholderShort": "Additional notes (optional)\u2026",
-    "notesPlaceholderAlt": "Internal notes about this prompt\u2026",
+    "notesPlaceholder": "Additional notes or context about this prompt (optional)…",
+    "notesPlaceholderShort": "Additional notes (optional)…",
+    "notesPlaceholderAlt": "Internal notes about this prompt…",
     "temperature": "Temperature",
-    "temperatureRange": "(0\u20132)",
-    "temperatureError": "Must be 0\u20132",
+    "temperatureRange": "(0–2)",
+    "temperatureError": "Must be 0–2",
     "maxTokens": "Max Tokens",
     "maxTokensError": "Must be a positive integer",
     "selectModel": "Select model",
     "selectStatus": "Select status",
-    "noneOption": "\u2014 None \u2014",
+    "noneOption": "— None —",
     "noCampaignModel": "No campaign selected",
     "identity": "Identity",
     "configuration": "Configuration",
     "required": "Required",
     "campaign": "Campaign",
-    "noCampaign": "\u2014 No campaign linked"
+    "noCampaign": "— No campaign linked"
   },
   "status": {
     "active": "Active",
@@ -91,8 +91,8 @@
     "save": "Save",
     "saveChanges": "Save Changes",
     "createPrompt": "Create Prompt",
-    "saving": "Saving\u2026",
-    "creating": "Creating\u2026",
+    "saving": "Saving…",
+    "creating": "Creating…",
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete"
@@ -101,7 +101,7 @@
     "title": "Delete Prompt",
     "message": "Are you sure you want to delete",
     "cannotUndo": "This action cannot be undone.",
-    "deleting": "Deleting\u2026",
+    "deleting": "Deleting…",
     "deletePrompt": "Delete Prompt"
   },
   "toast": {
@@ -179,21 +179,21 @@
   },
   "sort": {
     "mostRecent": "Most Recent",
-    "nameAZ": "Name A \u2192 Z",
-    "nameZA": "Name Z \u2192 A",
-    "scoreDesc": "Score \u2193",
-    "scoreAsc": "Score \u2191"
+    "nameAZ": "Name A → Z",
+    "nameZA": "Name Z → A",
+    "scoreDesc": "Score ↓",
+    "scoreAsc": "Score ↑"
   },
   "versions": {
     "saveVersion": "Save Version",
-    "majorVersion": "Major \u2191",
-    "majorVersionHint": "Bumps the major version (e.g. 1.2 \u2192 2.0)",
-    "saving": "Saving\u2026",
+    "majorVersion": "Major ↑",
+    "majorVersionHint": "Bumps the major version (e.g. 1.2 → 2.0)",
+    "saving": "Saving…",
     "saved": "Version saved",
     "saveFailed": "Failed to save version",
-    "loading": "Loading versions\u2026",
+    "loading": "Loading versions…",
     "noVersions": "No versions yet",
-    "selectVersion": "Load a version\u2026",
+    "selectVersion": "Load a version…",
     "loaded": "Version loaded",
     "deleted": "Version deleted",
     "deleteFailed": "Failed to delete version",
@@ -209,5 +209,61 @@
     "versionCount_other": "{{count}} versions",
     "minorUpdate": "Minor (+0.1)",
     "majorUpdate": "Major (+1.0)"
+  },
+  "preview": {
+    "conditionsTitle": "Preview conditions",
+    "cond": {
+      "leadStage": "Lead stage",
+      "positioning": "Positioning",
+      "aiDisclosure": "AI disclosure",
+      "off": "Off",
+      "on": "On",
+      "stage": {
+        "inquired": "Inquired",
+        "visited": "Had a site visit",
+        "deciding": "Deciding",
+        "declined": "Declined",
+        "quoted": "Received a quote (baseline)"
+      },
+      "pos": {
+        "midMarket": "Mid-market",
+        "premium": "Premium"
+      }
+    }
+  },
+  "vocabulary": {
+    "intro": "Per-niche words the AI uses to re-theme the universal demo prompt. Pick a niche on a campaign and the prompt swaps these terms in automatically, so the AI sounds native to that trade without a new prompt. The first word in each group is the one the prompt uses.",
+    "defaultNiche": "Default (fallback)",
+    "addNiche": "Add niche",
+    "addNichePlaceholder": "Select a niche…",
+    "deleteNiche": "Delete niche",
+    "saveError": "Could not save. Please try again.",
+    "groups": {
+      "projectTerm": "Project / product",
+      "proposalTerm": "Proposal / quote",
+      "decisionTerm": "Decision",
+      "advisorTerm": "Advisor",
+      "visitTerm": "Visit / location"
+    },
+    "title": "Niche Words",
+    "lang": {
+      "en": "English",
+      "nl": "Dutch"
+    },
+    "delete": {
+      "title": "Delete niche?",
+      "body": "This removes all words saved for \"{{niche}}\". This can't be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "addWord": "Add a word",
+    "showTemplates": "Show templates",
+    "hideTemplates": "Hide templates",
+    "templates": {
+      "title": "Business profile templates",
+      "companyName": "Company name",
+      "description": "Business description",
+      "kb": "Knowledge base"
+    }
   }
 }

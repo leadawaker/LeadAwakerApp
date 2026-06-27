@@ -30,6 +30,7 @@ interface CampaignSettingsLayoutProps {
   isAgency?: boolean;
   contracts?: any[];
   conversationPrompts?: any[];
+  onNicheChange?: (niche: string) => void;
   /** Mobile / narrow: stack the section nav into horizontal tabs, shrink chrome. */
   compact?: boolean;
 }
@@ -118,7 +119,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
 
           {active === "business" && <BusinessSectionFields {...props} />}
           {active === "ai"       && <AISectionFields {...props} conversationPrompts={props.conversationPrompts ?? []} />}
-          {active === "behavior" && <BehaviorSectionFields {...props} />}
+          {active === "behavior" && <BehaviorSectionFields {...props} onNicheChange={props.onNicheChange} />}
 
           {/* Prev / Next nav */}
           <div style={{ display: 'flex', flexWrap: compact ? 'wrap' : 'nowrap', gap: compact ? 10 : undefined, justifyContent: compact ? 'center' : 'space-between', marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--line)' }}>

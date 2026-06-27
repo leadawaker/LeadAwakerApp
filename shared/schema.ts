@@ -84,6 +84,29 @@ export const accounts = nocodb.table("Accounts", {
   whatsappSenderStatus: text("whatsapp_sender_status"),  // none | pending | approved | rejected
   whatsappSenderSid: text("whatsapp_sender_sid"),
   whatsappDisplayName: text("whatsapp_display_name"),
+  // Missed-Call Text-Back (Voice service Tier 1/2) — see specs/missed-call-textback.
+  // A forwarded missed call → instant WhatsApp text-back from the client's own number → AI chat.
+  // missedCallNumber is the provisioned Twilio voice number that receives forwarded calls; it is the
+  // number→account routing key for inbound voice webhooks (a call has no AccountSid→CRM map).
+  missedCallEnabled: boolean("missed_call_enabled").default(false),
+  missedCallNumber: varchar("missed_call_number"),
+  missedCallCampaignId: integer("missed_call_campaign_id"),  // the campaign_type='missed_call' campaign
+  missedCallGreetingMode: text("missed_call_greeting_mode").default("silent"),  // 'voice' | 'silent'
+  missedCallGreetingAudioData: text("missed_call_greeting_audio_data"),  // base64 mp3, served via <Play>
+  missedCallGreetingFileName: varchar("missed_call_greeting_file_name"),
+  missedCallVoicemailEnabled: boolean("missed_call_voicemail_enabled").default(false),  // Tier 2
+  // Per-account email From-identity — see specs/channel-fallback (task #676 "step 8").
+  // Fallback/opener email sends from the client's own domain (deliverability + brand) once their
+  // domain is DNS-verified (SPF+DKIM+DMARC). A per-account DKIM keypair is generated server-side;
+  // the client publishes the public key. Until verified, email falls back to the shared sender.
+  emailFromName: text("email_from_name"),
+  emailFromAddress: text("email_from_address"),
+  emailSendingDomain: text("email_sending_domain"),          // derived from email_from_address
+  emailDomainVerified: boolean("email_domain_verified").default(false),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  emailDkimSelector: text("email_dkim_selector"),
+  emailDkimPrivateKey: text("email_dkim_private_key"),        // PKCS1 PEM (secret)
+  emailDkimPublicKey: text("email_dkim_public_key"),          // base64 p= value (for display + verify)
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
@@ -285,6 +308,26 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   projectTerms: jsonb("project_terms").$type<string[]>().default([]),
   proposalTerms: jsonb("proposal_terms").$type<string[]>().default([]),
   decisionTerms: jsonb("decision_terms").$type<string[]>().default([]),
+  // Prompt-critical niche terms (consumed by the conversation prompt, not just
+  // the onboarding wizard). advisorTerms = the human expert the AI books a call
+  // with (kitchen designer, landscape architect); visitTerms = the first-touch
+  // location/context (showroom, site visit).
+  advisorTerms: jsonb("advisor_terms").$type<string[]>().default([]),
+  visitTerms: jsonb("visit_terms").$type<string[]>().default([]),
+  // English counterparts. The columns above hold the Dutch (nl) words; these
+  // *_en columns hold the English set. Additive + backward-compatible: callers
+  // fall back to the nl columns when an *_en list is empty.
+  projectTermsEn: jsonb("project_terms_en").$type<string[]>().default([]),
+  proposalTermsEn: jsonb("proposal_terms_en").$type<string[]>().default([]),
+  decisionTermsEn: jsonb("decision_terms_en").$type<string[]>().default([]),
+  advisorTermsEn: jsonb("advisor_terms_en").$type<string[]>().default([]),
+  visitTermsEn: jsonb("visit_terms_en").$type<string[]>().default([]),
+  // Business profile templates per niche (bilingual). When a campaign picks
+  // this niche, company_name/description/kb pre-fill from these; editing those
+  // campaign fields writes them back here for future campaigns.
+  companyNameTemplate: jsonb("company_name_template").$type<{ nl: string; en: string }>().default({}),
+  descriptionTemplate: jsonb("description_template").$type<{ nl: string; en: string }>().default({}),
+  kbTemplate: jsonb("kb_template").$type<{ nl: string; en: string }>().default({}),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -296,6 +339,18 @@ export const insertNicheVocabularySchema = createInsertSchema(nicheVocabulary).o
 });
 export type NicheVocabulary = typeof nicheVocabulary.$inferSelect;
 export type InsertNicheVocabulary = z.infer<typeof insertNicheVocabularySchema>;
+
+// The five editable word groups, in display order. projectTerm/proposalTerm/
+// decisionTerm feed both the onboarding wizard and the conversation prompt;
+// advisorTerm/visitTerm are prompt-only (the human expert + first-touch context).
+export const NICHE_WORD_GROUPS = [
+  "projectTerm", "proposalTerm", "decisionTerm", "advisorTerm", "visitTerm",
+] as const;
+export type NicheWordGroup = (typeof NICHE_WORD_GROUPS)[number];
+export type NicheWordGroups = Record<NicheWordGroup, string[]>;
+export const EMPTY_NICHE_GROUPS: NicheWordGroups = {
+  projectTerm: [], proposalTerm: [], decisionTerm: [], advisorTerm: [], visitTerm: [],
+};
 
 // ─── Automation_Logs ───────────────────────────────────────────────────────────────
 
@@ -389,7 +444,9 @@ export const campaigns = nocodb.table("Campaigns", {
   channel: text("channel").default("sms"),
   // Channel fallback (specs/channel-fallback): primary→fallback delivery routing.
   channelMode: text("channel_mode").default("whatsapp_then_sms"),
-  fallbackChannel: text("fallback_channel").default("email"),
+  // Default chain: WhatsApp → SMS → email (SMS leg needs a registered Twilio
+  // sender; until then SMS is rejected and it falls through to email).
+  fallbackChannel: text("fallback_channel").default("sms_then_email"),
   firstMessageVoiceNote: boolean("first_message_voice_note").default(false),
   bump1VoiceNote: boolean("bump_1_voice_note").default(false),
   bump2VoiceNote: boolean("bump_2_voice_note").default(false),
@@ -452,6 +509,12 @@ export const campaigns = nocodb.table("Campaigns", {
   twilioFirstMessageTemplateSid: text("twilio_first_message_template_sid"),
   twilioBumpTemplateSid: text("twilio_bump_template_sid"),
   firstTouch: text("first_touch"),
+  // Market positioning drives premium vs value framing in the prompt (premium |
+  // mid_market). Defaults to premium to preserve existing campaign behavior.
+  positioning: text("positioning").default("premium"),
+  // EU AI Act (Art. 50) disclosure: when "on", the AI states it is a virtual
+  // assistant early in the conversation. Defaults to "off" (legacy behavior).
+  aiDisclosure: text("ai_disclosure").default("off"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);

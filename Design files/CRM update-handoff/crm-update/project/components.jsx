@@ -13,6 +13,7 @@ const IconCampaigns = (p) => <Icon {...p} d={<><path d="M3 11l16-5v12L3 13z"/><p
 const IconLeads     = (p) => <Icon {...p} d={<><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></>} />;
 const IconChats     = (p) => <Icon {...p} d={<path d="M4 5h16v11H8l-4 4z"/>} />;
 const IconCal       = (p) => <Icon {...p} d={<><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></>} />;
+const IconGift      = (p) => <Icon {...p} d={<><rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M2.5 9h19M12 9v11M12 9c-1.6 0-4.2.2-5-1.3C6.3 6.4 8 5 9.1 6c1.4 1.2 2.9 3 2.9 3zM12 9c1.6 0 4.2.2 5-1.3.7-1.3-1-2.7-2.1-1.7C13.5 7.2 12 9 12 9z"/></>} />;
 const IconProspect  = (p) => <Icon {...p} d={<><circle cx="9" cy="9" r="3.5"/><path d="M3 19c1-3 3.5-4.5 6-4.5s5 1.5 6 4.5"/><circle cx="17.5" cy="7" r="2"/><path d="M14 16c.6-1.7 2-2.5 3.5-2.5s2.7.6 3.5 1.6"/></>} />;
 const IconCadence   = (p) => <Icon {...p} d={<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>} />;
 const IconAccts     = (p) => <Icon {...p} d={<><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></>} />;
@@ -43,6 +44,7 @@ const IconCheck     = (p) => <Icon {...p} d={<path d="m5 12 5 5 9-12"/>} />;
 const IconLogout    = (p) => <Icon {...p} d={<><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M9 12h11M16 8l4 4-4 4"/></>} />;
 const IconSwap      = (p) => <Icon {...p} d={<><path d="M7 4 3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 4 4M17 20l4-4-4-4"/><path d="M21 16H8a4 4 0 0 1-4-4"/></>} />;
 const IconPlus      = (p) => <Icon {...p} d={<path d="M12 5v14M5 12h14"/>} />;
+const IconStar      = (p) => <Icon {...p} d={<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>} />;
 
 // ─── Logo ──────────────────────────────────────────────────────────
 
@@ -140,13 +142,15 @@ function HeaderBar() {
 
 // ─── Sidebar nav ───────────────────────────────────────────────────
 
-function Sidebar({ width = 214, active = 'Campaigns' }) {
+function Sidebar({ width = 214, active = 'Campaigns', badges = {} }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const items = [
     { section: 'Menu', list: [{ label: 'Campaigns', Ic: IconCampaigns }] },
     { section: 'Engage', list: [
       { label: 'Leads', Ic: IconLeads },
       { label: 'Chats', Ic: IconChats },
+      { label: 'Reputation', Ic: IconStar },
+      { label: 'Referrals', Ic: IconGift },
       { label: 'Calendar', Ic: IconCal },
     ]},
     { section: 'Outreach', list: [
@@ -198,6 +202,15 @@ function Sidebar({ width = 214, active = 'Campaigns' }) {
             {g.list.map((it, i) => (
               <div key={i} className={`la-nav-item ${it.label === active ? 'active' : ''}`}>
                 <span className="icon"><it.Ic size={16} /></span>{it.label}
+                {badges[it.label] != null && (
+                  <span style={{
+                    marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700,
+                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--r-pill)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--wine-grad)', color: 'var(--paper)',
+                    boxShadow: 'var(--sh-raised-crisp)',
+                  }}>{badges[it.label]}</span>
+                )}
               </div>
             ))}
           </React.Fragment>
@@ -529,11 +542,11 @@ function SectionHead({ eyebrow, title, action }) {
 
 // Expose to other scripts
 Object.assign(window, {
-  Icon, IconCampaigns, IconLeads, IconChats, IconCal, IconProspect, IconCadence,
+  Icon, IconCampaigns, IconLeads, IconChats, IconCal, IconGift, IconProspect, IconCadence,
   IconAccts, IconBilling, IconTasks, IconLibrary, IconAuto, IconSettings,
   IconSearch, IconFilter, IconSort, IconLayers, IconMore, IconChev,
   IconWA, IconPhone, IconSpark, IconBell, IconHelp, IconHeadset, IconMoon,
-  IconDoc, IconBox, IconUp, IconActivity, IconBump, IconCheck, IconLogout, IconSwap, IconPlus,
+  IconDoc, IconBox, IconUp, IconActivity, IconBump, IconCheck, IconLogout, IconSwap, IconPlus, IconStar,
   Logo, StatusPill, ChannelChip, HeaderBar, Sidebar, CampaignList, CampaignCard,
   CampaignMeta, Meta, PipelineDonut, PipelineBars, MetricCard, TrendChart,
   TimeToggle, SectionHead, PageTabs,

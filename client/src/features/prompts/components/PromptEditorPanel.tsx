@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { hapticSave } from "@/lib/haptics";
 import { useTranslation } from "react-i18next";
-import { resolveVariablesHtml, buildMap, type CampaignForPreview } from "../utils/resolveVariables";
+import { resolveVariablesHtml, buildMap, type CampaignForPreview, type ResolveOpts } from "../utils/resolveVariables";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
 import { PromptCodeEditor, type PromptCodeEditorHandle } from "./PromptCodeEditor";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsUpDown, SlidersHorizontal } from "lucide-react";
 import {
   getPromptId,
   type PromptFormData,
@@ -99,6 +100,12 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   const [errors, setErrors] = useState<Partial<PromptFormData>>({});
   const [highlightTick, setHighlightTick] = useState(0);
   const [sampleLead, setSampleLead] = useState<import("../utils/resolveVariables").LeadForPreview | null>(null);
+  // Per-niche substitution terms for the selected campaign (fetched from the vocabulary API).
+  const [nicheTerms, setNicheTerms] = useState<Record<string, string>>({});
+  // Preview-only branch choices for {{#if}} blocks — default to the most-used options.
+  const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({
+    lead_stage: "inquired", positioning: "mid_market", ai_disclosure: "off",
+  });
   const [foldedSections, setFoldedSections] = useState<Set<number>>(new Set());
   // Active heading tracking for the Sections panel (emitted by the CodeMirror editor).
   const [activeH1, setActiveH1] = useState(-1);
@@ -214,10 +221,15 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightTick]);
 
+  const resolveOpts = useMemo<ResolveOpts>(
+    () => ({ overrides: previewOverrides, nicheTerms }),
+    [previewOverrides, nicheTerms],
+  );
+
   const varMap = useMemo(() => {
     const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
-    return buildMap(selectedCampaign, sampleLead, null, i18n.language);
-  }, [form.campaignsId, campaigns, sampleLead, i18n.language]);
+    return buildMap(selectedCampaign, sampleLead, null, i18n.language, resolveOpts);
+  }, [form.campaignsId, campaigns, sampleLead, i18n.language, resolveOpts]);
 
   // Headings for the outline strip
   const headings = useMemo(() => {
@@ -249,6 +261,32 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
       })
       .catch(() => setSampleLead(null));
   }, [previewOpen, form.campaignsId]);
+
+  // Fetch the selected campaign's niche terms so {project_term} etc. resolve in the preview,
+  // mirroring what the Python engine substitutes at runtime. Canonical = first word in each group.
+  useEffect(() => {
+    if (!previewOpen) { setNicheTerms({}); return; }
+    const sc = campaigns.find((c) => String(c.id) === form.campaignsId);
+    const niche = (sc?.niche || "").trim() || "__default__";
+    // Language-aware: the platform locale picks which word set resolves (Dutch
+    // for nl, English otherwise), matching how the engine themes the prompt.
+    const vlang = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+    apiFetch(`/api/niche-vocabulary/${encodeURIComponent(niche)}?lang=${vlang}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((groups: any) => {
+        if (!groups) { setNicheTerms({}); return; }
+        const pick = (a?: string[]) => (Array.isArray(a) && a.length ? a[0] : "");
+        const list = (a?: string[]) => (Array.isArray(a) ? a.join(", ") : "");
+        setNicheTerms({
+          project_term: pick(groups.projectTerm), project_term_list: list(groups.projectTerm),
+          proposal_term: pick(groups.proposalTerm), proposal_term_list: list(groups.proposalTerm),
+          decision_term: pick(groups.decisionTerm), decision_term_list: list(groups.decisionTerm),
+          advisor_term: pick(groups.advisorTerm), advisor_term_list: list(groups.advisorTerm),
+          visit_term: pick(groups.visitTerm), visit_term_list: list(groups.visitTerm),
+        });
+      })
+      .catch(() => setNicheTerms({}));
+  }, [previewOpen, form.campaignsId, campaigns, i18n.language]);
 
   function scheduleAutoSave() {
     if (!initialized.current) return;
@@ -434,11 +472,11 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     const sections: Section[] = rawSections.map((s) => ({
       headingLineIndex: s.headingLineIndex,
       headingHtmlLine: s.headingRawLine !== null
-        ? resolveVariablesHtml(s.headingRawLine, selectedCampaign, sampleLead, null, i18n.language)
+        ? resolveVariablesHtml(s.headingRawLine, selectedCampaign, sampleLead, null, i18n.language, resolveOpts)
         : null,
       headingLevel: s.headingLevel,
       bodyLines: s.bodyRawLines.length > 0
-        ? resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead, null, i18n.language)
+        ? resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead, null, i18n.language, resolveOpts)
             .split("\n")
             .map((htmlLine, j) => ({ htmlLine, lineIndex: j }))
         : [],
@@ -679,6 +717,58 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
               borderRadius: 8,
               position: "relative",
             }}>
+              {/* Conditional-branch override: pick which {{#if}} branch the preview resolves to. */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="neu-inset-super-crisp"
+                    title={t("preview.conditionsTitle", { defaultValue: "Preview conditions" })}
+                    style={{
+                      position: "absolute", top: 7, right: headings.length > 0 ? 32 : 8, zIndex: 2,
+                      border: "none", cursor: "pointer",
+                      color: "var(--mute-2)", padding: 4,
+                      display: "flex", alignItems: "center",
+                    }}
+                  >
+                    <SlidersHorizontal size={12} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56 p-3">
+                  <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700, margin: "0 0 8px 0" }}>
+                    {t("preview.conditionsTitle", { defaultValue: "Preview conditions" })}
+                  </p>
+                  <div className="flex flex-col gap-2.5">
+                    {([
+                      { key: "lead_stage", label: t("preview.cond.leadStage", { defaultValue: "Lead stage" }), opts: [
+                        ["inquired", t("preview.cond.stage.inquired", { defaultValue: "Inquired" })],
+                        ["visited", t("preview.cond.stage.visited", { defaultValue: "Had a site visit" })],
+                        ["deciding", t("preview.cond.stage.deciding", { defaultValue: "Deciding" })],
+                        ["declined", t("preview.cond.stage.declined", { defaultValue: "Declined" })],
+                        ["quoted", t("preview.cond.stage.quoted", { defaultValue: "Received a quote (baseline)" })],
+                      ] },
+                      { key: "positioning", label: t("preview.cond.positioning", { defaultValue: "Positioning" }), opts: [
+                        ["mid_market", t("preview.cond.pos.midMarket", { defaultValue: "Mid-market" })],
+                        ["premium", t("preview.cond.pos.premium", { defaultValue: "Premium" })],
+                      ] },
+                      { key: "ai_disclosure", label: t("preview.cond.aiDisclosure", { defaultValue: "AI disclosure" }), opts: [
+                        ["off", t("preview.cond.off", { defaultValue: "Off" })],
+                        ["on", t("preview.cond.on", { defaultValue: "On" })],
+                      ] },
+                    ] as const).map(({ key, label, opts }) => (
+                      <label key={key} className="flex flex-col gap-1">
+                        <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+                        <select
+                          className="neu-inset-super-crisp px-2 py-1 text-xs"
+                          value={previewOverrides[key] ?? ""}
+                          onChange={(e) => setPreviewOverrides((p) => ({ ...p, [key]: e.target.value }))}
+                        >
+                          {opts.map(([v, lbl]) => <option key={v} value={v}>{lbl}</option>)}
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               {headings.length > 0 && (
                 <button
                   onClick={() => foldedSections.size > 0 ? unfoldAll() : foldAll()}

@@ -3,10 +3,14 @@ import { useState, useEffect, useRef } from "react";
 const KNOWN_VARIABLES = [
   "first_name", "last_name", "phone", "email",
   "agent_name", "service_name", "calendar_link", "campaign_name",
-  "usp", "kb", "what_lead_did", "inquiries_source", "inquiry_timeframe",
+  "usp", "kb", "what_lead_did", "first_touch", "inquiries_source", "inquiry_timeframe",
   "niche_question", "booking_mode", "company_name", "niche",
   "business_description", "ai_style", "language", "ai_role",
   "typo_frequency", "today_date", "qualification_criteria",
+  // Universal Discovery-Demo vars
+  "lead_stage", "positioning", "ai_disclosure",
+  "project_term", "proposal_term", "decision_term", "advisor_term", "visit_term",
+  "project_term_list", "proposal_term_list", "decision_term_list", "advisor_term_list", "visit_term_list",
 ];
 
 interface Props {

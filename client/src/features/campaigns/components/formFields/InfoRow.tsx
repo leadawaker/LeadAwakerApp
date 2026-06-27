@@ -9,6 +9,7 @@ export function InfoRow({
   icon: Icon,
   onStartEdit,
   noBorder = false,
+  description,
 }: {
   label: string;
   value: React.ReactNode;
@@ -18,6 +19,7 @@ export function InfoRow({
   icon?: React.ElementType;
   onStartEdit?: () => void;
   noBorder?: boolean;
+  description?: string;
 }) {
   const renderValue = () => {
     if (value == null) return <span className="text-[12px] text-foreground">{"—"}</span>;
@@ -75,6 +77,9 @@ export function InfoRow({
         {label}
       </span>
       {valueNode}
+      {description && (
+        <span className="text-[10px] text-muted-foreground/70 leading-relaxed">{description}</span>
+      )}
     </div>
   );
 }

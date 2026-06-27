@@ -242,6 +242,15 @@
       "sms": "SMS",
       "sms_then_email": "SMS, depois e-mail"
     },
+    "campaignType": "Tipo de Serviço",
+    "campaignTypes": {
+      "reactivation": "Reativação",
+      "reputation": "Reputação",
+      "speed_to_lead": "Resposta Imediata",
+      "missed_call": "Retorno de Chamada Perdida"
+    },
+    "coldOpenTemplateSid": "SID do Template de Abertura",
+    "coldOpenTemplateSidHint": "Template aprovado do WhatsApp (Twilio) para a primeira mensagem fria (resposta imediata).",
     "stopOnResponse": "Parar ao responder",
     "useAiBumps": "Usar bumps de IA",
     "maxBumps": "Máx. bumps",
@@ -291,6 +300,9 @@
     "showDemoCampaigns": "Mostrar Campanhas de Demonstração",
     "language": "Idioma",
     "agentName": "Nome do agente",
+    "positioning": "Posicionamento",
+    "positioningOptions": { "premium": "Premium", "mid_market": "Mercado intermediário" },
+    "aiDisclosure": "Aviso de IA",
     "whatLeadDid": "O que o lead fez",
     "inquiryDate": "Data da consulta",
     "firstTouch": "Primeiro contato",

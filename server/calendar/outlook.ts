@@ -77,7 +77,7 @@ export const outlookAdapter: CalendarAdapter = {
   id: "outlook",
   capabilities: { authType: "oauth", canPush: true, canFreeBusy: true },
 
-  getAuthUrl(accountId: number) {
+  getAuthUrl(state: string) {
     requireConfig();
     const p = new URLSearchParams({
       client_id: CLIENT_ID,
@@ -85,7 +85,7 @@ export const outlookAdapter: CalendarAdapter = {
       redirect_uri: REDIRECT_URI,
       response_mode: "query",
       scope: SCOPES,
-      state: String(accountId),
+      state,
     });
     return `${AUTHORITY}/authorize?${p.toString()}`;
   },

@@ -5,7 +5,8 @@ import {
   HelpCircle,
   Inbox,
   MessageSquare,
-  Megaphone,
+  Bird,
+  Send,
   Calendar,
   CalendarDays,
   ScrollText,
@@ -19,6 +20,7 @@ import {
   Building2,
   UserSearch,
   PhoneCall,
+  PhoneMissed,
   ClipboardList,
   MoreHorizontal,
   LogOut,
@@ -36,9 +38,7 @@ import {
   Globe,
   Mic,
   Home,
-  RefreshCw,
   Star,
-  Zap,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
@@ -274,9 +274,11 @@ export function RightSidebar({
     ownerOnly?: boolean;
     outreachOnly?: boolean;
   }[] = [
-    { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
-    { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/campaigns`, label: t("sidebar.reactivation"), labelKey: "Campaigns", icon: Bird, testId: "nav-reactivation" },
+    // Agency = full chat ("Chats"); clients = summary-only view ("Interactions"). No gate needed.
+    { href: `${prefix}/conversations`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
+    { href: `${prefix}/contacts`, label: t("sidebar.contacts"), labelKey: "Contacts", icon: BookUser, testId: "nav-contacts" },
     {
       href: `${prefix}/tasks`,
       label: t("sidebar.tasks"),
@@ -426,10 +428,13 @@ export function RightSidebar({
         data-testid="mobile-bottom-bar"
       >
         {([
-          { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.campaigns"), testId: "mobile-nav-campaigns" },
-          { key: "contacts", href: `${prefix}/contacts`, icon: Users, label: t("sidebar.leads"), testId: "mobile-nav-contacts" },
+          { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" },
+          // Agency = full chat ("Chats"); clients = summary-only ("Interactions").
+          isAgencyUser
+            ? { key: "conversations", href: `${prefix}/conversations`, icon: MessageSquare, label: t("sidebar.chats"), testId: "mobile-nav-conversations" }
+            : { key: "conversations", href: `${prefix}/conversations`, icon: MessageSquare, label: t("sidebar.interactions"), testId: "mobile-nav-conversations" },
           { key: "calendar", href: `${prefix}/calendar`, icon: CalendarDays, label: t("sidebar.calendar"), testId: "mobile-nav-calendar" },
-          // Agency users get Tasks; client users get their Accounts page instead.
+          // Agency users get Tasks; clients get their Accounts page instead.
           isAgencyUser
             ? { key: "tasks", href: `${prefix}/tasks`, icon: ClipboardList, label: t("sidebar.tasks"), testId: "mobile-nav-tasks" }
             : { key: "accounts", href: `${prefix}/accounts`, icon: Building2, label: t("sidebar.accounts"), testId: "mobile-nav-accounts" },
@@ -589,22 +594,34 @@ export function RightSidebar({
             {t("sidebar.home")}
           </Link>
 
-          {/* Services group — Reactivation is live (→ Campaigns); Reputation &
-              Speed-to-Lead have no page yet, shown as muted "Soon" placeholders. */}
+          {/* Services group — each row is a service the agency runs. Reactivation
+              sits on top (→ Campaigns dashboard). Reputation is live (mock
+              workspace); Speed-to-Lead is live for agency users and a "Soon"
+              placeholder for clients; Missed-Call is a mock workspace. */}
           <div>
             <div className="la-nav-section">{t("sidebar.services")}</div>
-            <Link
-              href={`${prefix}/campaigns`}
-              className="la-nav-item"
-              data-testid="link-service-reactivation"
-            >
-              <span className="icon"><RefreshCw size={16} /></span>
-              {t("sidebar.reactivation")}
-            </Link>
             {[
-              { key: "reputation", labelKey: "sidebar.reputation", Icon: Star },
-              { key: "speed", labelKey: "sidebar.speedToLead", Icon: Zap },
-            ].map(({ key, labelKey, Icon }) => (
+              // Reactivation = the original service; its cockpit is the Campaigns dashboard.
+              { key: "reactivation", labelKey: "sidebar.reactivation", Icon: Bird, href: `${prefix}/campaigns` as string | null },
+              // Speed-to-Lead has a live mission-control dashboard for agency users;
+              // client users still see it as an upcoming "Soon" service.
+              { key: "speed", labelKey: "sidebar.speedToLead", Icon: Send, href: isAgencyUser ? `${prefix}/speed-to-lead` : null },
+              { key: "reputation", labelKey: "sidebar.reputation", Icon: Star, href: `${prefix}/reputation` as string | null },
+              // Missed-Call Text-Back (Voice service) — mock workspace for now.
+              { key: "missedcall", labelKey: "sidebar.missedCalls", Icon: PhoneMissed, href: `${prefix}/missed-calls` as string | null },
+            ].map(({ key, labelKey, Icon, href }) =>
+              href ? (
+                <Link
+                  key={key}
+                  href={href}
+                  className={`la-nav-item ${isActive(href) ? "active" : ""}`}
+                  data-testid={`link-service-${key}`}
+                  data-active={isActive(href) || undefined}
+                >
+                  <span className="icon"><Icon size={16} /></span>
+                  {t(labelKey)}
+                </Link>
+              ) : (
               <div
                 key={key}
                 style={{
@@ -641,13 +658,14 @@ export function RightSidebar({
                   {t("sidebar.soon")}
                 </span>
               </div>
-            ))}
+              )
+            )}
           </div>
 
           {/* Nav section groups */}
           {(() => {
             const sections = [
-              { section: "Engage", items: visibleNavItems.filter(it => ["Campaigns", "Leads", "Calendar"].includes(it.labelKey)) },
+              { section: "Engage", items: visibleNavItems.filter(it => ["Conversations", "Calendar", "Contacts"].includes(it.labelKey)) },
               { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
               { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations"].includes(it.labelKey)) },
               { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },

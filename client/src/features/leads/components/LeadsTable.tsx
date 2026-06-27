@@ -133,11 +133,13 @@ const TABLE_GROUP_TKEYS: Record<TableGroupByOption, string> = {
 
 // ── Inline confirmation button ────────────────────────────────────────────────
 function ConfirmToolbarButton({
-  icon: Icon, label, onConfirm, variant = "default",
+  icon: Icon, label, onConfirm, variant = "default", iconOnly = false,
 }: {
   icon: React.ElementType; label: string;
   onConfirm: () => Promise<void> | void;
   variant?: "default" | "danger";
+  /** Render the trigger as a neumorphic-raised icon button (topbar style). */
+  iconOnly?: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -161,6 +163,19 @@ function ConfirmToolbarButton({
       </div>
     );
   }
+  if (iconOnly) {
+    return (
+      <button
+        className="la-btn la-btn--soft la-btn--icon"
+        style={variant === "danger" ? { color: "hsl(var(--destructive))" } : undefined}
+        title={label}
+        aria-label={label}
+        onClick={() => setConfirming(true)}
+      >
+        <Icon className="h-4 w-4" />
+      </button>
+    );
+  }
   return (
     <button
       className={cn(
@@ -177,10 +192,29 @@ function ConfirmToolbarButton({
   );
 }
 
-export function LeadsTable() {
+/**
+ * Page mode (Conversations / Contacts split):
+ *  - "conversations" → chat list only (the WhatsApp-style thread view).
+ *  - "contacts"      → directory: Table (default) + Pipeline.
+ *  - "all"           → legacy combined page (all three views). Default.
+ */
+export type LeadsPageMode = "conversations" | "contacts" | "all";
+
+const ALLOWED_VIEWS_BY_MODE: Record<LeadsPageMode, ViewMode[]> = {
+  conversations: ["list"],
+  contacts: ["table", "pipeline"],
+  all: ["list", "table", "pipeline"],
+};
+
+export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
-  const VIEW_TABS: TabDef[] = useMemo(() => VIEW_TAB_KEYS.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t]);
+  const allowedViews = ALLOWED_VIEWS_BY_MODE[mode];
+  const visibleViewTabKeys = useMemo(
+    () => VIEW_TAB_KEYS.filter((k) => allowedViews.includes(k.id as ViewMode)),
+    [allowedViews],
+  );
+  const VIEW_TABS: TabDef[] = useMemo(() => visibleViewTabKeys.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t, visibleViewTabKeys]);
   const { currentAccountId, isAgencyView, isAgencyUser } = useWorkspace();
   const filterAccountId = currentAccountId > 0 ? currentAccountId : undefined;
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
@@ -233,16 +267,21 @@ export function LeadsTable() {
     return "list";
   });
 
+  // View-mode persistence is scoped per page mode so the Conversations and
+  // Contacts pages don't fight over a single shared key.
+  const viewModeKey = mode === "all" ? VIEW_MODE_KEY : `${VIEW_MODE_KEY}:${mode}`;
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    // Non-agency users (clients) only see pipeline view
+    // Conversations is chat-only; no view switching.
+    if (mode === "conversations") return "list";
+    // Non-agency users (clients) only see pipeline view (when reachable).
     const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
     const isClient = role !== "Owner" && role !== "Admin";
-    if (isClient) return "pipeline";
+    if (isClient && allowedViews.includes("pipeline")) return "pipeline";
     try {
-      const stored = localStorage.getItem(VIEW_MODE_KEY);
-      if (stored && ["list", "table", "pipeline"].includes(stored)) return stored as ViewMode;
+      const stored = localStorage.getItem(viewModeKey);
+      if (stored && allowedViews.includes(stored as ViewMode)) return stored as ViewMode;
     } catch {}
-    return "list";
+    return allowedViews[0];
   });
 
   const [selectedLead,   setSelectedLead]   = usePersistedSelection<Record<string, any>>(
@@ -398,8 +437,8 @@ export function LeadsTable() {
   /* ── Persist view mode (agency only) ────────────────────────────────────── */
   useEffect(() => {
     if (!isAgencyUser) return;
-    try { localStorage.setItem(VIEW_MODE_KEY, viewMode); } catch {}
-  }, [viewMode, isAgencyUser]);
+    try { localStorage.setItem(viewModeKey, viewMode); } catch {}
+  }, [viewMode, isAgencyUser, viewModeKey]);
 
   /* ── Persist visible columns ────────────────────────────────────────────── */
   useEffect(() => {
@@ -673,11 +712,13 @@ export function LeadsTable() {
     });
   }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById, t]);
 
-  const handleViewSwitch = useCallback((mode: ViewMode) => {
-    setViewMode(mode);
+  const handleViewSwitch = useCallback((next: ViewMode) => {
+    if (!allowedViews.includes(next)) return;
+    setViewMode(next);
     setSelectedLead(null);
     setMobileView("list");
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedViews]);
 
   const handleClosePanel = useCallback(() => { setSelectedLead(null); }, []);
 
@@ -1168,6 +1209,7 @@ export function LeadsTable() {
             filterTags={filterTags}
             viewMode={viewMode}
             onViewModeChange={handleViewSwitch}
+            allowedViews={allowedViews}
             searchOpen={searchOpen}
             onSearchOpenChange={setSearchOpen}
             onListSearchChange={setListSearch}
@@ -1200,7 +1242,7 @@ export function LeadsTable() {
               <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
             </div>
             <div className="la-seg shrink-0">
-              {VIEW_TAB_KEYS.map((tab) => (
+              {visibleViewTabKeys.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleViewSwitch(tab.id as ViewMode)}
@@ -1212,7 +1254,21 @@ export function LeadsTable() {
                 </button>
               ))}
             </div>
-            <div className="flex-1 min-w-0" />
+            {/* Selection actions — inline on the topbar (raised icons) when rows are checked */}
+            <div className="flex-1 min-w-0 flex items-center justify-end gap-[5px] pr-1.5">
+              {tableSelectedIds.size > 0 && (
+                <>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>
+                    {t("selection.countSelected", { count: tableSelectedIds.size, defaultValue: "{{count}} selected" })}
+                  </span>
+                  <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateLeads} iconOnly />
+                  <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteLeads} variant="danger" iconOnly />
+                  <button className="la-btn la-btn--soft la-btn--icon" onClick={() => setTableSelectedIds(new Set())} title={t("toolbar.clearAllFilters", "Clear")} aria-label={t("toolbar.clearAllFilters", "Clear")}>
+                    <X className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
             <div className="shrink-0 flex items-center gap-[5px]">
               {/* Search — same as list view */}
               <div className="relative" style={{ width: 160 }}>
@@ -1406,46 +1462,8 @@ export function LeadsTable() {
 
           {/* Body — full width */}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
-          {/* Right: table + floating selection action bar */}
+          {/* Right: table (selection actions now live inline on the topbar) */}
           <div className="relative flex-1 min-w-0 overflow-hidden flex flex-col">
-            {tableSelectedIds.size > 0 && (
-              <div
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5"
-                style={{
-                  background: "var(--card)",
-                  boxShadow: "var(--sh-raised-large, var(--sh-raised-tall))",
-                  borderRadius: "var(--r-pill)",
-                  padding: "8px 14px",
-                  border: "1px solid var(--line)",
-                }}
-              >
-                <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>
-                  {t("selection.countSelected", { count: tableSelectedIds.size, defaultValue: "{{count}} selected" })}
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft" style={{ fontSize: 11 }}>
-                      <Pencil className="h-3 w-3" />{t("toolbar.changeStage")}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" side="top" className="w-44 bg-white">
-                    <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.moveTo")}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {STATUS_OPTIONS.map((s) => (
-                      <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
-                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                        {t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateLeads} />
-                <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteLeads} variant="danger" />
-                <button className="la-btn la-btn--soft la-btn--icon" onClick={() => setTableSelectedIds(new Set())} title={t("toolbar.clearAllFilters", "Clear")}>
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
             <div className="flex-1 min-h-0 overflow-hidden">
               <LeadsInlineTable
                 flatItems={tableFlatItems}
@@ -1466,8 +1484,9 @@ export function LeadsTable() {
               />
             </div>
           </div>
-          {/* Right detail panel — appears when a lead is selected (design split) */}
-          {selectedLead && (
+          {/* Right detail panel — only while the open lead is actually checked, so
+              the page loads with the panel closed until you click a lead. */}
+          {selectedLead && tableSelectedIds.has(Number(selectedLead.Id ?? selectedLead.id)) && (
             <div className="shrink-0 overflow-hidden flex flex-col" style={{ flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
               <LeadDetailView
                 lead={selectedLead}
@@ -1475,6 +1494,7 @@ export function LeadsTable() {
                 leadTags={leadTagsInfo.get(getLeadIdHelper(selectedLead)) || []}
                 onRefresh={handleRefresh}
                 campaignsById={campaignsById}
+                mode={mode}
               />
             </div>
           )}
@@ -1495,7 +1515,7 @@ export function LeadsTable() {
             {/* View tabs — agency only */}
             {isAgencyUser && (
               <div className="la-seg shrink-0">
-                {VIEW_TAB_KEYS.map((tab) => (
+                {visibleViewTabKeys.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => handleViewSwitch(tab.id as ViewMode)}

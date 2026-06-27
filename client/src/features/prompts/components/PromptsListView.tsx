@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { type CampaignForPreview } from "../utils/resolveVariables";
+import { useInlineEditing } from "@/features/prospects/components/useInlineEditing";
 import { PromptEditorPanel, type PromptEditorPanelHandle } from "./PromptEditorPanel";
+import { NicheVocabularyPanel } from "./NicheVocabularyPanel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -413,7 +415,7 @@ export function PromptsListView({
   const leftPanelCompact = listPanelState === "compact";
 
   // System / Campaigns tab filter
-  const [listTab, setListTab] = useState<"system" | "campaign">("campaign");
+  const [listTab, setListTab] = useState<"system" | "campaign" | "niche">("campaign");
 
   // Section visibility toggles
   const [showSystemMessage, setShowSystemMessage] = useState(false);
@@ -464,6 +466,22 @@ export function PromptsListView({
       onSaved(saved);
     } catch {}
   }
+
+  // Inline-rename the prompt from its header title.
+  const { editableField: editablePromptName } = useInlineEditing(async (_field, value) => {
+    if (!selectedPrompt || !selectedId || !value.trim()) return;
+    try {
+      const res = await apiFetch(`/api/prompts/${selectedId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: value.trim() }),
+      });
+      if (!res.ok) return;
+      const saved = await res.json();
+      setSelectedPrompt(saved);
+      onSaved(saved);
+    } catch {}
+  });
 
   // Persisted selection
   const [selectedPrompt, setSelectedPrompt] = usePersistedSelection(
@@ -732,6 +750,12 @@ export function PromptsListView({
               {systemCount}
             </span>
           </button>
+          <button
+            className={`la-seg-btn${listTab === "niche" ? " on" : ""}`}
+            onClick={() => setListTab("niche")}
+          >
+            {t("vocabulary.title")}
+          </button>
         </div>
 
         {/* Panel collapse toggle */}
@@ -749,7 +773,7 @@ export function PromptsListView({
         <div style={{ flex: 1 }} />
 
         {/* Model pill — shown when a prompt is selected */}
-        {selectedPrompt && (
+        {listTab !== "niche" && selectedPrompt && (
           MODEL_OPTIONS.includes(selectedPrompt.model) ? (
             <select
               className="hidden lg:block text-[11px] font-mono outline-none cursor-pointer shrink-0"
@@ -778,6 +802,7 @@ export function PromptsListView({
         )}
 
         {/* Controls */}
+        {listTab !== "niche" && (
         <div className="hidden lg:flex items-center gap-1.5">
 
           {/* Edit actions — left of search, only when prompt selected */}
@@ -1082,8 +1107,18 @@ export function PromptsListView({
             <Plus size={13} /> {t("toolbar.create")}
           </button>
         </div>
+        )}
       </div>
 
+      {/* ══════════════════════════════════════════════════════════════════
+          Niche Words tab — full-width vocabulary manager
+         ══════════════════════════════════════════════════════════════════ */}
+      {listTab === "niche" ? (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <NicheVocabularyPanel />
+        </div>
+      ) : (
+      <>
       {/* ══════════════════════════════════════════════════════════════════
           Split pane: left list + right editor
          ══════════════════════════════════════════════════════════════════ */}
@@ -1173,12 +1208,12 @@ export function PromptsListView({
                       {/* Name + Badge */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span style={{
-                            fontSize: 16, fontWeight: 700, color: "var(--ink)",
-                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          }}>
-                            {selectedPrompt.name || t("labels.untitledPrompt")}
-                          </span>
+                          {editablePromptName(
+                            "name",
+                            selectedPrompt.name || "",
+                            t("labels.untitledPrompt"),
+                            "text-[16px] font-bold text-[color:var(--ink)] min-w-0 max-w-full",
+                          )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <span style={{
@@ -1338,6 +1373,8 @@ export function PromptsListView({
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

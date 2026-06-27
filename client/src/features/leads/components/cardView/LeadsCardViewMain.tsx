@@ -59,6 +59,7 @@ export function LeadsCardView({
   filterTags,
   viewMode,
   onViewModeChange,
+  allowedViews,
   searchOpen,
   onSearchOpenChange,
   onListSearchChange,
@@ -102,10 +103,9 @@ export function LeadsCardView({
   const handleOpenConversation = useCallback((leadId: number | string) => {
     try {
       localStorage.setItem("selected-lead-id", String(leadId));
-      localStorage.setItem("leads-view-mode", "list");
     } catch { /* ignore */ }
     const basePath = "/platform";
-    setLocation(`${basePath}/contacts`);
+    setLocation(`${basePath}/conversations`);
   }, [isAgencyUser, setLocation]);
 
   // ── Quick action tray state (Feature #41) ────────────────────────────────────
@@ -128,7 +128,7 @@ export function LeadsCardView({
     { id: "list",     label: t("viewTabs.list"),     icon: List   },
     { id: "table",    label: t("viewTabs.table"),    icon: Table2 },
     { id: "pipeline", label: t("viewTabs.pipeline"), icon: Kanban },
-  ];
+  ].filter((tab) => !allowedViews || allowedViews.includes(tab.id as ViewMode));
 
 
   const [currentPage, setCurrentPage]   = useState(0);

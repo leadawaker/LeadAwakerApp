@@ -29,6 +29,9 @@ const DocsPage = lazy(() => import("@/pages/Docs"));
 const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
 const AgentsPage = lazy(() => import("@/features/ai-agents/pages/AgentsPage").then(m => ({ default: m.AgentsPage })));
 const AgentChatPage = lazy(() => import("@/features/ai-agents/pages/AgentChatPage").then(m => ({ default: m.AgentChatPage })));
+const SpeedToLeadPage = lazy(() => import("@/features/speed-to-lead/pages/SpeedToLeadPage").then(m => ({ default: m.SpeedToLeadPage })));
+const ReputationPage = lazy(() => import("@/features/reputation/ReputationPage").then(m => ({ default: m.ReputationPage })));
+const VoicePage = lazy(() => import("@/features/voice/VoicePage").then(m => ({ default: m.VoicePage })));
 // OpportunitiesPage merged into Leads as "Pipeline" tab — route redirects below
 
 function isAuthed() {
@@ -131,15 +134,25 @@ export default function AppArea() {
           <Route path="/platform" component={() => <Redirect to="/platform/campaigns" />} />
           <Route path="/platform/dashboard" component={() => <Redirect to="/platform/campaigns" />} />
           <Route path="/platform/home" component={HomePage} />
-          <Route path="/platform/contacts" component={AppLeads} />
+          {/* Conversations / Contacts split: same workspace component, two modes.
+              Conversations = chat threads only; Contacts = directory (table + pipeline). */}
+          <Route path="/platform/conversations">
+            {isAgencyUser()
+              ? <AppLeads mode="conversations" />
+              : <Redirect to="/platform/contacts" />}
+          </Route>
+          <Route path="/platform/contacts"><AppLeads mode="contacts" /></Route>
           <Route path="/platform/leads" component={AppLeads} />
-          {/* Chats page retired — lead chat now lives on the Leads page */}
-          <Route path="/platform/conversations" component={() => <Redirect to="/platform/contacts" />} />
           <Route path="/platform/outreach-inbox">
             <AgencyOnly prefix="/platform"><OutreachInbox /></AgencyOnly>
           </Route>
           <Route path="/platform/contacts/:id" component={LeadDetailPage} />
           <Route path="/platform/campaigns" component={AppCampaigns} />
+          <Route path="/platform/speed-to-lead">
+            <AgencyOnly prefix="/platform"><SpeedToLeadPage /></AgencyOnly>
+          </Route>
+          <Route path="/platform/reputation" component={ReputationPage} />
+          <Route path="/platform/missed-calls" component={VoicePage} />
           <Route path="/platform/calendar" component={CalendarPage} />
           <Route path="/platform/settings" component={SettingsPage} />
 

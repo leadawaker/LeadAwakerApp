@@ -46,6 +46,14 @@ export const reviewsStorage = {
     return row;
   },
 
+  /** Mark all still-pending reviews for an account as skipped (e.g. on disconnect). */
+  async skipPendingReviews(accountId: number): Promise<void> {
+    await db
+      .update(accountReviews)
+      .set({ status: "skipped", updatedAt: new Date() })
+      .where(and(eq(accountReviews.accountsId, accountId), inArray(accountReviews.status, ["new", "drafted"])));
+  },
+
   /** Reviews ready to post — drafted positives queued for auto-posting by the poller. */
   async listAutoPostable(accountId: number): Promise<AccountReview[]> {
     return db

@@ -27,6 +27,8 @@ import { registerCalendarRoutes } from "./calendar";
 import { registerReviewsRoutes } from "./reviews";
 import { startReviewPoller } from "../reviews/poller";
 import { registerMessagingRoutes } from "./messaging";
+import { registerEmailSenderRoutes } from "./emailSender";
+import { registerMissedCallRoutes } from "./missedCall";
 import { registerDemoRoutes } from "./demo";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
@@ -70,6 +72,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerCalendarRoutes(app);
   registerReviewsRoutes(app);
   registerMessagingRoutes(app);
+  registerEmailSenderRoutes(app);
+  registerMissedCallRoutes(app);
   registerDemoRoutes(app);
   registerTwilioVoiceRoutes(app);
   registerUserSettingsRoutes(app);

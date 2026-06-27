@@ -3,11 +3,78 @@ import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
+  Gem, ShieldCheck,
+  UtensilsCrossed, TreePine, Heart, Sofa, Bath, Home, Grid3x3,
+  Layers, Hammer, Sun, Wind, DoorOpen, Paintbrush, Bug, Waves, Truck,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
   InfoRow, BoolRow, ContractSelect,
 } from "../formFields";
+import {
+  Select, SelectTrigger, SelectContent, SelectItem,
+} from "@/components/ui/select";
+
+// Ordered as requested: featured niches first, then the rest.
+const NICHE_ORDER = [
+  "Kitchens", "Landscaping", "Wellness", "Interior Design",
+  "Bathrooms", "Roofing", "Flooring",
+  "Countertops", "General Contracting", "Solar Panels", "HVAC",
+  "Windows & Doors", "Painting", "Pest Control", "Pool Installation", "Moving Services",
+];
+
+const NICHE_ICONS: Record<string, React.ElementType> = {
+  "Kitchens": UtensilsCrossed,
+  "Landscaping": TreePine,
+  "Wellness": Heart,
+  "Interior Design": Sofa,
+  "Bathrooms": Bath,
+  "Roofing": Home,
+  "Flooring": Grid3x3,
+  "Countertops": Layers,
+  "General Contracting": Hammer,
+  "Solar Panels": Sun,
+  "HVAC": Wind,
+  "Windows & Doors": DoorOpen,
+  "Painting": Paintbrush,
+  "Pest Control": Bug,
+  "Pool Installation": Waves,
+  "Moving Services": Truck,
+};
+
+function NicheSelect({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+  const CurIcon = value ? NICHE_ICONS[value] : null;
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger
+        className="la-input"
+        autoFocus={autoFocus}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          cursor: 'pointer', gap: 8, boxSizing: 'border-box', width: '100%',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          {CurIcon && <CurIcon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value || "Select niche…"}</span>
+        </div>
+      </SelectTrigger>
+      <SelectContent>
+        {NICHE_ORDER.map((niche) => {
+          const Icon = NICHE_ICONS[niche];
+          return (
+            <SelectItem key={niche} value={niche}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {Icon && <Icon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />}
+                {niche}
+              </div>
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
+  );
+}
 
 interface BehaviorSectionFieldsProps {
   campaign: any;
@@ -18,12 +85,15 @@ interface BehaviorSectionFieldsProps {
   onStartEditField?: (field: string) => void;
   isAgency?: boolean;
   contracts?: any[];
+  /** Called when niche changes so the parent can load + apply the niche template */
+  onNicheChange?: (niche: string) => void;
 }
 
 export function BehaviorSectionFields({
   campaign, isEditing, draft, setDraft,
   focusField, onStartEditField,
   isAgency, contracts,
+  onNicheChange,
 }: BehaviorSectionFieldsProps) {
   const { t } = useTranslation("campaigns");
 
@@ -31,80 +101,48 @@ export function BehaviorSectionFields({
     onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
   const focusFor = (field: string) => ({ autoFocus: focusField === field });
 
-  const languageLabels: Record<string, string> = { en: "English", pt: "Português", nl: "Nederlands" };
+  const languageLabels: Record<string, string> = {
+    en: "🇬🇧 English",
+    pt: "🇧🇷 Português",
+    nl: "🇳🇱 Nederlands",
+  };
 
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
-
-      {/* Language & Locale */}
+  // Fields always visible (agency + client)
+  const commonFields = (
+    <>
+      {/* Niche first, then Language — same row */}
+      <InfoRow icon={MapPin} label={t("config.niche")} value={campaign.niche}
+        {...editFor("niche")}
+        editChild={isEditing ? (
+          <NicheSelect
+            value={String(draft.niche ?? "")}
+            onChange={(v) => {
+              setDraft(d => ({...d, niche: v}));
+              onNicheChange?.(v);
+            }}
+            {...focusFor("niche")}
+          />
+        ) : undefined}
+      />
       <InfoRow icon={Globe} label={t("config.language")} value={languageLabels[campaign.language] ?? campaign.language}
         {...editFor("language")}
         editChild={isEditing ? <EditSelect value={String(draft.language ?? "")} onChange={(v) => setDraft(d => ({...d, language: v}))} options={["en", "nl", "pt"]} labels={languageLabels} {...focusFor("language")} /> : undefined}
       />
-      <InfoRow icon={MapPin} label={t("config.nicheQuestion")} value={campaign.niche}
-        {...editFor("niche")}
-        editChild={isEditing ? <EditSelect value={String(draft.niche ?? "")} onChange={(v) => setDraft(d => ({...d, niche: v}))} options={["Kitchens", "Bathrooms", "Countertops", "Flooring", "General Contracting", "Solar Panels", "HVAC", "Roofing", "Landscaping", "Windows & Doors", "Painting", "Pest Control", "Pool Installation", "Moving Services"]} {...focusFor("niche")} /> : undefined}
-      />
-      <div style={{ gridColumn: '1 / -1' }}>
-        <InfoRow icon={MapPin} label={t("config.website")} value={campaign.website}
-          {...editFor("website")}
-          editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://…" {...focusFor("website")} /> : undefined}
-        />
-      </div>
-      <div style={{ gridColumn: '1 / -1' }}>
-        <InfoRow icon={Link} label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
-          {...editFor("calendar_link_override")}
-          editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" {...focusFor("calendar_link_override")} /> : undefined}
-        />
-      </div>
 
-      {/* Demo & Account */}
-      <BoolRow icon={Eye} label={t("config.isDemo")} value={!!(draft.is_demo ?? campaign.is_demo)}
-        {...editFor("is_demo")}
-        editChild={isEditing ? <EditToggle value={!!draft.is_demo} onChange={(v) => setDraft(d => ({...d, is_demo: v}))} /> : undefined}
-      />
-      {isAgency && (
-        <InfoRow icon={Building2} label={t("config.accountId")} value={campaign.account_name || campaign.account_id}
-          {...editFor("account_id")}
-          editChild={isEditing ? <EditSelect value={String(draft.account_id ?? "")} onChange={(v) => setDraft(d => ({...d, account_id: v}))} options={[]} {...focusFor("account_id")} /> : undefined}
-        />
-      )}
-
-      {/* Status & Type */}
-      <InfoRow icon={Play} label={t("config.status") || "Status"} value={campaign.status}
-        {...editFor("status")}
-        editChild={isEditing ? <EditSelect value={String(draft.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Draft", "Active", "Paused", "Inactive", "Completed"]} {...focusFor("status")} /> : undefined}
-      />
-      <InfoRow icon={Type} label={t("config.type")} value={campaign.type}
-        {...editFor("type")}
-        editChild={isEditing ? <EditSelect value={String(draft.type ?? "")} onChange={(v) => setDraft(d => ({...d, type: v}))} options={["whatsapp_outbound", "whatsapp_inbound", "email_outbound", "voice_outbound"]} {...focusFor("type")} /> : undefined}
-      />
-
-      {/* Booking Mode — la-seg pill */}
-      <InfoRow icon={CreditCard} label={t("config.bookingMode") || "Booking Mode"} value={campaign.booking_mode_override}
-        {...editFor("booking_mode_override")}
+      {/* Positioning dropdown */}
+      <InfoRow icon={Gem} label={t("config.positioning")} value={t(`config.positioningOptions.${campaign.positioning || "premium"}`)}
+        {...editFor("positioning")}
         editChild={isEditing ? (
-          <div className="la-seg la-seg--fill">
-            {(["Sales Call", "Direct Booking"] as const).map(mode => (
-              <button key={mode} className={`la-seg-btn ${(draft.booking_mode_override ?? campaign.booking_mode_override) === mode ? 'on' : ''}`}
-                onClick={() => setDraft(d => ({...d, booking_mode_override: mode}))}
-              >{mode}</button>
-            ))}
-          </div>
-        ) : undefined}
-      />
-
-      {/* Typo Count — la-seg pill */}
-      <InfoRow icon={Hash} label={t("config.typoCount") || "Typo Count"} value={campaign.typo_count ?? 0}
-        {...editFor("typo_count")}
-        editChild={isEditing ? (
-          <div className="la-seg la-seg--pill">
-            {[0, 1, 2, 3].map(n => (
-              <button key={n} className={`la-seg-btn ${(draft.typo_count ?? campaign.typo_count ?? 0) === n ? 'on' : ''}`}
-                onClick={() => setDraft(d => ({...d, typo_count: n}))}
-              >{n}</button>
-            ))}
-          </div>
+          <EditSelect
+            value={String(draft.positioning ?? campaign.positioning ?? "premium")}
+            onChange={(v) => setDraft(d => ({...d, positioning: v}))}
+            options={["premium", "mid_market"]}
+            labels={{
+              premium: t("config.positioningOptions.premium"),
+              mid_market: t("config.positioningOptions.mid_market"),
+            }}
+            {...focusFor("positioning")}
+          />
         ) : undefined}
       />
 
@@ -120,7 +158,87 @@ export function BehaviorSectionFields({
         ) : undefined}
       />
 
-      {/* Start / End Dates */}
+      {/* AI Disclosure + Opt-out Notice — same row */}
+      <BoolRow icon={ShieldCheck} label={t("config.aiDisclosure")} value={(draft.ai_disclosure ?? campaign.ai_disclosure) === "on"}
+        {...editFor("ai_disclosure")}
+        editChild={isEditing ? <EditToggle value={(draft.ai_disclosure ?? campaign.ai_disclosure) === "on"} onChange={(v) => setDraft(d => ({...d, ai_disclosure: v ? "on" : "off"}))} /> : undefined}
+      />
+      <BoolRow icon={Power} label={t("config.optOutNotice")} value={!!(draft.opt_out_notice ?? campaign.opt_out_notice)}
+        {...editFor("opt_out_notice")}
+        editChild={isEditing ? <EditToggle value={!!draft.opt_out_notice} onChange={(v) => setDraft(d => ({...d, opt_out_notice: v}))} /> : undefined}
+      />
+    </>
+  );
+
+  // Non-agency users only see the common fields above
+  if (!isAgency) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
+        {commonFields}
+      </div>
+    );
+  }
+
+  const sectionDivider = (label: string) => (
+    <div style={{ gridColumn: '1 / -1', marginTop: 8, marginBottom: 2 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--wine)', opacity: 0.7 }}>{label}</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
+      {commonFields}
+
+      {/* ── Campaign Setup ── */}
+      {sectionDivider("Campaign Setup")}
+
+      <InfoRow icon={Play} label={t("config.status") || "Status"} value={campaign.status}
+        {...editFor("status")}
+        editChild={isEditing ? <EditSelect value={String(draft.status ?? "")} onChange={(v) => setDraft(d => ({...d, status: v}))} options={["Draft", "Active", "Paused", "Inactive", "Completed"]} {...focusFor("status")} /> : undefined}
+      />
+      <InfoRow icon={Building2} label={t("config.accountId")} value={campaign.account_name || campaign.account_id}
+        {...editFor("account_id")}
+        editChild={isEditing ? <EditSelect value={String(draft.account_id ?? "")} onChange={(v) => setDraft(d => ({...d, account_id: v}))} options={[]} {...focusFor("account_id")} /> : undefined}
+      />
+
+      <InfoRow icon={Zap} label={t("config.campaignType")} value={t(`config.campaignTypes.${campaign.campaign_type || "reactivation"}`)}
+        {...editFor("campaign_type")}
+        editChild={isEditing ? <EditSelect value={String(draft.campaign_type ?? "reactivation")} onChange={(v) => setDraft(d => ({...d, campaign_type: v}))} options={["reactivation", "reputation", "speed_to_lead", "missed_call"]} labels={{
+          reactivation: t("config.campaignTypes.reactivation"),
+          reputation: t("config.campaignTypes.reputation"),
+          speed_to_lead: t("config.campaignTypes.speed_to_lead"),
+          missed_call: t("config.campaignTypes.missed_call"),
+        }} {...focusFor("campaign_type")} /> : undefined}
+      />
+      <InfoRow icon={Type} label={t("config.type")} value={campaign.type}
+        {...editFor("type")}
+        editChild={isEditing ? <EditSelect value={String(draft.type ?? "")} onChange={(v) => setDraft(d => ({...d, type: v}))} options={["whatsapp_outbound", "whatsapp_inbound", "email_outbound", "voice_outbound"]} {...focusFor("type")} /> : undefined}
+      />
+
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={MapPin} label={t("config.website")} value={campaign.website}
+          {...editFor("website")}
+          editChild={isEditing ? <EditText value={String(draft.website ?? "")} onChange={(v) => setDraft(d => ({...d, website: v}))} placeholder="https://…" {...focusFor("website")} /> : undefined}
+        />
+      </div>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={Link} label={t("config.calendarLink")} value={campaign.calendar_link_override || campaign.calendar_link}
+          {...editFor("calendar_link_override")}
+          editChild={isEditing ? <EditText value={String(draft.calendar_link_override ?? "")} onChange={(v) => setDraft(d => ({...d, calendar_link_override: v}))} placeholder="https://calendly.com/…" {...focusFor("calendar_link_override")} /> : undefined}
+        />
+      </div>
+
+      <BoolRow icon={Eye} label={t("config.isDemo")} value={!!(draft.is_demo ?? campaign.is_demo)}
+        {...editFor("is_demo")}
+        editChild={isEditing ? <EditToggle value={!!draft.is_demo} onChange={(v) => setDraft(d => ({...d, is_demo: v}))} /> : undefined}
+      />
+
+      {/* ── Scheduling ── */}
+      {sectionDivider("Scheduling")}
+
       <InfoRow icon={Calendar} label={t("config.startDate")} value={campaign.start_date}
         {...editFor("start_date")}
         editChild={isEditing ? <EditDate value={String(draft.start_date ?? "")} onChange={(v) => setDraft(d => ({...d, start_date: v}))} {...focusFor("start_date")} /> : undefined}
@@ -130,17 +248,32 @@ export function BehaviorSectionFields({
         editChild={isEditing ? <EditDate value={String(draft.end_date ?? "")} onChange={(v) => setDraft(d => ({...d, end_date: v}))} {...focusFor("end_date")} /> : undefined}
       />
 
-      {/* Daily Limit & Interval */}
       <InfoRow icon={BarChart3} label={t("config.dailyLimit")} value={campaign.daily_lead_limit || 500}
         {...editFor("daily_lead_limit")}
         editChild={isEditing ? <EditNumber value={Number(draft.daily_lead_limit || 500)} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v === "" ? "" : Number(v)}))} placeholder="500" {...focusFor("daily_lead_limit")} /> : undefined}
       />
-      <InfoRow icon={MessageCircle} label={t("config.interval")} value={`${campaign.message_interval_minutes ?? 0} min`}
+      <InfoRow icon={MessageCircle} label={t("config.interval")} value={`${campaign.message_interval_minutes ?? 1} min`}
+        description={t("config.intervalHint")}
         {...editFor("message_interval_minutes")}
-        editChild={isEditing ? <EditNumber value={Number(draft.message_interval_minutes ?? 0)} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} {...focusFor("message_interval_minutes")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={Number(draft.message_interval_minutes ?? 1)} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} {...focusFor("message_interval_minutes")} /> : undefined}
       />
 
-      {/* Channel */}
+      <InfoRow icon={CreditCard} label={t("config.bookingMode") || "Booking Mode"} value={campaign.booking_mode_override}
+        {...editFor("booking_mode_override")}
+        editChild={isEditing ? (
+          <div className="la-seg la-seg--fill">
+            {(["Sales Call", "Direct Booking"] as const).map(mode => (
+              <button key={mode} className={`la-seg-btn ${(draft.booking_mode_override ?? campaign.booking_mode_override) === mode ? 'on' : ''}`}
+                onClick={() => setDraft(d => ({...d, booking_mode_override: mode}))}
+              >{mode}</button>
+            ))}
+          </div>
+        ) : undefined}
+      />
+
+      {/* ── Channel ── */}
+      {sectionDivider("Channel")}
+
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={Radio} label={t("config.channel")} value={campaign.channel}
           {...editFor("channel")}
@@ -148,7 +281,6 @@ export function BehaviorSectionFields({
         />
       </div>
 
-      {/* Channel Mode — WhatsApp / fallback routing policy */}
       <InfoRow icon={Radio} label={t("config.channelMode")} value={t(`config.channelModes.${campaign.channel_mode || "whatsapp_then_sms"}`)}
         {...editFor("channel_mode")}
         editChild={isEditing ? <EditSelect value={String(draft.channel_mode ?? "whatsapp_then_sms")} onChange={(v) => setDraft(d => ({...d, channel_mode: v}))} options={["whatsapp_only", "whatsapp_then_sms", "sms_first", "sms_only"]} labels={{
@@ -158,8 +290,6 @@ export function BehaviorSectionFields({
           sms_only: t("config.channelModes.sms_only"),
         }} {...focusFor("channel_mode")} /> : undefined}
       />
-
-      {/* Fallback Channel — what the fallback / pre-approval leg actually sends */}
       <InfoRow icon={Radio} label={t("config.fallbackChannel")} value={t(`config.fallbackChannels.${campaign.fallback_channel || "email"}`)}
         {...editFor("fallback_channel")}
         editChild={isEditing ? <EditSelect value={String(draft.fallback_channel ?? "email")} onChange={(v) => setDraft(d => ({...d, fallback_channel: v}))} options={["email", "sms", "sms_then_email"]} labels={{
@@ -169,7 +299,16 @@ export function BehaviorSectionFields({
         }} {...focusFor("fallback_channel")} /> : undefined}
       />
 
-      {/* BoolRows */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={MessageCircle} label={t("config.coldOpenTemplateSid")} value={campaign.twilio_first_message_template_sid}
+          {...editFor("twilio_first_message_template_sid")}
+          editChild={isEditing ? <EditText value={String(draft.twilio_first_message_template_sid ?? "")} onChange={(v) => setDraft(d => ({...d, twilio_first_message_template_sid: v}))} placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" {...focusFor("twilio_first_message_template_sid")} /> : undefined}
+        />
+      </div>
+
+      {/* ── AI Behavior ── */}
+      {sectionDivider("AI Behavior")}
+
       <BoolRow icon={Pause} label={t("config.stopOnResponse")} value={!!(draft.stop_on_response ?? campaign.stop_on_response)}
         {...editFor("stop_on_response")}
         editChild={isEditing ? <EditToggle value={!!draft.stop_on_response} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
@@ -182,8 +321,22 @@ export function BehaviorSectionFields({
         {...editFor("max_bumps")}
         editChild={isEditing ? <EditNumber value={Number(draft.max_bumps ?? 4)} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} {...focusFor("max_bumps")} /> : undefined}
       />
+      <InfoRow icon={Hash} label={t("config.typoCount") || "Typo Count"} value={campaign.typo_count ?? 0}
+        {...editFor("typo_count")}
+        editChild={isEditing ? (
+          <div className="la-seg la-seg--pill">
+            {[0, 1, 2, 3].map(n => (
+              <button key={n} className={`la-seg-btn ${(draft.typo_count ?? campaign.typo_count ?? 0) === n ? 'on' : ''}`}
+                onClick={() => setDraft(d => ({...d, typo_count: n}))}
+              >{n}</button>
+            ))}
+          </div>
+        ) : undefined}
+      />
 
-      {/* Deal Info */}
+      {/* ── Financials ── */}
+      {sectionDivider("Financials")}
+
       <InfoRow icon={DollarSign} label={t("config.deal")} value={campaign.deal_type || t("config.noneLinked")}
         {...editFor("deal_type")}
         editChild={isEditing ? <EditSelect value={String(draft.deal_type ?? "")} onChange={(v) => setDraft(d => ({...d, deal_type: v}))} options={["retainer", "per_booking", "fixed", "retainer_plus", "sale_closed"]} labels={{
@@ -202,14 +355,10 @@ export function BehaviorSectionFields({
           meeting_held: t("financials.paymentTriggers.meeting_held"),
         }} {...focusFor("payment_trigger")} /> : undefined}
       />
-
-      {/* Value Per Booking */}
       <InfoRow icon={DollarSign} label={t("config.valuePerBooking")} value={campaign.value_per_booking}
         {...editFor("value_per_booking")}
         editChild={isEditing ? <EditNumber value={Number(draft.value_per_booking ?? 0)} onChange={(v) => setDraft(d => ({...d, value_per_booking: v}))} {...focusFor("value_per_booking")} /> : undefined}
       />
-
-      {/* Contract */}
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={Link} label={t("config.contract")} value={campaign.contract_name || t("config.noneLinked")}
           {...editFor("contract_id")}
@@ -217,13 +366,9 @@ export function BehaviorSectionFields({
         />
       </div>
 
-      {/* Opt-out Notice */}
-      <BoolRow icon={Power} label={t("config.optOutNotice")} value={!!(draft.opt_out_notice ?? campaign.opt_out_notice)}
-        {...editFor("opt_out_notice")}
-        editChild={isEditing ? <EditToggle value={!!draft.opt_out_notice} onChange={(v) => setDraft(d => ({...d, opt_out_notice: v}))} /> : undefined}
-      />
+      {/* ── A/B Testing ── */}
+      {sectionDivider("A/B Testing")}
 
-      {/* A/B Testing */}
       <BoolRow icon={SplitSquareVertical} label={t("abTesting.enabled")} value={!!(draft.ab_enabled ?? campaign.ab_enabled)}
         {...editFor("ab_enabled")}
         editChild={isEditing ? <EditToggle value={!!draft.ab_enabled} onChange={(v) => setDraft(d => ({...d, ab_enabled: v}))} /> : undefined}

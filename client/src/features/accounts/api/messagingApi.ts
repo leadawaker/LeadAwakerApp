@@ -7,6 +7,7 @@ export interface MessagingStatus {
   sms: SmsState;
   whatsapp: WhatsappState;
   fromNumber: string | null;
+  sandbox?: boolean;
   displayName: string | null;
   provisionedAt: string | null;
   managed: boolean;
