@@ -107,6 +107,10 @@ export const accounts = nocodb.table("Accounts", {
   emailDkimSelector: text("email_dkim_selector"),
   emailDkimPrivateKey: text("email_dkim_private_key"),        // PKCS1 PEM (secret)
   emailDkimPublicKey: text("email_dkim_public_key"),          // base64 p= value (for display + verify)
+  // Booking meeting type — see specs/booking-meeting-types.
+  // phone_call: uses callingNumber as the host phone; whatsapp_call: uses twilio_default_from_number.
+  meetingType: text("meeting_type").default("phone_call"),    // phone_call | whatsapp_call
+  callingNumber: text("calling_number"),                      // required for phone_call; null for whatsapp_call
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
@@ -654,6 +658,11 @@ export const leads = nocodb.table("Leads", {
   noShow: boolean("no_show"),
   previousBookedCallDate: timestamp("previous_booked_call_date", { withTimezone: true }),
   reScheduledCount: bigint("re_scheduled_count", { mode: "number" }),
+  calcomBookingUid: text("calcom_booking_uid"),
+  billableBooking: boolean("billable_booking"),
+  bookingCancelledAt: timestamp("booking_cancelled_at", { withTimezone: true }),
+  clientCancelledBooking: boolean("client_cancelled_booking").default(false),
+  bookingReminderSentAt: timestamp("booking_reminder_sent_at", { withTimezone: true }),
   callDurationMinutes: integer("call_duration_minutes"),
   whatHasTheLeadDone: text("what_has_the_lead_done"),
   when: text("when"),
@@ -1097,6 +1106,7 @@ export const notificationPreferences = nocodb.table("Notification_Preferences", 
   accountId: integer("account_id").notNull(),
   telegramEnabled: boolean("telegram_enabled").notNull().default(true),
   webPushEnabled: boolean("web_push_enabled").notNull().default(true),
+  emailEnabled: boolean("email_enabled").notNull().default(true),
   telegramChatId: text("telegram_chat_id"),
   typeOverrides: json("type_overrides").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -1505,3 +1515,31 @@ export const insertAccountReviewSchema = createInsertSchema(accountReviews).omit
 });
 export type AccountReview = typeof accountReviews.$inferSelect;
 export type InsertAccountReview = z.infer<typeof insertAccountReviewSchema>;
+
+// ─── Calendar Blocks ──────────────────────────────────────────────────────────
+// Manual busy blocks entered on the LeadAwaker Calendar page. They layer on top
+// of connected-calendar events: a slot is bookable only if it is inside working
+// hours AND not covered by a calendar event AND not covered by a manual block.
+// See specs/calendar-manual-blocks/.
+
+export const calendarBlocks = nocodb.table("Calendar_Blocks", {
+  id: serial("id").primaryKey(),
+  accountId: integer("account_id").notNull(),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+  allDay: boolean("all_day").default(false).notNull(),
+  label: text("label"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("calendar_blocks_account_starts_idx").on(t.accountId, t.startsAt),
+]);
+
+export const insertCalendarBlockSchema = createInsertSchema(calendarBlocks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CalendarBlock = typeof calendarBlocks.$inferSelect;
+export type InsertCalendarBlock = z.infer<typeof insertCalendarBlockSchema>;
