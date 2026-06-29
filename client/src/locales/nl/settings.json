@@ -89,10 +89,16 @@
       "notConfigured": "Push-meldingen zijn niet geconfigureerd op deze server.",
       "serverRegistrationFailed": "Kon niet registreren, probeer het opnieuw."
     },
+    "email": {
+      "title": "E-mailmeldingen",
+      "enabled": "Ingeschakeld",
+      "disabled": "Uitgeschakeld"
+    },
     "overrides": {
       "title": "Meldingsoverschrijvingen per Type",
       "telegram": "Telegram",
-      "webPush": "Web Push"
+      "webPush": "Push",
+      "email": "E-mail"
     },
     "types": {
       "taskAssigned": "Taak Toegewezen",

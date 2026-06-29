@@ -11,6 +11,7 @@
 import webpush from "web-push";
 import { storage } from "./storage";
 import { broadcastToUser } from "./sse";
+import { sendRawEmail } from "./email";
 import type { InsertNotifications, Notifications } from "../shared/schema";
 
 // ── VAPID setup (lazy, only if env vars are present) ───────────────────────
@@ -38,11 +39,12 @@ console.log("[notifications] Telegram configured:", telegramConfigured);
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function isChannelEnabled(
-  prefs: { telegramEnabled: boolean; webPushEnabled: boolean; typeOverrides: any } | undefined,
-  channel: "telegram" | "web_push",
+  prefs: { telegramEnabled: boolean; webPushEnabled: boolean; emailEnabled: boolean; typeOverrides: any } | undefined,
+  channel: "telegram" | "web_push" | "email",
   notificationType: string,
 ): boolean {
-  if (!prefs) return true; // no prefs row means defaults (both enabled)
+  // No prefs row: push/telegram default on; email defaults off (opt-in to avoid inbox spam).
+  if (!prefs) return channel !== "email";
 
   // Check per-type override first
   const overrides = (prefs.typeOverrides ?? {}) as Record<string, Record<string, boolean>>;
@@ -54,6 +56,7 @@ function isChannelEnabled(
   // Fall back to global channel toggle
   if (channel === "telegram") return prefs.telegramEnabled;
   if (channel === "web_push") return prefs.webPushEnabled;
+  if (channel === "email") return prefs.emailEnabled;
   return true;
 }
 
@@ -129,6 +132,41 @@ async function sendTelegram(
   }
 }
 
+// ── Email ─────────────────────────────────────────────────────────────────
+
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+async function sendEmailNotification(
+  userId: number,
+  title: string,
+  body: string | null,
+  link: string | null,
+): Promise<void> {
+  const user = await storage.getAppUserById(userId);
+  if (!user?.email) return;
+
+  const appUrl = process.env.APP_URL || "https://app.leadawaker.com";
+  const fullLink = link ? `${appUrl}${link}` : appUrl;
+  const safeTitle = escHtml(title);
+  const safeBody = body ? escHtml(body) : null;
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#1a1a1a;">${safeTitle}</h2>
+      ${safeBody ? `<p style="margin:0 0 20px;color:#555;font-size:14px;">${safeBody}</p>` : ""}
+      <a href="${escHtml(fullLink)}" style="display:inline-block;padding:10px 20px;background:#7c2d55;color:#fff;border-radius:6px;text-decoration:none;font-size:14px;">View in LeadAwaker</a>
+      <p style="margin:24px 0 0;font-size:11px;color:#aaa;">LeadAwaker, lead reactivation CRM</p>
+    </div>`;
+
+  try {
+    await sendRawEmail({ to: user.email, subject: title, text: body ?? title, html });
+    console.log(`[notification-dispatcher] Email sent to userId=${userId} (${user.email})`);
+  } catch (err) {
+    console.error("[notification-dispatcher] Email send error:", err);
+  }
+}
+
 // ── Main dispatcher ────────────────────────────────────────────────────────
 
 /**
@@ -181,6 +219,13 @@ async function dispatchExternal(notif: Notifications): Promise<void> {
   if (telegramChatId && isChannelEnabled(prefs, "telegram", type)) {
     sendTelegram(telegramChatId, title, body).catch((err) => {
       console.error("[notification-dispatcher] Telegram dispatch error:", err);
+    });
+  }
+
+  // Email
+  if (isChannelEnabled(prefs, "email", type)) {
+    sendEmailNotification(userId, title, body, link).catch((err) => {
+      console.error("[notification-dispatcher] Email dispatch error:", err);
     });
   }
 }

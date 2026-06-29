@@ -89,10 +89,16 @@
       "notConfigured": "Push notifications are not configured on this server.",
       "serverRegistrationFailed": "Could not register, please try again."
     },
+    "email": {
+      "title": "Email Notifications",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
     "overrides": {
       "title": "Per-Type Notification Overrides",
       "telegram": "Telegram",
-      "webPush": "Web Push"
+      "webPush": "Push",
+      "email": "Email"
     },
     "types": {
       "taskAssigned": "Task Assigned",

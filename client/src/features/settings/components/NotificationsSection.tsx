@@ -5,7 +5,7 @@ import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MessageSquare, Bell, AlertTriangle, Cpu } from "lucide-react";
+import { MessageSquare, AlertTriangle, Mail } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
   type NotificationPreferences,
@@ -15,11 +15,28 @@ import {
   urlBase64ToUint8Array,
 } from "../types";
 
+// Notification types visible to client (Viewer) users
+const CLIENT_TYPE_KEYS = ["booking_confirmed", "campaign_finished"] as const;
+
 export function NotificationsSection() {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
   const session = useSession();
   const { currentAccountId } = useWorkspace();
+
+  const role = session.status === "authenticated" ? (session.user.role ?? "Viewer") : "Viewer";
+  const isAgency = role === "Owner" || role === "Admin";
+
+  // Notification types shown to this user
+  const visibleTypes = isAgency
+    ? NOTIF_TYPE_KEYS
+    : NOTIF_TYPE_KEYS.filter((nt) => CLIENT_TYPE_KEYS.includes(nt.key as any));
+
+  // Active channel columns for this role
+  // Agency: Telegram + Web Push + Email (3 cols)
+  // Client: Email + Web Push (2 cols)
+  type Channel = "telegram" | "web_push" | "email";
+  const activeChannels: Channel[] = isAgency ? ["telegram", "web_push", "email"] : ["email", "web_push"];
 
   // ── Notification state ─────────────────────────────────────────────
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(getDefaultNotifPrefs);
@@ -42,6 +59,7 @@ export function NotificationsSection() {
           telegram_enabled: prefs.telegram_enabled ?? prev.telegram_enabled,
           telegram_chat_id: prefs.telegram_chat_id ?? prev.telegram_chat_id,
           push_enabled: prefs.push_enabled ?? prev.push_enabled,
+          email_enabled: prefs.email_enabled ?? prev.email_enabled,
           type_overrides: prefs.type_overrides
             ? { ...prev.type_overrides, ...prefs.type_overrides }
             : prev.type_overrides,
@@ -91,8 +109,6 @@ export function NotificationsSection() {
     if (session.status !== "authenticated") return;
     setIsSubscribingPush(true);
     try {
-      // 0. Ensure browser notification permission. A "default" state must be
-      //    actively requested; only a hard "denied" cannot be reset from JS.
       if (typeof Notification !== "undefined") {
         if (Notification.permission === "default") {
           const result = await Notification.requestPermission();
@@ -101,12 +117,11 @@ export function NotificationsSection() {
             return;
           }
         } else if (Notification.permission === "denied") {
-          toast({ variant: "destructive", title: t("notifications.push.permissionDenied", "Notifications are blocked. Reset this site's notification permission in your browser settings (address bar lock icon → Site settings → Notifications → Allow), then try again.") });
+          toast({ variant: "destructive", title: t("notifications.push.permissionDenied", "Notifications are blocked. Reset this site's notification permission in your browser settings, then try again.") });
           return;
         }
       }
 
-      // 1. Get VAPID key
       const vapidRes = await apiFetch("/api/notifications/vapid-public-key");
       if (!vapidRes.ok) throw new Error("Failed to get VAPID key");
       const { publicKey } = await vapidRes.json();
@@ -116,14 +131,12 @@ export function NotificationsSection() {
         return;
       }
 
-      // 2. Register service worker and subscribe
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
 
-      // 3. Send subscription to server
       const uid = session.user.id;
       const aid = currentAccountId || session.user.accountsId || 1;
       const res = await apiFetch("/api/notifications/push-subscription", {
@@ -137,13 +150,11 @@ export function NotificationsSection() {
         }),
       });
 
-      // If server POST failed, unsubscribe from pushManager and show error
       if (!res.ok) {
         await subscription.unsubscribe();
         throw new Error(t("notifications.push.serverRegistrationFailed", "Could not register, please try again."));
       }
 
-      // 4. Update local state only after server confirmed
       const saved = await res.json();
       setPushDevices((prev) => [...prev, {
         id: saved.id,
@@ -181,6 +192,33 @@ export function NotificationsSection() {
     toast({ variant: "success", title: t("notifications.telegram.saved") });
   }, [telegramChatIdInput, updateNotifPrefs, toast]);
 
+  const gridCols = activeChannels.length === 3 ? "grid-cols-[1fr_auto_auto_auto]" : "grid-cols-[1fr_auto_auto]";
+
+  const channelLabel = (ch: Channel) => {
+    if (ch === "telegram") return t("notifications.overrides.telegram");
+    if (ch === "web_push") return t("notifications.overrides.webPush");
+    return t("notifications.overrides.email");
+  };
+
+  const getChannelValue = (override: NotificationPreferences["type_overrides"][string], ch: Channel): boolean => {
+    if (ch === "telegram") return override.telegram ?? true;
+    if (ch === "web_push") return override.web_push ?? true;
+    return override.email ?? true;
+  };
+
+  const setChannelValue = (key: string, ch: Channel, value: boolean) => {
+    updateNotifPrefs((p) => {
+      const override = p.type_overrides[key] ?? { telegram: true, web_push: true, email: true };
+      return {
+        ...p,
+        type_overrides: {
+          ...p.type_overrides,
+          [key]: { ...override, [ch]: value },
+        },
+      };
+    });
+  };
+
   return (
     <div className="space-y-6" data-testid="section-notifications">
       <p className="text-sm text-muted-foreground leading-relaxed">
@@ -194,73 +232,100 @@ export function NotificationsSection() {
         </div>
       )}
 
-      {/* ── Section A: Telegram ──────────────────────────────── */}
-      <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-telegram">
+      {/* ── Section A: Telegram — agency only ─────────────────────── */}
+      {isAgency && (
+        <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-telegram">
+          <div className="flex items-center justify-between gap-4 px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-[#229ED9]/10 flex items-center justify-center shrink-0">
+                <MessageSquare className="h-4 w-4 text-[#229ED9]" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold">{t("notifications.telegram.title")}</div>
+                <div className="text-[11px] text-muted-foreground/60 mt-0.5">
+                  {notifPrefs.telegram_enabled ? t("notifications.telegram.connected", "Connected") : t("notifications.telegram.disconnected", "Not connected")}
+                </div>
+              </div>
+            </div>
+            <Switch
+              checked={notifPrefs.telegram_enabled}
+              onCheckedChange={(checked) =>
+                updateNotifPrefs((p) => ({ ...p, telegram_enabled: checked }))
+              }
+              data-testid="toggle-telegram"
+              aria-label="Toggle Telegram notifications"
+            />
+          </div>
+
+          {notifPrefs.telegram_enabled && (
+            <div className="px-4 pb-4 pt-1 border-t border-border/15 space-y-2.5">
+              <label className="text-xs font-medium text-muted-foreground">{t("notifications.telegram.chatIdLabel")}</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={telegramChatIdInput}
+                  onChange={(e) => setTelegramChatIdInput(e.target.value)}
+                  placeholder={t("notifications.telegram.chatIdPlaceholder")}
+                  style={{ borderRadius: "var(--r-button)" }}
+                  className="h-10 flex-1 neu-inset-crisp text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 transition-shadow duration-200"
+                  data-testid="input-telegram-chat-id"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveTelegramChatId}
+                  className="la-btn la-btn--wine h-10 shrink-0"
+                  data-testid="button-save-telegram"
+                >
+                  {t("notifications.telegram.save")}
+                </button>
+              </div>
+              <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+                {t("notifications.telegram.setupHint")}
+              </p>
+              <a
+                href="https://t.me/Lead_Awaker_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-indigo hover:underline mt-1"
+              >
+                {t("notifications.telegram.openBot")} &rarr;
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Section B: Email ─────────────────────────────────────────── */}
+      <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-email">
         <div className="flex items-center justify-between gap-4 px-4 py-3.5">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-[#229ED9]/10 flex items-center justify-center shrink-0">
-              <MessageSquare className="h-4 w-4 text-[#229ED9]" />
+            <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+              <Mail className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <div className="text-sm font-semibold">{t("notifications.telegram.title")}</div>
+              <div className="text-sm font-semibold">{t("notifications.email.title")}</div>
               <div className="text-[11px] text-muted-foreground/60 mt-0.5">
-                {notifPrefs.telegram_enabled ? t("notifications.telegram.connected", "Connected") : t("notifications.telegram.disconnected", "Not connected")}
+                {notifPrefs.email_enabled ? t("notifications.email.enabled", "Enabled") : t("notifications.email.disabled", "Disabled")}
               </div>
             </div>
           </div>
           <Switch
-            checked={notifPrefs.telegram_enabled}
+            checked={notifPrefs.email_enabled}
             onCheckedChange={(checked) =>
-              updateNotifPrefs((p) => ({ ...p, telegram_enabled: checked }))
+              updateNotifPrefs((p) => ({ ...p, email_enabled: checked }))
             }
-            data-testid="toggle-telegram"
-            aria-label="Toggle Telegram notifications"
+            data-testid="toggle-email"
+            aria-label="Toggle email notifications"
           />
         </div>
-
-        {notifPrefs.telegram_enabled && (
-          <div className="px-4 pb-4 pt-1 border-t border-border/15 space-y-2.5">
-            <label className="text-xs font-medium text-muted-foreground">{t("notifications.telegram.chatIdLabel")}</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={telegramChatIdInput}
-                onChange={(e) => setTelegramChatIdInput(e.target.value)}
-                placeholder={t("notifications.telegram.chatIdPlaceholder")}
-                style={{ borderRadius: "var(--r-button)" }}
-                className="h-10 flex-1 neu-inset-crisp text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 transition-shadow duration-200"
-                data-testid="input-telegram-chat-id"
-              />
-              <button
-                type="button"
-                onClick={handleSaveTelegramChatId}
-                className="la-btn la-btn--wine h-10 shrink-0"
-                data-testid="button-save-telegram"
-              >
-                {t("notifications.telegram.save")}
-              </button>
-            </div>
-            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-              {t("notifications.telegram.setupHint")}
-            </p>
-            <a
-              href="https://t.me/Lead_Awaker_bot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-indigo hover:underline mt-1"
-            >
-              {t("notifications.telegram.openBot")} &rarr;
-            </a>
-          </div>
-        )}
       </div>
 
-      {/* ── Section B: Browser Push ──────────────────────────── */}
+      {/* ── Section C: Browser Push (inline enable + device list) ────── */}
       <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-push">
         <div className="flex items-center justify-between gap-4 px-4 py-3.5">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-brand-indigo/8 flex items-center justify-center shrink-0">
-              <Bell className="h-4 w-4 text-brand-indigo" />
+              <AlertTriangle className="h-4 w-4 text-brand-indigo" />
             </div>
             <div>
               <div className="text-sm font-semibold">{t("notifications.push.title")}</div>
@@ -318,7 +383,7 @@ export function NotificationsSection() {
                   <button
                     type="button"
                     onClick={() => handleRemovePushDevice(device.endpoint)}
-                    className="text-[11px] font-semibold text-red-500/80 hover:text-red-600 active:scale-95 transition-all duration-150 shrink-0"
+                    className="text-[11px] font-semibold text-red-500/80 hover:text-red-600 active:scale-95 transition-colors duration-150 shrink-0"
                     data-testid={`button-remove-device-${device.id ?? "unknown"}`}
                   >
                     {t("notifications.push.remove")}
@@ -330,11 +395,11 @@ export function NotificationsSection() {
         )}
       </div>
 
-      {/* ── Section C: Per-Type Overrides (always open) ──────── */}
+      {/* ── Section D: Per-Type Overrides ────────────────────────────── */}
       <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-type-overrides">
         <div className="flex items-center gap-3 px-4 py-3.5">
           <div className="h-8 w-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
-            <Cpu className="h-4 w-4 text-muted-foreground" />
+            <Mail className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-left">
             <span className="text-sm font-semibold block">{t("notifications.overrides.title")}</span>
@@ -343,105 +408,59 @@ export function NotificationsSection() {
         </div>
 
         <div className="px-4 pb-4 pt-2 border-t border-border/15">
-            {/* Column headers */}
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 mb-1 px-2">
-              <div />
-              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center w-11">
-                {t("notifications.overrides.telegram")}
+          {/* Column headers */}
+          <div className={`grid ${gridCols} gap-x-4 gap-y-1 mb-1 px-2`}>
+            <div />
+            {activeChannels.map((ch) => (
+              <div key={ch} className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center w-11">
+                {channelLabel(ch)}
               </div>
-              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest text-center w-11">
-                {t("notifications.overrides.webPush")}
-              </div>
-            </div>
-
-            <div className="space-y-0">
-              {NOTIF_TYPE_KEYS.map((nt) => {
-                const override = notifPrefs.type_overrides[nt.key] ?? { telegram: true, web_push: true };
-                const Icon = nt.icon;
-                return (
-                  <div
-                    key={nt.key}
-                    className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-center rounded-xl px-2 py-3 hover:bg-background/40 transition-colors duration-150 group"
-                    style={{ minHeight: 52 }}
-                    data-testid={`row-override-${nt.key}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Icon className="h-4 w-4 text-muted-foreground/60 group-hover:text-muted-foreground shrink-0 transition-colors duration-150" />
-                      <span className="text-[13px] truncate leading-snug">{t(nt.labelKey)}</span>
-                    </div>
-                    {/* Telegram toggle — large tap target */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateNotifPrefs((p) => ({
-                          ...p,
-                          type_overrides: {
-                            ...p.type_overrides,
-                            [nt.key]: { ...override, telegram: !override.telegram },
-                          },
-                        }))
-                      }
-                      aria-label={`${t(nt.labelKey)} telegram`}
-                      aria-pressed={override.telegram}
-                      data-testid={`check-${nt.key}-telegram`}
-                      className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-150 hover:bg-muted/60 active:scale-95"
-                      style={{ transition: "background-color 150ms, transform 150ms" }}
-                    >
-                      <Checkbox
-                        checked={override.telegram}
-                        onCheckedChange={(checked) =>
-                          updateNotifPrefs((p) => ({
-                            ...p,
-                            type_overrides: {
-                              ...p.type_overrides,
-                              [nt.key]: { ...override, telegram: !!checked },
-                            },
-                          }))
-                        }
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        className="pointer-events-none"
-                      />
-                    </button>
-                    {/* Web push toggle — large tap target */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateNotifPrefs((p) => ({
-                          ...p,
-                          type_overrides: {
-                            ...p.type_overrides,
-                            [nt.key]: { ...override, web_push: !override.web_push },
-                          },
-                        }))
-                      }
-                      aria-label={`${t(nt.labelKey)} web push`}
-                      aria-pressed={override.web_push}
-                      data-testid={`check-${nt.key}-push`}
-                      className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-150 hover:bg-muted/60 active:scale-95"
-                      style={{ transition: "background-color 150ms, transform 150ms" }}
-                    >
-                      <Checkbox
-                        checked={override.web_push}
-                        onCheckedChange={(checked) =>
-                          updateNotifPrefs((p) => ({
-                            ...p,
-                            type_overrides: {
-                              ...p.type_overrides,
-                              [nt.key]: { ...override, web_push: !!checked },
-                            },
-                          }))
-                        }
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        className="pointer-events-none"
-                      />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            ))}
           </div>
+
+          <div className="space-y-0">
+            {visibleTypes.map((nt) => {
+              const override = notifPrefs.type_overrides[nt.key] ?? { telegram: true, web_push: true, email: true };
+              const Icon = nt.icon;
+              return (
+                <div
+                  key={nt.key}
+                  className={`grid ${gridCols} gap-x-4 items-center rounded-xl px-2 py-3 hover:bg-background/40 transition-colors duration-150 group`}
+                  style={{ minHeight: 52 }}
+                  data-testid={`row-override-${nt.key}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon className="h-4 w-4 text-muted-foreground/60 group-hover:text-muted-foreground shrink-0 transition-colors duration-150" />
+                    <span className="text-[13px] truncate leading-snug">{t(nt.labelKey)}</span>
+                  </div>
+                  {activeChannels.map((ch) => {
+                    const val = getChannelValue(override, ch);
+                    return (
+                      <button
+                        key={ch}
+                        type="button"
+                        onClick={() => setChannelValue(nt.key, ch, !val)}
+                        aria-label={`${t(nt.labelKey)} ${ch}`}
+                        aria-pressed={val}
+                        data-testid={`check-${nt.key}-${ch}`}
+                        className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-150 hover:bg-muted/60 active:scale-95"
+                        style={{ transition: "background-color 150ms, transform 150ms" }}
+                      >
+                        <Checkbox
+                          checked={val}
+                          onCheckedChange={(checked) => setChannelValue(nt.key, ch, !!checked)}
+                          aria-hidden="true"
+                          tabIndex={-1}
+                          className="pointer-events-none"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
     </div>

@@ -20,7 +20,8 @@ export type NotificationPreferences = {
   telegram_enabled: boolean;
   telegram_chat_id: string;
   push_enabled: boolean;
-  type_overrides: Record<string, { telegram: boolean; web_push: boolean }>;
+  email_enabled: boolean;
+  type_overrides: Record<string, { telegram: boolean; web_push: boolean; email: boolean }>;
 };
 
 export type PushDevice = {
@@ -42,13 +43,14 @@ export const NOTIF_TYPE_KEYS = [
 ] as const;
 
 export function getDefaultNotifPrefs(): NotificationPreferences {
-  const type_overrides: Record<string, { telegram: boolean; web_push: boolean }> = {};
+  const type_overrides: Record<string, { telegram: boolean; web_push: boolean; email: boolean }> = {};
   for (const t of NOTIF_TYPE_KEYS)
-    type_overrides[t.key] = { telegram: true, web_push: true };
+    type_overrides[t.key] = { telegram: true, web_push: true, email: true };
   return {
     telegram_enabled: false,
     telegram_chat_id: "",
     push_enabled: false,
+    email_enabled: true,
     type_overrides,
   };
 }
