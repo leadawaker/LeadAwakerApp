@@ -223,5 +223,24 @@
       "availability": "Beschikbaarheid tonen",
       "hours": "Kantooruren"
     }
+  },
+  "blocks": {
+    "addBlock": "Bezet blok toevoegen",
+    "addTitle": "Bezet blok toevoegen",
+    "editTitle": "Bezet blok bewerken",
+    "date": "Datum",
+    "allDay": "Hele dag",
+    "startTime": "Begintijd",
+    "endTime": "Eindtijd",
+    "label": "Reden",
+    "optional": "optioneel",
+    "labelPlaceholder": "bijv. Doktersafspraak",
+    "save": "Blok opslaan",
+    "saving": "Opslaan...",
+    "delete": "Verwijderen",
+    "saveFailed": "Opslaan mislukt.",
+    "deleteFailed": "Verwijderen mislukt.",
+    "busyBlock": "Bezet blok",
+    "allDayBlock": "Hele dag — bezet"
   }
 }

@@ -10,6 +10,25 @@ const execFile = promisify(execFileCb);
 
 const CALDIY = "/home/gabriel/caldiy";
 
+function parseLastJsonLine<T>(stdout: string): T {
+  const lastLine = stdout.trim().split("\n").pop() || "";
+  return JSON.parse(lastLine) as T;
+}
+
+const resyncDebounce = new Map<number, ReturnType<typeof setTimeout>>();
+
+export function debouncedResyncCaldiySchedule(accountId: number): void {
+  const existing = resyncDebounce.get(accountId);
+  if (existing) clearTimeout(existing);
+  const t = setTimeout(() => {
+    resyncDebounce.delete(accountId);
+    resyncCaldiySchedule(accountId).catch((err) =>
+      console.error(`[calendar-blocks] resync failed:`, err)
+    );
+  }, 600);
+  resyncDebounce.set(accountId, t);
+}
+
 /** Cal.com credential type/appId for each LeadAwaker OAuth calendar provider. */
 const CALDIY_CRED_META: Record<string, { type: string; appId: string }> = {
   google: { type: "google_calendar", appId: "google-calendar" },
@@ -36,17 +55,26 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
           ...process.env,
           LA_EMAIL: account.ownerEmail,
           LA_NAME: account.name || account.ownerEmail,
+          // Per-client booking-email branding: client's own logo + business name.
+          // Logos are stored as base64 data URIs (blocked by email clients), so we
+          // point at the public endpoint that re-serves them as real images and
+          // falls back to the LeadAwaker logo when the account has none.
+          LA_BRAND_LOGO_URL: `https://api.leadawaker.com/public/account-logo/${accountId}`,
+          LA_BRAND_NAME: account.name || "",
           LA_TIMEZONE: account.timezone || "Europe/Amsterdam",
           ...(account.businessHoursStart ? { LA_BUSINESS_HOURS_START: account.businessHoursStart } : {}),
           ...(account.businessHoursEnd ? { LA_BUSINESS_HOURS_END: account.businessHoursEnd } : {}),
           LA_WEBHOOK_URL: "https://webhooks.leadawaker.com/webhooks/booking",
           LA_WEBAPP_URL: "https://cal.leadawaker.com",
+          // Meeting type configuration for Cal.diy location object.
+          LA_MEETING_TYPE: (account as any).meetingType || "phone_call",
+          ...((account as any).callingNumber ? { LA_CALLING_NUMBER: (account as any).callingNumber } : {}),
+          ...((account as any).twilioDefaultFromNumber ? { LA_WHATSAPP_NUMBER: (account as any).twilioDefaultFromNumber } : {}),
         },
         timeout: 60000,
       },
     );
-    const lastLine = stdout.trim().split("\n").pop() || "";
-    const creds: CaldiyCredentials = JSON.parse(lastLine);
+    const creds = parseLastJsonLine<CaldiyCredentials>(stdout);
 
     await storage.upsertCalendarConnection({
       accountId,
@@ -120,29 +148,95 @@ export async function injectCalendarCredentialToCaldiy(accountId: number, provid
 }
 
 /**
+ * Connects an Apple / CalDAV calendar for an account's client by writing a
+ * Cal.diy Credential + SelectedCalendar (+ DestinationCalendar for write-back)
+ * directly into the Cal.diy DB. Validates credentials first — throws with a
+ * user-facing error message if validation fails or if no booking page exists.
+ * Never logs the password.
+ */
+export async function injectCaldavCredentialToCaldiy(
+  accountId: number,
+  opts: { kind: "apple" | "caldav"; username: string; password: string; url?: string },
+): Promise<{ integration: string; externalId: string; credentialId: number }> {
+  const account = await storage.getAccountById(accountId);
+  if (!account?.ownerEmail) throw new Error("Account has no owner email");
+
+  const caldiy = await storage.getCalendarConnection(accountId, "caldiy");
+  if (!caldiy) throw new Error("No Cal.diy booking page for this account — provision it first");
+
+  const { stdout, stderr } = await execFile(
+    `${CALDIY}/inject-caldav-credential.sh`,
+    [],
+    {
+      env: {
+        ...process.env,
+        LA_EMAIL: account.ownerEmail,
+        CALDAV_KIND: opts.kind,
+        CALDAV_USERNAME: opts.username,
+        CALDAV_PASSWORD: opts.password,
+        ...(opts.url ? { CALDAV_URL: opts.url } : {}),
+        CALDAV_WRITEBACK: opts.kind === "apple" ? "1" : "0",
+      },
+      timeout: 60000,
+    },
+  );
+
+  if (stderr) console.error(`[caldiy] inject-caldav:`, stderr);
+
+  const result = parseLastJsonLine<{
+    ok: boolean;
+    error?: string;
+    integration?: string;
+    externalId?: string;
+    credentialId?: number;
+  }>(stdout);
+
+  if (!result.ok) throw new Error(result.error || "Failed to connect Apple / CalDAV calendar");
+
+  return {
+    integration: result.integration!,
+    externalId: result.externalId!,
+    credentialId: result.credentialId!,
+  };
+}
+
+/**
  * Best-effort: rewrites the account's Cal.diy user "Working Hours" schedule to a
- * new window. Called when businessHoursStart/End change on the account. No-op if
- * the account has no Cal.diy booking page or no hours set. Fire-and-forget.
+ * new window and inserts date-override rows for any manual busy blocks in the next
+ * 90 days. Called when businessHoursStart/End change OR when a manual block is
+ * created/updated/deleted. No-op if no Cal.diy booking page exists. Fire-and-forget.
  */
 export async function resyncCaldiySchedule(accountId: number): Promise<void> {
   try {
     const account = await storage.getAccountById(accountId);
     if (!account?.ownerEmail) return;
-    if (!account.businessHoursStart || !account.businessHoursEnd) return;
     const caldiy = await storage.getCalendarConnection(accountId, "caldiy");
     if (!caldiy) return;
+
+    // Fetch manual blocks for the next 90 days to embed in the resync.
+    const now = new Date();
+    const horizon = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    const blocks = await storage.listCalendarBlocks(accountId, now, horizon);
+    const blocksJson = JSON.stringify(
+      blocks.map((b) => ({
+        startsAt: b.startsAt.toISOString(),
+        endsAt: b.endsAt.toISOString(),
+        allDay: b.allDay,
+      }))
+    );
 
     await execFile(`${CALDIY}/resync-schedule.sh`, [], {
       env: {
         ...process.env,
         LA_EMAIL: account.ownerEmail,
-        LA_BUSINESS_HOURS_START: account.businessHoursStart,
-        LA_BUSINESS_HOURS_END: account.businessHoursEnd,
+        ...(account.businessHoursStart ? { LA_BUSINESS_HOURS_START: account.businessHoursStart } : {}),
+        ...(account.businessHoursEnd ? { LA_BUSINESS_HOURS_END: account.businessHoursEnd } : {}),
         ...(account.timezone ? { LA_TIMEZONE: account.timezone } : {}),
+        LA_BLOCKS: blocksJson,
       },
       timeout: 60000,
     });
-    console.error(`[caldiy] resynced schedule for account ${accountId}`);
+    console.error(`[caldiy] resynced schedule for account ${accountId} (${blocks.length} block(s))`);
   } catch (err) {
     console.error(`[caldiy] schedule resync failed for account ${accountId}:`, err);
   }

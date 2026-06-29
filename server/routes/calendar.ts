@@ -13,11 +13,17 @@ import {
   PROVIDER_META,
   CalendarNotConfiguredError,
 } from "../calendar";
-import { provisionCaldiyForAccount, injectCalendarCredentialToCaldiy } from "../calendar/caldiy";
+import { provisionCaldiyForAccount, injectCalendarCredentialToCaldiy, injectCaldavCredentialToCaldiy, debouncedResyncCaldiySchedule } from "../calendar/caldiy";
 import { createOAuthState, consumeOAuthState, saveSessionThen } from "../oauthState";
 
 const OAUTH_PROVIDERS = new Set(["google", "outlook"]);
 const calendarOAuthFlow = (provider: string) => `calendar:${provider}`;
+
+function buildBlockTimestamps(date: string, startTime: string | undefined, endTime: string | undefined, allDay: boolean) {
+  const startsAt = allDay ? new Date(`${date}T00:00:00`) : new Date(`${date}T${startTime || "00:00"}:00`);
+  const endsAt   = allDay ? new Date(`${date}T23:59:59`) : new Date(`${date}T${endTime   || "00:00"}:00`);
+  return { startsAt, endsAt };
+}
 
 function frontendBase(req: import("express").Request): string {
   return process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
@@ -120,6 +126,23 @@ export function registerCalendarRoutes(app: Express): void {
     }
   }));
 
+  // ─── Apple / CalDAV connect (no OAuth; username + app-specific password) ─────
+  app.post("/api/calendar/connect-caldav", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const { accountId, kind, username, password, url } = req.body || {};
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+    if (!username) return res.status(400).json({ message: "username required" });
+    if (!password) return res.status(400).json({ message: "password required" });
+    if (kind !== "apple" && kind !== "caldav") return res.status(400).json({ message: "kind must be 'apple' or 'caldav'" });
+    if (kind === "caldav" && !url) return res.status(400).json({ message: "url required for caldav kind" });
+
+    try {
+      const result = await injectCaldavCredentialToCaldiy(Number(accountId), { kind, username, password, url });
+      res.json({ ok: true, ...result });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Failed to connect Apple / CalDAV calendar" });
+    }
+  }));
+
   // ─── Disconnect ───────────────────────────────────────────────────────────
   app.post("/api/calendar/disconnect", requireAuth, requireAgency, wrapAsync(async (req, res) => {
     const { accountId, provider } = req.body || {};
@@ -171,6 +194,85 @@ export function registerCalendarRoutes(app: Express): void {
       return res.status(400).json({ message: "accountId, provider, externalEventId required" });
     }
     await removeBookingEvent(Number(accountId), provider, externalEventId);
+    res.json({ ok: true });
+  }));
+
+  // ─── Calendar Blocks: CRUD ────────────────────────────────────────────────
+
+  app.get("/api/calendar/blocks", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = Number(req.query.accountId);
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+    const from = req.query.from ? new Date(req.query.from as string) : undefined;
+    const to = req.query.to ? new Date(req.query.to as string) : undefined;
+    const blocks = await storage.listCalendarBlocks(accountId, from, to);
+    res.json(blocks);
+  }));
+
+  app.post("/api/calendar/blocks", requireAuth, wrapAsync(async (req, res) => {
+    const { accountId, date, startTime, endTime, allDay, label } = req.body || {};
+    if (!accountId || !date) return res.status(400).json({ message: "accountId and date required" });
+
+    const { startsAt, endsAt } = buildBlockTimestamps(date, startTime, endTime, Boolean(allDay));
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime())) {
+      return res.status(400).json({ message: "Invalid date/time values" });
+    }
+
+    const block = await storage.createCalendarBlock({
+      accountId: Number(accountId),
+      startsAt,
+      endsAt,
+      allDay: Boolean(allDay),
+      label: label || null,
+      createdBy: req.user?.id ?? null,
+    });
+
+    debouncedResyncCaldiySchedule(Number(accountId));
+
+    res.status(201).json(block);
+  }));
+
+  app.patch("/api/calendar/blocks/:id", requireAuth, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getCalendarBlock(id);
+    if (!existing) return res.status(404).json({ message: "Block not found" });
+    const callerAccountId = req.user!.accountsId;
+    if (callerAccountId !== 1 && existing.accountId !== callerAccountId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const { date, startTime, endTime, allDay, label } = req.body || {};
+    const patch: Parameters<typeof storage.updateCalendarBlock>[2] = {};
+    if (label !== undefined) patch.label = label || null;
+    if (allDay !== undefined) patch.allDay = Boolean(allDay);
+
+    if (date) {
+      const isAllDay = allDay !== undefined ? Boolean(allDay) : existing.allDay;
+      const { startsAt, endsAt } = buildBlockTimestamps(date, startTime, endTime, isAllDay);
+      if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime())) {
+        return res.status(400).json({ message: "Invalid date/time values" });
+      }
+      patch.startsAt = startsAt;
+      patch.endsAt = endsAt;
+    }
+
+    const block = await storage.updateCalendarBlock(id, existing.accountId, patch);
+    if (!block) return res.status(404).json({ message: "Block not found" });
+
+    debouncedResyncCaldiySchedule(block.accountId);
+    res.json(block);
+  }));
+
+  app.delete("/api/calendar/blocks/:id", requireAuth, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    // accountId is required so we can trigger a resync after deletion.
+    const accountId = Number(req.query.accountId || req.body?.accountId || 0);
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+
+    const ok = await storage.deleteCalendarBlock(id, accountId);
+    if (!ok) return res.status(404).json({ message: "Block not found" });
+
+    debouncedResyncCaldiySchedule(accountId);
+
     res.json({ ok: true });
   }));
 

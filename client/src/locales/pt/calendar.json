@@ -223,5 +223,24 @@
       "availability": "Mostrar disponibilidade",
       "hours": "Horário comercial"
     }
+  },
+  "blocks": {
+    "addBlock": "Adicionar bloqueio",
+    "addTitle": "Adicionar bloqueio de agenda",
+    "editTitle": "Editar bloqueio de agenda",
+    "date": "Data",
+    "allDay": "Dia inteiro",
+    "startTime": "Hora de início",
+    "endTime": "Hora de fim",
+    "label": "Motivo",
+    "optional": "opcional",
+    "labelPlaceholder": "ex: Consulta médica",
+    "save": "Salvar bloqueio",
+    "saving": "Salvando...",
+    "delete": "Excluir",
+    "saveFailed": "Falha ao salvar bloqueio.",
+    "deleteFailed": "Falha ao excluir bloqueio.",
+    "busyBlock": "Bloqueio de agenda",
+    "allDayBlock": "Dia inteiro — ocupado"
   }
 }

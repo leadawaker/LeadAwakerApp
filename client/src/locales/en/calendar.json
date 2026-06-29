@@ -223,5 +223,24 @@
       "availability": "Show availability",
       "hours": "Business hours"
     }
+  },
+  "blocks": {
+    "addBlock": "Add busy block",
+    "addTitle": "Add busy block",
+    "editTitle": "Edit busy block",
+    "date": "Date",
+    "allDay": "All day",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "label": "Reason",
+    "optional": "optional",
+    "labelPlaceholder": "e.g. Doctor appointment",
+    "save": "Save block",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "saveFailed": "Failed to save block.",
+    "deleteFailed": "Failed to delete block.",
+    "busyBlock": "Busy block",
+    "allDayBlock": "All day — busy"
   }
 }
