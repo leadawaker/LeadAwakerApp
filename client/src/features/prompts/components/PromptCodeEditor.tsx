@@ -1,11 +1,9 @@
 import { forwardRef, useImperativeHandle, useRef, useEffect } from "react";
-import { EditorState, Compartment } from "@codemirror/state";
+import { EditorState, StateField, Compartment } from "@codemirror/state";
 import {
   EditorView,
-  ViewPlugin,
   keymap,
   type DecorationSet,
-  type ViewUpdate,
 } from "@codemirror/view";
 import { history, historyKeymap, defaultKeymap } from "@codemirror/commands";
 import { buildDecorations, HEADING_RE } from "../utils/promptDecorations";
@@ -29,21 +27,17 @@ type Props = {
   onActiveHeadingsChange?: (activeH1Line: number, activeH2Line: number) => void;
 };
 
-/* Decoration plugin — recomputes on doc/viewport changes (fixes A: vars align). */
-const decorationPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = buildDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = buildDecorations(update.view);
-      }
-    }
+/* StateField-based decorations — height-affecting decorations (h1/h2/h3 change
+   font-size) must come from a StateField, never a ViewPlugin. Viewport-scoped
+   height decorations desync CM6's height map, causing click drift and crashes. */
+const decorationField = StateField.define<DecorationSet>({
+  create(state) { return buildDecorations(state); },
+  update(deco, tr) {
+    if (!tr.docChanged) return deco;
+    return buildDecorations(tr.state);
   },
-  { decorations: (v) => v.decorations },
-);
+  provide: (f) => EditorView.decorations.from(f),
+});
 
 /* Theme builder — lives in a Compartment so fontSize changes reconfigure live. */
 function buildTheme(fontSize: number) {
@@ -149,7 +143,7 @@ export const PromptCodeEditor = forwardRef<PromptCodeEditorHandle, Props>(
           EditorView.lineWrapping,
           history(),
           keymap.of([...defaultKeymap, ...historyKeymap]),
-          decorationPlugin,
+          decorationField,
           updateListener,
           EditorView.domEventHandlers({
             scroll: (_e, view) => {

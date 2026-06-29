@@ -107,7 +107,10 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
       .then((r) => r.ok ? r.json() : [])
       .then((data: any[]) => {
         setConversationPrompts(
-          Array.isArray(data) ? data.filter((p) => (p.use_case || p.useCase || "").toLowerCase() === "conversation") : []
+          Array.isArray(data) ? data.filter((p) =>
+            (p.use_case || p.useCase || "").toLowerCase() === "conversation" ||
+            !!(p.campaigns_id || p.campaignsId || p.Campaigns_id)
+          ) : []
         );
       })
       .catch(() => {});

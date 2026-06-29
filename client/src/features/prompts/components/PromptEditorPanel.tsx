@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { hapticSave } from "@/lib/haptics";
 import { useTranslation } from "react-i18next";
-import { resolveVariablesHtml, buildMap, type CampaignForPreview, type ResolveOpts } from "../utils/resolveVariables";
+import { resolveVariablesHtml, buildMap, DEFAULT_NICHE_TERMS, type CampaignForPreview, type ResolveOpts } from "../utils/resolveVariables";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
@@ -264,28 +264,34 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
 
   // Fetch the selected campaign's niche terms so {project_term} etc. resolve in the preview,
   // mirroring what the Python engine substitutes at runtime. Canonical = first word in each group.
+  // Seed with language-appropriate defaults first so raw tokens never appear when no vocab row exists.
   useEffect(() => {
     if (!previewOpen) { setNicheTerms({}); return; }
+    const vlang = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+    const defaults = DEFAULT_NICHE_TERMS[vlang];
     const sc = campaigns.find((c) => String(c.id) === form.campaignsId);
     const niche = (sc?.niche || "").trim() || "__default__";
-    // Language-aware: the platform locale picks which word set resolves (Dutch
-    // for nl, English otherwise), matching how the engine themes the prompt.
-    const vlang = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
     apiFetch(`/api/niche-vocabulary/${encodeURIComponent(niche)}?lang=${vlang}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((groups: any) => {
-        if (!groups) { setNicheTerms({}); return; }
+        if (!groups) { setNicheTerms(defaults); return; }
         const pick = (a?: string[]) => (Array.isArray(a) && a.length ? a[0] : "");
         const list = (a?: string[]) => (Array.isArray(a) ? a.join(", ") : "");
         setNicheTerms({
-          project_term: pick(groups.projectTerm), project_term_list: list(groups.projectTerm),
-          proposal_term: pick(groups.proposalTerm), proposal_term_list: list(groups.proposalTerm),
-          decision_term: pick(groups.decisionTerm), decision_term_list: list(groups.decisionTerm),
-          advisor_term: pick(groups.advisorTerm), advisor_term_list: list(groups.advisorTerm),
-          visit_term: pick(groups.visitTerm), visit_term_list: list(groups.visitTerm),
+          ...defaults,
+          project_term: pick(groups.projectTerm) || defaults.project_term,
+          project_term_list: list(groups.projectTerm) || defaults.project_term_list,
+          proposal_term: pick(groups.proposalTerm) || defaults.proposal_term,
+          proposal_term_list: list(groups.proposalTerm) || defaults.proposal_term_list,
+          decision_term: pick(groups.decisionTerm) || defaults.decision_term,
+          decision_term_list: list(groups.decisionTerm) || defaults.decision_term_list,
+          advisor_term: pick(groups.advisorTerm) || defaults.advisor_term,
+          advisor_term_list: list(groups.advisorTerm) || defaults.advisor_term_list,
+          visit_term: pick(groups.visitTerm) || defaults.visit_term,
+          visit_term_list: list(groups.visitTerm) || defaults.visit_term_list,
         });
       })
-      .catch(() => setNicheTerms({}));
+      .catch(() => setNicheTerms(defaults));
   }, [previewOpen, form.campaignsId, campaigns, i18n.language]);
 
   function scheduleAutoSave() {

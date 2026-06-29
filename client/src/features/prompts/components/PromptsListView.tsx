@@ -421,9 +421,12 @@ export function PromptsListView({
   const [showSystemMessage, setShowSystemMessage] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
+  // A prompt belongs to the Campaign tab only when it has a linked campaign.
+  const isCampaignPrompt = (p: any) => !!(p.campaignsId || p.Campaigns_id);
+
   // Counts from the full prompts list (not filtered by tab)
-  const systemCount = useMemo(() => prompts.filter((p: any) => !MODEL_OPTIONS.includes(p.model)).length, [prompts]);
-  const campaignCount = useMemo(() => prompts.filter((p: any) => MODEL_OPTIONS.includes(p.model)).length, [prompts]);
+  const systemCount = useMemo(() => prompts.filter((p: any) => !isCampaignPrompt(p)).length, [prompts]);
+  const campaignCount = useMemo(() => prompts.filter((p: any) => isCampaignPrompt(p)).length, [prompts]);
 
   const accountMap = useMemo(
     () => new Map(availableAccounts.map((a) => [a.id, a.name])),
@@ -432,10 +435,9 @@ export function PromptsListView({
 
   // Tab-filtered prompts
   const tabFilteredPrompts = useMemo(() => {
-    return prompts.filter((p: any) => {
-      const isSelectable = MODEL_OPTIONS.includes(p.model);
-      return listTab === "campaign" ? isSelectable : !isSelectable;
-    });
+    return prompts.filter((p: any) =>
+      listTab === "campaign" ? isCampaignPrompt(p) : !isCampaignPrompt(p)
+    );
   }, [prompts, listTab]);
 
   // GroupedRows also needs to be tab-filtered
@@ -443,10 +445,9 @@ export function PromptsListView({
     if (!groupedRows) return null;
     const result = new Map<string, any[]>();
     groupedRows.forEach((items, key) => {
-      const filtered = items.filter((p: any) => {
-        const isSelectable = MODEL_OPTIONS.includes(p.model);
-        return listTab === "campaign" ? isSelectable : !isSelectable;
-      });
+      const filtered = items.filter((p: any) =>
+        listTab === "campaign" ? isCampaignPrompt(p) : !isCampaignPrompt(p)
+      );
       if (filtered.length > 0) result.set(key, filtered);
     });
     return result;
@@ -945,8 +946,11 @@ export function PromptsListView({
                       onClick={() => loadVersion(v)}
                     >
                       <div className="flex items-center gap-1">
+                        <span className="text-xs shrink-0 text-muted-foreground w-[96px]">
+                          {new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
                         <span className="text-xs flex-1 min-w-0 truncate">
-                          v{v.versionNumber}{v.label ? ` — ${v.label}` : ` — ${new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`}
+                          v{v.versionNumber}{v.label ? ` — ${v.label}` : ""}
                         </span>
                         <button onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }} className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0" title={t("versions.deleteVersion")}>
                           <Trash2 className="h-3 w-3" />

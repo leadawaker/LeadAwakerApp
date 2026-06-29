@@ -194,7 +194,8 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
         temperature: form.temperature,
         maxTokens: parseInt(form.maxTokens, 10),
         status: form.status || "active",
-        useCase: form.useCase.trim() || null,
+        // New prompts default to "conversation" so they appear in campaign dropdowns.
+        useCase: form.useCase.trim() || (!isEdit ? "conversation" : null),
         notes: notesRef.current.trim() || null,
         campaignsId: form.campaignsId ? parseInt(form.campaignsId, 10) : null,
       };
@@ -373,7 +374,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
                       : selectedVersion
                       ? (() => {
                           const v = versions.find((v) => v.versionNumber === selectedVersion);
-                          return v ? `v${v.versionNumber} — ${formatVersionDateTime(v.savedAt)}` : t("versions.selectVersion");
+                          return v ? `${formatVersionDateTime(v.savedAt)}  ·  v${v.versionNumber}` : t("versions.selectVersion");
                         })()
                       : t("versions.selectVersion")}
                   </span>
@@ -396,8 +397,9 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
                           setVersionDropdownOpen(false);
                         }}
                       >
-                        <div className="text-xs font-medium">
-                          v{v.versionNumber} — {formatVersionDateTime(v.savedAt)}
+                        <div className="text-xs font-medium flex items-center gap-2">
+                          <span className="shrink-0 text-muted-foreground">{formatVersionDateTime(v.savedAt)}</span>
+                          <span>·  v{v.versionNumber}</span>
                         </div>
                         {v.notes && (
                           <div className="mt-1 text-[11px] text-muted-foreground leading-snug whitespace-pre-wrap hidden group-hover:block">

@@ -74,6 +74,25 @@ function normalizeBookingMode(raw: string | null | undefined): string | null | u
   return raw; // keep as-is for unknown values
 }
 
+/** Generic fallback niche terms used when the selected campaign has no
+ *  Niche_Vocabulary row, so the preview never shows raw {project_term} tokens. */
+export const DEFAULT_NICHE_TERMS: Record<"en" | "nl", Record<string, string>> = {
+  en: {
+    project_term: "project", project_term_list: "project",
+    advisor_term: "specialist", advisor_term_list: "specialist",
+    proposal_term: "proposal", proposal_term_list: "proposal",
+    visit_term: "visit", visit_term_list: "visit",
+    decision_term: "decision", decision_term_list: "decision",
+  },
+  nl: {
+    project_term: "project", project_term_list: "project",
+    advisor_term: "specialist", advisor_term_list: "specialist",
+    proposal_term: "voorstel", proposal_term_list: "voorstel",
+    visit_term: "bezoek", visit_term_list: "bezoek",
+    decision_term: "beslissing", decision_term_list: "beslissing",
+  },
+};
+
 /** Preview-only knobs: force conditional values and inject per-niche terms the
  *  client can't derive on its own (those live in the Niche_Vocabulary table). */
 export interface ResolveOpts {

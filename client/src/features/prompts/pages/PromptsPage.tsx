@@ -104,6 +104,45 @@ export default function PromptsPage() {
   /* ── Status toggle tracking ─────────────────────────────────────────────── */
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
+  /* ── Fetch campaigns (extracted so focus listener can call it independently) ── */
+  const reloadCampaigns = useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/campaigns");
+      if (!res.ok) return;
+      const data = await res.json();
+      setCampaigns(
+        (Array.isArray(data) ? data : []).map((c: any) => ({
+          id: c.id || c.Id,
+          name: c.name || c.Name || `Campaign #${c.id || c.Id}`,
+          aiModel: c.aiModel || c.ai_model || "",
+          agentName: c.agentName ?? c.agent_name ?? null,
+          serviceName: c.serviceName ?? c.service_name ?? null,
+          campaignService: c.campaignService ?? c.campaign_service ?? null,
+          campaignUsp: c.campaignUsp ?? c.campaign_usp ?? null,
+          calendarLink: c.calendarLink ?? c.calendar_link ?? null,
+          whatLeadDid: c.whatLeadDid ?? c.what_lead_did ?? null,
+          firstTouch: c.firstTouch ?? c.first_touch ?? null,
+          positioning: c.positioning ?? null,
+          aiDisclosure: c.aiDisclosure ?? c.ai_disclosure ?? null,
+          inquiriesSource: c.inquiriesSource ?? c.inquiries_source ?? null,
+          inquiryTimeframe: c.inquiryTimeframe ?? c.inquiry_timeframe ?? null,
+          niche: c.niche ?? c.campaignNicheOverride ?? c.campaign_niche_override ?? null,
+          nicheQuestion: c.nicheQuestion ?? c.niche_question ?? null,
+          bookingMode: c.bookingModeOverride ?? c.booking_mode_override ?? null,
+          language: c.language ?? null,
+          demoClientName: c.demoClientName ?? c.demo_client_name ?? null,
+          companyName: c.companyName ?? c.company_name ?? null,
+          aiStyleOverride: c.aiStyleOverride ?? c.ai_style_override ?? null,
+          description: c.description ?? null,
+          aiRole: c.aiRole ?? c.ai_role ?? null,
+          typoCount: c.typoCount ?? c.typo_count ?? null,
+          kb: c.kb ?? null,
+          accountsId: c.accountsId ?? c.Accounts_id ?? null,
+        })),
+      );
+    } catch { /* ignore — stale names are preferable to a crash */ }
+  }, []);
+
   /* ── Fetch prompts + campaigns ──────────────────────────────────────────── */
   const fetchPrompts = useCallback(async () => {
     setLoading(true);
@@ -172,6 +211,13 @@ export default function PromptsPage() {
   useEffect(() => {
     fetchPrompts();
   }, [fetchPrompts]);
+
+  /* ── Refetch campaigns on tab focus so renames appear without a hard reload ── */
+  useEffect(() => {
+    const handleFocus = () => reloadCampaigns();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [reloadCampaigns]);
 
   /* ── Campaign lookup map ────────────────────────────────────────────────── */
   const campaignMap = useMemo(() => {
