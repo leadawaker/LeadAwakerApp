@@ -114,6 +114,25 @@ function formatRelativeTime(dateStr: string | null | undefined, t: TFn): string 
   }
 }
 
+/* ── Campaign avatar color palette ──────────────────────────────────────── */
+
+const CAMPAIGN_PALETTE = [
+  "#4F46E5", // indigo
+  "#0891B2", // cyan
+  "#059669", // emerald
+  "#D97706", // amber
+  "#7C3AED", // violet
+  "#DB2777", // pink
+  "#2563EB", // blue
+  "#16A34A", // green
+  "#9333EA", // purple
+  "#EA580C", // orange
+];
+
+function campaignAvatarBg(campaignId: number): string {
+  return CAMPAIGN_PALETTE[campaignId % CAMPAIGN_PALETTE.length];
+}
+
 /* ── Left panel list card ────────────────────────────────────────────────── */
 
 function PromptListCard({
@@ -135,9 +154,12 @@ function PromptListCard({
   const isStatusActive = normalizedStatus === "active";
   const updatedAt = prompt.updatedAt || prompt.updated_at;
   const promptId = getPromptId(prompt);
-  const isSystem = !MODEL_OPTIONS.includes(prompt.model);
+  const campaignId = Number(prompt.campaignsId || prompt.Campaigns_id) || 0;
+  const isSystem = campaignId === 0;
   const accent = isSystem ? "var(--stage-responded)" : "var(--wine)";
   const accentTint = isSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
+  const avatarBg = isSystem ? "var(--stage-responded)" : campaignAvatarBg(campaignId);
+  const avatarOpacity = (!isActive && normalizedStatus === "active") ? 0.7 : 1;
 
   return (
     <div
@@ -172,20 +194,14 @@ function PromptListCard({
           width: 3, background: accent, borderRadius: "0 3px 3px 0",
         }} />
       )}
-      {/* Bot icon */}
+      {/* Bot icon — colored bg per campaign, beige icon */}
       <span style={{
         position: "relative", width: 34, height: 34, flexShrink: 0, borderRadius: "var(--r-surface)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: isActive ? accentTint : "var(--bg)",
-        boxShadow: isActive ? "none" : "var(--sh-inset-crisp)",
-        color: isActive
-          ? accent
-          : normalizedStatus === "active"
-          ? accent
-          : normalizedStatus === "archived"
-          ? "var(--mute-2)"
-          : "var(--mute)",
-        opacity: !isActive && normalizedStatus === "active" ? 0.55 : 1,
+        background: normalizedStatus === "archived" ? "var(--bg)" : avatarBg,
+        boxShadow: normalizedStatus === "archived" ? "var(--sh-inset-crisp)" : "none",
+        color: normalizedStatus === "archived" ? "var(--mute-2)" : "rgba(255,255,248,0.92)",
+        opacity: avatarOpacity,
       }}>
         <Bot size={17} />
         {isActive && isStatusActive && (
@@ -949,9 +965,18 @@ export function PromptsListView({
                         <span className="text-xs shrink-0 text-muted-foreground w-[96px]">
                           {new Date(v.savedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
                         </span>
-                        <span className="text-xs flex-1 min-w-0 truncate">
-                          v{v.versionNumber}{v.label ? ` — ${v.label}` : ""}
-                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs flex-1 min-w-0 truncate">
+                              v{v.versionNumber}{v.label ? ` — ${v.label}` : ""}
+                            </span>
+                          </TooltipTrigger>
+                          {v.label && (
+                            <TooltipContent side="right" className="max-w-[200px] text-xs">
+                              {v.label}
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
                         <button onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }} className="opacity-0 group-hover/vrow:opacity-100 p-0.5 rounded hover:text-destructive transition-opacity shrink-0" title={t("versions.deleteVersion")}>
                           <Trash2 className="h-3 w-3" />
                         </button>
@@ -1199,12 +1224,14 @@ export function PromptsListView({
                   <>
                     {/* Left section: Bot icon + name + Active badge + campaign/account */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      {/* Icon */}
+                      {/* Icon — campaign color bg, beige icon (matches list card) */}
                       <span style={{
                         width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        background: detailAccentTint, color: detailAccent,
-                        boxShadow: `0 0 0 1px ${detailAccentGlow}`,
+                        background: selCampaignId
+                          ? campaignAvatarBg(Number(selCampaignId))
+                          : "var(--stage-responded)",
+                        color: "rgba(255,255,248,0.92)",
                       }}>
                         <Bot size={18} />
                       </span>

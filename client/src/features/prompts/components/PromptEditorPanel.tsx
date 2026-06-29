@@ -106,6 +106,9 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({
     lead_stage: "inquired", positioning: "mid_market", ai_disclosure: "off",
   });
+  // Niche override for preview: "__campaign__" means use the campaign's actual niche.
+  const [previewNiche, setPreviewNiche] = useState<string>("__campaign__");
+  const [availableNiches, setAvailableNiches] = useState<string[]>([]);
   const [foldedSections, setFoldedSections] = useState<Set<number>>(new Set());
   // Active heading tracking for the Sections panel (emitted by the CodeMirror editor).
   const [activeH1, setActiveH1] = useState(-1);
@@ -221,6 +224,24 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightTick]);
 
+  // The niche that the linked campaign actually uses at runtime.
+  const campaignNiche = useMemo(() => {
+    const sc = campaigns.find((c) => String(c.id) === form.campaignsId);
+    return (sc?.niche || "").trim();
+  }, [form.campaignsId, campaigns]);
+
+  // Reset preview niche override when the linked campaign changes.
+  useEffect(() => { setPreviewNiche("__campaign__"); }, [form.campaignsId]);
+
+  // Fetch the list of available niches (agency-only) once when preview opens.
+  useEffect(() => {
+    if (!previewOpen) return;
+    apiFetch("/api/niche-vocabulary")
+      .then((r) => r.ok ? r.json() : [])
+      .then((rows: any[]) => setAvailableNiches(rows.map((r: any) => r.niche).filter(Boolean)))
+      .catch(() => setAvailableNiches([]));
+  }, [previewOpen]);
+
   const resolveOpts = useMemo<ResolveOpts>(
     () => ({ overrides: previewOverrides, nicheTerms }),
     [previewOverrides, nicheTerms],
@@ -269,8 +290,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     if (!previewOpen) { setNicheTerms({}); return; }
     const vlang = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
     const defaults = DEFAULT_NICHE_TERMS[vlang];
-    const sc = campaigns.find((c) => String(c.id) === form.campaignsId);
-    const niche = (sc?.niche || "").trim() || "__default__";
+    const niche = (previewNiche !== "__campaign__" ? previewNiche : campaignNiche) || "__default__";
     apiFetch(`/api/niche-vocabulary/${encodeURIComponent(niche)}?lang=${vlang}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((groups: any) => {
@@ -292,7 +312,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
         });
       })
       .catch(() => setNicheTerms(defaults));
-  }, [previewOpen, form.campaignsId, campaigns, i18n.language]);
+  }, [previewOpen, previewNiche, campaignNiche, i18n.language]);
 
   function scheduleAutoSave() {
     if (!initialized.current) return;
@@ -772,6 +792,27 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                         </select>
                       </label>
                     ))}
+                    {/* Niche override — campaign's actual niche shown in wine so it's clear which is real */}
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {t("preview.cond.niche", { defaultValue: "Niche" })}
+                      </span>
+                      <select
+                        className="neu-inset-super-crisp px-2 py-1 text-xs"
+                        style={{ color: previewNiche === "__campaign__" ? "var(--wine)" : undefined }}
+                        value={previewNiche}
+                        onChange={(e) => setPreviewNiche(e.target.value)}
+                      >
+                        <option value="__campaign__">
+                          {campaignNiche
+                            ? `${campaignNiche} (actual)`
+                            : t("preview.cond.nicheDefault", { defaultValue: "Default (actual)" })}
+                        </option>
+                        {availableNiches
+                          .filter((n) => n !== campaignNiche)
+                          .map((n) => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </label>
                   </div>
                 </PopoverContent>
               </Popover>

@@ -71,9 +71,9 @@ function buildTheme(fontSize: number) {
       fontWeight: "700",
       opacity: "0.7",
     },
-    ".cm-h1": { fontSize: `${fontSize + 5}px`, fontWeight: "700" },
-    ".cm-h2": { fontSize: `${fontSize + 3}px`, fontWeight: "700" },
-    ".cm-h3": { fontWeight: "700" },
+    ".cm-h1": { fontWeight: "700", letterSpacing: "0.02em" },
+    ".cm-h2": { fontWeight: "700" },
+    ".cm-h3": { fontWeight: "600" },
   });
 }
 
@@ -128,6 +128,45 @@ export const PromptCodeEditor = forwardRef<PromptCodeEditorHandle, Props>(
       cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => emitActiveHeadings(view));
     }
+
+    /* Correct cursor placement when html { zoom } != 1.
+       CM6 mixes visual-pixel clientY with layout-pixel scrollTop/height-map,
+       causing clicks to land on the wrong line when a CSS zoom is active.
+       We intercept mousedown in capture phase (before CM6) and re-dispatch
+       with zoom-normalised coordinates. Only corrects simple clicks — drag
+       selection is left to CM6 (the anchor may drift slightly during drag,
+       which is an acceptable trade-off vs rewriting CM6's selection logic). */
+    useEffect(() => {
+      const view = viewRef.current;
+      if (!view) return;
+
+      const correctionHandler = (e: MouseEvent) => {
+        const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+        if (Math.abs(zoom - 1) < 0.01) return; // noop when no zoom active
+        if (e.detail > 1 || e.shiftKey || e.metaKey || e.ctrlKey) return; // let CM6 handle multi/modifier clicks
+        if (e.buttons !== 1) return; // left button only
+
+        const rect = view.scrollDOM.getBoundingClientRect();
+        // Corrected coords: translate visual click into layout-pixel space so CM6's
+        // posAtCoords + scrollTop arithmetic uses the same unit throughout.
+        const correctedX = rect.left + (e.clientX - rect.left) / zoom;
+        const correctedY = rect.top + (e.clientY - rect.top) / zoom;
+        const pos = view.posAtCoords({ x: correctedX, y: correctedY });
+        if (pos === null) return;
+
+        // Run after CM6 has processed mousedown (focus, internal drag state) so
+        // we don't interfere with its setup, then fix cursor to the right position.
+        requestAnimationFrame(() => {
+          if (view.state.selection.main.empty) {
+            view.dispatch({ selection: { anchor: pos, head: pos } });
+          }
+        });
+      };
+
+      view.scrollDOM.addEventListener("mousedown", correctionHandler, true);
+      return () => view.scrollDOM.removeEventListener("mousedown", correctionHandler, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // runs once after editor mount; viewRef.current is stable
 
     useEffect(() => {
       if (!hostRef.current) return;

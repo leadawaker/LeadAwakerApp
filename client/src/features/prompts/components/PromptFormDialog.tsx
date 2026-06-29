@@ -387,6 +387,7 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
                     {versions.map((v) => (
                       <div
                         key={v.id}
+                        title={v.label || undefined}
                         className={`group px-3 py-2 cursor-pointer transition-colors ${
                           selectedVersion === v.versionNumber
                             ? "bg-brand-indigo/10 text-brand-indigo"
