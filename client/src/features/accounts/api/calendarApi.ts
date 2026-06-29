@@ -1,7 +1,7 @@
 import { apiFetch, API_BASE } from "@/lib/apiUtils";
 
-export type CalendarProviderId = "google" | "outlook" | "calcom" | "calendly" | "ical";
-export type CalendarAuthType = "oauth" | "apikey" | "url";
+export type CalendarProviderId = "google" | "outlook" | "calcom" | "calendly" | "ical" | "apple";
+export type CalendarAuthType = "oauth" | "apikey" | "url" | "caldav";
 
 export interface CalendarProviderMeta {
   id: CalendarProviderId;
@@ -82,6 +82,23 @@ export const provisionBookingPage = async (accountId: number): Promise<CaldiyCre
   if (!res.ok) {
     const msg = await res.json().catch(() => ({}));
     throw new Error(msg.message || "Failed to provision booking page");
+  }
+  return res.json();
+};
+
+/** Apple / CalDAV connect: submits username + app-specific password to validate and inject. */
+export const connectCalendarCaldav = async (
+  accountId: number,
+  payload: { kind: "apple" | "caldav"; username: string; password: string; url?: string },
+): Promise<{ ok: boolean; integration: string; externalId: string }> => {
+  const res = await apiFetch("/api/calendar/connect-caldav", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accountId, ...payload }),
+  });
+  if (!res.ok) {
+    const msg = await res.json().catch(() => ({}));
+    throw new Error(msg.message || "Failed to connect Apple / CalDAV calendar");
   }
   return res.json();
 };

@@ -23,6 +23,9 @@
     "factsTitle": "Fatos principais"
   },
   "questions": {
+    "meetingType": {
+      "label": "Como você conduz as ligações agendadas com leads?"
+    },
     "openingStyle": {
       "label": "Qual estilo de IA combina melhor com vocês?",
       "options": {

@@ -471,7 +471,18 @@
       "outlook": "Outlook",
       "calcom": "Cal.com",
       "calendly": "Calendly",
-      "ical": "iCal / URL ICS"
+      "ical": "iCal / URL ICS",
+      "apple": "Apple / iCal"
+    },
+    "apple": {
+      "appleId": "Apple ID",
+      "appleIdPlaceholder": "seu@icloud.com",
+      "appPassword": "Senha específica para app",
+      "appPasswordHint": "Gere uma senha específica para app em Login e Segurança em",
+      "advanced": "Usar servidor CalDAV personalizado",
+      "caldavUrl": "URL do servidor CalDAV",
+      "caldavNote": "Ao usar URL personalizada, a conexão é como CalDAV genérico (agendamentos não aparecem na sua agenda Apple).",
+      "connectFailed": "Não foi possível conectar — verifique seu Apple ID e senha."
     },
     "url": "URL do feed",
     "urlPlaceholder": "URL pública do feed iCal / ICS",
@@ -529,5 +540,19 @@
   },
   "scope": {
     "nSelected": "{{count}} selecionada(s)"
+  },
+  "meetingType": {
+    "title": "Como você faz as ligações com leads",
+    "options": {
+      "phone_call": "Ligacao telefonica",
+      "whatsapp_call": "Ligacao por WhatsApp",
+      "google_meet": "Google Meet",
+      "zoom": "Zoom"
+    },
+    "callingNumber": "Numero para ligar",
+    "callingNumberPlaceholder": "+55 11 9 0000-0000",
+    "callingNumberEmpty": "Nao definido",
+    "callingNumberHint": "Os leads verao este numero na confirmacao do agendamento para saber quem esta ligando.",
+    "whatsappHint": "A ligacao agendada acontece pelo WhatsApp usando o seu numero de mensagens conectado."
   }
 }

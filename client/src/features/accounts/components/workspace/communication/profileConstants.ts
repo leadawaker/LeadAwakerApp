@@ -63,11 +63,11 @@ export function recommendStatus(aiStyle: string | null): string {
 // The wizard keeps one-question-per-screen but groups steps into named sections
 // so the facilitator can say "now we're on part 3 of 4". Labels live in i18n
 // (`sections.<key>`).
-export type SectionKey = "tone" | "identity" | "sales" | "facts";
-export const SECTIONS: SectionKey[] = ["tone", "identity", "sales", "facts"];
+export type SectionKey = "tone" | "identity" | "sales" | "facts" | "booking";
+export const SECTIONS: SectionKey[] = ["tone", "identity", "sales", "facts", "booking"];
 
 // ── Merged step list ─────────────────────────────────────────────────────────
-export type StepKind = "style" | "fact" | "qagrid";
+export type StepKind = "style" | "fact" | "qagrid" | "custom";
 export interface StepDef { key: string; kind: StepKind; section: SectionKey }
 
 export const STEPS: StepDef[] = [
@@ -84,7 +84,8 @@ export const STEPS: StepDef[] = [
   { key: "guarantees", kind: "fact", section: "facts" },
   { key: "faq", kind: "qagrid", section: "facts" },            // → KB "faq"
   { key: "differentiator", kind: "style", section: "facts" },  // USP arguments: after FAQ, before sensitive topics
-  { key: "sensitiveTopics", kind: "fact", section: "facts" },  // → KB "policies" (last step)
+  { key: "sensitiveTopics", kind: "fact", section: "facts" },  // → KB "policies"
+  { key: "meetingType", kind: "custom", section: "booking" },  // how the booked call happens (account-level)
 ];
 
 export type StyleField =

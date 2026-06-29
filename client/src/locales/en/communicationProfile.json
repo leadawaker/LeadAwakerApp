@@ -36,9 +36,13 @@
     "tone": "Identity and Style",
     "identity": "Words & identity",
     "sales": "Sales arguments",
-    "facts": "Facts & policy"
+    "facts": "Facts & policy",
+    "booking": "Booking setup"
   },
   "questions": {
+    "meetingType": {
+      "label": "How do you conduct booked calls with leads?"
+    },
     "bookingUrl": {
       "label": "Which link do you use to book appointments?",
       "help": "The assistant sends this link so leads can book an appointment themselves. Paste your calendar or booking link here.",

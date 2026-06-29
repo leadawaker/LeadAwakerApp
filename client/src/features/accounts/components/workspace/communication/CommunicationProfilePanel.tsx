@@ -64,6 +64,7 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
         <div style={{ padding: "24px 0", textAlign: "center", color: "var(--mute-2)", fontSize: 12.5, fontStyle: "italic" }}>No profile set up yet.</div>
       ) : (
         <ProfileWizard
+          accountId={accountId}
           initial={profile?.answers ?? { ...EMPTY_ANSWERS, ...recommendedDefaults(niche) }}
           initialFacts={factValues}
           initialGrids={grids}

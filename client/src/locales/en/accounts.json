@@ -471,7 +471,18 @@
       "outlook": "Outlook",
       "calcom": "Cal.com",
       "calendly": "Calendly",
-      "ical": "iCal / ICS URL"
+      "ical": "iCal / ICS URL",
+      "apple": "Apple / iCal"
+    },
+    "apple": {
+      "appleId": "Apple ID",
+      "appleIdPlaceholder": "your@icloud.com",
+      "appPassword": "App-specific password",
+      "appPasswordHint": "Generate an app-specific password at Sign-In and Security on",
+      "advanced": "Use a custom CalDAV server",
+      "caldavUrl": "CalDAV server URL",
+      "caldavNote": "Switching to a custom URL connects as generic CalDAV (bookings won't appear in your Apple calendar).",
+      "connectFailed": "Could not connect — check your Apple ID and app password."
     },
     "url": "Feed URL",
     "urlPlaceholder": "Public iCal / ICS feed URL",
@@ -529,5 +540,19 @@
   },
   "scope": {
     "nSelected": "{{count}} selected"
+  },
+  "meetingType": {
+    "title": "How you meet with leads",
+    "options": {
+      "phone_call": "Phone call",
+      "whatsapp_call": "WhatsApp call",
+      "google_meet": "Google Meet",
+      "zoom": "Zoom"
+    },
+    "callingNumber": "Calling number",
+    "callingNumberPlaceholder": "+31 6 00 00 00 00",
+    "callingNumberEmpty": "Not set",
+    "callingNumberHint": "Leads will see this number in the booking confirmation so they know who's calling.",
+    "whatsappHint": "The booked call happens via WhatsApp using your connected messaging number."
   }
 }

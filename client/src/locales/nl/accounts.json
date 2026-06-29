@@ -471,7 +471,18 @@
       "outlook": "Outlook",
       "calcom": "Cal.com",
       "calendly": "Calendly",
-      "ical": "iCal / ICS-URL"
+      "ical": "iCal / ICS-URL",
+      "apple": "Apple / iCal"
+    },
+    "apple": {
+      "appleId": "Apple ID",
+      "appleIdPlaceholder": "jouw@icloud.com",
+      "appPassword": "App-specifiek wachtwoord",
+      "appPasswordHint": "Maak een app-specifiek wachtwoord aan via Aanmelden en beveiliging op",
+      "advanced": "Gebruik een aangepaste CalDAV-server",
+      "caldavUrl": "CalDAV-server-URL",
+      "caldavNote": "Bij een eigen URL wordt verbonden als generieke CalDAV (boekingen verschijnen niet in je Apple-agenda).",
+      "connectFailed": "Kon niet verbinden — controleer je Apple ID en app-wachtwoord."
     },
     "url": "Feed-URL",
     "urlPlaceholder": "Openbare iCal / ICS feed-URL",
@@ -529,5 +540,19 @@
   },
   "scope": {
     "nSelected": "{{count}} geselecteerd"
+  },
+  "meetingType": {
+    "title": "Hoe spreek je met leads",
+    "options": {
+      "phone_call": "Telefoongesprek",
+      "whatsapp_call": "WhatsApp-gesprek",
+      "google_meet": "Google Meet",
+      "zoom": "Zoom"
+    },
+    "callingNumber": "Belnummer",
+    "callingNumberPlaceholder": "+31 6 00 00 00 00",
+    "callingNumberEmpty": "Niet ingesteld",
+    "callingNumberHint": "Leads zien dit nummer in de boekingsbevestiging zodat ze weten wie er belt.",
+    "whatsappHint": "Het geboekte gesprek vindt plaats via WhatsApp met je gekoppelde berichtnummer."
   }
 }

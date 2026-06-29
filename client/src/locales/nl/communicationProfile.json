@@ -36,9 +36,13 @@
     "tone": "Identiteit en stijl",
     "identity": "Woorden & identiteit",
     "sales": "Verkoopargumenten",
-    "facts": "Feiten & beleid"
+    "facts": "Feiten & beleid",
+    "booking": "Afspraken instellen"
   },
   "questions": {
+    "meetingType": {
+      "label": "Hoe voer je geboekte gesprekken met leads?"
+    },
     "bookingUrl": {
       "label": "Welke link gebruiken jullie om afspraken in te plannen?",
       "help": "De assistent stuurt deze link zodat leads zelf een afspraak kunnen inplannen. Plak hier jullie agenda- of boekingslink.",

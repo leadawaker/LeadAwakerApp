@@ -12,6 +12,7 @@ import type { QAGrids } from "./useOnboardingFacts";
 import { useNicheWords } from "./useNicheWords";
 import { WhatsAppPreview } from "./WhatsAppPreview";
 import { USP_OPTIONS, asCampaignLang } from "@/features/campaigns/components/settings/fieldLocale";
+import { MeetingTypeCard } from "../MeetingTypeCard";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -87,6 +88,7 @@ function padRows(rows?: QARow[]): QARow[] {
 }
 
 interface Props {
+  accountId?: number;
   initial?: ProfileAnswers;
   initialFacts?: FactValues;
   initialGrids?: QAGrids;
@@ -102,7 +104,7 @@ interface Props {
   bodyMaxHeight?: number;
 }
 
-export function ProfileWizard({ initial, initialFacts, initialGrids, initialStep, saving, niche, accountName, accountLogoUrl, showPreview, prefillWords, onFinish, onClose, bodyMaxHeight }: Props) {
+export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, initialStep, saving, niche, accountName, accountLogoUrl, showPreview, prefillWords, onFinish, onClose, bodyMaxHeight }: Props) {
   const { t, i18n } = useTranslation("communicationProfile");
   const [step, setStep] = useState(initialStep ?? 0);
   const [a, setA] = useState<ProfileAnswers>(initial ?? { ...EMPTY_ANSWERS });
@@ -532,6 +534,9 @@ export function ProfileWizard({ initial, initialFacts, initialGrids, initialStep
         {def.kind === "style" && renderStyle(def.key as StyleField)}
         {def.kind === "fact" && renderFact(def.key)}
         {def.kind === "qagrid" && renderGrid(def.key)}
+        {def.kind === "custom" && def.key === "meetingType" && accountId && (
+          <MeetingTypeCard accountId={accountId} />
+        )}
       </div>
 
       {/* Nav */}
