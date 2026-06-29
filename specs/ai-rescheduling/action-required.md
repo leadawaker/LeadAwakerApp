@@ -18,8 +18,12 @@ Manual steps that must be completed by a human.
 
 ## After Implementation
 
-- [ ] **Verify no double-billing** — book a lead, reschedule twice; confirm the lead's billable
-      booking count stays at 1 and the booking section shows the latest date + reschedule count = 2.
+- [ ] **Decide the durable billable signal** — confirm whether to reuse `booking_confirmed_at` or add
+      a `billable_booking` boolean. Billing must NOT key off live `Conversion_Status = 'Booked'`
+      alone, or a cancellation erases the charge.
+- [ ] **Verify billing across the full lifecycle** — book → reschedule twice → cancel; confirm the
+      billable count for that lead stays exactly 1 (rebooks don't add, cancel doesn't remove) and the
+      booking section shows reschedule count = 2.
 - [ ] **Verify the one-way warning** — confirm the inline "don't edit your calendar directly" copy is
       visible on the reschedule action.
 - [ ] **Test AI re-engage end to end** — trigger "Let AI rebook", confirm the lead receives a

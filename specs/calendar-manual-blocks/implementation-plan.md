@@ -98,6 +98,28 @@ result overrides for that date: [09:00, 12:00] and [14:00, 17:00]
 ```
 Use the same `setUTCHours` time-of-day convention as `timeRange()` in `_schedule.ts`.
 
+**Edge cases that MUST be handled (each is a real bug if skipped):**
+
+- **Timezone.** Block times are entered in the **account timezone**; the schedule's availability rows
+  use the `setUTCHours` wall-clock-as-UTC convention. Do the interval subtraction in the schedule
+  timezone, then emit the override rows with the same UTC-time-of-day convention as the recurring
+  rows. Mismatched handling lands blocks at the wrong wall-clock time. Mirror exactly how
+  `availabilityFromHours` expresses the working window so blocks and base hours share one convention.
+- **Multi-day / cross-midnight blocks.** A block spanning more than one date (or crossing midnight in
+  the account tz) must be split into one override-row set **per calendar date**. Never emit a single
+  override spanning two dates.
+- **No business hours set.** `availabilityFromHours` falls back to `DEFAULT_SCHEDULE` (Mon–Fri
+  09:00–17:00) when hours are missing. The block subtraction must subtract from that **same effective
+  window** (whatever `getAvailabilityFromSchedule` produced), not from an empty window — otherwise a
+  block on a no-hours account produces nonsense. Derive the per-weekday working window from the
+  resolved schedule, then subtract.
+- **Block fully outside / fully covering the working window.** A block entirely outside working hours
+  → no override needed for that date (leave the weekday default). A block covering the whole working
+  window → emit the single "unavailable" override (the full-day case).
+- **Block exactly equal to a working-window edge** (e.g. 09:00–12:00 on a 09:00–17:00 day) → one
+  remaining interval [12:00, 17:00]; ensure zero-length remainders are dropped, not emitted as
+  empty rows.
+
 **Fully-blocked date representation — VERIFY before coding:** confirm how Cal.com marks a date
 override as fully unavailable. In current Cal.com this is an `Availability` row with `date` set and a
 zero-length interval (`startTime === endTime`, both at 00:00). Check `getAvailabilityFromSchedule` /

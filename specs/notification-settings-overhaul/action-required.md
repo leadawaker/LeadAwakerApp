@@ -4,15 +4,15 @@ Manual steps that must be completed by a human.
 
 ## During Implementation
 
-- [ ] **Add the `email_enabled` column via a direct `pg` SQL script** — `npm run db:push` has no TTY
-      on the Pi. Run:
-      `ALTER TABLE "Notification_Preferences" ADD COLUMN IF NOT EXISTS email_enabled boolean NOT NULL DEFAULT true;`
-      with `node --env-file=.env`.
-- [ ] **Confirm SMTP env is configured** for `server/email.ts` (the notification emails reuse its
-      nodemailer transporter / `sendRawEmail`). Verify with `verifySmtp()` if unsure.
-- [ ] **Decide the canonical booking client-notifier** — Express `leads.ts` vs the Python webhook.
-      Both can fire `booking_confirmed`; pick ONE to notify the client to avoid duplicates (recommend
-      the Python webhook as the true Cal.diy booking source). Read `/home/gabriel/automations/CLAUDE.md` first.
+- [x] **Add the `email_enabled` column via a direct `pg` SQL script** — done. Both `email_enabled`
+      (Notification_Preferences) and `email_sent` (Notifications) columns added via `node --env-file=.env`.
+- [ ] **Confirm SMTP for BOTH senders** — Express `server/email.ts` (`sendRawEmail`, verify with
+      `verifySmtp()`) AND the Python engine's existing SMTP helper (reuse it for the Python email
+      channel; do not add a second transport). Read `/home/gabriel/automations/CLAUDE.md` first.
+- [ ] **Confirm the booking notifier is the Python webhook** (verified: real Cal.diy bookings update
+      the DB directly and create the `booking_confirmed` row in `booking_routes.py`, NOT via Express
+      `leads.ts`). The Express booking notification stays for manual CRM flips only — confirm it does
+      not double-fire for a webhook booking.
 
 ## After Implementation
 

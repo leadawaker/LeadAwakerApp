@@ -15,10 +15,10 @@ Role model: agency = role `Owner`/`Admin`; client = role `Viewer` (see `useSessi
 
 ### Tasks
 
-- [ ] Add `emailEnabled` boolean to `Notification_Preferences` ([shared/schema.ts:1094](shared/schema.ts#L1094)), default `true`
-- [ ] Create the column on the Pi via a direct `pg` SQL script (`db:push` has no TTY): `ALTER TABLE "Notification_Preferences" ADD COLUMN IF NOT EXISTS email_enabled boolean NOT NULL DEFAULT true;`
-- [ ] Extend `typeOverrides` channel keys to include `email` (it's a free-form JSON map; no schema change, just handle the `email` key in code + defaults)
-- [ ] Update `getDefaultNotifPrefs()` and the `NotificationPreferences` type in
+- [x] Add `emailEnabled` boolean to `Notification_Preferences` ([shared/schema.ts:1094](shared/schema.ts#L1094)), default `true`
+- [x] Create the column on the Pi via a direct `pg` SQL script (`db:push` has no TTY): `ALTER TABLE "Notification_Preferences" ADD COLUMN IF NOT EXISTS email_enabled boolean NOT NULL DEFAULT true;`
+- [x] Extend `typeOverrides` channel keys to include `email` (it's a free-form JSON map; no schema change, just handle the `email` key in code + defaults)
+- [x] Update `getDefaultNotifPrefs()` and the `NotificationPreferences` type in
       [client/src/features/settings/types.ts](client/src/features/settings/types.ts) to include
       `email_enabled` and an `email` key in each type override default
 
@@ -30,51 +30,70 @@ Role model: agency = role `Owner`/`Admin`; client = role `Viewer` (see `useSessi
 
 ---
 
-## Phase 2: Dispatcher — send email channel
+## Phase 2: Email channel — add to BOTH dispatchers (Python is the booking path)
+
+The email channel must exist in the **Python** `notification_service.py` (that is what fires on real
+bookings) and, for parity, in the Express dispatcher (for the flows it owns).
 
 ### Tasks
 
-- [ ] In [server/notification-dispatcher.ts](server/notification-dispatcher.ts), add a `sendEmailNotification(...)` path
-  - [ ] Resolve the recipient's email from the app user row (`storage.getAppUsers()` / a get-by-id);
-        skip if no email
-  - [ ] Send via `sendRawEmail({ to, subject, text, html })` from [server/email.ts](server/email.ts)
-  - [ ] Subject = notif title; body = notif body + a link into LeadAwaker (`WEBAPP_URL + notif.link`)
-- [ ] Add `"email"` to the `isChannelEnabled()` channel union and wire the global `emailEnabled` fallback
-- [ ] In `dispatchExternal()`, call the email path when `isChannelEnabled(prefs, "email", type)`
+- [x] **Python** `/home/gabriel/automations/tools/notification_service.py` [complex]
+  - [x] Add `"email"` to each row of `DEFAULT_TYPE_CHANNELS` (at minimum `booking_confirmed` and
+        `campaign_finished` default `email: True`; others `False` or as desired)
+  - [x] In `notify()`, after the web_push block, add an email block gated by
+        `type_cfg.get("email")` AND `prefs.get("email_enabled", True)`
+  - [x] Add `_send_email_task(user_id, title, body, link, notif_id)`: look up the user's email,
+        send via the engine's existing email sender (the same SMTP relay used for openers/fallback —
+        confirm the helper in `tools/`, e.g. `send_email()`), set `email_sent` flag, log the step
+  - [x] Ensure `seed_default_preferences` / the prefs row includes `email_enabled` (Phase 1 column)
+- [x] **Express** [server/notification-dispatcher.ts](server/notification-dispatcher.ts) (parity for
+      non-booking flows)
+  - [x] Add a `sendEmailNotification(...)` path: resolve the recipient email from the app user row;
+        send via `sendRawEmail({ to, subject, text, html })` from [server/email.ts](server/email.ts)
+  - [x] Extend `isChannelEnabled()` channel union to `"telegram" | "web_push" | "email"` and add
+        `if (channel === "email") return prefs.emailEnabled;`
+  - [x] In `dispatchExternal()`, call the email path when `isChannelEnabled(prefs, "email", type)`
 
 ### Technical Details
 
-- `isChannelEnabled` already checks per-type override then global toggle — extend the `channel` type
-  to `"telegram" | "web_push" | "email"` and add `if (channel === "email") return prefs.emailEnabled;`
-- Keep email fire-and-forget + try/catch like the existing channels; never let an email failure break
-  the in-app notification.
-- Reuse the `sendRawEmail` transporter; a simple branded HTML wrapper (logo + title + body + button)
-  can mirror the invite email builder already in `server/email.ts`.
+- Both dispatchers read the SAME `Notification_Preferences` table, so the `email_enabled` column +
+  the `email` key inside `type_overrides` are honored by both. Keep the merge order identical
+  (type default ← user override ← global toggle).
+- Keep email fire-and-forget + try/catch in both; an email failure must never break the in-app
+  notification.
+- Express side: reuse the `sendRawEmail` transporter; a simple branded HTML wrapper can mirror the
+  invite email builder already in `server/email.ts`. Python side: reuse the engine's existing SMTP
+  send helper (do NOT spin up a second transport).
 
 ---
 
-## Phase 3: Booking scope fix — notify the client too
+## Phase 3: Booking recipients — notify all client users + the agency (in Python)
+
+The real booking notification is created in the **Python webhook**, which today notifies only the
+account owner (`owner_email` match). Broaden the recipient set there.
 
 ### Tasks
 
-- [ ] In [server/routes/leads.ts:201-222](server/routes/leads.ts#L201), in addition to agency users,
-      dispatch `booking_confirmed` to the account's **client user(s)** (the `Viewer`(s) whose
-      `accountsId === lead.accountsId`)
-  - [ ] Fetch those users via `storage.getAppUsers()` filtered by `accountsId === lead.accountsId`
-        (and not already in the agency set), dispatch the same notification with their `userId`
-- [ ] Mirror the same fix in the second booking creator at [server/routes/leads.ts:992](server/routes/leads.ts#L992)
-- [ ] Mirror in the Python webhook path `/home/gabriel/automations/src/webhooks/booking_routes.py` (~line 639, `notification_type="booking_confirmed"`) so the client is included there too [complex]
-  - [ ] Read `/home/gabriel/automations/CLAUDE.md` first; confirm which path actually fires on a real Cal.diy booking to avoid double-notifying
+- [x] In `/home/gabriel/automations/src/webhooks/booking_routes.py` (~line 623-645, the
+      `booking_confirmed` block), replace the single `owner_email` lookup with a recipient list [complex]
+  - [x] Resolve **all `Viewer` users on the account** (`Users.accounts_id = account_id`, role
+        `Viewer`) — covers owner and non-owner client users
+  - [x] Resolve the **agency users** (`accounts_id = 1`, roles `Owner`/`Admin`) so you also get a toast
+  - [x] Call `notify(...)` once per distinct recipient `user_id` (dedupe the list first)
+- [x] Keep the Express `leads.ts:201` + `:992` booking notifications for **manual CRM flips only**;
+      ensure they do NOT also fire for a webhook-driven booking (guard already exists:
+      `newStatus === "Booked" && oldStatus !== "Booked"` — confirm the webhook updates the DB directly
+      and does not re-enter the Express PATCH path, so there is no double-fire). Document the finding.
 
 ### Technical Details
 
-- The toast/SSE already targets the recipient via `broadcastToUser(notif.userId, ...)`
-  ([notification-dispatcher.ts:147](server/notification-dispatcher.ts#L147)) — once a notification row
-  exists with the client's `userId`, the client gets the in-app toast automatically. No SSE change.
-- Guard against double-notify: if the Express path and the Python webhook can both fire for one
-  booking, pick ONE as the canonical client-notifier (recommend the Python webhook, since it's the
-  true Cal.diy booking source; the Express `leads.ts` path fires on manual status flips). Document
-  the decision in the spec when implementing.
+- Recipients persist a `Notifications` row each (via `insert_notification` inside `notify`). The
+  frontend then surfaces each recipient's row on its next `/api/notifications` refetch — no SSE-bus
+  work needed.
+- Role values: agency = `Owner`/`Admin`; client = `Viewer` (mirror `useSession.ts:60`).
+- Dedupe so a user who is somehow both owner and in another set is notified once.
+- Per-recipient channels still respect each user's prefs inside `notify()` (so an agency user who
+  turned booking emails off won't get the email, etc.).
 
 ---
 
@@ -82,19 +101,19 @@ Role model: agency = role `Owner`/`Admin`; client = role `Viewer` (see `useSessi
 
 ### Tasks
 
-- [ ] In [client/src/features/settings/components/NotificationsSection.tsx](client/src/features/settings/components/NotificationsSection.tsx),
+- [x] In [client/src/features/settings/components/NotificationsSection.tsx](client/src/features/settings/components/NotificationsSection.tsx),
       derive `isAgency` from the session role (`Owner`/`Admin`) vs client (`Viewer`)
-- [ ] **Remove the standalone Browser Push card (Section B) for everyone**; instead, when a user
+- [x] **Remove the standalone Browser Push card (Section B) for everyone**; instead, when a user
       toggles a per-type push column on and is not yet push-subscribed, run the existing
       `handleEnablePush()` flow inline (keep the function, drop the dedicated card UI)
-- [ ] For clients (`Viewer`):
-  - [ ] Filter `NOTIF_TYPE_KEYS` to `["booking_confirmed", "campaign_finished"]`
-  - [ ] Hide the Telegram section (Section A) and the Telegram column in the per-type grid
-  - [ ] Per-type columns = **Email + Browser push**
-- [ ] For agency (`Owner`/`Admin`): keep all 8 types; columns = **Telegram + Web push + Email**
+- [x] For clients (`Viewer`):
+  - [x] Filter `NOTIF_TYPE_KEYS` to `["booking_confirmed", "campaign_finished"]`
+  - [x] Hide the Telegram section (Section A) and the Telegram column in the per-type grid
+  - [x] Per-type columns = **Email + Browser push**
+- [x] For agency (`Owner`/`Admin`): keep all 8 types; columns = **Telegram + Web push + Email**
       (add the new Email column for everyone)
-- [ ] Add the **Email** column header + per-row toggle wired to the `email` override key
-- [ ] i18n: add email-channel + any new strings to `client/src/locales/{en,nl,pt}/settings.json`
+- [x] Add the **Email** column header + per-row toggle wired to the `email` override key
+- [x] i18n: add email-channel + any new strings to `client/src/locales/{en,nl,pt}/settings.json`
 
 ### Technical Details
 

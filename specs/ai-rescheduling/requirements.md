@@ -17,14 +17,32 @@ lead, the CRM, and the calendar in sync, and neither of which double-charges the
    link. Fed the full conversation history + a structured reason. Reuses the existing re-engagement
    machinery. [[project_contact_later_reengagement]]
 
-## Billing rule (hard requirement)
+## Billing rule (hard requirement) — verified against the counting query
 
-A rescheduled/rebooked call **must NOT count as a second billable booking.** The original
-`BOOKING_CREATED` is the one billable event per lead. Reschedules fire `BOOKING_RESCHEDULED` and must
-update the booking in place (`booked_call_date`, `previous_booked_call_date`, `re_scheduled_count++`)
-without incrementing any invoice/metrics booking counter. The client charging model intentionally
-charges for the booking regardless of whether the call ultimately happens, so the client has the
-incentive to rebook rather than cancel, and a cancel+rebook of the same lead is still one booking.
+**`billable_booking` is the per-booking ledger.** Stamped `TRUE` on the first `BOOKING_CREATED` for
+a lead, never cleared — not on reschedule, not on cancellation. One stamp per lead means rebooks
+never produce a second charge. The billing query is `SELECT leads WHERE billable_booking = TRUE` (not
+the live analytics metric).
+
+The analytics metric (`COUNT(*) FILTER (WHERE "Conversion_Status" = 'Booked')`) is kept for
+dashboards, but it shrinks when a lead's status leaves `Booked` — never bill off it.
+
+**Cancellation billing rule:**
+
+| Who cancels | Pipeline status | `billable_booking` |
+|---|---|---|
+| **Lead cancels** | → `Cancelled` (genuine cancellation) | preserved — the call happened, charge stands |
+| **Client reschedules / AI rebooks** | unchanged (it's a reschedule, not a cancel) | unchanged — no second charge |
+
+The trap: Cal.com's reschedule flow auto-cancels the old booking, firing `BOOKING_CANCELLED` for the
+old UID. That event looks identical to a lead genuinely cancelling. If both are handled the same way,
+a client moving a call wrongly marks the lead `Cancelled`. The engine must distinguish them:
+
+- **Reschedule-driven auto-cancel:** `cancelled_uid != lead.calcom_booking_uid` → skip all state changes
+- **Genuine cancellation:** `cancelled_uid == lead.calcom_booking_uid` → update pipeline status, preserve `billable_booking`
+
+The original `BOOKING_CREATED` is the one billable event per lead; reschedules update in place; a
+cancellation changes pipeline status but never touches the billing stamp.
 
 ## The one-way calendar gotcha (must be enforced in copy)
 
@@ -46,12 +64,14 @@ told. The UI must steer clients to the Reschedule button and warn against editin
 - [ ] "Let AI rebook" (and, optionally, an auto-trigger on `BOOKING_CANCELLED`) starts a rescheduling automation for that lead
 - [ ] The automation is fed the full conversation + a structured `reschedule_reason` (`client_requested` / `no_show` / `lead_requested` / `cancelled`)
 - [ ] The AI re-opens the WhatsApp thread with a context-aware message and drives the lead back to the booking link to pick a new time
-- [ ] When the lead rebooks, the existing booking webhook handles it as a reschedule (in place, no double-bill)
+- [ ] When the lead rebooks via the link, the booking webhook's auto-cancel-previous path supersedes the old slot; the AI flow itself sets `re_scheduled_count` + `previous_booked_call_date` (the link path does NOT increment them — only the native reschedule handler does)
 - [ ] All automation steps log to `Automation_Logs` via the standard logger
 
 ### Cancellation handling
-- [ ] On `BOOKING_CANCELLED`, the lead's status/booking fields are updated appropriately (not left showing a stale booked call)
-- [ ] Optionally (configurable), a cancellation auto-triggers the AI re-engage rescheduling flow
+- [ ] **Lead cancels (genuine):** pipeline status → `Cancelled`, booking display fields cleared — but `billable_booking` and `booking_confirmed_at_` are preserved; the call was booked and stays billed
+- [ ] **Client reschedules / AI rebooks (auto-cancel of old UID):** the auto-cancel `BOOKING_CANCELLED` that Cal.com fires for the previous slot is silently skipped — no status change, no billing change; it is not a cancellation
+- [ ] The engine distinguishes the two by comparing `cancelled_uid` against `lead.calcom_booking_uid`: mismatch = reschedule auto-cancel (skip); match = genuine cancel (update status, preserve billing stamp)
+- [ ] Optionally (configurable), a genuine cancellation auto-triggers the AI re-engage flow
 
 ## Related Features / Dependencies
 

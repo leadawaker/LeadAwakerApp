@@ -12,11 +12,20 @@ no OAuth: the client provides an Apple ID + an app-specific password, which we h
 existing `apple_calendar` / `caldav_calendar` integration so it can **read free/busy** and block
 those periods on the booking page.
 
-**Read-only by design.** We connect it as a busy-time source only (`SelectedCalendar`), NOT as a
-write destination (`DestinationCalendar`). Bookings are still created inside Cal.diy and the
-attendee + client are emailed, but the event is **not pushed back** into the Apple calendar. This is
-the explicitly chosen scope: write-back is a trivial future add (CalDAV supports it) but is not a
-priority now.
+**Read-only by default — but reconsider write-back for Apple specifically.** The base scope connects
+it as a busy-time source only (`SelectedCalendar`), NOT as a write destination
+(`DestinationCalendar`): Cal.diy reads free/busy but does not push the booked event back into the
+Apple calendar.
+
+⚠️ **Important downside of read-only for Apple users:** unlike Google/Outlook (which DO get the booked
+event written into their calendar in the existing flow), an Apple-only client connected read-only
+**never sees their booked calls in their own calendar at all** — only on the booking page and in
+LeadAwaker. For a calendar-only person that defeats much of the point of connecting. Since CalDAV
+fully supports write-back, **the recommendation is to make write-back IN SCOPE for Apple** (add a
+`DestinationCalendar` row pointing at the same calendar) so Apple clients see their bookings where
+they expect. Keep it behind the same connect action; no extra user step. If Gabriel still prefers
+read-only first, ship read-only but surface the "bookings won't appear in your Apple calendar"
+caveat in the connect UI so it's a conscious choice. See Phase 4.
 
 ## Acceptance Criteria
 
@@ -25,7 +34,7 @@ priority now.
 - [ ] On submit, LeadAwaker writes a `Credential` (`type: "apple_calendar"`, `appId: "apple-calendar"`) + a `SelectedCalendar` row into the Cal.diy DB for that account's Cal.diy user, with the key encrypted using Cal.diy's `CALENDSO_ENCRYPTION_KEY`
 - [ ] Cal.diy validates the credentials (lists calendars) before saving; bad credentials surface a clear error and nothing is persisted
 - [ ] After connecting, real busy events on the client's Apple calendar remove the corresponding slots from the booking page
-- [ ] No `DestinationCalendar` row is created (no write-back); bookings still land in Cal.diy + email + LeadAwaker webhook as today
+- [ ] Write-back decision is implemented per the chosen option: **recommended** = also create a `DestinationCalendar` (Apple client sees their bookings in their calendar); **fallback** = no `DestinationCalendar` + a clear "bookings won't appear in your Apple calendar" caveat in the connect UI. Either way bookings still land in Cal.diy + email + LeadAwaker webhook as today
 - [ ] Generic CalDAV (custom server URL) is supported as an advanced sub-option (same flow, `type: "caldav_calendar"`, user supplies the server URL)
 - [ ] Reconnecting refreshes the stored credential (idempotent, no duplicate rows)
 

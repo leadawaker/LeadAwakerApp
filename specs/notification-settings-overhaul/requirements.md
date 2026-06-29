@@ -13,16 +13,40 @@ is overwhelming and largely irrelevant:
 - Clients won't set up Telegram.
 - The standalone "enable browser push" card is redundant: if a per-type push toggle is on, we should
   just subscribe.
-- The genuinely missing channel is **email** — there is currently NO email notification path at all
-  ([notification-dispatcher.ts](server/notification-dispatcher.ts) only does web push + Telegram).
-  Email to the user's LeadAwaker account address is what most clients will actually use.
+- The genuinely missing channel is **email** — there is currently NO email notification path at all,
+  in EITHER notification system (see below). Email to the user's LeadAwaker account address is what
+  most clients will actually use.
 
-There is also a **scope bug**: the `booking_confirmed` notification at
-[leads.ts:205](server/routes/leads.ts#L205) is dispatched only to agency users (`accountsId === 1`),
-so the client who owns the account never receives a booking notification or in-app toast at all. The
-SSE/toast plumbing already targets the recipient correctly via `broadcastToUser`
-([notification-dispatcher.ts:147](server/notification-dispatcher.ts#L147)) — the recipient list just
-never includes the client.
+### Two notification systems (critical context — verified in code)
+
+There are **two independent notification dispatchers**, and real bookings flow through the Python one:
+
+1. **Express / TypeScript** — [server/notification-dispatcher.ts](server/notification-dispatcher.ts):
+   web push + Telegram + SSE via `broadcastToUser`. Called from `server/routes/*` (tasks, ai-agents,
+   conversations) and from [leads.ts:201](server/routes/leads.ts#L201) — but `leads.ts` only fires on
+   a **manual CRM status flip**, and only to agency users (`accountsId === 1`). It does NOT fire on a
+   real Cal.diy booking.
+2. **Python** — `/home/gabriel/automations/tools/notification_service.py` (`notify()`): its own
+   `DEFAULT_TYPE_CHANNELS`, its own Telegram + web push senders, its own in-process SSE bus, and DB
+   persistence via `insert_notification`. **This is what fires on a real Cal.diy booking**
+   (`booking_routes.py` ~line 639), and today it notifies only the **account owner** (looked up by
+   `u.email = a.owner_email`).
+
+**What this means for the gaps:**
+- The account **owner already receives** in-app + push on real bookings (via the Python path). The
+  premise is not "clients get nothing" — it's narrower: (a) **no email channel exists anywhere**,
+  (b) only the *owner* user is notified, so **non-owner client users on the account get nothing**,
+  and (c) the **agency may not get notified on a real booking at all** (the Python path notifies only
+  the owner; the Express agency path only fires on manual flips).
+- The frontend ([useNotificationStream.ts](client/src/hooks/useNotificationStream.ts)) does NOT
+  consume a notification SSE event directly. It listens to `/api/interactions/stream` as a
+  "something changed" ping and refetches `/api/notifications`. So **DB persistence with the correct
+  recipient `user_id`(s) is what makes a toast appear** — not which SSE bus fired. The fix is
+  therefore "persist a row for each correct recipient," which both systems already do via the shared
+  `Notifications` table.
+- Because real bookings run through Python, the **email channel and the recipient/role logic must be
+  implemented in the Python `notification_service.py`** (the Express dispatcher gets the same email
+  channel for parity on the flows it owns, but it is NOT the booking path).
 
 ## Acceptance Criteria
 
@@ -40,20 +64,28 @@ never includes the client.
 - [ ] For clients, the per-type columns become **Email + Browser push** (Telegram dropped)
 - [ ] Booking + campaign-finished emails are branded/clean (subject + short body + link into LeadAwaker)
 
-### Booking toast / scope fix
-- [ ] When a lead flips to Booked, the account's **client user(s)** also receive the
-      `booking_confirmed` notification (in-app toast + their enabled channels), not only agency users
-- [ ] Verify the same for the Python webhook booking path
-      (`/home/gabriel/automations/src/webhooks/booking_routes.py` ~line 639) so both creators include the client
-- [ ] Existing agency notifications are unchanged
+### Booking recipients / scope fix
+- [ ] On a real booking, the Python path notifies **all relevant recipients**, not just the account
+      owner: every client (`Viewer`) user on the account AND the agency (so you get a toast too)
+- [ ] A non-owner client user on the account receives the booking notification (today only the
+      `owner_email` match is notified)
+- [ ] The agency receives a booking notification on a **real** Cal.diy booking (today the agency is
+      only notified on manual CRM flips via the Express path)
+- [ ] Avoid duplicates: the booking notification has ONE canonical creator (the Python webhook). The
+      Express `leads.ts` booking notification stays for manual flips only and must not double-fire for
+      a webhook-driven booking
+- [ ] Existing non-booking agency notifications are unchanged
 
 ## Related Features / Dependencies
 
-- Channels + dispatch logic: [server/notification-dispatcher.ts](server/notification-dispatcher.ts)
-- Prefs schema: `Notification_Preferences` table ([shared/schema.ts:1094](shared/schema.ts#L1094))
-- Type list: `NOTIF_TYPE_KEYS` ([client/src/features/settings/types.ts:33](client/src/features/settings/types.ts#L33))
-- Booking creators: [server/routes/leads.ts:201](server/routes/leads.ts#L201) and the Python webhook
-- Toast/SSE already works via `broadcastToUser`; no SSE change needed beyond fixing the recipient set
+- **Booking dispatch (the one that matters): Python `/home/gabriel/automations/tools/notification_service.py`**
+  (`notify()` + `DEFAULT_TYPE_CHANNELS`) and its caller `booking_routes.py` (~line 639)
+- Express dispatch (non-booking flows + manual flips): [server/notification-dispatcher.ts](server/notification-dispatcher.ts)
+- Prefs schema (shared by both): `Notification_Preferences` table ([shared/schema.ts:1094](shared/schema.ts#L1094)) — Python reads it via `seed_default_preferences`
+- Type list (UI): `NOTIF_TYPE_KEYS` ([client/src/features/settings/types.ts:33](client/src/features/settings/types.ts#L33))
+- Manual-flip booking creator (keep, narrow scope): [server/routes/leads.ts:201](server/routes/leads.ts#L201)
+- Toasts are driven by DB persistence + the frontend's `/api/notifications` refetch on an
+  `/api/interactions/stream` ping — no SSE-bus change needed, just correct recipient rows
 
 ## Out of Scope
 

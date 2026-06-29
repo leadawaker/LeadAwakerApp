@@ -14,8 +14,8 @@ Add two nullable columns to the Cal.diy `User` table via a raw SQL migration (Pr
 
 ### Tasks
 
-- [ ] Run SQL to add `brandLogoUrl` and `brandName` to `"User"` table
-- [ ] Update Cal.diy Prisma schema file to declare the new fields (keeps schema.prisma in sync; no migration needed since columns already exist)
+- [x] Run SQL to add `brandLogoUrl` and `brandName` to `"User"` table
+- [x] Update Cal.diy Prisma schema file to declare the new fields (keeps schema.prisma in sync; no migration needed since columns already exist)
 
 ### Technical Details
 
@@ -48,10 +48,10 @@ The email templates receive a `CalendarEvent` object. Add optional brand fields 
 
 ### Tasks
 
-- [ ] Add `brandLogoUrl?: string` and `brandName?: string` to the `CalendarEvent` interface [complex]
-  - [ ] Edit `/home/gabriel/caldiy/packages/types/Calendar.d.ts` — add fields to `CalendarEvent` interface (around line 197)
-  - [ ] Find where `CalendarEvent` is built from a booking (in `packages/features/bookings/lib/handleNewBooking/` or `EventManager.ts`) and populate the fields by looking up the organizer's User row's `brandLogoUrl`/`brandName`
-- [ ] Verify `formattedCalEvent` in `email-manager.ts` passes the new fields through (check `formatCalEvent` in `packages/lib/CalEventParser.ts`)
+- [x] Add `brandLogoUrl?: string` and `brandName?: string` to the `CalendarEvent` interface [complex]
+  - [x] Edit `/home/gabriel/caldiy/packages/types/Calendar.d.ts` — add fields to `CalendarEvent` interface (around line 197)
+  - [x] Find where `CalendarEvent` is built from a booking (in `packages/features/bookings/lib/handleNewBooking/` or `EventManager.ts`) and populate the fields by looking up the organizer's User row's `brandLogoUrl`/`brandName`
+- [x] Verify `formattedCalEvent` in `email-manager.ts` passes the new fields through (check `formatCalEvent` in `packages/lib/CalEventParser.ts`)
 
 ### Technical Details
 
@@ -82,19 +82,19 @@ Three files need changes:
 
 ### Tasks
 
-- [ ] Patch `EmailBodyLogo` to accept optional `logoUrl` and `altText` props [complex]
-  - [ ] Edit `/home/gabriel/caldiy/packages/emails/src/components/EmailBodyLogo.tsx`
-  - [ ] Change signature to `EmailBodyLogo({ logoUrl, altText }: { logoUrl?: string; altText?: string })`
-  - [ ] Use `logoUrl ?? \`${WEBAPP_URL}/emails/logo.png\`` as image src; use `altText ?? ""` as alt
-- [ ] Pass `calEvent.brandLogoUrl` from `BaseScheduledEmail` to `EmailBodyLogo`
-  - [ ] Edit `/home/gabriel/caldiy/packages/emails/src/templates/BaseScheduledEmail.tsx`
-  - [ ] Locate where `<EmailBodyLogo />` is rendered (or where it's imported via `BaseEmailHtml`) and pass props
-  - [ ] May need to thread through `BaseEmailHtml` props if `EmailBodyLogo` is rendered inside it — trace the call chain first
-- [ ] Set FROM name per client in outgoing email
-  - [ ] Edit `/home/gabriel/caldiy/packages/emails/email-manager.ts`
-  - [ ] In `sendScheduledEmails()`, before calling `sendEmail(...)`, read `calEvent.brandName`
-  - [ ] Pass it as the mailer `from` display name: `"${calEvent.brandName} Booking" <noreply@leadawaker.com>`
-  - [ ] Find where nodemailer `from` is set — likely in `/home/gabriel/caldiy/packages/emails/lib/sendEmail.ts` or similar; make it accept an optional override
+- [x] Patch `EmailBodyLogo` to accept optional `logoUrl` and `altText` props [complex]
+  - [x] Edit `/home/gabriel/caldiy/packages/emails/src/components/EmailBodyLogo.tsx`
+  - [x] Change signature to `EmailBodyLogo({ logoUrl, altText }: { logoUrl?: string; altText?: string })`
+  - [x] Use `logoUrl ?? \`${WEBAPP_URL}/emails/logo.png\`` as image src; use `altText ?? ""` as alt
+- [x] Pass `calEvent.brandLogoUrl` from `BaseScheduledEmail` to `EmailBodyLogo`
+  - [x] Edit `/home/gabriel/caldiy/packages/emails/src/templates/BaseScheduledEmail.tsx`
+  - [x] Locate where `<EmailBodyLogo />` is rendered (or where it's imported via `BaseEmailHtml`) and pass props
+  - [x] May need to thread through `BaseEmailHtml` props if `EmailBodyLogo` is rendered inside it — trace the call chain first
+- [x] Set FROM name per client in outgoing email
+  - [x] Edit `/home/gabriel/caldiy/packages/emails/email-manager.ts`
+  - [x] In `sendScheduledEmails()`, before calling `sendEmail(...)`, read `calEvent.brandName`
+  - [x] Pass it as the mailer `from` display name: `"${calEvent.brandName} Booking" <noreply@leadawaker.com>`
+  - [x] Find where nodemailer `from` is set — likely in `/home/gabriel/caldiy/packages/emails/lib/sendEmail.ts` or similar; make it accept an optional override
 
 ### Technical Details
 
@@ -125,10 +125,12 @@ export const sendEmail = async (cb: () => GeneratedEmailType, fromName?: string)
 
 Cal.diy already has a `hostEmailDisabled` parameter in `sendScheduledEmails()` and an `eventTypeDisableHostEmail(eventTypeMetadata)` check. Use the EventType `metadata` JSON column to set `disableStandardEmails.confirmation.host = true` so the organizer never receives a per-booking email.
 
+> **Scope note (avoid over-suppressing):** this suppresses ONLY Cal.diy's own organizer confirmation email. It is independent of the LeadAwaker Python booking webhook, which sends its own WhatsApp/confirmation messages and (after the notification overhaul) the in-app/email booking notification — those are NOT affected. That's the intent: the client gets the clean LeadAwaker booking notification instead of a redundant Cal.diy email. Keep `confirmation.attendee = false` so the lead still receives their branded confirmation email.
+
 ### Tasks
 
-- [ ] Update `provision-leadawaker-user.ts` to set `metadata` on the EventType at creation time
-- [ ] For existing sandbox EventType (id=6), patch via SQL
+- [x] Update `provision-leadawaker-user.ts` to set `metadata` on the EventType at creation time
+- [x] For existing sandbox EventType (id=6), patch via SQL
 
 ### Technical Details
 
@@ -171,9 +173,9 @@ Wire the LeadAwaker account's `logoUrl` and `name` into the Cal.diy User at prov
 
 ### Tasks
 
-- [ ] Update `provision-leadawaker-user.ts` to write `brandLogoUrl` and `brandName` on User create/update
-- [ ] Update `inject-calendar-credential.sh` / relevant script to also handle existing users missing the brand fields (upsert approach)
-- [ ] Rebuild Cal.diy and restart pm2
+- [x] Update `provision-leadawaker-user.ts` to write `brandLogoUrl` and `brandName` on User create/update
+- [x] Update `inject-calendar-credential.sh` / relevant script to also handle existing users missing the brand fields (upsert approach)
+- [x] Rebuild Cal.diy and restart pm2
 
 ### Technical Details
 
