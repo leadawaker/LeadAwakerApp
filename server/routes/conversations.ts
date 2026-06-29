@@ -454,11 +454,12 @@ export function registerConversationsRoutes(app: Express): void {
     if (req.user!.accountsId !== 1 && userId !== req.user!.id!) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    const { telegram_enabled, telegram_chat_id, push_enabled, type_overrides } = req.body;
+    const { telegram_enabled, telegram_chat_id, push_enabled, email_enabled, type_overrides } = req.body;
     const row = await storage.upsertNotificationPreferences(userId, accountId, {
       telegramEnabled: telegram_enabled,
       telegramChatId: telegram_chat_id,
       webPushEnabled: push_enabled,
+      emailEnabled: email_enabled,
       typeOverrides: type_overrides,
     });
     res.json(row);
@@ -542,11 +543,12 @@ export function registerConversationsRoutes(app: Express): void {
       return res.status(403).json({ message: "Forbidden" });
     }
     const prefs = await storage.getNotificationPreferences(userId, accountId);
-    if (!prefs) return res.json({ telegram_enabled: true, telegram_chat_id: null, push_enabled: true, type_overrides: {} });
+    if (!prefs) return res.json({ telegram_enabled: true, telegram_chat_id: null, push_enabled: true, email_enabled: true, type_overrides: {} });
     res.json({
       telegram_enabled: prefs.telegramEnabled,
       telegram_chat_id: prefs.telegramChatId,
       push_enabled: prefs.webPushEnabled,
+      email_enabled: prefs.emailEnabled,
       type_overrides: prefs.typeOverrides ?? {},
     });
   }));
