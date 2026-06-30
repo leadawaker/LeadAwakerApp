@@ -322,6 +322,9 @@
     "inquiryDate": "Aanvraagdatum",
     "firstTouch": "Eerste contact",
     "launchCampaign": "Campagne starten",
+    "launchName": "Naam demolead",
+    "launchNamePlaceholder": "Naam lead (optioneel)",
+    "launchNameHint": "Stelt de voornaam van de demolead in bij het starten. Laat leeg om de huidige naam te behouden.",
     "sections": {
       "business": "Zakelijk",
       "businessTitle": "Zakelijke Instellingen",

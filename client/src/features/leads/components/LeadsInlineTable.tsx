@@ -1054,7 +1054,7 @@ export function LeadsInlineTable({
                           col.key === "phone"   ? { fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--ink-soft)" }
                           : col.key === "email" ? { fontSize: 12, color: "var(--mute)" }
                           : col.key === "notes" ? { fontSize: 12, color: "var(--ink-soft)" }
-                          : col.key === "account" || col.key === "company" || col.key === "campaign"
+                          : col.key === "account" || col.key === "company"
                                                 ? { fontSize: 12, color: "var(--ink-soft)" }
                           :                       { fontSize: 12, color: "var(--mute)" };
 

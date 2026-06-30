@@ -62,7 +62,7 @@ export function useLeadsListControls(onRefresh?: () => void) {
   }, [selectedLeadIds, onRefresh]);
 
   // ── Chats peek toggle (Feature A) + bulk UI flags ───────────────────────
-  const [peekOn, setPeekOn] = usePersistedState("leads-list-peek-on", false);
+  const [peekOn, setPeekOn] = usePersistedState("leads-list-peek-on", true);
   const [bulkStageOpen, setBulkStageOpen] = useState(false);
   const [bulkCampaignOpen, setBulkCampaignOpen] = useState(false);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);

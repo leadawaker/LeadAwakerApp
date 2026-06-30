@@ -30,7 +30,7 @@ const i18n = createInstance();
 i18n
   .use(LanguageDetector)
   .init({
-    resources,
+    resources: resources as any,
     fallbackLng: "en",
     defaultNS: "common",
     ns: [
@@ -67,7 +67,7 @@ if (import.meta.hot) {
       i18n.addResourceBundle(
         lang,
         ns,
-        (mod as { default: unknown }).default,
+        (mod as unknown as { default: unknown }).default,
         true,  // deep merge
         true   // overwrite existing keys
       );

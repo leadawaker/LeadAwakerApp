@@ -101,13 +101,13 @@ export function LeadsListPanel({
   isHidden: boolean;
   isCompact: boolean;
   isNarrow: boolean;
-  scrollContainerRef: RefObject<HTMLDivElement>;
+  scrollContainerRef: RefObject<HTMLDivElement | null>;
   loading?: boolean;
   flatItems: any[];
   selectedLead: any;
   onSelectLead: (lead: any) => void;
   onMobileViewChange?: (v: "list" | "detail") => void;
-  handleCompactHover: (lead: any, el: HTMLElement | null) => void;
+  handleCompactHover: (lead: Record<string, any>, rect: DOMRect) => void;
   handleCompactHoverEnd: () => void;
   isFilterActive: boolean;
   filterStatus: string[];

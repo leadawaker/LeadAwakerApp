@@ -102,7 +102,7 @@ export function LeadScoreSection({
               {/* Signal chips */}
               {scoreBreakdown && !scoreLoading && scoreBreakdown.signals.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 animate-in fade-in duration-200">
-                  {scoreBreakdown.signals.map((s) => (
+                  {scoreBreakdown.signals.map((s: string) => (
                     <span key={s} className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
                       {s}
                     </span>

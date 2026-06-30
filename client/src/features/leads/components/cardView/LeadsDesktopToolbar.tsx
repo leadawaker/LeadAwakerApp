@@ -15,7 +15,6 @@ import {
   Trash2,
   Pencil,
   Megaphone,
-  Download,
   PanelLeftClose,
   PanelLeft,
   MoreHorizontal,
@@ -241,24 +240,6 @@ export function LeadsDesktopToolbar({
         </>
       )}
 
-      {/* Chats peek toggle (Feature A) — reveals last message under every lead */}
-      {selectedLeadIds.size === 0 && (
-        <button
-          onClick={() => {
-            const newPeekState = !peekOn;
-            setPeekOn(() => newPeekState);
-            if (newPeekState && sortBy !== "latest_message") {
-              onSortByChange("latest_message");
-            }
-          }}
-          className={`la-btn ${peekOn ? "la-btn--wine" : "la-btn--soft"}`}
-          title={t("toolbar.chatsPeek", "Show last message for every lead")}
-          style={{ fontSize: 11 }}
-        >
-          <MessageSquare size={13} />
-          {t("toolbar.chats", "Chats")}
-        </button>
-      )}
       {/* Minimize / expand the list pane (toggles compact rail) */}
       <button
         onClick={() => setLeftPanelState(isCompact ? "full" : "compact")}
@@ -286,6 +267,21 @@ export function LeadsDesktopToolbar({
             <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("toggle-gradient-tester"))}>
               <Palette className="h-4 w-4 mr-2" />
               {t("detail.gradientTester", "Gradient tester")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                const newPeekState = !peekOn;
+                setPeekOn(() => newPeekState);
+                if (newPeekState && sortBy !== "latest_message") {
+                  onSortByChange("latest_message");
+                }
+              }}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              {peekOn ? t("toolbar.hideChats", "Hide chats") : t("toolbar.showChats", "Show chats")}
+              {peekOn && <Check className="h-3.5 w-3.5 ml-auto" />}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -482,11 +478,6 @@ export function LeadsDesktopToolbar({
       </DropdownMenu>
         </>
       )}
-
-      {/* Export filtered leads to CSV */}
-      <button onClick={onExport} className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.exportCsv", "Export to CSV")}>
-        <Download className="h-4 w-4 shrink-0" />
-      </button>
 
       {/* +Add */}
       {onCreateLead && (

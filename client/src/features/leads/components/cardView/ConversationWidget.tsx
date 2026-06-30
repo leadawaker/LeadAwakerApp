@@ -336,6 +336,17 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
       mergedTokens = merged;
     }
 
+    // Deduplicate status-event chips — a /start restart re-adds Booked/Qualified
+    // events, so keep only the first occurrence of each unique status value.
+    const seenStatuses = new Set<string>();
+    mergedTokens = mergedTokens.filter((tok) => {
+      if (tok.kind === "status-event") {
+        if (seenStatuses.has(tok.statusName)) return false;
+        seenStatuses.add(tok.statusName);
+      }
+      return true;
+    });
+
     // Second pass: collect same-sender runs and wrap them
     const items: React.ReactNode[] = [];
     let ti = 0;

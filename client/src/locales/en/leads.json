@@ -54,7 +54,9 @@
     "switchToKanban": "Switch to kanban view",
     "upcomingCalls": "Upcoming calls",
     "more": "More",
-    "exportPdf": "Export PDF"
+    "exportPdf": "Export PDF",
+    "showChats": "Show chats",
+    "hideChats": "Hide chats"
   },
   "sort": {
     "sortBy": "Sort by",
@@ -72,7 +74,9 @@
     "nameAZ": "Name A → Z",
     "nameZA": "Name Z → A",
     "scoreDown": "Score ↓",
-    "scoreUp": "Score ↑"
+    "scoreUp": "Score ↑",
+    "activity": "Last activity",
+    "created": "Created date"
   },
   "group": {
     "status": "Status",
@@ -80,7 +84,10 @@
     "account": "Account",
     "none": "None",
     "noCampaign": "No Campaign",
-    "untagged": "Untagged"
+    "untagged": "Untagged",
+    "service": "Service",
+    "source": "Source",
+    "tag": "Tag"
   },
   "filters": {
     "title": "Lead Filters",
@@ -105,7 +112,10 @@
     "hasPhone": "Has Phone",
     "hasEmail": "Has Email",
     "allAccounts": "All Accounts",
-    "moveTo": "Move to"
+    "moveTo": "Move to",
+    "attributes": "Attributes",
+    "minScore": "Min score",
+    "anyScore": "Any"
   },
   "fold": {
     "foldColumns": "Fold columns",
@@ -309,7 +319,9 @@
       "aiSentiment": "Sentiment",
       "aiMemory": "AI Memory",
       "aiSummary": "Summary",
-      "campaign": "Campaign"
+      "campaign": "Campaign",
+      "prompt": "Prompt",
+      "aiModel": "AI model"
     },
     "actions": {
       "triggerBump": "Trigger Bump",

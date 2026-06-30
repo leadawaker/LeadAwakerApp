@@ -51,7 +51,7 @@ export function registerAccountsRoutes(app: Express): void {
     const isAgency = user.role === "Owner" || user.role === "Admin" || user.accountsId === 1;
     if (!isAgency) {
       // Client users see only their own account
-      const account = await storage.getAccountById(user.accountsId);
+      const account = await storage.getAccountById(user.accountsId!);
       return res.json(account ? toDbKeysArray([account] as any, accounts) : []);
     }
     const pagination = getPagination(req);
@@ -80,7 +80,7 @@ export function registerAccountsRoutes(app: Express): void {
     const parsed = insertAccountsSchema.safeParse(fromDbKeys(req.body, accounts));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const account = await storage.createAccount(parsed.data);
-    provisionCaldiyForAccount(account.id);
+    provisionCaldiyForAccount(account.id!);
     res.status(201).json(toDbKeys(account as any, accounts));
   }));
 
@@ -91,11 +91,11 @@ export function registerAccountsRoutes(app: Express): void {
     if (!account) return res.status(404).json({ message: "Account not found" });
     // If working hours changed, re-sync the Cal.diy booking schedule (best-effort).
     if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data) {
-      void resyncCaldiySchedule(account.id);
+      void resyncCaldiySchedule(account.id!);
     }
     // If meeting type or calling number changed, re-provision so Cal.diy EventType.locations updates.
     if ("meetingType" in parsed.data || "callingNumber" in parsed.data) {
-      void provisionCaldiyForAccount(account.id);
+      void provisionCaldiyForAccount(account.id!);
     }
     res.json(toDbKeys(account as any, accounts));
   }));

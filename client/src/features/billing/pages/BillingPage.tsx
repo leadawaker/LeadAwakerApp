@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 type BillingTab = "invoices" | "contracts" | "expenses";
 type SortBy = "recent" | "oldest" | "amount_desc" | "amount_asc" | "due_asc" | "due_desc" | "name_asc" | "name_desc";
 type ViewMode = "list" | "table";
+type RightPanelMode = "view" | "edit" | "create";
 
 export function BillingPage() {
   const { t } = useTranslation("billing");

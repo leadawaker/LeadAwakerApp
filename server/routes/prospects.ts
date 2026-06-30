@@ -258,7 +258,7 @@ export function registerProspectsRoutes(app: Express): void {
       status: "trial",
       businessNiche: prospect.niche || null,
     });
-    provisionCaldiyForAccount(account.id);
+    provisionCaldiyForAccount(account.id!);
 
     // Link prospect to the new account and set status to Converted
     const updatedProspect = await storage.updateProspect(Number(req.params.id), {

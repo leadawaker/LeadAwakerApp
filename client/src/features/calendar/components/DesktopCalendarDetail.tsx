@@ -99,7 +99,8 @@ export function DetailPanel(p: DesktopCalendarProps) {
 
   const sm = statusMetaOf(ev, t);
   const av = getLeadStatusAvatarColor(ev.no_show ? "Lost" : (ev.status || "Contacted"));
-  const aiSummaryRaw = ev.rawLead?.ai_summary ?? ev.rawLead?.aiSummary ?? null;
+  const rawLead = ev.rawLead as Record<string, any> | undefined;
+  const aiSummaryRaw = rawLead?.ai_summary ?? rawLead?.aiSummary ?? null;
   const summary = parseAiSummary(aiSummaryRaw);
 
   return (

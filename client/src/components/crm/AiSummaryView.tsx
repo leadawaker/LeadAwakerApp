@@ -15,6 +15,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, AlertTriangle, BadgeCheck, Smile, Meh, Frown, Info, ArrowRight } from "lucide-react";
+import { resolveLang } from "@shared/langField";
 
 type Tone = "good" | "warn" | "neutral";
 type Section = { label: string; body: string };
@@ -122,8 +123,12 @@ function SectionRow({ meta, body }: { meta: Meta; body: string }) {
 }
 
 export function AiSummaryView({ text }: { text: string | null | undefined }) {
-  const { t } = useTranslation("leads");
-  const parsed = parseSummary(text);
+  const { t, i18n } = useTranslation("leads");
+  // Summaries may be stored as a multilingual { en, nl } field (one body per
+  // platform language). Resolve to the UI language; plain text passes through.
+  const uiLang: "en" | "nl" = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+  const resolved = resolveLang(text, uiLang) || (typeof text === "string" ? text : "");
+  const parsed = parseSummary(resolved);
 
   if (parsed.mode === "prose") {
     return <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--ink-soft)", whiteSpace: "pre-wrap", textWrap: "pretty" }}>{parsed.text}</p>;

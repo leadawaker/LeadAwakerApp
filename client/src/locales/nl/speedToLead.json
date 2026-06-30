@@ -61,7 +61,7 @@
   },
   "channelMix": {
     "title": "Kanaalverdeling",
-    "shareCount": "{{pct}}% ({{count}})"
+    "shareCount": "{{pct}}% ({{countLabel}})"
   },
   "channels": {
     "whatsapp": "WhatsApp",

@@ -1,6 +1,11 @@
 # Contacts Table + Interactions Model (Slice 2)
 
-**Status:** In Progress — Slice 2a (cosmetics, labels, mobile nav) BUILT
+**Status:** In Progress — 2a (cosmetics/labels/mobile nav), 2b (pagination+fold), and
+2c (sort/filter/group expansion + Service dimension) BUILT. Contacts-page detail rework
+BUILT (summary-first, Contact card hidden for clients, Notes at bottom, Created in header,
+Mark-served hidden on Contacts). **Deferred from 2c:** the optional "Service" *column* in
+`LeadsInlineTable`'s column-visibility menu (group-by-Service + filter-by-Service shipped;
+the column itself is the only spec-"optional" piece left). Remaining: 2d (client page model).
 **Date:** 2026-06-26
 **Follows:** [`specs/conversations-contacts-split/requirements.md`](../conversations-contacts-split/requirements.md) (Slice 1 = page split + nav, BUILT).
 **Touches:** `LeadsInlineTable` (table view), `LeadDetailView` (right panel), `LeadsTable`

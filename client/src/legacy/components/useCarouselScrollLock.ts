@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, RefObject } from "react";
 
 export function useCarouselScrollLock(
-  sectionRef: RefObject<HTMLElement>,
+  sectionRef: RefObject<HTMLElement | null>,
   stepCount: number
 ) {
   const [isMobile, setIsMobile] = useState(false);

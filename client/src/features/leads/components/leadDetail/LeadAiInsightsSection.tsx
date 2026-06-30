@@ -2,6 +2,7 @@
 // Extracted verbatim (Session C).
 import { Bot } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { resolveLang } from "@shared/langField";
 import { SectionTitle } from "./atoms";
 import { SentimentBadge } from "./badges";
 import { formatAiMemory } from "./format";
@@ -12,7 +13,12 @@ interface LeadAiInsightsSectionProps {
 }
 
 export function LeadAiInsightsSection({ lead, localAiSummary }: LeadAiInsightsSectionProps) {
-  const { t } = useTranslation("leads");
+  const { t, i18n } = useTranslation("leads");
+  const uiLang: "en" | "nl" = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+  // Summaries may be a multilingual { en, nl } field; resolve to the UI language,
+  // falling back to the raw string for plain-text / legacy summaries.
+  const rawSummary = localAiSummary || lead.ai_summary;
+  const summaryText = resolveLang(rawSummary, uiLang) || (typeof rawSummary === "string" ? rawSummary : "");
   if (!(lead.ai_sentiment || lead.ai_memory || lead.ai_summary || localAiSummary)) return null;
   return (
     <>
@@ -22,10 +28,10 @@ export function LeadAiInsightsSection({ lead, localAiSummary }: LeadAiInsightsSe
         data-testid="ai-insights-section"
       >
         {/* AI summary */}
-        {(localAiSummary || lead.ai_summary) && (
+        {summaryText && (
           <div className="py-1.5 border-b border-border/30">
             <div className="text-[11px] text-muted-foreground mb-1">{t("detail.fields.aiSummary")}</div>
-            <p className="text-[12px] text-foreground/80 leading-relaxed">{localAiSummary || lead.ai_summary}</p>
+            <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{summaryText}</p>
           </div>
         )}
         {/* Sentiment badge — color coded */}

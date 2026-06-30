@@ -17,7 +17,7 @@ interface DetailViewHeaderProps {
   initials: string;
   campaignNumber: number;
   campaignCreatedAt: string | null;
-  dailyStats: { sentToday: number } | null | undefined;
+  dailyStats: { sentToday: number; dailyLimit?: number } | null | undefined;
   selectedSticker: { url: string; label: string; slug: string } | null;
   stickerSize: number;
   hueValue: number;

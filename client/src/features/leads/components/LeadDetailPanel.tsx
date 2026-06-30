@@ -195,7 +195,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   // ── Campaigns state (filtered by lead's account, agency view only) ──
   const isAgencyPanel = isAgencyView;
   const leadAccountId = Number(lead?.Accounts_id || lead?.account_id || lead?.accounts_id || 0);
-  const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([]);
+  const [campaigns, setCampaigns] = useState<{ id: number; name: string; aiModel?: string }[]>([]);
 
   useEffect(() => {
     if (!open || !isAgencyPanel) return;
@@ -206,16 +206,44 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         const mapped = arr.map((c: any) => ({
           id: c.Id ?? c.id,
           name: c.Name ?? c.name ?? `Campaign #${c.Id ?? c.id}`,
+          aiModel: c.ai_model ?? c.aiModel ?? undefined,
           accountId: Number(c.Accounts_id ?? c.accounts_id ?? c.account_id ?? 0),
         }));
         // Filter to only campaigns belonging to this lead's account
         const filtered = leadAccountId
           ? mapped.filter((c) => c.accountId === leadAccountId)
           : mapped;
-        setCampaigns(filtered.map(({ id, name }) => ({ id, name })));
+        setCampaigns(filtered.map(({ id, name, aiModel }) => ({ id, name, aiModel })));
       })
       .catch(() => {});
   }, [open, isAgencyPanel, leadAccountId]);
+
+  // ── Linked conversation prompt name (agency only) — Prompt_Library is the
+  //    source of truth, so resolve the prompt by the lead's campaign. ──
+  const leadCampaignId = Number(lead?.campaignsId ?? lead?.campaigns_id ?? lead?.Campaigns_id ?? 0);
+  const [prompts, setPrompts] = useState<{ campaignsId: number; name: string }[]>([]);
+  useEffect(() => {
+    if (!open || !isAgencyPanel) return;
+    apiFetch("/api/prompts")
+      .then((r) => r.ok ? r.json() : Promise.resolve([]))
+      .then((data: any) => {
+        const arr: any[] = Array.isArray(data) ? data : data?.list || data?.data || [];
+        setPrompts(arr.map((p: any) => ({
+          campaignsId: Number(p.campaigns_id ?? p.campaignsId ?? p.Campaigns_id ?? 0),
+          name: p.name ?? p.Name ?? "",
+        })));
+      })
+      .catch(() => {});
+  }, [open, isAgencyPanel]);
+
+  const promptName = useMemo(
+    () => prompts.find((p) => p.campaignsId === leadCampaignId)?.name || undefined,
+    [prompts, leadCampaignId],
+  );
+  const aiModel = useMemo(
+    () => campaigns.find((c) => c.id === leadCampaignId)?.aiModel || undefined,
+    [campaigns, leadCampaignId],
+  );
 
   const handleManualTakeoverChange = async (checked: boolean) => {
     if (!leadId || savingManualTakeover) return;
@@ -426,6 +454,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             isAgencyPanel={isAgencyPanel}
             campaigns={campaigns}
             handleInlineFieldSave={handleInlineFieldSave}
+            promptName={promptName}
+            aiModel={aiModel}
           />
 
           <LeadStatusSection

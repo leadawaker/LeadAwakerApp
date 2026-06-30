@@ -377,7 +377,6 @@ export function CampaignDetailView({
             campaign={campaign}
             isAdmin={isAdmin}
             status={status}
-            avatarColor={avatarColor}
             isDraft={isDraft}
             isPaused={isPaused}
             isInactive={isInactive}
@@ -404,7 +403,7 @@ export function CampaignDetailView({
             t={t}
             onSaveName={async (name) => { if (campaign.id) await onSave(campaign.id, { name }); }}
             readinessTag={isAgencyUser && campaignId ? (
-              <CampaignPreflight campaignId={Number(campaignId)} refreshKey={status} t={t} />
+              <CampaignPreflight campaignId={Number(campaignId)} refreshKey={status} t={(key, fallback, opts) => t(key, fallback ?? key, opts)} />
             ) : null}
           />
             </div>
@@ -569,7 +568,6 @@ export function CampaignDetailView({
                 showSystemMessage={promptSystemOpen}
                 showNotes={promptNotesOpen}
                 editorFontSize={13}
-                splitPreview={false}
               />
             </div>
           ) : (

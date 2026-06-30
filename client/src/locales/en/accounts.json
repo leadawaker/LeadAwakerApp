@@ -554,5 +554,24 @@
     "callingNumberEmpty": "Not set",
     "callingNumberHint": "Leads will see this number in the booking confirmation so they know who's calling.",
     "whatsappHint": "The booked call happens via WhatsApp using your connected messaging number."
+  },
+  "customDomain": {
+    "title": "Custom booking domain",
+    "explainer": "Serve this client's booking page from their own domain (e.g. book.theircompany.com) so no leadawaker branding shows in the address bar.",
+    "domainLabel": "Booking domain",
+    "save": "Save domain",
+    "verify": "Check DNS & activate",
+    "remove": "Remove",
+    "openPage": "Open booking page",
+    "statusPending": "Pending DNS",
+    "statusActive": "Active",
+    "dnsInstructions": "Add this CNAME record at the client's DNS provider, then click below to activate.",
+    "recordType": "Type",
+    "recordName": "Name / Host",
+    "recordTarget": "Target / Value",
+    "notReady": "Not reachable yet. DNS can take a few minutes to propagate.",
+    "saveFailed": "Could not save the domain.",
+    "verifyFailed": "Could not verify the domain.",
+    "removeFailed": "Could not remove the domain."
   }
 }

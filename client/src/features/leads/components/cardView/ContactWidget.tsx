@@ -57,9 +57,12 @@ export function ContactWidget({
   onToggleGradient,
   gradientTesterOpen,
   isAgencyUser,
+  hideNotes,
 }: {
   lead: Record<string, any>;
   onRefresh?: () => void;
+  /** Hide the inline Notes block (Contacts page renders Notes separately at the bottom) */
+  hideNotes?: boolean;
   /** Pass from parent when already fetched to avoid duplicate API calls */
   accountLogo?: string | null;
   campaignStickerUrl?: string | null;
@@ -342,6 +345,7 @@ export function ContactWidget({
         </div>
 
         {/* ── Notes ──────────────────────────────────────────────────────── */}
+        {!hideNotes && (
         <div className="mt-4 pt-4 border-t border-border/20">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 flex items-center gap-1.5">
@@ -397,6 +401,7 @@ export function ContactWidget({
             style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-button)", border: "none", padding: "9px 11px", lineHeight: 1.55 }}
           />
         </div>
+        )}
       </div>
     </Card>
   );

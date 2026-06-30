@@ -307,6 +307,9 @@
     "inquiryDate": "Data da consulta",
     "firstTouch": "Primeiro contato",
     "launchCampaign": "Iniciar campanha",
+    "launchName": "Nome do lead de demonstração",
+    "launchNamePlaceholder": "Nome do lead (opcional)",
+    "launchNameHint": "Define o primeiro nome do lead de demonstração ao iniciar. Deixe vazio para manter o nome atual.",
     "sections": {
       "business": "Negócio",
       "businessTitle": "Configuração do Negócio",

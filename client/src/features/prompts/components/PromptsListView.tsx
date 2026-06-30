@@ -268,7 +268,7 @@ function CompactPromptRail({
   accountMap,
 }: {
   items: any[];
-  selectedId: string | null;
+  selectedId: number | null;
   onSelect: (prompt: any) => void;
   campaigns: CampaignForPreview[];
   accountMap: Map<number, string>;

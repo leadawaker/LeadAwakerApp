@@ -322,6 +322,9 @@
     "inquiryDate": "Inquiry date",
     "firstTouch": "First touch",
     "launchCampaign": "Launch Campaign",
+    "launchName": "Demo lead name",
+    "launchNamePlaceholder": "Lead name (optional)",
+    "launchNameHint": "Sets the demo lead's first name when you launch. Leave empty to keep the current name.",
     "sections": {
       "business": "Business",
       "businessTitle": "Business Setup",

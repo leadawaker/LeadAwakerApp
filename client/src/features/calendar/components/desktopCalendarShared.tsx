@@ -164,7 +164,7 @@ export interface DesktopCalendarProps {
   recentMessages: Interaction[]; recentMessagesLoading: boolean;
   onOpenInLead: () => void; onCloseDetail: () => void;
   currentTime: Date;
-  apptListRef: React.RefObject<HTMLDivElement>;
+  apptListRef: React.RefObject<HTMLDivElement | null>;
   // conversation visibility gate (admin/owner only)
   canSeeConversation: boolean;
   // reschedule / cancel handlers

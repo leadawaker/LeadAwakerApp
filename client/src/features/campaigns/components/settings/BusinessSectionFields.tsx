@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   Clock, Bot, Building2,
-  MousePointerClick, Award, Megaphone, BookOpen, Paintbrush, MapPin,
+  MousePointerClick, Award, Megaphone, BookOpen, Paintbrush, MapPin, UserRound,
 } from "lucide-react";
 import {
   EditText, InfoRow,
@@ -25,11 +25,15 @@ interface BusinessSectionFieldsProps {
   setDraft: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
   focusField?: string | null;
   onStartEditField?: (field: string) => void;
+  /** Transient "demo lead name" that feeds the Launch Campaign button (not saved). */
+  launchName?: string;
+  setLaunchName?: (v: string) => void;
 }
 
 export function BusinessSectionFields({
   campaign, isEditing, draft, setDraft,
   focusField, onStartEditField,
+  launchName, setLaunchName,
 }: BusinessSectionFieldsProps) {
   const { t, i18n } = useTranslation("campaigns");
 
@@ -57,7 +61,7 @@ export function BusinessSectionFields({
     optionLabel(field, raw, uiLang);
 
   // Show the slot for the operator's UI language.
-  const displayText = (raw: unknown) => resolveLang(raw, uiLang);
+  const displayText = (raw: unknown) => resolveLang(raw, uiLang === "pt" ? "en" : uiLang);
 
   // OnChange for free-text fields: write the UI-language slot, preserving others.
   const onTextChange = (field: string, raw: unknown, text: string) => {
@@ -78,6 +82,26 @@ export function BusinessSectionFields({
         {...editFor("company_name")}
         editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
       />
+
+      {/* Demo lead name — transient, drives the Launch Campaign button. Always
+          editable (no save needed): typed live during a discovery screenshare. */}
+      {setLaunchName && (
+        <InfoRow icon={UserRound} label={t("config.launchName")} value={null}
+          description={t("config.launchNameHint")}
+          editChild={
+            <input
+              type="text"
+              value={launchName ?? ""}
+              onChange={(e) => setLaunchName(e.target.value)}
+              placeholder={t("config.launchNamePlaceholder")}
+              maxLength={80}
+              className="la-input"
+              style={{ width: '100%', fontSize: 13, padding: '8px 12px' }}
+            />
+          }
+        />
+      )}
+
       <InfoRow icon={Bot} label={t("config.agentName")} value={campaign.agent_name}
         {...editFor("agent_name")}
         editChild={isEditing ? (
@@ -186,19 +210,22 @@ export function BusinessSectionFields({
         ) : undefined}
       />
 
-      <InfoRow icon={BookOpen} label={t("config.kb")}
-        value={displayText(draft.kb ?? campaign.kb)} richText={true}
-        {...editFor("kb")}
-        editChild={isEditing ? (
-          <EditText
-            value={displayText(draft.kb ?? campaign.kb)}
-            onChange={(v) => onTextChange("kb", draft.kb ?? campaign.kb, v)}
-            multiline minRows={1}
-            placeholder={placeholderFor("kb", uiLang)}
-            {...focusFor("kb")}
-          />
-        ) : undefined}
-      />
+      {/* Knowledge base — full width, alone at the bottom. */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={BookOpen} label={t("config.kb")}
+          value={displayText(draft.kb ?? campaign.kb)} richText={true} noBorder
+          {...editFor("kb")}
+          editChild={isEditing ? (
+            <EditText
+              value={displayText(draft.kb ?? campaign.kb)}
+              onChange={(v) => onTextChange("kb", draft.kb ?? campaign.kb, v)}
+              multiline minRows={1}
+              placeholder={placeholderFor("kb", uiLang)}
+              {...focusFor("kb")}
+            />
+          ) : undefined}
+        />
+      </div>
     </div>
   );
 }

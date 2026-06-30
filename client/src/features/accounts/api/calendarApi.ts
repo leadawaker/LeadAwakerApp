@@ -13,11 +13,13 @@ export interface CalendarProviderMeta {
 export interface CalendarConnection {
   id: number;
   accountId: number;
-  provider: CalendarProviderId;
+  provider: CalendarProviderId | "caldiy";
   status: string;
   displayName: string | null;
   calendarId: string | null;
   timezone: string | null;
+  customDomain?: string | null;
+  customDomainStatus?: string | null;
   lastError: string | null;
   lastSyncAt: string | null;
 }
@@ -108,4 +110,40 @@ export const fetchCaldiyCredentials = async (accountId: number): Promise<CaldiyC
   const res = await apiFetch(`/api/calendar/caldiy-credentials?accountId=${accountId}`);
   if (!res.ok) throw new Error("Failed to load booking page credentials");
   return res.json();
+};
+
+// ── White-label booking domain ───────────────────────────────────────────────
+
+export interface CustomDomainState {
+  customDomain: string | null;
+  customDomainStatus: string | null;
+  cnameName: string;
+  cnameTarget: string;
+}
+
+export const saveCustomDomain = async (accountId: number, domain: string): Promise<CustomDomainState> => {
+  const res = await apiFetch(`/api/accounts/${accountId}/custom-domain`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ domain }),
+  });
+  if (!res.ok) {
+    const msg = await res.json().catch(() => ({}));
+    throw new Error(msg.message || "Failed to save domain");
+  }
+  return res.json();
+};
+
+export const verifyCustomDomain = async (accountId: number): Promise<CustomDomainState & { verified: boolean }> => {
+  const res = await apiFetch(`/api/accounts/${accountId}/custom-domain/verify`, { method: "POST" });
+  if (!res.ok) {
+    const msg = await res.json().catch(() => ({}));
+    throw new Error(msg.message || "Failed to verify domain");
+  }
+  return res.json();
+};
+
+export const removeCustomDomain = async (accountId: number): Promise<void> => {
+  const res = await apiFetch(`/api/accounts/${accountId}/custom-domain`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to remove domain");
 };

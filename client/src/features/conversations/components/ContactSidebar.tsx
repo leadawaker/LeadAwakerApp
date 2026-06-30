@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonContactPanel } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { resolveLang } from "@shared/langField";
 import { useToast } from "@/hooks/use-toast";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import {
@@ -206,7 +207,8 @@ interface ContactSidebarProps {
 }
 
 export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, onNavigateToLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions, onRefresh, campaignsMap }: ContactSidebarProps) {
-  const { t } = useTranslation("conversations");
+  const { t, i18n } = useTranslation("conversations");
+  const summaryLang: "en" | "nl" = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
   const COLLAPSED_STORAGE_KEY = "conversations-contact-collapsed-sections";
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(() => {
     try {
@@ -516,8 +518,11 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                           }
                         } catch { /* not JSON — it's a plain text summary, show it */ }
 
+                        // Multilingual { en, nl } summaries resolve to the UI language;
+                        // plain text / legacy summaries fall back to the raw string.
+                        const display = resolveLang(raw, summaryLang) || String(raw);
                         return (
-                          <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">{String(raw)}</p>
+                          <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">{display}</p>
                         );
                       })()}
                     </div>

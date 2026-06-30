@@ -54,7 +54,9 @@
     "switchToKanban": "Ver em kanban",
     "upcomingCalls": "Próximas chamadas",
     "more": "Mais",
-    "exportPdf": "Exportar PDF"
+    "exportPdf": "Exportar PDF",
+    "showChats": "Mostrar conversas",
+    "hideChats": "Ocultar conversas"
   },
   "sort": {
     "sortBy": "Ordenar por",
@@ -72,7 +74,9 @@
     "nameAZ": "Nome A → Z",
     "nameZA": "Nome Z → A",
     "scoreDown": "Pontuação ↓",
-    "scoreUp": "Pontuação ↑"
+    "scoreUp": "Pontuação ↑",
+    "activity": "Última atividade",
+    "created": "Data de criação"
   },
   "group": {
     "status": "Status",
@@ -80,7 +84,10 @@
     "account": "Conta",
     "none": "Nenhum",
     "noCampaign": "Sem Campanha",
-    "untagged": "Sem Tag"
+    "untagged": "Sem Tag",
+    "service": "Serviço",
+    "source": "Origem",
+    "tag": "Etiqueta"
   },
   "filters": {
     "title": "Filtros de Leads",
@@ -105,7 +112,10 @@
     "hasPhone": "Tem Telefone",
     "hasEmail": "Tem E-mail",
     "allAccounts": "Todas as Contas",
-    "moveTo": "Mover para"
+    "moveTo": "Mover para",
+    "attributes": "Atributos",
+    "minScore": "Pontuação mín.",
+    "anyScore": "Qualquer"
   },
   "fold": {
     "foldColumns": "Recolher colunas",
@@ -309,7 +319,9 @@
       "aiSentiment": "Sentimento",
       "aiMemory": "Memória da IA",
       "aiSummary": "Resumo",
-      "campaign": "Campanha"
+      "campaign": "Campanha",
+      "prompt": "Prompt",
+      "aiModel": "Modelo de IA"
     },
     "actions": {
       "triggerBump": "Disparar Bump",

@@ -76,7 +76,7 @@ export const PIPELINE_HEX: Record<string, string> = {
   Contacted:            "#547BB0",
   Responded:            "#3F8E8E",
   "Multiple Responses": "#5E8E5E",
-  Qualified:            "#B58F3E",
+  Qualified:            "#7AAB3F",
   Booked:               "#C48A2F",
   Closed:               "#6E7A5E",
   Lost:                 "#A24B3F",

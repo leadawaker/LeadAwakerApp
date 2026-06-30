@@ -103,6 +103,7 @@ import {
 } from "@shared/schema";
 
 import type { NotificationItem, ProspectsListParams } from "./types";
+import { prospectsStorage } from "./prospects";
 
 // Safety cap for no-arg full-table fetches that feed global views / AI tools.
 const MAX_UNPAGINATED_ROWS = 5000;
@@ -143,7 +144,7 @@ export const interactionsStorage = {
 
   async getInteractionsByProspectId(prospectId: number, limit: number = 20, offset: number = 0): Promise<{ interactions: Interactions[]; total: number }> {
     // Fetch prospect to get all email addresses
-    const prospect = await this.getProspectById(prospectId);
+    const prospect = await prospectsStorage.getProspectById(prospectId);
     if (!prospect) return { interactions: [], total: 0 };
 
     const emails: string[] = [];

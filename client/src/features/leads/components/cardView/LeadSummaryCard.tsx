@@ -10,9 +10,11 @@ import { useTranslation } from "react-i18next";
 import { Sparkles } from "lucide-react";
 import { CardLabel, HEAD_H } from "./designPrimitives";
 import { AiSummaryView } from "@/components/crm/AiSummaryView";
+import { resolveLang } from "@shared/langField";
 
 export function LeadSummaryCard({ lead, tier, status, hideHeader, sidePad = 16 }: { lead: Record<string, any>; tier?: string | null; status?: string; hideHeader?: boolean; sidePad?: number }) {
-  const { t } = useTranslation("leads");
+  const { t, i18n } = useTranslation("leads");
+  const uiLang: "en" | "nl" = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
   const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
   const memoryStr = lead?.ai_memory || lead?.aiMemory || "";
   let parsedText = "";
@@ -22,7 +24,6 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader, sidePad = 16 }
       parsedText = obj?.summary || obj?.notes || obj?.description || "";
     } catch { parsedText = ""; }
   }
-  const summaryText = aiSummary || parsedText;
 
   // Try to parse the AI summary as structured JSON for segmented rendering.
   type StructPoint = { text: string; tone?: string };
@@ -37,6 +38,13 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader, sidePad = 16 }
     structured = aiSummary as StructSummary;
   }
 
+  // Non-structured summaries may be a multilingual { en, nl } field (discovery
+  // demo, one body per platform language) or plain text — resolve to the UI
+  // language for display. `hasSummary` drives the locked state independently so
+  // structured (old-schema) summaries don't get treated as empty.
+  const hasSummary = Boolean(aiSummary || parsedText);
+  const summaryText = resolveLang(aiSummary, uiLang) || parsedText;
+
   const toneColor: Record<string, string> = { good: "var(--good)", warn: "var(--warn)", neutral: "var(--mute)" };
   const header = (
     <div style={{ height: HEAD_H, flexShrink: 0, padding: "0 16px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -47,7 +55,7 @@ export function LeadSummaryCard({ lead, tier, status, hideHeader, sidePad = 16 }
 
   // Locked until a summary exists (generated when the conversation ends — whether
   // the lead booked or was lost). Quiet/light empty state, no surface.
-  const locked = !summaryText;
+  const locked = !hasSummary;
 
   // Locked: NO glass-strong background — transparent, with the chat empty-state block near the top.
   if (locked) {

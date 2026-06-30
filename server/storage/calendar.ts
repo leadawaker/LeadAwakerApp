@@ -48,6 +48,40 @@ export const calendarStorage = {
     return result.length > 0;
   },
 
+  // ─── White-label custom booking domain (stored on the `caldiy` row) ─────────
+
+  /** Set / clear the account's custom booking domain + status on its caldiy row. */
+  async setCustomDomain(
+    accountId: number,
+    customDomain: string | null,
+    customDomainStatus: string | null,
+  ): Promise<CalendarConnection | undefined> {
+    const [row] = await db
+      .update(calendarConnections)
+      .set({ customDomain, customDomainStatus, updatedAt: new Date() })
+      .where(and(eq(calendarConnections.accountId, accountId), eq(calendarConnections.provider, "caldiy")))
+      .returning();
+    return row;
+  },
+
+  /** Reverse lookup by host — used by the Cloudflare Worker rewrite layer. */
+  async getCalendarConnectionByCustomDomain(domain: string): Promise<CalendarConnection | undefined> {
+    const [row] = await db
+      .select()
+      .from(calendarConnections)
+      .where(eq(calendarConnections.customDomain, domain));
+    return row;
+  },
+
+  /** Lookup by caldiy username — used by the Cal.diy email white-labelling. */
+  async getCaldiyConnectionByUsername(username: string): Promise<CalendarConnection | undefined> {
+    const [row] = await db
+      .select()
+      .from(calendarConnections)
+      .where(and(eq(calendarConnections.provider, "caldiy"), eq(calendarConnections.externalId, username)));
+    return row;
+  },
+
   // ─── Calendar Blocks ──────────────────────────────────────────────────────
 
   async getCalendarBlock(id: number): Promise<CalendarBlock | undefined> {

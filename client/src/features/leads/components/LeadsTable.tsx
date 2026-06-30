@@ -52,8 +52,8 @@ import { buildEntityRows } from "@/components/crm/entityList";
 import type { VirtualListItem } from "./LeadsCardView";
 
 type ViewMode = "list" | "table" | "pipeline";
-type TableSortByOption  = "recent" | "oldest" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
-type TableGroupByOption = "status" | "campaign" | "account" | "none";
+type TableSortByOption  = "recent" | "oldest" | "name_asc" | "name_desc" | "score_desc" | "score_asc" | "activity_desc" | "activity_asc" | "created_desc" | "created_asc";
+type TableGroupByOption = "status" | "campaign" | "account" | "service" | "source" | "tag" | "none";
 
 const VIEW_MODE_KEY    = "leads-view-mode";
 const VISIBLE_COLS_KEY = "leads-table-visible-cols";
@@ -116,18 +116,25 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const TABLE_SORT_TKEYS: Record<TableSortByOption, string> = {
-  recent:     "sort.mostRecent",
-  oldest:     "sort.oldest",
-  name_asc:   "sort.nameAZ",
-  name_desc:  "sort.nameZA",
-  score_desc: "sort.scoreDown",
-  score_asc:  "sort.scoreUp",
+  recent:        "sort.mostRecent",
+  oldest:        "sort.oldest",
+  name_asc:      "sort.nameAZ",
+  name_desc:     "sort.nameZA",
+  score_desc:    "sort.scoreDown",
+  score_asc:     "sort.scoreUp",
+  activity_desc: "sort.activityRecent",
+  activity_asc:  "sort.activityOldest",
+  created_desc:  "sort.createdNewest",
+  created_asc:   "sort.createdOldest",
 };
 
 const TABLE_GROUP_TKEYS: Record<TableGroupByOption, string> = {
   status:   "group.status",
   campaign: "group.campaign",
   account:  "group.account",
+  service:  "group.service",
+  source:   "group.source",
+  tag:      "group.tag",
   none:     "group.none",
 };
 
@@ -289,6 +296,26 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     (l) => l.Id ?? l.id,
     leads,
   );
+
+  // On open, always land on the lead with the most recent message (per Gabriel).
+  // Runs once per mount, after leads arrive, only on the chat/list view. Skipped
+  // when arriving via a deep-link (calendar "return to" carries a specific lead).
+  const didAutoSelectRef = useRef(false);
+  useEffect(() => {
+    if (didAutoSelectRef.current) return;
+    if (viewMode !== "list" || !leads || leads.length === 0) return;
+    didAutoSelectRef.current = true;
+    try {
+      const returnTo = localStorage.getItem("leadawaker-returnto");
+      const storedId = localStorage.getItem("selected-lead-id");
+      if (returnTo && storedId && leads.some((l) => String(l.Id ?? l.id) === storedId)) return;
+    } catch { /* noop */ }
+    const recency = (l: any) =>
+      new Date(l.last_interaction_at || l.last_message_received_at || l.created_at || 0).getTime();
+    const latest = leads.reduce((a, b) => (recency(b) > recency(a) ? b : a));
+    if (latest) setSelectedLead(latest);
+  }, [leads, viewMode, setSelectedLead]);
+
   const [importWizardOpen, setImportWizardOpen] = useState(false);
   // ── Lifted multi-select state ─────────────────────────────────────────────
   const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
@@ -351,17 +378,36 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     filterStatus: [] as string[],
     filterCampaign: "",
     filterAccount: "",
+    filterService: [] as string[],
+    filterSource: [] as string[],
+    filterTags: [] as string[],
+    filterHasPhone: false,
+    filterHasEmail: false,
+    filterMinScore: 0,
     groupBy: "status" as TableGroupByOption,
   });
   const tableSortBy = tablePrefs.sortBy;
   const tableFilterStatus = tablePrefs.filterStatus;
   const tableFilterCampaign = tablePrefs.filterCampaign;
   const tableFilterAccount = tablePrefs.filterAccount;
+  // New filter axes — guarded with defaults so prefs persisted before they existed still load.
+  const tableFilterService  = tablePrefs.filterService  ?? [];
+  const tableFilterSource   = tablePrefs.filterSource   ?? [];
+  const tableFilterTags     = tablePrefs.filterTags     ?? [];
+  const tableFilterHasPhone = tablePrefs.filterHasPhone ?? false;
+  const tableFilterHasEmail = tablePrefs.filterHasEmail ?? false;
+  const tableFilterMinScore = tablePrefs.filterMinScore ?? 0;
   const tableGroupBy = tablePrefs.groupBy;
   const setTableSortBy = useCallback((v: TableSortByOption) => setTablePrefs(p => ({ ...p, sortBy: v })), [setTablePrefs]);
   const setTableFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTablePrefs]);
   const setTableFilterCampaign = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterCampaign: v })), [setTablePrefs]);
   const setTableFilterAccount = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterAccount: v })), [setTablePrefs]);
+  const setTableFilterService = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterService: typeof v === "function" ? v(p.filterService ?? []) : v })), [setTablePrefs]);
+  const setTableFilterSource = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterSource: typeof v === "function" ? v(p.filterSource ?? []) : v })), [setTablePrefs]);
+  const setTableFilterTags = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterTags: typeof v === "function" ? v(p.filterTags ?? []) : v })), [setTablePrefs]);
+  const setTableFilterHasPhone = useCallback((v: boolean) => setTablePrefs(p => ({ ...p, filterHasPhone: v })), [setTablePrefs]);
+  const setTableFilterHasEmail = useCallback((v: boolean) => setTablePrefs(p => ({ ...p, filterHasEmail: v })), [setTablePrefs]);
+  const setTableFilterMinScore = useCallback((v: number) => setTablePrefs(p => ({ ...p, filterMinScore: v })), [setTablePrefs]);
   const setTableGroupBy = useCallback((v: TableGroupByOption) => setTablePrefs(p => ({ ...p, groupBy: v })), [setTablePrefs]);
 
   /* ── Column visibility (persisted) ──────────────────────────────────────── */
@@ -432,7 +478,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   /* ── Accounts (agency view) ──────────────────────────────────────────────── */
   const [accountsById, setAccountsById] = useState<Map<number, string>>(new Map());
   /* ── Campaigns (id → { name, accountId }) ──────────────────────────────── */
-  const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null; bookingMode: string | null }>>(new Map());
+  const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null; bookingMode: string | null; campaignType: string | null }>>(new Map());
 
   /* ── Persist view mode (agency only) ────────────────────────────────────── */
   useEffect(() => {
@@ -500,7 +546,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : data?.list || [];
-          const byId = new Map<number, { name: string; accountId: number | null; bookingMode: string | null }>();
+          const byId = new Map<number, { name: string; accountId: number | null; bookingMode: string | null; campaignType: string | null }>();
           list.forEach((c: any) => {
             // Skip soft-deleted campaigns — they shouldn't clutter filter dropdowns
             // or show up as labels (Gabriel, 2026-06-21).
@@ -510,6 +556,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
               name: c.name || c.Name || c.campaign_name || `Campaign ${id}`,
               accountId: c.Accounts_id ?? c.accounts_id ?? c.accountsId ?? null,
               bookingMode: c.booking_mode_override ?? c.bookingModeOverride ?? null,
+              campaignType: c.campaign_type ?? c.campaignType ?? null,
             });
           });
           setCampaignsById(byId);
@@ -661,6 +708,44 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredLeads, campaignsById, tableFilterAccount]);
 
+  // Distinct services (campaign_type) present in the current leads.
+  const availableServices = useMemo(() => {
+    const seen = new Set<string>();
+    filteredLeads.forEach((l) => {
+      const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+      const svc = (cId && campaignsById.get(cId)?.campaignType) || "";
+      if (svc) seen.add(svc);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [filteredLeads, campaignsById]);
+
+  // Distinct lead sources present in the current leads.
+  const availableSources = useMemo(() => {
+    const seen = new Set<string>();
+    filteredLeads.forEach((l) => {
+      const src = l.source || l.Source || "";
+      if (src) seen.add(src);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [filteredLeads]);
+
+  /* ── Per-lead dimension helpers (service / activity / created / tags) ────── */
+  const serviceOf = useCallback((l: Record<string, any>): string => {
+    const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+    return (cId && campaignsById.get(cId)?.campaignType) || "";
+  }, [campaignsById]);
+  const tsOf = (v: any): number => {
+    if (!v) return 0;
+    const t = Date.parse(v);
+    return Number.isNaN(t) ? 0 : t;
+  };
+  const activityOf = (l: Record<string, any>): number =>
+    tsOf(l.last_interaction_at || l.lastInteractionAt || l.last_message_received_at || l.last_message_sent_at);
+  const createdOf = (l: Record<string, any>): number =>
+    tsOf(l.created_at || l.CreatedAt || l.createdAt);
+  const tagNamesOf = useCallback((l: Record<string, any>): string[] =>
+    (leadTagsInfo.get(l.Id ?? l.id) || []).map((tg) => tg.name), [leadTagsInfo]);
+
   /* ── Table flat items — filtered, sorted, grouped ───────────────────────── */
   const tableFlatItems = useMemo((): VirtualListItem[] => {
     return buildEntityRows<Record<string, any>, VirtualListItem>({
@@ -672,16 +757,29 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
           String(l.Accounts_id || l.account_id || "") !== tableFilterAccount) return false;
         if (tableFilterCampaign &&
           String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") !== tableFilterCampaign) return false;
+        if (tableFilterService.length > 0 && !tableFilterService.includes(serviceOf(l))) return false;
+        if (tableFilterSource.length > 0 && !tableFilterSource.includes(l.source || l.Source || "")) return false;
+        if (tableFilterTags.length > 0) {
+          const names = tagNamesOf(l);
+          if (!tableFilterTags.some((tname) => names.includes(tname))) return false;
+        }
+        if (tableFilterHasPhone && !(l.phone || l.Phone)) return false;
+        if (tableFilterHasEmail && !(l.email || l.Email)) return false;
+        if (tableFilterMinScore > 0 && Number(l.lead_score ?? l.leadScore ?? 0) < tableFilterMinScore) return false;
         return true;
       },
       // "recent" keeps source order (no sort); other modes sort.
       comparator: tableSortBy === "recent" ? undefined : (a, b) => {
         switch (tableSortBy) {
-          case "oldest":     return (Number(a.id || a.Id || 0)) - (Number(b.id || b.Id || 0));
-          case "name_asc":   return getFullNameHelper(a).localeCompare(getFullNameHelper(b));
-          case "name_desc":  return getFullNameHelper(b).localeCompare(getFullNameHelper(a));
-          case "score_desc": return Number(b.lead_score ?? b.leadScore ?? 0) - Number(a.lead_score ?? a.leadScore ?? 0);
-          case "score_asc":  return Number(a.lead_score ?? a.leadScore ?? 0) - Number(b.lead_score ?? b.leadScore ?? 0);
+          case "oldest":        return (Number(a.id || a.Id || 0)) - (Number(b.id || b.Id || 0));
+          case "name_asc":      return getFullNameHelper(a).localeCompare(getFullNameHelper(b));
+          case "name_desc":     return getFullNameHelper(b).localeCompare(getFullNameHelper(a));
+          case "score_desc":    return Number(b.lead_score ?? b.leadScore ?? 0) - Number(a.lead_score ?? a.leadScore ?? 0);
+          case "score_asc":     return Number(a.lead_score ?? a.leadScore ?? 0) - Number(b.lead_score ?? b.leadScore ?? 0);
+          case "activity_desc": return activityOf(b) - activityOf(a);
+          case "activity_asc":  return activityOf(a) - activityOf(b);
+          case "created_desc":  return createdOf(b) - createdOf(a);
+          case "created_asc":   return createdOf(a) - createdOf(b);
           default: return 0;
         }
       },
@@ -694,6 +792,12 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
           case "account":
             return accountsById.get(Number(l.Accounts_id || l.account_id)) ||
               (l.Accounts_id || l.account_id ? `Account ${l.Accounts_id || l.account_id}` : "No Account");
+          case "service":
+            return serviceOf(l) || "No Service";
+          case "source":
+            return l.source || l.Source || "No Source";
+          case "tag":
+            return tagNamesOf(l)[0] || "No Tag";
           default: // status
             return l.conversion_status || l.Conversion_Status || "Unknown";
         }
@@ -710,7 +814,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
       }),
       makeItem: (l) => ({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] }),
     });
-  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById, t]);
+  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableFilterService, tableFilterSource, tableFilterTags, tableFilterHasPhone, tableFilterHasEmail, tableFilterMinScore, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById, serviceOf, tagNamesOf, t]);
 
   const handleViewSwitch = useCallback((next: ViewMode) => {
     if (!allowedViews.includes(next)) return;
@@ -771,11 +875,23 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   /* ── Table toolbar helpers ──────────────────────────────────────────────── */
   const toggleTableFilterStatus = useCallback((s: string) =>
     setTableFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
+  const toggleTableFilterService = useCallback((s: string) =>
+    setTableFilterService((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), [setTableFilterService]);
+  const toggleTableFilterSource = useCallback((s: string) =>
+    setTableFilterSource((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), [setTableFilterSource]);
+  const toggleTableFilterTag = useCallback((s: string) =>
+    setTableFilterTags((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), [setTableFilterTags]);
   const clearTableFilters = useCallback(() => {
     setTableFilterStatus([]); setTableFilterCampaign(""); setTableFilterAccount("");
-  }, []);
-  const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterCampaign || !!tableFilterAccount;
-  const tableActiveFilterCount = tableFilterStatus.length + (tableFilterCampaign ? 1 : 0) + (tableFilterAccount ? 1 : 0);
+    setTableFilterService([]); setTableFilterSource([]); setTableFilterTags([]);
+    setTableFilterHasPhone(false); setTableFilterHasEmail(false); setTableFilterMinScore(0);
+  }, [setTableFilterService, setTableFilterSource, setTableFilterTags, setTableFilterHasPhone, setTableFilterHasEmail, setTableFilterMinScore]);
+  const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterCampaign || !!tableFilterAccount
+    || tableFilterService.length > 0 || tableFilterSource.length > 0 || tableFilterTags.length > 0
+    || tableFilterHasPhone || tableFilterHasEmail || tableFilterMinScore > 0;
+  const tableActiveFilterCount = tableFilterStatus.length + (tableFilterCampaign ? 1 : 0) + (tableFilterAccount ? 1 : 0)
+    + tableFilterService.length + tableFilterSource.length + tableFilterTags.length
+    + (tableFilterHasPhone ? 1 : 0) + (tableFilterHasEmail ? 1 : 0) + (tableFilterMinScore > 0 ? 1 : 0);
 
   const handleAddLead = useCallback(async () => {
     try {
@@ -1340,6 +1456,66 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                       ))}
                     </>
                   )}
+                  {availableServices.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.service", "Service")}</DropdownMenuLabel>
+                      {availableServices.map((s) => (
+                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterService(s); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="flex-1 truncate">{s}</span>
+                          {tableFilterService.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {availableSources.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.source", "Source")}</DropdownMenuLabel>
+                      {availableSources.map((s) => (
+                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterSource(s); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="flex-1 truncate">{s}</span>
+                          {tableFilterSource.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {allTags.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.tag", "Tag")}</DropdownMenuLabel>
+                      {allTags.map((tg) => (
+                        <DropdownMenuItem key={tg.name} onClick={(e) => { e.preventDefault(); toggleTableFilterTag(tg.name); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tg.color || "var(--mute-2)" }} />
+                          <span className="flex-1 truncate">{tg.name}</span>
+                          {tableFilterTags.includes(tg.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.attributes", "Attributes")}</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterHasPhone(!tableFilterHasPhone); }} className="flex items-center gap-2 text-[12px]">
+                    <span className="flex-1">{t("filters.hasPhone", "Has phone")}</span>
+                    {tableFilterHasPhone && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterHasEmail(!tableFilterHasEmail); }} className="flex items-center gap-2 text-[12px]">
+                    <span className="flex-1">{t("filters.hasEmail", "Has email")}</span>
+                    {tableFilterHasEmail && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.minScore", "Min score")}</DropdownMenuLabel>
+                  <div className="flex items-center gap-1 px-2 pb-1.5">
+                    {[0, 50, 70, 90].map((thr) => (
+                      <button
+                        key={thr}
+                        type="button"
+                        onClick={() => setTableFilterMinScore(thr)}
+                        className={cn("flex-1 rounded text-[11px] py-1 border transition-colors", tableFilterMinScore === thr ? "bg-brand-indigo text-white border-brand-indigo" : "border-border/50 hover:bg-muted/60 text-foreground/70")}
+                      >
+                        {thr === 0 ? t("filters.anyScore", "Any") : `≥${thr}`}
+                      </button>
+                    ))}
+                  </div>
                   {isTableFilterActive && (
                     <>
                       <DropdownMenuSeparator />
@@ -1362,9 +1538,11 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                 </div>
                 <DropdownMenuContent align="start" className="w-52 bg-white">
                   {([
-                    { key: "recent", label: t("sort.mostRecent"), asc: "oldest" as TableSortByOption, desc: "recent" as TableSortByOption },
-                    { key: "name",   label: t("sort.name"),       asc: "name_asc" as TableSortByOption, desc: "name_desc" as TableSortByOption },
-                    { key: "score",  label: t("sort.score"),      asc: "score_asc" as TableSortByOption, desc: "score_desc" as TableSortByOption },
+                    { key: "recent",   label: t("sort.mostRecent"),         asc: "oldest" as TableSortByOption,        desc: "recent" as TableSortByOption },
+                    { key: "name",     label: t("sort.name"),               asc: "name_asc" as TableSortByOption,      desc: "name_desc" as TableSortByOption },
+                    { key: "score",    label: t("sort.score"),              asc: "score_asc" as TableSortByOption,     desc: "score_desc" as TableSortByOption },
+                    { key: "activity", label: t("sort.activity", "Last activity"), asc: "activity_asc" as TableSortByOption, desc: "activity_desc" as TableSortByOption },
+                    { key: "created",  label: t("sort.created", "Created date"),    asc: "created_asc" as TableSortByOption,  desc: "created_desc" as TableSortByOption },
                   ]).map((group) => {
                     const isActive = tableSortBy === group.asc || tableSortBy === group.desc;
                     const activeDir: "asc" | "desc" = tableSortBy === group.asc ? "asc" : "desc";
@@ -1395,7 +1573,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                   )}
                 </div>
                 <DropdownMenuContent align="start" className="w-52 bg-white">
-                  {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
+                  {(["status", "campaign", "account", "service", "source", "tag", "none"] as TableGroupByOption[]).map((opt) => (
                     <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); setTableGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
                       <span className={cn("flex-1", tableGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(TABLE_GROUP_TKEYS[opt])}</span>
                       {tableGroupBy === opt && opt !== "none" && (

@@ -54,7 +54,7 @@ function ChannelMixContent({ m }: { m: SpeedToLeadMetrics }) {
                     {c.medianLabel}
                   </span>
                   <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)", marginTop: 2 }}>
-                    {t("channelMix.shareCount", { pct: c.pct, count: c.count.toLocaleString() })}
+                    {t("channelMix.shareCount", { pct: c.pct, countLabel: c.count.toLocaleString() })}
                   </span>
                 </span>
               </div>

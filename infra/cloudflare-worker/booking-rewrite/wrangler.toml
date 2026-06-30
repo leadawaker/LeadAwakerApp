@@ -1,0 +1,19 @@
+name = "booking-rewrite"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+ORIGIN = "https://cal.leadawaker.com"
+LOOKUP_URL = "https://api.leadawaker.com/api/internal/custom-domain-lookup"
+
+# INTERNAL_KEY is a secret — set with:
+#   wrangler secret put INTERNAL_KEY
+# (value = INTERNAL_API_KEY from the LeadAwaker server .env)
+
+# Bind each client custom hostname here as a route, e.g.:
+# [[routes]]
+# pattern = "book.clientwebsite.com/*"
+# zone_name = "clientwebsite.com"
+#
+# With Cloudflare Tunnel (Option B) the host is wired to the Pi via a Public
+# Hostname entry in Zero Trust; this Worker runs on that hostname's route.

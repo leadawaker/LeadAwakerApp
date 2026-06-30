@@ -54,7 +54,9 @@
     "switchToKanban": "Kanbanweergave",
     "upcomingCalls": "Aankomende gesprekken",
     "more": "Meer",
-    "exportPdf": "PDF exporteren"
+    "exportPdf": "PDF exporteren",
+    "showChats": "Chats tonen",
+    "hideChats": "Chats verbergen"
   },
   "sort": {
     "sortBy": "Sorteren op",
@@ -72,7 +74,9 @@
     "nameAZ": "Naam A → Z",
     "nameZA": "Naam Z → A",
     "scoreDown": "Score ↓",
-    "scoreUp": "Score ↑"
+    "scoreUp": "Score ↑",
+    "activity": "Laatste activiteit",
+    "created": "Aanmaakdatum"
   },
   "group": {
     "status": "Status",
@@ -80,7 +84,10 @@
     "account": "Account",
     "none": "Geen",
     "noCampaign": "Geen Campagne",
-    "untagged": "Zonder Tag"
+    "untagged": "Zonder Tag",
+    "service": "Dienst",
+    "source": "Bron",
+    "tag": "Tag"
   },
   "filters": {
     "title": "Leadfilters",
@@ -105,7 +112,10 @@
     "hasPhone": "Heeft Telefoon",
     "hasEmail": "Heeft E-mail",
     "allAccounts": "Alle Accounts",
-    "moveTo": "Verplaatsen naar"
+    "moveTo": "Verplaatsen naar",
+    "attributes": "Kenmerken",
+    "minScore": "Min. score",
+    "anyScore": "Alle"
   },
   "fold": {
     "foldColumns": "Kolommen inklappen",
@@ -309,7 +319,9 @@
       "aiSentiment": "Sentiment",
       "aiMemory": "AI Geheugen",
       "aiSummary": "Samenvatting",
-      "campaign": "Campagne"
+      "campaign": "Campagne",
+      "prompt": "Prompt",
+      "aiModel": "AI-model"
     },
     "actions": {
       "triggerBump": "Bump versturen",

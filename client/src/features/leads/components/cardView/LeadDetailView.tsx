@@ -4,10 +4,8 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Calendar,
-  CheckCircle2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
-import { useToast } from "@/hooks/use-toast";
 import { updateLead, deleteLead } from "../../api/leadsApi";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
@@ -44,7 +42,7 @@ import { getLeadId, getFullName, getStatus, getScore } from "./leadUtils";
 import { formatRelativeTime, formatBookedDate } from "./formatUtils";
 import { PipelineProgress, PipelineProgressCompact, PipelineDashBar } from "./atoms";
 import { ScoreWidget } from "./ScoreWidgets";
-import { ContactWidget } from "./ContactWidget";
+import { ContactWidget, NotesSection } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
 import { TempBadge } from "./designPrimitives";
 import { LeadSummaryCard } from "./LeadSummaryCard";
@@ -71,7 +69,6 @@ export function LeadDetailView({
   mode?: string;
 }) {
   const { t } = useTranslation("leads");
-  const { toast } = useToast();
   const name        = getFullName(lead);
   const status      = getStatus(lead);
   const score       = getScore(lead);
@@ -129,28 +126,6 @@ export function LeadDetailView({
       console.error("Failed to resume AI", err);
     }
   }, [leadId, onRefresh]);
-
-  // ── Reputation: mark service completed (the entry trigger for the feedback ask).
-  //    The timestamp is set server-side by the endpoint, never sent from here. ──
-  const servedAt = lead?.service_completed_at || lead?.serviceCompletedAt || null;
-  const [marking, setMarking] = useState(false);
-  const handleMarkServed = useCallback(async () => {
-    if (!leadId) return;
-    setMarking(true);
-    try {
-      const res = await apiFetch(`/api/leads/${leadId}/mark-served`, { method: "POST" });
-      if (res.ok) {
-        hapticSave();
-        toast({ description: t("detail.markServed.success", "Marked as served") });
-        onRefresh?.();
-      } else {
-        toast({ description: t("detail.markServed.error", "Could not mark as served"), variant: "destructive" });
-      }
-    } catch {
-      toast({ description: t("detail.markServed.error", "Could not mark as served"), variant: "destructive" });
-    }
-    setMarking(false);
-  }, [leadId, onRefresh, t, toast]);
 
   // ── Tag events — fetch junction rows + full tag list, merge by ID ──────────
   const [tagEvents, setTagEvents] = useState<{ name: string; color?: string; appliedAt?: string }[]>([]);
@@ -336,6 +311,10 @@ export function LeadDetailView({
   }, [toggleGradientTester]);
 
   // ── Hero data (computed once) ─────────────────────────────────────────────
+  // Contacts page reshapes the panel: summary/conversation first, Contact card
+  // hidden for clients, Notes pulled out to the bottom, Created shown in header.
+  const isContacts = mode === "contacts";
+  const createdAt = lead.created_at || lead.CreatedAt || lead.createdAt || "";
   const campName = lead.campaign_name || lead.Campaign || "";
   const acctName = lead.account_name || lead.Account || "";
   const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
@@ -348,8 +327,99 @@ export function LeadDetailView({
   const setRefs = (n: HTMLDivElement | null) => { panelRef.current = n; containerRef.current = n; };
   const sep = <span style={{ color: "var(--line-strong)" }}>·</span>;
 
+  // ── Column elements (ordering differs between Chats and Contacts) ───────────
+  const contactCol = (
+    <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
+      <ContactWidget
+        lead={lead}
+        onRefresh={onRefresh}
+        accountLogo={accountLogo}
+        campaignStickerUrl={campaignStickerUrl}
+        campaignsById={campaignsById}
+        onPdf={handlePdf}
+        onDelete={handleDelete}
+        isDeleting={deleting}
+        deleteConfirm={deleteConfirm}
+        setDeleteConfirm={setDeleteConfirm}
+        onToggleGradient={toggleGradientTester}
+        gradientTesterOpen={gradientTesterOpen}
+        isAgencyUser={isAgencyUser}
+        hideNotes={isContacts}
+      />
+    </div>
+  );
+
+  const scoreCol = (
+    <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
+      <ScoreWidget score={score} lead={lead} status={status} showBreakdown={!isContacts} />
+    </div>
+  );
+
+  // Agency chat card: Conversations / Summary toggle.
+  const agencyChatCol = (
+    <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
+      <div className="glass" style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 0" }}>
+          <div className="la-seg la-seg--pill">
+            <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
+            <button className={`la-seg-btn${chatTab === "summary" ? " on" : ""}`} onClick={() => setChatTab("summary")}>{t("detail.aiSummary", "Summary")}</button>
+          </div>
+          {/* Let AI continue — opposite corner from the tab switcher, only while a human has taken over */}
+          {chatTab === "chat" && chatHumanTakeover && (
+            <Popover open={showAiResume} onOpenChange={setShowAiResume}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="group relative inline-flex items-center justify-center h-[30px] w-[30px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[128px]"
+                  aria-label={t("chat.letAiContinue", "Let AI continue")}
+                >
+                  <img src="/6. Favicon.svg" alt="AI" className="h-[18px] w-[18px] shrink-0 absolute left-[5px]" />
+                  <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    {t("chat.letAiContinue", "Let AI continue")}
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                side="bottom"
+                sideOffset={6}
+                className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+              >
+                <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
+                  AI will resume this conversation. You can take over again anytime.
+                </p>
+                <div className="flex items-center gap-2 justify-end">
+                  <button type="button" onClick={() => setShowAiResume(false)} className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors">Cancel</button>
+                  <button type="button" onClick={handleChatAiResume} className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors">Confirm</button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+        {chatTab === "summary" ? (
+          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+            <LeadSummaryCard lead={lead} tier={tier} status={status} hideHeader />
+          </div>
+        ) : (
+          <ConversationWidget lead={lead} showHeader={false} onTakeoverChange={setChatHumanTakeover} />
+        )}
+      </div>
+    </div>
+  );
+
+  // Client read-only summary card (Contacts page only — clients never see chat balloons).
+  const clientSummaryCol = (
+    <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
+      <LeadSummaryCard lead={lead} tier={tier} status={status} />
+    </div>
+  );
+
+  // The conversation/summary surface for whoever is viewing.
+  const conversationCol = isAgencyUser ? agencyChatCol : clientSummaryCol;
+
   return (
-    <div ref={setRefs} className="relative flex flex-col h-full" style={{ gap: 14, padding: 14 }}>
+    <div ref={setRefs} className="relative flex flex-col h-full" style={{ padding: 14 }}>
+     <div className="mx-auto w-full flex flex-col min-h-0 flex-1" style={{ maxWidth: 1100, gap: 14 }}>
 
       {/* ── Hero (detached, rounded) ── */}
       <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
@@ -376,25 +446,12 @@ export function LeadDetailView({
                   <Calendar className="h-[11px] w-[11px]" />Booked · {formatBookedDate(bookedDate, accountTimezone)}
                 </span>
               )}
-              {servedAt ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "color-mix(in srgb, var(--primary) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--primary) 35%, transparent)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--primary)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
-                  <CheckCircle2 className="h-[11px] w-[11px]" />{t("detail.served", "Served")} · {formatBookedDate(servedAt, accountTimezone)}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleMarkServed}
-                  disabled={marking}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: "1px solid var(--line-strong)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--mute)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, cursor: marking ? "default" : "pointer", opacity: marking ? 0.5 : 1 }}
-                >
-                  <CheckCircle2 className="h-[11px] w-[11px]" />{marking ? t("detail.markServed.saving", "Saving…") : t("detail.markServed.label", "Mark served")}
-                </button>
-              )}
             </div>
             <div style={{ display: "flex", gap: 12, fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", letterSpacing: "0.1em", textTransform: "uppercase", flexWrap: "wrap" }}>
               {hasActivity && <span>{t("contact.lastActivity", "Activity")} {formatRelativeTime(hasActivity, t)}</span>}
               {campName && <>{sep}<span>{campName}{campaignNumber ? ` #${campaignNumber}` : ""}</span></>}
               {!isNarrow && acctName && <>{sep}<span>{acctName}</span></>}
+              {isContacts && createdAt && <>{sep}<span>{t("contact.created")} {formatRelativeTime(createdAt, t)}</span></>}
             </div>
           </div>
         </div>
@@ -402,81 +459,31 @@ export function LeadDetailView({
       </div>
 
       {/* ── Columns ── */}
+      {/* Contacts page: conversation/summary first, score, then Contact (agency only).
+          Chats page: Contact, conversation (agency only), score. */}
       <div style={{ flex: 1, minHeight: 0, width: "100%", display: "flex", flexDirection: isNarrow ? "column" : "row", gap: 14, overflowY: isNarrow ? "auto" : undefined, overflow: isNarrow ? "auto" : "visible" }}>
-        {/* Contact */}
-        <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
-          <ContactWidget
-            lead={lead}
-            onRefresh={onRefresh}
-            accountLogo={accountLogo}
-            campaignStickerUrl={campaignStickerUrl}
-            campaignsById={campaignsById}
-            onPdf={handlePdf}
-            onDelete={handleDelete}
-            isDeleting={deleting}
-            deleteConfirm={deleteConfirm}
-            setDeleteConfirm={setDeleteConfirm}
-            onToggleGradient={toggleGradientTester}
-            gradientTesterOpen={gradientTesterOpen}
-            isAgencyUser={isAgencyUser}
-          />
-        </div>
-        {/* Chat with Conversations / Summary toggle — admin/owner only */}
-        {isAgencyUser && (
-          <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
-            <div style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 0" }}>
-                <div className="la-seg la-seg--pill">
-                  <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
-                  <button className={`la-seg-btn${chatTab === "summary" ? " on" : ""}`} onClick={() => setChatTab("summary")}>{t("detail.aiSummary", "Summary")}</button>
-                </div>
-                {/* Let AI continue — opposite corner from the tab switcher, only while a human has taken over */}
-                {chatTab === "chat" && chatHumanTakeover && (
-                  <Popover open={showAiResume} onOpenChange={setShowAiResume}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="group relative inline-flex items-center justify-center h-[30px] w-[30px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[128px]"
-                        aria-label={t("chat.letAiContinue", "Let AI continue")}
-                      >
-                        <img src="/6. Favicon.svg" alt="AI" className="h-[18px] w-[18px] shrink-0 absolute left-[5px]" />
-                        <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                          {t("chat.letAiContinue", "Let AI continue")}
-                        </span>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      align="end"
-                      side="bottom"
-                      sideOffset={6}
-                      className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
-                    >
-                      <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
-                        AI will resume this conversation. You can take over again anytime.
-                      </p>
-                      <div className="flex items-center gap-2 justify-end">
-                        <button type="button" onClick={() => setShowAiResume(false)} className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors">Cancel</button>
-                        <button type="button" onClick={handleChatAiResume} className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors">Confirm</button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
-              {chatTab === "summary" ? (
-                <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-                  <LeadSummaryCard lead={lead} tier={tier} status={status} hideHeader />
-                </div>
-              ) : (
-                <ConversationWidget lead={lead} showHeader={false} onTakeoverChange={setChatHumanTakeover} />
-              )}
-            </div>
-          </div>
+        {isContacts ? (
+          <>
+            {conversationCol}
+            {scoreCol}
+            {isAgencyUser && contactCol}
+          </>
+        ) : (
+          <>
+            {contactCol}
+            {isAgencyUser && agencyChatCol}
+            {scoreCol}
+          </>
         )}
-        {/* Lead Score — same fixed width as Contact */}
-        <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
-          <ScoreWidget score={score} lead={lead} status={status} showBreakdown={mode !== "contacts"} />
-        </div>
       </div>
+
+      {/* ── Notes (Contacts page only — pulled out of the Contact card to the bottom) ── */}
+      {isContacts && (
+        <div style={{ flexShrink: 0 }}>
+          <NotesSection lead={lead} onRefresh={onRefresh} />
+        </div>
+      )}
+     </div>
 
       {/* Gradient Tester floating panel (agency-only) */}
       {isAgencyUser && (

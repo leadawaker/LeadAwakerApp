@@ -76,7 +76,7 @@ export function registerMessagingRoutes(app: Express): void {
     //    persist the subaccount creds so a retry doesn't orphan a second subaccount.
     let fromNumber: string;
     try {
-      let available = await subClient.availablePhoneNumbers("NL").mobile.list({ smsEnabled: true, limit: 1 });
+      let available: Array<{ phoneNumber: string }> = await subClient.availablePhoneNumbers("NL").mobile.list({ smsEnabled: true, limit: 1 });
       if (!available.length) {
         available = await subClient.availablePhoneNumbers("NL").local.list({ smsEnabled: true, limit: 1 });
       }

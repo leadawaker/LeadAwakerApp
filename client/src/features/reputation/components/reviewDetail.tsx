@@ -11,7 +11,7 @@ import {
 
 // ── AI Analysis sidebar (flat surface, sits right of the reply) ──
 function RepAIAnalysis({ review }: { review: Review }) {
-  const a = review.analysis ?? {};
+  const a: Partial<{ issues: string[]; reco: string }> = review.analysis ?? {};
   const r = review.rating;
   const positive = r >= 4;
   const sentiment = r <= 1 ? "Very negative" : r === 2 ? "Negative" : r === 3 ? "Mixed" : r === 4 ? "Positive" : "Very positive";

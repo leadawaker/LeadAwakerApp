@@ -926,11 +926,8 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                       <button
                         type="button"
                         onClick={() => {
-                          const selectedAccount = currentAccountId > 0 ? accounts.find(a => a.id === currentAccountId) : null;
-                          const clientLabel = selectedAccount
-                            ? `Client: ${selectedAccount.name}`
-                            : "Client (sandbox)";
-                          impersonate("Manager", selectedAccount ? currentAccountId : undefined);
+                          const selectedAccountName = currentAccountId > 0 ? accounts[currentAccountId] : null;
+                          impersonate("Manager", selectedAccountName ? currentAccountId : undefined);
                         }}
                         className="w-full h-9 rounded-lg inline-flex items-center justify-center gap-2.5 text-[12px] font-semibold border"
                         style={{ background: "var(--bg)", borderColor: "var(--line)", color: "var(--ink)" }}

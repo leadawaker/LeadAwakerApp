@@ -20,7 +20,7 @@ export function registerUserSettingsRoutes(app: Express): void {
       await db
         .update(users)
         .set({ encryptedClaudeApiKey: encrypted })
-        .where(eq(users.id, req.user!.id));
+        .where(eq(users.id, req.user!.id!));
 
       res.json({ message: "Claude API key saved successfully" });
     } catch (err: any) {
@@ -35,7 +35,7 @@ export function registerUserSettingsRoutes(app: Express): void {
 
     try {
       const user = await db.query.users.findFirst({
-        where: eq(users.id, req.user!.id),
+        where: eq(users.id, req.user!.id!),
       });
 
       if (!user || !user.encryptedClaudeApiKey) {
@@ -61,7 +61,7 @@ export function registerUserSettingsRoutes(app: Express): void {
       await db
         .update(users)
         .set({ encryptedClaudeApiKey: null })
-        .where(eq(users.id, req.user.id));
+        .where(eq(users.id, req.user.id!));
 
       res.json({ message: "Claude API key deleted successfully" });
     } catch (err: any) {
@@ -76,7 +76,7 @@ export function registerUserSettingsRoutes(app: Express): void {
 
     try {
       const user = await db.query.users.findFirst({
-        where: eq(users.id, req.user!.id),
+        where: eq(users.id, req.user!.id!),
       });
 
       if (!user || !user.encryptedClaudeApiKey) {

@@ -329,9 +329,9 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // Business profile templates per niche (bilingual). When a campaign picks
   // this niche, company_name/description/kb pre-fill from these; editing those
   // campaign fields writes them back here for future campaigns.
-  companyNameTemplate: jsonb("company_name_template").$type<{ nl: string; en: string }>().default({}),
-  descriptionTemplate: jsonb("description_template").$type<{ nl: string; en: string }>().default({}),
-  kbTemplate: jsonb("kb_template").$type<{ nl: string; en: string }>().default({}),
+  companyNameTemplate: jsonb("company_name_template").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  descriptionTemplate: jsonb("description_template").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  kbTemplate: jsonb("kb_template").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -1465,6 +1465,10 @@ export const calendarConnections = nocodb.table("Calendar_Connections", {
   oauthTokensEncrypted: text("oauth_tokens_encrypted"), // google / outlook
   apiKeyEncrypted: text("api_key_encrypted"),           // calcom / calendly
   icalUrl: text("ical_url"),                            // ical read-only feed
+  // White-label booking domain (book.clientwebsite.com → Cloudflare Tunnel).
+  // Stored on the account's `caldiy` connection row. status: pending | active.
+  customDomain: text("custom_domain"),
+  customDomainStatus: text("custom_domain_status"),     // pending | active
   lastError: text("last_error"),
   lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),

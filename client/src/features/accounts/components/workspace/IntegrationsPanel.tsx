@@ -2,7 +2,7 @@ import { VoiceCloneSection } from "./VoiceCloneSection";
 import { MissedCallCard } from "./MissedCallCard";
 import { MeetingTypeCard } from "./MeetingTypeCard";
 import type { AccountRow, AccountDetail } from "./types";
-import { CalendarConnectCard, BookingPageCard, BookingLinkReadOnly } from "./CalendarConnectCard";
+import { CalendarConnectCard, BookingPageCard, BookingLinkReadOnly, CustomBookingDomainCard } from "./CalendarConnectCard";
 import { MessagingCard, EmailSenderCard } from "./MessagingCards";
 
 // ── Main panel ─────────────────────────────────────────────────────────────────
@@ -50,6 +50,12 @@ export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked =
           )}
         </div>
       </div>
+
+      {!readOnly && (
+        <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+          <CustomBookingDomainCard accountId={accountId} noBorder />
+        </div>
+      )}
 
       {withVoice && !readOnly && (
         <div style={{ padding: "0 0 20px" }}>

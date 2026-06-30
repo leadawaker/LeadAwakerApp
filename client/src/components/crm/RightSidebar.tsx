@@ -609,7 +609,7 @@ export function RightSidebar({
               { key: "reputation", labelKey: "sidebar.reputation", Icon: Star, href: `${prefix}/reputation` as string | null },
               // Missed-Call Text-Back (Voice service) — mock workspace for now.
               { key: "missedcall", labelKey: "sidebar.missedCalls", Icon: PhoneMissed, href: `${prefix}/missed-calls` as string | null },
-            ].map(({ key, labelKey, Icon, href }) =>
+            ].filter(({ key }) => isOwner || key === "reactivation").map(({ key, labelKey, Icon, href }) =>
               href ? (
                 <Link
                   key={key}

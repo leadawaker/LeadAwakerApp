@@ -554,5 +554,24 @@
     "callingNumberEmpty": "Niet ingesteld",
     "callingNumberHint": "Leads zien dit nummer in de boekingsbevestiging zodat ze weten wie er belt.",
     "whatsappHint": "Het geboekte gesprek vindt plaats via WhatsApp met je gekoppelde berichtnummer."
+  },
+  "customDomain": {
+    "title": "Eigen boekingsdomein",
+    "explainer": "Serveer de boekingspagina van deze klant vanaf hun eigen domein (bijv. book.hunbedrijf.nl) zodat er geen leadawaker-branding in de adresbalk staat.",
+    "domainLabel": "Boekingsdomein",
+    "save": "Domein opslaan",
+    "verify": "DNS controleren & activeren",
+    "remove": "Verwijderen",
+    "openPage": "Boekingspagina openen",
+    "statusPending": "Wacht op DNS",
+    "statusActive": "Actief",
+    "dnsInstructions": "Voeg dit CNAME-record toe bij de DNS-provider van de klant en klik daarna hieronder om te activeren.",
+    "recordType": "Type",
+    "recordName": "Naam / Host",
+    "recordTarget": "Doel / Waarde",
+    "notReady": "Nog niet bereikbaar. DNS kan een paar minuten duren om te verspreiden.",
+    "saveFailed": "Kon het domein niet opslaan.",
+    "verifyFailed": "Kon het domein niet verifiëren.",
+    "removeFailed": "Kon het domein niet verwijderen."
   }
 }

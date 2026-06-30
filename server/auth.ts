@@ -291,7 +291,7 @@ export function registerAuthRoutes(app: Express) {
           if (loginErr) return next(loginErr);
           // Record last login timestamp (server-side Date object — never an ISO string).
           // Fire-and-forget: don't block the login response on this write.
-          storage.updateAppUser(user.id, { lastLoginAt: new Date() } as any)
+          storage.updateAppUser(user.id!, { lastLoginAt: new Date() } as any)
             .catch((e) => console.error("[auth] failed to record last login:", e?.message));
           // Return safe user object (exclude passwordHash)
           const { passwordHash: _, ...safeUser } = user;

@@ -14,6 +14,10 @@ interface LeadContactSectionProps {
   isAgencyPanel: boolean;
   campaigns: { id: number; name: string }[];
   handleInlineFieldSave: (fieldName: string, newValue: string) => Promise<void>;
+  /** Linked conversation prompt name (agency only). */
+  promptName?: string;
+  /** Campaign's AI model (agency only). */
+  aiModel?: string;
 }
 
 export function LeadContactSection({
@@ -25,6 +29,8 @@ export function LeadContactSection({
   isAgencyPanel,
   campaigns,
   handleInlineFieldSave,
+  promptName,
+  aiModel,
 }: LeadContactSectionProps) {
   const { t } = useTranslation("leads");
   return (
@@ -84,6 +90,12 @@ export function LeadContactSection({
           label={t("detail.fields.source")}
           value={source}
         />
+        {isAgencyPanel && promptName && (
+          <InfoRow label={t("detail.fields.prompt")} value={promptName} />
+        )}
+        {isAgencyPanel && aiModel && (
+          <InfoRow label={t("detail.fields.aiModel")} value={aiModel} />
+        )}
         {demoNicheCtx && (
           <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
             <span className="text-[11px] text-muted-foreground shrink-0">Niche</span>

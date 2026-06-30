@@ -85,9 +85,10 @@ export function Card({
   );
 }
 
-export function CardLabel({ children, color }: { children: React.ReactNode; color?: string }) {
+export function CardLabel({ children, color, className }: { children: React.ReactNode; color?: string; className?: string }) {
   return (
     <span
+      className={className}
       style={{
         fontFamily: "var(--mono)",
         fontSize: 9.5,

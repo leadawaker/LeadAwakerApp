@@ -39,6 +39,15 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   const { t } = useTranslation("campaigns");
   const { compact = false } = props;
   const [active, setActive] = useState("business");
+  // Optional name typed live during a discovery-call screenshare. Rides along in
+  // the Launch button's "/start <campaignId> <name>" message so the engine
+  // switches the VIP lead to this campaign and sets first_name before replaying
+  // the opener. Name empty → "/start <campaignId>"; both empty → plain "/start".
+  const [launchName, setLaunchName] = useState("");
+  const launchCampaignId = (props.campaign?.id || props.campaign?.Id) as number | undefined;
+  const launchText = [LAUNCH_WA_MESSAGE, launchCampaignId, launchName.trim()]
+    .filter((p) => p !== undefined && p !== "" && p !== null)
+    .join(" ");
 
   const sections: SectionDef[] = [
     { id: "business", num: "01", labelKey: "config.sections.business", titleKey: "config.sections.businessTitle", descKey: "config.sections.businessDesc", icon: Building2 },
@@ -117,7 +126,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
             <div style={{ fontSize: 14, color: 'var(--mute)' }}>{t(cur.descKey)}</div>
           </div>
 
-          {active === "business" && <BusinessSectionFields {...props} />}
+          {active === "business" && <BusinessSectionFields {...props} launchName={launchName} setLaunchName={setLaunchName} />}
           {active === "ai"       && <AISectionFields {...props} conversationPrompts={props.conversationPrompts ?? []} />}
           {active === "behavior" && <BehaviorSectionFields {...props} onNicheChange={props.onNicheChange} />}
 
@@ -132,9 +141,11 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
               ← {curIdx > 0 ? t(sections[curIdx - 1].labelKey) : "Start"}
             </button>
 
-            {/* Launch Campaign — opens WhatsApp on the Lead Awaker AI line with /start prefilled */}
+            {/* Launch Campaign — opens WhatsApp on the Lead Awaker AI line with
+                "/start <campaignId> <name>" prefilled. The name comes from the
+                "Demo lead name" field in the Business section above. */}
             <a
-              href={`https://wa.me/${LAUNCH_WA_NUMBER}?text=${encodeURIComponent(LAUNCH_WA_MESSAGE)}`}
+              href={`https://wa.me/${LAUNCH_WA_NUMBER}?text=${encodeURIComponent(launchText)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="la-btn la-btn--wine la-btn--lg la-btn--pill"

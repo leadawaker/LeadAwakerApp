@@ -112,11 +112,12 @@ export function LeadsFiltersBar({
     none:     t("group.none"),
   };
   const sortLabels: Record<SortByOption, string> = {
-    recent:     t("sort.mostRecent"),
-    name_asc:   t("sort.nameAZ"),
-    name_desc:  t("sort.nameZA"),
-    score_desc: t("sort.scoreDown"),
-    score_asc:  t("sort.scoreUp"),
+    recent:         t("sort.mostRecent"),
+    latest_message: t("sort.latestMessage"),
+    name_asc:       t("sort.nameAZ"),
+    name_desc:      t("sort.nameZA"),
+    score_desc:     t("sort.scoreDown"),
+    score_asc:      t("sort.scoreUp"),
   };
 
   return (

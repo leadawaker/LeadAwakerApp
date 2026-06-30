@@ -29,6 +29,22 @@ function frontendBase(req: import("express").Request): string {
   return process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
 }
 
+// Cloudflare Tunnel CNAME target clients point their `book.` subdomain at.
+// (pi-tunnel UUID; overridable per-environment.)
+const CF_TUNNEL_CNAME =
+  process.env.CF_TUNNEL_CNAME || "75e02640-edf0-41dd-b681-6efc0469e8e2.cfargotunnel.com";
+
+/** Normalize a user-entered booking domain to a bare lowercase hostname. */
+function normalizeBookingDomain(raw: string): string | null {
+  let host = (raw || "").trim().toLowerCase();
+  if (!host) return null;
+  host = host.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/\.$/, "");
+  // Valid DNS hostname with at least one dot (a subdomain), no leadawaker host.
+  if (!/^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(host)) return null;
+  if (host.endsWith("leadawaker.com")) return null;
+  return host;
+}
+
 export function registerCalendarRoutes(app: Express): void {
   // ─── Provider capabilities (for the connect UI) ───────────────────────────
   app.get("/api/calendar/providers", requireAuth, wrapAsync(async (_req, res) => {
@@ -297,5 +313,92 @@ export function registerCalendarRoutes(app: Express): void {
     if (!conn || !conn.apiKeyEncrypted) return res.json(null);
     const password = decryptSecret<string>(conn.apiKeyEncrypted);
     res.json({ username: conn.externalId, password, bookingUrl: conn.displayName });
+  }));
+
+  // ─── White-label custom booking domain ─────────────────────────────────────
+  // Architecture: Cloudflare Tunnel (Option B). The client adds one CNAME
+  // (book → <tunnel>.cfargotunnel.com); Gabriel adds a Public Hostname entry in
+  // Zero Trust pointing the host at the local Cal.diy. No cert / SaaS API here.
+
+  const customDomainPayload = (conn: Awaited<ReturnType<typeof storage.getCalendarConnection>>) => ({
+    customDomain: conn?.customDomain ?? null,
+    customDomainStatus: conn?.customDomainStatus ?? null,
+    cnameName: "book",
+    cnameTarget: CF_TUNNEL_CNAME,
+  });
+
+  // Save (or change) the domain. Always (re)starts in `pending` until verified.
+  app.post("/api/accounts/:id/custom-domain", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+
+    const host = normalizeBookingDomain(req.body?.domain || "");
+    if (!host) return res.status(400).json({ message: "Enter a valid subdomain, e.g. book.yourcompany.com" });
+
+    const caldiy = await storage.getCalendarConnection(accountId, "caldiy");
+    if (!caldiy) return res.status(400).json({ message: "Provision a booking page for this account first." });
+
+    // Reject a host already claimed by another account.
+    const clash = await storage.getCalendarConnectionByCustomDomain(host);
+    if (clash && clash.accountId !== accountId) {
+      return res.status(409).json({ message: "That domain is already in use by another account." });
+    }
+
+    const updated = await storage.setCustomDomain(accountId, host, "pending");
+    res.status(201).json(customDomainPayload(updated ?? caldiy));
+  }));
+
+  // Verify the domain resolves through the tunnel and serves the booking page,
+  // then flip it to `active`. Agency-only (the activation gate).
+  app.post("/api/accounts/:id/custom-domain/verify", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+    const caldiy = await storage.getCalendarConnection(accountId, "caldiy");
+    if (!caldiy?.customDomain) return res.status(400).json({ message: "No custom domain set." });
+
+    let reachable = false;
+    try {
+      const probe = await fetch(`https://${caldiy.customDomain}/${caldiy.externalId}`, {
+        method: "HEAD",
+        redirect: "manual",
+        signal: AbortSignal.timeout(8000),
+      });
+      reachable = probe.status < 500;
+    } catch {
+      reachable = false;
+    }
+
+    if (!reachable) {
+      return res.json({ ...customDomainPayload(caldiy), verified: false });
+    }
+    const updated = await storage.setCustomDomain(accountId, caldiy.customDomain, "active");
+    res.json({ ...customDomainPayload(updated ?? caldiy), verified: true });
+  }));
+
+  // Remove the domain — reverts links + routing to cal.leadawaker.com.
+  app.delete("/api/accounts/:id/custom-domain", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+    await storage.setCustomDomain(accountId, null, null);
+    res.json({ ok: true });
+  }));
+
+  // Internal lookup for the Cloudflare Worker (host→username) and the Cal.diy
+  // email white-labelling (username→domain). Internal-key or session auth.
+  app.get("/api/internal/custom-domain-lookup", requireAuth, wrapAsync(async (req, res) => {
+    const host = (req.query.host as string | undefined)?.trim().toLowerCase();
+    const username = (req.query.username as string | undefined)?.trim();
+
+    if (host) {
+      const conn = await storage.getCalendarConnectionByCustomDomain(host);
+      if (!conn || conn.customDomainStatus !== "active") return res.json({ username: null });
+      return res.json({ username: conn.externalId, status: conn.customDomainStatus });
+    }
+    if (username) {
+      const conn = await storage.getCaldiyConnectionByUsername(username);
+      if (!conn || conn.customDomainStatus !== "active") return res.json({ customDomain: null });
+      return res.json({ customDomain: conn.customDomain, status: conn.customDomainStatus });
+    }
+    res.status(400).json({ message: "host or username required" });
   }));
 }

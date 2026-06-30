@@ -29,7 +29,7 @@ export function AISectionFields({
   // UI language drives display & edit; campaign `language` decides what the engine sends.
   const uiLang = asCampaignLang(i18n.language);
 
-  const displayText = (raw: unknown) => resolveLang(raw, uiLang);
+  const displayText = (raw: unknown) => resolveLang(raw, uiLang === "pt" ? "en" : uiLang);
 
   const onTextChange = (field: string, raw: unknown, text: string) => {
     let current: Record<string, string> = {};

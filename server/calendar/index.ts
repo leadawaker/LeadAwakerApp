@@ -109,6 +109,8 @@ export function publicConnection(c: CalendarConnection) {
     displayName: c.displayName,
     calendarId: c.calendarId,
     timezone: c.timezone,
+    customDomain: c.customDomain,
+    customDomainStatus: c.customDomainStatus,
     lastError: c.lastError,
     lastSyncAt: c.lastSyncAt,
     createdAt: c.createdAt,

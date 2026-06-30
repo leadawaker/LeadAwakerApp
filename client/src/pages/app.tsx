@@ -142,7 +142,7 @@ export default function AppArea() {
               : <Redirect to="/platform/contacts" />}
           </Route>
           <Route path="/platform/contacts"><AppLeads mode="contacts" /></Route>
-          <Route path="/platform/leads" component={AppLeads} />
+          <Route path="/platform/leads"><AppLeads /></Route>
           <Route path="/platform/outreach-inbox">
             <AgencyOnly prefix="/platform"><OutreachInbox /></AgencyOnly>
           </Route>

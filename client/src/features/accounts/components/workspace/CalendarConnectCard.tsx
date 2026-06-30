@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Plus, RefreshCw, Check, Trash2, Loader2, Copy, Eye, EyeOff,
-  ExternalLink, Calendar, KeyRound, ChevronDown, ChevronRight, Lock,
+  ExternalLink, Calendar, KeyRound, ChevronDown, ChevronRight, Lock, Globe,
 } from "lucide-react";
 import { ConnectedPill } from "./atoms";
 import {
   fetchCalendarProviders, fetchCalendarConnections, startCalendarOAuth, connectCalendarKey, connectCalendarCaldav, disconnectCalendar,
   provisionBookingPage, fetchCaldiyCredentials,
+  saveCustomDomain, verifyCustomDomain, removeCustomDomain,
   type CalendarProviderId, type CalendarProviderMeta, type CalendarConnection, type CaldiyCredentials,
 } from "../../api/calendarApi";
 import { CalendarProviderLogo } from "./integrationLogos";
@@ -47,7 +48,9 @@ export function CalendarConnectCard({ accountId, noBorder, clientMode }: { accou
   const meta = providers.find((p) => p.id === provider);
   const isApple = provider === "apple";
   const inputStyle: React.CSSProperties = { fontSize: 11.5, padding: "8px 11px", width: "100%" };
-  const visibleConnections = connections.filter((c) => (c.provider as string) !== "caldiy");
+  const visibleConnections = connections.filter(
+    (c): c is CalendarConnection & { provider: CalendarProviderId } => (c.provider as string) !== "caldiy"
+  );
   const hasConnections = visibleConnections.length > 0;
 
   const resetForm = () => {
@@ -368,6 +371,165 @@ export function BookingPageCard({ accountId, noBorder }: { accountId: number; no
               <Trash2 size={12} />
               {deleteConfirm ? t("detail.confirm") : t("toolbar.delete")}
             </button>
+            {error && <span style={{ fontSize: 11.5, color: "var(--wine)" }}>{error}</span>}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (noBorder) return <>{body}</>;
+  return <IntegSection>{body}</IntegSection>;
+}
+
+// ── White-label booking domain ───────────────────────────────────────────────────
+// Lets a client serve their booking page from their own host (book.client.com)
+// via Cloudflare Tunnel. The client adds one CNAME; Gabriel adds the Public
+// Hostname in Zero Trust, then marks it active here once DNS has propagated.
+const BOOKING_CNAME_TARGET = "75e02640-edf0-41dd-b681-6efc0469e8e2.cfargotunnel.com";
+
+export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: number; noBorder?: boolean }) {
+  const { t } = useTranslation("accounts");
+  const [domain, setDomain] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [input, setInput] = useState("");
+  const [cnameTarget, setCnameTarget] = useState(BOOKING_CNAME_TARGET);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!accountId) return;
+    fetchCalendarConnections(accountId)
+      .then((conns) => {
+        const caldiy = conns.find((c) => (c.provider as string) === "caldiy");
+        setDomain(caldiy?.customDomain ?? null);
+        setStatus(caldiy?.customDomainStatus ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, [accountId]);
+
+  if (!loaded) return null;
+
+  const active = status === "active";
+  const flatBtn = { background: "transparent", boxShadow: "none", color: "var(--mute-2)" } as React.CSSProperties;
+  const monoLabel = (text: string) => (
+    <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>
+      {text}
+    </div>
+  );
+
+  const copy = (value: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleSave = async () => {
+    setBusy(true); setError(null); setNotice(null);
+    try {
+      const r = await saveCustomDomain(accountId, input.trim());
+      setDomain(r.customDomain); setStatus(r.customDomainStatus); setCnameTarget(r.cnameTarget);
+      setInput("");
+    } catch (e: any) { setError(e.message || t("customDomain.saveFailed")); }
+    finally { setBusy(false); }
+  };
+
+  const handleVerify = async () => {
+    setBusy(true); setError(null); setNotice(null);
+    try {
+      const r = await verifyCustomDomain(accountId);
+      setStatus(r.customDomainStatus); setCnameTarget(r.cnameTarget);
+      if (!r.verified) setNotice(t("customDomain.notReady"));
+    } catch (e: any) { setError(e.message || t("customDomain.verifyFailed")); }
+    finally { setBusy(false); }
+  };
+
+  const handleRemove = async () => {
+    if (!deleteConfirm) { setDeleteConfirm(true); setTimeout(() => setDeleteConfirm(false), 3000); return; }
+    setBusy(true); setError(null);
+    try { await removeCustomDomain(accountId); setDomain(null); setStatus(null); setDeleteConfirm(false); }
+    catch (e: any) { setError(e.message || t("customDomain.removeFailed")); }
+    finally { setBusy(false); }
+  };
+
+  const body = (
+    <>
+      <SectionHead>
+        <IconTile><Globe size={16} style={{ color: "var(--mute-2)" }} /></IconTile>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("customDomain.title")}</span>
+        {domain ? (
+          <span style={{
+            fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
+            padding: "3px 8px", borderRadius: 999,
+            background: active ? "var(--good-bg, rgba(34,197,94,0.12))" : "var(--warn-bg, rgba(234,179,8,0.14))",
+            color: active ? "var(--good)" : "var(--warn)",
+          }}>
+            {active ? t("customDomain.statusActive") : t("customDomain.statusPending")}
+          </span>
+        ) : (
+          <ConnectedPill on={false} connectedLabel={t("pills.connected")} notSetLabel={t("pills.notSet")} />
+        )}
+      </SectionHead>
+
+      {!domain ? (
+        <>
+          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t("customDomain.explainer")}</p>
+          {monoLabel(t("customDomain.domainLabel"))}
+          <input
+            className="neu-input"
+            style={{ fontSize: 11.5, padding: "8px 11px", width: "100%", fontFamily: "var(--mono)" }}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="book.yourcompany.com"
+          />
+          <div className="row" style={{ gap: 10, marginTop: 14 }}>
+            <button className="la-btn la-btn--soft" disabled={busy || !input.trim()} onClick={handleSave}>
+              {busy ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+              {t("customDomain.save")}
+            </button>
+            {error && <span style={{ fontSize: 11.5, color: "var(--wine)" }}>{error}</span>}
+          </div>
+        </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FlatRow label={t("customDomain.domainLabel")} value={domain} />
+
+          {!active && (
+            <>
+              <p style={{ fontSize: 11.5, color: "var(--mute)", margin: "12px 0 8px", lineHeight: 1.5 }}>{t("customDomain.dnsInstructions")}</p>
+              <FlatRow label={t("customDomain.recordType")} value="CNAME" />
+              <FlatRow label={t("customDomain.recordName")} value="book" />
+              <FlatRow
+                label={t("customDomain.recordTarget")}
+                value={cnameTarget}
+                extra={<button className="la-btn la-btn--icon" onClick={() => copy(cnameTarget)} style={flatBtn}>{copied ? <Check size={13} /> : <Copy size={13} />}</button>}
+              />
+            </>
+          )}
+
+          <div className="row" style={{ gap: 10, marginTop: 12 }}>
+            {!active && (
+              <button className="la-btn la-btn--soft" disabled={busy} onClick={handleVerify}>
+                {busy ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                {t("customDomain.verify")}
+              </button>
+            )}
+            {active && (
+              <button className="la-btn la-btn--icon" onClick={() => window.open(`https://${domain}`, "_blank")} style={flatBtn} title={t("customDomain.openPage")}>
+                <ExternalLink size={13} />
+              </button>
+            )}
+            <button className="la-btn la-btn--soft" disabled={busy} onClick={handleRemove} style={{ color: deleteConfirm ? "var(--wine)" : undefined }}>
+              <Trash2 size={12} />
+              {deleteConfirm ? t("detail.confirm") : t("customDomain.remove")}
+            </button>
+            {notice && <span style={{ fontSize: 11.5, color: "var(--warn)" }}>{notice}</span>}
             {error && <span style={{ fontSize: 11.5, color: "var(--wine)" }}>{error}</span>}
           </div>
         </div>

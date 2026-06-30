@@ -24,7 +24,7 @@ export type Appointment = {
   phone: string | null;
   email: string | null;
   callDurationMinutes: number;
-  rawLead: Record<string, any>;
+  rawLead?: Record<string, any>;
   timezone?: string;
   leadScore: number;
 };
