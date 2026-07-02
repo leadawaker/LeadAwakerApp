@@ -98,7 +98,8 @@ export function BusinessSectionFields({
       {/* First Message — the opener template. This is the field Finn live-edits
           on screenshare during the demo (Part 1 of the trust-kit spec). */}
       <div style={{ gridColumn: '1 / -1' }}>
-        <InfoRow icon={MessageSquare} label={t("config.firstMessage")} value={campaign.first_message_template}
+        <InfoRow icon={MessageSquare} label={t("config.firstMessage")}
+          value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
           editChild={isEditing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
@@ -108,13 +109,13 @@ export function BusinessSectionFields({
                 />
               </div>
               <EditText
-                value={String(draft.First_Message ?? campaign.first_message_template ?? "")}
-                onChange={(v) => setDraft(d => ({ ...d, First_Message: v }))}
+                value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
+                onChange={(v) => onTextChange("First_Message", draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template, v)}
                 multiline
                 minRows={3}
                 placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
               />
-              <CopyButton value={String(draft.First_Message || campaign.first_message_template || "")} />
+              <CopyButton value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)} />
             </div>
           ) : undefined}
           {...editFor("first_message_template")}

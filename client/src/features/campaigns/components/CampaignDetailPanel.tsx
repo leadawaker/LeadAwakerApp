@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { resolveLang } from "@shared/langField";
+import { asCampaignLang } from "./settings/fieldLocale";
 import { formatDate } from "./formFields/campaignFormatters";
 import {
   QualificationCriteriaDisplay,
@@ -112,7 +114,8 @@ export function CampaignDetailPanel({
   open,
   onClose,
 }: CampaignDetailPanelProps) {
-  const { t } = useTranslation("campaigns");
+  const { t, i18n } = useTranslation("campaigns");
+  const uiLang = asCampaignLang(i18n.language);
   // Filter metrics to just this campaign
   const campaignMetrics = useMemo(() => {
     if (!campaign) return [];
@@ -302,7 +305,7 @@ export function CampaignDetailPanel({
                 </div>
                 {campaign.first_message_template || campaign.First_Message ? (
                   <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-                    {campaign.first_message_template || campaign.First_Message}
+                    {resolveLang(campaign.first_message_template || campaign.First_Message, uiLang === "pt" ? "en" : uiLang)}
                   </p>
                 ) : (
                   <p className="text-[11px] text-muted-foreground italic">{t("config.noTemplateSet")}</p>
