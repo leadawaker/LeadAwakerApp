@@ -235,9 +235,10 @@
     "intro": "Per-niche words the AI uses to re-theme the universal demo prompt. Pick a niche on a campaign and the prompt swaps these terms in automatically, so the AI sounds native to that trade without a new prompt. The first word in each group is the one the prompt uses.",
     "defaultNiche": "Default (fallback)",
     "addNiche": "Add niche",
-    "addNichePlaceholder": "Select a niche…",
+    "addNichePlaceholder": "New niche name…",
     "deleteNiche": "Delete niche",
     "saveError": "Could not save. Please try again.",
+    "selectNiche": "Select a niche to view its details.",
     "groups": {
       "projectTerm": "Project / product",
       "proposalTerm": "Proposal / quote",
@@ -245,7 +246,7 @@
       "advisorTerm": "Advisor",
       "visitTerm": "Visit / location"
     },
-    "title": "Niche Words",
+    "title": "Niches",
     "lang": {
       "en": "English",
       "nl": "Dutch"

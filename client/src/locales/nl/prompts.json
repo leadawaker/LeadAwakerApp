@@ -235,9 +235,10 @@
     "intro": "Woorden per niche die de AI gebruikt om de universele demo-prompt om te vormen. Kies een niche bij een campagne en de prompt wisselt deze termen automatisch in, zodat de AI native klinkt voor dat vakgebied zonder een nieuwe prompt. Het eerste woord in elke groep is het woord dat de prompt gebruikt.",
     "defaultNiche": "Standaard (terugval)",
     "addNiche": "Niche toevoegen",
-    "addNichePlaceholder": "Kies een niche…",
+    "addNichePlaceholder": "Naam nieuwe niche…",
     "deleteNiche": "Niche verwijderen",
     "saveError": "Opslaan mislukt. Probeer het opnieuw.",
+    "selectNiche": "Selecteer een niche om de details te bekijken.",
     "groups": {
       "projectTerm": "Project / product",
       "proposalTerm": "Voorstel / offerte",
@@ -245,7 +246,7 @@
       "advisorTerm": "Adviseur",
       "visitTerm": "Bezoek / locatie"
     },
-    "title": "Nichewoorden",
+    "title": "Niches",
     "lang": {
       "en": "Engels",
       "nl": "Nederlands"

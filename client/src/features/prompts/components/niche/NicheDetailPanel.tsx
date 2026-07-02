@@ -98,23 +98,23 @@ export function NicheDetailPanel({ row, lang, busyKey, onBack, onAdd, onRemove, 
           <div className="flex flex-col gap-3">
             <TemplateField
               label={t("vocabulary.templates.companyName")}
-              value={(row.companyNameTemplate ?? EMPTY_TEMPLATE)[lang]}
+              value={row.companyNameTemplate?.[lang] ?? ""}
               busy={!!busyKey?.startsWith(`${row.niche}:template:companyNameTemplate`)}
-              onSave={(v) => onSaveTemplate("companyNameTemplate", { ...row.companyNameTemplate, [lang]: v })}
+              onSave={(v) => onSaveTemplate("companyNameTemplate", { ...EMPTY_TEMPLATE, ...row.companyNameTemplate, [lang]: v })}
             />
             <TemplateField
               label={t("vocabulary.templates.description")}
-              value={(row.descriptionTemplate ?? EMPTY_TEMPLATE)[lang]}
+              value={row.descriptionTemplate?.[lang] ?? ""}
               multiline
               busy={!!busyKey?.startsWith(`${row.niche}:template:descriptionTemplate`)}
-              onSave={(v) => onSaveTemplate("descriptionTemplate", { ...row.descriptionTemplate, [lang]: v })}
+              onSave={(v) => onSaveTemplate("descriptionTemplate", { ...EMPTY_TEMPLATE, ...row.descriptionTemplate, [lang]: v })}
             />
             <TemplateField
               label={t("vocabulary.templates.kb")}
-              value={(row.kbTemplate ?? EMPTY_TEMPLATE)[lang]}
+              value={row.kbTemplate?.[lang] ?? ""}
               multiline
               busy={!!busyKey?.startsWith(`${row.niche}:template:kbTemplate`)}
-              onSave={(v) => onSaveTemplate("kbTemplate", { ...row.kbTemplate, [lang]: v })}
+              onSave={(v) => onSaveTemplate("kbTemplate", { ...EMPTY_TEMPLATE, ...row.kbTemplate, [lang]: v })}
             />
           </div>
         </div>
@@ -130,10 +130,10 @@ export function NicheDetailPanel({ row, lang, busyKey, onBack, onAdd, onRemove, 
               <TemplateField
                 key={field}
                 label={t(`vocabulary.packs.${field}`)}
-                value={(row[field] ?? EMPTY_TEMPLATE)[lang]}
+                value={row[field]?.[lang] ?? ""}
                 multiline
                 busy={!!busyKey?.startsWith(`${row.niche}:template:${field}`)}
-                onSave={(v) => onSaveTemplate(field, { ...row[field], [lang]: v })}
+                onSave={(v) => onSaveTemplate(field, { ...EMPTY_TEMPLATE, ...row[field], [lang]: v })}
               />
             ))}
           </div>
