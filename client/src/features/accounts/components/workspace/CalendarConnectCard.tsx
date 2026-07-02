@@ -466,7 +466,7 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
           <span style={{
             fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
             padding: "3px 8px", borderRadius: 999,
-            background: active ? "var(--good-bg, rgba(34,197,94,0.12))" : "var(--warn-bg, rgba(234,179,8,0.14))",
+            background: active ? "var(--good-tint)" : "var(--warn-tint)",
             color: active ? "var(--good)" : "var(--warn)",
           }}>
             {active ? t("customDomain.statusActive") : t("customDomain.statusPending")}
@@ -486,7 +486,7 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="book.yourcompany.com"
+            placeholder={t("customDomain.domainPlaceholder")}
           />
           <div className="row" style={{ gap: 10, marginTop: 14 }}>
             <button className="la-btn la-btn--soft" disabled={busy || !input.trim()} onClick={handleSave}>

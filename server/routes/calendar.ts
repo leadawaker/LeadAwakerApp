@@ -41,7 +41,7 @@ function normalizeBookingDomain(raw: string): string | null {
   host = host.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/\.$/, "");
   // Valid DNS hostname with at least one dot (a subdomain), no leadawaker host.
   if (!/^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(host)) return null;
-  if (host.endsWith("leadawaker.com")) return null;
+  if (host === "leadawaker.com" || host.endsWith(".leadawaker.com")) return null;
   return host;
 }
 
