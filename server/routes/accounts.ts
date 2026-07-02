@@ -299,11 +299,19 @@ export function registerAccountsRoutes(app: Express): void {
     const niche = req.params.niche.trim();
     const rows = await storage.listNicheVocabularies();
     const row = rows.find((r) => r.niche === niche);
-    if (!row) return res.json({ companyNameTemplate: { nl: "", en: "" }, descriptionTemplate: { nl: "", en: "" }, kbTemplate: { nl: "", en: "" } });
+    const empty = { nl: "", en: "" };
+    if (!row) return res.json({
+      companyNameTemplate: empty, descriptionTemplate: empty, kbTemplate: empty,
+      questionBank: empty, badExamples: empty, objectionExamples: empty, scenarioExamples: empty,
+    });
     res.json({
-      companyNameTemplate: row.companyNameTemplate ?? { nl: "", en: "" },
-      descriptionTemplate: row.descriptionTemplate ?? { nl: "", en: "" },
-      kbTemplate: row.kbTemplate ?? { nl: "", en: "" },
+      companyNameTemplate: row.companyNameTemplate ?? empty,
+      descriptionTemplate: row.descriptionTemplate ?? empty,
+      kbTemplate: row.kbTemplate ?? empty,
+      questionBank: row.questionBank ?? empty,
+      badExamples: row.badExamples ?? empty,
+      objectionExamples: row.objectionExamples ?? empty,
+      scenarioExamples: row.scenarioExamples ?? empty,
     });
   }));
 
@@ -356,10 +364,12 @@ export function registerAccountsRoutes(app: Express): void {
     res.json(await storage.deleteNicheWord(niche, l, group, word));
   }));
 
-  // Patch the three business-profile templates for a niche. Called when a
-  // campaign saves its company_name / description / kb fields so the niche
-  // template stays in sync for future campaigns.
-  // Body: { companyNameTemplate?, descriptionTemplate?, kbTemplate? } each { nl, en }.
+  // Patch the business-profile templates + example packs for a niche. Called
+  // when a campaign saves its company_name / description / kb fields (so the
+  // niche template stays in sync for future campaigns) or when the Niche
+  // Words editor saves prompt 93's example packs.
+  // Body: { companyNameTemplate?, descriptionTemplate?, kbTemplate?, questionBank?,
+  //   badExamples?, objectionExamples?, scenarioExamples? } each { nl, en }.
   app.patch("/api/niche-vocabulary/:niche/template", requireAgency, wrapAsync(async (req, res) => {
     const niche = req.params.niche.trim();
     if (!niche) return res.status(400).json({ error: "niche is required" });
@@ -372,6 +382,10 @@ export function registerAccountsRoutes(app: Express): void {
       companyNameTemplate: clean(req.body?.companyNameTemplate),
       descriptionTemplate: clean(req.body?.descriptionTemplate),
       kbTemplate: clean(req.body?.kbTemplate),
+      questionBank: clean(req.body?.questionBank),
+      badExamples: clean(req.body?.badExamples),
+      objectionExamples: clean(req.body?.objectionExamples),
+      scenarioExamples: clean(req.body?.scenarioExamples),
     });
     res.json({ ok: true });
   }));

@@ -122,6 +122,13 @@ type NicheRowBoth = {
   companyNameTemplate: NicheTemplate;
   descriptionTemplate: NicheTemplate;
   kbTemplate: NicheTemplate;
+  // Per-niche example packs for prompt 93 v8.7+ (question bank, bad examples,
+  // objection phrasings, scenario playbook). Same {nl,en} shape + persistence
+  // path as the templates above.
+  questionBank: NicheTemplate;
+  badExamples: NicheTemplate;
+  objectionExamples: NicheTemplate;
+  scenarioExamples: NicheTemplate;
 };
 
 const EMPTY_TEMPLATE: NicheTemplate = { nl: "", en: "" };
@@ -145,6 +152,10 @@ function rowToBoth(r: NicheVocabulary): Omit<NicheRowBoth, "niche"> {
     companyNameTemplate: (r.companyNameTemplate as NicheTemplate | null) ?? EMPTY_TEMPLATE,
     descriptionTemplate: (r.descriptionTemplate as NicheTemplate | null) ?? EMPTY_TEMPLATE,
     kbTemplate: (r.kbTemplate as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+    questionBank: (r.questionBank as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+    badExamples: (r.badExamples as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+    objectionExamples: (r.objectionExamples as NicheTemplate | null) ?? EMPTY_TEMPLATE,
+    scenarioExamples: (r.scenarioExamples as NicheTemplate | null) ?? EMPTY_TEMPLATE,
   };
 }
 
@@ -280,27 +291,42 @@ export const accountsStorage = {
     if (row) return rowToBoth(row);
     const [def] = await db.select().from(nicheVocabulary)
       .where(eq(nicheVocabulary.niche, "__default__"));
-    return def ? rowToBoth(def) : { nl: { ...EMPTY_NICHE_GROUPS }, en: { ...EMPTY_NICHE_GROUPS }, companyNameTemplate: EMPTY_TEMPLATE, descriptionTemplate: EMPTY_TEMPLATE, kbTemplate: EMPTY_TEMPLATE };
+    return def ? rowToBoth(def) : {
+      nl: { ...EMPTY_NICHE_GROUPS }, en: { ...EMPTY_NICHE_GROUPS },
+      companyNameTemplate: EMPTY_TEMPLATE, descriptionTemplate: EMPTY_TEMPLATE, kbTemplate: EMPTY_TEMPLATE,
+      questionBank: EMPTY_TEMPLATE, badExamples: EMPTY_TEMPLATE, objectionExamples: EMPTY_TEMPLATE, scenarioExamples: EMPTY_TEMPLATE,
+    };
   },
 
-  // Patch only the three business-profile text templates for a niche.
+  // Patch the business-profile text templates + example packs for a niche.
   async setNicheTemplate(
     niche: string,
-    templates: { companyNameTemplate?: NicheTemplate; descriptionTemplate?: NicheTemplate; kbTemplate?: NicheTemplate },
+    templates: {
+      companyNameTemplate?: NicheTemplate; descriptionTemplate?: NicheTemplate; kbTemplate?: NicheTemplate;
+      questionBank?: NicheTemplate; badExamples?: NicheTemplate; objectionExamples?: NicheTemplate; scenarioExamples?: NicheTemplate;
+    },
   ): Promise<NicheTemplate[]> {
     const j = (v: NicheTemplate) => JSON.stringify(v);
     const cn = templates.companyNameTemplate;
     const desc = templates.descriptionTemplate;
     const kb = templates.kbTemplate;
+    const qb = templates.questionBank;
+    const be = templates.badExamples;
+    const oe = templates.objectionExamples;
+    const se = templates.scenarioExamples;
     await db.execute(sql`
       UPDATE "p2mxx34fvbf3ll6"."Niche_Vocabulary" SET
         company_name_template = COALESCE(${cn ? j(cn) : null}::jsonb, company_name_template),
         description_template  = COALESCE(${desc ? j(desc) : null}::jsonb, description_template),
         kb_template           = COALESCE(${kb ? j(kb) : null}::jsonb, kb_template),
+        question_bank         = COALESCE(${qb ? j(qb) : null}::jsonb, question_bank),
+        bad_examples          = COALESCE(${be ? j(be) : null}::jsonb, bad_examples),
+        objection_examples    = COALESCE(${oe ? j(oe) : null}::jsonb, objection_examples),
+        scenario_examples     = COALESCE(${se ? j(se) : null}::jsonb, scenario_examples),
         updated_at = NOW()
       WHERE niche = ${niche}
     `);
-    return [cn ?? EMPTY_TEMPLATE, desc ?? EMPTY_TEMPLATE, kb ?? EMPTY_TEMPLATE];
+    return [cn ?? EMPTY_TEMPLATE, desc ?? EMPTY_TEMPLATE, kb ?? EMPTY_TEMPLATE, qb ?? EMPTY_TEMPLATE, be ?? EMPTY_TEMPLATE, oe ?? EMPTY_TEMPLATE, se ?? EMPTY_TEMPLATE];
   },
 
   async addNicheWord(niche: string, lang: NicheLang, group: NicheWordGroup, word: string): Promise<{ nl: NicheWordGroups; en: NicheWordGroups }> {

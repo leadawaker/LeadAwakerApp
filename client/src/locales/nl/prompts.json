@@ -264,6 +264,15 @@
       "companyName": "Bedrijfsnaam",
       "description": "Bedrijfsbeschrijving",
       "kb": "Kennisbank"
+    },
+    "showPacks": "Voorbeeldpakketten tonen",
+    "hidePacks": "Voorbeeldpakketten verbergen",
+    "packs": {
+      "title": "Prompt-voorbeeldpakketten (Discovery Prompt v8.7+)",
+      "questionBank": "Vragenbank",
+      "badExamples": "Slechte voorbeelden",
+      "objectionExamples": "Bezwaar- en commitmentformuleringen",
+      "scenarioExamples": "Scenario-draaiboek"
     }
   }
 }

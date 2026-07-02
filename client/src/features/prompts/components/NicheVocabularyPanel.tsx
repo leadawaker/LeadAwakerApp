@@ -34,7 +34,15 @@ type NicheRow = {
   companyNameTemplate: NicheTemplate;
   descriptionTemplate: NicheTemplate;
   kbTemplate: NicheTemplate;
+  questionBank: NicheTemplate;
+  badExamples: NicheTemplate;
+  objectionExamples: NicheTemplate;
+  scenarioExamples: NicheTemplate;
 };
+
+const PACK_FIELDS = ["questionBank", "badExamples", "objectionExamples", "scenarioExamples"] as const;
+type PackField = (typeof PACK_FIELDS)[number];
+type TemplateFieldName = "companyNameTemplate" | "descriptionTemplate" | "kbTemplate" | PackField;
 
 // Niche list — kept in sync with BehaviorSectionFields and the DB.
 const NICHE_OPTIONS = [
@@ -114,7 +122,7 @@ export function NicheVocabularyPanel() {
 
   const saveTemplate = useCallback(async (
     niche: string,
-    field: "companyNameTemplate" | "descriptionTemplate" | "kbTemplate",
+    field: TemplateFieldName,
     value: NicheTemplate,
   ) => {
     setBusy(`${niche}:template:${field}`);
@@ -154,6 +162,10 @@ export function NicheVocabularyPanel() {
         companyNameTemplate: EMPTY_TEMPLATE,
         descriptionTemplate: EMPTY_TEMPLATE,
         kbTemplate: EMPTY_TEMPLATE,
+        questionBank: EMPTY_TEMPLATE,
+        badExamples: EMPTY_TEMPLATE,
+        objectionExamples: EMPTY_TEMPLATE,
+        scenarioExamples: EMPTY_TEMPLATE,
       }].sort((a, b) => a.niche.localeCompare(b.niche)));
       setNewNiche("");
     } catch {
@@ -248,12 +260,13 @@ function NicheCard({ row, lang, busyKey, onAdd, onRemove, onSaveTemplate, onDele
   busyKey: string | null;
   onAdd: (group: NicheWordGroup, word: string) => void;
   onRemove: (group: NicheWordGroup, word: string) => void;
-  onSaveTemplate: (field: "companyNameTemplate" | "descriptionTemplate" | "kbTemplate", val: NicheTemplate) => void;
+  onSaveTemplate: (field: TemplateFieldName, val: NicheTemplate) => void;
   onDeleteNiche?: () => void;
 }) {
   const { t } = useTranslation("prompts");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showTemplate, setShowTemplate] = useState(true);
+  const [showPacks, setShowPacks] = useState(true);
   const isDefault = row.niche === "__default__";
   const groups = row[lang];
   const NicheIcon = isDefault ? Building2 : (NICHE_ICONS[row.niche] ?? Building2);
@@ -276,6 +289,12 @@ function NicheCard({ row, lang, busyKey, onAdd, onRemove, onSaveTemplate, onDele
             onClick={() => setShowTemplate((v) => !v)}
           >
             {showTemplate ? t("vocabulary.hideTemplates") : t("vocabulary.showTemplates")}
+          </button>
+          <button
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded"
+            onClick={() => setShowPacks((v) => !v)}
+          >
+            {showPacks ? t("vocabulary.hidePacks") : t("vocabulary.showPacks")}
           </button>
           {onDeleteNiche && (
             <>
@@ -339,6 +358,29 @@ function NicheCard({ row, lang, busyKey, onAdd, onRemove, onSaveTemplate, onDele
               busy={!!busyKey?.startsWith(`${row.niche}:template:kbTemplate`)}
               onSave={(v) => onSaveTemplate("kbTemplate", { ...row.kbTemplate, [lang]: v })}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Prompt 93 example packs — vivid, niche-flavored few-shot content. __default__
+          IS editable here since it's the always-rich fallback other niches inherit
+          from until they get their own pack. */}
+      {showPacks && (
+        <div className="mb-5 p-3 rounded-md" style={{ background: "var(--paper)", border: "1px solid var(--line)" }}>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            {t("vocabulary.packs.title")}
+          </div>
+          <div className="flex flex-col gap-3">
+            {PACK_FIELDS.map((field) => (
+              <TemplateField
+                key={field}
+                label={t(`vocabulary.packs.${field}`)}
+                value={(row[field] ?? EMPTY_TEMPLATE)[lang]}
+                multiline
+                busy={!!busyKey?.startsWith(`${row.niche}:template:${field}`)}
+                onSave={(v) => onSaveTemplate(field, { ...row[field], [lang]: v })}
+              />
+            ))}
           </div>
         </div>
       )}

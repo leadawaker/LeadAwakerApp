@@ -264,6 +264,15 @@
       "companyName": "Company name",
       "description": "Business description",
       "kb": "Knowledge base"
+    },
+    "showPacks": "Show example packs",
+    "hidePacks": "Hide example packs",
+    "packs": {
+      "title": "Prompt example packs (Discovery Prompt v8.7+)",
+      "questionBank": "Question bank",
+      "badExamples": "Bad examples",
+      "objectionExamples": "Objection & commitment phrasings",
+      "scenarioExamples": "Scenario playbook"
     }
   }
 }
