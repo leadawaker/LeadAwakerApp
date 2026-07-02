@@ -284,6 +284,12 @@ export function registerAccountsRoutes(app: Express): void {
     res.json(await storage.listNicheVocabularies());
   }));
 
+  // Niche names only, for the campaign settings niche picker. requireAuth
+  // (not requireAgency) since non-agency client users edit campaigns too.
+  app.get("/api/niches", requireAuth, wrapAsync(async (_req, res) => {
+    res.json(await storage.listNicheNames());
+  }));
+
   // Resolve a niche's terms for one language (?lang=en|nl, default nl). English
   // falls back to Dutch per-group when empty. Used by the prompt preview.
   app.get("/api/niche-vocabulary/:niche", requireAuth, wrapAsync(async (req, res) => {

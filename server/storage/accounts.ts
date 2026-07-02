@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, sum, SQL, inArray, and, or, ilike, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
+import { eq, ne, desc, asc, count, sum, SQL, inArray, and, or, ilike, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db, pool } from "../db";
 import {
@@ -240,6 +240,16 @@ export const accountsStorage = {
   async listNicheVocabularies(): Promise<Array<NicheRowBoth>> {
     const rows = await db.select().from(nicheVocabulary).orderBy(nicheVocabulary.niche);
     return rows.map((r) => ({ niche: r.niche, ...rowToBoth(r) }));
+  },
+
+  // Niche names only (no vocabulary payload) — powers the campaign settings
+  // niche picker, which any campaign editor (not just agency) can load.
+  // Excludes __default__ since it is a fallback row, not a selectable niche.
+  async listNicheNames(): Promise<string[]> {
+    const rows = await db.select({ niche: nicheVocabulary.niche }).from(nicheVocabulary)
+      .where(ne(nicheVocabulary.niche, "__default__"))
+      .orderBy(nicheVocabulary.niche);
+    return rows.map((r) => r.niche);
   },
 
   // Upsert ALL groups for BOTH languages of a niche in one shot. De-dupes/trims.
