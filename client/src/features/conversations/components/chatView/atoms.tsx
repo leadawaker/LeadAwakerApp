@@ -114,7 +114,7 @@ export function HandoffEventChip({
 export function AgentAvatar({ who, currentUser }: { who: string; currentUser: SessionUser | null }) {
   const { t } = useTranslation("conversations");
   // Prefer the logged-in user's real name & photo over the raw `who` field
-  const displayName = currentUser?.fullName || who || t("chat.senderLabels.you");
+  const displayName = currentUser?.fullName1 || who || t("chat.senderLabels.you");
   const photoUrl = currentUser?.avatarUrl ?? null;
   return (
     <EntityAvatar

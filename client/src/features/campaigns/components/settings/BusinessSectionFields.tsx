@@ -209,7 +209,7 @@ export function BusinessSectionFields({
   // {first_name}: Demo Lead Name wins if filled, else the logged-in user's
   // first name (Finn or Gabriel, whoever is running the screenshare).
   const sessionFirstName = session.status === "authenticated"
-    ? session.user.fullName?.split(" ")[0]
+    ? session.user.fullName1?.split(" ")[0]
     : undefined;
   const previewFirstName = launchName?.trim() || sessionFirstName || undefined;
   const campaignForPreview = buildCampaignForPreview(previewRaw);

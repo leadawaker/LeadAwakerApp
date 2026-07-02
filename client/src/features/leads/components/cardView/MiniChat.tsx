@@ -165,7 +165,7 @@ export function MiniThreadDivider({ group, total }: { group: MiniThreadGroup; to
 // ── Mini avatars (matching ChatPanel, scaled to 32px) ─────────────────────────
 
 export function MiniAgentAvatar({ currentUser }: { currentUser: SessionUser | null }) {
-  const displayName = currentUser?.fullName || "You";
+  const displayName = currentUser?.fullName1 || "You";
   const photoUrl = currentUser?.avatarUrl ?? null;
   return (
     <EntityAvatar

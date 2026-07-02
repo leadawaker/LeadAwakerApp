@@ -4,7 +4,7 @@ import { API_BASE } from "@/lib/apiUtils";
 export type SessionUser = {
   id: number;
   email: string | null;
-  fullName: string | null;
+  fullName1: string | null;
   role: string | null;
   accountsId: number | null;
   avatarUrl: string | null;
