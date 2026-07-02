@@ -329,6 +329,12 @@
     "objectionPlaybookHint": "Up to 3 objections the AI should recognize, with your approved answer for each. Edit live — the AI uses your wording on its next reply.",
     "objectionLabel": "Objection {{n}}",
     "objectionPlaceholder": "e.g. \"It's too expensive\"",
+    "objectionPlaceholder2": "e.g. \"The competitor is cheaper\"",
+    "objectionPlaceholder3": "e.g. \"We need to think about it\"",
+    "previewOpener": "Preview",
+    "previewBackToEdit": "Back to edit",
+    "previewResolving": "Resolving…",
+    "previewEmpty": "No message configured yet.",
     "answerPlaceholder": "Your approved answer…",
     "sections": {
       "business": "Business",

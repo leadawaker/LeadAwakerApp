@@ -19,6 +19,14 @@ import { resolveLang } from "@shared/langField";
 // operator picks one or types a custom name — it's a pick-or-type combobox.
 const AGENT_NAME_OPTIONS = ["Thomas", "Mark", "Sophie", "Lisa"].map((n) => ({ label: n, store: n }));
 
+// Distinct example objections per row (price / competitor / stalling) so the
+// playbook demonstrates its range instead of repeating the same example 3x.
+const OBJECTION_PLACEHOLDER_KEYS = [
+  "config.objectionPlaceholder",
+  "config.objectionPlaceholder2",
+  "config.objectionPlaceholder3",
+] as const;
+
 interface BusinessSectionFieldsProps {
   campaign: any;
   isEditing: boolean;
@@ -227,7 +235,7 @@ export function BusinessSectionFields({
                   <EditText
                     value={objectionRows()[idx].objection}
                     onChange={(v) => updateObjectionRow(idx, { objection: v.slice(0, 500) })}
-                    placeholder={t("config.objectionPlaceholder")}
+                    placeholder={t(OBJECTION_PLACEHOLDER_KEYS[idx])}
                   />
                   <EditText
                     value={objectionRows()[idx].answer}

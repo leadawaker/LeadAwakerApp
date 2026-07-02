@@ -329,6 +329,12 @@
     "objectionPlaybookHint": "Tot 3 bezwaren die de AI moet herkennen, met jouw goedgekeurde antwoord voor elk. Live aanpasbaar — de AI gebruikt jouw woorden in het volgende bericht.",
     "objectionLabel": "Bezwaar {{n}}",
     "objectionPlaceholder": "bijv. \"Het is te duur\"",
+    "objectionPlaceholder2": "bijv. \"De concurrent is goedkoper\"",
+    "objectionPlaceholder3": "bijv. \"We willen er nog even over nadenken\"",
+    "previewOpener": "Voorbeeld",
+    "previewBackToEdit": "Terug naar bewerken",
+    "previewResolving": "Bezig met omzetten…",
+    "previewEmpty": "Nog geen bericht ingesteld.",
     "answerPlaceholder": "Jouw goedgekeurde antwoord…",
     "sections": {
       "business": "Zakelijk",
