@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
@@ -14,14 +15,7 @@ import {
 import {
   Select, SelectTrigger, SelectContent, SelectItem,
 } from "@/components/ui/select";
-
-// Ordered as requested: featured niches first, then the rest.
-const NICHE_ORDER = [
-  "Kitchens", "Landscaping", "Wellness", "Interior Design",
-  "Bathrooms", "Roofing", "Flooring",
-  "Countertops", "General Contracting", "Solar Panels", "HVAC",
-  "Windows & Doors", "Painting", "Pest Control", "Pool Installation", "Moving Services",
-];
+import { apiFetch } from "@/lib/apiUtils";
 
 const NICHE_ICONS: Record<string, React.ElementType> = {
   "Kitchens": UtensilsCrossed,
@@ -43,6 +37,15 @@ const NICHE_ICONS: Record<string, React.ElementType> = {
 };
 
 function NicheSelect({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+  const [niches, setNiches] = useState<string[]>([]);
+
+  useEffect(() => {
+    apiFetch("/api/niches")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: string[]) => setNiches(Array.isArray(data) ? data : []))
+      .catch(() => setNiches([]));
+  }, []);
+
   const CurIcon = value ? NICHE_ICONS[value] : null;
   return (
     <Select value={value} onValueChange={onChange}>
@@ -60,7 +63,7 @@ function NicheSelect({ value, onChange, autoFocus }: { value: string; onChange: 
         </div>
       </SelectTrigger>
       <SelectContent>
-        {NICHE_ORDER.map((niche) => {
+        {niches.map((niche) => {
           const Icon = NICHE_ICONS[niche];
           return (
             <SelectItem key={niche} value={niche}>
