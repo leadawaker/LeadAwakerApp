@@ -243,6 +243,17 @@ export const notificationsStorage = {
     return rows.length;
   },
 
+  async deleteTaskNotifications(taskId: number): Promise<number> {
+    const rows = await db
+      .delete(notifications)
+      .where(and(
+        eq(notifications.link, `/tasks/${taskId}`),
+        inArray(notifications.type, ["task_assigned", "task_due_soon", "task_overdue"]),
+      ))
+      .returning({ id: notifications.id });
+    return rows.length;
+  },
+
   // ─── Notification Preferences ──────────────────────────────────────────
 
   async getNotificationPreferences(userId: number, accountId: number): Promise<NotificationPreferences | undefined> {

@@ -11,7 +11,7 @@ import MobileTaskDetailPanel from "./MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "./MobileTaskCreatePanel";
 import MobileTaskWeekStrip from "./MobileTaskWeekStrip";
 import { sortTasks, SORT_OPTIONS, type SortOption, type Task, type TaskStatus } from "../types";
-import { loadLocal, saveLocal, applyDesktopFilter, type DesktopFilter } from "../lib/taskViewUtils";
+import { loadLocal, saveLocal, applyDesktopFilter, consumeSelectedId, useSelectedTaskListener, type DesktopFilter } from "../lib/taskViewUtils";
 import { getUserAvatarColor } from "@/lib/avatarUtils";
 
 type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl?: string | null };
@@ -31,7 +31,8 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
   const [mobileWho, setMobileWho] = useState<string>(() => loadLocal<string>("tasks-mobile-who", "all"));
   const [filterPriority, setFilterPriority] = useState<TaskPriority[]>(() => loadLocal<TaskPriority[]>("tasks-mobile-filter-priority", []));
   const [filterType, setFilterType] = useState<TaskType[]>(() => loadLocal<TaskType[]>("tasks-mobile-filter-type", []));
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(() => consumeSelectedId("selected-task-id"));
+  useSelectedTaskListener("selected-task-id", setSelectedTaskId);
   const lastTaskIdRef = useRef<number | null>(null);
   const [mobileCreateOpen, setMobileCreateOpen] = useState(false);
   const [sort, setSort] = useState<SortOption>(() => loadLocal<SortOption>("tasks-sort", "due_date_asc"));

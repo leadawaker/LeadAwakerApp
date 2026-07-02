@@ -105,7 +105,7 @@ export function registerTasksRoutes(app: Express): void {
           userId: task.assignedToUserId,
           accountId: task.accountsId ?? null,
           read: false,
-          link: "/platform/tasks",
+          link: `/tasks/${task.id}`,
           leadId: null,
         });
       } catch (notifErr) {
@@ -197,7 +197,7 @@ export function registerTasksRoutes(app: Express): void {
           userId: updated.assignedToUserId,
           accountId: updated.accountsId ?? null,
           read: false,
-          link: "/platform/tasks",
+          link: `/tasks/${updated.id}`,
           leadId: null,
         });
       } catch (notifErr) {
@@ -244,6 +244,7 @@ export function registerTasksRoutes(app: Express): void {
     const id = Number(req.params.id);
     const deleted = await storage.deleteTask(id);
     if (!deleted) return res.status(404).json({ error: "Task not found" });
+    await storage.deleteTaskNotifications(id);
     res.json({ success: true });
   }));
 
@@ -488,7 +489,7 @@ export function startTaskNotifiers(): void {
           userId: task.assignedToUserId!,
           accountId: task.accountsId ?? null,
           read: false,
-          link: "/platform/tasks",
+          link: `/tasks/${task.id}`,
           leadId: task.leadsId ?? null,
         });
       }
@@ -533,7 +534,7 @@ export function startTaskNotifiers(): void {
           userId: task.assignedToUserId!,
           accountId: task.accountsId ?? null,
           read: false,
-          link: "/platform/tasks",
+          link: `/tasks/${task.id}`,
           leadId: task.leadsId ?? null,
         });
       }

@@ -23,7 +23,7 @@ import TasksWeekCalendar, {
   addDays, isoToUTC, utcToISO,
 } from "./TasksWeekCalendar";
 import { SORT_OPTIONS, sortTasks, type SortOption, type Task } from "../types";
-import { loadLocal, saveLocal } from "../lib/taskViewUtils";
+import { loadLocal, saveLocal, consumeSelectedId, useSelectedTaskListener } from "../lib/taskViewUtils";
 import { getUserAvatarColor } from "@/lib/avatarUtils";
 
 type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl: string | null };
@@ -88,7 +88,8 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
   const [hideWeekends, setHideWeekends] = useState(() => loadLocal<boolean>("tasks-hide-weekends", true));
   const [dateFrom, setDateFrom] = useState(() => loadLocal<string>("tasks-date-from", ""));
   const [dateTo, setDateTo] = useState(() => loadLocal<string>("tasks-date-to", ""));
-  const [openTaskId, setOpenTaskId] = useState<number | null>(null);
+  const [openTaskId, setOpenTaskId] = useState<number | null>(() => consumeSelectedId("selected-task-id"));
+  useSelectedTaskListener("selected-task-id", setOpenTaskId);
 
   const handlePriorityFilter = useCallback((p: PriorityFilter) => { setPriorityFilter(p); saveLocal('tasks-priority-filter', p); }, []);
   const handleCategoryFilter = useCallback((c: number | 'all') => { setCategoryFilter(c); saveLocal('tasks-category-filter', String(c)); }, []);

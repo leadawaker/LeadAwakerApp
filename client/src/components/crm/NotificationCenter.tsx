@@ -22,8 +22,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
+import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -125,7 +125,6 @@ export function NotificationCenter({
 }) {
   const { t } = useTranslation("crm");
   const [, setLocation] = useLocation();
-  const { isAgencyView } = useWorkspace();
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [typeFilter, setTypeFilter] = useState<"all" | "messages" | "tasks" | "bookings" | "system">("all");
 
@@ -202,19 +201,49 @@ export function NotificationCenter({
     if (isUnread(n)) {
       handleMarkAsRead(n.id);
     }
-    // Navigate if there's a link — normalize bare paths missing the /platform prefix
+    onClose();
+
+    // A lead-scoped notification always preselects the lead, regardless of
+    // which page the link ultimately points to (leads, calendar, etc.). Uses
+    // setPersistedSelection (not a raw localStorage write) so pages already
+    // mounted on-screen pick up the new selection immediately, not just on
+    // a fresh navigation.
+    if (n.leadId) {
+      setPersistedSelection("selected-lead-id", n.leadId);
+    }
+
     if (n.link) {
-      onClose();
+      // Some notifications (from the automations engine, including older rows
+      // created before the link format was fixed) encode an id as a path segment
+      // or query param — no such routes exist, they're deep links into the list
+      // page's persisted selection instead.
+      const rawPath = n.link.replace(/^\/platform/, "");
+      const idPatterns: { re: RegExp; entity: "leads" | "tasks" | "campaigns" }[] = [
+        { re: /^\/leads\/(\d+)$/, entity: "leads" },
+        { re: /^\/conversations\?lead=(\d+)$/, entity: "leads" },
+        { re: /^\/tasks\/(\d+)$/, entity: "tasks" },
+        { re: /^\/campaigns\/(\d+)$/, entity: "campaigns" },
+      ];
+      const matched = idPatterns
+        .map(({ re, entity }) => ({ entity, match: rawPath.match(re) }))
+        .find(({ match }) => match);
+      if (matched) {
+        setPersistedSelection(`selected-${matched.entity.slice(0, -1)}-id`, matched.match![1]);
+        setLocation(`/platform/${matched.entity}`);
+        return;
+      }
+      // Legacy typo: old "critical_automation_failure" rows link to "/automations"
+      if (rawPath === "/automations") {
+        setLocation("/platform/automation-logs");
+        return;
+      }
       const dest = n.link.startsWith("/platform") ? n.link : `/platform${n.link}`;
       setLocation(dest);
     } else if (n.leadId) {
-      // Default: navigate to leads with the lead preselected
-      sessionStorage.setItem("pendingLeadId", String(n.leadId));
-      onClose();
-      const base = "/platform";
-      setLocation(`${base}/leads`);
+      // No explicit link — default to the leads page with the lead preselected
+      setLocation("/platform/leads");
     }
-  }, [handleMarkAsRead, onClose, setLocation, isAgencyView]);
+  }, [handleMarkAsRead, onClose, setLocation]);
 
   const grouped = useMemo(() => groupNotifications(items), [items]);
 

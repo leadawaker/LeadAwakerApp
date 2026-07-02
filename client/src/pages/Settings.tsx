@@ -4,24 +4,23 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
-import { Building2, Bell, Users } from "lucide-react";
+import { Building2, Users } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { SettingsTeamSection } from "@/features/users/components/SettingsTeamSection";
 import { AccountDetailView } from "@/features/accounts/components/AccountDetailView";
 import { updateAccount } from "@/features/accounts/api/accountsApi";
 import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import { SkeletonSettingsSection } from "@/components/ui/skeleton";
-import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
 import { MobileAgencySwitcher } from "@/components/crm/mobile/MobileAgencySwitcher";
 
 // ── Settings sections ────────────────────────────────────────────────
-// (Niche Words moved to the Prompt Library page.)
-type SettingsSection = "notifications" | "team" | "account";
+// (Niche Words moved to the Prompt Library page. Notifications moved to the
+// Team tab — see the bottom of the profile detail card for the logged-in user.)
+type SettingsSection = "team" | "account";
 
 const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.ElementType; agencyOnly?: boolean; scopedOnly?: boolean }[] = [
   { id: "account", labelKey: "sections.account", icon: Building2, scopedOnly: true },
   { id: "team", labelKey: "sections.team", icon: Users },
-  { id: "notifications", labelKey: "sections.notifications", icon: Bell },
 ];
 
 // ── Main Settings Page ───────────────────────────────────────────────
@@ -128,37 +127,23 @@ function SettingsContent() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="max-w-[1386px] mr-auto px-4 md:px-6 py-6">
-          {showAccountPanel && activeSection === "account" && (
-            <div className="neu-raised p-5 mb-6" data-testid="settings-panel-account">
-              {renderAccountSection()}
+        {activeSection === "team" ? (
+          // Team: full-height layout — toolbar (cards) flush left, divider spans full height
+          <div className="h-full" data-testid="settings-panel-team">
+            <SettingsTeamSection isUltrawide={false} />
+          </div>
+        ) : (
+          // Account: centered layout
+          <div className="flex justify-center">
+            <div className="w-full max-w-[500px] px-4 md:px-6 py-6">
+              {showAccountPanel && activeSection === "account" && (
+                <div className="neu-raised p-5 mb-4" data-testid="settings-panel-account">
+                  {renderAccountSection()}
+                </div>
+              )}
             </div>
-          )}
-          {activeSection !== "account" && (
-            activeSection === "team" ? (
-              // Team: no outer panel — cards float on page bg
-              <div
-                className="flex flex-col flex-1 min-h-0"
-                data-testid="settings-panel-team"
-              >
-                <SettingsTeamSection isUltrawide={false} />
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  "neu-raised flex flex-col min-h-0 p-5",
-                  activeSection === "notifications" && "max-w-[600px]"
-                )}
-                data-testid={`settings-panel-${activeSection}`}
-                key={activeSection}
-              >
-                {activeSection === "notifications" && (
-                  <NotificationsSection />
-                )}
-              </div>
-            )
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

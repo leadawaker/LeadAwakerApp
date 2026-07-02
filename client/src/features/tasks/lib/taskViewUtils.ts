@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { Task } from "../types";
 
 // ── Desktop/mobile quick filter ──────────────────────────────────────
@@ -19,6 +20,35 @@ export function loadLocal<T>(key: string, fallback: T): T {
 
 export function saveLocal(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+// One-time deep-link consume: reads a raw (non-JSON) id set by e.g. a notification
+// click, then clears it so it doesn't keep reopening on later visits.
+export function consumeSelectedId(key: string): number | null {
+  try {
+    const v = localStorage.getItem(key);
+    if (v) localStorage.removeItem(key);
+    return v ? Number(v) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Live counterpart to consumeSelectedId: catches a "selected-task-id" set while
+// this view is already mounted (e.g. clicking a task notification while already
+// on the Tasks page), since a same-route navigation doesn't remount the component
+// and so never re-runs the lazy useState(() => consumeSelectedId(...)) initializer.
+export function useSelectedTaskListener(key: string, onSelect: (id: number) => void) {
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.key !== key) return;
+      try { localStorage.removeItem(key); } catch {}
+      onSelect(Number(detail.id));
+    };
+    window.addEventListener("persisted-selection", handler);
+    return () => window.removeEventListener("persisted-selection", handler);
+  }, [key, onSelect]);
 }
 
 // ── Today as YYYY-MM-DD (local) ──────────────────────────────────────

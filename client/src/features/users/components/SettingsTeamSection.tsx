@@ -6,10 +6,11 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   ArrowUpDown, Filter, Check, Search, X, Plus,
   Mail, Phone, Copy, Clock, User, Shield, Calendar,
-  Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal, Eye,
+  Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal, Eye, Bell,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ProfileSection } from "@/features/settings/components/ProfileSection";
+import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
 import { UsersCardGrid } from "./UsersCardGrid";
 import type { UserTableItem } from "./UsersInlineTable";
 import type { AppUser, AccountMap } from "../types";
@@ -768,18 +769,27 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
           </div>
         )}
 
-        {/* Team title */}
-        <div className="px-2 pb-3 shrink-0">
-          <div className="px-3.5">
-            <span className="serif" style={{ fontSize: 24, color: "var(--ink)", letterSpacing: "0.02em", fontWeight: 400, lineHeight: 1 }}>{t("team.title", "Team")}</span>
-          </div>
-        </div>
-
         {/* Split: cards (left) + detail (right, raised white panel) */}
-        <div className="flex flex-1 min-h-0 gap-4 flex-row-reverse">
+        <div className="flex flex-1 min-h-0 gap-4">
+          {/* Cards — left side (shared toolbar/list-panel pattern) */}
+          <div className="w-[var(--toolbar-w)] shrink-0 flex flex-col min-h-0 overflow-hidden bg-panel-list-bg border-r border-[var(--line)]">
+            <div className="la-list-area">
+              <UsersCardGrid
+                flatItems={flatItems}
+                loading={loading}
+                accounts={accounts}
+                selectedUserId={viewingUser?.id ?? null}
+                onSelectUser={u => setViewingUser(u)}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelectUser}
+                canMultiSelect={isOwner}
+              />
+            </div>
+          </div>
+
           {/* Detail — its own raised white panel, on the right */}
           {viewingUser && (
-            <div className="neu-raised rounded-2xl bg-card shrink-0 flex flex-col min-h-0" style={{ width: 600 }}>
+            <div className="neu-raised rounded-2xl bg-card shrink-0 flex flex-col min-h-0 my-4" style={{ width: 600 }}>
               {/* Header: big name + badges + close */}
               <div className="px-6 pt-5 pb-4 shrink-0">
                 <div className="flex items-start justify-between gap-4">
@@ -938,25 +948,19 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                     </div>
                   </div>
                 )}
+
+                {/* Notifications — own profile only, at the very bottom */}
+                {viewingUser.email === currentUserEmail && (
+                  <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-3 flex items-center gap-1.5">
+                      <Bell className="w-3.5 h-3.5" />{t("notifications.title")}
+                    </p>
+                    <NotificationsSection />
+                  </div>
+                )}
               </div>
             </div>
           )}
-
-          {/* Cards — left side */}
-          <div className="flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden px-2">
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <UsersCardGrid
-                flatItems={flatItems}
-                loading={loading}
-                accounts={accounts}
-                selectedUserId={viewingUser?.id ?? null}
-                onSelectUser={u => setViewingUser(u)}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelectUser}
-                canMultiSelect={isOwner}
-              />
-            </div>
-          </div>
         </div>
       </div>
 

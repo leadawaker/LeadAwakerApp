@@ -110,6 +110,8 @@ export function SettingsPanel() {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
   const session = useSession();
+  const role = session.status === "authenticated" ? (session.user.role ?? "Viewer") : "Viewer";
+  const isAgency = role === "Owner" || role === "Admin";
 
   const [email, setEmail] = useState("");
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(getDefaultNotifPrefs);
@@ -203,6 +205,18 @@ export function SettingsPanel() {
       return next;
     });
   }, [saveNotifPrefs]);
+
+  // Master push toggle: flips push_enabled AND every per-type web_push override,
+  // so "off" really means no push notifications of any type.
+  const setPushMaster = useCallback((enabled: boolean) => {
+    updateNotifPrefs((p) => {
+      const type_overrides: NotificationPreferences["type_overrides"] = {};
+      for (const key of Object.keys(p.type_overrides)) {
+        type_overrides[key] = { ...p.type_overrides[key], web_push: enabled };
+      }
+      return { ...p, push_enabled: enabled, type_overrides };
+    });
+  }, [updateNotifPrefs]);
 
   // ── Push subscription helpers ─────────────────────────────────────
   const handleEnablePush = useCallback(async () => {
@@ -330,73 +344,85 @@ export function SettingsPanel() {
               <div className="text-xs text-muted-foreground italic">{t("notifications.saving")}</div>
             )}
 
-            {/* ── Telegram ──────────────────────────────── */}
-            <div className="rounded-xl bg-background/50 p-3 space-y-2.5" data-testid="section-telegram">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-[#229ED9] shrink-0" />
-                  <div className="text-sm font-semibold">{t("notifications.telegram.title")}</div>
-                </div>
-                <Switch
-                  checked={notifPrefs.telegram_enabled}
-                  onCheckedChange={(checked) =>
-                    updateNotifPrefs((p) => ({ ...p, telegram_enabled: checked }))
-                  }
-                  data-testid="toggle-telegram"
-                  aria-label="Toggle Telegram notifications"
-                />
-              </div>
-              {notifPrefs.telegram_enabled && (
-                <div className="space-y-2 pl-6">
-                  <label className="text-xs text-muted-foreground">{t("notifications.telegram.chatIdLabel")}</label>
+            {/* ── Telegram — agency only ──────────────────── */}
+            {isAgency && (
+              <div className="rounded-xl bg-background/50 p-3 space-y-2.5" data-testid="section-telegram">
+                <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={telegramChatIdInput}
-                      onChange={(e) => setTelegramChatIdInput(e.target.value)}
-                      placeholder={t("notifications.telegram.chatIdPlaceholder")}
-                      className="h-10 flex-1 rounded-xl border border-border/30 bg-input-bg px-3 text-sm"
-                      data-testid="input-telegram-chat-id"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSaveTelegramChatId}
-                      className="h-10 px-4 rounded-xl bg-brand-indigo text-white text-[13px] font-semibold hover:opacity-90 transition-opacity duration-150 shrink-0"
-                      data-testid="button-save-telegram"
-                    >
-                      {t("notifications.telegram.save")}
-                    </button>
+                    <MessageSquare className="h-4 w-4 text-[#229ED9] shrink-0" />
+                    <div className="text-sm font-semibold">{t("notifications.telegram.title")}</div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    {t("notifications.telegram.setupHint")}
-                  </p>
-                  <a
-                    href="https://t.me/Lead_Awaker_bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-indigo hover:underline mt-1"
-                  >
-                    {t("notifications.telegram.openBot")} &rarr;
-                  </a>
+                  <Switch
+                    checked={notifPrefs.telegram_enabled}
+                    onCheckedChange={(checked) =>
+                      updateNotifPrefs((p) => ({ ...p, telegram_enabled: checked }))
+                    }
+                    data-testid="toggle-telegram"
+                    aria-label="Toggle Telegram notifications"
+                  />
                 </div>
-              )}
-            </div>
+                {notifPrefs.telegram_enabled && (
+                  <div className="space-y-2 pl-6">
+                    <label className="text-xs text-muted-foreground">{t("notifications.telegram.chatIdLabel")}</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={telegramChatIdInput}
+                        onChange={(e) => setTelegramChatIdInput(e.target.value)}
+                        placeholder={t("notifications.telegram.chatIdPlaceholder")}
+                        className="h-10 flex-1 rounded-xl border border-border/30 bg-input-bg px-3 text-sm"
+                        data-testid="input-telegram-chat-id"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveTelegramChatId}
+                        className="h-10 px-4 rounded-xl bg-brand-indigo text-white text-[13px] font-semibold hover:opacity-90 transition-opacity duration-150 shrink-0"
+                        data-testid="button-save-telegram"
+                      >
+                        {t("notifications.telegram.save")}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {t("notifications.telegram.setupHint")}
+                    </p>
+                    <a
+                      href="https://t.me/Lead_Awaker_bot"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-indigo hover:underline mt-1"
+                    >
+                      {t("notifications.telegram.openBot")} &rarr;
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Browser Push ──────────────────────────── */}
             <div className="rounded-xl bg-background/50 p-3 space-y-2.5" data-testid="section-push">
-              <div className="flex items-center gap-2 mb-1">
-                <Bell className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div className="text-sm font-semibold">{t("notifications.push.title")}</div>
+              <div className="flex items-center justify-between gap-4 mb-1">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="text-sm font-semibold">{t("notifications.push.title")}</div>
+                </div>
+                <Switch
+                  checked={notifPrefs.push_enabled}
+                  onCheckedChange={setPushMaster}
+                  data-testid="toggle-push"
+                  aria-label="Toggle browser push notifications"
+                />
               </div>
-              <button
-                type="button"
-                onClick={handleEnablePush}
-                disabled={isSubscribingPush || !("serviceWorker" in navigator)}
-                className="h-10 px-5 rounded-full bg-brand-indigo text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
-                data-testid="button-enable-push"
-              >
-                {isSubscribingPush ? t("notifications.push.subscribing") : t("notifications.push.enable")}
-              </button>
+              {notifPrefs.push_enabled && (
+                <button
+                  type="button"
+                  onClick={handleEnablePush}
+                  disabled={isSubscribingPush || !("serviceWorker" in navigator)}
+                  className="h-10 px-5 rounded-full bg-brand-indigo text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+                  data-testid="button-enable-push"
+                >
+                  {isSubscribingPush ? t("notifications.push.subscribing") : t("notifications.push.enable")}
+                </button>
+              )}
               {!("serviceWorker" in navigator) && (
                 <p className="text-[11px] text-amber-500">{t("notifications.push.notSupported")}</p>
               )}
@@ -461,11 +487,13 @@ export function SettingsPanel() {
               </button>
               {overridesOpen && (
                 <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }}>
-                  <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-1 mb-2 px-1">
+                  <div className={cn("grid gap-1 mb-2 px-1", isAgency ? "grid-cols-[1fr_3.5rem_3.5rem]" : "grid-cols-[1fr_3.5rem]")}>
                     <div />
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider text-center">
-                      {t("notifications.overrides.telegram")}
-                    </div>
+                    {isAgency && (
+                      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider text-center">
+                        {t("notifications.overrides.telegram")}
+                      </div>
+                    )}
                     <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider text-center">
                       {t("notifications.overrides.webPush")}
                     </div>
@@ -477,29 +505,31 @@ export function SettingsPanel() {
                       return (
                         <div
                           key={nt.key}
-                          className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-1 items-center rounded-lg px-1 py-1.5 hover:bg-muted/40 transition-colors duration-150"
+                          className={cn("grid gap-1 items-center rounded-lg px-1 py-1.5 hover:bg-muted/40 transition-colors duration-150", isAgency ? "grid-cols-[1fr_3.5rem_3.5rem]" : "grid-cols-[1fr_3.5rem]")}
                           data-testid={`row-override-${nt.key}`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                             <span className="text-[12px] truncate">{t(nt.labelKey)}</span>
                           </div>
-                          <div className="flex justify-center">
-                            <Checkbox
-                              checked={override.telegram}
-                              onCheckedChange={(checked) =>
-                                updateNotifPrefs((p) => ({
-                                  ...p,
-                                  type_overrides: {
-                                    ...p.type_overrides,
-                                    [nt.key]: { ...override, telegram: !!checked },
-                                  },
-                                }))
-                              }
-                              aria-label={`${t(nt.labelKey)} telegram`}
-                              data-testid={`check-${nt.key}-telegram`}
-                            />
-                          </div>
+                          {isAgency && (
+                            <div className="flex justify-center">
+                              <Checkbox
+                                checked={override.telegram}
+                                onCheckedChange={(checked) =>
+                                  updateNotifPrefs((p) => ({
+                                    ...p,
+                                    type_overrides: {
+                                      ...p.type_overrides,
+                                      [nt.key]: { ...override, telegram: !!checked },
+                                    },
+                                  }))
+                                }
+                                aria-label={`${t(nt.labelKey)} telegram`}
+                                data-testid={`check-${nt.key}-telegram`}
+                              />
+                            </div>
+                          )}
                           <div className="flex justify-center">
                             <Checkbox
                               checked={override.web_push}

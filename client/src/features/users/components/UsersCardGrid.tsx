@@ -12,10 +12,7 @@ function getUserName(u: AppUser) {
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 function CardGridSkeleton() {
   return (
-    <div
-      className="grid gap-3 p-3.5"
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
-    >
+    <div className="flex flex-col gap-2">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
@@ -69,7 +66,7 @@ export function UsersCardGrid({
 
   let cardIdx = 0;
   return (
-    <div className="overflow-y-auto p-3.5 space-y-5" data-testid="users-card-grid">
+    <div className="space-y-4 pt-3" data-testid="users-card-grid">
       {sections.map((section, si) => {
         if (section.users.length === 0) return null;
         return (
@@ -84,10 +81,7 @@ export function UsersCardGrid({
                 </span>
               </div>
             )}
-            <div
-              className="grid gap-2.5"
-              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
-            >
+            <div className="la-cards">
               {section.users.map((u) => {
                 const role = u.role || "Viewer";
                 const color = ROLE_AVATAR[role] ?? ROLE_AVATAR.Viewer;
