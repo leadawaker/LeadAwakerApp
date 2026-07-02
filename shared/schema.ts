@@ -434,10 +434,10 @@ export const campaigns = nocodb.table("Campaigns", {
   n8nWorkflowId: text("n8n_workflow_id"),
   aiPromptTemplate: text("ai_prompt_template"),
   totalCost: numeric("total_cost"),
-  bump1Template: text("bump_1_template"),
-  bump2Template: text("bump_2_template"),
-  bump3Template: text("bump_3_template"),
-  bump4Template: text("bump_4_template"),
+  bump1Template: text("bump_1_template").default("Hi {first_name}! Just checking in, I figured you got busy before."),
+  bump2Template: text("bump_2_template").default("{first_name}, what's holding you back from {service}?"),
+  bump3Template: text("bump_3_template").default("Is it a trust thing?"),
+  bump4Template: text("bump_4_template").default("I won't bother you anymore {first_name}. If you ever need to discuss {service}, I will be here for you :)"),
   reengagementBumpTemplate: text("reengagement_bump_template"),
   bump1DelayHours: bigint("bump_1_delay_hours", { mode: "number" }),
   bump3DelayHours: bigint("bump_3_delay_hours", { mode: "number" }),
@@ -451,7 +451,7 @@ export const campaigns = nocodb.table("Campaigns", {
   webhookUrl: text("webhook_url"),
   aiModel: text("ai_model"),
   useAiBumps: boolean("use_ai_bumps"),
-  maxBumps: bigint("max_bumps", { mode: "number" }),
+  maxBumps: bigint("max_bumps", { mode: "number" }).default(4),
   stopOnResponse: boolean("stop_on_response"),
   channel: text("channel").default("sms"),
   // Channel fallback (specs/channel-fallback): primary→fallback delivery routing.
@@ -468,6 +468,13 @@ export const campaigns = nocodb.table("Campaigns", {
   bump1AiReference: boolean("bump_1_ai_reference").default(false),
   bump2AiReference: boolean("bump_2_ai_reference").default(false),
   bump3AiReference: boolean("bump_3_ai_reference").default(false),
+  // Per-bump AI angle override: what generate_ai_bump() should aim for at this
+  // stage. Falls back to the engine's hardcoded _STAGE_ANGLES when empty (see
+  // docs/superpowers/specs/2026-07-02-bump-system-overhaul-design.md, item 2).
+  bump1AiPrompt: text("bump_1_ai_prompt"),
+  bump2AiPrompt: text("bump_2_ai_prompt"),
+  bump3AiPrompt: text("bump_3_ai_prompt"),
+  bump4AiPrompt: text("bump_4_ai_prompt"),
   bump1VoiceTemplate: text("bump_1_voice_template"),
   bump2VoiceTemplate: text("bump_2_voice_template"),
   bump3VoiceTemplate: text("bump_3_voice_template"),
@@ -659,6 +666,11 @@ export const leads = nocodb.table("Leads", {
   firstMessageSentAt: timestamp("first_message_sent_at", { withTimezone: true }),
   nextActionAt: timestamp("next_action_at", { withTimezone: true }),
   currentBumpStage: bigint("current_bump_stage", { mode: "number" }),
+  // Set when the lead named a booking day but hasn't confirmed a time yet;
+  // JSON string {day, offered_slots, timezone, saved_at}. Cleared on booking,
+  // after one booking-nudge bump, or when older than 7 days. See
+  // bump-system-overhaul design spec, item 6.
+  pendingBookingContext: text("pending_booking_context"),
   optedOut: boolean("opted_out"),
   aiSentiment: text("ai_sentiment"),
   aiSummary: text("ai_summary"),
