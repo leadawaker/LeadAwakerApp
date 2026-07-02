@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   Clock, Bot, Building2,
   MousePointerClick, Award, Megaphone, BookOpen, Paintbrush, MapPin, UserRound,
+  HelpCircle,
 } from "lucide-react";
 import {
   EditText, InfoRow,
@@ -74,6 +75,17 @@ export function BusinessSectionFields({
     }
     current[uiLang] = text;
     setDraft(d => ({ ...d, [field]: JSON.stringify(current) }));
+  };
+
+  type ObjectionRow = { objection: string; answer: string };
+  const objectionRows = (): ObjectionRow[] => {
+    const raw = (draft.objection_playbook ?? campaign.objection_playbook) as ObjectionRow[] | undefined;
+    return [0, 1, 2].map((i) => raw?.[i] ?? { objection: "", answer: "" });
+  };
+  const updateObjectionRow = (idx: number, patch: Partial<ObjectionRow>) => {
+    const rows = objectionRows();
+    rows[idx] = { ...rows[idx], ...patch };
+    setDraft(d => ({ ...d, objection_playbook: rows }));
   };
 
   return (
@@ -224,6 +236,37 @@ export function BusinessSectionFields({
               {...focusFor("kb")}
             />
           ) : undefined}
+        />
+      </div>
+
+      {/* Objection playbook — up to 3 owner-approved objection/answer pairs,
+          injected into the AI's system prompt (Part 3 of the trust-kit spec). */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={HelpCircle} label={t("config.objectionPlaybook")} value={null}
+          description={t("config.objectionPlaybookHint")}
+          editChild={
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md, 12px)' }}>
+              {[0, 1, 2].map((idx) => (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+                  <span style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 11, fontWeight: 600, color: 'var(--mute-2)' }}>
+                    {t("config.objectionLabel", { n: idx + 1 })}
+                  </span>
+                  <EditText
+                    value={objectionRows()[idx].objection}
+                    onChange={(v) => updateObjectionRow(idx, { objection: v.slice(0, 500) })}
+                    placeholder={t("config.objectionPlaceholder")}
+                  />
+                  <EditText
+                    value={objectionRows()[idx].answer}
+                    onChange={(v) => updateObjectionRow(idx, { answer: v.slice(0, 500) })}
+                    multiline
+                    minRows={2}
+                    placeholder={t("config.answerPlaceholder")}
+                  />
+                </div>
+              ))}
+            </div>
+          }
         />
       </div>
     </div>

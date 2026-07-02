@@ -325,6 +325,11 @@
     "launchName": "Demo lead name",
     "launchNamePlaceholder": "Lead name (optional)",
     "launchNameHint": "Sets the demo lead's first name when you launch. Leave empty to keep the current name.",
+    "objectionPlaybook": "Objection playbook",
+    "objectionPlaybookHint": "Up to 3 objections the AI should recognize, with your approved answer for each. Edit live — the AI uses your wording on its next reply.",
+    "objectionLabel": "Objection {{n}}",
+    "objectionPlaceholder": "e.g. \"It's too expensive\"",
+    "answerPlaceholder": "Your approved answer…",
     "sections": {
       "business": "Business",
       "businessTitle": "Business Setup",

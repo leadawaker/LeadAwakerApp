@@ -287,6 +287,11 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     ai_style_override: (c as any).ai_style_override || "",
     niche: (c as any).niche || "",
     inquiry_timeframe: (c as any).inquiry_timeframe || "",
+    objection_playbook: (c as any).objection_playbook ?? [
+      { objection: "", answer: "" },
+      { objection: "", answer: "" },
+      { objection: "", answer: "" },
+    ],
     typo_count: (c as any).typo_count ?? "",
     positioning: (c as any).positioning || "premium",
     ai_disclosure: (c as any).ai_disclosure || "off",

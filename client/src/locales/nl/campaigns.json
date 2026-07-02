@@ -325,6 +325,11 @@
     "launchName": "Naam demolead",
     "launchNamePlaceholder": "Naam lead (optioneel)",
     "launchNameHint": "Stelt de voornaam van de demolead in bij het starten. Laat leeg om de huidige naam te behouden.",
+    "objectionPlaybook": "Bezwaren-script",
+    "objectionPlaybookHint": "Tot 3 bezwaren die de AI moet herkennen, met jouw goedgekeurde antwoord voor elk. Live aanpasbaar — de AI gebruikt jouw woorden in het volgende bericht.",
+    "objectionLabel": "Bezwaar {{n}}",
+    "objectionPlaceholder": "bijv. \"Het is te duur\"",
+    "answerPlaceholder": "Jouw goedgekeurde antwoord…",
     "sections": {
       "business": "Zakelijk",
       "businessTitle": "Zakelijke Instellingen",
