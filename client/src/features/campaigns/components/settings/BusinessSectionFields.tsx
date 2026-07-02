@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bot, Building2, MessageSquare,
@@ -14,6 +15,9 @@ import {
   placeholderFor, optionLabel, optionStore,
 } from "./fieldLocale";
 import { resolveLang } from "@shared/langField";
+import { useSession } from "@/hooks/useSession";
+import { apiFetch } from "@/lib/apiUtils";
+import { buildMap, DEFAULT_NICHE_TERMS, type CampaignForPreview } from "@/features/prompts/utils/resolveVariables";
 
 // The four built-in assistant personas (same set as the onboarding wizard). The
 // operator picks one or types a custom name — it's a pick-or-type combobox.
@@ -96,6 +100,113 @@ export function BusinessSectionFields({
     setDraft(d => ({ ...d, objection_playbook: rows }));
   };
 
+  /* ── Preview opener button ──────────────────────────────────────────────
+     Resolves the First Message with all {variable} tokens substituted, using
+     the same buildMap() the AI-prompt preview uses (mirrors the engine's
+     personalize_message()). Local-only — nothing is sent. */
+  const session = useSession();
+  const [previewOn, setPreviewOn] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewText, setPreviewText] = useState("");
+  const nicheTermsCacheRef = useRef<Map<string, Record<string, string>>>(new Map());
+
+  // Leaving edit mode should not leave a stale preview showing next time.
+  useEffect(() => { if (!isEditing) setPreviewOn(false); }, [isEditing]);
+
+  const fetchNicheTerms = async (niche: string, lang: "en" | "nl"): Promise<Record<string, string>> => {
+    const defaults = DEFAULT_NICHE_TERMS[lang];
+    try {
+      const r = await apiFetch(`/api/niche-vocabulary/${encodeURIComponent(niche)}?lang=${lang}`);
+      if (!r.ok) return defaults;
+      const groups = await r.json();
+      if (!groups) return defaults;
+      const pick = (a?: string[]) => (Array.isArray(a) && a.length ? a[0] : "");
+      const list = (a?: string[]) => (Array.isArray(a) ? a.join(", ") : "");
+      return {
+        ...defaults,
+        project_term: pick(groups.projectTerm) || defaults.project_term,
+        project_term_list: list(groups.projectTerm) || defaults.project_term_list,
+        proposal_term: pick(groups.proposalTerm) || defaults.proposal_term,
+        proposal_term_list: list(groups.proposalTerm) || defaults.proposal_term_list,
+        decision_term: pick(groups.decisionTerm) || defaults.decision_term,
+        decision_term_list: list(groups.decisionTerm) || defaults.decision_term_list,
+        advisor_term: pick(groups.advisorTerm) || defaults.advisor_term,
+        advisor_term_list: list(groups.advisorTerm) || defaults.advisor_term_list,
+        visit_term: pick(groups.visitTerm) || defaults.visit_term,
+        visit_term_list: list(groups.visitTerm) || defaults.visit_term_list,
+      };
+    } catch {
+      return defaults;
+    }
+  };
+
+  // Maps the merged {...campaign, ...draft} snake_case/camelCase-mixed shape
+  // into CampaignForPreview, mirroring the mapper in PromptsPage.tsx so this
+  // preview and the AI-prompt preview never drift on field-name handling.
+  const buildCampaignForPreview = (raw: Record<string, unknown>): CampaignForPreview => {
+    const get = (camel: string, snake: string) => (raw[camel] ?? raw[snake] ?? null) as string | null;
+    return {
+      id: Number(raw.id ?? raw.Id ?? 0),
+      name: String(raw.name ?? raw.Name ?? ""),
+      aiModel: String(raw.aiModel ?? raw.ai_model ?? ""),
+      agentName: get("agentName", "agent_name"),
+      serviceName: get("serviceName", "service_name"),
+      campaignService: get("campaignService", "campaign_service"),
+      campaignUsp: get("campaignUsp", "campaign_usp"),
+      calendarLink: get("calendarLink", "calendar_link"),
+      firstMessage: (raw.firstMessage ?? raw.first_message ?? raw.First_Message ?? null) as string | null,
+      whatLeadDid: get("whatLeadDid", "what_lead_did"),
+      firstTouch: get("firstTouch", "first_touch"),
+      inquiriesSource: get("inquiriesSource", "inquiries_source"),
+      inquiryTimeframe: get("inquiryTimeframe", "inquiry_timeframe"),
+      niche: (raw.niche ?? null) as string | null,
+      nicheQuestion: get("nicheQuestion", "niche_question"),
+      bookingMode: (raw.bookingModeOverride ?? raw.booking_mode_override ?? null) as string | null,
+      positioning: (raw.positioning ?? null) as string | null,
+      aiDisclosure: get("aiDisclosure", "ai_disclosure"),
+      language: (raw.language ?? null) as string | null,
+      demoClientName: get("demoClientName", "demo_client_name"),
+      companyName: get("companyName", "company_name"),
+      aiStyleOverride: get("aiStyleOverride", "ai_style_override"),
+      description: (raw.description ?? null) as string | null,
+      aiRole: get("aiRole", "ai_role"),
+      typoCount: (raw.typoCount ?? raw.typo_count ?? null) as number | null,
+      kb: (raw.kb ?? null) as string | null,
+      accountsId: (raw.accountsId ?? raw.Accounts_id ?? null) as number | null,
+    };
+  };
+
+  const handlePreviewClick = async () => {
+    if (previewOn) { setPreviewOn(false); return; }
+    setPreviewOn(true);
+    setPreviewLoading(true);
+
+    // Merge unsaved edits over the saved campaign so a First Message the operator
+    // is actively typing (or a Company Name change made moments ago) shows up.
+    const raw: Record<string, unknown> = { ...campaign, ...draft };
+    const lang: "en" | "nl" = String(raw.language ?? "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+    const niche = String(raw.niche ?? "").trim() || "__default__";
+    const cacheKey = `${niche}|${lang}`;
+
+    let terms = nicheTermsCacheRef.current.get(cacheKey);
+    if (!terms) {
+      terms = await fetchNicheTerms(niche, lang);
+      nicheTermsCacheRef.current.set(cacheKey, terms);
+    }
+
+    // {first_name}: Demo Lead Name wins if filled, else the logged-in user's
+    // first name (Finn or Gabriel, whoever is running the screenshare).
+    const sessionFirstName = session.status === "authenticated"
+      ? session.user.fullName?.split(" ")[0]
+      : undefined;
+    const firstName = launchName?.trim() || sessionFirstName || undefined;
+
+    const campaignForPreview = buildCampaignForPreview(raw);
+    const map = buildMap(campaignForPreview, { firstName }, null, lang, { nicheTerms: terms });
+    setPreviewText(map.first_message ?? "");
+    setPreviewLoading(false);
+  };
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
       <InfoRow icon={Building2} label={t("config.companyName")} value={String(draft.company_name ?? campaign.company_name ?? "")}
@@ -129,20 +240,52 @@ export function BusinessSectionFields({
           value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
           editChild={isEditing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
-                <EditToggle
-                  value={!!draft.first_message_voice_note}
-                  onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
-                />
-              </div>
-              <EditText
-                value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
-                onChange={(v) => onTextChange("First_Message", draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template, v)}
-                multiline
-                minRows={3}
-                placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
-              />
-              <CopyButton value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)} />
+              {previewOn ? (
+                <>
+                  <div style={{
+                    fontSize: 13, lineHeight: 1.5, color: 'var(--ink)',
+                    border: '1px solid var(--line)', borderRadius: 'var(--r-input, 10px)',
+                    padding: '10px 12px', whiteSpace: 'pre-wrap', minHeight: 64,
+                  }}>
+                    {previewLoading ? t("config.previewResolving") : (previewText || t("config.previewEmpty"))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewOn(false)}
+                    className="la-btn la-btn--soft"
+                    style={{ alignSelf: 'flex-start', fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                  >
+                    {t("config.previewBackToEdit")}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
+                    <EditToggle
+                      value={!!draft.first_message_voice_note}
+                      onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
+                    />
+                  </div>
+                  <EditText
+                    value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
+                    onChange={(v) => onTextChange("First_Message", draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template, v)}
+                    multiline
+                    minRows={3}
+                    placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
+                    <CopyButton value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)} />
+                    <button
+                      type="button"
+                      onClick={handlePreviewClick}
+                      className="la-btn la-btn--soft"
+                      style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                    >
+                      {t("config.previewOpener")}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : undefined}
           {...editFor("first_message_template")}
