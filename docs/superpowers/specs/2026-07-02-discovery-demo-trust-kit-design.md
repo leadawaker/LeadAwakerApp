@@ -91,6 +91,7 @@ The old identity-verification opener remains a documented legacy variant only; i
 - **Move to Business panel:** First_Message field.
 - **Move from Business panel to AI panel (below the bumps):** Business description, AANVRAAGDATUM, WAT DE LEAD HEEFT GEDAAN, EERSTE CONTACT.
 - Result: the Business panel (the one Finn screenshares) contains exactly the owner-voice surface: opener + objection playbook. AI plumbing lives in the AI panel.
+- **Future direction (not this build):** these 4 fields are currently campaign-level defaults. Gabriel wants per-lead override eventually (a lead's own "what they did" / "when last contacted" should win over the campaign default). `what_lead_did` already has this: `Leads.what_has_the_lead_done` overrides `Campaigns.what_lead_did` in `personalize_message()`. `first_touch` and `inquiry_timeframe` don't have a lead-level column yet — extending them later means adding the Leads column + the same override line, no architecture change needed. The panel reorg here doesn't block that.
 
 ## Part 5: `{first_message}` Prompt Variable (build)
 
@@ -102,7 +103,7 @@ Handled in Gabriel's ongoing prompt-revamp session. Required changes:
 
 - STEP 1 references `{first_message}` and reads the lead's first reply as a direct answer to it. Reply classification: status/context reply (primary path, go straight to responding), bare short reply (introduce + fallback status question), opt-out (respect immediately).
 - STEP 2 trigger changes from "when the prospect confirms it is them" to "when the prospect replies to the opener". The Override branch (respond directly to provided context) becomes the primary path; the generic status question becomes the fallback.
-- AI disclosure: one short clause at the top of the AI's first message ("Ik ben de digitale assistent van {business}, ik help hier met de planning"), then straight into substance. Never repeated unless asked. No wording anywhere that implies an identity check happened.
+- AI disclosure: one short clause at the top of the AI's first message ("Ik ben {agent_name}, de digitale assistent van {business}, ik help hier met de planning"), then straight into substance. `{agent_name}` already resolves via `personalize_message()` (`lead.active_agent` → `campaign.agent_name`, `_helpers.py:87`), no new build needed. Never repeated unless asked. No wording anywhere that implies an identity check happened.
 
 ## AI Act Disclosure in the Demo (decision)
 
