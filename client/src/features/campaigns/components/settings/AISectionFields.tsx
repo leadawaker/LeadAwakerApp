@@ -121,6 +121,18 @@ export function AISectionFields({
         {...editFor("voice_reply_mode")}
         editChild={isEditing ? <EditSelect value={String(draft.voice_reply_mode ?? "")} onChange={(v) => setDraft(d => ({...d, voice_reply_mode: v}))} options={["off", "smart", "voice_reply"]} labels={{ off: t("config.voiceReplyOff"), smart: t("config.voiceReplySmart"), voice_reply: t("config.voiceReplyVoiceReply") }} {...focusFor("voice_reply_mode")} /> : undefined}
       />
+      <InfoRow icon={Mic} label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ? t("config.on") : t("config.off")}
+        {...editFor("first_message_voice_note")}
+        editChild={isEditing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+            <EditToggle
+              value={!!draft.first_message_voice_note}
+              onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
+            />
+            <span style={{ fontSize: 11, color: 'var(--mute)' }}>{t("config.firstMessageVoiceNoteHint")}</span>
+          </div>
+        ) : undefined}
+      />
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={Link} label={t("config.promptLinked")} value={campaign.prompt_linked_id || t("config.noPromptLinked")}
           {...editFor("prompt_linked_id")}

@@ -6,7 +6,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import {
-  EditText, EditToggle, InfoRow, CopyButton,
+  EditText, InfoRow, CopyButton,
 } from "../formFields";
 import { LocalizedCombo } from "../formFields/LocalizedCombo";
 import {
@@ -17,11 +17,17 @@ import {
 import { resolveLang } from "@shared/langField";
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
-import { buildMap, DEFAULT_NICHE_TERMS, type CampaignForPreview } from "@/features/prompts/utils/resolveVariables";
+import { buildMap, resolvePreviewPlainText, DEFAULT_NICHE_TERMS, type CampaignForPreview } from "@/features/prompts/utils/resolveVariables";
+import { OpenerTemplatePicker } from "./OpenerTemplatePicker";
+import type { OpenerTemplate } from "./openerTemplates";
 
 // The four built-in assistant personas (same set as the onboarding wizard). The
 // operator picks one or types a custom name — it's a pick-or-type combobox.
 const AGENT_NAME_OPTIONS = ["Thomas", "Mark", "Sophie", "Lisa"].map((n) => ({ label: n, store: n }));
+
+const MONO_BTN_STYLE: React.CSSProperties = {
+  fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+};
 
 // Distinct example objections per row (price / competitor / stalling) so the
 // playbook demonstrates its range instead of repeating the same example 3x.
@@ -100,18 +106,21 @@ export function BusinessSectionFields({
     setDraft(d => ({ ...d, objection_playbook: rows }));
   };
 
-  /* ── Preview opener button ──────────────────────────────────────────────
-     Resolves the First Message with all {variable} tokens substituted, using
+  /* ── First Message preview ──────────────────────────────────────────────
+     Live-resolves the opener with all {variable} tokens substituted, using
      the same buildMap() the AI-prompt preview uses (mirrors the engine's
-     personalize_message()). Local-only — nothing is sent. */
+     personalize_message()). Preview is the default view while editing; a
+     small Edit toggle switches to the raw template. Recomputes automatically
+     as Company Name / Demo Lead Name / the template text change — no manual
+     refresh. Local-only — nothing is sent. */
   const session = useSession();
-  const [previewOn, setPreviewOn] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewText, setPreviewText] = useState("");
-  const nicheTermsCacheRef = useRef<Map<string, Record<string, string>>>(new Map());
+  const [rawEditOpen, setRawEditOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [nicheTerms, setNicheTerms] = useState<Record<string, Record<string, string>>>({});
+  const fetchedNicheKeysRef = useRef<Set<string>>(new Set());
 
-  // Leaving edit mode should not leave a stale preview showing next time.
-  useEffect(() => { if (!isEditing) setPreviewOn(false); }, [isEditing]);
+  // Entering edit mode always lands on the preview, not mid-edit of the raw template.
+  useEffect(() => { if (isEditing) setRawEditOpen(false); }, [isEditing]);
 
   const fetchNicheTerms = async (niche: string, lang: "en" | "nl"): Promise<Record<string, string>> => {
     const defaults = DEFAULT_NICHE_TERMS[lang];
@@ -139,6 +148,20 @@ export function BusinessSectionFields({
       return defaults;
     }
   };
+
+  // Fetches niche terms for a niche+lang pair at most once; result lands in
+  // `nicheTerms` state so live-preview reads pick it up on the next render.
+  const ensureNicheTerms = (niche: string, lang: "en" | "nl") => {
+    const key = `${niche}|${lang}`;
+    if (fetchedNicheKeysRef.current.has(key)) return;
+    fetchedNicheKeysRef.current.add(key);
+    fetchNicheTerms(niche, lang).then((terms) => {
+      setNicheTerms((m) => ({ ...m, [key]: terms }));
+    });
+  };
+
+  const termsFor = (niche: string, lang: "en" | "nl") =>
+    nicheTerms[`${niche}|${lang}`] ?? DEFAULT_NICHE_TERMS[lang];
 
   // Maps the merged {...campaign, ...draft} snake_case/camelCase-mixed shape
   // into CampaignForPreview, mirroring the mapper in PromptsPage.tsx so this
@@ -176,38 +199,47 @@ export function BusinessSectionFields({
     };
   };
 
-  const handlePreviewClick = async () => {
-    if (previewOn) { setPreviewOn(false); return; }
-    setPreviewOn(true);
-    setPreviewLoading(true);
+  // Merge unsaved edits over the saved campaign so a First Message the operator
+  // is actively typing (or a Company Name change made moments ago) shows live.
+  const previewRaw: Record<string, unknown> = { ...campaign, ...draft };
+  // Send language: what the engine will actually deliver — the whole point of
+  // the main preview is to catch language/token bugs before they go out.
+  const sendLang: "en" | "nl" = String(previewRaw.language ?? "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+  const previewNiche = String(previewRaw.niche ?? "").trim() || "__default__";
+  // {first_name}: Demo Lead Name wins if filled, else the logged-in user's
+  // first name (Finn or Gabriel, whoever is running the screenshare).
+  const sessionFirstName = session.status === "authenticated"
+    ? session.user.fullName?.split(" ")[0]
+    : undefined;
+  const previewFirstName = launchName?.trim() || sessionFirstName || undefined;
+  const campaignForPreview = buildCampaignForPreview(previewRaw);
 
-    // Merge unsaved edits over the saved campaign so a First Message the operator
-    // is actively typing (or a Company Name change made moments ago) shows up.
-    const raw: Record<string, unknown> = { ...campaign, ...draft };
-    const lang: "en" | "nl" = String(raw.language ?? "en").toLowerCase().startsWith("nl") ? "nl" : "en";
-    const niche = String(raw.niche ?? "").trim() || "__default__";
-    const cacheKey = `${niche}|${lang}`;
+  useEffect(() => { ensureNicheTerms(previewNiche, sendLang); }, [previewNiche, sendLang]);
 
-    let terms = nicheTermsCacheRef.current.get(cacheKey);
-    if (!terms) {
-      terms = await fetchNicheTerms(niche, lang);
-      nicheTermsCacheRef.current.set(cacheKey, terms);
-    }
+  const previewMap = buildMap(campaignForPreview, { firstName: previewFirstName }, null, sendLang, {
+    nicheTerms: termsFor(previewNiche, sendLang),
+  });
+  const previewText = previewMap.first_message ?? "";
 
-    // {first_name}: Demo Lead Name wins if filled, else the logged-in user's
-    // first name (Finn or Gabriel, whoever is running the screenshare).
-    const sessionFirstName = session.status === "authenticated"
-      ? session.user.fullName?.split(" ")[0]
-      : undefined;
-    const firstName = launchName?.trim() || sessionFirstName || undefined;
+  // Template picker shows the CRM's own display language, not the campaign's
+  // send language — it's a browse/pick UI, not a send-accuracy check.
+  const templateUiLang: "en" | "nl" = uiLang === "nl" ? "nl" : "en";
+  useEffect(() => {
+    if (templatesOpen) ensureNicheTerms(previewNiche, templateUiLang);
+  }, [templatesOpen, previewNiche, templateUiLang]);
 
-    const campaignForPreview = buildCampaignForPreview(raw);
-    const map = buildMap(campaignForPreview, { firstName }, null, lang, { nicheTerms: terms });
-    setPreviewText(map.first_message ?? "");
-    setPreviewLoading(false);
+  const resolveTemplateBody = (rawBody: string): string =>
+    resolvePreviewPlainText(rawBody, campaignForPreview, { firstName: previewFirstName }, null, templateUiLang, {
+      nicheTerms: termsFor(previewNiche, templateUiLang),
+    });
+
+  const handlePickTemplate = (tpl: OpenerTemplate) => {
+    setDraft(d => ({ ...d, First_Message: JSON.stringify({ en: tpl.body.en, nl: tpl.body.nl }) }));
+    setRawEditOpen(false); // land back on the live preview showing the applied template
   };
 
   return (
+    <>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
       <InfoRow icon={Building2} label={t("config.companyName")} value={String(draft.company_name ?? campaign.company_name ?? "")}
         {...editFor("company_name")}
@@ -240,32 +272,8 @@ export function BusinessSectionFields({
           value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
           editChild={isEditing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
-              {previewOn ? (
+              {rawEditOpen ? (
                 <>
-                  <div style={{
-                    fontSize: 13, lineHeight: 1.5, color: 'var(--ink)',
-                    border: '1px solid var(--line)', borderRadius: 'var(--r-input, 10px)',
-                    padding: '10px 12px', whiteSpace: 'pre-wrap', minHeight: 64,
-                  }}>
-                    {previewLoading ? t("config.previewResolving") : (previewText || t("config.previewEmpty"))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewOn(false)}
-                    className="la-btn la-btn--soft"
-                    style={{ alignSelf: 'flex-start', fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                  >
-                    {t("config.previewBackToEdit")}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
-                    <EditToggle
-                      value={!!draft.first_message_voice_note}
-                      onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
-                    />
-                  </div>
                   <EditText
                     value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
                     onChange={(v) => onTextChange("First_Message", draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template, v)}
@@ -275,13 +283,29 @@ export function BusinessSectionFields({
                   />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
                     <CopyButton value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)} />
-                    <button
-                      type="button"
-                      onClick={handlePreviewClick}
-                      className="la-btn la-btn--soft"
-                      style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                    >
+                    <button type="button" onClick={() => setRawEditOpen(false)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
                       {t("config.previewOpener")}
+                    </button>
+                    <button type="button" onClick={() => setTemplatesOpen(true)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
+                      {t("config.openerTemplatesButton")}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    fontSize: 13, lineHeight: 1.5, color: 'var(--ink)',
+                    border: '1px solid var(--line)', borderRadius: 'var(--r-input, 10px)',
+                    padding: '10px 12px', whiteSpace: 'pre-wrap', minHeight: 64,
+                  }}>
+                    {previewText || t("config.previewEmpty")}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
+                    <button type="button" onClick={() => setRawEditOpen(true)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
+                      {t("config.editOpener")}
+                    </button>
+                    <button type="button" onClick={() => setTemplatesOpen(true)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
+                      {t("config.openerTemplatesButton")}
                     </button>
                   </div>
                 </>
@@ -394,5 +418,13 @@ export function BusinessSectionFields({
         />
       </div>
     </div>
+    <OpenerTemplatePicker
+      open={templatesOpen}
+      onOpenChange={setTemplatesOpen}
+      uiLang={templateUiLang}
+      resolveBody={resolveTemplateBody}
+      onPick={handlePickTemplate}
+    />
+    </>
   );
 }
