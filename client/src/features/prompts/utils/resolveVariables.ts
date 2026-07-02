@@ -11,6 +11,7 @@ export interface CampaignForPreview {
   campaignService?: string | null;
   campaignUsp?: string | null;
   calendarLink?: string | null;
+  firstMessage?: string | null;
   whatLeadDid?: string | null;
   firstTouch?: string | null;
   inquiriesSource?: string | null;
@@ -111,7 +112,7 @@ export function buildMap(
 ): Record<string, string | undefined | null> {
   const l = (lang || campaign?.language || "en") as Lang;
   const rl = (raw: unknown) => resolveLang(raw, l) || undefined;
-  return {
+  const map: Record<string, string | undefined | null> = {
     first_name: lead?.firstName,
     last_name: lead?.lastName,
     phone: lead?.phone,
@@ -129,6 +130,7 @@ export function buildMap(
     niche_question: rl(campaign?.nicheQuestion),
     booking_mode: normalizeBookingMode(campaign?.bookingMode),
     company_name: campaign?.companyName || campaign?.demoClientName,
+    business: campaign?.companyName || campaign?.demoClientName,
     niche: campaign?.niche,
     business_description: rl(campaign?.description),
     ai_style: rl(campaign?.aiStyleOverride) || "Casual, smooth and pro",
@@ -164,9 +166,21 @@ export function buildMap(
     lead_stage: "",
     // Per-niche substitution terms (fetched from the vocabulary API in the preview).
     ...(opts?.nicheTerms ?? {}),
+    project: opts?.nicheTerms?.project_term ?? campaign?.serviceName ?? campaign?.campaignService ?? undefined,
     // Preview overrides win over everything above.
     ...(opts?.overrides ?? {}),
   };
+
+  // {first_message}: the opener template (Campaigns.First_Message, a {en,nl}
+  // bilingual field) resolved to the campaign's language, then substituted
+  // against this same map, mirroring personalize_message() server-side, so
+  // the preview shows the actual sent text instead of a literal token.
+  const firstMessageTemplate = rl(campaign?.firstMessage);
+  map.first_message = firstMessageTemplate
+    ? firstMessageTemplate.replace(/\{(\w+)\}/g, (match, key) => map[key.toLowerCase()] || match)
+    : undefined;
+
+  return map;
 }
 
 /** Plain-text resolution — returns resolved string + list of unresolved keys */
@@ -193,9 +207,61 @@ export function resolveVariables(
 }
 
 const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
+const MARK_OPEN = `<mark ${MARK}>`;
+const MARK_CLOSE = "</mark>";
+
+/**
+ * Split resolved HTML on newlines for per-line rendering, re-opening/closing
+ * <mark> tags at each split so a multi-line variable value (e.g. a niche
+ * example pack) stays highlighted on every line instead of just the first —
+ * a naive .split("\n") cuts straight through the tag pair.
+ */
+export function splitHtmlPreservingMarks(html: string): string[] {
+  const rawLines = html.split("\n");
+  let openCount = 0;
+  return rawLines.map((line) => {
+    let result = openCount > 0 ? MARK_OPEN.repeat(openCount) + line : line;
+    const opens = (line.match(/<mark /g) || []).length;
+    const closes = (line.match(/<\/mark>/g) || []).length;
+    openCount = Math.max(0, openCount + opens - closes);
+    if (openCount > 0) result += MARK_CLOSE.repeat(openCount);
+    return result;
+  });
+}
 
 // Matches {{#if var == "val"}}content{{else}}alt{{/if}} — no special HTML chars inside the tag syntax
 const CONDITIONAL_RE = /\{\{#if\s+(\w+)\s*(==|!=)\s*&quot;([^&]*)&quot;\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g;
+// Same conditional shape but on raw (unescaped) text — used for token counting.
+const CONDITIONAL_RE_PLAIN = /\{\{#if\s+(\w+)\s*(==|!=)\s*"([^"]*)"\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g;
+
+/**
+ * Plain-text resolution with conditionals evaluated — the same substitution the
+ * HTML preview shows, minus the escaping/<mark> wrapping. Used so the token
+ * count matches exactly what's rendered in the preview panel, not the raw
+ * unresolved template (which undercounts any {niche_*} pack variable).
+ */
+export function resolvePreviewPlainText(
+  text: string,
+  campaign?: CampaignForPreview | null,
+  lead?: LeadForPreview | null,
+  account?: AccountForPreview | null,
+  lang?: string,
+  opts?: ResolveOpts,
+): string {
+  const map = buildMap(campaign, lead, account, lang, opts);
+  let out = text.replace(CONDITIONAL_RE_PLAIN, (_match, varName, op, compareVal, ifContent, elseContent) => {
+    const actual = String(map[varName.toLowerCase()] ?? "");
+    const met = op === "==" ? actual === compareVal : actual !== compareVal;
+    if (met) return ifContent;
+    if (elseContent != null) return elseContent;
+    return "";
+  });
+  out = out.replace(/\{(\w+)\}/g, (match, key) => {
+    const val = map[key.toLowerCase()];
+    return val ? String(val) : match;
+  });
+  return out;
+}
 
 /** HTML resolution — all {variable} tokens become <mark> chips, conditionals evaluated */
 export function resolveVariablesHtml(

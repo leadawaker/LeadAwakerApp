@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { hapticSave } from "@/lib/haptics";
 import { useTranslation } from "react-i18next";
-import { resolveVariablesHtml, buildMap, DEFAULT_NICHE_TERMS, type CampaignForPreview, type ResolveOpts } from "../utils/resolveVariables";
+import { resolveVariablesHtml, resolvePreviewPlainText, splitHtmlPreservingMarks, buildMap, DEFAULT_NICHE_TERMS, type CampaignForPreview, type ResolveOpts } from "../utils/resolveVariables";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
@@ -206,13 +206,30 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     autoResize(notesTextareaRef.current);
   }, [autoResize]);
 
-  // Token estimate
+  // Real GPT tokenizer (o200k_base — same encoding family as gpt-4o/gpt-5), lazy-loaded
+  // only once the preview is opened since its BPE rank table is ~2MB.
+  const [countTokensFn, setCountTokensFn] = useState<((s: string) => number) | null>(null);
+  useEffect(() => {
+    if (!previewOpen || countTokensFn) return;
+    let cancelled = false;
+    import("gpt-tokenizer/model/gpt-5").then((mod) => {
+      if (!cancelled) setCountTokensFn(() => mod.countTokens);
+    });
+    return () => { cancelled = true; };
+  }, [previewOpen, countTokensFn]);
+
+  // Token estimate — counts the RESOLVED text (what the preview panel actually shows:
+  // variables substituted, conditionals evaluated), not the raw template, so pack
+  // variables like {niche_question_bank} are reflected instead of undercounted.
   const tokenEstimate = useMemo(() => {
-    const promptLen = (promptTextValRef.current ?? "").length;
-    const sysLen = (systemMessageValRef.current ?? "").length;
-    return Math.ceil((promptLen + sysLen) / 4);
+    const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
+    const opts: ResolveOpts = { overrides: previewOverrides, nicheTerms };
+    const resolvedPrompt = resolvePreviewPlainText(promptTextValRef.current ?? "", selectedCampaign, sampleLead, null, i18n.language, opts);
+    const resolvedSys = resolvePreviewPlainText(systemMessageValRef.current ?? "", selectedCampaign, sampleLead, null, i18n.language, opts);
+    const combined = `${resolvedPrompt}\n${resolvedSys}`;
+    return countTokensFn ? countTokensFn(combined) : Math.ceil(combined.length / 4);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightTick]);
+  }, [highlightTick, campaigns, form.campaignsId, sampleLead, i18n.language, previewOverrides, nicheTerms, countTokensFn]);
 
   useEffect(() => { onTokenEstimate?.(tokenEstimate); }, [tokenEstimate, onTokenEstimate]);
 
@@ -312,6 +329,31 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
         });
       })
       .catch(() => setNicheTerms(defaults));
+  }, [previewOpen, previewNiche, campaignNiche, i18n.language]);
+
+  // Fetch the 4 example packs so {niche_question_bank} etc. resolve in the preview.
+  // Mirrors the engine's per-field __default__ fallback (tools/db/niche_vocabulary.py
+  // get_niche_example_packs): an existing-but-empty pack still inherits the kitchen pack.
+  useEffect(() => {
+    if (!previewOpen) return;
+    const vlang = (i18n.language || "en").toLowerCase().startsWith("nl") ? "nl" : "en";
+    const niche = (previewNiche !== "__campaign__" ? previewNiche : campaignNiche) || "__default__";
+    const pick = (tpl: { nl?: string; en?: string } | undefined) =>
+      (vlang === "en" ? (tpl?.en || tpl?.nl) : tpl?.nl) || "";
+    const fetchPacks = (n: string) =>
+      apiFetch(`/api/niche-vocabulary/${encodeURIComponent(n)}/template`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+    Promise.all([fetchPacks(niche), niche === "__default__" ? Promise.resolve(null) : fetchPacks("__default__")])
+      .then(([nicheRow, defaultRow]) => {
+        const merged = {
+          niche_question_bank: pick(nicheRow?.questionBank) || pick(defaultRow?.questionBank),
+          niche_bad_examples: pick(nicheRow?.badExamples) || pick(defaultRow?.badExamples),
+          niche_objection_examples: pick(nicheRow?.objectionExamples) || pick(defaultRow?.objectionExamples),
+          niche_scenario_examples: pick(nicheRow?.scenarioExamples) || pick(defaultRow?.scenarioExamples),
+        };
+        setNicheTerms((prev) => ({ ...prev, ...merged }));
+      });
   }, [previewOpen, previewNiche, campaignNiche, i18n.language]);
 
   function scheduleAutoSave() {
@@ -502,9 +544,9 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
         : null,
       headingLevel: s.headingLevel,
       bodyLines: s.bodyRawLines.length > 0
-        ? resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead, null, i18n.language, resolveOpts)
-            .split("\n")
-            .map((htmlLine, j) => ({ htmlLine, lineIndex: j }))
+        ? splitHtmlPreservingMarks(
+            resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead, null, i18n.language, resolveOpts),
+          ).map((htmlLine, j) => ({ htmlLine, lineIndex: j }))
         : [],
     }));
 
