@@ -95,6 +95,25 @@ export function BusinessSectionFields({
         editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
       />
 
+      {/* Demo lead name — transient, drives the Launch Campaign button. Always
+          editable (no save needed): typed live during a discovery screenshare. */}
+      {setLaunchName && (
+        <InfoRow icon={UserRound} label={t("config.launchName")} value={null}
+          description={t("config.launchNameHint")}
+          editChild={
+            <input
+              type="text"
+              value={launchName ?? ""}
+              onChange={(e) => setLaunchName(e.target.value)}
+              placeholder={t("config.launchNamePlaceholder")}
+              maxLength={80}
+              className="la-input"
+              style={{ width: '100%', fontSize: 13, padding: '8px 12px' }}
+            />
+          }
+        />
+      )}
+
       {/* First Message — the opener template. This is the field Finn live-edits
           on screenshare during the demo (Part 1 of the trust-kit spec). */}
       <div style={{ gridColumn: '1 / -1' }}>
@@ -121,25 +140,6 @@ export function BusinessSectionFields({
           {...editFor("first_message_template")}
         />
       </div>
-
-      {/* Demo lead name — transient, drives the Launch Campaign button. Always
-          editable (no save needed): typed live during a discovery screenshare. */}
-      {setLaunchName && (
-        <InfoRow icon={UserRound} label={t("config.launchName")} value={null}
-          description={t("config.launchNameHint")}
-          editChild={
-            <input
-              type="text"
-              value={launchName ?? ""}
-              onChange={(e) => setLaunchName(e.target.value)}
-              placeholder={t("config.launchNamePlaceholder")}
-              maxLength={80}
-              className="la-input"
-              style={{ width: '100%', fontSize: 13, padding: '8px 12px' }}
-            />
-          }
-        />
-      )}
 
       <InfoRow icon={Bot} label={t("config.agentName")} value={campaign.agent_name}
         {...editFor("agent_name")}
