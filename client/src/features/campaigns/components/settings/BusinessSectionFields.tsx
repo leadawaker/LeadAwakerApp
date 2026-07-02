@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next";
 import {
-  Clock, Bot, Building2,
-  MousePointerClick, Award, Megaphone, BookOpen, Paintbrush, MapPin, UserRound,
+  Bot, Building2, MessageSquare,
+  Award, Megaphone, BookOpen, Paintbrush, UserRound,
   HelpCircle,
 } from "lucide-react";
 import {
-  EditText, InfoRow,
+  EditText, EditToggle, InfoRow, CopyButton,
 } from "../formFields";
 import { LocalizedCombo } from "../formFields/LocalizedCombo";
 import {
   asCampaignLang,
-  USP_OPTIONS, AI_STYLE_OPTIONS, WHAT_LEAD_DID_OPTIONS, SERVICE_OPTIONS, FIRST_TOUCH_OPTIONS,
+  USP_OPTIONS, AI_STYLE_OPTIONS, SERVICE_OPTIONS,
   placeholderFor, optionLabel, optionStore,
 } from "./fieldLocale";
 import { resolveLang } from "@shared/langField";
@@ -95,6 +95,32 @@ export function BusinessSectionFields({
         editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
       />
 
+      {/* First Message — the opener template. This is the field Finn live-edits
+          on screenshare during the demo (Part 1 of the trust-kit spec). */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={MessageSquare} label={t("config.firstMessage")} value={campaign.first_message_template}
+          editChild={isEditing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
+                <EditToggle
+                  value={!!draft.first_message_voice_note}
+                  onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
+                />
+              </div>
+              <EditText
+                value={String(draft.First_Message ?? campaign.first_message_template ?? "")}
+                onChange={(v) => setDraft(d => ({ ...d, First_Message: v }))}
+                multiline
+                minRows={3}
+                placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
+              />
+              <CopyButton value={String(draft.First_Message || campaign.first_message_template || "")} />
+            </div>
+          ) : undefined}
+          {...editFor("first_message_template")}
+        />
+      </div>
+
       {/* Demo lead name — transient, drives the Launch Campaign button. Always
           editable (no save needed): typed live during a discovery screenshare. */}
       {setLaunchName && (
@@ -126,20 +152,6 @@ export function BusinessSectionFields({
         ) : undefined}
       />
 
-      {/* Stage of Sales Process — multilingual dropdown */}
-      <InfoRow icon={MousePointerClick} label={t("config.whatLeadDid")}
-        value={displayLabel("what_lead_did", campaign.what_lead_did)}
-        {...editFor("what_lead_did")}
-        editChild={isEditing ? (
-          <LocalizedCombo
-            displayValue={displayLabel("what_lead_did", draft.what_lead_did ?? campaign.what_lead_did)}
-            onChange={(store) => setDraft(d => ({...d, what_lead_did: store}))}
-            options={comboOptions("what_lead_did", WHAT_LEAD_DID_OPTIONS)}
-            {...focusFor("what_lead_did")}
-          />
-        ) : undefined}
-      />
-
       {/* AI Style — multilingual dropdown */}
       <InfoRow icon={Paintbrush} label={t("config.aiStyleOverride")}
         value={displayLabel("ai_style_override", campaign.ai_style_override)}
@@ -150,32 +162,6 @@ export function BusinessSectionFields({
             onChange={(store) => setDraft(d => ({...d, ai_style_override: store}))}
             options={comboOptions("ai_style_override", AI_STYLE_OPTIONS)}
             {...focusFor("ai_style_override")}
-          />
-        ) : undefined}
-      />
-
-      <InfoRow icon={Clock} label={t("config.inquiryDate")} value={displayText(campaign.inquiry_timeframe)}
-        {...editFor("inquiry_timeframe")}
-        editChild={isEditing ? (
-          <EditText
-            value={displayText(draft.inquiry_timeframe ?? campaign.inquiry_timeframe)}
-            onChange={(v) => onTextChange("inquiry_timeframe", draft.inquiry_timeframe ?? campaign.inquiry_timeframe, v)}
-            placeholder="e.g. Last 6 months, 2+ years ago"
-            {...focusFor("inquiry_timeframe")}
-          />
-        ) : undefined}
-      />
-
-      {/* First Touch — how the lead first contacted the business */}
-      <InfoRow icon={MapPin} label={t("config.firstTouch")}
-        value={displayLabel("first_touch", campaign.first_touch)}
-        {...editFor("first_touch")}
-        editChild={isEditing ? (
-          <LocalizedCombo
-            displayValue={displayLabel("first_touch", draft.first_touch ?? campaign.first_touch)}
-            onChange={(store) => setDraft(d => ({...d, first_touch: store}))}
-            options={comboOptions("first_touch", FIRST_TOUCH_OPTIONS)}
-            {...focusFor("first_touch")}
           />
         ) : undefined}
       />
@@ -204,20 +190,6 @@ export function BusinessSectionFields({
             onChange={(store) => setDraft(d => ({...d, campaign_usp: store}))}
             options={comboOptions("campaign_usp", USP_OPTIONS)}
             {...focusFor("campaign_usp")}
-          />
-        ) : undefined}
-      />
-
-      <InfoRow icon={Building2} label={t("config.businessDescription")}
-        value={displayText(draft.description ?? campaign.description)} richText={true} noBorder
-        {...editFor("description")}
-        editChild={isEditing ? (
-          <EditText
-            value={displayText(draft.description ?? campaign.description)}
-            onChange={(v) => onTextChange("description", draft.description ?? campaign.description, v)}
-            multiline minRows={4}
-            placeholder={placeholderFor("business_description", uiLang)}
-            {...focusFor("description")}
           />
         ) : undefined}
       />

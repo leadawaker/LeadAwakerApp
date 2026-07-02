@@ -1,13 +1,17 @@
 import { useTranslation } from "react-i18next";
 import {
-  MessageSquare, Bot, Mic, Link, Zap,
+  MessageSquare, Bot, Mic, Link, Zap, Building2, Clock, MapPin, MousePointerClick,
   Thermometer, Radio, MessageCircle, HelpCircle,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditSelect, EditToggle, InfoRow, CopyButton,
 } from "../formFields";
+import { LocalizedCombo } from "../formFields/LocalizedCombo";
 import { MODEL_OPTIONS } from "@/features/prompts/types";
-import { asCampaignLang, placeholderFor } from "./fieldLocale";
+import {
+  asCampaignLang, placeholderFor,
+  WHAT_LEAD_DID_OPTIONS, FIRST_TOUCH_OPTIONS, optionLabel, optionStore,
+} from "./fieldLocale";
 import { resolveLang } from "@shared/langField";
 
 interface AISectionFieldsProps {
@@ -42,6 +46,20 @@ export function AISectionFields({
     current[uiLang] = text;
     setDraft(d => ({ ...d, [field]: JSON.stringify(current) }));
   };
+
+  // Build LocalizedCombo options for a given field and option table
+  const comboOptions = (
+    field: string,
+    table: Record<string, string[]>,
+  ) =>
+    (table[uiLang] ?? table.en).map((label) => ({
+      label,
+      store: optionStore(field, label, uiLang),
+    }));
+
+  // Resolve a raw field value to its display label in UI language
+  const displayLabel = (field: string, raw: unknown) =>
+    optionLabel(field, raw, uiLang);
 
   const editFor = (field: string) =>
     onStartEditField && !isEditing ? { onStartEdit: () => onStartEditField(field) } : {};
@@ -87,29 +105,6 @@ export function AISectionFields({
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
-      <div style={{ gridColumn: '1 / -1' }}>
-        <InfoRow icon={MessageSquare} label={t("config.firstMessage")} value={campaign.first_message_template}
-          editChild={isEditing ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
-                <EditToggle
-                  value={!!draft.first_message_voice_note}
-                  onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
-                />
-              </div>
-              <EditText
-                value={String(draft.First_Message ?? campaign.first_message_template ?? "")}
-                onChange={(v) => setDraft(d => ({ ...d, First_Message: v }))}
-                multiline
-                minRows={3}
-                placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
-              />
-              <CopyButton value={String(draft.First_Message || campaign.first_message_template || "")} />
-            </div>
-          ) : undefined}
-          {...editFor("first_message_template")}
-        />
-      </div>
       <InfoRow icon={Bot} label={t("config.aiRole") || "AI Role"}
         value={displayText(campaign.ai_role)}
         {...editFor("ai_role")}
@@ -139,6 +134,60 @@ export function AISectionFields({
       </div>
 
       {[1, 2, 3, 4].map(n => renderBump(n))}
+
+      {/* Business context fields — moved here from the Business panel so that
+          panel contains only the owner-voice surface (opener + objection
+          playbook). See Part 4 of the trust-kit spec. */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={Building2} label={t("config.businessDescription")}
+          value={displayText(draft.description ?? campaign.description)} richText={true} noBorder
+          {...editFor("description")}
+          editChild={isEditing ? (
+            <EditText
+              value={displayText(draft.description ?? campaign.description)}
+              onChange={(v) => onTextChange("description", draft.description ?? campaign.description, v)}
+              multiline minRows={4}
+              placeholder={placeholderFor("business_description", uiLang)}
+              {...focusFor("description")}
+            />
+          ) : undefined}
+        />
+      </div>
+      <InfoRow icon={Clock} label={t("config.inquiryDate")} value={displayText(campaign.inquiry_timeframe)}
+        {...editFor("inquiry_timeframe")}
+        editChild={isEditing ? (
+          <EditText
+            value={displayText(draft.inquiry_timeframe ?? campaign.inquiry_timeframe)}
+            onChange={(v) => onTextChange("inquiry_timeframe", draft.inquiry_timeframe ?? campaign.inquiry_timeframe, v)}
+            placeholder="e.g. Last 6 months, 2+ years ago"
+            {...focusFor("inquiry_timeframe")}
+          />
+        ) : undefined}
+      />
+      <InfoRow icon={MapPin} label={t("config.firstTouch")}
+        value={displayLabel("first_touch", campaign.first_touch)}
+        {...editFor("first_touch")}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={displayLabel("first_touch", draft.first_touch ?? campaign.first_touch)}
+            onChange={(store) => setDraft(d => ({...d, first_touch: store}))}
+            options={comboOptions("first_touch", FIRST_TOUCH_OPTIONS)}
+            {...focusFor("first_touch")}
+          />
+        ) : undefined}
+      />
+      <InfoRow icon={MousePointerClick} label={t("config.whatLeadDid")}
+        value={displayLabel("what_lead_did", campaign.what_lead_did)}
+        {...editFor("what_lead_did")}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={displayLabel("what_lead_did", draft.what_lead_did ?? campaign.what_lead_did)}
+            onChange={(store) => setDraft(d => ({...d, what_lead_did: store}))}
+            options={comboOptions("what_lead_did", WHAT_LEAD_DID_OPTIONS)}
+            {...focusFor("what_lead_did")}
+          />
+        ) : undefined}
+      />
 
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={MessageCircle} label={t("config.reengagementBump")} value={campaign.reengagement_bump_template}
