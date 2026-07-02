@@ -60,9 +60,14 @@ export default {
       });
     };
 
-    // Never rewrite the canonical host or passthrough paths.
+    // Never rewrite the canonical host or passthrough paths — and skip the
+    // username lookup entirely for them, since every asset/_next/api request
+    // would otherwise trigger its own edge lookup round-trip.
     const isPassThrough =
       PASS_THROUGH.some((re) => re.test(url.pathname)) || ASSET_EXT.test(url.pathname);
+    if (isPassThrough) {
+      return proxy(`${originBase}${url.pathname}${url.search}`);
+    }
 
     let username = null;
     try {
@@ -71,8 +76,8 @@ export default {
       username = null;
     }
 
-    // Unknown host or asset/API request → proxy origin untouched.
-    if (!username || isPassThrough) {
+    // Unknown host → proxy origin untouched.
+    if (!username) {
       return proxy(`${originBase}${url.pathname}${url.search}`);
     }
 
