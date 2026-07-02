@@ -332,6 +332,14 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   companyNameTemplate: jsonb("company_name_template").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
   descriptionTemplate: jsonb("description_template").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
   kbTemplate: jsonb("kb_template").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  // Per-niche example packs for prompt 93 (v8.7+): vivid few-shot content that
+  // keeps the universal skeleton from sounding generic. __default__ row = kitchen
+  // content (v8.6's exact examples), the always-rich fallback for any niche
+  // whose own pack is still empty.
+  questionBank: jsonb("question_bank").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  badExamples: jsonb("bad_examples").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  objectionExamples: jsonb("objection_examples").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  scenarioExamples: jsonb("scenario_examples").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -480,6 +488,10 @@ export const campaigns = nocodb.table("Campaigns", {
   inquiryTimeframe: text("inquiry_timeframe"),
   whatLeadDid: text("what_lead_did"),
   firstMessage: text("First_Message"),
+  // Discovery Demo Trust Kit: up to 3 owner-approved {objection, answer} pairs,
+  // injected into the AI's system prompt verbatim-in-substance (see Part 3 of
+  // docs/superpowers/specs/2026-07-02-discovery-demo-trust-kit-design.md).
+  objectionPlaybook: jsonb("objection_playbook").$type<{ objection: string; answer: string }[]>(),
 
   agentName: text("agent_name"),
   serviceName: text("service_name"),
@@ -523,7 +535,12 @@ export const campaigns = nocodb.table("Campaigns", {
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
 
-export const insertCampaignsSchema = createInsertSchema(campaigns).omit({
+export const insertCampaignsSchema = createInsertSchema(campaigns, {
+  objectionPlaybook: z.array(z.object({
+    objection: z.string().max(500),
+    answer: z.string().max(500),
+  })).max(3).nullish(),
+}).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
