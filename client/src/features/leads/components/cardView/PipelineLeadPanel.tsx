@@ -55,7 +55,7 @@ export function PipelineLeadPanel({
   const avatarColor = getStatusAvatarColor(status);
   const phone = lead.phone || lead.Phone || "";
   const email = lead.email || lead.Email || "";
-  const bookedDate = lead.booked_call_date || lead.bookedCallDate || lead.booked_date || lead.BookedDate || lead.booked_at || "";
+  const bookedDate = lead.booked_call_date || lead.bookedCallDate || lead.booked_date || lead.BookedDate || "";
   const isBooked = status === "Booked";
 
   const { breakdown: detailBreakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
