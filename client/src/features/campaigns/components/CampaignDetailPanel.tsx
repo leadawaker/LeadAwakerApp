@@ -312,7 +312,7 @@ export function CampaignDetailPanel({
                 )}
               </div>
 
-              {/* Bump 1, 2, 3 */}
+              {/* Bump 1, 2, 3, 4 */}
               <BumpCard
                 bumpNumber={1}
                 template={campaign.bump_1_template}
@@ -327,6 +327,11 @@ export function CampaignDetailPanel({
                 bumpNumber={3}
                 template={campaign.bump_3_template}
                 delayHours={campaign.bump_3_delay_hours}
+              />
+              <BumpCard
+                bumpNumber={4}
+                template={campaign.bump_4_template}
+                delayHours={campaign.bump_4_delay_hours}
               />
             </div>
           </section>
