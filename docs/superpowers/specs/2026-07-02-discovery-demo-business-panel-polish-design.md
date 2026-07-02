@@ -1,7 +1,7 @@
 # Discovery Demo Business Panel Polish — Design
 
 **Date:** 2026-07-02
-**Status:** Approved design, pending implementation plan
+**Status:** Implemented and verified live on campaign #61 (Discovery Demo). Extended beyond original scope: preview is now the default (live-reactive) view with an Edit toggle, plus a Templates popup offering 9 pre-written opener archetypes (resolved in the CRM's UI language, applied to both language slots on pick).
 **Owner:** Gabriel, built by Claude
 **Builds on:** `2026-07-02-discovery-demo-trust-kit-design.md` (Business panel reorg, objection playbook, First Message field)
 
