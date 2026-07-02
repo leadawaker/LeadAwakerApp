@@ -144,6 +144,12 @@ export function setupAuth(app: Express) {
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "";
+if (!INTERNAL_API_KEY) {
+  // isValidInternalKey() rejects every x-internal-key when this is unset, so the
+  // Python engine, the Cloudflare Worker lookup, and caldiy's email branding call
+  // all silently 401 with no indication why. Surface it at boot instead.
+  console.warn("[auth] INTERNAL_API_KEY is not set — all internal-key requests (automations engine, booking Worker, caldiy) will be rejected");
+}
 
 // Login email aliases — alternate addresses that resolve to a canonical account.
 const EMAIL_ALIASES: Record<string, string> = {
