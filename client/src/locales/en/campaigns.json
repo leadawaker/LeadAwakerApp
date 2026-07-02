@@ -291,6 +291,8 @@
     "delayHours": "Delay (h):",
     "bumpN": "Bump {{n}}",
     "bumpTemplate": "Bump {{n}} template…",
+    "bumpAiPrompt": "AI angle (used once this bump goes AI-generated)",
+    "bumpAiPromptPlaceholder": "e.g. Address price hesitation directly, offer a smaller first step",
     "reengagementBump": "Contact Later re-engagement",
     "reengagementBumpPlaceholder": "Starter for the message sent when a 'Contact Later' lead's date arrives. The AI uses it as a base and weaves in what the lead said (e.g. 'Hey, as promised I'm circling back now!').",
     "reengagementBumpHint": "Sent automatically when a lead who asked to be reached later comes due. Leave blank to let the AI write it from the conversation alone.",

@@ -291,6 +291,8 @@
     "delayHours": "Vertraging (u):",
     "bumpN": "Bump {{n}}",
     "bumpTemplate": "Bump {{n}} sjabloon…",
+    "bumpAiPrompt": "AI-invalshoek (gebruikt zodra deze bump AI-gegenereerd wordt)",
+    "bumpAiPromptPlaceholder": "bijv. Ga direct in op prijstwijfel, bied een kleinere eerste stap aan",
     "reengagementBump": "Later contact heropening",
     "reengagementBumpPlaceholder": "Basis voor het bericht dat wordt verstuurd wanneer de datum van een 'Later contact'-lead is bereikt. De AI gebruikt het als startpunt en verwerkt wat de lead zei (bijv. 'Hey, zoals beloofd kom ik er nu op terug!').",
     "reengagementBumpHint": "Wordt automatisch verstuurd wanneer een lead die later gecontacteerd wilde worden aan de beurt is. Laat leeg om de AI het uit het gesprek te laten schrijven.",

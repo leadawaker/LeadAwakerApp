@@ -69,6 +69,7 @@ export function AISectionFields({
     const voiceField = `bump_${n}_voice_note`;
     const delayField = `bump_${n}_delay_hours`;
     const templateField = `bump_${n}_template`;
+    const aiPromptField = `bump_${n}_ai_prompt`;
     return (
       <div key={n} style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 'var(--space-md, 12px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
@@ -98,6 +99,16 @@ export function AISectionFields({
             />
             <CopyButton value={String(draft[templateField] || campaign[templateField] || "")} />
           </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+          <span style={{ fontSize: 11, color: 'var(--mute)' }}>{t("config.bumpAiPrompt")}</span>
+          <EditText
+            value={String(draft[aiPromptField] ?? campaign[aiPromptField] ?? "")}
+            onChange={(v) => setDraft(d => ({ ...d, [aiPromptField]: v }))}
+            multiline
+            minRows={2}
+            placeholder={t("config.bumpAiPromptPlaceholder", { n }) || `How should the AI angle bump ${n}? Leave blank for the default.`}
+          />
         </div>
       </div>
     );
