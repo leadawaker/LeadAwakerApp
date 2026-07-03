@@ -536,7 +536,14 @@
     "upload": "Uploaden",
     "test": "Testen",
     "ratioReady": "{{ready}}/{{total}} klaar",
-    "always": "altijd"
+    "always": "altijd",
+    "pasteId": "Bestaande voice-ID plakken",
+    "pasteIdPlaceholder": "Fish.audio voice-ID",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "qualityChecking": "Kwaliteit van sample controleren…",
+    "qualityGood": "Goede samplekwaliteit",
+    "qualityPoor": "Probleem met samplekwaliteit"
   },
   "scope": {
     "nSelected": "{{count}} geselecteerd"

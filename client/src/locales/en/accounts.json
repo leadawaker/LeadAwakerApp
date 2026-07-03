@@ -536,7 +536,14 @@
     "upload": "Upload",
     "test": "Test",
     "ratioReady": "{{ready}}/{{total}} ready",
-    "always": "always"
+    "always": "always",
+    "pasteId": "Paste existing voice ID",
+    "pasteIdPlaceholder": "Fish.audio voice ID",
+    "save": "Save",
+    "cancel": "Cancel",
+    "qualityChecking": "Checking sample quality…",
+    "qualityGood": "Good sample quality",
+    "qualityPoor": "Sample quality issue"
   },
   "scope": {
     "nSelected": "{{count}} selected"

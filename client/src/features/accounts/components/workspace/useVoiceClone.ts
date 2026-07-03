@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/apiUtils";
 export const VOICE_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 export type VoiceLang = "en" | "pt" | "nl";
 export type VoiceSample = { data: string; name: string };
+export type VoiceQuality = { passed: boolean | null; reason: string | null };
 
 const LANGS: VoiceLang[] = ["en", "pt", "nl"];
 
@@ -37,6 +38,7 @@ export function useVoiceClone(
   const [busyLang, setBusyLang] = useState<VoiceLang | null>(null);
   const [testingLang, setTestingLang] = useState<VoiceLang | null>(null);
   const [testAudio, setTestAudio] = useState<Partial<Record<VoiceLang, string>>>({});
+  const [quality, setQuality] = useState<Partial<Record<VoiceLang, VoiceQuality | "checking">>>({});
 
   useEffect(() => {
     if (fullVoiceFileData) return;
@@ -59,6 +61,22 @@ export function useVoiceClone(
     await onSave("voice_file_data", json);
   }, [samples, onSave]);
 
+  const checkQuality = useCallback(async (lang: VoiceLang) => {
+    setQuality((prev) => ({ ...prev, [lang]: "checking" }));
+    try {
+      const res = await apiFetch(`/api/accounts/${accountId}/voice-quality/${lang}`);
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        setQuality((prev) => ({ ...prev, [lang]: { passed: null, reason: result.message || result.error || null } }));
+        return;
+      }
+      setQuality((prev) => ({ ...prev, [lang]: { passed: result.quality_passed, reason: result.quality_reason } }));
+    } catch (e) {
+      console.error("Voice quality check failed", e);
+      setQuality((prev) => ({ ...prev, [lang]: { passed: null, reason: null } }));
+    }
+  }, [accountId]);
+
   const upload = useCallback(async (lang: VoiceLang, file: File): Promise<string | null> => {
     if (!file.type.startsWith("audio/")) return "audio";
     if (file.size > VOICE_MAX_SIZE) return "size";
@@ -78,7 +96,10 @@ export function useVoiceClone(
       const result = await res.json();
       if (!res.ok || !result.success) return result.message || result.error || "Voice cloning failed";
       await saveSamples({ [lang]: { data: dataUrl, name: file.name } });
-      if (result.model_id) await onSave(`tts_voice_id_${lang}`, result.model_id);
+      if (result.model_id) {
+        await onSave(`tts_voice_id_${lang}`, result.model_id);
+        void checkQuality(lang);
+      }
       return null;
     } catch (e) {
       console.error("Voice upload failed", e);
@@ -86,7 +107,7 @@ export function useVoiceClone(
     } finally {
       setBusyLang(null);
     }
-  }, [accountId, onSave, saveSamples]);
+  }, [accountId, onSave, saveSamples, checkQuality]);
 
   const remove = useCallback(async (lang: VoiceLang) => {
     setBusyLang(lang);
@@ -97,6 +118,21 @@ export function useVoiceClone(
       setBusyLang(null);
     }
   }, [onSave, saveSamples]);
+
+  const saveManualId = useCallback(async (lang: VoiceLang, id: string): Promise<string | null> => {
+    const trimmed = id.trim();
+    if (!trimmed) return "empty";
+    setBusyLang(lang);
+    try {
+      await onSave(`tts_voice_id_${lang}`, trimmed);
+      return null;
+    } catch (e) {
+      console.error("Manual voice ID save failed", e);
+      return "Voice ID save failed";
+    } finally {
+      setBusyLang(null);
+    }
+  }, [onSave]);
 
   const test = useCallback(async (lang: VoiceLang, text: string) => {
     const trimmed = text.trim();
@@ -120,5 +156,5 @@ export function useVoiceClone(
     }
   }, [accountId]);
 
-  return { samples, busyLang, testingLang, testAudio, upload, remove, test };
+  return { samples, busyLang, testingLang, testAudio, quality, upload, remove, saveManualId, test, checkQuality };
 }

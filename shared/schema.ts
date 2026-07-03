@@ -67,6 +67,8 @@ export const accounts = nocodb.table("Accounts", {
   ttsVoiceIdEn: text("tts_voice_id_en"),
   ttsVoiceIdPt: text("tts_voice_id_pt"),
   ttsVoiceIdNl: text("tts_voice_id_nl"),
+  ttsSpeed: numeric("tts_speed"),
+  ttsTemperature: numeric("tts_temperature"),
   supportBotConfig: text("support_bot_config"),
   instagramAccessToken: text("instagram_access_token"),
   instagramUserId: text("instagram_user_id"),

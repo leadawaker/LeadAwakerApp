@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Mic, Play, Upload, X, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
+import { Mic, Play, Upload, X, RefreshCw, ChevronDown, ChevronRight, Link, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PanelAction } from "./atoms";
 import { useVoiceClone, type VoiceLang } from "./useVoiceClone";
 import type { AccountRow, VoiceSlot } from "./types";
@@ -14,10 +14,27 @@ const DEFAULT_TEST: Record<VoiceLang, string> = {
 function VoiceRow({ v, vc, t }: { v: VoiceSlot; vc: ReturnType<typeof useVoiceClone>; t: ReturnType<typeof useTranslation>["t"] }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [testText, setTestText] = useState(DEFAULT_TEST[v.langKey]);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualId, setManualId] = useState("");
   const sample = vc.samples[v.langKey];
   const busy = vc.busyLang === v.langKey;
   const testing = vc.testingLang === v.langKey;
   const testUrl = vc.testAudio[v.langKey];
+  const quality = vc.quality[v.langKey];
+
+  useEffect(() => {
+    if (v.ready && quality === undefined) vc.checkQuality(v.langKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [v.ready, v.langKey]);
+
+  const saveManualId = () => {
+    if (busy || !manualId.trim()) return;
+    vc.saveManualId(v.langKey, manualId).then((err) => {
+      if (err) return;
+      setManualId("");
+      setShowManualInput(false);
+    });
+  };
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,17 +57,52 @@ function VoiceRow({ v, vc, t }: { v: VoiceSlot; vc: ReturnType<typeof useVoiceCl
             <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: v.ready ? "var(--good)" : "var(--mute-2)" }}>{v.ready ? `● ${t("voice.ready")}` : `○ ${t("voice.noSample")}`}</span>
           </div>
           {v.ready && sample?.name && <div style={{ fontSize: 11.5, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontStyle: "italic" }}>{sample.name}</div>}
+          {v.ready && quality === "checking" && (
+            <div style={{ fontSize: 10.5, color: "var(--mute-2)", fontFamily: "var(--mono)" }}>{t("voice.qualityChecking")}</div>
+          )}
+          {v.ready && quality && quality !== "checking" && quality.passed !== null && (
+            <div className="row" style={{ gap: 4, fontSize: 10.5, fontFamily: "var(--mono)", color: quality.passed ? "var(--good)" : "var(--warn)" }} title={quality.reason ?? undefined}>
+              {quality.passed ? <CheckCircle2 size={11} /> : <AlertTriangle size={11} />}
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {quality.passed ? t("voice.qualityGood") : `${t("voice.qualityPoor")}${quality.reason ? `: ${quality.reason}` : ""}`}
+              </span>
+            </div>
+          )}
         </div>
         {v.ready ? (
           <button className="la-btn la-btn--soft la-btn--icon" disabled={busy} onClick={() => vc.remove(v.langKey)} title={t("detail.removeVoice")}>
             {busy ? <RefreshCw size={12} className="animate-spin" /> : <X size={12} />}
           </button>
         ) : (
-          <button className="la-btn la-btn--soft" disabled={busy} onClick={() => fileRef.current?.click()}>
-            {busy ? <RefreshCw size={12} className="animate-spin" /> : <Upload size={12} />}{t("voice.upload")}
-          </button>
+          <>
+            <button className="la-btn la-btn--soft" disabled={busy} onClick={() => fileRef.current?.click()}>
+              {busy ? <RefreshCw size={12} className="animate-spin" /> : <Upload size={12} />}{t("voice.upload")}
+            </button>
+            <button className="la-btn la-btn--soft la-btn--icon" disabled={busy} onClick={() => setShowManualInput((s) => !s)} title={t("voice.pasteId")}>
+              <Link size={12} />
+            </button>
+          </>
         )}
       </div>
+
+      {!v.ready && showManualInput && (
+        <div className="row" style={{ gap: 8 }}>
+          <input
+            className="neu-input"
+            style={{ flex: 1, minWidth: 0, fontSize: 11, fontFamily: "var(--mono)", padding: "7px 10px" }}
+            value={manualId}
+            onChange={(e) => setManualId(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && saveManualId()}
+            placeholder={t("voice.pasteIdPlaceholder")}
+          />
+          <button className="la-btn la-btn--soft" disabled={busy || !manualId.trim()} onClick={saveManualId}>
+            {busy ? <RefreshCw size={12} className="animate-spin" /> : t("voice.save")}
+          </button>
+          <button className="la-btn la-btn--soft la-btn--icon" onClick={() => { setShowManualInput(false); setManualId(""); }} title={t("voice.cancel")}>
+            <X size={12} />
+          </button>
+        </div>
+      )}
 
       {v.ready && sample?.data && (
         <audio controls src={sample.data} style={{ width: "100%", height: 30, borderRadius: 6, colorScheme: "light" }} />

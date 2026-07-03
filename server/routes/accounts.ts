@@ -180,6 +180,31 @@ export function registerAccountsRoutes(app: Express): void {
     res.json({ success: true, audio_url: result.audio_url });
   }));
 
+  app.get("/api/accounts/:id/voice-quality/:lang", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    const lang = req.params.lang;
+    if (!["en", "pt", "nl"].includes(lang)) {
+      return res.status(400).json({ message: "language must be en, pt, or nl" });
+    }
+    const account = await storage.getAccountById(accountId);
+    if (!account) return res.status(404).json({ message: "Account not found" });
+
+    const voiceFieldMap = { en: "ttsVoiceIdEn", pt: "ttsVoiceIdPt", nl: "ttsVoiceIdNl" } as const;
+    const voiceId = (account as any)[voiceFieldMap[lang as "en" | "pt" | "nl"]];
+    if (!voiceId) {
+      return res.status(400).json({ message: `No cloned voice for language: ${lang}` });
+    }
+
+    const engineUrl = getEngineUrl();
+    const engineRes = await fetch(`${engineUrl}/api/voice/quality/${voiceId}`);
+    if (!engineRes.ok) {
+      const errText = await engineRes.text();
+      return res.status(502).json({ message: "Voice quality check failed", error: errText });
+    }
+    const result = await engineRes.json();
+    res.json(result);
+  }));
+
   app.post("/api/accounts/:id/sync-instagram", requireAgency, wrapAsync(async (req, res) => {
     const account = await storage.getAccountById(Number(req.params.id));
     if (!account) return res.status(404).json({ message: "Account not found" });
