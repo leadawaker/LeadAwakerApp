@@ -1,4 +1,4 @@
-import { VoiceCloneSection } from "./VoiceCloneSection";
+import { VoiceSettingsSection } from "./VoiceSettingsSection";
 import { MissedCallCard } from "./MissedCallCard";
 import { MeetingTypeCard } from "./MeetingTypeCard";
 import type { AccountRow, AccountDetail } from "./types";
@@ -59,7 +59,7 @@ export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked =
 
       {withVoice && !readOnly && (
         <div style={{ padding: "0 0 20px" }}>
-          <VoiceCloneSection account={account} voices={d.voices} onSave={onSave} stacked={stacked} />
+          <VoiceSettingsSection account={account} voices={d.voices} onSave={onSave} stacked={stacked} />
         </div>
       )}
     </div>
