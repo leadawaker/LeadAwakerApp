@@ -175,10 +175,7 @@
     "confirm": "Confirm?",
     "clickToUploadLogo": "Click to upload logo",
     "removeLogo": "Remove logo",
-    "removeVoice": "Remove voice",
     "voiceFile": "Voice file",
-    "pleaseUploadAudio": "Please upload an audio file (M4A, WAV, MP3, OGG, FLAC).",
-    "fileSizeLimit": "File size must be under 10 MB.",
     "syncInstagram": "Sync Instagram Contacts",
     "syncingContacts": "Syncing contacts...",
     "syncFailed": "Sync failed",
@@ -190,7 +187,7 @@
     "campaignsAndContracts": "Campaigns & Contracts",
     "aiAndSchedule": "AI & Schedule",
     "integrations": "Integrations",
-    "voiceClone": "Voice Clone",
+    "voiceClone": "Voice",
     "voiceIdForCampaigns": "Voice ID for campaigns",
     "voiceIdWillBe": "Voice ID will be",
     "clickOrDragAudio": "Click or drag audio file",
@@ -424,7 +421,7 @@
     "team": "Team",
     "contracts": "Contracts",
     "integrations": "Integrations",
-    "voiceClone": "Voice Clone",
+    "voiceClone": "Voice",
     "knowledgeBase": "Company Intel",
     "available": "Available",
     "leads": "Leads",
@@ -532,30 +529,8 @@
   },
   "voice": {
     "ready": "Ready",
-    "noSample": "No sample",
-    "upload": "Upload",
     "test": "Test",
-    "ratioReady": "{{ready}}/{{total}} ready",
-    "always": "always",
-    "pasteId": "Paste existing voice ID",
-    "pasteIdPlaceholder": "Fish.audio voice ID",
-    "save": "Save",
-    "cancel": "Cancel",
-    "qualityChecking": "Checking sample quality…",
-    "qualityGood": "Good sample quality",
-    "qualityPoor": "Sample quality issue",
-    "paceLabel": "Pace",
-    "pace": {
-      "slower": "Slower",
-      "normal": "Normal",
-      "faster": "Faster"
-    },
-    "expressivenessLabel": "Expressiveness",
-    "expressiveness": {
-      "calm": "Calm",
-      "balanced": "Balanced",
-      "animated": "Animated"
-    }
+    "stylePlaceholder": "e.g. Speak warmly, at a relaxed conversational pace"
   },
   "scope": {
     "nSelected": "{{count}} selected"

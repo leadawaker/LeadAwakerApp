@@ -175,10 +175,7 @@
     "confirm": "Bevestigen?",
     "clickToUploadLogo": "Klik om logo te uploaden",
     "removeLogo": "Logo verwijderen",
-    "removeVoice": "Stem verwijderen",
     "voiceFile": "Stembestand",
-    "pleaseUploadAudio": "Upload een audiobestand (M4A, WAV, MP3, OGG, FLAC).",
-    "fileSizeLimit": "Bestandsgrootte moet kleiner zijn dan 10 MB.",
     "syncInstagram": "Instagram Contacten Synchroniseren",
     "syncingContacts": "Contacten synchroniseren...",
     "syncFailed": "Synchronisatie mislukt",
@@ -190,7 +187,7 @@
     "campaignsAndContracts": "Campagnes & Contracten",
     "aiAndSchedule": "AI & Planning",
     "integrations": "Integraties",
-    "voiceClone": "Stemkloon",
+    "voiceClone": "Stem",
     "voiceIdForCampaigns": "Stem-ID voor campagnes",
     "voiceIdWillBe": "Stem-ID wordt",
     "clickOrDragAudio": "Klik of sleep audiobestand",
@@ -424,7 +421,7 @@
     "team": "Team",
     "contracts": "Contracten",
     "integrations": "Integraties",
-    "voiceClone": "Stemkloon",
+    "voiceClone": "Stem",
     "knowledgeBase": "Bedrijfsintel",
     "available": "Beschikbaar",
     "leads": "Leads",
@@ -532,30 +529,8 @@
   },
   "voice": {
     "ready": "Klaar",
-    "noSample": "Geen sample",
-    "upload": "Uploaden",
     "test": "Testen",
-    "ratioReady": "{{ready}}/{{total}} klaar",
-    "always": "altijd",
-    "pasteId": "Bestaande voice-ID plakken",
-    "pasteIdPlaceholder": "Fish.audio voice-ID",
-    "save": "Opslaan",
-    "cancel": "Annuleren",
-    "qualityChecking": "Kwaliteit van sample controleren…",
-    "qualityGood": "Goede samplekwaliteit",
-    "qualityPoor": "Probleem met samplekwaliteit",
-    "paceLabel": "Tempo",
-    "pace": {
-      "slower": "Langzamer",
-      "normal": "Normaal",
-      "faster": "Sneller"
-    },
-    "expressivenessLabel": "Expressiviteit",
-    "expressiveness": {
-      "calm": "Rustig",
-      "balanced": "Gebalanceerd",
-      "animated": "Levendig"
-    }
+    "stylePlaceholder": "bijv. Spreek warm, in een ontspannen gesprekstoon"
   },
   "scope": {
     "nSelected": "{{count}} geselecteerd"
