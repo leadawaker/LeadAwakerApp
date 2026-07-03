@@ -5,7 +5,7 @@
 // account fields at call time. Greeting audio is stored as base64 MP3 on the account and served to
 // Twilio `<Play>` by the engine's public /webhooks/voice/mc/greeting/{id}.mp3 endpoint.
 //
-// Browser recordings (webm/opus) and Fish Audio TTS (ogg/opus) are NOT playable by Twilio `<Play>`,
+// Browser recordings (webm/opus) and Gemini TTS output (ogg/opus) are NOT playable by Twilio `<Play>`,
 // so every greeting source is transcoded to MP3 via the engine's /api/voice/transcode-mp3 before
 // storage.
 import type { Express, Response } from "express";
