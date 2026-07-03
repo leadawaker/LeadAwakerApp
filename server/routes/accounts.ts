@@ -163,11 +163,20 @@ export function registerAccountsRoutes(app: Express): void {
       return res.status(400).json({ message: `No cloned voice for language: ${language}` });
     }
 
+    const speedFieldMap = { en: "ttsSpeedEn", nl: "ttsSpeedNl" } as const;
+    const temperatureFieldMap = { en: "ttsTemperatureEn", nl: "ttsTemperatureNl" } as const;
+    const speedField = (speedFieldMap as any)[language];
+    const temperatureField = (temperatureFieldMap as any)[language];
+    const rawSpeed = speedField ? (account as any)[speedField] : null;
+    const rawTemperature = temperatureField ? (account as any)[temperatureField] : null;
+    const speed = rawSpeed != null ? Number(rawSpeed) : undefined;
+    const temperature = rawTemperature != null ? Number(rawTemperature) : undefined;
+
     const engineUrl = getEngineUrl();
     const engineRes = await fetch(`${engineUrl}/api/voice/synthesize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ voice_id: voiceId, text }),
+      body: JSON.stringify({ voice_id: voiceId, text, speed, temperature }),
     });
     if (!engineRes.ok) {
       const errText = await engineRes.text();

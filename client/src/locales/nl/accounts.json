@@ -543,7 +543,19 @@
     "cancel": "Annuleren",
     "qualityChecking": "Kwaliteit van sample controleren…",
     "qualityGood": "Goede samplekwaliteit",
-    "qualityPoor": "Probleem met samplekwaliteit"
+    "qualityPoor": "Probleem met samplekwaliteit",
+    "paceLabel": "Tempo",
+    "pace": {
+      "slower": "Langzamer",
+      "normal": "Normaal",
+      "faster": "Sneller"
+    },
+    "expressivenessLabel": "Expressiviteit",
+    "expressiveness": {
+      "calm": "Rustig",
+      "balanced": "Gebalanceerd",
+      "animated": "Levendig"
+    }
   },
   "scope": {
     "nSelected": "{{count}} geselecteerd"

@@ -38,7 +38,6 @@ export function toAccountDetail(a: AccountRow, t: TFunction): AccountDetail {
 
   const voices: VoiceSlot[] = [
     { lang: "EN", langKey: "en", flag: "🇬🇧", ready: !!a.tts_voice_id_en, voiceId: a.tts_voice_id_en ?? null },
-    { lang: "PT", langKey: "pt", flag: "🇧🇷", ready: !!a.tts_voice_id_pt, voiceId: a.tts_voice_id_pt ?? null },
     { lang: "NL", langKey: "nl", flag: "🇳🇱", ready: !!a.tts_voice_id_nl, voiceId: a.tts_voice_id_nl ?? null },
   ];
 

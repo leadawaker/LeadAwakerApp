@@ -543,7 +543,19 @@
     "cancel": "Cancel",
     "qualityChecking": "Checking sample quality…",
     "qualityGood": "Good sample quality",
-    "qualityPoor": "Sample quality issue"
+    "qualityPoor": "Sample quality issue",
+    "paceLabel": "Pace",
+    "pace": {
+      "slower": "Slower",
+      "normal": "Normal",
+      "faster": "Faster"
+    },
+    "expressivenessLabel": "Expressiveness",
+    "expressiveness": {
+      "calm": "Calm",
+      "balanced": "Balanced",
+      "animated": "Animated"
+    }
   },
   "scope": {
     "nSelected": "{{count}} selected"

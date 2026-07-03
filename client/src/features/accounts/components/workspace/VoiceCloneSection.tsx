@@ -7,11 +7,16 @@ import type { AccountRow, VoiceSlot } from "./types";
 
 const DEFAULT_TEST: Record<VoiceLang, string> = {
   en: "Hi, this is a test of my cloned voice.",
-  pt: "Oi, este é um teste da minha voz clonada.",
   nl: "Hoi, dit is een test van mijn gekloonde stem.",
 };
 
-function VoiceRow({ v, vc, t }: { v: VoiceSlot; vc: ReturnType<typeof useVoiceClone>; t: ReturnType<typeof useTranslation>["t"] }) {
+function VoiceRow({ v, vc, account, onSave, t }: {
+  v: VoiceSlot;
+  vc: ReturnType<typeof useVoiceClone>;
+  account: AccountRow;
+  onSave: (field: string, value: string) => Promise<void>;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [testText, setTestText] = useState(DEFAULT_TEST[v.langKey]);
   const [showManualInput, setShowManualInput] = useState(false);
@@ -108,6 +113,8 @@ function VoiceRow({ v, vc, t }: { v: VoiceSlot; vc: ReturnType<typeof useVoiceCl
         <audio controls src={sample.data} style={{ width: "100%", height: 30, borderRadius: 6, colorScheme: "light" }} />
       )}
 
+      {v.ready && <VoiceTuning account={account} langKey={v.langKey} onSave={onSave} t={t} />}
+
       {v.ready && (
         <div className="row" style={{ gap: 8 }}>
           <input
@@ -130,6 +137,72 @@ function VoiceRow({ v, vc, t }: { v: VoiceSlot; vc: ReturnType<typeof useVoiceCl
   );
 }
 
+const PACE_STEPS = [
+  { value: 0.85, key: "slower" },
+  { value: 1, key: "normal" },
+  { value: 1.15, key: "faster" },
+] as const;
+
+function VoiceTuning({ account, langKey, onSave, t }: {
+  account: AccountRow;
+  langKey: VoiceLang;
+  onSave: (field: string, value: string, opts?: { silent?: boolean }) => Promise<void>;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  const speedField = `tts_speed_${langKey}`;
+  const temperatureField = `tts_temperature_${langKey}`;
+  const savedSpeed = account[speedField] ? parseFloat(account[speedField]) : 1;
+  const savedTemp = account[temperatureField] ? parseFloat(account[temperatureField]) : 0.7;
+  const [temp, setTemp] = useState(savedTemp);
+  const [savingSpeed, setSavingSpeed] = useState(false);
+  const [savingTemp, setSavingTemp] = useState(false);
+
+  const commitTemp = (value: number) => {
+    setSavingTemp(true);
+    onSave(temperatureField, value.toFixed(2), { silent: true }).finally(() => setSavingTemp(false));
+  };
+
+  const expressivenessLabel = temp <= 0.5 ? t("voice.expressiveness.calm") : temp >= 0.85 ? t("voice.expressiveness.animated") : t("voice.expressiveness.balanced");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 13px", borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--ink-soft)" }}>{t("voice.paceLabel")}</span>
+        <div className="row" style={{ gap: 6 }}>
+          {PACE_STEPS.map((step) => (
+            <button
+              key={step.key}
+              disabled={savingSpeed}
+              onClick={() => { setSavingSpeed(true); onSave(speedField, step.value.toFixed(2), { silent: true }).finally(() => setSavingSpeed(false)); }}
+              className={`la-btn la-btn--soft${Math.abs(savedSpeed - step.value) < 0.01 ? " on" : ""}`}
+              style={{ fontSize: 10.5, padding: "4px 10px" }}
+            >
+              {t(`voice.pace.${step.key}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--ink-soft)" }}>{t("voice.expressivenessLabel")}</span>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute-2)" }}>{expressivenessLabel}</span>
+      </div>
+      <input
+        type="range"
+        min={0.3}
+        max={1}
+        step={0.05}
+        value={temp}
+        disabled={savingTemp}
+        onChange={(e) => setTemp(parseFloat(e.target.value))}
+        onMouseUp={(e) => commitTemp(parseFloat((e.target as HTMLInputElement).value))}
+        onTouchEnd={(e) => commitTemp(parseFloat((e.target as HTMLInputElement).value))}
+        onKeyUp={(e) => commitTemp(parseFloat((e.target as HTMLInputElement).value))}
+        style={{ width: "100%", accentColor: "var(--wine)" }}
+      />
+    </div>
+  );
+}
+
 export function VoiceCloneSection({ account, voices, onSave, stacked = false }: {
   account: AccountRow;
   voices: VoiceSlot[];
@@ -140,7 +213,6 @@ export function VoiceCloneSection({ account, voices, onSave, stacked = false }: 
   const [expanded, setExpanded] = useState(false);
   const voiceIds = {
     en: account.tts_voice_id_en ?? null,
-    pt: account.tts_voice_id_pt ?? null,
     nl: account.tts_voice_id_nl ?? null,
   };
   const vc = useVoiceClone(account.Id ?? account.id ?? 0, voiceIds, account.voice_file_name ?? null, onSave);
@@ -163,7 +235,7 @@ export function VoiceCloneSection({ account, voices, onSave, stacked = false }: 
       </div>
       {expanded && (
         <div style={{ display: "grid", gridTemplateColumns: stacked ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
-          {voices.map((v) => <VoiceRow key={v.lang} v={v} vc={vc} t={t} />)}
+          {voices.map((v) => <VoiceRow key={v.lang} v={v} vc={vc} account={account} onSave={onSave} t={t} />)}
         </div>
       )}
     </div>

@@ -79,17 +79,17 @@ export default function AccountsPage() {
   }, [selectedAccount, setCrumb]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
-  const handleDetailSave = useCallback(async (accountId: number, patch: Partial<AccountRow>) => {
+  const handleDetailSave = useCallback(async (accountId: number, patch: Partial<AccountRow>, opts?: { silent?: boolean }) => {
     for (const [col, value] of Object.entries(patch)) {
-      await handleInlineUpdate(accountId, col, value, [accountId]);
+      await handleInlineUpdate(accountId, col, value, [accountId], opts);
     }
     setSelectedAccount((prev) => (prev && (prev.Id ?? prev.id) === accountId ? ({ ...prev, ...patch } as AccountRow) : prev));
   }, [handleInlineUpdate, setSelectedAccount]);
 
-  const handleFieldSave = useCallback(async (field: string, value: string) => {
+  const handleFieldSave = useCallback(async (field: string, value: string, opts?: { silent?: boolean }) => {
     if (!selectedAccount) return;
     const aid = selectedAccount.Id ?? selectedAccount.id ?? 0;
-    await handleDetailSave(aid, { [field]: value });
+    await handleDetailSave(aid, { [field]: value }, opts);
   }, [selectedAccount, handleDetailSave]);
 
   const handleCreate = useCallback(async (data: NewAccountForm) => {

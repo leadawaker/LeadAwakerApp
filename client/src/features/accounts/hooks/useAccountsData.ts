@@ -243,6 +243,7 @@ export function useAccountsData(currentAccountId?: number) {
     col: string,
     value: any,
     selectedIds: number[] = [],
+    opts?: { silent?: boolean },
   ) => {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const cleanValue = value === null || value === undefined ? "" : value;
@@ -262,10 +263,12 @@ export function useAccountsData(currentAccountId?: number) {
 
       await Promise.all(updatePromises);
 
-      toast({
-        title: "Updated",
-        description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
-      });
+      if (!opts?.silent) {
+        toast({
+          title: "Updated",
+          description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
+        });
+      }
     } catch (err) {
       console.error("Detailed sync error:", err);
       toast({

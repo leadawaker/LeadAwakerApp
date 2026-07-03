@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/lib/apiUtils";
 
 export const VOICE_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-export type VoiceLang = "en" | "pt" | "nl";
+export type VoiceLang = "en" | "nl";
 export type VoiceSample = { data: string; name: string };
 export type VoiceQuality = { passed: boolean | null; reason: string | null };
 
-const LANGS: VoiceLang[] = ["en", "pt", "nl"];
+const LANGS: VoiceLang[] = ["en", "nl"];
 
 // Port of VoiceCloneWidget.parseVoiceSamples (new JSON blob + legacy single URL).
 function parseVoiceSamples(raw: string | null, legacyName: string | null, voiceIds: Record<VoiceLang, string | null>): Partial<Record<VoiceLang, VoiceSample>> {
@@ -32,7 +32,7 @@ export function useVoiceClone(
   accountId: number,
   voiceIds: Record<VoiceLang, string | null>,
   voiceFileName: string | null,
-  onSave: (field: string, value: string) => Promise<void>,
+  onSave: (field: string, value: string, opts?: { silent?: boolean }) => Promise<void>,
 ) {
   const [fullVoiceFileData, setFullVoiceFileData] = useState<string | null>(null);
   const [busyLang, setBusyLang] = useState<VoiceLang | null>(null);
@@ -58,7 +58,7 @@ export function useVoiceClone(
     (Object.keys(next) as VoiceLang[]).forEach((k) => { if (!next[k]) delete next[k]; });
     const json = JSON.stringify(next);
     setFullVoiceFileData(json);
-    await onSave("voice_file_data", json);
+    await onSave("voice_file_data", json, { silent: true });
   }, [samples, onSave]);
 
   const checkQuality = useCallback(async (lang: VoiceLang) => {
@@ -97,7 +97,7 @@ export function useVoiceClone(
       if (!res.ok || !result.success) return result.message || result.error || "Voice cloning failed";
       await saveSamples({ [lang]: { data: dataUrl, name: file.name } });
       if (result.model_id) {
-        await onSave(`tts_voice_id_${lang}`, result.model_id);
+        await onSave(`tts_voice_id_${lang}`, result.model_id, { silent: true });
         void checkQuality(lang);
       }
       return null;
@@ -113,7 +113,8 @@ export function useVoiceClone(
     setBusyLang(lang);
     try {
       await saveSamples({ [lang]: undefined });
-      await onSave(`tts_voice_id_${lang}`, "");
+      await onSave(`tts_voice_id_${lang}`, "", { silent: true });
+      setQuality((prev) => { const next = { ...prev }; delete next[lang]; return next; });
     } finally {
       setBusyLang(null);
     }
@@ -124,7 +125,9 @@ export function useVoiceClone(
     if (!trimmed) return "empty";
     setBusyLang(lang);
     try {
-      await onSave(`tts_voice_id_${lang}`, trimmed);
+      await onSave(`tts_voice_id_${lang}`, trimmed, { silent: true });
+      setQuality((prev) => { const next = { ...prev }; delete next[lang]; return next; });
+      void checkQuality(lang);
       return null;
     } catch (e) {
       console.error("Manual voice ID save failed", e);
@@ -132,7 +135,7 @@ export function useVoiceClone(
     } finally {
       setBusyLang(null);
     }
-  }, [onSave]);
+  }, [onSave, checkQuality]);
 
   const test = useCallback(async (lang: VoiceLang, text: string) => {
     const trimmed = text.trim();
