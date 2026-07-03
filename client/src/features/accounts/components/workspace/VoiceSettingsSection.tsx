@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Mic, Play, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
+import { Mic, Play, RefreshCw, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import { useVoiceSettings, GEMINI_VOICES, type VoiceLang } from "./useVoiceSettings";
 import type { AccountRow, VoiceSlot } from "./types";
 
@@ -28,8 +28,10 @@ function VoiceRow({ v, vs, account, t }: {
   const [testText, setTestText] = useState(DEFAULT_TEST[lang]);
   const [savingVoice, setSavingVoice] = useState(false);
   const [savingStyle, setSavingStyle] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const testing = vs.testingLang === lang;
   const testUrl = vs.testAudio[lang];
+  const testError = vs.testError[lang];
 
   const onVoiceChange = (name: string) => {
     setVoiceName(name);
@@ -80,10 +82,18 @@ function VoiceRow({ v, vs, account, t }: {
           placeholder={DEFAULT_TEST[lang]}
         />
         <button className="la-btn la-btn--soft" disabled={testing || !testText.trim()} onClick={() => vs.test(lang, testText, voiceName, style)}>
-          {testing ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}{t("voice.test")}
+          {testing ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}{t("voice.generate")}
+        </button>
+        <button className="la-btn la-btn--soft" disabled={!testUrl || testing} onClick={() => audioRef.current?.play()} title={t("voice.play")}>
+          <Play size={12} />{t("voice.play")}
         </button>
       </div>
-      {testUrl && <audio autoPlay controls src={testUrl} style={{ width: "100%", height: 30, borderRadius: 6, colorScheme: "light" }} />}
+      {testError && (
+        <span style={{ fontSize: 10.5, fontFamily: "var(--mono)", color: "var(--danger, #b3261e)" }}>
+          {t("voice.generateFailed")}: {testError}
+        </span>
+      )}
+      {testUrl && <audio ref={audioRef} autoPlay src={testUrl} style={{ display: "none" }} />}
     </div>
   );
 }

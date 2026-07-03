@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Mic, RefreshCw, Play } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Mic, RefreshCw, Play, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiUtils";
 
@@ -38,6 +38,8 @@ function VoiceLanguageRow({
   const [testText, setTestText] = useState(DEFAULT_TEST_TEXT[lang]);
   const [testing, setTesting] = useState(false);
   const [testAudioUrl, setTestAudioUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const { t } = useTranslation("accounts");
 
   const handleVoiceChange = useCallback((name: string) => {
     setVoiceName(name);
@@ -112,21 +114,22 @@ function VoiceLanguageRow({
           onClick={handleTest}
           disabled={testing || !testText.trim()}
           className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium bg-brand-indigo/10 text-brand-indigo rounded hover:bg-brand-indigo/20 disabled:opacity-40 transition-colors"
-          title="Test this voice"
+          title={t("voice.generate")}
         >
-          {testing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-          <span>Test</span>
+          {testing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+          <span>{t("voice.generate")}</span>
+        </button>
+        <button
+          onClick={() => audioRef.current?.play()}
+          disabled={!testAudioUrl || testing}
+          className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium bg-brand-indigo/10 text-brand-indigo rounded hover:bg-brand-indigo/20 disabled:opacity-40 transition-colors"
+          title={t("voice.play")}
+        >
+          <Play className="w-3 h-3" />
+          <span>{t("voice.play")}</span>
         </button>
       </div>
-      {testAudioUrl && (
-        <audio
-          autoPlay
-          controls
-          src={testAudioUrl}
-          className="w-full h-7 rounded mt-1.5"
-          style={{ colorScheme: "light" }}
-        />
-      )}
+      {testAudioUrl && <audio ref={audioRef} autoPlay src={testAudioUrl} style={{ display: "none" }} />}
     </div>
   );
 }

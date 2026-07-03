@@ -17,6 +17,7 @@ export function useVoiceSettings(
 ) {
   const [testingLang, setTestingLang] = useState<VoiceLang | null>(null);
   const [testAudio, setTestAudio] = useState<Partial<Record<VoiceLang, string>>>({});
+  const [testError, setTestError] = useState<Partial<Record<VoiceLang, string>>>({});
 
   const setVoice = useCallback(async (lang: VoiceLang, voiceName: string) => {
     await onSave(`tts_voice_id_${lang}`, voiceName, { silent: true });
@@ -30,7 +31,7 @@ export function useVoiceSettings(
     const trimmed = text.trim();
     if (!trimmed) return;
     setTestingLang(lang);
-    setTestAudio((prev) => ({ ...prev, [lang]: undefined }));
+    setTestError((prev) => ({ ...prev, [lang]: undefined }));
     try {
       const res = await apiFetch(`/api/accounts/${accountId}/test-voice`, {
         method: "POST",
@@ -40,13 +41,17 @@ export function useVoiceSettings(
       const result = await res.json();
       if (res.ok && result.success && result.audio_url) {
         setTestAudio((prev) => ({ ...prev, [lang]: `${result.audio_url}?t=${Date.now()}` }));
+      } else {
+        const detail = result.error || result.message || `HTTP ${res.status}`;
+        setTestError((prev) => ({ ...prev, [lang]: String(detail) }));
       }
     } catch (e) {
-      console.error("Voice test failed", e);
+      console.error("Voice generation failed", e);
+      setTestError((prev) => ({ ...prev, [lang]: e instanceof Error ? e.message : "Request failed" }));
     } finally {
       setTestingLang(null);
     }
   }, [accountId]);
 
-  return { testingLang, testAudio, setVoice, setStyle, test };
+  return { testingLang, testAudio, testError, setVoice, setStyle, test };
 }

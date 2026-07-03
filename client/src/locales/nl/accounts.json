@@ -529,7 +529,10 @@
   },
   "voice": {
     "ready": "Klaar",
-    "test": "Testen",
+    "always": "altijd",
+    "generate": "Genereren",
+    "play": "Afspelen",
+    "generateFailed": "Genereren mislukt",
     "stylePlaceholder": "bijv. Spreek warm, in een ontspannen gesprekstoon"
   },
   "scope": {

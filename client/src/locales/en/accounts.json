@@ -529,7 +529,10 @@
   },
   "voice": {
     "ready": "Ready",
-    "test": "Test",
+    "always": "always",
+    "generate": "Generate",
+    "play": "Play",
+    "generateFailed": "Generation failed",
     "stylePlaceholder": "e.g. Speak warmly, at a relaxed conversational pace"
   },
   "scope": {
