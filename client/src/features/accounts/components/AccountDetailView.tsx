@@ -693,10 +693,9 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
           <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
             <VoiceCloneWidget
               ttsVoiceIdEn={(account as any).tts_voice_id_en ?? null}
-              ttsVoiceIdPt={(account as any).tts_voice_id_pt ?? null}
               ttsVoiceIdNl={(account as any).tts_voice_id_nl ?? null}
-              voiceFileData={(account as any).voice_file_data ?? null}
-              voiceFileName={(account as any).voice_file_name ?? null}
+              ttsStyleEn={(account as any).tts_style_en ?? null}
+              ttsStyleNl={(account as any).tts_style_nl ?? null}
               accountId={(account as any).Id ?? (account as any).id ?? 0}
               onSave={onSave}
             />
