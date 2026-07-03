@@ -663,6 +663,7 @@ export const leads = nocodb.table("Leads", {
   bump1SentAt: timestamp("bump_1_sent_at", { withTimezone: true }),
   bump2SentAt: timestamp("bump_2_sent_at", { withTimezone: true }),
   bump3SentAt: timestamp("bump_3_sent_at", { withTimezone: true }),
+  bump4SentAt: timestamp("bump_4_sent_at", { withTimezone: true }),
   firstMessageSentAt: timestamp("first_message_sent_at", { withTimezone: true }),
   nextActionAt: timestamp("next_action_at", { withTimezone: true }),
   currentBumpStage: bigint("current_bump_stage", { mode: "number" }),

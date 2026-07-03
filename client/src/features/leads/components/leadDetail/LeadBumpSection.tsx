@@ -1,4 +1,4 @@
-// Bump cadence progress block for LeadDetailPanel: 3-step bar + sent timestamps.
+// Bump cadence progress block for LeadDetailPanel: 4-step bar + sent timestamps.
 // Extracted verbatim (Session C).
 import { Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,9 +6,19 @@ import { cn } from "@/lib/utils";
 import { SectionTitle } from "./atoms";
 import { fmtDateTime } from "./format";
 
+const BUMP_STAGES = [1, 2, 3, 4] as const;
+
 export function LeadBumpSection({ lead }: { lead: Record<string, any> }) {
   const { t } = useTranslation("leads");
-  if (!(lead.current_bump_stage != null || lead.bump_1_sent_at || lead.bump_2_sent_at || lead.bump_3_sent_at)) {
+  if (
+    !(
+      lead.current_bump_stage != null ||
+      lead.bump_1_sent_at ||
+      lead.bump_2_sent_at ||
+      lead.bump_3_sent_at ||
+      lead.bump_4_sent_at
+    )
+  ) {
     return null;
   }
   return (
@@ -20,7 +30,7 @@ export function LeadBumpSection({ lead }: { lead: Record<string, any> }) {
       >
         {/* Stage progress bar */}
         <div className="flex items-center gap-1 mb-3">
-          {[1, 2, 3].map((stage) => {
+          {BUMP_STAGES.map((stage) => {
             const currentStage = Number(lead.current_bump_stage ?? 0);
             const done = currentStage >= stage;
             return (
@@ -44,35 +54,23 @@ export function LeadBumpSection({ lead }: { lead: Record<string, any> }) {
             className="text-[12px] font-semibold text-foreground tabular-nums"
             data-testid="bump-current-stage"
           >
-            {lead.current_bump_stage ?? 0} / 3
+            {lead.current_bump_stage ?? 0} / {BUMP_STAGES.length}
           </span>
         </div>
 
         {/* Bump timestamps */}
-        {lead.bump_1_sent_at && (
-          <div className="flex items-center justify-between py-0.5">
-            <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 1 })}</span>
-            <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-1-sent-at">
-              {fmtDateTime(lead.bump_1_sent_at)}
-            </span>
-          </div>
-        )}
-        {lead.bump_2_sent_at && (
-          <div className="flex items-center justify-between py-0.5">
-            <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 2 })}</span>
-            <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-2-sent-at">
-              {fmtDateTime(lead.bump_2_sent_at)}
-            </span>
-          </div>
-        )}
-        {lead.bump_3_sent_at && (
-          <div className="flex items-center justify-between py-0.5">
-            <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 3 })}</span>
-            <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-3-sent-at">
-              {fmtDateTime(lead.bump_3_sent_at)}
-            </span>
-          </div>
-        )}
+        {BUMP_STAGES.map((stage) => {
+          const sentAt = lead[`bump_${stage}_sent_at`];
+          if (!sentAt) return null;
+          return (
+            <div key={stage} className="flex items-center justify-between py-0.5">
+              <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: stage })}</span>
+              <span className="text-[11px] text-foreground/80 tabular-nums" data-testid={`bump-${stage}-sent-at`}>
+                {fmtDateTime(sentAt)}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </>
   );
