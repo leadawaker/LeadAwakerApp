@@ -108,75 +108,23 @@ export function registerAccountsRoutes(app: Express): void {
     res.status(204).end();
   }));
 
-  app.post("/api/accounts/:id/clone-voice", requireAgency, wrapAsync(async (req, res) => {
-    const accountId = Number(req.params.id);
-    const { audioDataUrl, language, fileName } = req.body;
-    if (!audioDataUrl || !language || !["en", "pt", "nl"].includes(language)) {
-      return res.status(400).json({ message: "audioDataUrl, language (en|pt|nl), and fileName required" });
-    }
-    const account = await storage.getAccountById(accountId);
-    if (!account) return res.status(404).json({ message: "Account not found" });
-
-    const engineUrl = getEngineUrl();
-    const engineRes = await fetch(`${engineUrl}/api/voice/clone`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        audio_data_url: audioDataUrl,
-        filename: fileName,
-        language,
-        account_id: accountId,
-        account_name: (account as any).name ?? `Account ${accountId}`,
-        account_photo_url: (account as any).logoUrl ?? (account as any).logo_url ?? null,
-      }),
-    });
-    if (!engineRes.ok) {
-      const errText = await engineRes.text();
-      return res.status(502).json({ message: "Voice cloning failed", error: errText });
-    }
-    const result = await engineRes.json() as { success: boolean; model_id?: string; error?: string };
-    if (!result.success) {
-      return res.status(400).json({ message: result.error || "Voice cloning failed" });
-    }
-    const fieldMap = { en: "ttsVoiceIdEn", pt: "ttsVoiceIdPt", nl: "ttsVoiceIdNl" } as const;
-    const field = fieldMap[language as "en" | "pt" | "nl"];
-    await storage.updateAccount(accountId, { [field]: result.model_id } as any);
-    res.json({ success: true, model_id: result.model_id, language });
-  }));
-
   app.post("/api/accounts/:id/test-voice", requireAgency, wrapAsync(async (req, res) => {
-    const accountId = Number(req.params.id);
-    const { text, language } = req.body;
+    const { text, language, voiceName, style } = req.body;
     if (!text || typeof text !== "string" || !text.trim()) {
       return res.status(400).json({ message: "text is required" });
     }
-    if (!language || !["en", "pt", "nl"].includes(language)) {
-      return res.status(400).json({ message: "language must be en, pt, or nl" });
+    if (!language || !["en", "nl"].includes(language)) {
+      return res.status(400).json({ message: "language must be en or nl" });
     }
-    const account = await storage.getAccountById(accountId);
-    if (!account) return res.status(404).json({ message: "Account not found" });
-
-    const voiceFieldMap = { en: "ttsVoiceIdEn", pt: "ttsVoiceIdPt", nl: "ttsVoiceIdNl" } as const;
-    const voiceField = voiceFieldMap[language as "en" | "pt" | "nl"];
-    const voiceId = (account as any)[voiceField];
-    if (!voiceId) {
-      return res.status(400).json({ message: `No cloned voice for language: ${language}` });
+    if (!voiceName || typeof voiceName !== "string") {
+      return res.status(400).json({ message: "voiceName is required" });
     }
-
-    const speedFieldMap = { en: "ttsSpeedEn", nl: "ttsSpeedNl" } as const;
-    const temperatureFieldMap = { en: "ttsTemperatureEn", nl: "ttsTemperatureNl" } as const;
-    const speedField = (speedFieldMap as any)[language];
-    const temperatureField = (temperatureFieldMap as any)[language];
-    const rawSpeed = speedField ? (account as any)[speedField] : null;
-    const rawTemperature = temperatureField ? (account as any)[temperatureField] : null;
-    const speed = rawSpeed != null ? Number(rawSpeed) : undefined;
-    const temperature = rawTemperature != null ? Number(rawTemperature) : undefined;
 
     const engineUrl = getEngineUrl();
     const engineRes = await fetch(`${engineUrl}/api/voice/synthesize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ voice_id: voiceId, text, speed, temperature }),
+      body: JSON.stringify({ voice_id: voiceName, text, style: style || null }),
     });
     if (!engineRes.ok) {
       const errText = await engineRes.text();
@@ -187,31 +135,6 @@ export function registerAccountsRoutes(app: Express): void {
       return res.status(400).json({ message: result.error || "Voice synthesis failed" });
     }
     res.json({ success: true, audio_url: result.audio_url });
-  }));
-
-  app.get("/api/accounts/:id/voice-quality/:lang", requireAgency, wrapAsync(async (req, res) => {
-    const accountId = Number(req.params.id);
-    const lang = req.params.lang;
-    if (!["en", "pt", "nl"].includes(lang)) {
-      return res.status(400).json({ message: "language must be en, pt, or nl" });
-    }
-    const account = await storage.getAccountById(accountId);
-    if (!account) return res.status(404).json({ message: "Account not found" });
-
-    const voiceFieldMap = { en: "ttsVoiceIdEn", pt: "ttsVoiceIdPt", nl: "ttsVoiceIdNl" } as const;
-    const voiceId = (account as any)[voiceFieldMap[lang as "en" | "pt" | "nl"]];
-    if (!voiceId) {
-      return res.status(400).json({ message: `No cloned voice for language: ${lang}` });
-    }
-
-    const engineUrl = getEngineUrl();
-    const engineRes = await fetch(`${engineUrl}/api/voice/quality/${voiceId}`);
-    if (!engineRes.ok) {
-      const errText = await engineRes.text();
-      return res.status(502).json({ message: "Voice quality check failed", error: errText });
-    }
-    const result = await engineRes.json();
-    res.json(result);
   }));
 
   app.post("/api/accounts/:id/sync-instagram", requireAgency, wrapAsync(async (req, res) => {
