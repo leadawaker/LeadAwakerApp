@@ -4,9 +4,7 @@ import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
-  Gem, ShieldCheck,
-  UtensilsCrossed, TreePine, Heart, Sofa, Bath, Home, Grid3x3,
-  Layers, Hammer, Sun, Wind, DoorOpen, Paintbrush, Bug, Waves, Truck,
+  Gem, ShieldCheck, Loader2,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
@@ -16,37 +14,30 @@ import {
   Select, SelectTrigger, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { apiFetch } from "@/lib/apiUtils";
-
-const NICHE_ICONS: Record<string, React.ElementType> = {
-  "Kitchens": UtensilsCrossed,
-  "Landscaping": TreePine,
-  "Wellness": Heart,
-  "Interior Design": Sofa,
-  "Bathrooms": Bath,
-  "Roofing": Home,
-  "Flooring": Grid3x3,
-  "Countertops": Layers,
-  "General Contracting": Hammer,
-  "Solar Panels": Sun,
-  "HVAC": Wind,
-  "Windows & Doors": DoorOpen,
-  "Painting": Paintbrush,
-  "Pest Control": Bug,
-  "Pool Installation": Waves,
-  "Moving Services": Truck,
-};
+import { resolveNicheIcon } from "@/features/prompts/components/niche/nicheShared";
+import { useToast } from "@/hooks/use-toast";
 
 function NicheSelect({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+  const { t } = useTranslation("campaigns");
+  const { toast } = useToast();
   const [niches, setNiches] = useState<string[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     apiFetch("/api/niches")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: string[]) => setNiches(Array.isArray(data) ? data : []))
-      .catch(() => setNiches([]));
-  }, []);
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("fetch failed"))))
+      .then((data: string[]) => {
+        setNiches(Array.isArray(data) ? data : []);
+        setStatus("ready");
+      })
+      .catch(() => {
+        setNiches([]);
+        setStatus("error");
+        toast({ title: t("nicheLoadError"), variant: "destructive" });
+      });
+  }, [t, toast]);
 
-  const CurIcon = value ? NICHE_ICONS[value] : null;
+  const CurIcon = value ? resolveNicheIcon(value, false) : null;
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
@@ -58,17 +49,18 @@ function NicheSelect({ value, onChange, autoFocus }: { value: string; onChange: 
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          {status === "loading" && <Loader2 style={{ width: 14, height: 14, flexShrink: 0 }} className="animate-spin" />}
           {CurIcon && <CurIcon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />}
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value || "Select niche…"}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value || t("selectNichePlaceholder")}</span>
         </div>
       </SelectTrigger>
       <SelectContent>
         {niches.map((niche) => {
-          const Icon = NICHE_ICONS[niche];
+          const Icon = resolveNicheIcon(niche, false);
           return (
             <SelectItem key={niche} value={niche}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {Icon && <Icon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />}
+                <Icon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />
                 {niche}
               </div>
             </SelectItem>

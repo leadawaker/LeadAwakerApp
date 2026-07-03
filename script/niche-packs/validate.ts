@@ -8,6 +8,7 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, "data");
 const DASH_RE = /[–—]/;
+const EMOJI_RE = /\p{Extended_Pictographic}/u;
 
 function validateFile(path: string): string[] {
   const errors: string[] = [];
@@ -37,15 +38,24 @@ function validateFile(path: string): string[] {
       if (DASH_RE.test(text)) {
         errors.push(`${field}.${lang} contains an em/en dash, which the base prompt bans`);
       }
+      if (EMOJI_RE.test(text)) {
+        errors.push(`${field}.${lang} contains an emoji, which the base prompt bans`);
+      }
     }
   }
 
   if (data.scenario_examples) {
     for (const lang of ["en", "nl"] as const) {
       const text = data.scenario_examples[lang] || "";
+      let lastIndex = -1;
       for (const marker of REQUIRED_SCENARIO_MARKERS) {
-        if (!text.includes(marker)) {
+        const index = text.indexOf(marker);
+        if (index === -1) {
           errors.push(`scenario_examples.${lang} is missing marker "${marker}"`);
+        } else if (index < lastIndex) {
+          errors.push(`scenario_examples.${lang} has marker "${marker}" out of order (expected ascending 6.1-6.7)`);
+        } else {
+          lastIndex = index;
         }
       }
     }

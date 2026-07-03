@@ -7,17 +7,17 @@ export function NicheListRail({ rows, selectedNiche, onSelect, onAdd, addBusy }:
   rows: NicheRow[];
   selectedNiche: string | null;
   onSelect: (niche: string) => void;
-  onAdd: (niche: string) => void;
+  onAdd: (niche: string) => Promise<boolean>;
   addBusy: boolean;
 }) {
   const { t } = useTranslation("prompts");
   const [newNiche, setNewNiche] = useState("");
 
-  const submitAdd = () => {
+  const submitAdd = async () => {
     const trimmed = newNiche.trim();
     if (!trimmed) return;
-    onAdd(trimmed);
-    setNewNiche("");
+    const ok = await onAdd(trimmed);
+    if (ok) setNewNiche("");
   };
 
   return (

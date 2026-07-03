@@ -270,6 +270,8 @@
     "businessDescription": "Bedrijfsomschrijving",
     "niche": "Niche",
     "nicheQuestion": "Nichevraag",
+    "selectNichePlaceholder": "Selecteer niche…",
+    "nicheLoadError": "Niches konden niet worden geladen. Probeer het opnieuw.",
     "positioning": "Positionering",
     "positioningOptions": { "premium": "Premium", "mid_market": "Middensegment" },
     "aiDisclosure": "AI-vermelding",

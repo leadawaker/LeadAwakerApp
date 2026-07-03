@@ -242,7 +242,7 @@ export const accountsStorage = {
     return rows.map((r) => ({ niche: r.niche, ...rowToBoth(r) }));
   },
 
-  // Niche names only (no vocabulary payload) — powers the campaign settings
+  // Niche names only (no vocabulary payload): powers the campaign settings
   // niche picker, which any campaign editor (not just agency) can load.
   // Excludes __default__ since it is a fallback row, not a selectable niche.
   async listNicheNames(): Promise<string[]> {

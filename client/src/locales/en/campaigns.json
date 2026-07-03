@@ -270,6 +270,8 @@
     "businessDescription": "Business Description",
     "niche": "Niche",
     "nicheQuestion": "Niche Question",
+    "selectNichePlaceholder": "Select niche…",
+    "nicheLoadError": "Could not load niches. Please try again.",
     "positioning": "Positioning",
     "positioningOptions": { "premium": "Premium", "mid_market": "Mid-market" },
     "aiDisclosure": "AI Disclosure",

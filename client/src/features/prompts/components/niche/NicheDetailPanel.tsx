@@ -32,7 +32,7 @@ export function NicheDetailPanel({ row, lang, busyKey, onBack, onAdd, onRemove, 
     <div data-testid={`vocab-card-${row.niche}`}>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <button type="button" className="lg:hidden text-muted-foreground shrink-0" onClick={onBack} aria-label="Back">
+          <button type="button" className="lg:hidden text-muted-foreground shrink-0" onClick={onBack} aria-label={t("vocabulary.back")}>
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="flex items-center justify-center w-8 h-8 rounded-md shrink-0" style={{ background: "var(--wine)", opacity: 0.9 }}>

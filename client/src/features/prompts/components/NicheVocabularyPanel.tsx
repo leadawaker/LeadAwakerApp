@@ -41,7 +41,6 @@ export function NicheVocabularyPanel() {
   }, [sortedRows, selectedNiche]);
 
   const defaultRow = useMemo(() => rows.find((r) => r.niche === DEFAULT_NICHE), [rows]);
-  const existingNiches = useMemo(() => new Set(rows.map((r) => r.niche)), [rows]);
   const selectedRow = rows.find((r) => r.niche === selectedNiche) ?? null;
 
   const patchRow = useCallback((niche: string, updates: Partial<NicheRow>) => {
@@ -91,8 +90,15 @@ export function NicheVocabularyPanel() {
     }
   }, [patchRow, t, toast]);
 
-  const addNiche = useCallback(async (niche: string) => {
-    if (!niche || existingNiches.has(niche)) return;
+  const addNiche = useCallback(async (niche: string): Promise<boolean> => {
+    if (!niche) return false;
+    const dupe = rows.find((r) => r.niche.toLowerCase() === niche.toLowerCase());
+    if (dupe) {
+      toast({ title: t("vocabulary.duplicateNiche"), variant: "destructive" });
+      setSelectedNiche(dupe.niche);
+      setMobileView("detail");
+      return false;
+    }
     setBusy("__new__");
     try {
       const seed = defaultRow
@@ -118,12 +124,14 @@ export function NicheVocabularyPanel() {
       }]);
       setSelectedNiche(niche);
       setMobileView("detail");
+      return true;
     } catch {
       toast({ title: t("vocabulary.saveError"), variant: "destructive" });
+      return false;
     } finally {
       setBusy(null);
     }
-  }, [existingNiches, defaultRow, t, toast]);
+  }, [rows, defaultRow, t, toast]);
 
   const deleteNiche = useCallback(async (niche: string) => {
     setBusy(niche);

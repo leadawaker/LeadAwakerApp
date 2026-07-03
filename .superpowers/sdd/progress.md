@@ -78,3 +78,45 @@ fix, mount-only useEffect fetch) reconfirmed as the only deviations, all content
 (no dashes, category order, 6.1-6.7 numbering, en/nl distinctness) passed across all 17 files.
 
 PLAN COMPLETE. All 13 tasks + final review done. No Critical/Important issues outstanding.
+
+/code-review (xhigh, separate from the whole-plan review above): 10 finder angles run
+against the file-scoped diff c44820f0..6cef8aea, self-verified (Phase 2) via direct
+Read/Grep/git diff of every implicated file rather than per-candidate verifier subagents,
+gap-sweep (Phase 3) also run self-directed after the dispatched sweep subagent hit a
+tool-access glitch and gave up with 0 findings. 11 findings reported via ReportFindings,
+most severe first, all subsequently fixed:
+1. WordGroup (NicheDetailPanel.tsx) keyed by `group` only, not niche - cross-niche
+   word-leak on rapid niche switch. Fixed: key={`${row.niche}-${group}`}.
+2. apply.ts UPDATE never checked rowCount - typo'd niche silently no-ops while logging
+   success. Fixed: rowCount check + exit 1 on any miss.
+3. addNiche dedup was case-sensitive exact-match, silent no-op on hit. Fixed:
+   case-insensitive check, toast + select-existing-row on duplicate.
+4. TemplateField had no busy-guard (unlike WordGroup), race on rapid double-save could
+   revert a newer edit. Fixed: disabled={busy} on both input and textarea.
+5. NicheSelect swallowed /api/niches fetch failures silently, empty dropdown with no
+   signal. Fixed: loading spinner + error toast, i18n'd placeholder.
+6. NicheListRail cleared the add-niche input regardless of outcome. Fixed: onAdd now
+   returns Promise<boolean>, input only clears on success.
+7. NICHE_ICONS duplicated verbatim between nicheShared.ts and BehaviorSectionFields.tsx.
+   Fixed: BehaviorSectionFields now imports resolveNicheIcon from nicheShared.
+8. apply.ts hand-rolled its own Pool instead of the shared server/db.ts pool (unlike
+   sibling seed scripts). Fixed: imports the shared pool.
+9. CONTRACT.md (8 instances) + accounts.ts:245 comment used em dashes, violating the
+   global CLAUDE.md style rule. Fixed: replaced with commas/colons.
+10. NicheDetailPanel.tsx back button aria-label was a hardcoded "Back" string. Fixed:
+    i18n'd via new vocabulary.back key (en/nl).
+11. validate.ts didn't enforce several CONTRACT.md-documented rules (no emojis;
+    scenario markers checked by presence only, not order). Fixed: added emoji regex
+    check + ascending-order check for the ## 6.1-6.7 markers; re-ran validate.ts
+    against all 17 existing files, all still pass clean.
+
+All fixes verified live via playwright-cli against app.leadawaker.com (logged in as
+leadawaker@gmail.com): duplicate-niche toast fires and preserves input text; typing an
+unsubmitted word under Kitchens and switching to Solar Panels no longer leaks the text
+into the new niche's input; campaign #58's Behavior-tab niche dropdown still renders all
+15 niches with icons and no console errors; campaign #58's niche confirmed unchanged
+("dental care") via direct DB query throughout. Console: 0 errors, 0 warnings at every
+checkpoint. Changes left uncommitted per standing instruction to never commit without
+being asked; working tree also has unrelated pre-existing WIP (VoiceCloneSection.tsx,
+adapters.ts, useVoiceClone.ts, accounts.json, server/routes/accounts.ts, shared/schema.ts)
+that predates this session's code-review work and was not touched.

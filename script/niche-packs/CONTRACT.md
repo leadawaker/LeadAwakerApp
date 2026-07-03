@@ -38,15 +38,15 @@ pool.query('select question_bank, bad_examples, objection_examples, scenario_exa
 ```
 
 Use the **`nl` side** of that output as your structural template. Its `en`
-side is a known bug (duplicated Dutch text) — do not copy it, and do not
+side is a known bug (duplicated Dutch text): do not copy it, and do not
 model your `en` writing on it.
 
 ## Per-field structural requirements (do not deviate from these categories)
 
-- **`bad_examples`** — a handful of presumptuous/leading questions to avoid,
+- **`bad_examples`**: a handful of presumptuous/leading questions to avoid,
   in the niche's own domain (mirrors what sits right after "Bad examples:"
   in the base prompt's question-quality rule).
-- **`question_bank`** — five sub-parts, in this order: (1) preferred open
+- **`question_bank`**: five sub-parts, in this order: (1) preferred open
   questions to use when the prospect gave only a bare status, (2)
   price-framed-status examples showing a price remark read as status, not
   objection, with the reframed response, (3) a general good-question bank
@@ -54,13 +54,13 @@ model your `en` writing on it.
   transitions), (4) the "I need to think about it" special case, (5) the
   "not now" special case (said after the prospect already indicated they
   are comparing).
-- **`objection_examples`** — exactly these seven named categories, in this
+- **`objection_examples`**: exactly these seven named categories, in this
   order, because later prompt sections reference them by name ("the
   commitment-check phrasings in Step 4", "the relevance phrasings in Step
   4"): Price; Cheaper competitor; Reframe after a second objection; Closing
   after two clear rejections; Commitment check (buying signal); Advisor
   relevance (price difference); Advisor relevance (remaining questions).
-- **`scenario_examples`** — numbered `## 6.1` through `## 6.7` (do not use
+- **`scenario_examples`**: numbered `## 6.1` through `## 6.7` (do not use
   `6.8`/`6.9`, those are hardcoded in the base prompt right after this
   block). Categories, in order: 6.1 Timing issue; 6.2 Situation outside our
   control; 6.3 AI accusation; 6.4 Pricing and deals; 6.5 Unknown/detailed
@@ -70,7 +70,7 @@ model your `en` writing on it.
 
 ## Language & market grounding
 
-Both `en` and `nl` describe the **same Dutch business reality** — Euro
+Both `en` and `nl` describe the **same Dutch business reality**: Euro
 pricing, BTW, gemeente vergunningen, VvE, subsidy schemes (ISDE, Warmtefonds,
 salderingsregeling) where relevant to the niche. `en` is a natural English
 rendering for an English-speaking prospect dealing with a Dutch business, not
@@ -78,13 +78,13 @@ a US-market scenario set, and not a literal duplicate of the Dutch text.
 
 ## Style rules inherited from the base prompt
 
-- No em dashes or en dashes anywhere — use commas, colons or semicolons.
+- No em dashes or en dashes anywhere: use commas, colons or semicolons.
 - No emojis.
 - No quotation marks wrapping full example messages (short inline quoted
   fragments used purely to classify a reply, like Kitchens' `"we hebben het
   uitgesteld"`, are fine).
 - Vary acknowledgement words (Helder / Dat begrijp ik / Ik snap het /
-  Natuurlijk, and their English equivalents) — the base prompt bans using the
+  Natuurlijk, and their English equivalents): the base prompt bans using the
   same one twice in a row.
 
 ## Validate before moving on
