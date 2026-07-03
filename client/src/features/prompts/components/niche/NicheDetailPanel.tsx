@@ -143,7 +143,7 @@ export function NicheDetailPanel({ row, lang, busyKey, onBack, onAdd, onRemove, 
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
         {NICHE_WORD_GROUPS.map((group) => (
           <WordGroup
-            key={group}
+            key={`${row.niche}-${group}`}
             label={t(`vocabulary.groups.${group}`)}
             placeholder={t("vocabulary.addWord")}
             words={groups[group]}
@@ -180,19 +180,21 @@ function TemplateField({ label, value, multiline = false, busy, onSave }: {
       <div className="relative">
         {multiline ? (
           <textarea
-            className="w-full bg-transparent border border-border/40 focus:border-[color:var(--wine)] outline-none rounded-md px-2.5 py-2 text-xs resize-none min-h-[64px] leading-relaxed placeholder:text-muted-foreground/50"
+            className="w-full bg-transparent border border-border/40 focus:border-[color:var(--wine)] outline-none rounded-md px-2.5 py-2 text-xs resize-none min-h-[64px] leading-relaxed placeholder:text-muted-foreground/50 disabled:opacity-60"
             value={draft}
             onChange={(e) => { setDraft(e.target.value); setDirty(true); }}
             onBlur={submit}
             rows={3}
+            disabled={busy}
           />
         ) : (
           <input
-            className="w-full bg-transparent border border-border/40 focus:border-[color:var(--wine)] outline-none rounded-md px-2.5 py-2 text-xs placeholder:text-muted-foreground/50"
+            className="w-full bg-transparent border border-border/40 focus:border-[color:var(--wine)] outline-none rounded-md px-2.5 py-2 text-xs placeholder:text-muted-foreground/50 disabled:opacity-60"
             value={draft}
             onChange={(e) => { setDraft(e.target.value); setDirty(true); }}
             onBlur={submit}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
+            disabled={busy}
           />
         )}
         {busy && (

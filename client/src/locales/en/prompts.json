@@ -238,6 +238,8 @@
     "addNichePlaceholder": "New niche name…",
     "deleteNiche": "Delete niche",
     "saveError": "Could not save. Please try again.",
+    "duplicateNiche": "A niche with that name already exists.",
+    "back": "Back",
     "selectNiche": "Select a niche to view its details.",
     "groups": {
       "projectTerm": "Project / product",

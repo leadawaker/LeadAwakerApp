@@ -161,8 +161,8 @@ EOF
 ## Task 2: Drizzle schema — declare the new columns
 
 **Files:**
-- Modify: `shared/schema.ts:461-466` (Campaigns table, alongside `bump1AiReference`/`bumpNVoiceTemplate`)
-- Modify: `shared/schema.ts:660-664` (Leads table, alongside `nextActionAt`/`currentBumpStage`)
+- Modify: `shared/schema.ts:468-471` (Campaigns table, alongside `bump1AiReference`/`bump1VoiceTemplate`)
+- Modify: `shared/schema.ts:660-661` (Leads table, alongside `nextActionAt`/`currentBumpStage`)
 
 **Interfaces:**
 - Consumes: columns created in Task 1
@@ -216,8 +216,9 @@ Replace with:
   nextActionAt: timestamp("next_action_at", { withTimezone: true }),
   currentBumpStage: bigint("current_bump_stage", { mode: "number" }),
   // Set when the lead named a booking day but hasn't confirmed a time yet;
-  // JSON string {day, offered_slots, timezone}. Cleared on booking or after
-  // one booking-nudge bump. See bump-system-overhaul design spec, item 6.
+  // JSON string {day, offered_slots, timezone, saved_at}. Cleared on booking,
+  // after one booking-nudge bump, or when older than 7 days. See
+  // bump-system-overhaul design spec, item 6.
   pendingBookingContext: text("pending_booking_context"),
 ```
 
@@ -243,19 +244,21 @@ EOF
 ## Task 3: Fix max_bumps default mismatch
 
 **Files:**
-- Modify: `/home/gabriel/automations/src/automations/bump_scheduler.py:101`
+- Modify: `/home/gabriel/automations/src/automations/bump_scheduler.py:101` (`_process_lead`) and `:479` (`trigger_bump_for_lead`)
 
 **Interfaces:**
 - Consumes: nothing new
 - Produces: nothing new (internal default only)
 
-- [ ] **Step 1: Change the default**
+- [ ] **Step 1: Change the default in BOTH functions**
 
-Find:
+The line appears twice: line 101 in `_process_lead` (the scheduler path) and line 479 in `trigger_bump_for_lead` (the manual-trigger path). Replace both occurrences (replace-all is safe: there are exactly these two).
+
+Find (2 occurrences):
 ```python
     max_bumps = data.get("max_bumps") or 3
 ```
-Replace with:
+Replace both with:
 ```python
     max_bumps = data.get("max_bumps") or 4
 ```
@@ -370,8 +373,9 @@ Replace with:
 Run: `cd /home/gabriel/automations && .venv/bin/python -c "
 from src.automations.bump_scheduler import _compute_next_delay_hours
 data = {'bump_2_delay_hours': 48, 'bump_4_delay_hours': 72}
-assert _compute_next_delay_hours(data, 1, 4) == 48   # next stage has a delay
-assert _compute_next_delay_hours(data, 3, 4) == 24   # bump_4_delay_hours missing above, but stage 3->4 uses bump_4
+assert _compute_next_delay_hours(data, 1, 4) == 48   # next stage (2) has a delay
+assert _compute_next_delay_hours(data, 3, 4) == 72   # stage 3->4 uses bump_4_delay_hours
+assert _compute_next_delay_hours(data, 2, 4) == 24   # bump_3_delay_hours missing, falls back to 24
 assert _compute_next_delay_hours({'bump_4_delay_hours': 72}, 4, 4) == 72  # last bump uses its own delay
 print('OK')
 "`
@@ -1170,8 +1174,10 @@ Replace with:
                             pending_booking_context=json.dumps({
                                 "day": _day_iso,
                                 "offered_slots": _day_times,
+                                "saved_at": datetime.now(timezone.utc).isoformat(),
                                 "timezone": (
-                                    lead.get("time_zone")
+                                    lead.get("timezone")
+                                    or lead.get("time_zone")
                                     or campaign_account.get("account_timezone")
                                     or campaign_account.get("timezone")
                                     or "Europe/Amsterdam"
@@ -1277,14 +1283,13 @@ so they can pick another moment themselves.
 AVAILABLE TIMES FOR {day_label}:
 {times_block}
 
-BOOKING LINK (mention it naturally as a fallback, e.g. "or grab any time here"):
-{link}
+{link_section}
 
 RULES
 1. Keep it under {max_chars} characters. One message only.
 2. Sound human and casual, not salesy or like a list.
 3. Reference the specific times naturally, don't just dump them mechanically.
-4. Always include the link so they have a way to self-serve if the times don't fit.
+4. {link_rule}
 5. Never reveal you are an AI.
 6. Always write in {language}.
 7. Never use em dashes. Use commas, periods, or colons instead.
@@ -1306,7 +1311,8 @@ async def generate_booking_nudge_bump(
     confirmed a time. `times` must be freshly re-fetched ISO datetimes for
     `day_iso` — never pass stale previously-offered slots, availability may
     have changed since. Returns None on failure (caller falls back to a
-    plain link-only message).
+    plain link-only message). In voice mode the spoken text never includes
+    the booking link: URLs are never spoken aloud.
     """
     from datetime import datetime as _dt
     from src.automations.conversation.helpers import _format_relative_date
@@ -1337,6 +1343,8 @@ async def generate_booking_nudge_bump(
     channel = campaign_account.get("channel") or "sms"
     max_chars = 160 if channel == "whatsapp" else 120
 
+    # A raw URL must never be spoken aloud: voice notes get no link section
+    # and an explicit no-URL rule; text messages keep the self-serve link.
     voice_mode_block = ""
     if voice_mode:
         voice_mode_block = (
@@ -1344,6 +1352,17 @@ async def generate_booking_nudge_bump(
             "talking into their phone. Start with 'Hey {first_name}'. No emojis, no "
             "'...'. Keep it under 30 words."
         ).format(first_name=first_name)
+        link_section = ""
+        link_rule = (
+            "This is spoken aloud, so NEVER say a URL or booking link. If the times "
+            "might not fit, invite them to reply and you'll find another moment together."
+        )
+    else:
+        link_section = (
+            'BOOKING LINK (mention it naturally as a fallback, e.g. "or grab any time here"):\n'
+            + (link or "(no link available)")
+        )
+        link_rule = "Always include the link so they have a way to self-serve if the times don't fit."
 
     system = _BOOKING_NUDGE_SYSTEM_PROMPT.format(
         agent_name=agent_name,
@@ -1353,7 +1372,8 @@ async def generate_booking_nudge_bump(
         service_name=service_name,
         day_label=day_label,
         times_block=times_block,
-        link=link or "(no link available)",
+        link_section=link_section,
+        link_rule=link_rule,
         max_chars=max_chars,
         language=language,
         voice_mode_block=voice_mode_block,
@@ -1467,6 +1487,8 @@ import structlog
 
 - [ ] **Step 2: Add the early branch in `_process_lead`, right after the Contact Later check**
 
+Precondition: the anchor below ends with `max_bumps = data.get("max_bumps") or 4`, which only exists after Task 3's change. If the file still says `or 3` here, Task 3 has not landed: stop and complete Tasks 3-4 first.
+
 Find:
 ```python
     # Contact Later re-engagement takes precedence over normal bump logic.
@@ -1530,6 +1552,20 @@ async def _handle_booking_nudge(lead: dict, data: dict, exec_id: str) -> None:
         log.warning("bump_scheduler.booking_nudge.bad_context", lead_id=lead_id)
         return
 
+    # Expiry guard: booking intent older than 7 days (paused lead, scheduler
+    # backlog) is stale, nudging about it would read as strange. Clear it and
+    # let the lead fall back to normal bump progression next cycle.
+    saved_at = context.get("saved_at")
+    if saved_at:
+        try:
+            age = datetime.now(timezone.utc) - datetime.fromisoformat(saved_at)
+        except ValueError:
+            age = None
+        if age is not None and age > timedelta(days=7):
+            await update_lead_fields(lead_id, pending_booking_context=None)
+            log.info("bump_scheduler.booking_nudge.stale_context_cleared", lead_id=lead_id)
+            return
+
     lead_tz = context.get("timezone") or "Europe/Amsterdam"
     day_iso = context.get("day") or ""
     today_iso = datetime.now(timezone.utc).date().isoformat()
@@ -1578,6 +1614,9 @@ async def _handle_booking_nudge(lead: dict, data: dict, exec_id: str) -> None:
 
     if not body:
         # AI failed, or no live times anywhere — plain link-only fallback.
+        # A raw URL must never be spoken aloud, so this fallback always goes
+        # out as text, even when voice mode is on.
+        voice_mode = False
         first_name = lead.get("first_name") or "there"
         if per_lead_link or link:
             body = f"Hey {first_name}, still want to grab a time? Pick whatever works here: {per_lead_link or link}"
@@ -1688,7 +1727,7 @@ async def main():
     lead = await get_lead(<test_lead_id>)
     print(lead.get('pending_booking_context'))
 asyncio.run(main())
-"` — expect a JSON string with `day`/`offered_slots`/`timezone`.
+"` — expect a JSON string with `day`/`offered_slots`/`timezone`/`saved_at`.
 5. Go silent (don't reply). Manually set `next_action_at` to the past for this lead so `bump_scheduler` picks it up on its next 5-minute cycle (or wait for the natural delay), then check `pm2 logs leadawaker-engine --lines 100 --nostream | grep booking_nudge` for `bump_scheduler.booking_nudge_sent`.
 6. Confirm the resulting WhatsApp/SMS message re-offers times for the chosen day (or the next available day, if enough time passed) plus the booking link.
 7. Confirm `pending_booking_context` is now `None` on the lead.
@@ -1708,6 +1747,10 @@ Trigger a normal static-template bump on any other active test lead (or wait for
 ## Execution Notes
 
 - Tasks 1-2 must run first (both repos depend on the new columns existing).
-- Tasks 3-9 are independent of each other and of Tasks 10-13 — safe to parallelize across subagents.
 - Tasks 10-13 are strictly sequential (each depends on the previous task's new function/signature).
 - Task 14 must run last.
+- File-overlap constraints (never parallelize tasks that edit the same file):
+  - `bump_scheduler.py`: Tasks 3, 4, 13. Run 3 then 4, and both must be committed before Task 13 starts (Task 13's find-anchor quotes the `or 4` default that only exists after Task 3's change).
+  - `ai_bump_generator.py`: Tasks 6 and 12. Land one before starting the other.
+  - `AISectionFields.tsx` + the two `campaigns.json` locale files: Tasks 5 and 7. Same rule.
+- With those constraints respected, Tasks 3-9 are otherwise independent of each other and of Tasks 10-13, and safe to spread across subagents.

@@ -417,6 +417,20 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     }
   }, [reloadPrompts, toast]);
 
+  // Flush a pending debounced save when the panel unmounts (e.g. navigating
+  // away right after editing a field). Without this, the timeout's own
+  // cleanup just cancels the save and the edit is silently lost.
+  const doSaveRef = useRef(doSave);
+  doSaveRef.current = doSave;
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+        doSaveRef.current();
+      }
+    };
+  }, []);
+
   // Legacy compat stubs (keep API surface stable)
   const startEdit = useCallback((_linkedPromptArg?: any) => {}, []);
   const startEditForField = useCallback((field: string) => { setFocusField(field); }, []);

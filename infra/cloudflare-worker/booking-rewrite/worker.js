@@ -60,7 +60,7 @@ export default {
       });
     };
 
-    // Never rewrite the canonical host or passthrough paths — and skip the
+    // Never rewrite the canonical host or passthrough paths, and skip the
     // username lookup entirely for them, since every asset/_next/api request
     // would otherwise trigger its own edge lookup round-trip.
     const isPassThrough =

@@ -238,6 +238,8 @@
     "addNichePlaceholder": "Naam nieuwe niche…",
     "deleteNiche": "Niche verwijderen",
     "saveError": "Opslaan mislukt. Probeer het opnieuw.",
+    "duplicateNiche": "Er bestaat al een niche met die naam.",
+    "back": "Terug",
     "selectNiche": "Selecteer een niche om de details te bekijken.",
     "groups": {
       "projectTerm": "Project / product",
