@@ -73,6 +73,7 @@ export type Campaign = {
   max_bumps: number;
   stop_on_response: boolean;
   voice_reply_mode?: string;  // "off" | "smart" | "voice_reply"
+  voice_engine?: string;  // "pipeline" | "live_native" | "live_half"
   // Qualification criteria (JSON string or plain text)
   qualification_criteria?: string | null;
   // Performance metrics from Campaigns table

@@ -132,6 +132,26 @@ export function AISectionFields({
         {...editFor("voice_reply_mode")}
         editChild={isEditing ? <EditSelect value={String(draft.voice_reply_mode ?? "")} onChange={(v) => setDraft(d => ({...d, voice_reply_mode: v}))} options={["off", "smart", "voice_reply"]} labels={{ off: t("config.voiceReplyOff"), smart: t("config.voiceReplySmart"), voice_reply: t("config.voiceReplyVoiceReply") }} {...focusFor("voice_reply_mode")} /> : undefined}
       />
+      <InfoRow icon={Radio} label={t("config.voiceEngine")}
+        value={t(`config.voiceEngine_${campaign.voice_engine || "pipeline"}`)}
+        {...editFor("voice_engine")}
+        editChild={isEditing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+            <EditSelect
+              value={String(draft.voice_engine ?? "pipeline")}
+              onChange={(v) => setDraft(d => ({ ...d, voice_engine: v }))}
+              options={["pipeline", "live_native", "live_half"]}
+              labels={{
+                pipeline: t("config.voiceEngine_pipeline"),
+                live_native: t("config.voiceEngine_live_native"),
+                live_half: t("config.voiceEngine_live_half"),
+              }}
+              {...focusFor("voice_engine")}
+            />
+            <span style={{ fontSize: 11, color: 'var(--mute)' }}>{t("config.voiceEngineHint")}</span>
+          </div>
+        ) : undefined}
+      />
       <InfoRow icon={Mic} label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ? t("config.on") : t("config.off")}
         {...editFor("first_message_voice_note")}
         editChild={isEditing ? (

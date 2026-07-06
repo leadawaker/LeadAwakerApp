@@ -238,6 +238,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     bump_4_voice_note: c.bump_4_voice_note ?? false,
     ai_reply_voice_note: c.ai_reply_voice_note ?? false,
     voice_reply_mode: c.voice_reply_mode || "off",
+    voice_engine: c.voice_engine || "pipeline",
     tts_voice_id: c.tts_voice_id || "",
     max_bumps: c.max_bumps ?? "",
     ai_model: c.ai_model || "",

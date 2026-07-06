@@ -483,6 +483,7 @@ export const campaigns = nocodb.table("Campaigns", {
   bump4VoiceTemplate: text("bump_4_voice_template"),
   aiReplyVoiceNote: boolean("ai_reply_voice_note").default(false),
   voiceReplyMode: text("voice_reply_mode").default("off"),
+  voiceEngine: text("voice_engine").default("pipeline"),
   ttsVoiceId: text("tts_voice_id"),
   niche: text("niche"),
   campaignService: text("campaign_service"),
