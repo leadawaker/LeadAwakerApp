@@ -22,6 +22,7 @@ export default function PrivacyPolicy() {
         </>,
       ],
     },
+    { title: t('section8.title'), body: [t('section8.content')] },
   ];
 
   return (
