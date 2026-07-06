@@ -317,7 +317,7 @@
     "voiceEngine_pipeline": "Klassiek (transcriberen, tekstantwoord, dan uitspreken)",
     "voiceEngine_live_native": "Gemini Live, natuurlijk (nieuwste model, meest menselijk klinkend)",
     "voiceEngine_live_half": "Gemini Live, alternatief (fallback-engine, dezelfde onderliggende technologie)",
-    "voiceEngineHint": "Bepaalt hoe spraakantwoorden onder de motorkap worden gegenereerd. Gemini Live-opties spreken direct in plaats van eerst te transcriberen en dan tekstueel te antwoorden. Werkt alleen als AI-spraakmodus hierboven niet op Uit staat.",
+    "voiceEngineHint": "Bepaalt hoe spraakantwoorden onder de motorkap worden gegenereerd. Gemini Live-opties spreken direct in plaats van eerst te transcriberen en dan tekstueel te antwoorden. Werkt alleen als AI-spraakmodus hierboven op \"Voice antwoord op voice\" staat (Smart-modus heeft hier geen effect van).",
     "voiceId": "Stem-ID",
     "bump1AiReference": "Gebruiken als AI-referentie",
     "bump2AiReference": "Gebruiken als AI-referentie",

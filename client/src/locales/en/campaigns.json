@@ -317,7 +317,7 @@
     "voiceEngine_pipeline": "Classic (transcribe, reply in text, then speak the reply)",
     "voiceEngine_live_native": "Gemini Live, natural (newest model, most human-sounding)",
     "voiceEngine_live_half": "Gemini Live, alternate (fallback engine, same underlying tech)",
-    "voiceEngineHint": "Controls how voice replies are generated under the hood. Gemini Live options speak directly instead of transcribing then replying in text. Only applies when AI Voice Mode above is not Off.",
+    "voiceEngineHint": "Controls how voice replies are generated under the hood. Gemini Live options speak directly instead of transcribing then replying in text. Only applies when AI Voice Mode above is set to \"Reply to voice with voice\" (Smart mode is unaffected).",
     "voiceId": "Voice ID",
     "bump1AiReference": "Use as AI reference",
     "bump2AiReference": "Use as AI reference",
