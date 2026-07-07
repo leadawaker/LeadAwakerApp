@@ -179,7 +179,12 @@ async function main() {
   // fires while `THREE` is still undefined and never gets a second chance —
   // deterministic, not a network race, confirmed via empirical repro
   // (built canvas 300x150 default vs. live production's rendered 1280x720).
-  html = html.replace("</body>", `<script src="/premium/${bundleName}" defer></script>\n</body>`);
+  html = replaceRequired(
+    html,
+    /<\/body>/,
+    `<script src="/premium/${bundleName}" defer></script>\n</body>`,
+    "the closing </body> tag"
+  );
 
   await writeFile(indexPath, html);
   console.log("build-premium: rewrote index.html");
