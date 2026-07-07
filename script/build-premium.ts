@@ -50,7 +50,25 @@ function topLevelConstLetToVar(code: string): string {
 async function compileBundle(scriptFiles: string[]): Promise<string> {
   let bundleSource = "";
   for (const file of scriptFiles) {
-    const raw = await readFile(path.join(DIST_PREMIUM, file), "utf-8");
+    let raw: string;
+    try {
+      raw = await readFile(path.join(DIST_PREMIUM, file), "utf-8");
+    } catch (err) {
+      // tweaks-panel.jsx, hero-debug.jsx, cta-debug.jsx are gitignored
+      // (.gitignore:93-95) — local-only dev tooling, never committed, so a
+      // clean checkout (Vercel's build) won't have them even though
+      // index.html still references them (2 of the 3 already have
+      // onerror="void 0" on their script tag for exactly this reason).
+      // app-main.jsx already handles TweaksPanel being undefined via
+      // `TweaksPanel && <TweaksPanel ...>` (app-main.jsx:150/186), so
+      // omitting these from the bundle changes nothing visitor-facing —
+      // they already don't execute in production today.
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        console.log(`build-premium: skipping ${file} (not present in this checkout — gitignored local-only file)`);
+        continue;
+      }
+      throw err;
+    }
     const { code } = transformSync(raw, {
       loader: "jsx",
       jsx: "transform", // classic runtime: compiles to React.createElement(...),
