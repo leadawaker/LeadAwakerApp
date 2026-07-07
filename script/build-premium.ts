@@ -27,6 +27,26 @@ const POLLER_RE = /<script>\n\/\/ Auto-reload when files change[\s\S]*?<\/script
 const THREE_JS_RE = /(<script src="https:\/\/unpkg\.com\/three[^"]*"[^>]*)><\/script>/;
 const DESIGN_TOKENS_LINK_RE = /<link rel="stylesheet" href="\/premium\/design-tokens\.css" \/>\n?/;
 
+// Converts only TOP-LEVEL (column-0) `const`/`let` declarations to `var`,
+// leaving every nested declaration (inside a function/block body, always
+// indented) untouched. Empirically verified against the real site: Babel
+// Standalone's per-<script>-tag execution treats top-level const/let as
+// freely re-declarable AND readable bare across separate script tags (e.g.
+// `config.jsx`'s `const TWEAK_DEFAULTS` is read bare in `app-main.jsx`,
+// and `01-nav.jsx` / `10-cta-footer.jsx` both declare `const ArrowSm =
+// window.ArrowSm` with no conflict) — i.e. real top-level const/let here
+// behaves exactly like `var` (freely redeclarable, shared across files),
+// not like true block-scoped, single-scope-only const/let. A first attempt
+// at fixing the ArrowSm collision by wrapping each file in its own IIFE
+// broke the *other* half of this behavior (bare cross-file reads like
+// `TWEAK_DEFAULTS`), confirmed by a blank page + `TWEAK_DEFAULTS is not
+// defined` at runtime. esbuild has no const/let-to-var downlevel transform
+// (confirmed: `target: 'es5'` errors "not supported yet" on this esbuild
+// version), so the fix is this narrow text-level substitution instead.
+function topLevelConstLetToVar(code: string): string {
+  return code.replace(/^(const|let)\b/gm, "var");
+}
+
 async function compileBundle(scriptFiles: string[]): Promise<string> {
   let bundleSource = "";
   for (const file of scriptFiles) {
@@ -38,17 +58,7 @@ async function compileBundle(scriptFiles: string[]): Promise<string> {
       jsxFragment: "React.Fragment", // global `React` from the CDN script today.
       sourcefile: file,
     });
-    // Wrap each file in its own function scope. Separate <script> tags (and
-    // Babel Standalone's per-file execution today) isolate top-level
-    // const/let/class per file — e.g. 01-nav.jsx and 10-cta-footer.jsx both
-    // declare `const ArrowSm = window.ArrowSm` today with no conflict, because
-    // each script tag gets its own top-level lexical scope. A flat
-    // concatenation shares one scope and collides on that. Cross-file
-    // communication is unaffected: it goes through `window.X = ...`
-    // assignments (verified: no file relies on a bare top-level `var` for
-    // cross-file sharing), and `window` is the same object inside or outside
-    // an IIFE.
-    bundleSource += `// ${file}\n(function () {\n${code}\n})();\n`;
+    bundleSource += `// ${file}\n${topLevelConstLetToVar(code)}\n`;
   }
   const { code: minified } = transformSync(bundleSource, { loader: "js", minify: true });
   return minified;
