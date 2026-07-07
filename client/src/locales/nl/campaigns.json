@@ -354,6 +354,13 @@
     "openerTemplatesTitle": "Openingssjablonen",
     "openerTemplatesHint": "Kies er een om het eerste bericht te vervangen. Variabelen worden opgelost getoond, zodat je precies ziet wat een lead te lezen krijgt.",
     "useTemplate": "Gebruik dit",
+    "editTemplate": "Sjabloon bewerken",
+    "saveTemplate": "Opslaan",
+    "cancelEditTemplate": "Annuleren",
+    "templateTitleLabel": "Titel",
+    "templateBodyLabel": "Bericht",
+    "templateSaved": "Sjabloon opgeslagen",
+    "templateSaveFailed": "Opslaan van sjabloon mislukt",
     "answerPlaceholder": "Jouw goedgekeurde antwoord…",
     "sections": {
       "business": "Zakelijk",

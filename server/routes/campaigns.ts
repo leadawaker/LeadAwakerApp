@@ -11,6 +11,7 @@ import {
   insertPrompt_LibrarySchema,
   insertCampaignMetricsHistorySchema,
   insertPromptVersionsSchema,
+  openerTemplates,
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
@@ -246,6 +247,28 @@ export async function computeCampaignPreflight(
 }
 
 export function registerCampaignsRoutes(app: Express): void {
+  // ─── Opener Templates ───────────────────────────────────────────────
+  // Global "First Message" archetype library shown in the campaign settings
+  // template picker. Editable in-place from the picker UI (agency-only).
+
+  app.get("/api/opener-templates", requireAuth, wrapAsync(async (_req, res) => {
+    const data = await storage.listOpenerTemplates();
+    res.json(toDbKeysArray(data as any, openerTemplates));
+  }));
+
+  app.patch("/api/opener-templates/:id", requireAgency, wrapAsync(async (req, res) => {
+    const { titleEn, titleNl, bodyEn, bodyNl } = fromDbKeys(req.body, openerTemplates);
+    const edit: Record<string, string> = {};
+    if (typeof titleEn === "string") edit.titleEn = titleEn;
+    if (typeof titleNl === "string") edit.titleNl = titleNl;
+    if (typeof bodyEn === "string") edit.bodyEn = bodyEn;
+    if (typeof bodyNl === "string") edit.bodyNl = bodyNl;
+
+    const row = await storage.updateOpenerTemplate(req.params.id, edit);
+    if (!row) return res.status(404).json({ message: "Template not found" });
+    res.json(toDbKeys(row as any, openerTemplates));
+  }));
+
   // ─── Campaigns ────────────────────────────────────────────────────
 
   app.get("/api/campaigns", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {

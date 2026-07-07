@@ -354,6 +354,13 @@
     "openerTemplatesTitle": "Opener templates",
     "openerTemplatesHint": "Pick one to replace the First Message. Variables are shown resolved so you can see exactly what a lead would read.",
     "useTemplate": "Use this",
+    "editTemplate": "Edit template",
+    "saveTemplate": "Save",
+    "cancelEditTemplate": "Cancel",
+    "templateTitleLabel": "Title",
+    "templateBodyLabel": "Message",
+    "templateSaved": "Template saved",
+    "templateSaveFailed": "Couldn't save template",
     "answerPlaceholder": "Your approved answer…",
     "sections": {
       "business": "Business",

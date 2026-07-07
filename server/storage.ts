@@ -19,6 +19,7 @@ import { agentsStorage } from "./storage/agents";
 import { calendarStorage } from "./storage/calendar";
 import { reviewsStorage } from "./storage/reviews";
 import { miscStorage } from "./storage/misc";
+import { openerTemplatesStorage } from "./storage/openerTemplates";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -79,4 +80,5 @@ export const storage = {
   ...calendarStorage,
   ...reviewsStorage,
   ...miscStorage,
+  ...openerTemplatesStorage,
 };

@@ -1589,3 +1589,24 @@ export const insertCalendarBlockSchema = createInsertSchema(calendarBlocks).omit
 });
 export type CalendarBlock = typeof calendarBlocks.$inferSelect;
 export type InsertCalendarBlock = z.infer<typeof insertCalendarBlockSchema>;
+
+// ─── Opener Templates ─────────────────────────────────────────────────────────
+// The 9 "First Message" opener archetypes shown in the campaign settings
+// template picker. One shared global library (not per-account) — English and
+// Dutch copy are separate columns so each language can be edited independently.
+
+export const openerTemplates = nocodb.table("Opener_Templates", {
+  id: text("id").primaryKey(), // "A".."I"
+  sortOrder: integer("sort_order").notNull(),
+  titleEn: text("title_en").notNull(),
+  titleNl: text("title_nl").notNull(),
+  bodyEn: text("body_en").notNull(),
+  bodyNl: text("body_nl").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const insertOpenerTemplateSchema = createInsertSchema(openerTemplates).omit({
+  updatedAt: true,
+});
+export type OpenerTemplateRow = typeof openerTemplates.$inferSelect;
+export type InsertOpenerTemplate = z.infer<typeof insertOpenerTemplateSchema>;

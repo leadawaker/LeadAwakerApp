@@ -18,8 +18,7 @@ import { resolveLang } from "@shared/langField";
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { buildMap, resolvePreviewPlainText, DEFAULT_NICHE_TERMS, type CampaignForPreview } from "@/features/prompts/utils/resolveVariables";
-import { OpenerTemplatePicker } from "./OpenerTemplatePicker";
-import type { OpenerTemplate } from "./openerTemplates";
+import { OpenerTemplatePicker, type OpenerTemplate } from "./OpenerTemplatePicker";
 
 // The four built-in assistant personas (same set as the onboarding wizard). The
 // operator picks one or types a custom name — it's a pick-or-type combobox.
