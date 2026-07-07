@@ -67,6 +67,40 @@ window.TRANSLATIONS.en = {
         body: "The system keeps conversations moving. When a lead is ready, you get the booking in your agenda and a summary of the interaction. Everything in between is handled.",
       },
     ],
+    illus: {
+      archive: {
+        header_label: "archive.scan",
+        header_count: "437 contacts",
+        ranked: "ranked {n} of 437",
+        snips: [
+          "floor plan Q3, two options",
+          "re: viewing Tuesday",
+          "quote follow-up",
+          "browsing, not urgent",
+          "second visit possible",
+          "whenever you're ready",
+        ],
+      },
+      ab: {
+        col_message: "message",
+        col_reply: "reply",
+        col_trend: "trend",
+        msgs: [
+          '"just checking in about the floor plan"',
+          '"Tuesday slot still open?"',
+          '"saw your note, two ideas"',
+        ],
+        footer_winner_prefix: "variant",
+        footer_winner_suffix: "pulling ahead",
+        footer_sent: "+153 sent",
+      },
+      calendar: {
+        header_week: "week of May 18",
+        header_status: "3 scheduled · 2 in progress",
+        footer_next: "next conversation",
+        footer_slot: "Tue 10:30 · Van Rooijen",
+      },
+    },
   },
   pipeline: {
     eyebrow: "Live pipeline",
@@ -83,6 +117,7 @@ window.TRANSLATIONS.en = {
   },
   about: {
     eyebrow: "About",
+    h2_pre: "Design",
     h2_meets: "meets",
     h2_italic: "sales",
     body: "One comes from design and the other from premium sales. Leadawaker connects the two, so your design work is understood as premium and sold with clarity and confidence.",

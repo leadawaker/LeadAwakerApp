@@ -54,6 +54,7 @@ function About() {
             <div className="eyebrow" style={{ marginBottom: isMobile ? 10 : 14 }}>{t('about.eyebrow')}</div>
             <div style={{ marginBottom: isMobile ? 14 : 20 }}><AccentBar /></div>
             <h2 className="serif" style={{ margin: 0, fontSize: isMobile ? "clamp(40px, 10vw, 58px)" : "clamp(54px, 5.2vw, 78px)", lineHeight: 1.0 }}>
+              {t('about.h2_pre') && <span style={{ display: "block" }}>{t('about.h2_pre')}</span>}
               <span style={{ display: "block" }}>{t('about.h2_meets')}</span>
               <span style={{ color: "var(--wine)", display: "block", fontStyle: "italic" }}>{t('about.h2_italic')}<span style={{ fontStyle: "normal" }}>.</span></span>
             </h2>

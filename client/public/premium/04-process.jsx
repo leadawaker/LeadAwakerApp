@@ -1,12 +1,12 @@
 // Process section with animated illustrations
 
 const ARCHIVE_ROWS_DATA = [
-  { who: 'M. van Dijk',    snip: 'plattegrond Q3, twee opties', tag: 'Premium',  tone: 'hot'  },
-  { who: 'T. de Boer',     snip: 're: bezichtiging dinsdag',    tag: 'Default', tone: 'warm' },
-  { who: 'Fam. Janssen',   snip: 'offerte opvolging',           tag: 'Premium',  tone: 'hot'  },
-  { who: 'K. Vermeer',     snip: 'oriënterend, niet urgent',    tag: 'Basic', tone: 'cool' },
-  { who: 'Sandra Visser',  snip: 'tweede bezoek mogelijk',      tag: 'Default', tone: 'warm' },
-  { who: 'Van Rooijen',    snip: 'wanneer jullie klaar zijn',   tag: 'Premium',  tone: 'hot'  },
+  { who: 'M. van Dijk',    tag: 'Premium',  tone: 'hot'  },
+  { who: 'T. de Boer',     tag: 'Default', tone: 'warm' },
+  { who: 'Fam. Janssen',   tag: 'Premium',  tone: 'hot'  },
+  { who: 'K. Vermeer',     tag: 'Basic', tone: 'cool' },
+  { who: 'Sandra Visser',  tag: 'Default', tone: 'warm' },
+  { who: 'Van Rooijen',    tag: 'Premium',  tone: 'hot'  },
 ];
 const PILL_COLORS = {
   hot:  { bg: 'rgba(179,74,44,.12)',  color: '#a3401f' },
@@ -15,6 +15,8 @@ const PILL_COLORS = {
 };
 
 function ArchiveScanIllus({ active = false }) {
+  const { t } = window.useI18n();
+  const illusT = t('process.illus.archive');
   const [n, setN] = React.useState(0);
   React.useEffect(() => {
     if (!active) { setN(0); return; }
@@ -40,7 +42,7 @@ function ArchiveScanIllus({ active = false }) {
 
   return (
     <div style={illus}>
-      <div style={header}><span>archive.scan</span><span>437 contacten</span></div>
+      <div style={header}><span>{illusT.header_label}</span><span>{illusT.header_count}</span></div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginTop: 4 }}>
         {ARCHIVE_ROWS_DATA.map((r, i) => {
           const tagged = i < n;
@@ -51,7 +53,7 @@ function ArchiveScanIllus({ active = false }) {
                 {tagged && <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.5,4.2 L3.3,6 L6.8,2" fill="none" stroke="#f6efde" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
               </div>
               <span style={{ width: 100, color: tagged ? 'var(--ink)' : 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: tagged ? 500 : 400, transition: 'color 0.4s ease' }}>{r.who}</span>
-              <span style={{ flex: 1, color: tagged ? 'rgba(92,70,46,0.8)' : 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.4s ease' }}>{r.snip}</span>
+              <span style={{ flex: 1, color: tagged ? 'rgba(92,70,46,0.8)' : 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.4s ease' }}>{illusT.snips[i]}</span>
               <span style={{ width: 54, display: 'flex', justifyContent: 'flex-end', opacity: tagged ? 1 : 0, transform: tagged ? 'translateX(0)' : 'translateX(4px)', transition: 'opacity 0.35s ease, transform 0.35s ease' }}>
                 <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.16em', padding: '2px 7px', borderRadius: 99, textTransform: 'uppercase', background: pc.bg, color: pc.color }}>{r.tag}</span>
               </span>
@@ -60,7 +62,7 @@ function ArchiveScanIllus({ active = false }) {
         })}
       </div>
       <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed rgba(90,30,41,.15)', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink)', flexShrink: 0 }}>
-        <span>gerangschikt {n} van 437</span>
+        <span>{illusT.ranked.replace('{n}', n)}</span>
         <div style={{ flex: 1, height: 3, background: 'rgba(90,30,41,.12)', borderRadius: 99, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'var(--wine)', borderRadius: 99, width: `${(n / ARCHIVE_ROWS_DATA.length) * 36}%`, transition: 'width 0.5s ease' }} />
         </div>
@@ -71,14 +73,16 @@ function ArchiveScanIllus({ active = false }) {
 }
 
 function ABVariantsIllus({ active = false }) {
+  const { t } = window.useI18n();
+  const illusT = t('process.illus.ab');
   const [loopKey, setLoopKey] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
   const [winnerRevealed, setWinnerRevealed] = React.useState(false);
 
   const ROWS = [
-    { letter: 'A', msg: '"even inchecken over de plattegrond"', target: 12, winner: false, path: 'M0,11 L6.2,10.5 L12.4,11 L18.7,9.5 L24.9,10.5 L31.1,8.5 L37.3,9.5 L43.6,10.5 L49.8,9.5 L56,8.5' },
-    { letter: 'B', msg: '"dinsdag slot nog vrij?"',            target: 9, winner: true,  path: 'M0,11 L6.2,9.8 L12.4,8 L18.7,6 L24.9,4 L31.1,3 L37.3,1.8 L43.6,1.2 L49.8,0.8 L56,0.4' },
-    { letter: 'C', msg: '"jouw notitie gezien, twee ideeën"',  target: 19, winner: false, path: 'M0,10.5 L6.2,9.5 L12.4,8.5 L18.7,9.5 L24.9,7.5 L31.1,6 L37.3,7 L43.6,5 L49.8,5 L56,4.5' },
+    { letter: 'A', msg: illusT.msgs[0], target: 12, winner: false, path: 'M0,11 L6.2,10.5 L12.4,11 L18.7,9.5 L24.9,10.5 L31.1,8.5 L37.3,9.5 L43.6,10.5 L49.8,9.5 L56,8.5' },
+    { letter: 'B', msg: illusT.msgs[1], target: 9, winner: true,  path: 'M0,11 L6.2,9.8 L12.4,8 L18.7,6 L24.9,4 L31.1,3 L37.3,1.8 L43.6,1.2 L49.8,0.8 L56,0.4' },
+    { letter: 'C', msg: illusT.msgs[2], target: 19, winner: false, path: 'M0,10.5 L6.2,9.5 L12.4,8.5 L18.7,9.5 L24.9,7.5 L31.1,6 L37.3,7 L43.6,5 L49.8,5 L56,4.5' },
   ];
 
   React.useEffect(() => {
@@ -112,7 +116,7 @@ function ABVariantsIllus({ active = false }) {
         @keyframes starPop { 0%{opacity:0;transform:scale(0) rotate(-20deg)} 65%{transform:scale(1.35) rotate(4deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
       `}</style>
       <div style={{ display: 'grid', gridTemplateColumns: '24px 1fr 44px 60px 22px', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase', paddingBottom: 8, borderBottom: '1px dashed rgba(90,30,41,.15)', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        <span>v</span><span>bericht</span><span style={{ textAlign: 'right' }}>reactie</span><span>trend</span><span></span>
+        <span>v</span><span>{illusT.col_message}</span><span style={{ textAlign: 'right' }}>{illusT.col_reply}</span><span>{illusT.col_trend}</span><span></span>
       </div>
       <div key={loopKey} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
         {ROWS.map((r, i) => {
@@ -141,14 +145,16 @@ function ABVariantsIllus({ active = false }) {
         })}
       </div>
       <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed rgba(90,30,41,.15)', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span>variant <span style={{ fontFamily: 'var(--serif)', color: 'var(--wine)', fontStyle: 'italic' }}>B</span> versterkt</span>
-        <span style={{ transition: 'opacity 0.5s ease', opacity: winnerRevealed ? 1 : 0.3 }}>+153 verzonden</span>
+        <span>{illusT.footer_winner_prefix} <span style={{ fontFamily: 'var(--serif)', color: 'var(--wine)', fontStyle: 'italic' }}>{ROWS.find(r => r.winner).letter}</span> {illusT.footer_winner_suffix}</span>
+        <span style={{ transition: 'opacity 0.5s ease', opacity: winnerRevealed ? 1 : 0.3 }}>{illusT.footer_sent}</span>
       </div>
     </div>
   );
 }
 
 function WeekCalendarIllus({ active = false }) {
+  const { t } = window.useI18n();
+  const illusT = t('process.illus.calendar');
   const [loopKey, setLoopKey] = React.useState(0);
   const [revealed, setRevealed] = React.useState(new Set());
   const [checked, setChecked] = React.useState(new Set());
@@ -194,7 +200,7 @@ function WeekCalendarIllus({ active = false }) {
         @keyframes checkFade { from{opacity:0;transform:scale(0.4)} to{opacity:1;transform:scale(1)} }
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase', paddingBottom: 8, borderBottom: '1px dashed rgba(90,30,41,.15)', flexShrink: 0 }}>
-        <span>week van 18 mei</span><span>3 gepland · 2 in behandeling</span>
+        <span>{illusT.header_week}</span><span>{illusT.header_status}</span>
       </div>
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '24px repeat(5, 1fr)', gridTemplateRows: 'auto repeat(6, 1fr)', gap: 5, marginTop: 10, alignContent: 'stretch' }}>
         <div />
@@ -220,8 +226,8 @@ function WeekCalendarIllus({ active = false }) {
         ))}
       </div>
       <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px dashed rgba(90,30,41,.15)', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span>volgend gesprek</span>
-        <span style={{ color: 'var(--wine)' }}>Di 10:30 · Van Rooijen</span>
+        <span>{illusT.footer_next}</span>
+        <span style={{ color: 'var(--wine)' }}>{illusT.footer_slot}</span>
       </div>
     </div>
   );

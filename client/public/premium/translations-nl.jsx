@@ -66,6 +66,40 @@ window.TRANSLATIONS.nl = {
         body: "Het systeem blijft opvolgen zolang daar aanleiding voor is. Wil iemand later opnieuw contact? Dan wordt dat automatisch opgepakt. Zodra iemand klaar is voor een gesprek, verschijnt de afspraak in jullie agenda.",
       },
     ],
+    illus: {
+      archive: {
+        header_label: "archive.scan",
+        header_count: "437 contacten",
+        ranked: "gerangschikt {n} van 437",
+        snips: [
+          "plattegrond Q3, twee opties",
+          "re: bezichtiging dinsdag",
+          "offerte opvolging",
+          "oriënterend, niet urgent",
+          "tweede bezoek mogelijk",
+          "wanneer jullie klaar zijn",
+        ],
+      },
+      ab: {
+        col_message: "bericht",
+        col_reply: "reactie",
+        col_trend: "trend",
+        msgs: [
+          '"even inchecken over de plattegrond"',
+          '"dinsdag slot nog vrij?"',
+          '"jouw notitie gezien, twee ideeën"',
+        ],
+        footer_winner_prefix: "variant",
+        footer_winner_suffix: "versterkt",
+        footer_sent: "+153 verzonden",
+      },
+      calendar: {
+        header_week: "week van 18 mei",
+        header_status: "3 gepland · 2 in behandeling",
+        footer_next: "volgend gesprek",
+        footer_slot: "Di 10:30 · Van Rooijen",
+      },
+    },
   },
   pipeline: {
     eyebrow: "Live pipeline",
@@ -82,8 +116,9 @@ window.TRANSLATIONS.nl = {
   },
   about: {
     eyebrow: "Over ons",
+    h2_pre: "",
     h2_meets: "Slimme systemen.",
-    h2_italic: "Echte gesprekken.",
+    h2_italic: "Echte gesprekken",
     body: "We geloven dat de meeste gemiste omzet niet in nieuwe leads zit, maar in bestaande kansen die stilvallen. Daarom combineren we slimme systemen met commerciële ervaring.",
     people: [
       {
