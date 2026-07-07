@@ -103,15 +103,18 @@ app.use((req, res, next) => {
 (async () => {
   // Premium landing page is the default homepage. Serve the static HTML at "/"
   // (before Vite middleware claims the route) and the JSX/asset sidecars at /premium/*.
+  // login.html lives directly under client/public/ (not /premium/) so dev matches
+  // production, where it's reachable at /login instead of /premium/login.html.
   const premiumDir = path.resolve("client/public/premium");
-  const sendPremium = (file: string) => (_req: Request, res: Response, next: NextFunction) => {
-    fs.readFile(path.join(premiumDir, file), "utf-8", (err, html) => {
+  const publicDir = path.resolve("client/public");
+  const sendFile = (dir: string, file: string) => (_req: Request, res: Response, next: NextFunction) => {
+    fs.readFile(path.join(dir, file), "utf-8", (err, html) => {
       if (err) return next();
       res.type("html").send(html);
     });
   };
-  app.get("/", sendPremium("index.html"));
-  app.get("/login", sendPremium("login.html"));
+  app.get("/", sendFile(premiumDir, "index.html"));
+  app.get("/login", sendFile(publicDir, "login.html"));
   app.use("/premium", express.static(premiumDir));
 
   // Dev: proxy /preview to legacy-handoff Vite dev server (HMR, no rebuild needed)
