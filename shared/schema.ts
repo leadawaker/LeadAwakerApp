@@ -445,6 +445,12 @@ export const campaigns = nocodb.table("Campaigns", {
   bump3DelayHours: bigint("bump_3_delay_hours", { mode: "number" }),
   bump2DelayHours: bigint("bump_2_delay_hours", { mode: "number" }),
   messageIntervalMinutes: bigint("message_interval_minutes", { mode: "number" }),
+  // Inbound reply debounce (seconds) — how long the engine waits after an
+  // inbound message before generating one reply for the batch. NULL = engine
+  // defaults (10s text / 60s memos). Voice memos check their own column first,
+  // then fall back to messageDebounceSeconds, then the 60s default.
+  messageDebounceSeconds: integer("message_debounce_seconds"),
+  voiceNoteDebounceSeconds: integer("voice_note_debounce_seconds"),
   activeHoursStart: time("active_hours_start"),
   activeHoursEnd: time("active_hours_end"),
   defaultCallDurationMinutes: integer("default_call_duration_minutes"),

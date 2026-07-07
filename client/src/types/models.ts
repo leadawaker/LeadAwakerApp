@@ -63,6 +63,8 @@ export type Campaign = {
   bump_4_voice_template?: string;
   daily_lead_limit: number;
   message_interval_minutes: number;
+  message_debounce_seconds?: number | null;  // null = engine default (10s)
+  voice_note_debounce_seconds?: number | null;  // null = message_debounce_seconds, else 60s
   active_hours_start: string;
   active_hours_end: string;
   calendar_link: string;

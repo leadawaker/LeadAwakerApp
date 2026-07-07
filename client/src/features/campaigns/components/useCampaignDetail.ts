@@ -229,6 +229,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     active_hours_end: c.active_hours_end || "",
     daily_lead_limit: c.daily_lead_limit || "",
     message_interval_minutes: c.message_interval_minutes ?? "",
+    message_debounce_seconds: c.message_debounce_seconds ?? "",
+    voice_note_debounce_seconds: c.voice_note_debounce_seconds ?? "",
     stop_on_response: c.stop_on_response ?? false,
     use_ai_bumps: c.use_ai_bumps ?? false,
     first_message_voice_note: c.first_message_voice_note ?? false,

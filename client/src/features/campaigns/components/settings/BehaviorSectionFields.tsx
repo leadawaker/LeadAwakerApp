@@ -4,7 +4,7 @@ import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
-  Gem, ShieldCheck, Loader2,
+  Gem, ShieldCheck, Loader2, Mic,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
@@ -327,6 +327,17 @@ export function BehaviorSectionFields({
             ))}
           </div>
         ) : undefined}
+      />
+
+      <InfoRow icon={Clock} label={t("config.messageDebounce")} value={`${campaign.message_debounce_seconds ?? 10}s`}
+        description={t("config.messageDebounceHint")}
+        {...editFor("message_debounce_seconds")}
+        editChild={isEditing ? <EditNumber value={String(draft.message_debounce_seconds ?? "")} onChange={(v) => setDraft(d => ({...d, message_debounce_seconds: v === "" ? "" : Number(v)}))} placeholder="10" {...focusFor("message_debounce_seconds")} /> : undefined}
+      />
+      <InfoRow icon={Mic} label={t("config.voiceNoteDebounce")} value={`${campaign.voice_note_debounce_seconds ?? campaign.message_debounce_seconds ?? 60}s`}
+        description={t("config.voiceNoteDebounceHint")}
+        {...editFor("voice_note_debounce_seconds")}
+        editChild={isEditing ? <EditNumber value={String(draft.voice_note_debounce_seconds ?? "")} onChange={(v) => setDraft(d => ({...d, voice_note_debounce_seconds: v === "" ? "" : Number(v)}))} placeholder="60" {...focusFor("voice_note_debounce_seconds")} /> : undefined}
       />
 
       {/* ── Financials ── */}

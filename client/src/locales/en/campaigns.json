@@ -230,6 +230,10 @@
     "dailyLimit": "Daily limit",
     "interval": "Message interval",
     "intervalHint": "Minutes between first messages sent to each lead. 0 = engine default (2 min). At 60, the campaign sends one lead per hour.",
+    "messageDebounce": "Reply delay: texts",
+    "messageDebounceHint": "Seconds the AI waits after a text message before replying, so rapid-fire messages get one combined answer. 0 = reply instantly. Empty = default (10s).",
+    "voiceNoteDebounce": "Reply delay: voice memos",
+    "voiceNoteDebounceHint": "Seconds the AI waits after a voice memo before replying, so back-to-back memos get one combined answer. Empty = same as the text delay, or 60s if that is empty too.",
     "channel": "Channel",
     "channelMode": "Channel Mode",
     "channelModes": {

@@ -230,6 +230,10 @@
     "dailyLimit": "Dagelijks limiet",
     "interval": "Berichtinterval",
     "intervalHint": "Minuten tussen eerste berichten naar elke lead. 0 = engine standaard (2 min). Bij 60 stuurt de campagne één lead per uur.",
+    "messageDebounce": "Reactievertraging: tekst",
+    "messageDebounceHint": "Seconden die de AI wacht na een tekstbericht voordat hij antwoordt, zodat snel opeenvolgende berichten één gecombineerd antwoord krijgen. 0 = direct antwoorden. Leeg = standaard (10s).",
+    "voiceNoteDebounce": "Reactievertraging: spraakmemo's",
+    "voiceNoteDebounceHint": "Seconden die de AI wacht na een spraakmemo voordat hij antwoordt, zodat opeenvolgende memo's één gecombineerd antwoord krijgen. Leeg = gelijk aan de tekstvertraging, of 60s als die ook leeg is.",
     "channel": "Kanaal",
     "channelMode": "Kanaalmodus",
     "channelModes": {
