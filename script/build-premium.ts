@@ -55,6 +55,21 @@ function topLevelConstLetToVar(code: string): string {
   return code.replace(/^(const|let)\b/gm, "var");
 }
 
+// Throws if `re` doesn't match `html` instead of silently no-op'ing a
+// .replace(). Gabriel actively hand-edits index.html, so if any of these
+// markup shapes ever drifts (e.g. the design-tokens.css <link> tag's
+// attribute order changes), a plain .replace() would leave the original
+// tag in the shipped HTML — pointing at a file pruneDistPremium still
+// deletes — and the build would exit 0 with a broken production page.
+// Fail loud instead, matching the existing zero-script-tags guard's
+// philosophy.
+function replaceRequired(html: string, re: RegExp, replacement: string, label: string): string {
+  if (!re.test(html)) {
+    throw new Error(`build-premium: expected to find and replace ${label} in index.html, but the pattern didn't match — markup may have changed`);
+  }
+  return html.replace(re, replacement);
+}
+
 async function compileBundle(scriptFiles: string[]): Promise<string> {
   let bundleSource = "";
   for (const file of scriptFiles) {
@@ -152,12 +167,19 @@ async function main() {
 
   const css = await readFile(path.join(SRC_PREMIUM, "design-tokens.css"), "utf-8");
 
-  html = html.replace(SCRIPT_TAG_RE, "");
-  html = html.replace(BABEL_STANDALONE_RE, "");
-  html = html.replace(POLLER_RE, "");
-  html = html.replace(THREE_JS_RE, "$1 defer></script>");
-  html = html.replace(DESIGN_TOKENS_LINK_RE, `<style>\n${css}\n</style>\n`);
-  html = html.replace("</body>", `<script src="/premium/${bundleName}"></script>\n</body>`);
+  html = html.replace(SCRIPT_TAG_RE, ""); // already covered by the scriptFiles.length===0 guard above
+  html = replaceRequired(html, BABEL_STANDALONE_RE, "", "the Babel Standalone <script> tag");
+  html = replaceRequired(html, POLLER_RE, "", "the auto-reload poller <script> block");
+  html = replaceRequired(html, THREE_JS_RE, "$1 defer></script>", "the three.js <script> tag");
+  html = replaceRequired(html, DESIGN_TOKENS_LINK_RE, `<style>\n${css}\n</style>\n`, "the design-tokens.css <link> tag");
+  // Deferred scripts execute in document order, strictly after full parse.
+  // three.js is declared in <head> and deferred above; the bundle must also
+  // be deferred so it runs AFTER three.js finishes loading+executing.
+  // Without this, 03-approach.jsx's render effect (deps=[shapes], no retry)
+  // fires while `THREE` is still undefined and never gets a second chance —
+  // deterministic, not a network race, confirmed via empirical repro
+  // (built canvas 300x150 default vs. live production's rendered 1280x720).
+  html = html.replace("</body>", `<script src="/premium/${bundleName}" defer></script>\n</body>`);
 
   await writeFile(indexPath, html);
   console.log("build-premium: rewrote index.html");
