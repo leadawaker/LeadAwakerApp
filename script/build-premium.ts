@@ -21,6 +21,14 @@ const KEEP_FILES = new Set([
 const KEEP_DIRS = new Set(["assets", "hero-images"]);
 const UPLOADS_KEEP = new Set(["ctatext17.jpg"]); // inside uploads/textures/
 
+// The only files allowed to be silently missing from a checkout. These 3 are
+// gitignored (.gitignore:93-95) — local-only dev tooling, never committed —
+// so a clean checkout (Vercel's build) won't have them even though
+// index.html still references them. Anything else missing (a real,
+// tracked file gone via a bad rename/merge/etc.) must still fail the build
+// loudly: see the ENOENT handling in compileBundle below.
+const OPTIONAL_FILES = new Set(["tweaks-panel.jsx", "hero-debug.jsx", "cta-debug.jsx"]);
+
 const SCRIPT_TAG_RE = /<script type="text\/babel" src="\/premium\/([^"]+)"[^>]*><\/script>\n?/g;
 const BABEL_STANDALONE_RE = /<script[^>]*@babel\/standalone[^>]*><\/script>\n?/;
 const POLLER_RE = /<script>\n\/\/ Auto-reload when files change[\s\S]*?<\/script>\n?/;
@@ -54,16 +62,15 @@ async function compileBundle(scriptFiles: string[]): Promise<string> {
     try {
       raw = await readFile(path.join(DIST_PREMIUM, file), "utf-8");
     } catch (err) {
-      // tweaks-panel.jsx, hero-debug.jsx, cta-debug.jsx are gitignored
-      // (.gitignore:93-95) — local-only dev tooling, never committed, so a
-      // clean checkout (Vercel's build) won't have them even though
-      // index.html still references them (2 of the 3 already have
-      // onerror="void 0" on their script tag for exactly this reason).
-      // app-main.jsx already handles TweaksPanel being undefined via
-      // `TweaksPanel && <TweaksPanel ...>` (app-main.jsx:150/186), so
-      // omitting these from the bundle changes nothing visitor-facing —
-      // they already don't execute in production today.
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      // Only the 3 known-gitignored dev files (OPTIONAL_FILES, above) are
+      // allowed to be silently missing — app-main.jsx already handles
+      // TweaksPanel being undefined via `TweaksPanel && <TweaksPanel ...>`
+      // (app-main.jsx:150/186), so omitting these from the bundle changes
+      // nothing visitor-facing; they already don't execute in production
+      // today. Anything else missing (e.g. a real section file like
+      // 02-hero.jsx gone via a bad rename/merge) must fail loudly instead
+      // of silently dropping a whole section with a green build.
+      if ((err as NodeJS.ErrnoException).code === "ENOENT" && OPTIONAL_FILES.has(file)) {
         console.log(`build-premium: skipping ${file} (not present in this checkout — gitignored local-only file)`);
         continue;
       }
