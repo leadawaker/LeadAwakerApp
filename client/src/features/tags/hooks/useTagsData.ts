@@ -61,7 +61,7 @@ export function useTagsData() {
   useEffect(() => {
     const debounceRef = { current: 0 as unknown as ReturnType<typeof setTimeout> };
     const url = `/api/interactions/stream`;
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
     es.addEventListener("tags_changed", () => {
       clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => fetchData(), 400);

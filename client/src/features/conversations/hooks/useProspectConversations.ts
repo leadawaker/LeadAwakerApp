@@ -28,7 +28,7 @@ export function useProspectConversations() {
 
   // Wire into the shared SSE stream for real-time updates instead of relying solely on polling
   useEffect(() => {
-    const es = new EventSource("/api/interactions/stream");
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
 
     es.addEventListener("new_interaction", (e: MessageEvent) => {
       try {

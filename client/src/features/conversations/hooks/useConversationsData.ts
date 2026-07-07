@@ -126,7 +126,7 @@ export function useConversationsData(
     const url = currentAccountId
       ? `${API_BASE}/api/interactions/stream?accountId=${currentAccountId}`
       : `${API_BASE}/api/interactions/stream`;
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
 
     es.addEventListener("lead_reset", (e: MessageEvent) => {
       try {

@@ -116,7 +116,7 @@ export function useCampaignsData(accountId?: number) {
     const params = new URLSearchParams();
     if (accountId && accountId > 0) params.set("accountId", String(accountId));
     const url = `/api/interactions/stream${params.toString() ? `?${params}` : ""}`;
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
     es.addEventListener("campaigns_changed", () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => handleRefresh(), 400);

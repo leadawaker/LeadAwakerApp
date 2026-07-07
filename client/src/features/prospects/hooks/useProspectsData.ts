@@ -158,7 +158,7 @@ export function useProspectsData(currentAccountId?: number) {
       params.set("accountId", String(currentAccountId));
     }
     const url = `/api/interactions/stream${params.toString() ? `?${params}` : ""}`;
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
 
     es.addEventListener("prospect_changed", () => {
       clearTimeout(debounceRef.current);

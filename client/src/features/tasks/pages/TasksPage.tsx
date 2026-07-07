@@ -24,7 +24,7 @@ export default function TasksPage() {
 
   // Live-refresh on task changes pushed by the automation/SSE stream.
   useEffect(() => {
-    const es = new EventSource("/api/interactions/stream");
+    const es = new EventSource("/api/interactions/stream", { withCredentials: true });
     es.addEventListener("tasks_changed", () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
     });
