@@ -110,6 +110,13 @@ export type Campaign = {
   twilio_bump_template_sid?: string | null;
   // Computed/joined fields
   account_name?: string;
+  account_logo_url?: string;
+  // WhatsApp quality/tier monitoring — see specs/whatsapp-quality-tracking. Merged
+  // client-side from Accounts in useCampaignsData.ts; null until a real whatsapp_sender_sid
+  // is provisioned (messaging-provisioning Phase 2).
+  account_whatsapp_quality_rating?: "green" | "yellow" | "red" | "unknown" | null;
+  account_whatsapp_messaging_limit?: number | null;
+  account_whatsapp_quality_checked_at?: string | null;
   [key: string]: any;
 };
 

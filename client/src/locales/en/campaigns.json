@@ -383,7 +383,10 @@
     "leadsUnit": "leads",
     "activeHours": "Active Hours",
     "duration": "{{count}} day",
-    "duration_plural": "{{count}} days"
+    "duration_plural": "{{count}} days",
+    "whatsappQuality": "WhatsApp Quality",
+    "whatsappQualityCheckedAt": "Checked {{date}}",
+    "whatsappQualityUnknown": "Not yet checked — no WhatsApp sender provisioned"
   },
   "panel": {
     "performance": "Performance",

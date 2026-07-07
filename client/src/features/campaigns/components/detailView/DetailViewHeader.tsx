@@ -57,6 +57,15 @@ function stickerFilter(isDraft: boolean, isPaused: boolean, isInactive: boolean,
   return `hue-rotate(${hueValue}deg)`;
 }
 
+// WhatsApp quality dot color — see specs/whatsapp-quality-tracking. Gray (default)
+// until a real whatsapp_sender_sid is provisioned and the poller writes a rating.
+function qualityDotColor(rating: string | null | undefined): string {
+  if (rating === "green") return "var(--good)";
+  if (rating === "yellow") return "var(--warn)";
+  if (rating === "red") return "hsl(var(--destructive))";
+  return "var(--mute-2)";
+}
+
 export function DetailViewHeader({
   campaign,
   isAdmin,
@@ -120,8 +129,8 @@ export function DetailViewHeader({
   const statusMod = statusClass(status, isDraft, isPaused, isInactive);
   const imgFilter = stickerFilter(isDraft, isPaused, isInactive, hueValue);
 
-  const renderMetaChip = (label: string, value: React.ReactNode, icon?: React.ReactNode) => (
-    <div>
+  const renderMetaChip = (label: string, value: React.ReactNode, icon?: React.ReactNode, title?: string) => (
+    <div title={title}>
       <div className="eyebrow eyebrow-sm" style={{ color: 'var(--mute)' }}>{label}</div>
       <div className="flex items-center gap-1.5" style={{ fontSize: 13, color: 'var(--ink)', marginTop: 5 }}>
         {icon}
@@ -338,6 +347,14 @@ export function DetailViewHeader({
             ? renderMetaChip(t("meta.dailyLimit"), `${dailyStats.sentToday} / ${dailyStats.dailyLimit}`)
             : renderMetaChip(t("meta.dailyLimit"), "— / 500")
           }
+          {renderMetaChip(
+            t("meta.whatsappQuality"),
+            campaign.account_whatsapp_messaging_limit != null ? campaign.account_whatsapp_messaging_limit : "—",
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ background: qualityDotColor(campaign.account_whatsapp_quality_rating) }} />,
+            campaign.account_whatsapp_quality_checked_at
+              ? t("meta.whatsappQualityCheckedAt", { date: formatDate(campaign.account_whatsapp_quality_checked_at) })
+              : t("meta.whatsappQualityUnknown")
+          )}
           {(campaign.active_hours_start || (campaign as any).activeHoursStart) && renderMetaChip(t("meta.activeHours"),
             `${((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)} – ${((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "-"}`
           )}

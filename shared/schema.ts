@@ -86,6 +86,12 @@ export const accounts = nocodb.table("Accounts", {
   whatsappSenderStatus: text("whatsapp_sender_status"),  // none | pending | approved | rejected
   whatsappSenderSid: text("whatsapp_sender_sid"),
   whatsappDisplayName: text("whatsapp_display_name"),
+  // WhatsApp quality/tier monitoring — see specs/whatsapp-quality-tracking. Polled (no Twilio
+  // webhook exists for quality changes), inert until whatsapp_sender_sid is populated above.
+  whatsappQualityRating: text("whatsapp_quality_rating").default("unknown"),  // green|yellow|red|unknown
+  whatsappPreviousQualityRating: text("whatsapp_previous_quality_rating"),
+  whatsappMessagingLimit: bigint("whatsapp_messaging_limit", { mode: "number" }),
+  whatsappQualityCheckedAt: timestamp("whatsapp_quality_checked_at", { withTimezone: true }),
   // Missed-Call Text-Back (Voice service Tier 1/2) — see specs/missed-call-textback.
   // A forwarded missed call → instant WhatsApp text-back from the client's own number → AI chat.
   // missedCallNumber is the provisioned Twilio voice number that receives forwarded calls; it is the

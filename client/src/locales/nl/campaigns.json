@@ -383,7 +383,10 @@
     "leadsUnit": "leads",
     "activeHours": "Actieve uren",
     "duration": "{{count}} dag",
-    "duration_plural": "{{count}} dagen"
+    "duration_plural": "{{count}} dagen",
+    "whatsappQuality": "WhatsApp-kwaliteit",
+    "whatsappQualityCheckedAt": "Gecontroleerd {{date}}",
+    "whatsappQualityUnknown": "Nog niet gecontroleerd — geen WhatsApp-afzender ingesteld"
   },
   "panel": {
     "performance": "Prestaties",
