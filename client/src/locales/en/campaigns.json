@@ -234,6 +234,9 @@
     "messageDebounceHint": "Seconds the AI waits after a text message before replying, so rapid-fire messages get one combined answer. 0 = reply instantly. Empty = default (10s).",
     "voiceNoteDebounce": "Reply delay: voice memos",
     "voiceNoteDebounceHint": "Seconds the AI waits after a voice memo before replying, so back-to-back memos get one combined answer. Empty = same as the text delay, or 60s if that is empty too.",
+    "vcardName": "Contact card name",
+    "vcardNameAuto": "Automatic: company + Advisor",
+    "vcardNameHint": "Name on the contact card the lead receives right after booking, with the number the advisor calls from. Empty = company name + Advisor, which follows a company rename. A typed name (e.g. Matthias) shows as-is with the company underneath.",
     "channel": "Channel",
     "channelMode": "Channel Mode",
     "channelModes": {

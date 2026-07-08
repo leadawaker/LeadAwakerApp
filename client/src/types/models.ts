@@ -65,6 +65,7 @@ export type Campaign = {
   message_interval_minutes: number;
   message_debounce_seconds?: number | null;  // null = engine default (10s)
   voice_note_debounce_seconds?: number | null;  // null = message_debounce_seconds, else 60s
+  vcard_contact_name?: string | null;  // null = composed "{business} Advisor"
   active_hours_start: string;
   active_hours_end: string;
   calendar_link: string;

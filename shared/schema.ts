@@ -457,6 +457,10 @@ export const campaigns = nocodb.table("Campaigns", {
   // then fall back to messageDebounceSeconds, then the 60s default.
   messageDebounceSeconds: integer("message_debounce_seconds"),
   voiceNoteDebounceSeconds: integer("voice_note_debounce_seconds"),
+  // Name on the post-booking WhatsApp contact card (vCard). NULL = engine
+  // composes "{business name} Advisor/Adviseur" from the account, so it
+  // follows company renames; a typed name is shown as-is.
+  vcardContactName: text("vcard_contact_name"),
   activeHoursStart: time("active_hours_start"),
   activeHoursEnd: time("active_hours_end"),
   defaultCallDurationMinutes: integer("default_call_duration_minutes"),

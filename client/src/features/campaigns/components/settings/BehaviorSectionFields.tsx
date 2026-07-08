@@ -4,7 +4,7 @@ import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
-  Gem, ShieldCheck, Loader2, Mic,
+  Gem, ShieldCheck, Loader2, Mic, Contact,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
@@ -264,6 +264,12 @@ export function BehaviorSectionFields({
             ))}
           </div>
         ) : undefined}
+      />
+
+      <InfoRow icon={Contact} label={t("config.vcardName")} value={campaign.vcard_contact_name || t("config.vcardNameAuto")}
+        description={t("config.vcardNameHint")}
+        {...editFor("vcard_contact_name")}
+        editChild={isEditing ? <EditText value={String(draft.vcard_contact_name ?? "")} onChange={(v) => setDraft(d => ({...d, vcard_contact_name: v}))} placeholder={t("config.vcardNameAuto")} {...focusFor("vcard_contact_name")} /> : undefined}
       />
 
       {/* ── Channel ── */}

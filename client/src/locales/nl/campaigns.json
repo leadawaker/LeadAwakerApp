@@ -234,6 +234,9 @@
     "messageDebounceHint": "Seconden die de AI wacht na een tekstbericht voordat hij antwoordt, zodat snel opeenvolgende berichten één gecombineerd antwoord krijgen. 0 = direct antwoorden. Leeg = standaard (10s).",
     "voiceNoteDebounce": "Reactievertraging: spraakmemo's",
     "voiceNoteDebounceHint": "Seconden die de AI wacht na een spraakmemo voordat hij antwoordt, zodat opeenvolgende memo's één gecombineerd antwoord krijgen. Leeg = gelijk aan de tekstvertraging, of 60s als die ook leeg is.",
+    "vcardName": "Naam contactkaartje",
+    "vcardNameAuto": "Automatisch: bedrijf + Adviseur",
+    "vcardNameHint": "Naam op het contactkaartje dat de lead direct na het boeken ontvangt, met het nummer waarmee de adviseur belt. Leeg = bedrijfsnaam + Adviseur, dus een naamswijziging gaat automatisch mee. Een ingevulde naam (bijv. Matthias) wordt exact zo getoond, met het bedrijf eronder.",
     "channel": "Kanaal",
     "channelMode": "Kanaalmodus",
     "channelModes": {

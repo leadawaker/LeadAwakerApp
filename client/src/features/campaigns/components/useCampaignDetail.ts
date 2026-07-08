@@ -231,6 +231,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     message_interval_minutes: c.message_interval_minutes ?? "",
     message_debounce_seconds: c.message_debounce_seconds ?? "",
     voice_note_debounce_seconds: c.voice_note_debounce_seconds ?? "",
+    vcard_contact_name: c.vcard_contact_name ?? "",
     stop_on_response: c.stop_on_response ?? false,
     use_ai_bumps: c.use_ai_bumps ?? false,
     first_message_voice_note: c.first_message_voice_note ?? false,
