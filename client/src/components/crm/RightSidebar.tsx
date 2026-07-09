@@ -5,7 +5,6 @@ import {
   HelpCircle,
   Inbox,
   MessageSquare,
-  Bird,
   Send,
   Calendar,
   CalendarDays,
@@ -39,6 +38,7 @@ import {
   Mic,
   Home,
   Star,
+  Megaphone,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
@@ -274,7 +274,7 @@ export function RightSidebar({
     ownerOnly?: boolean;
     outreachOnly?: boolean;
   }[] = [
-    { href: `${prefix}/campaigns`, label: t("sidebar.reactivation"), labelKey: "Campaigns", icon: Bird, testId: "nav-reactivation" },
+    { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-reactivation" },
     // Agency = full chat ("Chats"); clients = summary-only view ("Interactions"). No gate needed.
     { href: `${prefix}/conversations`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
@@ -428,7 +428,10 @@ export function RightSidebar({
         data-testid="mobile-bottom-bar"
       >
         {([
-          { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" },
+          // Owner keeps the services hub; admins/clients land on Campaigns instead.
+          isOwner
+            ? { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" }
+            : { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.campaigns"), testId: "mobile-nav-campaigns" },
           // Agency = full chat ("Chats"); clients = summary-only ("Interactions").
           isAgencyUser
             ? { key: "conversations", href: `${prefix}/conversations`, icon: MessageSquare, label: t("sidebar.chats"), testId: "mobile-nav-conversations" }
@@ -583,16 +586,19 @@ export function RightSidebar({
             </DropdownMenu>
           )}
 
-          {/* Home — the hub landing page */}
-          <Link
-            href={`${prefix}/home`}
-            className={`la-nav-item ${isActive(`${prefix}/home`) ? "active" : ""}`}
-            data-testid="link-home"
-            data-active={isActive(`${prefix}/home`) || undefined}
-          >
-            <span className="icon"><Home size={16} /></span>
-            {t("sidebar.home")}
-          </Link>
+          {/* Home — the hub landing page. Owner-only: other services are parked,
+              so admins/clients go straight to Campaigns. */}
+          {isOwner && (
+            <Link
+              href={`${prefix}/home`}
+              className={`la-nav-item ${isActive(`${prefix}/home`) ? "active" : ""}`}
+              data-testid="link-home"
+              data-active={isActive(`${prefix}/home`) || undefined}
+            >
+              <span className="icon"><Home size={16} /></span>
+              {t("sidebar.home")}
+            </Link>
+          )}
 
           {/* Services group — each row is a service the agency runs. Reactivation
               sits on top (→ Campaigns dashboard). Reputation is live (mock
@@ -602,7 +608,7 @@ export function RightSidebar({
             <div className="la-nav-section">{t("sidebar.services")}</div>
             {[
               // Reactivation = the original service; its cockpit is the Campaigns dashboard.
-              { key: "reactivation", labelKey: "sidebar.reactivation", Icon: Bird, href: `${prefix}/campaigns` as string | null },
+              { key: "reactivation", labelKey: "sidebar.campaigns", Icon: Megaphone, href: `${prefix}/campaigns` as string | null },
               // Speed-to-Lead has a live mission-control dashboard for agency users;
               // client users still see it as an upcoming "Soon" service.
               { key: "speed", labelKey: "sidebar.speedToLead", Icon: Send, href: isAgencyUser ? `${prefix}/speed-to-lead` : null },

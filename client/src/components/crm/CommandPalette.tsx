@@ -19,7 +19,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import {
-  Bird,
+  Megaphone,
   BookUser,
   MessageSquare,
   Calendar,
@@ -62,7 +62,7 @@ export function CommandPalette() {
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
     { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, keywords: "clients organizations", agencyOnly: true },
-    { href: `${prefix}/campaigns`, label: "Reactivation", icon: Bird, keywords: "campaigns messages outreach drip reactivation" },
+    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, keywords: "campaigns messages outreach drip reactivation" },
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, keywords: "chats whatsapp threads leads messages inbox" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, keywords: "leads people prospects directory table pipeline" },
     { href: `${prefix}/outreach-inbox`, label: "Inbox", icon: MessageSquare, keywords: "inbox messages whatsapp prospects outreach chats", agencyOnly: true },
@@ -270,7 +270,7 @@ export function CommandPalette() {
       case "lead":
         return User;
       case "campaign":
-        return Bird;
+        return Megaphone;
       case "account":
         return Building2;
       default:

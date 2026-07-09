@@ -18,7 +18,7 @@ import {
   MessageSquare,
   Inbox,
   X,
-  Bird,
+  Megaphone,
   BookUser,
   type LucideIcon,
 } from "lucide-react";
@@ -125,7 +125,7 @@ export function MobileMorePage({
   // Nav items split into Admin and Backend sections
   type Item = { label: string; href: string; icon: LucideIcon };
   const adminItems: Item[] = [
-    ...(isAgencyUser ? [{ label: t("sidebar.reactivation"), href: `${prefix}/campaigns`, icon: Bird }] : []),
+    ...(isAgencyUser ? [{ label: t("sidebar.campaigns"), href: `${prefix}/campaigns`, icon: Megaphone }] : []),
     ...(isAgencyUser ? [{ label: t("sidebar.contacts"), href: `${prefix}/contacts`, icon: BookUser }] : []),
     ...(isAgencyUser && isAgencyView ? [{ label: t("sidebar.accounts"), href: `${prefix}/accounts`, icon: Building2 }] : []),
     ...(isAgencyUser ? [{ label: t("sidebar.billing"), href: `${prefix}/billing`, icon: Receipt }] : []),

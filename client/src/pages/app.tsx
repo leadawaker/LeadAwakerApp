@@ -64,6 +64,18 @@ function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: stri
 }
 
 /**
+ * Route guard for the owner-only services hub (Home). Non-reactivation
+ * services are parked, so admins and clients go straight to Campaigns.
+ */
+function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
+  const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
+  if (role !== "Owner") {
+    return <Redirect to={`${prefix}/campaigns`} />;
+  }
+  return children;
+}
+
+/**
  * Route-level Suspense fallback shown while a page's lazy chunk loads.
  * Mirrors the real shell: a 188px left nav rail (matching CrmShell's fixed
  * navbar) plus the page area (60px flush header + toolbar list panel + content)
@@ -133,7 +145,9 @@ export default function AppArea() {
               user's role/session, no longer from the URL prefix. */}
           <Route path="/platform" component={() => <Redirect to="/platform/campaigns" />} />
           <Route path="/platform/dashboard" component={() => <Redirect to="/platform/campaigns" />} />
-          <Route path="/platform/home" component={HomePage} />
+          <Route path="/platform/home">
+            <OwnerOnly prefix="/platform"><HomePage /></OwnerOnly>
+          </Route>
           {/* Conversations / Contacts split: same workspace component, two modes.
               Conversations = chat threads only; Contacts = directory (table + pipeline). */}
           <Route path="/platform/conversations">
