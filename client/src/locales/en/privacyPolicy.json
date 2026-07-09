@@ -1,6 +1,6 @@
 {
   "title": "Privacy Policy",
-  "lastUpdated": "Last updated: January 2026",
+  "lastUpdated": "Last updated: July 2026",
   "section1": {
     "title": "1. Introduction",
     "content": "Welcome to Lead Awaker. This Privacy Policy explains how we process, use, store, and protect personal data in the context of providing our messaging automation services via WhatsApp, SMS, and Instagram, including the use of Artificial Intelligence for lead reactivation and automated communications. Lead Awaker operates in compliance with applicable European Union data protection laws, including the General Data Protection Regulation (GDPR)."
@@ -15,24 +15,32 @@
   },
   "section4": {
     "title": "4. Data Sharing",
-    "content": "Lead Awaker may share personal data only when necessary to provide the services, including with messaging platforms (WhatsApp, SMS, and Instagram), technology infrastructure providers, hosting services, and automation or AI tools. We do not sell, rent, or trade personal data. Any data sharing is conducted with appropriate safeguards to ensure compliance with applicable data protection laws."
+    "content": "Lead Awaker may share personal data only when necessary to provide the services, including with messaging platforms (WhatsApp, SMS, and Instagram), technology infrastructure providers, hosting services, and automation or AI tools. We do not sell, rent, or trade personal data. Any data sharing is conducted with appropriate safeguards to ensure compliance with applicable data protection laws.",
+    "aiContent": "For AI-powered conversation automation, Lead Awaker uses third-party AI service providers, primarily OpenAI, L.L.C., together with additional providers such as Groq, Inc. used for auxiliary processing such as message classification, intent detection, and voice generation. None of these providers use data obtained through Lead Awaker to train general AI or machine learning models. Lead Awaker has entered into a Data Processing Agreement (DPA) with OpenAI under Article 28 GDPR, including Standard Contractual Clauses (SCCs) as the legal basis for transfers of personal data outside the European Economic Area under Article 46 GDPR. OpenAI applies a zero data retention policy for API data: requests and responses are not stored and are not used to train models. Lead Awaker selects AI subprocessors that maintain independently audited information security controls (SOC 2-aligned)."
   },
   "section5": {
-    "title": "5. Data Security",
-    "content": "We implement appropriate technical and organizational measures to protect personal data against unauthorized access, loss, misuse, alteration, or unlawful disclosure. These measures include access controls, secure infrastructure, monitoring, and industry-standard information security practices. While we strive to protect personal data, no system can be guaranteed to be completely secure."
+    "title": "5. Google User Data and API Services",
+    "content": "Lead Awaker offers an optional calendar integration that allows a user to connect their own Google Calendar. This connection is established solely at the user's initiative through our interface (Google OAuth). When a user connects their Google Calendar, Lead Awaker only accesses that user's availability data (free/busy) and calendar events, for the sole purpose of: (1) displaying available time slots to leads so they can schedule a conversation, and (2) creating, modifying, or cancelling the resulting booked appointments in the user's calendar.",
+    "content2": "Google access tokens are stored encrypted and can be revoked by the user at any time, either by disconnecting the integration or by revoking access directly in their Google Account. Lead Awaker does not use Google user data for advertising, does not sell or rent this data, does not share it with third parties except where necessary to provide the calendar feature, and does not use this data, directly or indirectly, to train general AI or machine learning models.",
+    "pledgePrefix": "Lead Awaker's use and transfer to any other app of information received from Google APIs will adhere to the",
+    "pledgeSuffix": ", including the Limited Use requirements."
   },
   "section6": {
-    "title": "6. Your Rights",
-    "content": "Under applicable EU data protection laws, individuals have the right to request access to their personal data, rectification of inaccurate or incomplete data, erasure, restriction or objection to processing, data portability where applicable, and withdrawal of consent at any time when processing is based on consent. Requests should primarily be directed to the client acting as the Data Controller, with Lead Awaker providing technical support when required."
+    "title": "6. Data Security",
+    "content": "We implement appropriate technical and organizational measures to protect personal data against unauthorized access, loss, misuse, alteration, or unlawful disclosure. These measures include access controls, secure infrastructure, monitoring, and industry-standard information security practices. While we strive to protect personal data, no system can be guaranteed to be completely secure."
   },
   "section7": {
-    "title": "7. Contact Information",
+    "title": "7. Your Rights",
+    "content": "Under applicable EU data protection laws, individuals have the right to request access to their personal data, rectification of inaccurate or incomplete data, erasure, restriction or objection to processing, data portability where applicable, and withdrawal of consent at any time when processing is based on consent. Requests should primarily be directed to the client acting as the Data Controller, with Lead Awaker providing technical support when required."
+  },
+  "section8": {
+    "title": "8. Contact Information",
     "content": "If you have any questions, requests, or concerns regarding this Privacy Policy or the processing of personal data, please contact us:",
     "email": "Email: leadawaker@gmail.com",
     "address": "Address: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   },
-  "section8": {
-    "title": "8. Data Deletion",
+  "section9": {
+    "title": "9. Data Deletion",
     "content": "To request deletion of your personal data from Lead Awaker's systems, email gabriel@leadawaker.com with the phone number or WhatsApp number associated with your data. We will process deletion requests within 30 days."
   }
 }

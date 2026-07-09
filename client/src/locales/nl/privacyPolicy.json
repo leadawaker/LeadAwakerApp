@@ -1,6 +1,6 @@
 {
   "title": "Privacybeleid",
-  "lastUpdated": "Laatst bijgewerkt: januari 2026",
+  "lastUpdated": "Laatst bijgewerkt: juli 2026",
   "section1": {
     "title": "1. Inleiding",
     "content": "Welkom bij Lead Awaker. Dit privacybeleid beschrijft hoe wij persoonsgegevens verwerken, gebruiken, opslaan en beschermen in het kader van onze diensten voor geautomatiseerde berichten via WhatsApp, SMS en Instagram, inclusief het gebruik van kunstmatige intelligentie voor leadreactivatie en geautomatiseerde communicatie. Lead Awaker handelt in overeenstemming met de toepasselijke Europese wetgeving inzake gegevensbescherming, waaronder de Algemene Verordening Gegevensbescherming (AVG)."
@@ -15,24 +15,32 @@
   },
   "section4": {
     "title": "4. Delen van gegevens",
-    "content": "Lead Awaker kan persoonsgegevens uitsluitend delen wanneer dit noodzakelijk is voor het leveren van de diensten, bijvoorbeeld met berichtenplatforms (WhatsApp, SMS en Instagram), aanbieders van technologische infrastructuur, hostingdiensten en automatiserings- of AI-tools. Wij verkopen, verhuren of verhandelen geen persoonsgegevens. Het delen van gegevens gebeurt met passende waarborgen om naleving van de geldende wetgeving inzake gegevensbescherming te waarborgen."
+    "content": "Lead Awaker kan persoonsgegevens uitsluitend delen wanneer dit noodzakelijk is voor het leveren van de diensten, bijvoorbeeld met berichtenplatforms (WhatsApp, SMS en Instagram), aanbieders van technologische infrastructuur, hostingdiensten en automatiserings- of AI-tools. Wij verkopen, verhuren of verhandelen geen persoonsgegevens. Het delen van gegevens gebeurt met passende waarborgen om naleving van de geldende wetgeving inzake gegevensbescherming te waarborgen.",
+    "aiContent": "Voor AI-gestuurde gespreksautomatisering maakt Lead Awaker gebruik van AI-dienstverleners, voornamelijk OpenAI, L.L.C., aangevuld met andere aanbieders zoals Groq, Inc. voor secundaire verwerking zoals berichtclassificatie, intentieherkenning en spraakgeneratie. Geen van deze aanbieders gebruikt via Lead Awaker verkregen gegevens om algemene AI- of machine-learningmodellen te trainen. Met OpenAI is een verwerkersovereenkomst (DPA) gesloten overeenkomstig artikel 28 AVG, inclusief standaardcontractbepalingen (SCC's) als grondslag voor doorgifte van persoonsgegevens buiten de Europese Economische Ruimte overeenkomstig artikel 46 AVG. OpenAI hanteert een nulretentiebeleid voor API-gegevens: verzoeken en antwoorden worden niet opgeslagen en niet gebruikt voor het trainen van modellen. Lead Awaker selecteert AI-subverwerkers die onafhankelijk geauditeerde informatiebeveiligingsmaatregelen hanteren (SOC 2-conform)."
   },
   "section5": {
-    "title": "5. Beveiliging van gegevens",
-    "content": "Wij nemen passende technische en organisatorische maatregelen om persoonsgegevens te beschermen tegen ongeoorloofde toegang, verlies, misbruik, wijziging of onrechtmatige openbaarmaking. Deze maatregelen omvatten onder meer toegangsbeperkingen, beveiligde infrastructuur, monitoring en gangbare informatiebeveiligingspraktijken. Desondanks kan geen enkel systeem volledige veiligheid garanderen."
+    "title": "5. Google-gebruikersgegevens en API-services",
+    "content": "Lead Awaker biedt een optionele agenda-integratie waarmee een gebruiker zijn of haar eigen Google Agenda kan koppelen. Deze koppeling wordt uitsluitend tot stand gebracht op initiatief van de gebruiker via onze interface (Google OAuth). Wanneer een gebruiker zijn Google Agenda koppelt, krijgt Lead Awaker uitsluitend toegang tot de beschikbaarheidsgegevens (vrij/bezet) en de agenda-afspraken van die gebruiker, met als enige doel: (1) beschikbare tijdvakken tonen aan leads zodat zij een gesprek kunnen inplannen, en (2) de daaruit voortvloeiende geboekte gesprekken aanmaken, wijzigen of annuleren in de agenda van de gebruiker.",
+    "content2": "De toegangstokens van Google worden versleuteld opgeslagen en kunnen op elk moment door de gebruiker worden ingetrokken door de koppeling te verbreken of de toegang in zijn Google-account in te trekken. Lead Awaker gebruikt Google-gebruikersgegevens niet voor advertenties, verkoopt of verhuurt deze gegevens niet, deelt deze niet met derden behalve voor zover noodzakelijk om de agendafunctie te leveren, en gebruikt deze gegevens niet, direct of indirect, om algemene AI- of machine-learningmodellen te trainen.",
+    "pledgePrefix": "Het gebruik en de overdracht door Lead Awaker van informatie die is ontvangen van Google API's voldoen aan het",
+    "pledgeSuffix": ", inclusief de Limited Use-vereisten."
   },
   "section6": {
-    "title": "6. Uw rechten",
-    "content": "Op grond van de AVG hebben betrokkenen het recht om inzage te vragen in hun persoonsgegevens, onjuiste of onvolledige gegevens te laten corrigeren, gegevens te laten wissen, de verwerking te beperken of hiertegen bezwaar te maken, gegevensoverdraagbaarheid te verzoeken wanneer van toepassing, en hun toestemming in te trekken wanneer de verwerking daarop is gebaseerd. Verzoeken dienen in eerste instantie te worden gericht aan de klant die optreedt als Verwerkingsverantwoordelijke, waarbij Lead Awaker indien nodig technische ondersteuning biedt."
+    "title": "6. Beveiliging van gegevens",
+    "content": "Wij nemen passende technische en organisatorische maatregelen om persoonsgegevens te beschermen tegen ongeoorloofde toegang, verlies, misbruik, wijziging of onrechtmatige openbaarmaking. Deze maatregelen omvatten onder meer toegangsbeperkingen, beveiligde infrastructuur, monitoring en gangbare informatiebeveiligingspraktijken. Desondanks kan geen enkel systeem volledige veiligheid garanderen."
   },
   "section7": {
-    "title": "7. Contactgegevens",
+    "title": "7. Uw rechten",
+    "content": "Op grond van de AVG hebben betrokkenen het recht om inzage te vragen in hun persoonsgegevens, onjuiste of onvolledige gegevens te laten corrigeren, gegevens te laten wissen, de verwerking te beperken of hiertegen bezwaar te maken, gegevensoverdraagbaarheid te verzoeken wanneer van toepassing, en hun toestemming in te trekken wanneer de verwerking daarop is gebaseerd. Verzoeken dienen in eerste instantie te worden gericht aan de klant die optreedt als Verwerkingsverantwoordelijke, waarbij Lead Awaker indien nodig technische ondersteuning biedt."
+  },
+  "section8": {
+    "title": "8. Contactgegevens",
     "content": "Als u vragen, verzoeken of zorgen heeft met betrekking tot dit privacybeleid of de verwerking van persoonsgegevens, kunt u contact met ons opnemen via:",
     "email": "E-mail: leadawaker@gmail.com",
     "address": "Adres: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   },
-  "section8": {
-    "title": "8. Gegevensverwijdering",
+  "section9": {
+    "title": "9. Gegevensverwijdering",
     "content": "Om verwijdering van uw persoonsgegevens uit de systemen van Lead Awaker te verzoeken, stuur een e-mail naar gabriel@leadawaker.com met het telefoonnummer of WhatsApp-nummer dat aan uw gegevens is gekoppeld. Wij verwerken verwijderingsverzoeken binnen 30 dagen."
   }
 }
