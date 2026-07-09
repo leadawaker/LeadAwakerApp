@@ -549,8 +549,9 @@
     "callingNumber": "Calling number",
     "callingNumberPlaceholder": "+31 6 00 00 00 00",
     "callingNumberEmpty": "Not set",
-    "callingNumberHint": "Leads will see this number in the booking confirmation so they know who's calling.",
-    "whatsappHint": "The booked call happens via WhatsApp using your connected messaging number."
+    "callingNumberHint": "Leads receive this number as a contact card right after booking, so they know who's calling.",
+    "callingNumberHintWhatsapp": "The advisor's number, sent to the lead as a contact card right after booking — separate from your connected chat number, since the person who calls is often not the same as the one texting.",
+    "whatsappHint": "The booked call happens over WhatsApp, from the calling number above."
   },
   "customDomain": {
     "title": "Custom booking domain",

@@ -36,12 +36,10 @@ export function MeetingTypeCard({ accountId, meetingType: initialType, callingNu
     setSaving(true);
     setError(null);
     try {
-      const body: Record<string, string | null> = { meeting_type: meetingType };
-      if (meetingType === "phone_call") {
-        body.calling_number = callingNumber || null;
-      } else {
-        body.calling_number = null;
-      }
+      const body: Record<string, string | null> = {
+        meeting_type: meetingType,
+        calling_number: callingNumber || null,
+      };
       const res = await apiFetch(`/api/accounts/${accountId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -118,31 +116,33 @@ export function MeetingTypeCard({ accountId, meetingType: initialType, callingNu
         })}
       </div>
 
-      {/* Calling number field — shown only for phone_call */}
-      {meetingType === "phone_call" && (
-        <div style={{ marginTop: 13 }}>
-          <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 6 }}>
-            {t("meetingType.callingNumber")}
-          </div>
-          {isEditing ? (
-            <input
-              className="neu-input"
-              style={{ fontSize: 13, padding: "8px 11px", width: "100%" }}
-              type="tel"
-              value={callingNumber}
-              onChange={(e) => setCallingNumber(e.target.value)}
-              placeholder={t("meetingType.callingNumberPlaceholder")}
-            />
-          ) : (
-            <div style={{ fontSize: 13, color: callingNumber ? "var(--ink-soft)" : "var(--mute-2)", fontStyle: callingNumber ? "normal" : "italic" }}>
-              {callingNumber || t("meetingType.callingNumberEmpty")}
-            </div>
-          )}
-          <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 5, lineHeight: 1.5 }}>
-            {t("meetingType.callingNumberHint")}
-          </div>
+      {/* Calling number — used for both meeting types: the advisor's number
+          leads see on the vCard contact card sent right after booking. For
+          whatsapp_call this is deliberately editable too, since the chat
+          number (your connected messaging number) and the advisor who
+          actually calls are often different people/numbers. */}
+      <div style={{ marginTop: 13 }}>
+        <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 6 }}>
+          {t("meetingType.callingNumber")}
         </div>
-      )}
+        {isEditing ? (
+          <input
+            className="neu-input"
+            style={{ fontSize: 13, padding: "8px 11px", width: "100%" }}
+            type="tel"
+            value={callingNumber}
+            onChange={(e) => setCallingNumber(e.target.value)}
+            placeholder={t("meetingType.callingNumberPlaceholder")}
+          />
+        ) : (
+          <div style={{ fontSize: 13, color: callingNumber ? "var(--ink-soft)" : "var(--mute-2)", fontStyle: callingNumber ? "normal" : "italic" }}>
+            {callingNumber || t("meetingType.callingNumberEmpty")}
+          </div>
+        )}
+        <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 5, lineHeight: 1.5 }}>
+          {meetingType === "whatsapp_call" ? t("meetingType.callingNumberHintWhatsapp") : t("meetingType.callingNumberHint")}
+        </div>
+      </div>
 
       {/* WhatsApp call hint */}
       {meetingType === "whatsapp_call" && (

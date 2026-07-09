@@ -549,8 +549,9 @@
     "callingNumber": "Belnummer",
     "callingNumberPlaceholder": "+31 6 00 00 00 00",
     "callingNumberEmpty": "Niet ingesteld",
-    "callingNumberHint": "Leads zien dit nummer in de boekingsbevestiging zodat ze weten wie er belt.",
-    "whatsappHint": "Het geboekte gesprek vindt plaats via WhatsApp met je gekoppelde berichtnummer."
+    "callingNumberHint": "Leads krijgen dit nummer direct na het boeken als contactkaartje, zodat ze weten wie er belt.",
+    "callingNumberHintWhatsapp": "Het nummer van de adviseur, verstuurd als contactkaartje direct na het boeken — los van je gekoppelde chatnummer, want degene die belt is vaak niet dezelfde als degene die appt.",
+    "whatsappHint": "Het geboekte gesprek vindt plaats via WhatsApp, vanaf het belnummer hierboven."
   },
   "customDomain": {
     "title": "Eigen boekingsdomein",

@@ -116,9 +116,12 @@ export const accounts = nocodb.table("Accounts", {
   emailDkimPrivateKey: text("email_dkim_private_key"),        // PKCS1 PEM (secret)
   emailDkimPublicKey: text("email_dkim_public_key"),          // base64 p= value (for display + verify)
   // Booking meeting type — see specs/booking-meeting-types.
-  // phone_call: uses callingNumber as the host phone; whatsapp_call: uses twilio_default_from_number.
+  // callingNumber is the advisor's number for BOTH meeting types: who calls,
+  // shown to the lead as a vCard contact card right after booking. It is
+  // intentionally independent of the connected messaging/chat number — the
+  // person who calls is often not the one texting.
   meetingType: text("meeting_type").default("phone_call"),    // phone_call | whatsapp_call
-  callingNumber: text("calling_number"),                      // required for phone_call; null for whatsapp_call
+  callingNumber: text("calling_number"),
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
