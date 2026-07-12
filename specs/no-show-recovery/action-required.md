@@ -3,7 +3,7 @@
 Manual steps that must be completed by a human.
 
 ## Before Implementation
-- [ ] **Decide the billing rule** - Does a claimed no-show flip `billable_booking = false` on the lead? This is the whole point of the 48h claim window from the billing side, but it is a business decision (and affects revenue reporting). The spec stores the claim either way; the billing flip is one extra line once decided.
+- [x] **Decide the billing rule** - DECIDED 2026-07-12: every claim flips `billable_booking = false`, uniform across all three reasons (implemented in the claim route). A rebook via the recovery ladder arrives as a fresh BOOKING_CREATED which re-sets `billable_booking = true`, so recovered no-shows re-bill automatically; only never-recovered no-shows stay unbilled. Follow-up idea (not built): show claimed no-shows as "not billed (no-show)" in the billing view, and watch per-account claim rates (>25-30% of bookings = conversation).
 - [ ] **Decide whether Owner/admin can claim outside the 48h window** - Current spec: hard 409 for everyone. An Owner override is easy to add but changes the dispute story.
 
 ## During Implementation

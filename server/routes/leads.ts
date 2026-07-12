@@ -449,6 +449,10 @@ export function registerLeadsRoutes(app: Express): void {
       noShowReason: reason,
       noShowReportedAt: now,
       noShowReportedBy: req.user!.id,
+      // Claimed no-shows are not billed. If the recovery ladder rebooks the
+      // lead, BOOKING_CREATED sets billable_booking back to true, so only
+      // never-recovered no-shows stay unbilled.
+      billableBooking: false,
     });
 
     // Fire-and-forget: follow-up automation must not block or fail the claim.
