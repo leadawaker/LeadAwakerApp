@@ -11,9 +11,9 @@ Two repos are touched: **LeadAwakerApp** (schema, Express route, UI) and **/home
 Store the claim on the lead and expose one authenticated endpoint.
 
 ### Tasks
-- [ ] Add claim columns to Leads: `no_show_reason` (text), `no_show_reported_at` (timestamptz), `no_show_reported_by` (bigint, user id), `no_show_followup_stage` (integer, for the Phase 3 ladder)
-- [ ] Mirror the new columns in `shared/schema.ts` (leads table, camelCase mappings)
-- [ ] Add Express route `POST /api/leads/:id/no-show` in `server/routes/leads.ts` (validation + persist + fire-and-forget engine call)
+- [x] Add claim columns to Leads: `no_show_reason` (text), `no_show_reported_at` (timestamptz), `no_show_reported_by` (bigint, user id), `no_show_followup_stage` (integer, for the Phase 3 ladder)
+- [x] Mirror the new columns in `shared/schema.ts` (leads table, camelCase mappings)
+- [x] Add Express route `POST /api/leads/:id/no-show` in `server/routes/leads.ts` (validation + persist + fire-and-forget engine call)
 
 ### Technical Details
 
@@ -47,14 +47,14 @@ Express route (copy the proxy pattern from `server/routes/leads.ts:391-401`, the
 One engine endpoint that maps reason to flow.
 
 ### Tasks
-- [ ] Add `POST /api/leads/{lead_id}/no-show` endpoint in `src/main.py` (mirror the `reschedule_reengage` endpoint shape: validate reason, `asyncio.create_task`, return immediately)
-- [ ] Create `src/automations/no_show_recovery.py` with the dispatcher + the `no_reason` check-in sender [complex]
-  - [ ] `not_interested` branch: `update_lead_status(lead_id, conversion_status="Lost", automation_status="completed")` + `apply_event_tags(..., "lead_lost", workflow="no_show_recovery")`, no outbound message
-  - [ ] `wants_other_time` branch: `await trigger_reschedule_reengage(lead_id, "no_show")` (existing flow, sends rebook link)
-  - [ ] `no_reason` branch: AI-drafted gentle check-in (no booking link), set `no_show_followup_stage=1`, reset `automation_status='active'` so the lead's reply gets a normal AI turn
-- [ ] Add Prompt_Library global prompt for the check-in message (key e.g. `no_show_checkin`), en + nl guidance, tone: "we had elkaar niet te pakken, druk dagje? nog steeds interesse?" — no link, one question
-- [ ] Skip-guards in the dispatcher: `opted_out`, `manual_takeover`, DNC status → log and do nothing
-- [ ] Reset claim state on rebooking: in `src/webhooks/booking_routes.py`, the BOOKING_CREATED lead update (~line 520) also clears `no_show=False, no_show_reason=None, no_show_reported_at=None, no_show_reported_by=None, no_show_followup_stage=None`. Without this a rebooked lead can never be claimed again (409 already_reported) and a stale ladder could message after a successful rebook
+- [x] Add `POST /api/leads/{lead_id}/no-show` endpoint in `src/main.py` (mirror the `reschedule_reengage` endpoint shape: validate reason, `asyncio.create_task`, return immediately)
+- [x] Create `src/automations/no_show_recovery.py` with the dispatcher + the `no_reason` check-in sender [complex]
+  - [x] `not_interested` branch: `update_lead_status(lead_id, conversion_status="Lost", automation_status="completed")` + `apply_event_tags(..., "lead_lost", workflow="no_show_recovery")`, no outbound message
+  - [x] `wants_other_time` branch: `await trigger_reschedule_reengage(lead_id, "no_show")` (existing flow, sends rebook link)
+  - [x] `no_reason` branch: AI-drafted gentle check-in (no booking link), set `no_show_followup_stage=1`, reset `automation_status='active'` so the lead's reply gets a normal AI turn
+- [x] Add Prompt_Library global prompt for the check-in message (key e.g. `no_show_checkin`), en + nl guidance, tone: "we had elkaar niet te pakken, druk dagje? nog steeds interesse?" — no link, one question
+- [x] Skip-guards in the dispatcher: `opted_out`, `manual_takeover`, DNC status → log and do nothing
+- [x] Reset claim state on rebooking: in `src/webhooks/booking_routes.py`, the BOOKING_CREATED lead update (~line 520) also clears `no_show=False, no_show_reason=None, no_show_reported_at=None, no_show_reported_by=None, no_show_followup_stage=None`. Without this a rebooked lead can never be claimed again (409 already_reported) and a stale ladder could message after a successful rebook
 
 ### Technical Details
 
@@ -68,9 +68,9 @@ One engine endpoint that maps reason to flow.
 Second message with the booking link if the lead never replied to the check-in.
 
 ### Tasks
-- [ ] Add `no_show_followup` scheduler job (register alongside the existing jobs in the scheduler setup in `src/main.py`; 15-min interval is fine)
-- [ ] Job logic: select leads with `no_show_followup_stage=1` AND `no_show_reason='no_reason'` AND last outbound > 24h ago AND no inbound since the check-in; send booking-link message (reuse `get_or_create_booking_link`), set stage=2 (terminal)
-- [ ] Stop conditions: any inbound from the lead clears the ladder (set stage=2 without sending; the normal AI conversation owns the thread from there); skip-guards same as Phase 2
+- [x] Add `no_show_followup` scheduler job (register alongside the existing jobs in the scheduler setup in `src/main.py`; 15-min interval is fine)
+- [x] Job logic: select leads with `no_show_followup_stage=1` AND `no_show_reason='no_reason'` AND last outbound > 24h ago AND no inbound since the check-in; send booking-link message (reuse `get_or_create_booking_link`), set stage=2 (terminal)
+- [x] Stop conditions: any inbound from the lead clears the ladder (set stage=2 without sending; the normal AI conversation owns the thread from there); skip-guards same as Phase 2
 
 ### Technical Details
 
@@ -83,11 +83,11 @@ Second message with the booking link if the lead never replied to the check-in.
 Time-box the post-completion AI, and keep the system autonomous after the window closes.
 
 ### Tasks
-- [ ] In the completed-lead path of `src/automations/ai_conversation.py`: allow the normal AI turn only while `now <= booked_call_date + 48h` (for leads that were Booked; non-booked completed leads keep today's behavior) [complex]
-  - [ ] Within window: unchanged (classic/Live turn, [SILENT] available to classic)
-  - [ ] Past window: run a cheap rebook-intent check on the inbound (Groq ladder, same client pattern as `detect_conversation_end` in `tools/ai_service.py`); on rebook intent → `trigger_reschedule_reengage(lead_id, "lead_requested")`; otherwise send nothing
-- [ ] Past-window, no-intent case: create a user notification ("lead resurfaced after closed conversation") via the engine's own `tools.notification_service.notify()` (persists + SSE + telegram/web-push, already user-scoped). Recipient: account owner via the `owner_email` join pattern in `inbound_handler._notify_lead_responded`
-- [ ] Add `detect_rebook_intent(text) -> bool` to `tools/ai_service.py` (same conservative style + Groq fallback ladder as `detect_conversation_end`)
+- [x] In the completed-lead path of `src/automations/ai_conversation.py`: allow the normal AI turn only while `now <= booked_call_date + 48h` (for leads that were Booked; non-booked completed leads keep today's behavior) [complex]
+  - [x] Within window: unchanged (classic/Live turn, [SILENT] available to classic)
+  - [x] Past window: run a cheap rebook-intent check on the inbound (Groq ladder, same client pattern as `detect_conversation_end` in `tools/ai_service.py`); on rebook intent → `trigger_reschedule_reengage(lead_id, "lead_requested")`; otherwise send nothing
+- [x] Past-window, no-intent case: create a user notification ("lead resurfaced after closed conversation") via the engine's own `tools.notification_service.notify()` (persists + SSE + telegram/web-push, already user-scoped). Recipient: account owner via the `owner_email` join pattern in `inbound_handler._notify_lead_responded`
+- [x] Add `detect_rebook_intent(text) -> bool` to `tools/ai_service.py` (same conservative style + Groq fallback ladder as `detect_conversation_end`)
 
 ### Technical Details
 
@@ -98,12 +98,12 @@ Time-box the post-completion AI, and keep the system autonomous after the window
 ## Phase 5: UI (one dialog, three placements)
 
 ### Tasks
-- [ ] Create shared `NoShowDialog` component in `client/src/features/leads/components/` (radio group with the 3 reasons, confirm/cancel, TanStack mutation to `POST /api/leads/:id/no-show`, invalidate lead queries on success) [complex]
-- [ ] Add button + claimed-state badge to `LeadBookingSection.tsx` (next to the existing rebook button; same visibility rule)
-- [ ] Add button to calendar booking detail (`client/src/features/calendar/components/DesktopCalendarDetail.tsx`) for past-start bookings of Booked leads within the window
-- [ ] Add row action on the Contacts page table/pipeline for Booked leads (same visibility rule)
-- [ ] i18n strings in `client/src/locales/{en,nl}/leads.json` (+ `calendar.json` for the calendar placement): button label, dialog title, 3 reason labels, confirm, claimed badge, window-expired tooltip
-- [ ] Shared visibility helper (booked + call past + within 48h + not yet claimed) exported from the leads feature so all three placements use identical logic
+- [x] Create shared `NoShowDialog` component in `client/src/features/leads/components/` (radio group with the 3 reasons, confirm/cancel, TanStack mutation to `POST /api/leads/:id/no-show`, invalidate lead queries on success) [complex]
+- [x] Add button + claimed-state badge to `LeadBookingSection.tsx` (next to the existing rebook button; same visibility rule)
+- [x] Add button to calendar booking detail (`client/src/features/calendar/components/DesktopCalendarDetail.tsx`) for past-start bookings of Booked leads within the window
+- [x] Add row action on the Contacts page table/pipeline for Booked leads (same visibility rule)
+- [x] i18n strings in `client/src/locales/{en,nl}/leads.json` (+ `calendar.json` for the calendar placement): button label, dialog title, 3 reason labels, confirm, claimed badge, window-expired tooltip
+- [x] Shared visibility helper (booked + call past + within 48h + not yet claimed) exported from the leads feature so all three placements use identical logic
 
 ### Technical Details
 
@@ -121,3 +121,16 @@ export function canReportNoShow(lead: Lead, now = new Date()): boolean {
   return call < now && now.getTime() - call.getTime() <= 48 * 3600 * 1000;
 }
 ```
+
+## Build status (2026-07-12)
+
+All phases built same-day. Deviations from the plan as written:
+
+1. **Storage layer**: reused the existing generic `storage.updateLead()` instead of adding a dedicated method in `server/storage/leads.ts`; the claim is a plain field update and a bespoke method added nothing.
+2. **Contacts placements**: no separate row-action menu was added. The contacts table rows open `LeadDetailPanel` (button lives in `LeadBookingSection`), and the contacts pipeline + calendar detail both render `PipelineLeadPanel` (button added to its Booked block), so all three user-facing surfaces have the button through two components instead of three integration points.
+3. **Ladder ordering**: stage is flipped to 2 BEFORE the send (at-most-once), so a crash mid-send skips rather than double-messages.
+4. **Ladder link message**: reuses `trigger_reschedule_reengage(lead_id, "no_show")` outright rather than a separate template; while wiring this, fixed a pre-existing crash in `reschedule_reengage.py` (`create_interaction` called with non-existent kwargs, raised on every send after the message went out).
+5. **Check-in prompt**: created as Prompt_Library id 101, `use_case='system:no-show-checkin'`, global + active. The generator also hard-rejects any draft containing "http" (fallback copy used instead) as a belt-and-braces guard on the no-link rule.
+6. **Mobile**: not separately addressed; mobile surfaces that render `LeadBookingSection` get the button for free, anything else is deferred.
+
+Still open (from action-required.md): the billing rule (`billable_booking` flip on claim), the Owner window-override decision, and the end-to-end test on campaign 61.
