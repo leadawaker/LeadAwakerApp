@@ -671,5 +671,29 @@
   "emptyState": {
     "noMatch": "No leads match your filters",
     "noLeads": "No leads found"
+  },
+  "noShow": {
+    "title": "Report a no-show",
+    "description": "The lead did not show up for the booked call. Pick what happened; this decides the automatic follow-up.",
+    "reportButton": "Lead didn't show up",
+    "claimedBadge": "No-show reported",
+    "reported": "No-show reported, follow-up triggered",
+    "reportFailed": "Could not report the no-show",
+    "confirm": "Report no-show",
+    "cancel": "Cancel",
+    "reasons": {
+      "not_interested": {
+        "label": "They said they're no longer interested",
+        "hint": "The lead is marked as lost. No further messages are sent."
+      },
+      "wants_other_time": {
+        "label": "They want a different time",
+        "hint": "The AI immediately sends a message with a link to pick a new time."
+      },
+      "no_reason": {
+        "label": "They simply didn't show up",
+        "hint": "The AI sends a friendly check-in first, and a rebooking link a day later if they don't reply."
+      }
+    }
   }
 }

@@ -1,12 +1,13 @@
 // Booking block for LeadDetailPanel: call date, reschedule, no-show, summary.
 // Extracted verbatim (Session C); reschedule action added Phase 1.
 import { useState } from "react";
-import { PhoneCall, RefreshCw, Bot, Calendar, Sparkles, AlertTriangle, X } from "lucide-react";
+import { PhoneCall, RefreshCw, Bot, Calendar, Sparkles, AlertTriangle, X, UserX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiFetch } from "@/lib/apiUtils";
 import { formatBookedDate } from "@/features/leads/components/cardView/formatUtils";
+import { NoShowDialog, canReportNoShow } from "@/features/leads/components/NoShowDialog";
 import { SectionTitle, InfoRow } from "./atoms";
 import { fmtDateTime } from "./format";
 
@@ -23,6 +24,8 @@ export function LeadBookingSection({ lead, accountTimezone }: LeadBookingSection
   const [aiLoading, setAiLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [noShowOpen, setNoShowOpen] = useState(false);
+  const [noShowClaimed, setNoShowClaimed] = useState(false);
 
   if (!(lead.booked_call_date || lead.booking_confirmed_at_)) return null;
 
@@ -94,6 +97,34 @@ export function LeadBookingSection({ lead, accountTimezone }: LeadBookingSection
         {lead.call_duration_minutes != null && (
           <InfoRow label={t("detail.fields.duration")} value={t("detail.fields.durationMinutes", { minutes: lead.call_duration_minutes })} />
         )}
+
+        {/* No-show claim: button within the 48h window, badge once claimed */}
+        {(lead.no_show || noShowClaimed) ? (
+          <div className="pt-2 mt-1 border-t border-border/30 flex items-center gap-1.5" data-testid="no-show-claimed">
+            <UserX className="h-3 w-3 text-destructive/70" />
+            <span className="text-[11px] text-muted-foreground">
+              {t("noShow.claimedBadge")}
+              {lead.no_show_reason ? ` · ${t(`noShow.reasons.${lead.no_show_reason}.label`)}` : ""}
+            </span>
+          </div>
+        ) : canReportNoShow(lead) ? (
+          <div className="pt-2 mt-1 border-t border-border/30">
+            <button
+              className="flex items-center gap-1.5 text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors"
+              onClick={() => setNoShowOpen(true)}
+              data-testid="report-no-show"
+            >
+              <UserX className="h-3 w-3" />
+              {t("noShow.reportButton")}
+            </button>
+            <NoShowDialog
+              leadId={lead.id}
+              open={noShowOpen}
+              onOpenChange={setNoShowOpen}
+              onReported={() => setNoShowClaimed(true)}
+            />
+          </div>
+        ) : null}
 
         {/* Reschedule / Cancel actions */}
         <div className="pt-2 mt-1 border-t border-border/30 flex items-center gap-3">

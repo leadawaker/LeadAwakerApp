@@ -671,5 +671,29 @@
   "emptyState": {
     "noMatch": "Geen leads komen overeen met je filters",
     "noLeads": "Geen leads gevonden"
+  },
+  "noShow": {
+    "title": "No-show melden",
+    "description": "De lead is niet komen opdagen voor het geplande gesprek. Kies wat er gebeurd is; dit bepaalt de automatische opvolging.",
+    "reportButton": "Lead is niet komen opdagen",
+    "claimedBadge": "No-show gemeld",
+    "reported": "No-show gemeld, opvolging gestart",
+    "reportFailed": "No-show melden is niet gelukt",
+    "confirm": "No-show melden",
+    "cancel": "Annuleren",
+    "reasons": {
+      "not_interested": {
+        "label": "Ze gaven aan geen interesse meer te hebben",
+        "hint": "De lead wordt gemarkeerd als verloren. Er worden geen berichten meer gestuurd."
+      },
+      "wants_other_time": {
+        "label": "Ze willen een ander moment",
+        "hint": "De AI stuurt direct een bericht met een link om een nieuw moment te kiezen."
+      },
+      "no_reason": {
+        "label": "Ze zijn simpelweg niet komen opdagen",
+        "hint": "De AI stuurt eerst een vriendelijke check-in, en een dag later een link om opnieuw te boeken als er geen reactie komt."
+      }
+    }
   }
 }

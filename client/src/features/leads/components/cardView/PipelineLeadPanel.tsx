@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Mic, Square, Loader2, Save, CheckCircle2, Calendar, X } from "lucide-react";
+import { Mic, Square, Loader2, Save, CheckCircle2, Calendar, X, UserX } from "lucide-react";
+import { NoShowDialog, canReportNoShow } from "@/features/leads/components/NoShowDialog";
 import { updateLead } from "../../api/leadsApi";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useScoreBreakdown } from "@/hooks/useScoreBreakdown";
@@ -63,6 +64,11 @@ export function PipelineLeadPanel({
 
   // ── Tab state (Summary, Chat for agency only, Score, Notes) ───────────────
   const [activeTab, setActiveTab] = useState<"summary" | "chat" | "score" | "notes">("summary");
+
+  // ── No-show claim (48h window; covers calendar detail + contacts pipeline) ─
+  const [noShowOpen, setNoShowOpen] = useState(false);
+  const [noShowClaimed, setNoShowClaimed] = useState(false);
+  const noShowAlreadySet = Boolean(lead.no_show ?? lead.noShow) || noShowClaimed;
 
   // ── Notes state ──────────────────────────────────────────────────────────
   const { toast: toastNotes } = useToast();
@@ -264,6 +270,29 @@ export function PipelineLeadPanel({
               <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: bookedHex, fontWeight: 700 }}>
                 {t("kanban.stageLabels.Booked", "Booked")}
               </span>
+              {noShowAlreadySet ? (
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--mute-2)" }} data-testid="no-show-claimed">
+                  <UserX className="h-3 w-3" style={{ color: "var(--mute-2)" }} />
+                  {t("noShow.claimedBadge")}
+                </span>
+              ) : canReportNoShow(lead) ? (
+                <>
+                  <button
+                    onClick={() => setNoShowOpen(true)}
+                    style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--mute-2)", padding: 0 }}
+                    data-testid="report-no-show"
+                  >
+                    <UserX className="h-3 w-3" />
+                    {t("noShow.reportButton")}
+                  </button>
+                  <NoShowDialog
+                    leadId={Number(leadId)}
+                    open={noShowOpen}
+                    onOpenChange={setNoShowOpen}
+                    onReported={() => setNoShowClaimed(true)}
+                  />
+                </>
+              ) : null}
             </div>
           );
         })() : (

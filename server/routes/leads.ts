@@ -415,6 +415,54 @@ export function registerLeadsRoutes(app: Express): void {
     }
   }));
 
+  // POST /api/leads/:id/no-show — client reports the lead didn't show up for the
+  // booked call (48h claim window). Persists the claim + audit fields, then
+  // fire-and-forgets the engine's reason-mapped follow-up automation.
+  app.post("/api/leads/:id/no-show", requireAuth, wrapAsync(async (req, res) => {
+    const leadId = Number(req.params.id);
+    const lead = await storage.getLeadById(leadId);
+    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (req.user!.accountsId !== 1 && lead.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const reason = req.body?.reason as string;
+    if (!["not_interested", "wants_other_time", "no_reason"].includes(reason)) {
+      return res.status(400).json({ message: "Invalid reason" });
+    }
+    if (lead.conversionStatus !== "Booked") {
+      return res.status(409).json({ code: "not_booked", message: "Lead has no booked call" });
+    }
+    if (lead.noShow) {
+      return res.status(409).json({ code: "already_reported", message: "No-show already reported" });
+    }
+    const callDate = lead.bookedCallDate ? new Date(lead.bookedCallDate) : null;
+    const now = new Date();
+    if (!callDate || callDate > now) {
+      return res.status(409).json({ code: "call_not_past", message: "Call has not taken place yet" });
+    }
+    if (now.getTime() - callDate.getTime() > 48 * 3600 * 1000) {
+      return res.status(409).json({ code: "window_expired", message: "48h claim window has expired" });
+    }
+
+    await storage.updateLead(leadId, {
+      noShow: true,
+      noShowReason: reason,
+      noShowReportedAt: now,
+      noShowReportedBy: req.user!.id,
+    });
+
+    // Fire-and-forget: follow-up automation must not block or fail the claim.
+    fetch(`${getEngineUrl()}/api/leads/${leadId}/no-show`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    }).catch((err) =>
+      console.error("[leads] no-show engine dispatch failed:", err?.message || err),
+    );
+
+    res.json({ status: "reported", leadId, reason });
+  }));
+
   registerLeadsBulkTagsRoutes(app);
   registerLeadsDemoScoreRoutes(app);
 }
