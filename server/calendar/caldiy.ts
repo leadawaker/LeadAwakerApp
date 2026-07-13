@@ -202,9 +202,10 @@ export async function injectCaldavCredentialToCaldiy(
 
 /**
  * Best-effort: rewrites the account's Cal.diy user "Working Hours" schedule to a
- * new window and inserts date-override rows for any manual busy blocks in the next
- * 90 days. Called when businessHoursStart/End change OR when a manual block is
- * created/updated/deleted. No-op if no Cal.diy booking page exists. Fire-and-forget.
+ * new window/day-set and inserts date-override rows for any manual busy blocks in
+ * the next 90 days. Called when businessHoursStart/End/openDays change OR when a
+ * manual block is created/updated/deleted. No-op if no Cal.diy booking page exists.
+ * Fire-and-forget.
  */
 export async function resyncCaldiySchedule(accountId: number): Promise<void> {
   try {
@@ -232,6 +233,9 @@ export async function resyncCaldiySchedule(accountId: number): Promise<void> {
         ...(account.businessHoursStart ? { LA_BUSINESS_HOURS_START: account.businessHoursStart } : {}),
         ...(account.businessHoursEnd ? { LA_BUSINESS_HOURS_END: account.businessHoursEnd } : {}),
         ...(account.timezone ? { LA_TIMEZONE: account.timezone } : {}),
+        ...(account.openDays && account.openDays.length
+          ? { LA_OPEN_DAYS: account.openDays.join(",") }
+          : {}),
         LA_BLOCKS: blocksJson,
       },
       timeout: 60000,

@@ -89,8 +89,8 @@ export function registerAccountsRoutes(app: Express): void {
     if (!parsed.success) return handleZodError(res, parsed.error);
     const account = await storage.updateAccount(Number(req.params.id), parsed.data);
     if (!account) return res.status(404).json({ message: "Account not found" });
-    // If working hours changed, re-sync the Cal.diy booking schedule (best-effort).
-    if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data) {
+    // If working hours or open days changed, re-sync the Cal.diy booking schedule (best-effort).
+    if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data || "openDays" in parsed.data) {
       void resyncCaldiySchedule(account.id!);
     }
     // If meeting type or calling number changed, re-provision so Cal.diy EventType.locations updates.
