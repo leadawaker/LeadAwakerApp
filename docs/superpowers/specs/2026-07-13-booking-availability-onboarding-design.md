@@ -79,6 +79,16 @@ offers same-day. No special-casing needed; the existing day/time bucketing
 Null-safety: `campaign_account.get("min_booking_notice_hours") or 16` in case
 of a legacy row somehow missing the default.
 
+**Other `window_start` call sites in this module — do not touch:**
+- `conversation/reschedule.py:284` computes `requested_dt - timedelta(days=1)`
+  to bracket a lead-*requested* reschedule date, not "now + notice". Unrelated
+  to the initial-booking floor; leave as-is.
+- `slot_booking.py:379` (`_fetch_day_slots`-style helper) computes the end of
+  a day the lead already picked (stage 2 of the day→time flow), not an offer
+  floor. Leave as-is.
+- Only the `window_start` at `slot_booking.py:177` (the initial 3-day-offer
+  fetch) is in scope for this change.
+
 ## Call duration wiring
 
 `server/routes/leads.ts:222`, extend the existing fallback chain used when
@@ -170,6 +180,34 @@ New keys under the `accounts` namespace section already used by the wizard
 per existing project-wide PT deprecation). Section label
 `sections.availability` alongside the existing `sections.sales` /
 `sections.booking` keys in `communicationProfile.json`.
+
+## Known gaps surfaced during review (not yet resolved)
+
+- **Days-of-week are hardcoded to Mon–Fri.** `caldiy/scripts/_schedule.ts`
+  (`availabilityFromHours`) always builds `[[], [range], [range], [range],
+  [range], [range], []]` — Sunday and Saturday are unconditionally closed,
+  regardless of what opening/closing time is passed in. The wizard as spec'd
+  has no way for a client to say "we're open Saturdays" or "closed
+  Wednesdays." This is a pre-existing gap (the agency-facing admin view has
+  the same limitation today), not something this spec introduces — but it
+  means the new client-facing wizard will actively mislead clients whose
+  real hours include a weekend day, which is plausible for the
+  home-improvement/contractor niche. **Decision needed before implementation:**
+  either (a) extend `AvailabilityCard` with a day-of-week multi-select and
+  thread `days` through `resync-schedule.ts`/`_schedule.ts` (real scope
+  increase — touches the cal.diy repo, not just this one), or (b) ship
+  Mon–Fri-only for now and note it explicitly as a known limitation.
+- **No timezone field in this wizard.** `resync-schedule.ts` resolves
+  timezone as `LA_TIMEZONE || user.timeZone || "Europe/Amsterdam"`, and
+  `LA_TIMEZONE` is only set from `account.timezone`, which today is only
+  ever set via the separate agency-facing `ProfileSection.tsx` (Settings
+  page) — not this wizard. If a client is onboarded end-to-end through the
+  wizard and nobody has set their account timezone elsewhere, business hours
+  will resync under a fallback timezone that may not match the client's
+  actual location. **Decision needed:** either confirm timezone is always
+  set some other way before this step runs (e.g. earlier in the wizard, or
+  as an agency setup step before handing the wizard to the client), or add a
+  timezone field to `AvailabilityCard` as well.
 
 ## Out of scope / explicitly deferred
 
