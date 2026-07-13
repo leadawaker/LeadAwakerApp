@@ -56,6 +56,15 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           </span>
           <h3 className="serif" style={{ margin: 0, fontSize: 24, color: "var(--ink)", lineHeight: 1.2 }}>{t("done.title")}</h3>
           <p style={{ margin: 0, fontSize: 13.5, color: "var(--mute)", lineHeight: 1.5, maxWidth: 320 }}>{t("done.subtitle")}</p>
+          <div className="neu-inset" style={{ textAlign: "left", padding: "16px 18px", borderRadius: 12, maxWidth: 420, width: "100%" }}>
+            <div className="eyebrow eyebrow-sm" style={{ marginBottom: 10 }}>{t("done.nextSteps.title")}</div>
+            <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--mute)", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 6 }}>
+              <li>{t("done.nextSteps.step1")}</li>
+              <li>{t("done.nextSteps.step2")}</li>
+              <li>{t("done.nextSteps.step3")}</li>
+              <li>{t("done.nextSteps.step4")}</li>
+            </ol>
+          </div>
           <button className="la-btn la-btn--wine" style={{ marginTop: 6 }} onClick={() => setCelebrate(false)}>{t("done.button")}</button>
         </div>
       ) : showSummary ? (

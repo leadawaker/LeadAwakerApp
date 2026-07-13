@@ -400,6 +400,7 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
   const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!accountId) return;
@@ -408,6 +409,7 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
         const caldiy = conns.find((c) => (c.provider as string) === "caldiy");
         setDomain(caldiy?.customDomain ?? null);
         setStatus(caldiy?.customDomainStatus ?? null);
+        if (caldiy?.customDomain) setOpen(true); // already configured → show it
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
@@ -459,7 +461,12 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
 
   const body = (
     <>
-      <SectionHead>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="row"
+        style={{ gap: 12, width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: open ? 16 : 0 }}
+      >
         <IconTile><Globe size={16} style={{ color: "var(--mute-2)" }} /></IconTile>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("customDomain.title")}</span>
         {domain ? (
@@ -472,11 +479,14 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
             {active ? t("customDomain.statusActive") : t("customDomain.statusPending")}
           </span>
         ) : (
-          <ConnectedPill on={false} connectedLabel={t("pills.connected")} notSetLabel={t("pills.notSet")} />
+          <span style={{ fontFamily: "var(--mono)", fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)", background: "var(--bg)", padding: "2px 6px", borderRadius: "var(--r-pill)", boxShadow: "var(--sh-inset-crisp)" }}>
+            {t("customDomain.optional")}
+          </span>
         )}
-      </SectionHead>
+        <ChevronDown size={16} style={{ color: "var(--mute-2)", transform: open ? "rotate(180deg)" : "none", transition: "transform 150ms", flexShrink: 0 }} />
+      </button>
 
-      {!domain ? (
+      {!open ? null : !domain ? (
         <>
           <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t("customDomain.explainer")}</p>
           {monoLabel(t("customDomain.domainLabel"))}

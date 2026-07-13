@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, X, Phone, MessageCircle, Video } from "lucide-react";
+import { Phone, MessageCircle, Video, Loader2, Check } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { IntegSection, SectionHead, IconTile } from "./integrationsAtoms";
-import { PanelAction, EditButton } from "./atoms";
 
 type MeetingType = "phone_call" | "whatsapp_call";
 
@@ -26,27 +25,25 @@ const MEETING_OPTIONS: {
 
 export function MeetingTypeCard({ accountId, meetingType: initialType, callingNumber: initialNumber }: Props) {
   const { t } = useTranslation("accounts");
-  const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [meetingType, setMeetingType] = useState<string>(initialType || "phone_call");
   const [callingNumber, setCallingNumber] = useState(initialNumber || "");
+  const [savedNumber, setSavedNumber] = useState(initialNumber || "");
+  const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function save() {
+  async function persist(body: Record<string, string | null>) {
     setSaving(true);
     setError(null);
     try {
-      const body: Record<string, string | null> = {
-        meeting_type: meetingType,
-        calling_number: callingNumber || null,
-      };
       const res = await apiFetch(`/api/accounts/${accountId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
-      setIsEditing(false);
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 1500);
     } catch (err: any) {
       setError(err?.message || "Save failed");
     } finally {
@@ -54,11 +51,16 @@ export function MeetingTypeCard({ accountId, meetingType: initialType, callingNu
     }
   }
 
-  function cancel() {
-    setMeetingType(initialType || "phone_call");
-    setCallingNumber(initialNumber || "");
-    setError(null);
-    setIsEditing(false);
+  function onSelectType(value: string) {
+    setMeetingType(value);
+    void persist({ meeting_type: value });
+  }
+
+  function onBlurNumber() {
+    const trimmed = callingNumber.trim();
+    if (trimmed === savedNumber) return;
+    setSavedNumber(trimmed);
+    void persist({ calling_number: trimmed || null });
   }
 
   const currentOption = MEETING_OPTIONS.find((o) => o.key === meetingType);
@@ -70,75 +72,45 @@ export function MeetingTypeCard({ accountId, meetingType: initialType, callingNu
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>
           {t("meetingType.title")}
         </span>
-        {isEditing ? (
-          <div className="row" style={{ gap: 6 }}>
-            <PanelAction onClick={cancel} disabled={saving} icon={<X size={12} />}>{t("detail.cancel")}</PanelAction>
-            <PanelAction wine onClick={save} disabled={saving} icon={<Check size={12} />}>
-              {saving ? t("detail.saving") : t("detail.save")}
-            </PanelAction>
-          </div>
-        ) : (
-          <EditButton label={t("detail.edit")} onClick={() => setIsEditing(true)} />
-        )}
+        {saving ? (
+          <Loader2 size={14} className="animate-spin" style={{ color: "var(--mute-2)" }} />
+        ) : justSaved ? (
+          <Check size={14} style={{ color: "var(--good)" }} />
+        ) : null}
       </SectionHead>
 
-      {/* Option cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
-        {MEETING_OPTIONS.map(({ key, icon, disabled }) => {
-          const selected = meetingType === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              disabled={disabled || !isEditing}
-              onClick={() => { if (!disabled && isEditing) setMeetingType(key); }}
-              style={{
-                display: "flex", alignItems: "center", gap: 9, padding: "10px 13px",
-                borderRadius: "var(--r-button)", border: "none", cursor: disabled ? "not-allowed" : isEditing ? "pointer" : "default",
-                background: selected ? "var(--wine-tint)" : "var(--bg)",
-                boxShadow: selected ? "none" : "var(--sh-inset-crisp)",
-                outline: selected ? "1px solid var(--wine)" : "none",
-                opacity: disabled ? 0.45 : 1,
-                transition: "background 120ms",
-              }}
-            >
-              <span style={{ color: selected ? "var(--wine)" : "var(--ink-soft)" }}>{icon}</span>
-              <span style={{ fontSize: 13, fontWeight: selected ? 600 : 400, color: selected ? "var(--wine)" : "var(--ink-soft)", flex: 1, textAlign: "left" }}>
-                {t(`meetingType.options.${key}`)}
-              </span>
-              {disabled && (
-                <span style={{ fontFamily: "var(--mono)", fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)", background: "var(--bg)", padding: "2px 6px", borderRadius: "var(--r-pill)", boxShadow: "var(--sh-inset-crisp)" }}>
-                  {t("pills.comingSoon")}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Meeting type dropdown */}
+      <select
+        className="neu-input"
+        style={{ fontSize: 13, padding: "9px 11px", width: "100%" }}
+        value={meetingType}
+        disabled={saving}
+        onChange={(e) => onSelectType(e.target.value)}
+      >
+        {MEETING_OPTIONS.map(({ key, disabled }) => (
+          <option key={key} value={key} disabled={disabled}>
+            {t(`meetingType.options.${key}`)}{disabled ? ` — ${t("pills.comingSoon")}` : ""}
+          </option>
+        ))}
+      </select>
 
-      {/* Calling number — used for both meeting types: the advisor's number
-          leads see on the vCard contact card sent right after booking. For
-          whatsapp_call this is deliberately editable too, since the chat
-          number (your connected messaging number) and the advisor who
-          actually calls are often different people/numbers. */}
-      <div style={{ marginTop: 13 }}>
+      {/* Calling number — always visible; feeds the post-booking vCard.
+          Editable for whatsapp_call too, since the chat number and the
+          advisor who actually calls are often different people/numbers. */}
+      <div style={{ marginTop: 14 }}>
         <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 6 }}>
           {t("meetingType.callingNumber")}
         </div>
-        {isEditing ? (
-          <input
-            className="neu-input"
-            style={{ fontSize: 13, padding: "8px 11px", width: "100%" }}
-            type="tel"
-            value={callingNumber}
-            onChange={(e) => setCallingNumber(e.target.value)}
-            placeholder={t("meetingType.callingNumberPlaceholder")}
-          />
-        ) : (
-          <div style={{ fontSize: 13, color: callingNumber ? "var(--ink-soft)" : "var(--mute-2)", fontStyle: callingNumber ? "normal" : "italic" }}>
-            {callingNumber || t("meetingType.callingNumberEmpty")}
-          </div>
-        )}
+        <input
+          className="neu-input"
+          style={{ fontSize: 13, padding: "8px 11px", width: "100%" }}
+          type="tel"
+          value={callingNumber}
+          disabled={saving}
+          onChange={(e) => setCallingNumber(e.target.value)}
+          onBlur={onBlurNumber}
+          placeholder={t("meetingType.callingNumberPlaceholder")}
+        />
         <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 5, lineHeight: 1.5 }}>
           {meetingType === "whatsapp_call" ? t("meetingType.callingNumberHintWhatsapp") : t("meetingType.callingNumberHint")}
         </div>

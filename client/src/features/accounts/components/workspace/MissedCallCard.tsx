@@ -3,7 +3,7 @@
 // Spec: specs/missed-call-textback. Config is read by the engine voice webhook at call time.
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { PhoneMissed, Copy, Check, Loader2, Mic, Square, Upload, Trash2, Sparkles, Play } from "lucide-react";
+import { PhoneMissed, Copy, Check, Loader2, Mic, Square, Upload, Trash2, Sparkles, Play, ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ConnectedPill } from "./atoms";
 import {
@@ -43,6 +43,7 @@ export function MissedCallCard({ accountId }: { accountId: number }) {
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   // Greeting authoring state.
   const [recording, setRecording] = useState(false);
@@ -118,18 +119,31 @@ export function MissedCallCard({ accountId }: { accountId: number }) {
 
   return (
     <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
-      <div className="row" style={{ gap: 12, marginBottom: 16 }}>
-        <IconTile><PhoneMissed size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("missedCall.title")}</span>
+      <div className="row" style={{ gap: 12 }}>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="row"
+          style={{ gap: 12, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+        >
+          <IconTile><PhoneMissed size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("missedCall.title")}</span>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)", background: "var(--bg)", padding: "2px 6px", borderRadius: "var(--r-pill)", boxShadow: "var(--sh-inset-crisp)" }}>
+            {t("pills.comingSoon")}
+          </span>
+          <ChevronDown size={16} style={{ color: "var(--mute-2)", transform: open ? "rotate(180deg)" : "none", transition: "transform 150ms", flexShrink: 0 }} />
+        </button>
         <ConnectedPill on={status.enabled} connectedLabel={t("missedCall.on")} notSetLabel={t("missedCall.off")} />
         <Switch checked={status.enabled} disabled={busy} onCheckedChange={(v) => save({ enabled: v })} />
       </div>
 
-      <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: status.enabled ? 18 : 0, lineHeight: 1.5 }}>
+      {open && (
+      <p style={{ fontSize: 12, color: "var(--mute)", marginTop: 16, marginBottom: status.enabled ? 18 : 0, lineHeight: 1.5 }}>
         {t("missedCall.explainer")}
       </p>
+      )}
 
-      {status.enabled && (
+      {open && status.enabled && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {/* Number + forwarding instructions */}
           <div>

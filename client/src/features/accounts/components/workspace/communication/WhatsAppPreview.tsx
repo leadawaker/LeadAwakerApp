@@ -143,10 +143,10 @@ export function WhatsAppPreview({ answers, accountName, accountLogoUrl, visibleC
         }}>
           <AvatarBubble choice={answers.avatarChoice} name={agentName} size={HEADER_AVATAR} logoUrl={accountLogoUrl} avatarUrl={avatarUrl} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#111", lineHeight: 1.2 }}>{agentName}</div>
-            {accountName && (
-              <div style={{ fontSize: 11, color: "#666", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{accountName}</div>
-            )}
+            {/* WhatsApp shows the registered business name here, not the AI's persona
+                name — Meta rejects display names that don't match the business. */}
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#111", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{accountName || agentName}</div>
+            <div style={{ fontSize: 11, color: "#666", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{agentName}</div>
           </div>
           <Phone size={17} color="#555" />
         </div>
