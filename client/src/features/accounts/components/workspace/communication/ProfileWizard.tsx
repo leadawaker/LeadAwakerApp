@@ -13,6 +13,7 @@ import { useNicheWords } from "./useNicheWords";
 import { WhatsAppPreview } from "./WhatsAppPreview";
 import { USP_OPTIONS, asCampaignLang } from "@/features/campaigns/components/settings/fieldLocale";
 import { MeetingTypeCard } from "../MeetingTypeCard";
+import { AvailabilityCard } from "../AvailabilityCard";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -536,6 +537,9 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
         {def.kind === "qagrid" && renderGrid(def.key)}
         {def.kind === "custom" && def.key === "meetingType" && accountId && (
           <MeetingTypeCard accountId={accountId} />
+        )}
+        {def.kind === "custom" && def.key === "availabilityHours" && accountId && (
+          <AvailabilityCard accountId={accountId} />
         )}
       </div>
 

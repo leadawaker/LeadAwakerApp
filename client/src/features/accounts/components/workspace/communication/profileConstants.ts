@@ -63,8 +63,8 @@ export function recommendStatus(aiStyle: string | null): string {
 // The wizard keeps one-question-per-screen but groups steps into named sections
 // so the facilitator can say "now we're on part 3 of 4". Labels live in i18n
 // (`sections.<key>`).
-export type SectionKey = "tone" | "identity" | "sales" | "facts" | "booking";
-export const SECTIONS: SectionKey[] = ["tone", "identity", "sales", "facts", "booking"];
+export type SectionKey = "tone" | "identity" | "availability" | "sales" | "facts" | "booking";
+export const SECTIONS: SectionKey[] = ["tone", "identity", "availability", "sales", "facts", "booking"];
 
 // ── Merged step list ─────────────────────────────────────────────────────────
 export type StepKind = "style" | "fact" | "qagrid" | "custom";
@@ -76,6 +76,7 @@ export const STEPS: StepDef[] = [
   { key: "perception", kind: "style", section: "tone" },
   { key: "preferredWords", kind: "style", section: "identity" },
   { key: "agentName", kind: "style", section: "identity" },    // name + custom + avatar
+  { key: "availabilityHours", kind: "custom", section: "availability" }, // open days/hours/duration/notice (account-level)
   { key: "objections", kind: "qagrid", section: "sales" },     // → KB "objections"
   { key: "negotiation", kind: "fact", section: "facts" },
   { key: "financing", kind: "fact", section: "facts" },
