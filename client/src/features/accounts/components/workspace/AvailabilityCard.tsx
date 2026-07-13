@@ -91,7 +91,9 @@ export function AvailabilityCard({ accountId }: Props) {
   }, [loaded]);
 
   function toggleDay(day: number) {
-    const next = openDays.includes(day) ? openDays.filter((d) => d !== day) : [...openDays, day];
+    const isSelected = openDays.includes(day);
+    if (isSelected && openDays.length === 1) return; // must keep at least one open day
+    const next = isSelected ? openDays.filter((d) => d !== day) : [...openDays, day];
     setOpenDays(next);
     void persist({ open_days: next });
   }

@@ -79,6 +79,17 @@ export function registerAccountsRoutes(app: Express): void {
   app.post("/api/accounts", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertAccountsSchema.safeParse(fromDbKeys(req.body, accounts));
     if (!parsed.success) return handleZodError(res, parsed.error);
+    // Clamp availability fields to their documented valid ranges (server-side
+    // enforcement — the wizard UI already clamps these on blur, but this route
+    // is the real trust boundary). An out-of-range minBookingNoticeHours can
+    // push window_start past the booking engine's fixed 8-day window_end,
+    // silently zeroing out all offered slots for the account.
+    if (typeof parsed.data.minBookingNoticeHours === "number") {
+      parsed.data.minBookingNoticeHours = Math.min(168, Math.max(0, parsed.data.minBookingNoticeHours));
+    }
+    if (typeof parsed.data.defaultCallDurationMinutes === "number") {
+      parsed.data.defaultCallDurationMinutes = Math.min(240, Math.max(5, parsed.data.defaultCallDurationMinutes));
+    }
     const account = await storage.createAccount(parsed.data);
     provisionCaldiyForAccount(account.id!);
     res.status(201).json(toDbKeys(account as any, accounts));
@@ -87,6 +98,17 @@ export function registerAccountsRoutes(app: Express): void {
   app.patch("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertAccountsSchema.partial().safeParse(fromDbKeys(req.body, accounts));
     if (!parsed.success) return handleZodError(res, parsed.error);
+    // Clamp availability fields to their documented valid ranges (server-side
+    // enforcement — the wizard UI already clamps these on blur, but this route
+    // is the real trust boundary). An out-of-range minBookingNoticeHours can
+    // push window_start past the booking engine's fixed 8-day window_end,
+    // silently zeroing out all offered slots for the account.
+    if (typeof parsed.data.minBookingNoticeHours === "number") {
+      parsed.data.minBookingNoticeHours = Math.min(168, Math.max(0, parsed.data.minBookingNoticeHours));
+    }
+    if (typeof parsed.data.defaultCallDurationMinutes === "number") {
+      parsed.data.defaultCallDurationMinutes = Math.min(240, Math.max(5, parsed.data.defaultCallDurationMinutes));
+    }
     const account = await storage.updateAccount(Number(req.params.id), parsed.data);
     if (!account) return res.status(404).json({ message: "Account not found" });
     // If working hours or open days changed, re-sync the Cal.diy booking schedule (best-effort).
