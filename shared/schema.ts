@@ -38,7 +38,7 @@ export const accounts = nocodb.table("Accounts", {
   ownerEmail: varchar("owner_email"),
   website: text("website"),
   type: text("type"),
-  timezone: text("timezone"),
+  timezone: text("timezone").default("Europe/Amsterdam"),
   language: text("language"),
   notes: text("notes"),
   twilioAccountSid: text("twilio_account_sid"),
@@ -48,6 +48,13 @@ export const accounts = nocodb.table("Accounts", {
   status: text("status"),
   businessHoursStart: time("business_hours_start"),
   businessHoursEnd: time("business_hours_end"),
+  // Days the client is open, 0=Sun...6=Sat (JS Date.getDay() convention). Default Mon-Fri.
+  // Feeds resyncCaldiySchedule -> ~/caldiy's per-day Cal.com availability rows.
+  openDays: jsonb("open_days").$type<number[]>().default([1, 2, 3, 4, 5]),
+  // Hours between "now" and the earliest slot the AI will offer a lead. 0 = no minimum.
+  minBookingNoticeHours: integer("min_booking_notice_hours").default(16),
+  // Default call length in minutes when neither the lead nor campaign specifies one.
+  defaultCallDurationMinutes: integer("default_call_duration_minutes").default(30),
   maxDailySends: bigint("max_daily_sends", { mode: "number" }),
   webhookSecret: text("webhook_secret"),
   slug: text("slug"),
@@ -470,9 +477,11 @@ export const campaigns = nocodb.table("Campaigns", {
   channel: text("channel").default("sms"),
   // Channel fallback (specs/channel-fallback): primary→fallback delivery routing.
   channelMode: text("channel_mode").default("whatsapp_then_sms"),
-  // Default chain: WhatsApp → SMS → email (SMS leg needs a registered Twilio
-  // sender; until then SMS is rejected and it falls through to email).
-  fallbackChannel: text("fallback_channel").default("sms_then_email"),
+  // Default chain: WhatsApp → SMS → nothing. Email fallback is deliberately OFF
+  // (2026-07-13, not deliverability-safe from the Pi; see
+  // specs/channel-fallback/email-fallback-assessment-2026-07-13.md). To re-enable
+  // email as a fallback, set 'sms_then_email' or 'email' per campaign.
+  fallbackChannel: text("fallback_channel").default("sms"),
   firstMessageVoiceNote: boolean("first_message_voice_note").default(false),
   bump1VoiceNote: boolean("bump_1_voice_note").default(false),
   bump2VoiceNote: boolean("bump_2_voice_note").default(false),
