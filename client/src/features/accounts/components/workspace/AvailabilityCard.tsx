@@ -160,7 +160,7 @@ export function AvailabilityCard({ accountId }: Props) {
                   fontSize: 12,
                   fontWeight: 600,
                   ...(selected
-                    ? { background: "var(--wine)", color: "var(--wine-fg, #fff)", boxShadow: "none" }
+                    ? { background: "var(--wine)", color: "var(--paper)", boxShadow: "none" }
                     : {}),
                 }}
               >
