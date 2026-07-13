@@ -63,6 +63,7 @@ export interface AccountRow {
   business_hours_start?: string;
   business_hours_end?: string;
   max_daily_sends?: number;
+  price_per_booking?: string | number | null;
   webhook_url?: string;
   webhook_secret?: string;
   twilio_account_sid?: string;
@@ -146,6 +147,7 @@ export function AccountDetailsDialog({
         "business_hours_start",
         "business_hours_end",
         "max_daily_sends",
+        "price_per_booking",
         "default_ai_name",
         "default_ai_role",
         "default_ai_style",
@@ -505,6 +507,7 @@ export function AccountDetailsDialog({
           {textField("business_niche", "e.g. Construction, SaaS...")}
         </div>
       </FieldRow>
+      <FieldRow label={t("fields.pricePerBooking")}>{textField("price_per_booking", "150")}</FieldRow>
 
       <SectionHeader icon={<Phone className="h-4 w-4" />} title={t("sections.contact")} />
       <FieldRow label={t("fields.ownerEmail")}>{textField("owner_email", "owner@example.com")}</FieldRow>

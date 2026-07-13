@@ -145,6 +145,109 @@ export const billingStorage = {
     return result.length > 0;
   },
 
+  // ─── Billable booking stats (Leads.billable_booking) ────────────────────
+  // Period key = booked_call_date (a booking bills in the month the call
+  // happened). "Final" means the 48h no-show claim window has closed.
+  // Cancellations clear booked_call_date + billable_booking engine-side, so
+  // they never appear here; no-show claims keep the date but flip the flag.
+
+  async getAccountBookingStats(
+    accountId: number,
+    opts: { months?: number; month?: string } = {},
+  ): Promise<{
+    ratePerBooking: number | null;
+    months: { month: string; billable: number; pending: number; excluded: number; amount: number | null }[];
+    leads?: { id: number; name: string; bookedCallDate: string; status: "billed" | "pending" | "excluded" | "unbilled"; noShowReason: string | null }[];
+    existingInvoice?: { id: number; invoiceNumber: string | null; status: string | null } | null;
+  }> {
+    const [account] = await db
+      .select({ pricePerBooking: accounts.pricePerBooking })
+      .from(accounts)
+      .where(eq(accounts.id, accountId));
+    const rate = account?.pricePerBooking != null ? Number(account.pricePerBooking) : null;
+
+    if (opts.month) {
+      const monthStart = `${opts.month}-01`;
+      const detail = await db.execute(sql`
+        SELECT id, first_name, last_name, booked_call_date, no_show_reason,
+          CASE
+            WHEN no_show = TRUE THEN 'excluded'
+            WHEN billable_booking = TRUE AND booked_call_date + interval '48 hours' <= NOW() THEN 'billed'
+            WHEN billable_booking = TRUE THEN 'pending'
+            ELSE 'unbilled'
+          END AS status
+        FROM "p2mxx34fvbf3ll6"."Leads"
+        WHERE "Accounts_id" = ${accountId}
+          AND booked_call_date >= ${monthStart}::date
+          AND booked_call_date < ${monthStart}::date + interval '1 month'
+        ORDER BY booked_call_date ASC
+      `);
+      const leadRows = (detail.rows as any[]).map((r) => ({
+        id: Number(r.id),
+        name: [r.first_name, r.last_name].filter(Boolean).join(" ") || `Lead #${r.id}`,
+        bookedCallDate: new Date(r.booked_call_date).toISOString(),
+        status: r.status as "billed" | "pending" | "excluded" | "unbilled",
+        noShowReason: r.no_show_reason ?? null,
+      }));
+      const billable = leadRows.filter((l) => l.status === "billed").length;
+      const pending = leadRows.filter((l) => l.status === "pending").length;
+      const excluded = leadRows.filter((l) => l.status === "excluded").length;
+
+      const inv = await db.execute(sql`
+        SELECT id, invoice_number, status
+        FROM "p2mxx34fvbf3ll6"."Invoices"
+        WHERE "Accounts_id" = ${accountId}
+          AND period_start >= ${monthStart}::date
+          AND period_start < ${monthStart}::date + interval '1 month'
+        ORDER BY id ASC LIMIT 1
+      `);
+      const invRow = (inv.rows as any[])[0];
+
+      return {
+        ratePerBooking: rate,
+        months: [{
+          month: opts.month,
+          billable, pending, excluded,
+          amount: rate != null ? billable * rate : null,
+        }],
+        leads: leadRows,
+        existingInvoice: invRow
+          ? { id: Number(invRow.id), invoiceNumber: invRow.invoice_number ?? null, status: invRow.status ?? null }
+          : null,
+      };
+    }
+
+    const monthsBack = Math.min(Math.max(opts.months ?? 2, 1), 12);
+    const summary = await db.execute(sql`
+      SELECT to_char(date_trunc('month', booked_call_date), 'YYYY-MM') AS month,
+        COUNT(*) FILTER (WHERE no_show IS NOT TRUE AND billable_booking = TRUE AND booked_call_date + interval '48 hours' <= NOW()) AS billable,
+        COUNT(*) FILTER (WHERE no_show IS NOT TRUE AND billable_booking = TRUE AND booked_call_date + interval '48 hours' > NOW()) AS pending,
+        COUNT(*) FILTER (WHERE no_show = TRUE) AS excluded
+      FROM "p2mxx34fvbf3ll6"."Leads"
+      WHERE "Accounts_id" = ${accountId}
+        AND booked_call_date IS NOT NULL
+        AND booked_call_date >= date_trunc('month', NOW()) - make_interval(months => ${monthsBack - 1})
+      GROUP BY 1
+    `);
+    const byMonth = new Map((summary.rows as any[]).map((r) => [r.month as string, r]));
+    const months: { month: string; billable: number; pending: number; excluded: number; amount: number | null }[] = [];
+    const now = new Date();
+    for (let i = 0; i < monthsBack; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const row = byMonth.get(key);
+      const billable = row ? Number(row.billable) : 0;
+      months.push({
+        month: key,
+        billable,
+        pending: row ? Number(row.pending) : 0,
+        excluded: row ? Number(row.excluded) : 0,
+        amount: rate != null ? billable * rate : null,
+      });
+    }
+    return { ratePerBooking: rate, months };
+  },
+
   // ─── Contracts ─────────────────────────────────────────────────────────
 
   async getContracts(): Promise<Contracts[]> {

@@ -4,6 +4,7 @@ import { Download, Link2, SendHorizontal, CheckCircle, Pencil, Eye, Check, CopyP
 import type { InvoiceRow } from "../../types";
 import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import { parseLineItems, formatCurrency } from "../../types";
+import { apiFetch } from "@/lib/apiUtils";
 import { StatusPill, fmtDateFull, daysFrom, DetailSection, ActBtn, DetailRow } from "./atoms";
 import { effectiveInvoiceStatus } from "./adapters";
 
@@ -230,7 +231,90 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
             </div>
           )}
         </DetailSection>
+
+      <InvoiceBookingsBreakdown invoice={invoice} />
     </div>
+  );
+}
+
+// ── Bookings-in-period breakdown (only for generated invoices with a period) ──
+
+type BreakdownStats = {
+  months: { month: string; billable: number; pending: number; excluded: number }[];
+  leads?: { id: number; name: string; bookedCallDate: string; status: string; noShowReason: string | null }[];
+};
+
+const BREAKDOWN_STATUS_COLOR: Record<string, string> = {
+  billed: "var(--good)",
+  pending: "var(--mute)",
+  excluded: "var(--stage-lost)",
+  unbilled: "var(--mute-2)",
+};
+
+function InvoiceBookingsBreakdown({ invoice }: { invoice: InvoiceRow }) {
+  const { t } = useTranslation("billing");
+  const periodStart = (invoice as any).period_start as string | null | undefined;
+  const monthKey = periodStart ? String(periodStart).slice(0, 7) : null;
+  const accountsId = invoice.Accounts_id;
+  const [stats, setStats] = useState<BreakdownStats | null>(null);
+
+  useEffect(() => {
+    if (!monthKey || !accountsId) { setStats(null); return; }
+    let cancelled = false;
+    apiFetch(`/api/accounts/${accountsId}/booking-stats?month=${monthKey}`)
+      .then((res) => res.json())
+      .then((d: any) => { if (!cancelled) setStats(d); })
+      .catch(() => { if (!cancelled) setStats(null); });
+    return () => { cancelled = true; };
+  }, [monthKey, accountsId]);
+
+  if (!monthKey || !accountsId || !stats) return null;
+
+  const leads = stats.leads ?? [];
+  const liveBillable = stats.months?.[0]?.billable ?? 0;
+  const items = parseLineItems(invoice.line_items);
+  const invoicedQty = items.length > 0 ? Number(items[0].qty) || 0 : 0;
+  const mismatch = invoicedQty > 0 && liveBillable !== invoicedQty;
+
+  return (
+    <DetailSection title={t("invoices.breakdown.heading")}>
+      {mismatch && (
+        <p
+          className="text-[11px] rounded-md px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400"
+          style={{ marginBottom: 10 }}
+          data-testid="breakdown-mismatch"
+        >
+          {t("invoices.breakdown.mismatch", { live: liveBillable, invoiced: invoicedQty })}
+        </p>
+      )}
+      {leads.length === 0 ? (
+        <div style={{ padding: "16px 0", textAlign: "center", fontSize: 12, color: "var(--mute-2)", fontStyle: "italic" }}>
+          {t("invoices.breakdown.empty")}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column" }} data-testid="breakdown-leads">
+          {leads.map((l) => (
+            <div
+              key={l.id}
+              className="row"
+              style={{ justifyContent: "space-between", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--line)" }}
+            >
+              <span style={{ fontSize: 12.5, color: "var(--ink)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {l.name}
+              </span>
+              <span className="row" style={{ gap: 10, flexShrink: 0, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--mute-2)", fontFamily: "var(--mono)" }}>
+                  {fmtDateFull(l.bookedCallDate)}
+                </span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: BREAKDOWN_STATUS_COLOR[l.status] ?? "var(--mute)", fontFamily: "var(--mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {t(`invoices.breakdown.${l.status}`, l.status)}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </DetailSection>
   );
 }
 

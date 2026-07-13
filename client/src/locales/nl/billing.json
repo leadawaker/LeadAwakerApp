@@ -170,6 +170,25 @@
       "delete": "Verwijderen",
       "confirm": "Bevestigen?"
     },
+    "generate": {
+      "heading": "Genereren uit afspraken",
+      "selectMonth": "Kies een maand",
+      "button": "Genereren",
+      "lineDescription": "Geboekte gesprekken {{month}}",
+      "summary": "{{billable}} factureerbare afspraak/afspraken, {{excluded}} uitgesloten (no-show)",
+      "pendingBlock": "{{count}} afspraak/afspraken nog niet definitief: de 48u-claimperiode sluit {{date}}. Genereer daarna.",
+      "noRate": "Aantal is ingevuld. Vul de eenheidsprijs en het bedrag handmatig in.",
+      "duplicateWarning": "Factuur {{number}} ({{status}}) dekt dit account en deze periode al."
+    },
+    "breakdown": {
+      "heading": "Afspraken in deze periode",
+      "billed": "Gefactureerd",
+      "pending": "In afwachting",
+      "excluded": "No-show",
+      "unbilled": "Niet gefactureerd",
+      "mismatch": "Actuele factureerbare telling is {{live}}, gefactureerd {{invoiced}}. Mogelijk is er een no-show gemeld na het genereren van deze factuur.",
+      "empty": "Geen afspraken gevonden in deze periode."
+    },
     "form": {
       "createInvoice": "Factuur aanmaken",
       "editInvoice": "Factuur bewerken",

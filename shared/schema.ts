@@ -61,6 +61,7 @@ export const accounts = nocodb.table("Accounts", {
   serviceCategories: text("service_categories"),
   businessDescription: text("business_description"),
   businessNiche: text("business_niche"),
+  pricePerBooking: numeric("price_per_booking"),
   logoUrl: text("logo_url"),
   voiceFileData: text("voice_file_data"),
   voiceFileName: varchar("voice_file_name"),
@@ -282,20 +283,12 @@ export const accountCommunicationProfile = nocodb.table("Account_Communication_P
   // Wizard progress.
   status: text("status"),                    // draft | in_progress | completed
   completedAt: timestamp("completed_at", { withTimezone: true }),
-  // Deprecated columns kept for back-compat (no longer written): brand_feel,
-  // contact_approach, distinctive, distinctive_other, agent_name_note.
-  brandFeel: text("brand_feel"),
-  contactApproach: text("contact_approach"),
-  distinctive: jsonb("distinctive").$type<string[]>(),
-  distinctiveOther: text("distinctive_other"),
-  agentNameNote: text("agent_name_note"),
 }, (t) => [
   uniqueIndex("account_communication_profile_accounts_id_idx").on(t.accountsId),
 ]);
 
 export const insertAccountCommunicationProfileSchema = createInsertSchema(accountCommunicationProfile, {
   formality: z.coerce.number().int().min(1).max(5).nullish(),
-  distinctive: z.array(z.string()).nullish(),
   perception: z.array(z.string()).max(3).nullish(),
   preferredWords: z.object({
     projectTerm: z.string().optional(),
@@ -1016,6 +1009,8 @@ export const invoices = nocodb.table("Invoices", {
   paymentInfo: text("payment_info"),
   issuedDate: date("issued_date"),
   dueDate: date("due_date"),
+  periodStart: date("period_start"),
+  periodEnd: date("period_end"),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   paidAt: timestamp("paid_at", { withTimezone: true }),
   viewedAt: timestamp("viewed_at", { withTimezone: true }),

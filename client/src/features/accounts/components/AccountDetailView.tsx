@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import {
-  Building2, Phone, Globe, Clock, FileText,
+  Building2, Phone, Globe, Clock, FileText, Banknote,
   Check, FileDown, Trash2,
   Pencil, X, RefreshCw, Camera,
   ChevronLeft,
@@ -60,6 +60,7 @@ type AccountDraft = {
   default_ai_name: string; default_ai_role: string; default_ai_style: string;
   default_typo_frequency: string; opt_out_keyword: string; preferred_terminology: string;
   timezone: string; language: string; business_hours_start: string; business_hours_end: string; max_daily_sends: string;
+  price_per_booking: string;
   twilio_account_sid: string; twilio_auth_token: string; twilio_messaging_service_sid: string;
   twilio_default_from_number: string; webhook_url: string; webhook_secret: string; logo_url: string;
   instagram_user_id: string; instagram_access_token: string;
@@ -84,7 +85,7 @@ export { AccountDetailViewEmpty };
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onToggleStatus, toolbarPrefix, onBack }: AccountDetailViewProps) {
-  const { t } = useTranslation("accounts");
+  const { t, i18n } = useTranslation("accounts");
   const isMobile   = useIsMobile();
   const status     = String(account.status || t("status.unknown"));
   const badgeStyle = getStatusBadgeStyle(status);
@@ -130,6 +131,20 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<any>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  // ── Billable booking stats (this month + last month) ─────────────────────
+  type BookingStatsMonth = { month: string; billable: number; pending: number; excluded: number; amount: number | null };
+  const [bookingStats, setBookingStats] = useState<BookingStatsMonth[] | null>(null);
+
+  useEffect(() => {
+    const id = (account as any).Id ?? (account as any).id;
+    if (!id) return;
+    setBookingStats(null);
+    apiFetch(`/api/accounts/${id}/booking-stats?months=2`)
+      .then((res) => res.json())
+      .then((data: any) => setBookingStats(Array.isArray(data?.months) ? data.months : null))
+      .catch(() => setBookingStats(null));
+  }, [(account as any).Id ?? (account as any).id]);
 
   useEffect(() => {
     const id = (account as any).Id ?? (account as any).id;
@@ -186,6 +201,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       business_hours_start:       String(account.business_hours_start    || ""),
       business_hours_end:         String(account.business_hours_end      || ""),
       max_daily_sends:            account.max_daily_sends != null ? String(account.max_daily_sends) : "",
+      price_per_booking:          account.price_per_booking != null ? String(account.price_per_booking) : "",
       twilio_account_sid:         String(account.twilio_account_sid           || ""),
       twilio_auth_token:          String(account.twilio_auth_token            || ""),
       twilio_messaging_service_sid: String(account.twilio_messaging_service_sid || ""),
@@ -262,6 +278,19 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
   }, [onSave]);
 
   const initials = getInitials(account.name || "?");
+
+  // Billing rate: live from the draft while editing so amounts update as you type
+  const rateRaw = isEditing ? draft.price_per_booking : account.price_per_booking;
+  const rateNum =
+    rateRaw != null && String(rateRaw).trim() !== "" && !Number.isNaN(Number(rateRaw))
+      ? Number(rateRaw)
+      : null;
+  const formatEur = (n: number) =>
+    new Intl.NumberFormat(i18n.language?.startsWith("nl") ? "nl-NL" : "en-US", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: Number.isInteger(n) ? 0 : 2,
+    }).format(n);
 
   const serviceCategories = parseServiceCategories(account.service_categories);
 
@@ -538,6 +567,44 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
                 value={val("tax_id")}
                 editChild={isEditing ? <EditText value={val("tax_id")} onChange={(v) => set("tax_id", v)} placeholder="Tax identifier" /> : undefined}
               />
+
+              <SectionHeader label={t("sections.billing")} icon={Banknote} />
+
+              <InfoRow
+                label={t("fields.pricePerBooking")}
+                value={rateNum != null ? formatEur(rateNum) : "—"}
+                editChild={isEditing ? <EditText value={val("price_per_booking")} onChange={(v) => set("price_per_booking", v)} type="number" placeholder="150" /> : undefined}
+              />
+              {rateNum == null && !isEditing && (
+                <p className="text-xs text-muted-foreground italic pt-1.5" data-testid="billing-set-rate-hint">
+                  {t("billing.setRateHint")}
+                </p>
+              )}
+              {bookingStats?.map((m, i) => (
+                <InfoRow
+                  key={m.month}
+                  label={i === 0 ? t("billing.thisMonth") : t("billing.lastMonth")}
+                  value={
+                    <span className="flex flex-col gap-0.5" data-testid={`billing-month-${m.month}`}>
+                      <span className="text-sm text-foreground">
+                        {rateNum != null
+                          ? `${m.billable} × ${formatEur(rateNum)} = ${formatEur(m.billable * rateNum)}`
+                          : t("billing.billableCount", { count: m.billable })}
+                      </span>
+                      {m.pending > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {t("billing.pendingLine", { count: m.pending })}
+                        </span>
+                      )}
+                      {m.excluded > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {t("billing.excludedLine", { count: m.excluded })}
+                        </span>
+                      )}
+                    </span>
+                  }
+                />
+              ))}
 
               <SectionHeader label={t("sections.notes")} icon={FileText} />
 

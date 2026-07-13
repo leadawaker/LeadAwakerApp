@@ -11,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, X, Globe, ChevronDown } from "lucide-react";
+import { Plus, Trash2, X, Globe, ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiUtils";
 import type { InvoiceRow, InvoiceLineItem } from "../types";
 import { parseLineItems } from "../types";
 import { fetchCampaigns } from "../../campaigns/api/campaignsApi";
@@ -86,6 +87,31 @@ function detectPresetFromTimezone(timezone?: string | null): SenderPreset {
   return "EU";
 }
 
+// Last N calendar months (current first) as YYYY-MM keys
+function recentMonthKeys(n: number): string[] {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return out;
+}
+
+// Last day of a YYYY-MM month as YYYY-MM-DD
+function monthEnd(monthKey: string): string {
+  const [y, m] = monthKey.split("-").map(Number);
+  const last = new Date(y, m, 0).getDate();
+  return `${monthKey}-${String(last).padStart(2, "0")}`;
+}
+
+type BookingGenStats = {
+  ratePerBooking: number | null;
+  months: { month: string; billable: number; pending: number; excluded: number; amount: number | null }[];
+  leads?: { id: number; name: string; bookedCallDate: string; status: string; noShowReason: string | null }[];
+  existingInvoice?: { id: number; invoiceNumber: string | null; status: string | null } | null;
+};
+
 // Add N days to a YYYY-MM-DD string, returns YYYY-MM-DD
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -107,7 +133,7 @@ export function InvoiceCreatePanel({
 }: InvoiceCreatePanelProps) {
   const isEditMode = editingInvoice !== null;
   const { toast } = useToast();
-  const { t } = useTranslation("billing");
+  const { t, i18n } = useTranslation("billing");
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [invoiceNumber, setInvoiceNumber] = useState(nextInvoiceNumber ?? "");
@@ -131,6 +157,12 @@ export function InvoiceCreatePanel({
   const [paidAt, setPaidAt] = useState("");
   const [sentAt, setSentAt] = useState("");
   const [showMoreFields, setShowMoreFields] = useState(false);
+  // Generate-from-bookings state (create mode only)
+  const [genMonth, setGenMonth] = useState("");
+  const [genStats, setGenStats] = useState<BookingGenStats | null>(null);
+  const [genLoading, setGenLoading] = useState(false);
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
 
   // ── Populate / reset on mount or when editing/prefill changes ────────────────
   useEffect(() => {
@@ -154,6 +186,8 @@ export function InvoiceCreatePanel({
       setPaymentInfo(editingInvoice.payment_info || "");
       setPaidAt(editingInvoice.paid_at ? editingInvoice.paid_at.split("T")[0] : "");
       setSentAt(editingInvoice.sent_at ? editingInvoice.sent_at.split("T")[0] : "");
+      setPeriodStart((editingInvoice as any).period_start ? String((editingInvoice as any).period_start).split("T")[0] : "");
+      setPeriodEnd((editingInvoice as any).period_end ? String((editingInvoice as any).period_end).split("T")[0] : "");
       setShowMoreFields(!!(editingInvoice.paid_at || editingInvoice.sent_at));
       setCampaignId("");
       setCampaigns([]);
@@ -196,9 +230,31 @@ export function InvoiceCreatePanel({
       setCampaignId("");
       setCampaigns([]);
     }
+    if (!isEditMode) {
+      setPeriodStart("");
+      setPeriodEnd("");
+    }
+    setGenMonth("");
+    setGenStats(null);
     setErrors({});
     setSaving(false);
   }, [editingInvoice, prefillInvoice]);
+
+  // ── Generate-from-bookings: fetch stats for the picked month ───────────────
+  useEffect(() => {
+    if (isEditMode || !accountId || !genMonth) {
+      setGenStats(null);
+      return;
+    }
+    let cancelled = false;
+    setGenLoading(true);
+    apiFetch(`/api/accounts/${accountId}/booking-stats?month=${genMonth}`)
+      .then((res) => res.json())
+      .then((data: any) => { if (!cancelled) setGenStats(data); })
+      .catch(() => { if (!cancelled) setGenStats(null); })
+      .finally(() => { if (!cancelled) setGenLoading(false); });
+    return () => { cancelled = true; };
+  }, [accountId, genMonth, isEditMode]);
 
   // ── Auto-detect preset when account changes ─────────────────────────────────
   useEffect(() => {
@@ -238,6 +294,36 @@ export function InvoiceCreatePanel({
       );
     }
   }, [campaignId]); // intentionally only campaignId — avoid infinite loops
+
+  // ── Generate-from-bookings helpers ──────────────────────────────────────────
+  const genLocale = i18n.language?.startsWith("nl") ? "nl-NL" : "en-US";
+  const monthLabel = (k: string) => {
+    const [y, m] = k.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString(genLocale, { month: "long", year: "numeric" });
+  };
+  const genRow = genStats?.months?.[0] ?? null;
+  // Latest pending call + 48h = when the month becomes final
+  const genFinalAt = (() => {
+    const pending = (genStats?.leads ?? []).filter((l) => l.status === "pending");
+    if (pending.length === 0) return null;
+    const latest = Math.max(...pending.map((l) => new Date(l.bookedCallDate).getTime()));
+    return new Date(latest + 48 * 3600 * 1000);
+  })();
+  const canGenerate = !genLoading && !!genRow && genRow.billable > 0 && genRow.pending === 0;
+
+  // Pre-fills description + quantity only. Unit price/amount are left for
+  // manual entry until the commission-based pricing model is decided (task #702) —
+  // there's no flat rate to multiply by anymore.
+  function applyGenerated() {
+    if (!genRow) return;
+    const account = accounts.find((a) => String(a.id) === accountId);
+    const description = t("invoices.generate.lineDescription", { month: monthLabel(genRow.month) });
+    setLineItems([{ description, qty: genRow.billable, unitPrice: 0, amount: 0 }]);
+    setTitle(`${description} - ${account?.name ?? ""}`.trim().replace(/-$/, "").trim());
+    setPeriodStart(`${genRow.month}-01`);
+    setPeriodEnd(monthEnd(genRow.month));
+    setErrors((prev) => ({ ...prev, lineItems: "", title: "" }));
+  }
 
   // ── Apply a preset ──────────────────────────────────────────────────────────
   function applyPreset(preset: SenderPreset) {
@@ -351,6 +437,8 @@ export function InvoiceCreatePanel({
       payment_info: paymentInfo.trim() || null,
       paid_at: paidAt || null,
       sent_at: sentAt || null,
+      period_start: periodStart || null,
+      period_end: periodEnd || null,
     };
 
     try {
@@ -477,6 +565,73 @@ export function InvoiceCreatePanel({
               />
             </div>
           </div>
+
+          {/* ── Generate from bookings (create mode, agency, account picked) ── */}
+          {!isEditMode && isAgencyUser && accountId && (
+            <div className="rounded-lg border border-border/40 px-3 py-2.5 space-y-2" data-testid="generate-from-bookings">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {t("invoices.generate.heading")}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Select value={genMonth || "__none__"} onValueChange={(v) => setGenMonth(v === "__none__" ? "" : v)}>
+                    <SelectTrigger className="h-8 w-44" data-testid="generate-month-select">
+                      <SelectValue placeholder={t("invoices.generate.selectMonth")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">{t("invoices.form.none")}</SelectItem>
+                      {recentMonthKeys(6).map((k) => (
+                        <SelectItem key={k} value={k}>{monthLabel(k)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={!canGenerate}
+                    onClick={applyGenerated}
+                    data-testid="generate-from-bookings-button"
+                  >
+                    {t("invoices.generate.button")}
+                  </Button>
+                </div>
+              </div>
+              {genLoading && (
+                <p className="text-xs text-muted-foreground">{t("invoices.form.loading")}</p>
+              )}
+              {!genLoading && genRow && (
+                <p className="text-xs text-foreground" data-testid="generate-summary">
+                  {t("invoices.generate.summary", {
+                    billable: genRow.billable,
+                    excluded: genRow.excluded,
+                  })}
+                </p>
+              )}
+              {!genLoading && genRow && genRow.pending > 0 && (
+                <p className="text-[11px] rounded-md px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400" data-testid="generate-pending-block">
+                  {t("invoices.generate.pendingBlock", {
+                    count: genRow.pending,
+                    date: genFinalAt ? genFinalAt.toLocaleDateString(genLocale, { day: "numeric", month: "long" }) : "",
+                  })}
+                </p>
+              )}
+              {!genLoading && genRow && (
+                <p className="text-[11px] text-muted-foreground italic">
+                  {t("invoices.generate.noRate")}
+                </p>
+              )}
+              {!genLoading && genStats?.existingInvoice && (
+                <p className="text-[11px] rounded-md px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400" data-testid="generate-duplicate-warning">
+                  {t("invoices.generate.duplicateWarning", {
+                    number: genStats.existingInvoice.invoiceNumber ?? `#${genStats.existingInvoice.id}`,
+                    status: genStats.existingInvoice.status ?? "",
+                  })}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* ── Currency + Dates ───────────────────────────────────────── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

@@ -100,6 +100,13 @@
     "instagramIntegration": "Instagram Integration",
     "schedule": "Schedule"
   },
+  "invoiceStatus": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "viewed": "Viewed",
+    "paid": "Paid",
+    "cancelled": "Cancelled"
+  },
   "fields": {
     "name": "Name",
     "accountName": "Account Name",
@@ -217,6 +224,7 @@
     "noCampaigns": "No campaigns",
     "contract": "Contract",
     "noContract": "No contract",
+    "noInvoice": "No invoices yet",
     "unlinkedContracts": "Unlinked Contracts",
     "members": "Members",
     "pickUser": "Pick a user to assign to this account.",
@@ -420,6 +428,8 @@
     "campaigns": "Campaigns",
     "team": "Team",
     "contracts": "Contracts",
+    "invoices": "Invoices",
+    "viewAllInvoices": "View all {{count}} invoices",
     "integrations": "Integrations",
     "voiceClone": "Voice",
     "knowledgeBase": "Company Intel",
@@ -555,6 +565,7 @@
   },
   "customDomain": {
     "title": "Custom booking domain",
+    "optional": "Optional",
     "explainer": "Serve this client's booking page from their own domain (e.g. book.theircompany.com) so no leadawaker branding shows in the address bar.",
     "domainLabel": "Booking domain",
     "domainPlaceholder": "book.yourcompany.com",

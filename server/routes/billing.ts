@@ -17,6 +17,26 @@ import path from "path";
 import { execFileSync } from "child_process";
 
 export function registerBillingRoutes(app: Express): void {
+  // ─── Billable booking stats ──────────────────────────────────────────
+  // Serves the Accounts billing panel (months=N summary), the invoice
+  // generate-from-bookings flow and the invoice breakdown (month=YYYY-MM
+  // detail incl. per-lead list + existing invoice for the period).
+
+  app.get("/api/accounts/:id/booking-stats", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    if (!Number.isFinite(accountId)) return res.status(400).json({ message: "Invalid account id" });
+    if (req.user!.accountsId !== 1 && req.user!.accountsId !== accountId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const month = typeof req.query.month === "string" ? req.query.month : undefined;
+    if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+      return res.status(400).json({ message: "month must be YYYY-MM" });
+    }
+    const months = req.query.months ? Math.min(Math.max(Number(req.query.months) || 2, 1), 12) : 2;
+    const stats = await storage.getAccountBookingStats(accountId, month ? { month } : { months });
+    res.json(stats);
+  }));
+
   // ─── Invoices ────────────────────────────────────────────────────────
 
   app.get("/api/invoices", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {

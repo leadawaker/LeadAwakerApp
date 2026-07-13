@@ -100,6 +100,13 @@
     "instagramIntegration": "Instagram Integratie",
     "schedule": "Planning"
   },
+  "invoiceStatus": {
+    "draft": "Concept",
+    "sent": "Verzonden",
+    "viewed": "Bekeken",
+    "paid": "Betaald",
+    "cancelled": "Geannuleerd"
+  },
   "fields": {
     "name": "Naam",
     "accountName": "Accountnaam",
@@ -217,6 +224,7 @@
     "noCampaigns": "Geen campagnes",
     "contract": "Contract",
     "noContract": "Geen contract",
+    "noInvoice": "Nog geen facturen",
     "unlinkedContracts": "Niet-gekoppelde contracten",
     "members": "Leden",
     "pickUser": "Kies een gebruiker om aan dit account toe te wijzen.",
@@ -420,6 +428,8 @@
     "campaigns": "Campagnes",
     "team": "Team",
     "contracts": "Contracten",
+    "invoices": "Facturen",
+    "viewAllInvoices": "Bekijk alle {{count}} facturen",
     "integrations": "Integraties",
     "voiceClone": "Stem",
     "knowledgeBase": "Bedrijfsintel",
@@ -555,6 +565,7 @@
   },
   "customDomain": {
     "title": "Eigen boekingsdomein",
+    "optional": "Optioneel",
     "explainer": "Serveer de boekingspagina van deze klant vanaf hun eigen domein (bijv. book.hunbedrijf.nl) zodat er geen leadawaker-branding in de adresbalk staat.",
     "domainLabel": "Boekingsdomein",
     "domainPlaceholder": "book.uwbedrijf.nl",

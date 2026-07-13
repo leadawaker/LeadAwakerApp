@@ -2,6 +2,7 @@ import { AccountDetailsPanel } from "./AccountDetailsPanel";
 import { CampaignsPanel } from "./CampaignsPanel";
 import { TeamPanel } from "./TeamPanel";
 import { ContractsPanel } from "./ContractsPanel";
+import { InvoicesPanel } from "./InvoicesPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { KBPanel } from "./knowledge/KBPanel";
 import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
@@ -31,6 +32,8 @@ function OverviewRegular(p: OverviewData & { readOnly?: boolean }) {
         <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} naked />
         <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
         <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} naked />
+        <div style={{ height: "1.5px", background: "var(--line)", margin: "0 20px" }} />
+        <InvoicesPanel accountId={p.accountId} naked />
       </div>
     </div>
   );
@@ -43,6 +46,7 @@ function OverviewMobile(p: OverviewData) {
       <CampaignsPanel campaigns={p.campaigns} loading={p.loadingCampaigns} onRefresh={p.onRefresh} />
       <TeamPanel team={p.team} loading={p.loadingTeam} accountId={p.accountId} onRefresh={p.onRefresh} />
       <ContractsPanel contracts={p.contracts} loading={p.loadingContracts} accountId={p.accountId} onRefresh={p.onRefresh} />
+      <InvoicesPanel accountId={p.accountId} />
     </div>
   );
 }

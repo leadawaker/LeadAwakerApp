@@ -69,10 +69,10 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
         <FieldRow label={t("fields.hoursOpen")} value={`${formatTimeDisplay(val("business_hours_start")) || "—"} – ${formatTimeDisplay(val("business_hours_end")) || "—"}`} mono />
       )}
       <FieldRow label={t("fields.dailySends")} value={val("max_daily_sends")} mono editChild={isEditing ? <EditInput value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined} />
-      <FieldRow label={t("fields.optOutKeyword")} value={val("opt_out_keyword")} mono editChild={isEditing ? <EditInput value={val("opt_out_keyword")} onChange={(v) => set("opt_out_keyword", v)} placeholder="e.g. STOP" /> : undefined} />
 
       <div style={{ height: 10 }} />
       <GroupLabel icon={<FileText size={13} />}>{t("sections.notes")}</GroupLabel>
+      <FieldRow label={t("fields.optOutKeyword")} value={val("opt_out_keyword")} mono editChild={isEditing ? <EditInput value={val("opt_out_keyword")} onChange={(v) => set("opt_out_keyword", v)} placeholder="e.g. STOP" /> : undefined} />
       <FieldRow label={t("fields.taxId")} value={val("tax_id")} mono muted editChild={isEditing ? <EditInput value={val("tax_id")} onChange={(v) => set("tax_id", v)} placeholder="Tax identifier" /> : undefined} />
       <div style={{ padding: "7px 0" }}>
         <div style={{ fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--mute)", marginBottom: 7 }}>{t("fields.description")}</div>

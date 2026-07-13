@@ -170,6 +170,25 @@
       "delete": "Delete",
       "confirm": "Confirm?"
     },
+    "generate": {
+      "heading": "Generate from bookings",
+      "selectMonth": "Pick a month",
+      "button": "Generate",
+      "lineDescription": "Booked calls {{month}}",
+      "summary": "{{billable}} billable booking(s), {{excluded}} excluded (no-show)",
+      "pendingBlock": "{{count}} booking(s) not final yet - the 48h claim window closes {{date}}. Generate after that.",
+      "noRate": "Quantity pre-filled. Enter the unit price and amount manually.",
+      "duplicateWarning": "Invoice {{number}} ({{status}}) already covers this account and period."
+    },
+    "breakdown": {
+      "heading": "Bookings in this period",
+      "billed": "Billed",
+      "pending": "Pending",
+      "excluded": "No-show",
+      "unbilled": "Not billed",
+      "mismatch": "Live billable count is {{live}}, invoiced {{invoiced}}. A no-show claim may have landed after this invoice was generated.",
+      "empty": "No bookings found in this period."
+    },
     "form": {
       "createInvoice": "Create Invoice",
       "editInvoice": "Edit Invoice",
