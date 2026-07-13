@@ -48,6 +48,17 @@ defaultCallDurationMinutes: integer("default_call_duration_minutes").default(30)
   account-level fallback. Default `30` (existing implicit default).
 - `businessHoursStart` / `businessHoursEnd` (existing `time` columns) —
   unchanged, no migration needed.
+- `openDays`: `integer[]` (or `smallint[]`), default `{1,2,3,4,5}` (Mon–Fri,
+  `0=Sun...6=Sat` to match JS `Date.getDay()` / cal.com's `days` convention).
+  **New column** — see "Weekday selection" below.
+
+`timezone` (existing column, line 41): add `.default("Europe/Amsterdam")`.
+All of Gabriel's clients are Netherlands-based, so rather than adding a
+timezone picker to the wizard, every account is simply correct by default
+from creation. This closes the silent-fallback gap identified in review
+(`resync-schedule.ts` resolving `LA_TIMEZONE || user.timeZone ||
+"Europe/Amsterdam"` when `account.timezone` was never set) without adding a
+question the client would never meaningfully answer differently.
 
 No migration script needed beyond `DEFAULT` values on the new columns
 (applied via a direct `pg` script per this repo's convention — `db:push` has
@@ -105,23 +116,78 @@ const durationMin =
 (`account` needs to be fetched alongside `campaign` in that handler if not
 already in scope.)
 
-## Business hours
+## Business hours & weekday selection
 
-No backend change. `businessHoursStart`/`businessHoursEnd` are already
-account fields; the accounts PATCH route already calls
-`resyncCaldiySchedule(account.id)` whenever either field changes
-(`server/routes/accounts.ts:93-94`), which rewrites the client's cal.diy
-"Working Hours" schedule and re-applies any manual busy blocks. Only the
-wizard-side UI is new — this is the sole write path for business hours since
-clients never log into cal.com/cal.diy directly.
+`businessHoursStart`/`businessHoursEnd` are already account fields; the
+accounts PATCH route already calls `resyncCaldiySchedule(account.id)`
+whenever either field changes (`server/routes/accounts.ts:93-94`). This
+spec adds a third trigger field, `openDays`, and threads it through the
+same pipeline so clients can mark which days they're open (e.g. including
+Saturday) instead of the current hardcoded Mon–Fri.
+
+**`server/routes/accounts.ts`**: extend the resync-trigger condition to
+also fire on `openDays` changes:
+
+```ts
+if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data || "openDays" in parsed.data) {
+  void resyncCaldiySchedule(account.id!);
+}
+```
+
+**`server/calendar/caldiy.ts` (`resyncCaldiySchedule`)**: pass the account's
+`openDays` through as a new env var, e.g. `LA_OPEN_DAYS` (JSON array or
+comma-separated `"1,2,3,4,5"`), alongside the existing
+`LA_BUSINESS_HOURS_START/END`/`LA_TIMEZONE`.
+
+**`~/caldiy/scripts/_schedule.ts` (`availabilityFromHours`)**: currently
+hardcodes `const schedule: Schedule = [[], [range], [range], [range],
+[range], [range], []]` (index 0=Sun, 6=Sat always empty). Change the
+signature to accept an `openDays: number[]` parameter and build the
+per-index array from it instead of the fixed literal:
+
+```ts
+export function availabilityFromHours(
+  start?: string | null,
+  end?: string | null,
+  openDays: number[] = [1, 2, 3, 4, 5],
+): Availability[] {
+  if (!start || !end) return getAvailabilityFromSchedule(DEFAULT_SCHEDULE);
+  const range = timeRange(start, end);
+  if (!range || range.start.getTime() >= range.end.getTime()) {
+    return getAvailabilityFromSchedule(DEFAULT_SCHEDULE);
+  }
+  const schedule: Schedule = [0, 1, 2, 3, 4, 5, 6].map((day) =>
+    openDays.includes(day) ? [range] : []
+  ) as Schedule;
+  return getAvailabilityFromSchedule(schedule);
+}
+```
+
+**`~/caldiy/scripts/resync-schedule.ts`**: read `LA_OPEN_DAYS`, parse to
+`number[]`, pass through to `availabilityFromHours(start, end, openDays)`.
+Default to `[1,2,3,4,5]` if unset (keeps the current Mon–Fri behavior for
+any account that predates this change, until the account is re-saved).
+
+This touches the separate `~/caldiy` repo, not just `LeadAwakerApp` — flag
+this explicitly in the implementation plan so it isn't missed as "just a
+CRM change."
+
+One opening/closing time pair applies uniformly to every selected day
+(no per-day hour variation, e.g. shorter Saturday hours) — matches the
+scope decision to keep this a single time range + day toggle set, not a
+per-day schedule grid.
+
+Only the wizard-side UI is new for `businessHoursStart`/`End`/`openDays` —
+this is the sole write path for business hours since clients never log
+into cal.com/cal.diy directly.
 
 ## Account PATCH route
 
 `server/routes/accounts.ts`: extend the accepted/validated body fields to
-include `minBookingNoticeHours` and `defaultCallDurationMinutes` (same
-pattern as the existing `businessHoursStart`/`businessHoursEnd` handling,
-minus the resync trigger — those two don't affect the cal.diy schedule
-directly).
+include `minBookingNoticeHours`, `defaultCallDurationMinutes`, and
+`openDays`. `minBookingNoticeHours`/`defaultCallDurationMinutes` don't
+affect the cal.diy schedule (no resync trigger needed); `openDays` does
+(see "Business hours & weekday selection" above).
 
 ## Frontend: wizard section
 
@@ -154,11 +220,16 @@ Same pattern as `MeetingTypeCard`: local state seeded from props, PATCH
 indicators.
 
 Fields:
+- **Open days** — 7 toggle pills (Mon Tue Wed Thu Fri Sat Sun), Mon–Fri
+  pre-checked by default → `openDays` (`int[]`, `0=Sun...6=Sat`)
 - **Opening time** — time input → `businessHoursStart`
 - **Closing time** — time input → `businessHoursEnd`
 - **Call duration (minutes)** — number input → `defaultCallDurationMinutes`
 - **Minimum booking notice (hours)** — number input, clamped 0–168 →
   `minBookingNoticeHours`
+
+One shared opening/closing time applies to all checked days — no per-day
+hour variation in this version (see "Business hours & weekday selection").
 
 Each field autosaves independently on blur/change, consistent with
 `MeetingTypeCard`'s per-field PATCH calls (not one combined submit).
@@ -181,35 +252,27 @@ per existing project-wide PT deprecation). Section label
 `sections.availability` alongside the existing `sections.sales` /
 `sections.booking` keys in `communicationProfile.json`.
 
-## Known gaps surfaced during review (not yet resolved)
+## Gaps found during review — resolved
 
-- **Days-of-week are hardcoded to Mon–Fri.** `caldiy/scripts/_schedule.ts`
-  (`availabilityFromHours`) always builds `[[], [range], [range], [range],
-  [range], [range], []]` — Sunday and Saturday are unconditionally closed,
-  regardless of what opening/closing time is passed in. The wizard as spec'd
-  has no way for a client to say "we're open Saturdays" or "closed
-  Wednesdays." This is a pre-existing gap (the agency-facing admin view has
-  the same limitation today), not something this spec introduces — but it
-  means the new client-facing wizard will actively mislead clients whose
-  real hours include a weekend day, which is plausible for the
-  home-improvement/contractor niche. **Decision needed before implementation:**
-  either (a) extend `AvailabilityCard` with a day-of-week multi-select and
-  thread `days` through `resync-schedule.ts`/`_schedule.ts` (real scope
-  increase — touches the cal.diy repo, not just this one), or (b) ship
-  Mon–Fri-only for now and note it explicitly as a known limitation.
-- **No timezone field in this wizard.** `resync-schedule.ts` resolves
-  timezone as `LA_TIMEZONE || user.timeZone || "Europe/Amsterdam"`, and
-  `LA_TIMEZONE` is only set from `account.timezone`, which today is only
-  ever set via the separate agency-facing `ProfileSection.tsx` (Settings
-  page) — not this wizard. If a client is onboarded end-to-end through the
-  wizard and nobody has set their account timezone elsewhere, business hours
-  will resync under a fallback timezone that may not match the client's
-  actual location. **Decision needed:** either confirm timezone is always
-  set some other way before this step runs (e.g. earlier in the wizard, or
-  as an agency setup step before handing the wizard to the client), or add a
-  timezone field to `AvailabilityCard` as well.
+- **Days-of-week hardcoded to Mon–Fri** → resolved by adding `openDays` and
+  threading it through `_schedule.ts`/`resync-schedule.ts` (see "Business
+  hours & weekday selection"). Clients can now mark Saturday (or any day)
+  open.
+- **No timezone field / silent fallback risk** → resolved by defaulting
+  `accounts.timezone` to `"Europe/Amsterdam"` at the column level instead of
+  adding a wizard question. All of Gabriel's clients are Netherlands-based,
+  so there is no real per-client value asked; this just removes the gap
+  where an unset `account.timezone` silently fell back inside
+  `resync-schedule.ts`. If Lead Awaker ever takes on non-NL clients, this
+  default will need revisiting (flagged here for future-self, not
+  actionable now).
 
 ## Out of scope / explicitly deferred
+
+- **Per-day hour variation** (e.g. Saturday 10:00–14:00 vs weekday
+  09:00–17:00) — one shared time range applies to all open days. Real
+  clients with shorter weekend hours would need to either accept the
+  overlap or a future per-day-hours iteration.
 
 - No campaign-level override for any of these four fields — account-level
   only, matches how the client will actually be asked ("what are your
@@ -231,6 +294,13 @@ per existing project-wide PT deprecation). Section label
 - Manual: change business hours in the wizard, confirm
   `resyncCaldiySchedule` fires (check pm2 logs / cal.diy schedule) same as
   it already does from the account admin view.
+- Manual: toggle Saturday on with hours 10:00–14:00, confirm cal.diy's
+  schedule actually shows Saturday as bookable (query the schedule via
+  Prisma/cal.diy admin, or attempt to fetch a Saturday slot through
+  `caldiy_get_availability`) and that Sunday remains closed.
+- Manual: confirm a newly created account has `timezone` = `Europe/Amsterdam`
+  by default with no wizard interaction, and that `resync-schedule.ts` logs
+  show it using that value (not a cal.diy-user fallback).
 - Manual: with a test campaign/lead, verify the AI does not offer a slot
   earlier than `now + minBookingNoticeHours`, and that same-day slots are
   offered when the notice window and cal.diy availability both allow it.
