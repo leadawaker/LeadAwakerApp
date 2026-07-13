@@ -30,11 +30,19 @@
   "done": {
     "title": "Profiel compleet 🎉",
     "subtitle": "Het communicatieprofiel is opgeslagen. De assistent praat nu precies zoals jullie willen.",
-    "button": "Bekijk profiel"
+    "button": "Bekijk profiel",
+    "nextSteps": {
+      "title": "Wat volgt: WhatsApp live krijgen",
+      "step1": "Messaging instellen in het Integraties-paneel — regelt automatisch het Twilio-nummer (SMS werkt meteen).",
+      "step2": "We bellen met de klant om hun Facebook Business Manager te koppelen en de WhatsApp-afzender te registreren. De weergavenaam die we registreren is de bedrijfsnaam (bijv. \"X Kitchens\"), niet de naam van de AI.",
+      "step3": "Meta-bedrijfsverificatie loopt parallel (tot ~20 dagen) — verzenden werkt al voordat dit klaar is, verificatie verhoogt alleen de dagelijkse berichtenlimiet.",
+      "step4": "Zodra de afzender is goedgekeurd, koppelen we de berichtsjablonen aan de campagne en is alles volledig live."
+    }
   },
   "sections": {
     "tone": "Identiteit en stijl",
     "identity": "Woorden & identiteit",
+    "availability": "Beschikbaarheid",
     "sales": "Verkoopargumenten",
     "facts": "Feiten & beleid",
     "booking": "Afspraken instellen"
@@ -42,6 +50,9 @@
   "questions": {
     "meetingType": {
       "label": "Hoe voer je geboekte gesprekken met leads?"
+    },
+    "availabilityHours": {
+      "label": "Wanneer kunnen leads een gesprek bij u boeken?"
     },
     "bookingUrl": {
       "label": "Welke link gebruiken jullie om afspraken in te plannen?",

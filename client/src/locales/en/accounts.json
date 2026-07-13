@@ -563,6 +563,24 @@
     "callingNumberHintWhatsapp": "The advisor's number, sent to the lead as a contact card right after booking — separate from your connected chat number, since the person who calls is often not the same as the one texting.",
     "whatsappHint": "The booked call happens over WhatsApp, from the calling number above."
   },
+  "availability": {
+    "title": "Availability",
+    "openDays": "Open days",
+    "days": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "0": "Sun"
+    },
+    "openingTime": "Opening time",
+    "closingTime": "Closing time",
+    "callDuration": "Call duration (minutes)",
+    "minBookingNotice": "Minimum booking notice (hours)",
+    "minBookingNoticeHint": "How far in advance a lead must book. E.g. 4 = same-day is fine as long as it's 4+ hours out. 24 = next-day only."
+  },
   "customDomain": {
     "title": "Custom booking domain",
     "optional": "Optional",

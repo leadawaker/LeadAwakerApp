@@ -563,6 +563,24 @@
     "callingNumberHintWhatsapp": "Het nummer van de adviseur, verstuurd als contactkaartje direct na het boeken — los van je gekoppelde chatnummer, want degene die belt is vaak niet dezelfde als degene die appt.",
     "whatsappHint": "Het geboekte gesprek vindt plaats via WhatsApp, vanaf het belnummer hierboven."
   },
+  "availability": {
+    "title": "Beschikbaarheid",
+    "openDays": "Open dagen",
+    "days": {
+      "1": "Ma",
+      "2": "Di",
+      "3": "Wo",
+      "4": "Do",
+      "5": "Vr",
+      "6": "Za",
+      "0": "Zo"
+    },
+    "openingTime": "Openingstijd",
+    "closingTime": "Sluitingstijd",
+    "callDuration": "Gespreksduur (minuten)",
+    "minBookingNotice": "Minimale boekingstermijn (uren)",
+    "minBookingNoticeHint": "Hoe ver van tevoren een lead moet boeken. Bijv. 4 = dezelfde dag is prima zolang het 4+ uur van tevoren is. 24 = alleen de volgende dag."
+  },
   "customDomain": {
     "title": "Eigen boekingsdomein",
     "optional": "Optioneel",

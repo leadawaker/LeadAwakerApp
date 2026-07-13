@@ -30,11 +30,19 @@
   "done": {
     "title": "Profile complete 🎉",
     "subtitle": "The communication profile is saved. The assistant now talks exactly the way you want.",
-    "button": "View profile"
+    "button": "View profile",
+    "nextSteps": {
+      "title": "What's next: getting WhatsApp live",
+      "step1": "Set up messaging in the Integrations panel — provisions the Twilio number automatically (SMS is ready right away).",
+      "step2": "We'll get on a call with the client to connect their Facebook Business Manager and register the WhatsApp sender. The display name we register is the business name (e.g. \"X Kitchens\"), not the AI's persona name.",
+      "step3": "Meta business verification runs in parallel (up to ~20 days) — sending already works before it finishes, verification just raises the daily message limit.",
+      "step4": "Once the sender is approved, we link the message templates to the campaign and it's fully live."
+    }
   },
   "sections": {
     "tone": "Identity and Style",
     "identity": "Words & identity",
+    "availability": "Availability",
     "sales": "Sales arguments",
     "facts": "Facts & policy",
     "booking": "Booking setup"
@@ -42,6 +50,9 @@
   "questions": {
     "meetingType": {
       "label": "How do you conduct booked calls with leads?"
+    },
+    "availabilityHours": {
+      "label": "When can leads book a call with you?"
     },
     "bookingUrl": {
       "label": "Which link do you use to book appointments?",
