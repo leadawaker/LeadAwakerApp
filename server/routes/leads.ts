@@ -219,7 +219,12 @@ export function registerLeadsRoutes(app: Express): void {
         try {
           const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(" ") || "Lead";
           const campaign = lead.campaignsId ? await storage.getCampaignById(lead.campaignsId) : null;
-          const durationMin = lead.callDurationMinutes || campaign?.defaultCallDurationMinutes || 30;
+          const account = await storage.getAccountById(lead.accountsId);
+          const durationMin =
+            lead.callDurationMinutes ||
+            campaign?.defaultCallDurationMinutes ||
+            account?.defaultCallDurationMinutes ||
+            30;
           const start = new Date(lead.bookedCallDate);
           const end = new Date(start.getTime() + durationMin * 60000);
           await pushBookingEvent(lead.accountsId, {
