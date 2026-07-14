@@ -9,6 +9,7 @@ const SCENARIOS = [
 function Audit() {
   const isMobile = window.useIsMobile();
   const { t } = window.useI18n();
+  const { symbol, locale } = window.useCurrency();
   const [copied, setCopied] = React.useState(false);
   const [sectionRef, sectionInView] = window.useInView();
 
@@ -104,17 +105,20 @@ function Audit() {
   const r = results[scenario];
 
   function fmtNum(n) {
-    return Math.round(n).toLocaleString('nl-NL');
+    return Math.round(n).toLocaleString(locale);
   }
 
   function fmt(n) {
-    if (n >= 1_000_000) return "€" + (n / 1_000_000).toFixed(1).replace('.', ',') + "M";
-    if (n >= 1_000)     return "€" + Math.round(n / 1_000) + "K";
-    return "€" + fmtNum(n);
+    if (n >= 1_000_000) {
+      const millions = (n / 1_000_000).toFixed(1);
+      return symbol + (locale === 'en-GB' ? millions : millions.replace('.', ',')) + "M";
+    }
+    if (n >= 1_000) return symbol + Math.round(n / 1_000) + "K";
+    return symbol + fmtNum(n);
   }
 
   function fmtFull(n) {
-    return "€" + fmtNum(n);
+    return symbol + fmtNum(n);
   }
 
   function pctOfDormant(n) {
@@ -160,8 +164,8 @@ function Audit() {
           style={{ '--pct': pct }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>{min.toLocaleString('nl-NL')}</span>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>{max.toLocaleString('nl-NL')}</span>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>{min.toLocaleString(locale)}</span>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>{max.toLocaleString(locale)}</span>
         </div>
       </div>
     );
@@ -191,7 +195,7 @@ function Audit() {
       }}>
         {AuditSlider({
           label: t('audit.label_quotes'), min: 50, max: 2000, step: 50,
-          value: quotes, onChange: setQuotes, display: quotes.toLocaleString('nl-NL'),
+          value: quotes, onChange: setQuotes, display: quotes.toLocaleString(locale),
           editing: editQuotes, setEditing: setEditQuotes,
           inputVal: quotesInput, setInputVal: setQuotesInput, onCommit: setQuotes,
         })}
@@ -206,7 +210,7 @@ function Audit() {
         <div style={{ height: 1, background: "var(--line)", margin: "8px 0" }} />
         {AuditSlider({
           label: t('audit.label_value'), min: 1000, max: 100000, step: 1000,
-          value: avgValue, onChange: setAvgValue, display: "€" + avgValue.toLocaleString('nl-NL'),
+          value: avgValue, onChange: setAvgValue, display: symbol + avgValue.toLocaleString(locale),
           editing: editValue, setEditing: setEditValue,
           inputVal: valueInput, setInputVal: setValueInput, onCommit: setAvgValue,
         })}
@@ -241,7 +245,7 @@ function Audit() {
                 <span style={{ fontFamily: "var(--sans)", fontSize: 13, color: "var(--mute)", fontWeight: 500 }}>{m.label}</span>
                 <span style={{ fontFamily: "var(--mono)", fontSize: 15, color: "var(--ink)", fontWeight: 700 }}>
                   {m.label !== t('audit.metric_total') && <span style={{ fontSize: 11, color: "var(--mute-2)", marginRight: 6 }}>{Math.round(m.bar * animProgress)}%</span>}
-                  {m.value.toLocaleString('nl-NL')}
+                  {m.value.toLocaleString(locale)}
                 </span>
               </div>
               {MetricBar({ pct: m.bar })}

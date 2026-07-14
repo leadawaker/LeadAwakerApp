@@ -364,3 +364,10 @@ window.useI18n = function useI18n() {
   if (!ctx) throw new Error('useI18n must be called inside I18nProvider');
   return ctx;
 };
+
+window.useCurrency = function useCurrency() {
+  const currency = window.__CURRENCY__ === 'GBP' ? 'GBP' : 'EUR';
+  return currency === 'GBP'
+    ? { symbol: '£', locale: 'en-GB' }
+    : { symbol: '€', locale: 'nl-NL' };
+};
