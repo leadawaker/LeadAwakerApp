@@ -59,7 +59,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   const curIdx = sections.indexOf(cur);
 
   return (
-    <div style={compact
+    <div className="max-w-[1386px] mx-auto" style={compact
       ? { display: 'flex', flexDirection: 'column', gap: 16 }
       : { display: 'flex', gap: 'var(--gap, 22px)', alignItems: 'flex-start' }}>
 
@@ -158,7 +158,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
             <button
               onClick={() => curIdx < sections.length - 1 && setActive(sections[curIdx + 1].id)}
               disabled={curIdx === sections.length - 1}
-              className={cn("la-btn", curIdx < sections.length - 1 ? "la-btn--wine" : "la-btn--soft")}
+              className={cn("la-btn", curIdx < sections.length - 1 ? "la-btn--plain" : "la-btn--soft")}
               style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase' as const, gap: 8, opacity: curIdx === sections.length - 1 ? 0.5 : undefined }}
             >
               {curIdx < sections.length - 1 ? t(sections[curIdx + 1].labelKey) : "All done"} →

@@ -78,6 +78,14 @@
 }
 .la-btn--inset:hover { color: var(--wine); }
 
+.la-btn--plain {
+  background: transparent;
+  box-shadow: none;
+  color: var(--wine);
+}
+.la-btn--plain:hover { color: var(--wine-soft); }
+.la-btn--plain:disabled { opacity: 0.5; cursor: default; }
+
 .la-btn--icon { width: 32px; height: 32px; padding: 0; gap: 0; }
 .la-btn--lg { font-size: 11px; padding: 13px 22px; }
 .la-btn--pill { border-radius: var(--r-pill); }

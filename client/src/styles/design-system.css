@@ -598,6 +598,14 @@ body, html { margin: 0; padding: 0; }
   box-shadow: var(--sh-inset-super-crisp);
 }
 .la-btn--inset:hover { color: var(--wine); }
+/* Plain — transparent text-only button */
+.la-btn--plain {
+  background: transparent;
+  box-shadow: none;
+  color: var(--wine);
+}
+.la-btn--plain:hover { color: var(--wine-soft); }
+.la-btn--plain:disabled { opacity: 0.5; cursor: default; }
 /* Shape / size modifiers */
 .la-btn--icon { width: 32px; height: 32px; padding: 0; gap: 0; }
 .la-btn--lg   { font-size: 11px; padding: 13px 22px; }
