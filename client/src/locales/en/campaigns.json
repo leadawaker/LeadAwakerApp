@@ -352,8 +352,6 @@
     "objectionPlaceholder5": "e.g. \"Not interested right now\"",
     "objectionAdd": "Add objection",
     "objectionRemove": "Remove objection",
-    "previewOpener": "Preview",
-    "editOpener": "Edit",
     "previewEmpty": "No message configured yet.",
     "openerTemplatesButton": "Templates",
     "openerTemplatesTitle": "Opener templates",

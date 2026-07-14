@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Bot, Building2, MessageSquare,
   Award, Megaphone, BookOpen, Paintbrush, UserRound,
-  HelpCircle, X, Plus,
+  HelpCircle, X, Plus, LayoutTemplate,
 } from "lucide-react";
 import {
   EditText, InfoRow, CopyButton,
@@ -23,10 +23,6 @@ import { OpenerTemplatePicker, type OpenerTemplate } from "./OpenerTemplatePicke
 // The four built-in assistant personas (same set as the onboarding wizard). The
 // operator picks one or types a custom name — it's a pick-or-type combobox.
 const AGENT_NAME_OPTIONS = ["Thomas", "Mark", "Sophie", "Lisa"].map((n) => ({ label: n, store: n }));
-
-const MONO_BTN_STYLE: React.CSSProperties = {
-  fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-};
 
 // Distinct example objections per row (price / competitor / stalling) so the
 // playbook demonstrates its range instead of repeating the same example 3x.
@@ -125,13 +121,13 @@ export function BusinessSectionFields({
      as Company Name / Demo Lead Name / the template text change — no manual
      refresh. Local-only — nothing is sent. */
   const session = useSession();
-  const [rawEditOpen, setRawEditOpen] = useState(false);
+  const [firstMessageFocused, setFirstMessageFocused] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [nicheTerms, setNicheTerms] = useState<Record<string, Record<string, string>>>({});
   const fetchedNicheKeysRef = useRef<Set<string>>(new Set());
 
   // Entering edit mode always lands on the preview, not mid-edit of the raw template.
-  useEffect(() => { if (isEditing) setRawEditOpen(false); }, [isEditing]);
+  useEffect(() => { if (isEditing) setFirstMessageFocused(false); }, [isEditing]);
 
   const fetchNicheTerms = async (niche: string, lang: "en" | "nl"): Promise<Record<string, string>> => {
     const defaults = DEFAULT_NICHE_TERMS[lang];
@@ -246,7 +242,7 @@ export function BusinessSectionFields({
 
   const handlePickTemplate = (tpl: OpenerTemplate) => {
     setDraft(d => ({ ...d, First_Message: JSON.stringify({ en: tpl.body.en, nl: tpl.body.nl }) }));
-    setRawEditOpen(false); // land back on the live preview showing the applied template
+    setFirstMessageFocused(false); // land back on the live preview showing the applied template
   };
 
   return (
@@ -321,49 +317,48 @@ export function BusinessSectionFields({
       </div>
 
       {/* First Message — the opener template. This is the field Finn live-edits
-          on screenshare during the demo (Part 1 of the trust-kit spec). */}
+          on screenshare during the demo (Part 1 of the trust-kit spec). Click the
+          preview to edit; blur reverts to preview (draft autosaves as-you-type). */}
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={MessageSquare} label={t("config.firstMessage")}
           value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
           editChild={isEditing ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
-              {rawEditOpen ? (
-                <>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setTemplatesOpen(true)}
+                className="la-btn la-btn--soft la-btn--icon"
+                title={t("config.openerTemplatesButton")}
+                style={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, zIndex: 1 }}
+              >
+                <LayoutTemplate size={14} />
+              </button>
+              {firstMessageFocused ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
                   <EditText
                     value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
                     onChange={(v) => onTextChange("First_Message", draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template, v)}
+                    onBlur={() => setFirstMessageFocused(false)}
                     multiline
                     minRows={3}
+                    autoFocus
                     placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
+                  <div style={{ alignSelf: 'flex-start' }}>
                     <CopyButton value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)} />
-                    <button type="button" onClick={() => setRawEditOpen(false)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
-                      {t("config.previewOpener")}
-                    </button>
-                    <button type="button" onClick={() => setTemplatesOpen(true)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
-                      {t("config.openerTemplatesButton")}
-                    </button>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <div style={{
-                    fontSize: 13, lineHeight: 1.5, color: 'var(--ink)',
+                <div
+                  onClick={() => setFirstMessageFocused(true)}
+                  style={{
+                    fontSize: 13, lineHeight: 1.5, color: 'var(--ink)', cursor: 'text',
                     border: '1px solid var(--line)', borderRadius: 'var(--r-input, 10px)',
-                    padding: '10px 12px', whiteSpace: 'pre-wrap', minHeight: 64,
-                  }}>
-                    {previewText || t("config.previewEmpty")}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm, 8px)' }}>
-                    <button type="button" onClick={() => setRawEditOpen(true)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
-                      {t("config.editOpener")}
-                    </button>
-                    <button type="button" onClick={() => setTemplatesOpen(true)} className="la-btn la-btn--soft" style={MONO_BTN_STYLE}>
-                      {t("config.openerTemplatesButton")}
-                    </button>
-                  </div>
-                </>
+                    padding: '10px 40px 10px 12px', whiteSpace: 'pre-wrap', minHeight: 64,
+                  }}
+                >
+                  {previewText || t("config.previewEmpty")}
+                </div>
               )}
             </div>
           ) : undefined}

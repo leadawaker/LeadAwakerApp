@@ -7,6 +7,7 @@ export function EditText({
   multiline = false,
   autoFocus = false,
   minRows = 3,
+  onBlur,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -14,6 +15,7 @@ export function EditText({
   multiline?: boolean;
   autoFocus?: boolean;
   minRows?: number;
+  onBlur?: () => void;
 }) {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +58,7 @@ export function EditText({
         ref={taRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         rows={minRows}
         className="la-input resize-none overflow-y-auto"
@@ -70,6 +73,7 @@ export function EditText({
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       className="la-input"
     />
