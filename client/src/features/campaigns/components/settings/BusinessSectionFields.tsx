@@ -264,6 +264,51 @@ export function BusinessSectionFields({
         />
       )}
 
+      {/* Service — multilingual dropdown */}
+      <InfoRow icon={Megaphone} label={t("config.service")}
+        value={displayLabel("service_name", campaign.service_name)}
+        {...editFor("service_name")}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={displayLabel("service_name", draft.service_name ?? campaign.service_name)}
+            onChange={(store) => setDraft(d => ({...d, service_name: store}))}
+            options={comboOptions("service_name", SERVICE_OPTIONS)}
+            {...focusFor("service_name")}
+          />
+        ) : undefined}
+      />
+
+      {/* USP — multilingual dropdown */}
+      <InfoRow icon={Award} label={t("config.usp")}
+        value={displayLabel("campaign_usp", campaign.campaign_usp)}
+        {...editFor("campaign_usp")}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={displayLabel("campaign_usp", draft.campaign_usp ?? campaign.campaign_usp)}
+            onChange={(store) => setDraft(d => ({...d, campaign_usp: store}))}
+            options={comboOptions("campaign_usp", USP_OPTIONS)}
+            {...focusFor("campaign_usp")}
+          />
+        ) : undefined}
+      />
+
+      {/* Knowledge base — full width. */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={BookOpen} label={t("config.kb")}
+          value={displayText(draft.kb ?? campaign.kb)} richText={true} noBorder
+          {...editFor("kb")}
+          editChild={isEditing ? (
+            <EditText
+              value={displayText(draft.kb ?? campaign.kb)}
+              onChange={(v) => onTextChange("kb", draft.kb ?? campaign.kb, v)}
+              multiline minRows={1}
+              placeholder={placeholderFor("kb", uiLang)}
+              {...focusFor("kb")}
+            />
+          ) : undefined}
+        />
+      </div>
+
       {/* First Message — the opener template. This is the field Finn live-edits
           on screenshare during the demo (Part 1 of the trust-kit spec). */}
       <div style={{ gridColumn: '1 / -1' }}>
@@ -340,51 +385,6 @@ export function BusinessSectionFields({
           />
         ) : undefined}
       />
-
-      {/* Service — multilingual dropdown */}
-      <InfoRow icon={Megaphone} label={t("config.service")}
-        value={displayLabel("service_name", campaign.service_name)}
-        {...editFor("service_name")}
-        editChild={isEditing ? (
-          <LocalizedCombo
-            displayValue={displayLabel("service_name", draft.service_name ?? campaign.service_name)}
-            onChange={(store) => setDraft(d => ({...d, service_name: store}))}
-            options={comboOptions("service_name", SERVICE_OPTIONS)}
-            {...focusFor("service_name")}
-          />
-        ) : undefined}
-      />
-
-      {/* USP — multilingual dropdown */}
-      <InfoRow icon={Award} label={t("config.usp")}
-        value={displayLabel("campaign_usp", campaign.campaign_usp)}
-        {...editFor("campaign_usp")}
-        editChild={isEditing ? (
-          <LocalizedCombo
-            displayValue={displayLabel("campaign_usp", draft.campaign_usp ?? campaign.campaign_usp)}
-            onChange={(store) => setDraft(d => ({...d, campaign_usp: store}))}
-            options={comboOptions("campaign_usp", USP_OPTIONS)}
-            {...focusFor("campaign_usp")}
-          />
-        ) : undefined}
-      />
-
-      {/* Knowledge base — full width, alone at the bottom. */}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <InfoRow icon={BookOpen} label={t("config.kb")}
-          value={displayText(draft.kb ?? campaign.kb)} richText={true} noBorder
-          {...editFor("kb")}
-          editChild={isEditing ? (
-            <EditText
-              value={displayText(draft.kb ?? campaign.kb)}
-              onChange={(v) => onTextChange("kb", draft.kb ?? campaign.kb, v)}
-              multiline minRows={1}
-              placeholder={placeholderFor("kb", uiLang)}
-              {...focusFor("kb")}
-            />
-          ) : undefined}
-        />
-      </div>
 
       {/* Objection playbook — up to 3 owner-approved objection/answer pairs,
           injected into the AI's system prompt (Part 3 of the trust-kit spec). */}
