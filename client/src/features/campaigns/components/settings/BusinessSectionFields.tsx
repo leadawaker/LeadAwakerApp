@@ -249,7 +249,6 @@ export function BusinessSectionFields({
           editable (no save needed): typed live during a discovery screenshare. */}
       {setLaunchName && (
         <InfoRow icon={UserRound} label={t("config.launchName")} value={null}
-          description={t("config.launchNameHint")}
           editChild={
             <input
               type="text"
