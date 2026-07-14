@@ -59,7 +59,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   const curIdx = sections.indexOf(cur);
 
   return (
-    <div className="max-w-[1386px] mx-auto" style={compact
+    <div className="max-w-[1386px] mr-auto" style={compact
       ? { display: 'flex', flexDirection: 'column', gap: 16 }
       : { display: 'flex', gap: 'var(--gap, 22px)', alignItems: 'flex-start' }}>
 
