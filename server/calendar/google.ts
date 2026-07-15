@@ -12,10 +12,8 @@ const REDIRECT_URI =
   process.env.GOOGLE_CALENDAR_REDIRECT_URI ||
   "https://app.leadawaker.com/api/calendar/oauth/google/callback";
 const SCOPES = [
-  // Full calendar scope so the same token can be injected into Cal.diy, which
-  // requires https://www.googleapis.com/auth/calendar. Covers events + readonly.
-  "https://www.googleapis.com/auth/calendar",
-  "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/calendar.events.freebusy",
+  "https://www.googleapis.com/auth/calendar.events",
 ];
 
 function oauthClient() {
@@ -50,13 +48,10 @@ export const googleAdapter: CalendarAdapter = {
   async exchangeCode(code: string): Promise<Partial<CalendarConnection>> {
     const client = oauthClient();
     const { tokens } = await client.getToken(code);
-    client.setCredentials(tokens);
-    const oauth2 = google.oauth2({ version: "v2", auth: client });
-    const profile = await oauth2.userinfo.get();
     return {
       provider: "google",
       status: "connected",
-      displayName: profile.data.email || "Google Calendar",
+      displayName: "Google Calendar",
       calendarId: "primary",
       oauthTokensEncrypted: encryptSecret(tokens),
     };
