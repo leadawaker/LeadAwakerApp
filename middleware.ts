@@ -30,6 +30,18 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;");
 }
 
+function resolveCurrency(request: Request): "GBP" | "EUR" {
+  const country = request.headers.get("x-vercel-ip-country");
+  return country === "GB" ? "GBP" : "EUR";
+}
+
+function injectCurrency(html: string, currency: "GBP" | "EUR"): string {
+  return html.replace(
+    '<meta charset="utf-8" />',
+    `<meta charset="utf-8" />\n<script>window.__CURRENCY__="${currency}";</script>`
+  );
+}
+
 interface OgTags {
   title: string;
   description: string;
@@ -69,7 +81,7 @@ export default async function middleware(request: Request): Promise<Response> {
   if (!hasCalcParams) {
     const baseOg = translations[lang];
     const res = await fetch(new URL("/index.html", url.origin), request);
-    const html = await res.text();
+    const html = injectCurrency(await res.text(), resolveCurrency(request));
 
     const updated = html
       .replace(
@@ -163,7 +175,7 @@ export default async function middleware(request: Request): Promise<Response> {
   }
 
   const res = await fetch(new URL("/index.html", url.origin), request);
-  const html = await res.text();
+  const html = injectCurrency(await res.text(), resolveCurrency(request));
 
   const escTitle = escapeHtml(title);
   const escDesc = escapeHtml(description);

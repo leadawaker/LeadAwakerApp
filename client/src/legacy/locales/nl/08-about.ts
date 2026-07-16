@@ -7,7 +7,7 @@ export default {
     "paragraph3": "Dan reageren mensen. Niet omdat je aandrong, maar omdat ze zich begrepen voelden."
   },
   "founder": {
-    "name": "YOUR_NAME",
+    "name": "Gabriel Fronza",
     "title": "Oprichter",
     "tagline": "Ik bouw systemen die aandacht verdienen.",
     "body1": "Als AI-specialist, developer, designer en digital artist, wordt mijn werk gevormd door psychologie, technologie en esthetiek.",

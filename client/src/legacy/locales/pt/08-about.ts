@@ -7,7 +7,7 @@ export default {
     "paragraph3": "É aí que as pessoas respondem. Não por insistência, mas porque se sentiram entendidas."
   },
   "founder": {
-    "name": "YOUR_NAME",
+    "name": "Gabriel Fronza",
     "title": "Fundador",
     "tagline": "Construo sistemas que conquistam atenção.",
     "body1": "Como especialista em IA, desenvolvedor, designer e artista digital, meu trabalho é moldado pela psicologia, tecnologia e estética.",

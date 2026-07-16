@@ -20,6 +20,8 @@ const Cases = lazy(() => import("@/pages/cases"));
 const IntakeDemo = lazy(() => import("@/pages/intake-demo"));
 const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
 const LegacyHome = lazy(() => import("@/legacy/LegacyRoute"));
+const LegacyPrivacyPolicy = lazy(() => import("@/legacy/PrivacyPolicyRoute"));
+const LegacyTermsOfService = lazy(() => import("@/legacy/TermsOfServiceRoute"));
 
 const AppArea = lazy(() => import("@/pages/app"));
 const Canvas = lazy(() => import("@/pages/canvas"));
@@ -108,6 +110,8 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={() => <Redirect to="/platform" />} />
       <Route path="/legacy" component={LegacyHome} />
+      <Route path="/legacy/privacy-policy" component={LegacyPrivacyPolicy} />
+      <Route path="/legacy/terms-of-service" component={LegacyTermsOfService} />
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
       <Route path="/services" component={() => <Redirect to="/cases" />} />
@@ -154,6 +158,8 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/privacy-policy`} component={PrivacyPolicy} />
       <Route path={`/${lang}/terms-of-service`} component={TermsOfService} />
       <Route path={`/${lang}/legacy`} component={LegacyHome} />
+      <Route path={`/${lang}/legacy/privacy-policy`} component={LegacyPrivacyPolicy} />
+      <Route path={`/${lang}/legacy/terms-of-service`} component={LegacyTermsOfService} />
 
       {/* Home MUST be last */}
       <Route path={`/${lang}`} component={() => <Redirect to={`/${lang}/faq`} />} />

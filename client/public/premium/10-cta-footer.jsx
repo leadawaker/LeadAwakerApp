@@ -98,6 +98,7 @@ function buildCtaBgTransform({ scale, tx, ty, rot, flipX, flipY }) {
 function CTA() {
   const isMobile = window.useIsMobile();
   const { t } = window.useI18n();
+  const { symbol, locale } = window.useCurrency();
 
   /* ---- bg image debug adjustments ---- */
   const [bgAdj, setBgAdj] = React.useState(() =>
@@ -159,7 +160,7 @@ function CTA() {
     const notes = desc + "\n\n" + [
       `Quotes/year: ${quotes}`,
       `Go silent: ${silentPct}%`,
-      `Avg project value: €${avgValue.toLocaleString('nl-NL')}`,
+      `Avg project value: ${symbol}${avgValue.toLocaleString(locale)}`,
     ].join("\n");
 
     try {
@@ -320,6 +321,7 @@ function CTA() {
                       <GlassTextarea ph={t('cta.ph_describe')} value={description} onChange={(e) => setDescription(e.target.value)} />
                       <QualifyingSliders
                         t={t}
+                        locale={locale}
                         quotes={quotes} setQuotes={setQuotes}
                         silentPct={silentPct} setSilentPct={setSilentPct}
                         avgValue={avgValue} setAvgValue={setAvgValue}
@@ -476,7 +478,7 @@ function CalInlineEmbed({ prefill, style }) {
   );
 }
 
-function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, numbersAccurate, setNumbersAccurate, name }) {
+function QualifyingSliders({ t, locale, quotes, setQuotes, silentPct, setSilentPct, avgValue, setAvgValue, numbersAccurate, setNumbersAccurate, name }) {
   const handleSliderChange = (setter, value) => {
     setter(value);
     window.__leadAwakerCalc = window.__leadAwakerCalc || {};
@@ -497,7 +499,7 @@ function QualifyingSliders({ t, quotes, setQuotes, silentPct, setSilentPct, avgV
   };
 
   const rows = [
-    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString('nl-NL') },
+    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString(locale) },
     { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
   ];
   const hasName = name && name.trim().length > 0;

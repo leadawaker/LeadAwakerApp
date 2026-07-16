@@ -4,6 +4,24 @@
    All variables are scoped to .legacy-app so they don't
    conflict with a parent application during development.
    ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* Modern sans pairing (matches the client handoff build) — overrides the
+   CRM's default Manrope/Playfair Display pairing, scoped to .legacy-app only. */
+.legacy-app,
+.legacy-app .font-sans {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+.legacy-app h1,
+.legacy-app h2,
+.legacy-app h3,
+.legacy-app h4,
+.legacy-app h5,
+.legacy-app h6,
+.legacy-app .font-heading {
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+}
+
 .legacy-app {
   /* Shadcn/ui token overrides — sets the "primary" button/CTA color */
   --primary: 243.4 75.4% 58.7%;      /* #4F46E5 — primary indigo */
