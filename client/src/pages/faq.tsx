@@ -5,6 +5,7 @@ import { ChevronDown, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import Seo from "@/Seo";
+import "@/legacy/styles/theme.css";
 
 // three.js is ~600KB — load the decorative dotted surface only when faq mounts.
 const DottedSurface = lazy(() =>

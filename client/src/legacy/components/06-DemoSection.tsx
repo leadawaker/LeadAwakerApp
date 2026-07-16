@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Triangle } from "lucide-react";
 import i18n from "../../i18n";
 
 function TypingDots() {
@@ -249,17 +249,14 @@ export default function DemoSection() {
             {/* Phone-style header */}
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-white rounded-t-2xl -mx-6 -mt-6 px-6 pt-6">
               <div className="w-16 h-16 rounded-full bg-white ring-1 ring-zinc-200 dark:ring-zinc-700 flex items-center justify-center overflow-hidden">
-                {/* TODO: replace with your AI agent's logo */}
-                <img
-                  src="/your-ai-logo.svg"
-                  alt="AI Assistant"
-                  className="w-12 h-12 object-contain"
-                  style={{ marginTop: "-3px" }}
+                <Triangle
+                  className="w-7 h-7"
+                  fill="var(--brand-blue-mid)"
+                  stroke="none"
                 />
               </div>
               <div>
-                {/* TODO: replace with your AI agent's name */}
-                <p className="text-lg font-semibold text-foreground leading-none">YOUR_AI_NAME</p>
+                <p className="text-lg font-semibold text-foreground leading-none">Dennis</p>
                 <p className="text-sm text-muted-foreground mt-1">online</p>
               </div>
             </div>

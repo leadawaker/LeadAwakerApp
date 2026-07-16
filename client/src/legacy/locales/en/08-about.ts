@@ -7,7 +7,7 @@ export default {
     "paragraph3": "That's when people respond. Not because you pushed, but because they felt understood."
   },
   "founder": {
-    "name": "YOUR_NAME",
+    "name": "Gabriel Fronza",
     "title": "Founder",
     "tagline": "I build systems that earn attention.",
     "body1": "As an AI specialist, developer, designer, and digital artist, my work is shaped by psychology, technology and aesthetics.",
