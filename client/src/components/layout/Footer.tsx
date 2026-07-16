@@ -146,13 +146,13 @@ export function Footer() {
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div className="flex gap-6">
             <Link
-              href={withLang("/privacy-policy")}
+              href={withLang(isLegacy ? "/legacy/privacy-policy" : "/privacy-policy")}
               className="hover:text-primary transition-colors"
             >
               {t("footer.privacy")}
             </Link>
             <Link
-              href={withLang("/terms-of-service")}
+              href={withLang(isLegacy ? "/legacy/terms-of-service" : "/terms-of-service")}
               className="hover:text-primary transition-colors"
             >
               {t("footer.terms")}
