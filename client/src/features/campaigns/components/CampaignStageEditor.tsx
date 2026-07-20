@@ -21,6 +21,7 @@ export interface CampaignStageEditorProps {
   focusField?: string | null;
   onStartEditField?: (field: string) => void;
   onTogglePromptPanel?: () => void;
+  onGenerated?: () => void;
 }
 
 export function CampaignStageEditor({
@@ -29,6 +30,7 @@ export function CampaignStageEditor({
   conversationPrompts,
   compact,
   focusField, onStartEditField,
+  onGenerated,
 }: CampaignStageEditorProps) {
   const { isOwner } = useWorkspace();
 
@@ -75,6 +77,7 @@ export function CampaignStageEditor({
       compact={compact}
       isAgency={isOwner}
       onNicheChange={handleNicheChange}
+      onGenerated={onGenerated}
     />
   );
 }

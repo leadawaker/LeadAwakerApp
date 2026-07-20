@@ -60,6 +60,7 @@ interface DetailViewBodyProps {
   handleSaveGradient: () => void;
   handleApplyGradient: () => void;
   onTogglePromptPanel?: () => void;
+  onGenerated?: () => void;
 }
 
 export function DetailViewBody({
@@ -92,6 +93,7 @@ export function DetailViewBody({
   handleSaveGradient,
   handleApplyGradient,
   onTogglePromptPanel,
+  onGenerated,
 }: DetailViewBodyProps) {
   return (
     <>
@@ -133,6 +135,7 @@ export function DetailViewBody({
             focusField={detail.focusField}
             onStartEditField={detail.startEditForField}
             onTogglePromptPanel={onTogglePromptPanel}
+            onGenerated={onGenerated}
           />
         )}
       </div>

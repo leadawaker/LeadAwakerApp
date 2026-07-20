@@ -474,6 +474,7 @@ export function CampaignDetailView({
         handleSaveGradient={handleSaveGradient}
         handleApplyGradient={handleApplyGradient}
         onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
+        onGenerated={onRefresh}
       />
       </div> {/* end main column */}
 
