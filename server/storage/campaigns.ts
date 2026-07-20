@@ -227,4 +227,13 @@ export const campaignsStorage = {
     const [row] = await db.insert(campaignMetricsHistory).values(data as any).returning();
     return row;
   },
+
+  // ─── Niche Vocabulary ───────────────────────────────────────────────
+  async campaignsUsingNiche(niche: string): Promise<Array<{ id: number; name: string }>> {
+    const rows = await db
+      .select({ id: campaigns.id, name: campaigns.name })
+      .from(campaigns)
+      .where(eq(campaigns.niche, niche));
+    return rows.map((r) => ({ id: r.id, name: r.name ?? `#${r.id}` }));
+  },
 };

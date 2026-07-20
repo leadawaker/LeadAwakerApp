@@ -355,8 +355,19 @@ export function registerAccountsRoutes(app: Express): void {
   }));
 
   app.delete("/api/niche-vocabulary/:niche", requireAgency, wrapAsync(async (req, res) => {
-    const ok = await storage.deleteNicheVocabulary(req.params.niche);
-    if (!ok) return res.status(400).json({ error: "cannot delete this niche" });
+    const niche = req.params.niche.trim();
+    if (niche === "__default__") {
+      return res.status(400).json({ message: "the default niche cannot be deleted" });
+    }
+    const inUse = await storage.campaignsUsingNiche(niche);
+    if (inUse.length > 0) {
+      return res.status(409).json({
+        message: "This niche is used by active campaigns.",
+        campaigns: inUse,
+      });
+    }
+    const ok = await storage.deleteNicheVocabulary(niche);
+    if (!ok) return res.status(400).json({ message: "cannot delete this niche" });
     res.json({ ok: true });
   }));
 
