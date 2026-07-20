@@ -341,7 +341,7 @@ export function registerAccountsRoutes(app: Express): void {
     const rawNiche = typeof req.body?.niche === "string" ? req.body.niche.trim() : "";
     if (!rawNiche) return res.status(400).json({ message: "niche is required" });
     // Title Case so "dental clinic" and "Dental Clinic" don't create two rows.
-    const niche = rawNiche.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    const niche = rawNiche.replace(/\p{L}[^\s]*/gu, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
     if (niche === "__default__") return res.status(400).json({ message: "reserved niche name" });
 
     const existingNames = await storage.listNicheNames();
