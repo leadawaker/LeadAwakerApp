@@ -21,7 +21,6 @@ type Groups = {
 const EMPTY_GROUPS = (): Groups => ({
   projectTerm: [], proposalTerm: [], decisionTerm: [], advisorTerm: [], visitTerm: [],
 });
-const EMPTY_PACK = (): LangPack => ({ en: "", nl: "" });
 
 export const NICHE_ROW_GENERATOR_SYSTEM_FALLBACK = `You generate a complete vocabulary + example row for a lead-reactivation AI, for one business niche.
 
@@ -100,9 +99,17 @@ export async function generateAndSaveNicheRow(niche: string): Promise<{ warnings
 
   const nl = coerceGroups(parsed?.nl);
   const en = coerceGroups(parsed?.en);
-  // Hard fail if neither language has any advisor/project terms — row is unusable.
-  const hasTerms = [...Object.values(nl), ...Object.values(en)].some((a) => a.length > 0);
-  if (!hasTerms) return null;
+  // Hard fail unless BOTH languages have at least one non-empty term group.
+  const nlHasTerms = Object.values(nl).some((a) => a.length > 0);
+  const enHasTerms = Object.values(en).some((a) => a.length > 0);
+  if (!nlHasTerms || !enHasTerms) return null;
+
+  const warnings: string[] = [];
+  for (const [lang, groups] of [["nl", nl], ["en", en]] as const) {
+    for (const key of Object.keys(groups) as (keyof Groups)[]) {
+      if (groups[key].length === 0) warnings.push(`${lang}.${key}`);
+    }
+  }
 
   const templates = {
     companyNameTemplate: coercePack(parsed?.companyNameTemplate),
@@ -114,7 +121,6 @@ export async function generateAndSaveNicheRow(niche: string): Promise<{ warnings
     scenarioExamples: coercePack(parsed?.scenarioExamples),
   };
 
-  const warnings: string[] = [];
   for (const [key, pack] of Object.entries(templates)) {
     if (!pack.en && !pack.nl) warnings.push(key);
   }
