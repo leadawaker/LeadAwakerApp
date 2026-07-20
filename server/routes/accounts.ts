@@ -14,6 +14,7 @@ import {
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { pool } from "../db";
 import { provisionCaldiyForAccount, resyncCaldiySchedule } from "../calendar/caldiy";
+import { generateAndSaveNicheRow } from "../nicheGenerator";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
 import { registerProspectsRoutes } from "./prospects";
 import { registerProspectsWhatsappRoutes } from "./prospectsWhatsapp";
@@ -96,7 +97,13 @@ export function registerAccountsRoutes(app: Express): void {
   }));
 
   app.patch("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
-    const parsed = insertAccountsSchema.partial().safeParse(fromDbKeys(req.body, accounts));
+    const body = fromDbKeys(req.body, accounts);
+    // AccountDetailsPanel's generic edit UI sends every field as a string (plain <input> onChange),
+    // including number-typed ones — coerce here so maxDailySends doesn't 422 on a well-formed edit.
+    if (typeof body.maxDailySends === "string" && body.maxDailySends !== "") {
+      body.maxDailySends = Number(body.maxDailySends);
+    }
+    const parsed = insertAccountsSchema.partial().safeParse(body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     // Clamp availability fields to their documented valid ranges (server-side
     // enforcement — the wizard UI already clamps these on blur, but this route
@@ -109,14 +116,22 @@ export function registerAccountsRoutes(app: Express): void {
     if (typeof parsed.data.defaultCallDurationMinutes === "number") {
       parsed.data.defaultCallDurationMinutes = Math.min(240, Math.max(5, parsed.data.defaultCallDurationMinutes));
     }
+    // A human editing the daily send cap owns it from now on — the poller must not silently
+    // overwrite it. "Reset to auto-sync" clears the flag explicitly via the same PATCH (by
+    // sending whatsappMaxDailySendsIsManual: false alongside/instead), which this respects
+    // since that key would already be present in parsed.data.
+    if ("maxDailySends" in parsed.data && !("whatsappMaxDailySendsIsManual" in parsed.data)) {
+      parsed.data.whatsappMaxDailySendsIsManual = true;
+    }
     const account = await storage.updateAccount(Number(req.params.id), parsed.data);
     if (!account) return res.status(404).json({ message: "Account not found" });
     // If working hours or open days changed, re-sync the Cal.diy booking schedule (best-effort).
     if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data || "openDays" in parsed.data) {
       void resyncCaldiySchedule(account.id!);
     }
-    // If meeting type or calling number changed, re-provision so Cal.diy EventType.locations updates.
-    if ("meetingType" in parsed.data || "callingNumber" in parsed.data) {
+    // If meeting type, calling number, or call duration changed, re-provision so
+    // Cal.diy's EventType.locations / length / title stay in sync.
+    if ("meetingType" in parsed.data || "callingNumber" in parsed.data || "defaultCallDurationMinutes" in parsed.data) {
       void provisionCaldiyForAccount(account.id!);
     }
     res.json(toDbKeys(account as any, accounts));
@@ -318,6 +333,25 @@ export function registerAccountsRoutes(app: Express): void {
     const body = req.body ?? {};
     const both = { nl: coerceGroups(body.nl), en: coerceGroups(body.en) };
     res.json(await storage.setNicheVocabulary(niche, both));
+  }));
+
+  // Generate a full niche row (terms + templates + packs) from just a name.
+  // Agency-only. If the niche already exists, returns it untouched (existed:true).
+  app.post("/api/niche-vocabulary/generate", requireAgency, wrapAsync(async (req, res) => {
+    const rawNiche = typeof req.body?.niche === "string" ? req.body.niche.trim() : "";
+    if (!rawNiche) return res.status(400).json({ message: "niche is required" });
+    // Title Case so "dental clinic" and "Dental Clinic" don't create two rows.
+    const niche = rawNiche.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    if (niche === "__default__") return res.status(400).json({ message: "reserved niche name" });
+
+    const existingNames = await storage.listNicheNames();
+    if (existingNames.includes(niche)) {
+      return res.json({ niche, existed: true, warnings: [] });
+    }
+
+    const result = await generateAndSaveNicheRow(niche);
+    if (!result) return res.status(502).json({ message: "Niche generation failed — try again" });
+    res.json({ niche, existed: false, warnings: result.warnings });
   }));
 
   app.delete("/api/niche-vocabulary/:niche", requireAgency, wrapAsync(async (req, res) => {
