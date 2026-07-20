@@ -14,7 +14,7 @@ const CLAUDE_TIMEOUT_MS = 30_000;
 const GROQ_TIMEOUT_MS = 20_000;
 const GROQ_MODEL = "llama-3.1-8b-instant";
 const OPENAI_TIMEOUT_MS = 20_000;
-const OPENAI_MODEL = "gpt-4o-mini";
+const OPENAI_MODEL = "gpt-5.4-mini";
 
 function cleanClaudeEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
@@ -26,22 +26,27 @@ function cleanClaudeEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
-/** Single completion via Claude Haiku. Returns null on error. */
-async function tryHaiku(prompt: string): Promise<string | null> {
+/** Single completion via Claude CLI at an arbitrary model/timeout. Returns null on error. */
+async function tryClaude(prompt: string, model: string, timeoutMs: number): Promise<string | null> {
   return new Promise((resolve) => {
     execFile(
       CLAUDE_BIN,
-      ["-p", prompt, "--model", "haiku", "--max-turns", "1"],
-      { timeout: CLAUDE_TIMEOUT_MS, maxBuffer: 1024 * 1024, env: cleanClaudeEnv() },
+      ["-p", prompt, "--model", model, "--max-turns", "1"],
+      { timeout: timeoutMs, maxBuffer: 4 * 1024 * 1024, env: cleanClaudeEnv() },
       (err, stdout) => {
         if (err || !stdout?.trim()) {
-          if (err) console.warn("[aiTextHelper] Haiku failed:", err.message);
+          if (err) console.warn(`[aiTextHelper] Claude ${model} failed:`, err.message);
           return resolve(null);
         }
         resolve(stdout.trim());
       },
     );
   });
+}
+
+/** Single completion via Claude Haiku. Returns null on error. */
+async function tryHaiku(prompt: string): Promise<string | null> {
+  return tryClaude(prompt, "haiku", CLAUDE_TIMEOUT_MS);
 }
 
 /** Single completion via Groq. Returns null on error or missing key. */
@@ -98,8 +103,8 @@ async function tryOpenAI(prompt: string, systemPrompt?: string): Promise<string 
           ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
           { role: "user", content: prompt },
         ],
-        max_tokens: 800,
-        temperature: 0.4,
+        // gpt-5+ family: max_completion_tokens replaces max_tokens, no custom temperature
+        max_completion_tokens: 800,
       }),
       signal: controller.signal,
     });
@@ -137,4 +142,59 @@ export async function completeText(prompt: string, systemPrompt?: string): Promi
   const groq = await tryGroq(prompt, systemPrompt);
   if (groq) return groq;
   return tryOpenAI(prompt, systemPrompt);
+}
+
+/**
+ * Larger structured completion (e.g. a full niche vocabulary row).
+ * Claude (default sonnet, 60s) first — subscription, no per-call cost — then
+ * OpenAI gpt-5.4-mini. Groq is skipped: the 8B model is unreliable for large
+ * structured JSON. Returns null only if BOTH providers fail.
+ */
+export async function completeTextLarge(
+  prompt: string,
+  systemPrompt?: string,
+  opts?: { claudeModel?: string; timeoutMs?: number; maxTokens?: number },
+): Promise<string | null> {
+  const claudeModel = opts?.claudeModel ?? "sonnet";
+  const timeoutMs = opts?.timeoutMs ?? 60_000;
+  const maxTokens = opts?.maxTokens ?? 3500;
+
+  const claude = await tryClaude(
+    systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
+    claudeModel,
+    timeoutMs,
+  );
+  if (claude) return claude;
+
+  const apiKey = process.env.OPEN_AI_API_KEY;
+  if (!apiKey) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+          { role: "user", content: prompt },
+        ],
+        max_completion_tokens: maxTokens,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.warn("[aiTextHelper] OpenAI (large) error:", res.status);
+      return null;
+    }
+    const json = await res.json() as any;
+    const text = json.choices?.[0]?.message?.content?.trim();
+    return text || null;
+  } catch (err: any) {
+    console.warn("[aiTextHelper] OpenAI (large) fetch failed:", err.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
