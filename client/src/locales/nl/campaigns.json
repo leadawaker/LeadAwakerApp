@@ -40,6 +40,21 @@
     "allComplete": "Alle velden hebben al beide talen.",
     "generateFailed": "Genereren mislukt"
   },
+  "niche": {
+    "new": "Nieuwe niche…",
+    "newPlaceholder": "bijv. Tandartsen",
+    "create": "Aanmaken",
+    "creating": "Bezig…",
+    "created": "Niche aangemaakt",
+    "createdWithGaps": "Niche aangemaakt",
+    "someFieldsEmpty": "Sommige velden bleven leeg en gebruiken standaardwaarden.",
+    "createFailed": "Niche aanmaken mislukt",
+    "delete": "Niche verwijderen",
+    "confirmDelete": "Niche \"{{niche}}\" verwijderen?",
+    "deleted": "Niche verwijderd",
+    "deleteFailed": "Niche verwijderen mislukt",
+    "inUse": "Niche in gebruik"
+  },
   "columns": {
     "name": "Naam",
     "status": "Status",
@@ -275,6 +290,8 @@
     "service": "Service",
     "bookingMode": "Boekingsmodus",
     "businessDescription": "Bedrijfsomschrijving",
+    "useAccountKb": "Account-kennisbank",
+    "useAccountKbHint": "Injecteer de kennisbank op accountniveau in de AI-prompt van deze campagne. Zet uit voor demo's of campagnes met eigen kennis.",
     "niche": "Niche",
     "nicheQuestion": "Nichevraag",
     "selectNichePlaceholder": "Selecteer niche…",

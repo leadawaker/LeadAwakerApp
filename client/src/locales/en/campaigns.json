@@ -40,6 +40,21 @@
     "allComplete": "All fields already have both languages.",
     "generateFailed": "Generation failed"
   },
+  "niche": {
+    "new": "New niche…",
+    "newPlaceholder": "e.g. Dentists",
+    "create": "Create",
+    "creating": "Creating…",
+    "created": "Niche created",
+    "createdWithGaps": "Niche created",
+    "someFieldsEmpty": "Some fields came back empty and use defaults.",
+    "createFailed": "Could not create niche",
+    "delete": "Remove niche",
+    "confirmDelete": "Delete niche \"{{niche}}\"?",
+    "deleted": "Niche deleted",
+    "deleteFailed": "Could not delete niche",
+    "inUse": "Niche in use"
+  },
   "columns": {
     "name": "Name",
     "status": "Status",
@@ -275,6 +290,8 @@
     "service": "Service",
     "bookingMode": "Booking Mode",
     "businessDescription": "Business Description",
+    "useAccountKb": "Account knowledge base",
+    "useAccountKbHint": "Inject the account-level Knowledge Base into this campaign's AI prompt. Turn off for demos or campaigns with their own knowledge.",
     "niche": "Niche",
     "nicheQuestion": "Niche Question",
     "selectNichePlaceholder": "Select niche…",
