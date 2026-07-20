@@ -1,75 +1,15 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
-  Gem, ShieldCheck, Loader2, Mic, Contact,
+  Gem, ShieldCheck, Mic, Contact,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
   InfoRow, BoolRow, ContractSelect,
 } from "../formFields";
-import {
-  Select, SelectTrigger, SelectContent, SelectItem,
-} from "@/components/ui/select";
-import { apiFetch } from "@/lib/apiUtils";
-import { resolveNicheIcon } from "@/features/prompts/components/niche/nicheShared";
-import { useToast } from "@/hooks/use-toast";
-
-function NicheSelect({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
-  const { t } = useTranslation("campaigns");
-  const { toast } = useToast();
-  const [niches, setNiches] = useState<string[]>([]);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-
-  useEffect(() => {
-    apiFetch("/api/niches")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("fetch failed"))))
-      .then((data: string[]) => {
-        setNiches(Array.isArray(data) ? data : []);
-        setStatus("ready");
-      })
-      .catch(() => {
-        setNiches([]);
-        setStatus("error");
-        toast({ title: t("nicheLoadError"), variant: "destructive" });
-      });
-  }, [t, toast]);
-
-  const CurIcon = value ? resolveNicheIcon(value, false) : null;
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        className="la-input"
-        autoFocus={autoFocus}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          cursor: 'pointer', gap: 8, boxSizing: 'border-box', width: '100%',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          {status === "loading" && <Loader2 style={{ width: 14, height: 14, flexShrink: 0 }} className="animate-spin" />}
-          {CurIcon && <CurIcon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />}
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value || t("selectNichePlaceholder")}</span>
-        </div>
-      </SelectTrigger>
-      <SelectContent>
-        {niches.map((niche) => {
-          const Icon = resolveNicheIcon(niche, false);
-          return (
-            <SelectItem key={niche} value={niche}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon style={{ width: 14, height: 14, color: 'var(--wine)', flexShrink: 0 }} />
-                {niche}
-              </div>
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
-  );
-}
+import { NicheSelect } from "./NicheSelect";
 
 interface BehaviorSectionFieldsProps {
   campaign: any;
@@ -111,10 +51,12 @@ export function BehaviorSectionFields({
         editChild={isEditing ? (
           <NicheSelect
             value={String(draft.niche ?? "")}
+            campaign={campaign}
             onChange={(v) => {
               setDraft(d => ({...d, niche: v}));
               onNicheChange?.(v);
             }}
+            onNicheChange={onNicheChange}
             {...focusFor("niche")}
           />
         ) : undefined}
