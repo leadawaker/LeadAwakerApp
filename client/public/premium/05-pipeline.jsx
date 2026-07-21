@@ -1,5 +1,9 @@
 // Pipeline section with animated kanban board
 
+// Display labels for the lead tier pill. The `tier` keys stay as-is because the
+// pill styling keys off them.
+const TIER_LABEL = { premium: "High value", basic: "Standard" };
+
 function FlyingCardEl({ card, fromRect, toRect, duration = 420 }) {
   const [arrived, setArrived] = React.useState(false);
   const dx = toRect.left - fromRect.left;
@@ -30,7 +34,7 @@ function FlyingCardEl({ card, fromRect, toRect, duration = 420 }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
           <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", opacity: 0.7, whiteSpace: "nowrap" }}>{card.lastMsg}</span>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "1px 5px", borderRadius: 999, background: card.tier === "premium" ? "rgba(158,32,53,0.11)" : "rgba(0,0,0,0.06)", color: card.tier === "premium" ? "#9E2035" : "#888" }}>{card.tier}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "1px 5px", borderRadius: 999, whiteSpace: "nowrap", background: card.tier === "premium" ? "rgba(158,32,53,0.11)" : "rgba(0,0,0,0.06)", color: card.tier === "premium" ? "#9E2035" : "#888" }}>{TIER_LABEL[card.tier] || card.tier}</span>
         </div>
       </div>
     </div>
@@ -384,7 +388,7 @@ function Pipeline() {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
                         <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", opacity: 0.7, whiteSpace: "nowrap" }}>{lead.lastMsg}</span>
-                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "1px 5px", borderRadius: 999, background: lead.tier === "premium" ? "rgba(158,32,53,0.11)" : "rgba(0,0,0,0.06)", color: lead.tier === "premium" ? "#9E2035" : "#888" }}>{lead.tier}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "1px 5px", borderRadius: 999, whiteSpace: "nowrap", background: lead.tier === "premium" ? "rgba(158,32,53,0.11)" : "rgba(0,0,0,0.06)", color: lead.tier === "premium" ? "#9E2035" : "#888" }}>{TIER_LABEL[lead.tier] || lead.tier}</span>
                       </div>
                     </div>
                   );})}

@@ -364,7 +364,7 @@ function CTA() {
             }}>
               {/* Map + favicon — bottom aligned together */}
               <div style={{ display: "flex", gap: 16, alignItems: "flex-end", paddingBottom: 18 }}>
-                <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker studio, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
+                <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker office, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
                   <NetherlandsMap />
                 </a>
                 <FooterMark size={44} />

@@ -11,36 +11,36 @@ window.TRANSLATIONS.en = {
     open_app: "Open app",
   },
   hero: {
-    badge: "Premium home improvement",
+    badge: "Home improvement · Netherlands",
     h1_line1: "Your leads are not dead.",
     h1_pre: "They're",
     h1_italic: "dormant.",
     sub: "Make sure you're the one they hear from first.",
     body: "Our system follows up. You talk to the ones ready to buy.",
-    cta_primary: "Request an introduction",
+    cta_primary: "See if you qualify",
     cta_secondary: "See it in action",
     conv_enquired: "inquired",
     conv_live: "Live",
     conv_next: "Next:",
   },
   trust: {
-    tagline: "Built for premium home improvement businesses in the Netherlands",
+    tagline: "Built for home improvement companies that send more quotes than they can chase",
   },
   pain: {
     kicker: "The Problem",
     h2_pre: "Your best buyers",
     h2_italic: "went quiet",
     h2_post: "after the first quote.",
-    sub: "Manual follow-up doesn't scale, and warm leads cool while you're running the studio.",
+    sub: "Manual follow-up doesn't scale, and warm leads cool while your team is out quoting the next job.",
   },
   approach: {
     eyebrow: "Approach",
-    h2_l1: "Premium businesses",
-    h2_l2: "don't need more leads.",
-    h2_italic: "They need more booked calls.",
-    p1: "High-end home improvement runs on referral, reputation, and timing. The leads who matter most are already in your CRM.",
+    h2_l1: "Your follow-up ended.",
+    h2_l2: "Their decision",
+    h2_italic: "didn't.",
+    p1: "The thread ends before the decision does. Nobody can hold hundreds of conversations open for months.",
     p1_italic: "The work is in returning to them.",
-    p2: "We handle the outreach entirely, studying your history with each lead, writing every message as you would, and timing contact around intent signals. You're involved when a lead is genuinely ready to move.",
+    p2: "We run the outreach in your tone, off your own history with each lead. You step in when someone is ready to move.",
   },
   process: {
     eyebrow: "Process",
@@ -80,6 +80,7 @@ window.TRANSLATIONS.en = {
           "second visit possible",
           "whenever you're ready",
         ],
+        tags: { high: "High", mid: "Mid", low: "Low" },
       },
       ab: {
         col_message: "message",
@@ -120,7 +121,7 @@ window.TRANSLATIONS.en = {
     h2_pre: "Design",
     h2_meets: "meets",
     h2_italic: "sales",
-    body: "One comes from design and the other from premium sales. Leadawaker connects the two, so your design work is understood as premium and sold with clarity and confidence.",
+    body: "One comes from systems and the other from sales. Leadawaker connects the two, so the work you quote gets followed through and sold with clarity and confidence.",
     people: [
       {
         name: "Gabriel Fronza",
@@ -154,7 +155,7 @@ window.TRANSLATIONS.en = {
       },
       {
         q: "How is this different from a marketing agency or AI tool?",
-        a: "We don't run ads, generate leads, or sell software. We work the contacts you already have: the ones who walked through your showroom, requested a quote, or sat through a consultation. It's a managed studio, not a dashboard you need to operate. We work the contacts and you see the results.",
+        a: "We don't run ads, generate leads, or sell software. We work the contacts you already have: the ones who walked through your showroom, requested a quote, or sat through a consultation. It's a managed service, not a dashboard you need to operate. We work the contacts and you see the results.",
       },
       {
         q: "We're owner-led with no sales team. Will this still work?",
@@ -162,7 +163,7 @@ window.TRANSLATIONS.en = {
       },
       {
         q: "What if our database is small or messy?",
-        a: "We need roughly 150 past inquiries to do meaningful work. Fewer than that and there isn't enough surface area to be worth the engagement. Messy is fine: spreadsheets, exports, archived inboxes. We do the reading. What we can't do is recover contacts that never existed.",
+        a: "This works best for companies sending a few hundred quotes a year or more, with an archive to match. Below that there isn't enough surface area to be worth the engagement. Messy is fine: spreadsheets, exports, archived inboxes. We do the reading. What we can't do is recover contacts that never existed.",
       },
       {
         q: "Do we need to be available when a lead responds?",
@@ -212,7 +213,7 @@ window.TRANSLATIONS.en = {
     chat_note_deciding: "received a quote 3 months ago",
   },
   cta: {
-    eyebrow: "Request access",
+    eyebrow: "Check your fit",
     h2_l1: "You did the work.",
     h2_l2: "We make sure",
     h2_l3: "",
@@ -228,10 +229,10 @@ window.TRANSLATIONS.en = {
     q_silent: "What percentage goes silent without a clear answer?",
     q_value: "What is the average project value?",
     reply_note: "We will reply within two business days.",
-    brand_desc: "A revival service for premium home improvement businesses in the Netherlands.",
+    brand_desc: "A revival service for home improvement companies in the Netherlands.",
     contact_label: "Contact",
-    intro_only: "By introduction only",
-    studio_label: "Studio",
+    intro_only: "We take on a limited number of clients",
+    studio_label: "Office",
     terms: "Terms & Conditions",
     privacy: "Privacy Policy",
     cta_calc_note: "Values taken from your calculator — adjust if needed.",

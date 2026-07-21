@@ -2,7 +2,7 @@
 
 function Demo() {
   const isMobile = window.useIsMobile();
-  const { t } = window.useI18n();
+  const { t, lang } = window.useI18n();
   const [firstName, setFirstName] = React.useState("");
   const [niche, setNiche] = React.useState("");
   const [scenario, setScenario] = React.useState("inquired");
@@ -30,7 +30,7 @@ function Demo() {
       const res = await fetch("/api/demo/create-session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ firstName: firstName.trim(), niche: niche.trim(), language: "nl", scenario }),
+        body: JSON.stringify({ firstName: firstName.trim(), niche: niche.trim(), language: lang, scenario }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));

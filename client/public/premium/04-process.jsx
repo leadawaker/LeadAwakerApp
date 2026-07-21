@@ -1,12 +1,14 @@
 // Process section with animated illustrations
 
+// tagKey resolves against process.illus.archive.tags so the pill translates.
+// Keep the labels short: the pill sits in a fixed 54px column.
 const ARCHIVE_ROWS_DATA = [
-  { who: 'M. van Dijk',    tag: 'Premium',  tone: 'hot'  },
-  { who: 'T. de Boer',     tag: 'Default', tone: 'warm' },
-  { who: 'Fam. Janssen',   tag: 'Premium',  tone: 'hot'  },
-  { who: 'K. Vermeer',     tag: 'Basic', tone: 'cool' },
-  { who: 'Sandra Visser',  tag: 'Default', tone: 'warm' },
-  { who: 'Van Rooijen',    tag: 'Premium',  tone: 'hot'  },
+  { who: 'M. van Dijk',    tagKey: 'high', tone: 'hot'  },
+  { who: 'T. de Boer',     tagKey: 'mid',  tone: 'warm' },
+  { who: 'Fam. Janssen',   tagKey: 'high', tone: 'hot'  },
+  { who: 'K. Vermeer',     tagKey: 'low',  tone: 'cool' },
+  { who: 'Sandra Visser',  tagKey: 'mid',  tone: 'warm' },
+  { who: 'Van Rooijen',    tagKey: 'high', tone: 'hot'  },
 ];
 const PILL_COLORS = {
   hot:  { bg: 'rgba(179,74,44,.12)',  color: '#a3401f' },
@@ -55,7 +57,7 @@ function ArchiveScanIllus({ active = false }) {
               <span style={{ width: 100, color: tagged ? 'var(--ink)' : 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: tagged ? 500 : 400, transition: 'color 0.4s ease' }}>{r.who}</span>
               <span style={{ flex: 1, color: tagged ? 'rgba(92,70,46,0.8)' : 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.4s ease' }}>{illusT.snips[i]}</span>
               <span style={{ width: 54, display: 'flex', justifyContent: 'flex-end', opacity: tagged ? 1 : 0, transform: tagged ? 'translateX(0)' : 'translateX(4px)', transition: 'opacity 0.35s ease, transform 0.35s ease' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.16em', padding: '2px 7px', borderRadius: 99, textTransform: 'uppercase', background: pc.bg, color: pc.color }}>{r.tag}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.16em', padding: '2px 7px', borderRadius: 99, textTransform: 'uppercase', background: pc.bg, color: pc.color }}>{illusT.tags[r.tagKey]}</span>
               </span>
             </div>
           );
