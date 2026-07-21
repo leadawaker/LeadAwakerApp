@@ -47,6 +47,8 @@
     "creating": "Bezig…",
     "created": "Niche aangemaakt",
     "createdWithGaps": "Niche aangemaakt",
+    "reused": "Niche bestaat al",
+    "reusedDescription": "De bestaande vocabulaire voor deze niche wordt gebruikt.",
     "someFieldsEmpty": "Sommige velden bleven leeg en gebruiken standaardwaarden.",
     "createFailed": "Niche aanmaken mislukt",
     "delete": "Niche verwijderen",

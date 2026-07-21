@@ -25,9 +25,14 @@ function hasEmptyFields(campaign: any): boolean {
 export function CampaignGenerateButton({
   campaign,
   onGenerated,
+  onFieldsGenerated,
 }: {
   campaign: Campaign;
   onGenerated?: () => void;
+  /** Merge the /generate response's filled fields into draft + originalDraft
+   * so the next autosave doesn't PATCH the still-stale draft back over them.
+   * Same underlying bug/fix as NicheSelect's create-niche flow. */
+  onFieldsGenerated?: (fields: Record<string, unknown>) => void;
 }) {
   const { t } = useTranslation("campaigns");
   const { toast } = useToast();
@@ -57,6 +62,7 @@ export function CampaignGenerateButton({
       const data = await res.json();
       const filledFields: string[] = data.filledFields ?? [];
       const translatedFields: string[] = data.translatedFields ?? [];
+      if (data.campaign) onFieldsGenerated?.(data.campaign);
       setPopoverOpen(false);
       setNiche("");
       onGenerated?.();

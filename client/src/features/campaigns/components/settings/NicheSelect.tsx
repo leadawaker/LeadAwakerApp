@@ -7,12 +7,18 @@ import { resolveNicheIcon } from "@/features/prompts/components/niche/nicheShare
 import { useToast } from "@/hooks/use-toast";
 
 export function NicheSelect({
-  value, campaign, onChange, onNicheChange, autoFocus,
+  value, campaign, onChange, onNicheChange, onFieldsGenerated, isAgency, autoFocus,
 }: {
   value: string;
   campaign: any;
   onChange: (v: string) => void;
   onNicheChange?: (niche: string) => void;
+  /** Merge a /generate response's filled fields into draft + originalDraft
+   * so the next autosave doesn't PATCH stale values back over them. */
+  onFieldsGenerated?: (fields: Record<string, unknown>) => void;
+  /** Only agency users can create/delete niche rows — requireAgency 403s
+   * these for anyone else, so the affordances are hidden entirely for them. */
+  isAgency?: boolean;
   autoFocus?: boolean;
 }) {
   const { t } = useTranslation("campaigns");
@@ -42,8 +48,11 @@ export function NicheSelect({
   useEffect(() => { loadNiches(); }, [loadNiches]);
 
   const applyNiche = useCallback(async (niche: string) => {
+    // `onChange` is the caller's wrapper (BehaviorSectionFields), which itself
+    // already calls onNicheChange — calling both here fired two concurrent
+    // template fetches + two setDraft passes. onChange alone is the single
+    // owner of that notification.
     onChange(niche);
-    onNicheChange?.(niche);
     // Fill empty Business/AI fields bilingually via the existing endpoint.
     try {
       const id = campaign?.id || campaign?.Id;
@@ -56,12 +65,16 @@ export function NicheSelect({
         const data = await res.json();
         const filled: string[] = data.filledFields ?? [];
         const translated: string[] = data.translatedFields ?? [];
+        // Merge the server-filled campaign fields into draft + originalDraft
+        // so the 1.5s autosave debounce doesn't PATCH the still-stale draft
+        // values back over what /generate just wrote.
+        if (data.campaign) onFieldsGenerated?.(data.campaign);
         if (filled.length || translated.length) {
           toast({ title: t("toolbar.done", "Done"), description: [...filled, ...translated].join(", ") });
         }
       }
     } catch { /* field fill is best-effort */ }
-  }, [campaign, onChange, onNicheChange, t, toast]);
+  }, [campaign, onChange, onFieldsGenerated, t, toast]);
 
   const handleCreate = useCallback(async () => {
     const name = newNiche.trim();
@@ -81,7 +94,13 @@ export function NicheSelect({
       await loadNiches();
       setShowInput(false);
       setNewNiche("");
-      if (data.warnings?.length) {
+      if (data.existed) {
+        // A case-insensitive match already existed (e.g. typing "hvac" when
+        // "HVAC" is already stored) — nothing was generated, so "Niche
+        // created" would be misleading. The client selects the canonical
+        // stored name the server returned, not the freshly-typed casing.
+        toast({ title: t("niche.reused", "Niche already exists"), description: t("niche.reusedDescription", "Using the existing vocabulary for this niche.") });
+      } else if (data.warnings?.length) {
         toast({ title: t("niche.createdWithGaps", "Niche created"), description: t("niche.someFieldsEmpty", "Some fields came back empty and use defaults."), });
       } else {
         toast({ title: t("niche.created", "Niche created") });
@@ -133,27 +152,32 @@ export function NicheSelect({
               <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
                 <Icon style={{ width: 14, height: 14, color: "var(--wine)", flexShrink: 0 }} />
                 <span style={{ flex: 1 }}>{niche}</span>
-                <button
-                  // Radix's SelectItem fires selection on pointerup (for mouse) before
-                  // this button's onClick ever runs — stopPropagation in onClick alone
-                  // is too late. Intercept at the pointer level so the item is never
-                  // selected/closed when deleting.
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onPointerUp={(e) => e.stopPropagation()}
-                  onClick={(e) => handleDelete(niche, e)}
-                  className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
-                  style={{ border: "none", background: "transparent", cursor: "pointer", padding: 2, display: "grid", placeItems: "center" }}
-                  title={t("niche.delete", "Remove niche")}
-                  aria-label={t("niche.delete", "Remove niche")}
-                >
-                  <X style={{ width: 13, height: 13, color: "var(--mute)" }} />
-                </button>
+                {isAgency && (
+                  <button
+                    // Radix's SelectItem fires selection on pointerup (for mouse) before
+                    // this button's onClick ever runs — stopPropagation in onClick alone
+                    // is too late. Intercept at the pointer level so the item is never
+                    // selected/closed when deleting.
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onPointerUp={(e) => e.stopPropagation()}
+                    onClick={(e) => handleDelete(niche, e)}
+                    className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+                    style={{ border: "none", background: "transparent", cursor: "pointer", padding: 2, display: "grid", placeItems: "center" }}
+                    title={t("niche.delete", "Remove niche")}
+                    aria-label={t("niche.delete", "Remove niche")}
+                  >
+                    <X style={{ width: 13, height: 13, color: "var(--mute)" }} />
+                  </button>
+                )}
               </div>
             </SelectItem>
           );
         })}
 
-        {/* Inline create row — not a SelectItem so clicks don't select a value. */}
+        {/* Inline create row — not a SelectItem so clicks don't select a value.
+            Agency-only: requireAgency 403s the generate endpoint for anyone
+            else, so client users never see an affordance that always fails. */}
+        {isAgency && (
         <div style={{ borderTop: "1px solid var(--line)", marginTop: 4, paddingTop: 4 }}>
           {showInput ? (
             <div style={{ display: "flex", gap: 6, padding: "4px 6px" }} onKeyDown={(e) => e.stopPropagation()}>
@@ -163,6 +187,7 @@ export function NicheSelect({
                 onChange={(e) => setNewNiche(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
                 placeholder={t("niche.newPlaceholder", "e.g. Dentists")}
+                maxLength={80}
                 className="flex-1 h-8 rounded-md border border-black/[0.125] bg-background px-2.5 text-[12px] outline-none focus:border-brand-indigo"
               />
               <button
@@ -185,6 +210,7 @@ export function NicheSelect({
             </button>
           )}
         </div>
+        )}
       </SelectContent>
     </Select>
   );

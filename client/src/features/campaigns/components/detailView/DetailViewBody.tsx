@@ -128,6 +128,7 @@ export function DetailViewBody({
             isEditing={detail.isEditing}
             draft={detail.draft}
             setDraft={detail.setDraft}
+            applyGeneratedFields={detail.applyGeneratedFields}
             linkedPrompt={detail.linkedPrompt}
             conversationPrompts={detail.conversationPrompts}
             linkedContract={detail.linkedContract}

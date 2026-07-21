@@ -22,6 +22,8 @@ interface BehaviorSectionFieldsProps {
   contracts?: any[];
   /** Called when niche changes so the parent can load + apply the niche template */
   onNicheChange?: (niche: string) => void;
+  /** Merge a /generate response's filled fields into draft + originalDraft. */
+  onFieldsGenerated?: (fields: Record<string, unknown>) => void;
 }
 
 export function BehaviorSectionFields({
@@ -29,6 +31,7 @@ export function BehaviorSectionFields({
   focusField, onStartEditField,
   isAgency, contracts,
   onNicheChange,
+  onFieldsGenerated,
 }: BehaviorSectionFieldsProps) {
   const { t } = useTranslation("campaigns");
 
@@ -57,6 +60,8 @@ export function BehaviorSectionFields({
               onNicheChange?.(v);
             }}
             onNicheChange={onNicheChange}
+            onFieldsGenerated={onFieldsGenerated}
+            isAgency={!!isAgency}
             {...focusFor("niche")}
           />
         ) : undefined}

@@ -47,6 +47,8 @@
     "creating": "Creating…",
     "created": "Niche created",
     "createdWithGaps": "Niche created",
+    "reused": "Niche already exists",
+    "reusedDescription": "Using the existing vocabulary for this niche.",
     "someFieldsEmpty": "Some fields came back empty and use defaults.",
     "createFailed": "Could not create niche",
     "delete": "Remove niche",

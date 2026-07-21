@@ -14,6 +14,10 @@ export interface CampaignStageEditorProps {
   isEditing: boolean;
   draft: Record<string, unknown>;
   setDraft: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
+  /** Merge server-filled fields (from /api/campaigns/:id/generate) into both
+   * draft and originalDraft so the next autosave doesn't PATCH stale values
+   * back over them. See useCampaignDetail.applyGeneratedFields. */
+  applyGeneratedFields?: (fields: Record<string, unknown>) => void;
   linkedPrompt: any | null;
   conversationPrompts: any[];
   linkedContract: ContractFinancials | null;
@@ -26,6 +30,7 @@ export interface CampaignStageEditorProps {
 
 export function CampaignStageEditor({
   campaign, isEditing, draft, setDraft,
+  applyGeneratedFields,
   linkedContract,
   conversationPrompts,
   compact,
@@ -77,6 +82,7 @@ export function CampaignStageEditor({
       compact={compact}
       isAgency={isOwner}
       onNicheChange={handleNicheChange}
+      onFieldsGenerated={applyGeneratedFields}
       onGenerated={onGenerated}
     />
   );

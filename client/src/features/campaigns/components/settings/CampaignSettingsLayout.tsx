@@ -41,6 +41,10 @@ interface CampaignSettingsLayoutProps {
   /** Mobile / narrow: stack the section nav into horizontal tabs, shrink chrome. */
   compact?: boolean;
   onGenerated?: () => void;
+  /** Merge a /generate response's filled fields into draft + originalDraft
+   * (see useCampaignDetail.applyGeneratedFields). Passed to both callers of
+   * that endpoint: NicheSelect (create-niche) and CampaignGenerateButton. */
+  onFieldsGenerated?: (fields: Record<string, unknown>) => void;
 }
 
 export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
@@ -158,7 +162,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
 
           {/* Prev / Next nav */}
           <div style={{ display: 'flex', flexWrap: compact ? 'wrap' : 'nowrap', gap: compact ? 10 : undefined, justifyContent: compact ? 'center' : 'space-between', marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--line)' }}>
-            <CampaignGenerateButton campaign={props.campaign} onGenerated={props.onGenerated} />
+            <CampaignGenerateButton campaign={props.campaign} onGenerated={props.onGenerated} onFieldsGenerated={props.onFieldsGenerated} />
 
             {/* Launch Campaign — opens WhatsApp on the Lead Awaker AI line with
                 "/start <campaignId> <name>" prefilled. The name comes from the
