@@ -11,6 +11,20 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import type { Campaign } from "@/types/models";
 
+// The only fields POST /api/campaigns/:id/generate writes (CONTEXT_FIELDS in
+// server/routes/campaigns.ts), in draft/db-key form. Its response carries a
+// full campaign row, so applyGeneratedFields merges these and nothing else.
+const GENERATED_FIELD_KEYS = [
+  "description",
+  "niche_question",
+  "kb",
+  "inquiry_timeframe",
+  "campaign_usp",
+  "ai_style_override",
+  "what_lead_did",
+  "service_name",
+] as const;
+
 // ── Contract type (minimal, for financials) ──────────────────────────────────
 
 export interface ContractFinancials {
@@ -451,14 +465,17 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
   // values right back over the just-generated ones on the operator's next
   // keystroke. Merging into originalDraft too (not just draft) means the
   // fields land as already-saved, not as a pending dirty change to re-PATCH.
-  // Only whitelisted keys already present in the draft are copied — the
-  // generate response is a full campaign row and we must not smuggle
-  // untracked fields (id, created_at, ...) into the autosave payload.
+  //
+  // Only the eight fields that endpoint actually writes are merged. The response
+  // is a full campaign row, and on its "nothing to do" path that row is the
+  // snapshot read at request start — so merging every key would revert the
+  // operator's own just-made edits (notably `niche`, which the endpoint never
+  // persists) back to their pre-request values, silently and unsaved.
   const applyGeneratedFields = useCallback((fields: Record<string, unknown>) => {
     const merge = (d: Record<string, unknown>): Record<string, unknown> => {
       const next = { ...d };
-      for (const key of Object.keys(d)) {
-        if (key in fields) next[key] = fields[key] ?? "";
+      for (const key of GENERATED_FIELD_KEYS) {
+        if (key in d && key in fields) next[key] = fields[key] ?? d[key];
       }
       return next;
     };

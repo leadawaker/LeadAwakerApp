@@ -236,7 +236,10 @@ export const campaignsStorage = {
     const rows = await db
       .select({ id: campaigns.id, name: campaigns.name })
       .from(campaigns)
-      .where(ilike(campaigns.niche, niche));
+      // lower()= rather than ilike: the niche arrives from a URL path segment,
+      // and ilike would treat % and _ in it as wildcards. We want case-
+      // insensitive equality, not pattern matching.
+      .where(sql`lower(${campaigns.niche}) = lower(${niche})`);
     return rows.map((r) => ({ id: r.id, name: r.name ?? `#${r.id}` }));
   },
 };
