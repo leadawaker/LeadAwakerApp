@@ -340,13 +340,23 @@ export function registerAccountsRoutes(app: Express): void {
   app.post("/api/niche-vocabulary/generate", requireAgency, wrapAsync(async (req, res) => {
     const rawNiche = typeof req.body?.niche === "string" ? req.body.niche.trim() : "";
     if (!rawNiche) return res.status(400).json({ message: "niche is required" });
+    if (rawNiche.length > 80) return res.status(400).json({ message: "niche name is too long (max 80 characters)" });
+    // Reserved-name check against the RAW, lower-cased input — must happen
+    // before Title Case below, since "__default__" title-cases to "__Default__"
+    // and would otherwise never match an exact-string guard placed after it.
+    if (rawNiche.toLowerCase() === "__default__") return res.status(400).json({ message: "reserved niche name" });
+
     // Title Case so "dental clinic" and "Dental Clinic" don't create two rows.
     const niche = rawNiche.replace(/\p{L}[^\s]*/gu, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-    if (niche === "__default__") return res.status(400).json({ message: "reserved niche name" });
 
+    // Case-insensitive existence check: "hvac" / "HVAC" / "Hvac" must all
+    // resolve to the SAME stored row rather than spawning a sibling that only
+    // differs by case. Return the canonical stored name so the client selects
+    // the row that actually exists (not the freshly-title-cased variant).
     const existingNames = await storage.listNicheNames();
-    if (existingNames.includes(niche)) {
-      return res.json({ niche, existed: true, warnings: [] });
+    const existingMatch = existingNames.find((n) => n.toLowerCase() === niche.toLowerCase());
+    if (existingMatch) {
+      return res.json({ niche: existingMatch, existed: true, warnings: [] });
     }
 
     const result = await generateAndSaveNicheRow(niche);

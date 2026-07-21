@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { promptLibrary } from "@shared/schema";
 import { storage } from "./storage";
-import { completeTextLarge, stripFences } from "./aiTextHelper";
+import { completeTextLarge, tryOpenAILarge, extractJsonObject } from "./aiTextHelper";
 
 type LangPack = { en: string; nl: string };
 type Groups = {
@@ -85,16 +85,34 @@ function coercePack(src: any): LangPack {
   return { en: toStr(src?.en), nl: toStr(src?.nl) };
 }
 
-export async function generateAndSaveNicheRow(niche: string): Promise<{ warnings: string[] } | null> {
-  const system = await loadSystemPrompt();
-  const raw = await completeTextLarge(`Business niche: ${niche}`, system, { maxTokens: 3500 });
-  if (!raw) return null;
-
-  let parsed: any;
+/** Best-effort JSON extraction + parse. Returns null (never throws) on failure. */
+function tryParse(raw: string): any | null {
+  const extracted = extractJsonObject(raw);
+  if (!extracted) return null;
   try {
-    parsed = JSON.parse(stripFences(raw));
+    return JSON.parse(extracted);
   } catch {
     return null;
+  }
+}
+
+export async function generateAndSaveNicheRow(niche: string): Promise<{ warnings: string[] } | null> {
+  const system = await loadSystemPrompt();
+  const prompt = `Business niche: ${niche}`;
+  const raw = await completeTextLarge(prompt, system, { maxTokens: 3500 });
+  if (!raw) return null;
+
+  let parsed = tryParse(raw);
+  if (!parsed) {
+    // The single most common LLM failure mode: Claude wraps the JSON in a
+    // prose preamble ("Here's the JSON:\n{...}"). As far as completeTextLarge
+    // is concerned Claude "succeeded" (it returned text), so its own OpenAI
+    // fallback never triggers. Explicitly retry on the OpenAI leg here before
+    // giving up, so a parse failure doesn't defeat the two-provider chain.
+    const openaiRaw = await tryOpenAILarge(prompt, system, { maxTokens: 3500 });
+    if (!openaiRaw) return null;
+    parsed = tryParse(openaiRaw);
+    if (!parsed) return null; // genuinely unusable from both providers — hard fail
   }
 
   const nl = coerceGroups(parsed?.nl);
@@ -125,9 +143,19 @@ export async function generateAndSaveNicheRow(niche: string): Promise<{ warnings
     if (!pack.en && !pack.nl) warnings.push(key);
   }
 
-  // Persist: terms via setNicheVocabulary, templates+packs via setNicheTemplate.
-  await storage.setNicheVocabulary(niche, { nl, en });
-  await storage.setNicheTemplate(niche, templates);
+  // Persist: terms via setNicheVocabulary (INSERT ... ON CONFLICT), templates
+  // via setNicheTemplate (UPDATE ... WHERE niche = ...). Run both inside one
+  // transaction — previously these were two sequential unguarded awaits, so a
+  // throw (or a pm2 watch restart) between them left a row with terms but no
+  // templates. Because /api/niches lists any row with a terms match, the
+  // route's existed-check would then short-circuit every retry forever and
+  // the AI would never re-run. Wrapping them atomically means that half-state
+  // can no longer be observed: either both writes land, or neither does and
+  // the next attempt starts clean.
+  await db.transaction(async (tx) => {
+    await storage.setNicheVocabulary(niche, { nl, en }, tx);
+    await storage.setNicheTemplate(niche, templates, tx);
+  });
 
   return { warnings };
 }

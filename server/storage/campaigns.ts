@@ -229,11 +229,14 @@ export const campaignsStorage = {
   },
 
   // ─── Niche Vocabulary ───────────────────────────────────────────────
+  // Case-insensitive: once mixed-casing niche rows exist (e.g. "HVAC" vs
+  // "Hvac"), a campaign saved against either casing must still block deletion
+  // of the other — the delete guard and the actual stored niche must agree.
   async campaignsUsingNiche(niche: string): Promise<Array<{ id: number; name: string }>> {
     const rows = await db
       .select({ id: campaigns.id, name: campaigns.name })
       .from(campaigns)
-      .where(eq(campaigns.niche, niche));
+      .where(ilike(campaigns.niche, niche));
     return rows.map((r) => ({ id: r.id, name: r.name ?? `#${r.id}` }));
   },
 };

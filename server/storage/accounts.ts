@@ -133,6 +133,12 @@ type NicheRowBoth = {
 
 const EMPTY_TEMPLATE: NicheTemplate = { nl: "", en: "" };
 
+// Either the module-level `db` or a transaction handle from `db.transaction()`
+// — both expose `.execute()`, which is all setNicheVocabulary/setNicheTemplate
+// need. Lets a caller (nicheGenerator.ts) run both writes atomically so a
+// terms-only half-created niche row can never be observed.
+type NicheDbExecutor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 function rowToBoth(r: NicheVocabulary): Omit<NicheRowBoth, "niche"> {
   return {
     nl: {
@@ -253,7 +259,9 @@ export const accountsStorage = {
   },
 
   // Upsert ALL groups for BOTH languages of a niche in one shot. De-dupes/trims.
-  async setNicheVocabulary(niche: string, both: { nl: NicheWordGroups; en: NicheWordGroups }): Promise<{ nl: NicheWordGroups; en: NicheWordGroups }> {
+  // Optional `executor` lets a caller run this inside a transaction alongside
+  // setNicheTemplate (see nicheGenerator.ts) so the pair commits atomically.
+  async setNicheVocabulary(niche: string, both: { nl: NicheWordGroups; en: NicheWordGroups }, executor: NicheDbExecutor = db): Promise<{ nl: NicheWordGroups; en: NicheWordGroups }> {
     const norm = (arr: string[]) => Array.from(new Set((arr ?? []).map((w) => w.trim()).filter(Boolean)));
     const nl: NicheWordGroups = {
       projectTerm: norm(both.nl.projectTerm), proposalTerm: norm(both.nl.proposalTerm),
@@ -266,7 +274,7 @@ export const accountsStorage = {
       visitTerm: norm(both.en.visitTerm),
     };
     const j = (v: string[]) => `${JSON.stringify(v)}`;
-    await db.execute(sql`
+    await executor.execute(sql`
       INSERT INTO "p2mxx34fvbf3ll6"."Niche_Vocabulary"
         (niche, project_terms, proposal_terms, decision_terms, advisor_terms, visit_terms,
          project_terms_en, proposal_terms_en, decision_terms_en, advisor_terms_en, visit_terms_en,
@@ -309,12 +317,14 @@ export const accountsStorage = {
   },
 
   // Patch the business-profile text templates + example packs for a niche.
+  // Optional `executor` — see setNicheVocabulary above.
   async setNicheTemplate(
     niche: string,
     templates: {
       companyNameTemplate?: NicheTemplate; descriptionTemplate?: NicheTemplate; kbTemplate?: NicheTemplate;
       questionBank?: NicheTemplate; badExamples?: NicheTemplate; objectionExamples?: NicheTemplate; scenarioExamples?: NicheTemplate;
     },
+    executor: NicheDbExecutor = db,
   ): Promise<NicheTemplate[]> {
     const j = (v: NicheTemplate) => JSON.stringify(v);
     const cn = templates.companyNameTemplate;
@@ -324,7 +334,7 @@ export const accountsStorage = {
     const be = templates.badExamples;
     const oe = templates.objectionExamples;
     const se = templates.scenarioExamples;
-    await db.execute(sql`
+    await executor.execute(sql`
       UPDATE "p2mxx34fvbf3ll6"."Niche_Vocabulary" SET
         company_name_template = COALESCE(${cn ? j(cn) : null}::jsonb, company_name_template),
         description_template  = COALESCE(${desc ? j(desc) : null}::jsonb, description_template),
