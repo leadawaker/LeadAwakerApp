@@ -54,7 +54,11 @@ export function Footer() {
   const pathWithoutLang = currentLang === "en"
     ? location
     : location.slice(`/${currentLang}`.length) || "/";
-  const isLegacy = pathWithoutLang.startsWith("/legacy");
+  const legacyBase = pathWithoutLang.startsWith("/dbr")
+    ? "/dbr"
+    : pathWithoutLang.startsWith("/legacy")
+      ? "/legacy"
+      : null;
 
   return (
     <footer className="pt-20 pb-10 border-t border-slate-200 dark:border-border relative overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
@@ -67,7 +71,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href={withLang(isLegacy ? "/legacy" : "/")}
+                  href={withLang(legacyBase ?? "/")}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.home")}
@@ -83,7 +87,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href={isLegacy ? "/legacy#demo" : "/#try"}
+                  href={legacyBase ? `${legacyBase}#demo` : "/#try"}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("nav.try")}
@@ -146,13 +150,13 @@ export function Footer() {
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div className="flex gap-6">
             <Link
-              href={withLang(isLegacy ? "/legacy/privacy-policy" : "/privacy-policy")}
+              href={withLang(legacyBase ? `${legacyBase}/privacy-policy` : "/privacy-policy")}
               className="hover:text-primary transition-colors"
             >
               {t("footer.privacy")}
             </Link>
             <Link
-              href={withLang(isLegacy ? "/legacy/terms-of-service" : "/terms-of-service")}
+              href={withLang(legacyBase ? `${legacyBase}/terms-of-service` : "/terms-of-service")}
               className="hover:text-primary transition-colors"
             >
               {t("footer.terms")}

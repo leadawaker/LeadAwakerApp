@@ -1,6 +1,6 @@
 export default {
   "hero": {
-    "badge": "For insurange companies only",
+    "badge": "For High-Ticket Sales Teams",
     "title": {
       "line1": "Stop buying new leads.",
       "highlight": "Wake up",
