@@ -51,6 +51,7 @@ export function ChatBubble({
   const isLinkedIn = typeNorm === "linkedin";
   const isWhatsApp = typeNorm === "whatsapp" || typeNorm === "whatsapp_cloud";
   const isCall = typeNorm === "call";
+  const isVoiceCall = typeNorm === "voice_call";
   const aiMsg = outbound && !isEmail && !isLinkedIn && isAiMessage(item);
   const humanAgentMsg = outbound && !isEmail && !isLinkedIn && isHumanAgentMessage(item);
   const { isFirstInRun, isLastInRun } = meta;
@@ -235,6 +236,12 @@ export function ChatBubble({
             <div className="flex flex-col gap-1">
               {isEmail && emailSubject && (
                 <div className="text-[11px] font-semibold text-foreground/60 pb-0.5 border-b border-border/30 mb-1">{emailSubject}</div>
+              )}
+              {isVoiceCall && (
+                <span className="inline-flex items-center gap-1 self-start text-[10px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 mb-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+                  <Phone className="h-3 w-3" />
+                  {t("chat.callBadge")}
+                </span>
               )}
               {attachment && <AttachmentPreview url={attachment as string} outbound={outbound} voiceColor={voiceColor} />}
               <div className="flex items-end gap-1.5">
