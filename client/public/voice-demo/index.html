@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Call Emma — LeadAwaker Voice Demo</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f5f2;
+    --card-bg: #ffffff;
+    --text: #241b16;
+    --text-muted: #6b6058;
+    --accent: #7a2e2e;
+    --accent-hover: #5f2222;
+    --border: #e5ddd4;
+    --error-bg: #fbe9e7;
+    --error-text: #8a2c1f;
+    --live-dot: #2e8b57;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1613;
+      --card-bg: #26201c;
+      --text: #f2ece5;
+      --text-muted: #b3a89d;
+      --accent: #c98a6b;
+      --accent-hover: #dba489;
+      --border: #3a322c;
+      --error-bg: #3a201c;
+      --error-text: #f0a89a;
+      --live-dot: #4fbd82;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #fff;
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+  .sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+    line-height: 1.4;
+  }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 999px;
+    padding: 13px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  #callBtn {
+    background: var(--accent);
+    color: #fff;
+    width: 100%;
+  }
+  #callBtn:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  #hangupBtn {
+    background: transparent;
+    color: var(--error-text);
+    border: 1px solid var(--error-text);
+    width: 100%;
+    margin-top: 14px;
+  }
+  .status {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    min-height: 18px;
+  }
+  .live-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--live-dot);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+  .error-box {
+    margin-top: 16px;
+    background: var(--error-bg);
+    color: var(--error-text);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    text-align: left;
+  }
+  .transcript {
+    margin-top: 20px;
+    text-align: left;
+    max-height: 220px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .transcript div {
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .transcript .who {
+    font-weight: 600;
+    color: var(--text);
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="avatar">E</div>
+  <h1>Call Emma</h1>
+  <p class="sub">Your AI receptionist, live in the browser. No phone number needed — click, allow the mic, and talk.</p>
+
+  <button id="callBtn" type="button">Call Emma</button>
+
+  <div id="liveControls" hidden>
+    <div class="live-row"><span class="pulse-dot"></span> Live with Emma</div>
+    <button id="hangupBtn" type="button">Hang up</button>
+  </div>
+
+  <div id="status" class="status"></div>
+  <div id="errorBox" class="error-box" hidden></div>
+  <div id="transcript" class="transcript" hidden></div>
+</div>
+
+<audio id="remoteAudio" autoplay></audio>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // EDITABLE CONSTS — everything demo-specific or environment-specific
+  // lives here so this page can be repointed without touching the logic
+  // below.
+  // ---------------------------------------------------------------------
+
+  // Base URL for the LeadAwaker automation engine's /voice/token and
+  // /voice/relay routes (see automations repo:
+  // src/webhooks/realtime_voice_routes.py). Empty string = same-origin
+  // relative paths, which only works if this static page is served from
+  // the same host as the engine. In production this page is served by
+  // the CRM frontend (Vercel), which is a DIFFERENT origin than the
+  // engine — so this almost certainly needs to point at the engine's
+  // public host before this page can work for real (e.g. the engine's
+  // public webhook host, "https://webhooks.leadawaker.com" per
+  // automations/src/config.py `public_webhook_url` — CONFIRM the exact
+  // public host to use for /voice/* at deploy time, and that CORS is
+  // open for it — the engine's CORSMiddleware currently allows
+  // allow_origins=["*"] so this should be fine as-is).
+  var ENGINE_BASE_URL = "";
+
+  // Demo account/campaign this call gets logged against in the CRM
+  // (matches automations/tests/voice/test_web_relay.py fixture values).
+  var DEMO_ACCOUNT_ID = 52;
+  var DEMO_CAMPAIGN_ID = 60;
+
+  // OpenAI Realtime WebRTC "calls" endpoint: the browser POSTs its local
+  // SDP offer here (Content-Type: application/sdp, Authorization: Bearer
+  // <ephemeral client_secret from /voice/token>) and gets back the SDP
+  // answer as the raw response body.
+  //
+  // CONFIRM AT BUILD TIME: this exact path/host. This matches the shape
+  // OpenAI has documented for the GA Realtime API's browser/WebRTC flow
+  // (POST SDP offer to `${base}/realtime/calls` with the ephemeral
+  // client_secret as bearer, get SDP answer text back), consistent with
+  // the client_secrets mint endpoint already verified+built server-side
+  // in automations/src/webhooks/realtime_voice_routes.py
+  // (_REALTIME_CLIENT_SECRETS_PATH = "/realtime/client_secrets", same
+  // api.openai.com/v1 base). It has NOT been re-verified against live
+  // OpenAI docs in this task (out of scope per the brief — no live doc
+  // fetches, no live calls). Check for: (a) whether this is still the
+  // current path name/host, (b) whether an "OpenAI-Beta" header is still
+  // required on this call (older Realtime beta needed one; the GA
+  // client_secrets flow this repo already uses did not), (c) whether a
+  // `?model=...` query param is required here — the server-side mint in
+  // realtime_voice_routes.py currently sends a bare
+  // `{"session": {"type": "realtime"}}` with no model, so the model this
+  // call negotiates against is whatever OpenAI defaults to unless that
+  // changes.
+  var OPENAI_REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
+
+  // ---------------------------------------------------------------------
+
+  var callBtn = document.getElementById("callBtn");
+  var hangupBtn = document.getElementById("hangupBtn");
+  var liveControls = document.getElementById("liveControls");
+  var statusEl = document.getElementById("status");
+  var errorBox = document.getElementById("errorBox");
+  var transcriptEl = document.getElementById("transcript");
+  var remoteAudio = document.getElementById("remoteAudio");
+
+  // Per-session state. Reset on every call attempt.
+  var pc = null;
+  var micStream = null;
+  var dataChannel = null;
+  var callId = null;
+
+  function setState(state) {
+    // idle | connecting | live | ended | error
+    callBtn.hidden = state === "live";
+    callBtn.disabled = state === "connecting";
+    liveControls.hidden = state !== "live";
+    if (state === "idle") {
+      statusEl.textContent = "";
+    } else if (state === "connecting") {
+      statusEl.textContent = "Connecting to Emma...";
+    } else if (state === "live") {
+      statusEl.textContent = "";
+    } else if (state === "ended") {
+      statusEl.textContent = "Call ended.";
+    }
+  }
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.hidden = false;
+    setState("idle");
+    callBtn.disabled = false;
+  }
+
+  function clearError() {
+    errorBox.hidden = true;
+    errorBox.textContent = "";
+  }
+
+  function appendTranscript(who, text) {
+    if (!text) return;
+    transcriptEl.hidden = false;
+    var row = document.createElement("div");
+    var whoSpan = document.createElement("span");
+    whoSpan.className = "who";
+    whoSpan.textContent = who + ": ";
+    row.appendChild(whoSpan);
+    row.appendChild(document.createTextNode(text));
+    transcriptEl.appendChild(row);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  }
+
+  // Forward one realtime event to the engine so it lands in the CRM
+  // (relay -> CallLogger -> create_interaction -> NOTIFY -> sse-listener).
+  // Fire-and-forget: a dropped relay call should never interrupt the live
+  // call, so failures are only logged to the console.
+  function relayEvent(event) {
+    fetch(ENGINE_BASE_URL + "/voice/relay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        call_id: callId,
+        account_id: DEMO_ACCOUNT_ID,
+        campaign_id: DEMO_CAMPAIGN_ID,
+        phone: "web",
+        event: event
+      })
+    }).catch(function (err) {
+      console.error("voice-demo: /voice/relay failed", err);
+    });
+  }
+
+  // Best-effort local transcript rendering. This is purely a demo nicety
+  // (the source of truth is the CRM Conversations thread via the relay
+  // path above) so it deliberately only handles the couple of event types
+  // that carry human-readable text; anything else is ignored on-page but
+  // still relayed above.
+  function maybeRenderTranscript(event) {
+    if (!event || !event.type) return;
+    if (event.type === "response.output_audio_transcript.done" && event.transcript) {
+      appendTranscript("Emma", event.transcript);
+    } else if (event.type === "conversation.item.input_audio_transcription.completed" && event.transcript) {
+      appendTranscript("You", event.transcript);
+    }
+  }
+
+  async function fetchEphemeralToken() {
+    var res = await fetch(ENGINE_BASE_URL + "/voice/token", { method: "POST" });
+    if (!res.ok) {
+      throw new Error("Could not reach the voice engine (HTTP " + res.status + ").");
+    }
+    var data = await res.json();
+    if (!data || !data.value) {
+      throw new Error("Voice engine did not return a usable token.");
+    }
+    return data.value;
+  }
+
+  async function startCall() {
+    clearError();
+    callId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random());
+    setState("connecting");
+
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      showError("Microphone access was denied. Please allow the mic and try again.");
+      return;
+    }
+
+    var ephemeralToken;
+    try {
+      ephemeralToken = await fetchEphemeralToken();
+    } catch (err) {
+      stopTracks();
+      showError(err.message || "Could not start the call. Please try again.");
+      return;
+    }
+
+    try {
+      pc = new RTCPeerConnection();
+
+      // Play Emma's audio back through the page as soon as it arrives.
+      pc.ontrack = function (event) {
+        remoteAudio.srcObject = event.streams[0];
+      };
+
+      micStream.getAudioTracks().forEach(function (track) {
+        pc.addTrack(track, micStream);
+      });
+
+      dataChannel = pc.createDataChannel("oai-events");
+
+      dataChannel.onopen = function () {
+        // Speak-first: as soon as the channel is open, ask Emma to greet
+        // instead of waiting for the caller to speak first.
+        dataChannel.send(JSON.stringify({ type: "response.create" }));
+        setState("live");
+      };
+
+      dataChannel.onmessage = function (e) {
+        var event;
+        try {
+          event = JSON.parse(e.data);
+        } catch (err) {
+          console.error("voice-demo: could not parse data channel message", e.data);
+          return;
+        }
+        relayEvent(event);
+        maybeRenderTranscript(event);
+      };
+
+      dataChannel.onclose = function () {
+        if (pc) endCall("ended");
+      };
+
+      var offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // CONFIRM AT BUILD TIME (see OPENAI_REALTIME_CALLS_URL above): exact
+      // request shape for the SDP exchange. Written here as documented for
+      // OpenAI's GA Realtime WebRTC flow: raw SDP body, `application/sdp`
+      // content type, ephemeral client_secret as bearer, raw SDP text back.
+      var sdpResponse = await fetch(OPENAI_REALTIME_CALLS_URL, {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          "Authorization": "Bearer " + ephemeralToken,
+          "Content-Type": "application/sdp"
+        }
+      });
+
+      if (!sdpResponse.ok) {
+        throw new Error("OpenAI rejected the call setup (HTTP " + sdpResponse.status + ").");
+      }
+
+      var answerSdp = await sdpResponse.text();
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+    } catch (err) {
+      console.error("voice-demo: WebRTC setup failed", err);
+      endCall("idle");
+      showError(err.message || "Could not connect to Emma. Please try again.");
+    }
+  }
+
+  function stopTracks() {
+    if (micStream) {
+      micStream.getTracks().forEach(function (t) { t.stop(); });
+      micStream = null;
+    }
+  }
+
+  function endCall(nextState) {
+    stopTracks();
+    if (dataChannel) {
+      try { dataChannel.close(); } catch (e) { /* no-op */ }
+      dataChannel = null;
+    }
+    if (pc) {
+      try { pc.close(); } catch (e) { /* no-op */ }
+      pc = null;
+    }
+    remoteAudio.srcObject = null;
+    setState(nextState || "ended");
+  }
+
+  callBtn.addEventListener("click", function () {
+    startCall();
+  });
+
+  hangupBtn.addEventListener("click", function () {
+    endCall("ended");
+  });
+
+  setState("idle");
+})();
+</script>
+
+</body>
+</html>
