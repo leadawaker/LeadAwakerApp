@@ -162,6 +162,7 @@
     "play": "Afspelen",
     "pause": "Pauzeren",
     "download": "Downloaden",
+    "callBadge": "Oproep",
     "handoff": {
       "circular_conversation": "AI detecteerde een circulair gesprek",
       "knowledge_gap": "AI weet het antwoord niet",

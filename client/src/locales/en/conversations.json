@@ -162,6 +162,7 @@
     "play": "Play",
     "pause": "Pause",
     "download": "Download",
+    "callBadge": "Call",
     "handoff": {
       "circular_conversation": "AI detected a circular conversation",
       "knowledge_gap": "AI doesn't know the answer",
