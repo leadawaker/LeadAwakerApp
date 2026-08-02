@@ -2,15 +2,21 @@
 
 function Demo() {
   const isMobile = window.useIsMobile();
-  const { t } = window.useI18n();
+  const { t, lang } = window.useI18n();
+  const isSolar = window.SITE_VARIANT !== 'home';
   const [firstName, setFirstName] = React.useState("");
-  const [niche, setNiche] = React.useState("");
-  const [scenario, setScenario] = React.useState("inquired");
+  const [niche, setNiche] = React.useState(isSolar ? "solar panel and battery installation" : "");
+  const [companyName, setCompanyName] = React.useState("");
+  // "Quoted" leads first: a stalled quote is the expensive problem and the one
+  // the whole page argues about, so it's the scenario worth demoing by default.
+  const [scenario, setScenario] = React.useState("deciding");
   const [sectionRef, sectionInView] = window.useInView();
 
+  // Quoted first: it's the default and the expensive problem. "Never quoted" is
+  // the softer, earlier lead.
   const SCENARIOS = [
-    { id: "inquired", label: t('demo.scenario_inquired'), note: t('demo.chat_note_inquired') },
     { id: "deciding", label: t('demo.scenario_deciding'), note: t('demo.chat_note_deciding') },
+    { id: "inquired", label: t('demo.scenario_inquired'), note: t('demo.chat_note_inquired') },
   ];
   const activeScenario = SCENARIOS.find((s) => s.id === scenario) || SCENARIOS[0];
   const scenarioNote = activeScenario.note;
@@ -30,7 +36,13 @@ function Demo() {
       const res = await fetch("/api/demo/create-session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ firstName: firstName.trim(), niche: niche.trim(), language: "nl", scenario }),
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          niche: niche.trim(),
+          language: lang,
+          scenario,
+          ...(isSolar ? { preset: "solar", companyName: companyName.trim() } : {}),
+        }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -102,14 +114,18 @@ function Demo() {
                 maxLength={80}
               />
             </div>
+            {/* On /home the second field is the trade, which the server turns
+                into a whole niche context via LLM. On solar the trade is known,
+                so the field buys something better: the visitor's own company
+                name, which the AI then opens the conversation in. */}
             <div className="neu-inset-crisp" style={{ borderRadius: 10 }}>
               <input
                 type="text"
                 className="demo-input"
-                placeholder={t('demo.ph_trade')}
-                value={niche}
-                onChange={(e) => setNiche(e.target.value)}
-                maxLength={200}
+                placeholder={t(isSolar ? 'demo.ph_company' : 'demo.ph_trade')}
+                value={isSolar ? companyName : niche}
+                onChange={(e) => (isSolar ? setCompanyName : setNiche)(e.target.value)}
+                maxLength={isSolar ? 120 : 200}
               />
             </div>
 
@@ -198,7 +214,9 @@ function Demo() {
                   {firstName.trim() || t('demo.chat_lead_name')}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--mute)", marginTop: 2, fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>
-                  {niche.trim() ? `${niche.trim()} · ${scenarioNote}` : t('demo.chat_lead_sub')}
+                  {isSolar
+                    ? `${t('demo.chat_lead_label')} · ${scenarioNote}`
+                    : `${niche.trim() || t('demo.chat_lead_niche')} · ${scenarioNote}`}
                 </div>
               </div>
             </div>

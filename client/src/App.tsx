@@ -113,6 +113,9 @@ function AppRoutes() {
       <Route path="/legacy" component={LegacyHome} />
       <Route path="/legacy/privacy-policy" component={LegacyPrivacyPolicy} />
       <Route path="/legacy/terms-of-service" component={LegacyTermsOfService} />
+      <Route path="/dbr" component={LegacyHome} />
+      <Route path="/dbr/privacy-policy" component={LegacyPrivacyPolicy} />
+      <Route path="/dbr/terms-of-service" component={LegacyTermsOfService} />
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
       <Route path="/services" component={() => <Redirect to="/cases" />} />
@@ -162,6 +165,9 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/legacy`} component={LegacyHome} />
       <Route path={`/${lang}/legacy/privacy-policy`} component={LegacyPrivacyPolicy} />
       <Route path={`/${lang}/legacy/terms-of-service`} component={LegacyTermsOfService} />
+      <Route path={`/${lang}/dbr`} component={LegacyHome} />
+      <Route path={`/${lang}/dbr/privacy-policy`} component={LegacyPrivacyPolicy} />
+      <Route path={`/${lang}/dbr/terms-of-service`} component={LegacyTermsOfService} />
 
       {/* Home MUST be last */}
       <Route path={`/${lang}`} component={() => <Redirect to={`/${lang}/faq`} />} />

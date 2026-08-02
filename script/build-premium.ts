@@ -6,6 +6,14 @@ import { transformSync } from "esbuild";
 const DIST_PREMIUM = path.resolve("dist/public/premium");
 const SRC_PREMIUM = path.resolve("client/public/premium");
 
+// Standalone legal pages, served at /terms-of-service and /privacy-policy via
+// the rewrites in vercel.json. They are hand-written HTML with no JSX and no
+// part in the bundle, but they DO <link> design-tokens.css — which is inlined
+// and then pruned — so main() gives each the same link-to-<style> treatment as
+// index.html. Without both steps these ship either deleted or unstyled, which
+// is exactly how terms.html silently 404'd until 2026-07.
+const LEGAL_PAGES = ["terms.html", "privacy.html"];
+
 // Everything else under dist/public/premium/ is deleted once the build below
 // finishes: the compiled .jsx files (their content now lives only in the
 // bundle), dead HTML duplicates, docs, debug source, and design-tokens.css
@@ -17,6 +25,7 @@ const KEEP_FILES = new Set([
   "logo-v2.svg",
   "logo-v2-dark.svg",
   "netherlands.svg",
+  ...LEGAL_PAGES,
 ]);
 const KEEP_DIRS = new Set(["assets", "hero-images"]);
 const UPLOADS_KEEP = new Set(["ctatext17.jpg"]); // inside uploads/textures/
@@ -63,9 +72,9 @@ function topLevelConstLetToVar(code: string): string {
 // deletes — and the build would exit 0 with a broken production page.
 // Fail loud instead, matching the existing zero-script-tags guard's
 // philosophy.
-function replaceRequired(html: string, re: RegExp, replacement: string, label: string): string {
+function replaceRequired(html: string, re: RegExp, replacement: string, label: string, file = "index.html"): string {
   if (!re.test(html)) {
-    throw new Error(`build-premium: expected to find and replace ${label} in index.html, but the pattern didn't match — markup may have changed`);
+    throw new Error(`build-premium: expected to find and replace ${label} in ${file}, but the pattern didn't match — markup may have changed`);
   }
   return html.replace(re, replacement);
 }
@@ -188,6 +197,16 @@ async function main() {
 
   await writeFile(indexPath, html);
   console.log("build-premium: rewrote index.html");
+
+  for (const page of LEGAL_PAGES) {
+    const pagePath = path.join(DIST_PREMIUM, page);
+    const pageHtml = await readFile(pagePath, "utf-8");
+    await writeFile(
+      pagePath,
+      replaceRequired(pageHtml, DESIGN_TOKENS_LINK_RE, `<style>\n${css}\n</style>\n`, "the design-tokens.css <link> tag", page)
+    );
+    console.log(`build-premium: inlined design tokens into ${page}`);
+  }
 
   await pruneDistPremium(bundleName);
   console.log("build-premium: pruned non-public files from dist/public/premium/");

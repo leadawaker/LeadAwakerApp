@@ -18,7 +18,9 @@ const READ_AGENT = 32,  TYPE_AGENT = 65,  MIN_AGENT = 2000, MAX_AGENT = 8000;
 const READ_USER  = 22,  TYPE_USER  = 52,  MIN_USER  = 900,  MAX_USER  = 3800;
 const INITIAL_TYPING = 2400, SYSTEM_GAP = 380, READ_RECEIPT_LEAD = 700, BOOKING_GAP = 7000, BOOKING_READ_LEAD = 3500;
 const RESTART_PAUSE = 4000;
-const NICHE_ORDER = ['kitchen', 'flooring', 'wellness', 'landscaping', 'roofing'];
+/* Derived from the active case set so the solar page (3 angle tabs) and the
+   /home page (5 niche tabs) both cycle correctly without a second list. */
+const NICHE_ORDER = Object.keys(CHAT_CASES);
 const COUNTDOWN_SECS = 5;
 
 /* --------------------------- CONVERSATION CARD --------------------------- */
@@ -26,9 +28,21 @@ function ConversationCard({ niche, onSetNiche }) {
   const isMobile = window.useIsMobile();
   const isTabletOrBelow = window.useIsMobile(1280);
   const { t, lang } = window.useI18n();
-  const data = CHAT_CASES[niche] || CHAT_CASES.kitchen;
+  const data = CHAT_CASES[niche] || CHAT_CASES[NICHE_ORDER[0]];
+  // chatMessages is keyed by case, which is safe for every tab except the
+  // deadline one: that tab's case swaps by market, so a Dutch-speaking visitor
+  // geo-located to the UK would otherwise get Dutch salderingsregeling copy
+  // under a UK lead's header. Market-specific cases carry their own
+  // translations inline (messagesNl) instead.
   const nlMessages = (window.TRANSLATIONS?.[lang]?.chatMessages || {})[niche];
-  const messages = Array.isArray(nlMessages) ? nlMessages : data.messages;
+  const messages = Array.isArray(nlMessages)
+    ? nlMessages
+    : (lang === 'nl' && Array.isArray(data.messagesNl) ? data.messagesNl : data.messages);
+
+  // Most cases are dormant enquiries ("inquired 5 mo. ago"). The referrals case
+  // is a finished customer, so it opts out via agoKey.
+  const agoPrefixRaw = t(data.agoKey || 'hero.conv_enquired');
+  const agoPrefix = agoPrefixRaw === data.agoKey ? t('hero.conv_enquired') : agoPrefixRaw;
 
   const [visible,      setVisible]      = React.useState([]);
   const [readReceipts, setReadReceipts] = React.useState(new Set());
@@ -213,7 +227,7 @@ function ConversationCard({ niche, onSetNiche }) {
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{data.leadName}</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 2, gap: 8 }}>
             <div style={{ fontSize: 11, color: "var(--ink)", fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>{data.project}</div>
-            <div style={{ fontSize: 10, color: "var(--ink)", fontFamily: "var(--mono)", letterSpacing: "0.04em", opacity: 0.7, whiteSpace: "nowrap" }}>{t('hero.conv_enquired')} {data.ago.split(' ')[0]} {t('convUI.months_ago')}</div>
+            <div style={{ fontSize: 10, color: "var(--ink)", fontFamily: "var(--mono)", letterSpacing: "0.04em", opacity: 0.7, whiteSpace: "nowrap" }}>{agoPrefix} {data.ago.split(' ')[0]} {t('convUI.months_ago')}</div>
           </div>
         </div>
       </div>
@@ -356,12 +370,22 @@ function CheckCheckIcon() {
 }
 
 function NicheSwitcher({ value, onChange }) {
-  const { t } = window.useI18n();
-  const items = Object.keys(CHAT_CASES).map(k => ({ k, label: t('convUI.niche_' + k) || CHAT_CASES[k].label, icon: NICHE_ICONS[k] }));
+  const { t, lang } = window.useI18n();
+  const items = Object.keys(CHAT_CASES).map(k => {
+    // t() echoes the path back when a key is missing. The deadline tab has no
+    // convUI key on purpose, so it falls through to the label on the case
+    // itself — which is what makes it read "VAT deadline" in the UK and
+    // "Saldering" in NL without a translation entry per market.
+    const key = 'convUI.niche_' + k;
+    const tr = t(key);
+    const c = CHAT_CASES[k];
+    const label = (tr && tr !== key) ? tr : ((lang === 'nl' && c.labelNl) || c.label);
+    return { k, label, icon: NICHE_ICONS[k] };
+  });
   return (
     <div style={{
       marginTop: 8, padding: 6, borderRadius: 10,
-      display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4
+      display: "grid", gridTemplateColumns: `repeat(${items.length}, 1fr)`, gap: 4
     }}>
       {items.map((it) => {
         const on = it.k === value;
@@ -400,7 +424,11 @@ const NICHE_ICONS = {
   flooring:    <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="3.5" width="13" height="11" rx="0.5"/><path d="M2.5 7.5h13M2.5 11.5h13"/><path d="M7 3.5v4M11 7.5v4M7 11.5v3"/></svg>,
   wellness:    <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5h14v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5Z"/><path d="M5 9.5V7a1.5 1.5 0 0 1 3 0v2.5"/><path d="M5 13.5l-1 2M13 13.5l1 2"/></svg>,
   landscaping: <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14.5V9"/><path d="M9 9C9 6.5 6.5 4 4 4c0 3 2 5.5 5 5Z"/><path d="M9 12C9 9.5 11.5 7 15 7c0 3-2 5-6 5Z"/><path d="M3 14.5h12"/></svg>,
-  roofing:     <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 9 9 3.5 15.5 9" /><path d="M4 8v6.5h10V8" /><path d="M12 5.5V3.5h1.5v3.2" /></svg>
+  roofing:     <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 9 9 3.5 15.5 9" /><path d="M4 8v6.5h10V8" /><path d="M12 5.5V3.5h1.5v3.2" /></svg>,
+  quotes:      <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 2.5h6L14 6v9.5H4.5Z"/><path d="M10.5 2.5V6H14"/><path d="M6.5 9.5h5M6.5 12.5h3"/></svg>,
+  netmetering: <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="4" width="13" height="11" rx="1"/><path d="M2.5 7.5h13"/><path d="M6 2.5v3M12 2.5v3"/><path d="M11 10.5 8.5 13 7 11.5"/></svg>,
+  dbr:         <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3.2 9a5.8 5.8 0 1 0 1.7-4.1"/><path d="M2.8 3.2v3.2H6"/><path d="M9 6.2V9.4l2.3 1.4"/></svg>,
+  referrals:   <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="6.4" cy="6" r="2.6"/><path d="M2.2 14.5c0-2.3 1.9-4.2 4.2-4.2s4.2 1.9 4.2 4.2"/><path d="M12.2 4.6a2.6 2.6 0 0 1 0 5"/><path d="M13.4 11.1c1.4.7 2.4 2 2.4 3.4"/></svg>
 };
 
 function Msg({ from, time, readReceipt, children }) {

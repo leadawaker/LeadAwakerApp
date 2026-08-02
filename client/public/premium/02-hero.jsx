@@ -6,6 +6,11 @@ const NICHE_IMAGES = {
   wellness:    '/premium/hero-images/sauna final.webp',
   landscaping: '/premium/hero-images/garden8.webp',
   roofing:     '/premium/hero-images/roof.webp',
+  quotes:      '/premium/hero-images/roof5.webp',
+  netmetering: '/premium/hero-images/battery6.webp',
+  dbr:         '/premium/hero-images/heat5.webp',
+  // PLACEHOLDER: reusing the quotes roof until the referrals cutout exists.
+  referrals:   '/premium/hero-images/referral.webp',
 };
 
 const NICHE_IMAGE_STYLE = {
@@ -14,6 +19,10 @@ const NICHE_IMAGE_STYLE = {
   wellness:    { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.5,  tx: -12, ty: 6,   rot: 0 } },
   landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.65, tx: -12, ty: 4,   rot: 0 } },
   roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.6,  tx: -11, ty: 6,   rot: 0 } },
+  quotes:      { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -11, ty: 7,   rot: 0 } },
+  netmetering: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -9,  ty: 4,   rot: 0 } },
+  dbr:         { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.7,  tx: -21, ty: 8,   rot: 0 } },
+  referrals:   { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -11, ty: 7,   rot: 0 } },
 };
 
 const DEFAULT_ADJUST = { scale: 1, tx: 0, ty: 0, rot: 0 };
@@ -31,7 +40,7 @@ function buildFreeTransform({ scale, tx, ty, rot }) {
 }
 
 function Hero({ wineIntensity, textures }) {
-  const [niche, setNiche] = React.useState("kitchen");
+  const [niche, setNiche] = React.useState(() => Object.keys(CHAT_CASES)[0]);
   const [adjustments, setAdjustments] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem("hero_niche_adjustments")) || {}; } catch { return {}; }
   });

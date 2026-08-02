@@ -114,11 +114,15 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isLegacy = pathWithoutLang.startsWith("/legacy");
+  const legacyBase = pathWithoutLang.startsWith("/dbr")
+    ? "/dbr"
+    : pathWithoutLang.startsWith("/legacy")
+      ? "/legacy"
+      : null;
 
   const navLinks = [
-    { href: isLegacy ? "/legacy" : "/", label: t("nav.home") },
-    { href: isLegacy ? "/legacy#demo" : "/#try", label: t("nav.try"), isHash: true },
+    { href: legacyBase ?? "/", label: t("nav.home") },
+    { href: legacyBase ? `${legacyBase}#demo` : "/#try", label: t("nav.try"), isHash: true },
     { href: "/faq", label: t("nav.about") },
   ];
 

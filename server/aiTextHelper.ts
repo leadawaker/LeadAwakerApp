@@ -14,7 +14,7 @@ const CLAUDE_TIMEOUT_MS = 30_000;
 const GROQ_TIMEOUT_MS = 20_000;
 const GROQ_MODEL = "llama-3.1-8b-instant";
 const OPENAI_TIMEOUT_MS = 20_000;
-const OPENAI_MODEL = "gpt-4o-mini";
+const OPENAI_MODEL = "gpt-5.4-mini";
 
 function cleanClaudeEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
@@ -26,22 +26,27 @@ function cleanClaudeEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
-/** Single completion via Claude Haiku. Returns null on error. */
-async function tryHaiku(prompt: string): Promise<string | null> {
+/** Single completion via Claude CLI at an arbitrary model/timeout. Returns null on error. */
+async function tryClaude(prompt: string, model: string, timeoutMs: number): Promise<string | null> {
   return new Promise((resolve) => {
     execFile(
       CLAUDE_BIN,
-      ["-p", prompt, "--model", "haiku", "--max-turns", "1"],
-      { timeout: CLAUDE_TIMEOUT_MS, maxBuffer: 1024 * 1024, env: cleanClaudeEnv() },
+      ["-p", prompt, "--model", model, "--max-turns", "1"],
+      { timeout: timeoutMs, maxBuffer: 4 * 1024 * 1024, env: cleanClaudeEnv() },
       (err, stdout) => {
         if (err || !stdout?.trim()) {
-          if (err) console.warn("[aiTextHelper] Haiku failed:", err.message);
+          if (err) console.warn(`[aiTextHelper] Claude ${model} failed:`, err.message);
           return resolve(null);
         }
         resolve(stdout.trim());
       },
     );
   });
+}
+
+/** Single completion via Claude Haiku. Returns null on error. */
+async function tryHaiku(prompt: string): Promise<string | null> {
+  return tryClaude(prompt, "haiku", CLAUDE_TIMEOUT_MS);
 }
 
 /** Single completion via Groq. Returns null on error or missing key. */
@@ -98,8 +103,8 @@ async function tryOpenAI(prompt: string, systemPrompt?: string): Promise<string 
           ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
           { role: "user", content: prompt },
         ],
-        max_tokens: 800,
-        temperature: 0.4,
+        // gpt-5+ family: max_completion_tokens replaces max_tokens, no custom temperature
+        max_completion_tokens: 800,
       }),
       signal: controller.signal,
     });
@@ -128,6 +133,49 @@ export function stripFences(s: string): string {
 }
 
 /**
+ * Extract the first balanced `{...}` JSON object substring from arbitrary
+ * text. Handles the common LLM failure modes: a bare JSON object, a fenced
+ * block (with or without a `json` language tag), a prose preamble before the
+ * object ("Here's the JSON:\n{...}"), and prose + a fenced block together.
+ * Brace-depth tracking ignores braces inside string literals so quoted text
+ * containing "{" or "}" doesn't throw off the match. Returns null if no
+ * balanced object is found (the genuinely-not-JSON case).
+ */
+export function extractJsonObject(s: string): string | null {
+  // Fast path: stripping a leading/trailing fence (if any) already yields
+  // valid JSON — covers the plain and fenced-with-no-preamble cases cheaply.
+  const stripped = stripFences(s);
+  try {
+    JSON.parse(stripped);
+    return stripped;
+  } catch {
+    // fall through to brace-scanning over the ORIGINAL text, which also
+    // handles prose preambles and prose-before-fence.
+  }
+  const start = s.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i];
+    if (inString) {
+      if (escape) escape = false;
+      else if (ch === "\\") escape = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') { inString = true; continue; }
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return s.slice(start, i + 1);
+    }
+  }
+  return null; // unbalanced — genuinely not usable JSON
+}
+
+/**
  * Complete a prompt. Tries Haiku first, falls back to Groq. Returns null if both fail.
  * For fast enrichment tasks only — not for long-running reasoning.
  */
@@ -137,4 +185,76 @@ export async function completeText(prompt: string, systemPrompt?: string): Promi
   const groq = await tryGroq(prompt, systemPrompt);
   if (groq) return groq;
   return tryOpenAI(prompt, systemPrompt);
+}
+
+/**
+ * Single large completion via OpenAI only (no Claude attempt). Exported so
+ * callers that already tried Claude via completeTextLarge and got back
+ * unusable content (not a Claude *failure*, just non-JSON prose) can
+ * explicitly retry on the OpenAI leg — completeTextLarge itself only falls
+ * back to OpenAI when Claude fails outright, not when its output fails to
+ * parse downstream. Returns null on error or missing key.
+ */
+export async function tryOpenAILarge(
+  prompt: string,
+  systemPrompt?: string,
+  opts?: { timeoutMs?: number; maxTokens?: number },
+): Promise<string | null> {
+  const timeoutMs = opts?.timeoutMs ?? 60_000;
+  const maxTokens = opts?.maxTokens ?? 3500;
+  const apiKey = process.env.OPEN_AI_API_KEY;
+  if (!apiKey) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+          { role: "user", content: prompt },
+        ],
+        max_completion_tokens: maxTokens,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.warn("[aiTextHelper] OpenAI (large) error:", res.status);
+      return null;
+    }
+    const json = await res.json() as any;
+    const text = json.choices?.[0]?.message?.content?.trim();
+    return text || null;
+  } catch (err: any) {
+    console.warn("[aiTextHelper] OpenAI (large) fetch failed:", err.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Larger structured completion (e.g. a full niche vocabulary row).
+ * Claude (default sonnet, 60s) first — subscription, no per-call cost — then
+ * OpenAI gpt-5.4-mini. Groq is skipped: the 8B model is unreliable for large
+ * structured JSON. Returns null only if BOTH providers fail.
+ */
+export async function completeTextLarge(
+  prompt: string,
+  systemPrompt?: string,
+  opts?: { claudeModel?: string; timeoutMs?: number; maxTokens?: number },
+): Promise<string | null> {
+  const claudeModel = opts?.claudeModel ?? "sonnet";
+  const timeoutMs = opts?.timeoutMs ?? 60_000;
+
+  const claude = await tryClaude(
+    systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
+    claudeModel,
+    timeoutMs,
+  );
+  if (claude) return claude;
+
+  return tryOpenAILarge(prompt, systemPrompt, opts);
 }

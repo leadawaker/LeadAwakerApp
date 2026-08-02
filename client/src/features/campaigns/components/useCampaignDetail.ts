@@ -11,6 +11,20 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import type { Campaign } from "@/types/models";
 
+// The only fields POST /api/campaigns/:id/generate writes (CONTEXT_FIELDS in
+// server/routes/campaigns.ts), in draft/db-key form. Its response carries a
+// full campaign row, so applyGeneratedFields merges these and nothing else.
+const GENERATED_FIELD_KEYS = [
+  "description",
+  "niche_question",
+  "kb",
+  "inquiry_timeframe",
+  "campaign_usp",
+  "ai_style_override",
+  "what_lead_did",
+  "service_name",
+] as const;
+
 // ── Contract type (minimal, for financials) ──────────────────────────────────
 
 export interface ContractFinancials {
@@ -304,6 +318,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     typo_count: (c as any).typo_count ?? "",
     positioning: (c as any).positioning || "premium",
     ai_disclosure: (c as any).ai_disclosure || "off",
+    use_account_kb: (c as any).use_account_kb !== false,
   }), []);
 
   const [draft, setDraft] = useState<Record<string, unknown>>(() => buildDraft(campaign, linkedPrompt));
@@ -441,6 +456,33 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
   const cancelEdit = useCallback(() => { setFocusField(null); }, []);
   const handleSave = doSave;
 
+  // Merge server-filled fields (from POST /api/campaigns/:id/generate) into
+  // BOTH draft and originalDraft. Both callers of that endpoint — NicheSelect's
+  // create-niche flow and the toolbar CampaignGenerateButton — fill fields
+  // server-side, but the draft here still held the pre-generate (often empty)
+  // values. Since buildDraft is only rebuilt on campaignId change (never on a
+  // same-id refetch), the 1.5s autosave debounce would PATCH those stale ""
+  // values right back over the just-generated ones on the operator's next
+  // keystroke. Merging into originalDraft too (not just draft) means the
+  // fields land as already-saved, not as a pending dirty change to re-PATCH.
+  //
+  // Only the eight fields that endpoint actually writes are merged. The response
+  // is a full campaign row, and on its "nothing to do" path that row is the
+  // snapshot read at request start — so merging every key would revert the
+  // operator's own just-made edits (notably `niche`, which the endpoint never
+  // persists) back to their pre-request values, silently and unsaved.
+  const applyGeneratedFields = useCallback((fields: Record<string, unknown>) => {
+    const merge = (d: Record<string, unknown>): Record<string, unknown> => {
+      const next = { ...d };
+      for (const key of GENERATED_FIELD_KEYS) {
+        if (key in d && key in fields) next[key] = fields[key] ?? d[key];
+      }
+      return next;
+    };
+    setDraft(merge);
+    setOriginalDraft(merge);
+  }, []);
+
   return {
     // Prompts
     conversationPrompts,
@@ -468,6 +510,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     setDeleting,
     draft,
     setDraft,
+    applyGeneratedFields,
     saving,
     hasChanges,
     startEdit,
