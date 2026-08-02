@@ -45,7 +45,19 @@ function Pipeline() {
   const isMobile = window.useIsMobile();
   const { t } = window.useI18n();
 
-  const makeLeads = () => isMobile ? ({
+  /* Names follow the market, not the language: a UK prospect reading a column of
+     Dutch surnames learns who our other clients are. Applied positionally so the
+     lists below stay the single source of ordering. */
+  const applyNames = (cols) => {
+    const pool = window.marketNames().pipeline;
+    let i = 0;
+    const order = ['engaged', 'replied', 'qualified', 'booked', 'lost'];
+    const out = {};
+    for (const k of order) out[k] = (cols[k] || []).map(l => ({ ...l, name: pool[i++] || l.name }));
+    return out;
+  };
+
+  const makeLeads = () => applyNames(isMobile ? ({
     engaged: [
       { id: "e1", name: "Martijn van den Berg", lastMsg: "5m ago",  tier: "premium" },
       { id: "e2", name: "Sophie Janssen",       lastMsg: "12m ago", tier: "basic"   },
@@ -106,7 +118,7 @@ function Pipeline() {
       { id: "l8", name: "Frank Kooiman",           lastMsg: "7d ago",   tier: "basic"   },
       { id: "l9", name: "Hanneke Prins",           lastMsg: "7d ago",   tier: "basic"   },
     ],
-  });
+  }));
 
   const STAGES = [
     { id: "engaged",   label: t('pipeline.stage_engaged'),   headerBg: "linear-gradient(145deg, #252118, #1A1910)", headerColor: "rgba(244,239,227,0.72)" },

@@ -37,7 +37,11 @@ const DS_NICHE_ICONS = {
   flooring:    <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="3.5" width="13" height="11" rx="0.5" /><path d="M2.5 7h13M2.5 11h13M9 3.5v3.5M6 7v4M12 7v4M9 11v3.5" /></svg>,
   wellness:    <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2.5C6.5 5 4.5 7.5 4.5 10.5a4.5 4.5 0 0 0 9 0c0-3-2-5.5-4.5-8Z" /><path d="M9 14v-3M7.5 11.5h3" /></svg>,
   landscaping: <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 13V8M9 8L6 5h6L9 8Z" /><path d="M9 8L7 6h4L9 8Z" transform="translate(0 -2)" /><path d="M2 15h14" /></svg>,
-  roofing:     <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 9 9 3.5 15.5 9" /><path d="M4 8v6.5h10V8" /><path d="M12 5.5V3.5h1.5v3.2" /></svg>
+  roofing:     <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 9 9 3.5 15.5 9" /><path d="M4 8v6.5h10V8" /><path d="M12 5.5V3.5h1.5v3.2" /></svg>,
+  quotes:      <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 2.5h6L14 6v9.5H4.5Z" /><path d="M10.5 2.5V6H14" /><path d="M6.5 9.5h5M6.5 12.5h3" /></svg>,
+  netmetering: <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="4" width="13" height="11" rx="1" /><path d="M2.5 7.5h13" /><path d="M6 2.5v3M12 2.5v3" /><path d="M11 10.5 8.5 13 7 11.5" /></svg>,
+  dbr:         <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3.2 9a5.8 5.8 0 1 0 1.7-4.1" /><path d="M2.8 3.2v3.2H6" /><path d="M9 6.2V9.4l2.3 1.4" /></svg>,
+  referrals:   <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="6.4" cy="6" r="2.6" /><path d="M2.2 14.5c0-2.3 1.9-4.2 4.2-4.2s4.2 1.9 4.2 4.2" /><path d="M12.2 4.6a2.6 2.6 0 0 1 0 5" /><path d="M13.4 11.1c1.4.7 2.4 2 2.4 3.4" /></svg>
 };
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
@@ -155,11 +159,11 @@ function CheckCheckIcon() {
 }
 
 function NicheSwitch({ value, onChange }) {
-  const items = ['kitchen', 'flooring', 'wellness', 'landscaping', 'roofing'].map(k => ({
+  const items = Object.keys(CHAT_CASES).map(k => ({
     k, label: CHAT_CASES[k].label, icon: DS_NICHE_ICONS[k]
   }));
   return (
-    <div style={{ padding: 6, borderRadius: 10, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+    <div style={{ padding: 6, borderRadius: 10, display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, gap: 4 }}>
       {items.map(it => {
         const on = it.k === value;
         return (

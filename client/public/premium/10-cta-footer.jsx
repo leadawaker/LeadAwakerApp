@@ -114,9 +114,11 @@ function CTA() {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [quotes, setQuotes] = React.useState(200);
-  const [silentPct, setSilentPct] = React.useState(50);
-  const [avgValue, setAvgValue] = React.useState(40000);
+  // Must track AUDIT_POOLS[0] / AUDIT_VALUE_SLIDER defaults in config.jsx, or a
+  // visitor who never scrolls the audit submits different numbers than it shows.
+  const [quotes, setQuotes] = React.useState(6000);
+  const [silentPct, setSilentPct] = React.useState(30);
+  const [avgValue, setAvgValue] = React.useState(10000);
   const [numbersAccurate, setNumbersAccurate] = React.useState(false);
 
   const [prefill, setPrefill] = React.useState(null);
@@ -152,22 +154,40 @@ function CTA() {
     if (!n || !em || !numbersAccurate) return;
     setFormState("sending");
 
+    // /api/contact only forwards name/email/description into the email body, so
+    // everything worth knowing has to be folded into `description`. Pool keys are
+    // sent raw rather than translated: this email is for us, not the visitor.
+    const calc = window.__leadAwakerCalc || {};
+    const pools = calc.pools || {};
+    const touchedKeys = calc.touchedPools || [];
+    const money = (v) => symbol + Math.round(v || 0).toLocaleString(locale);
+
     const extras = {
       quotes_per_year: quotes,
       silent_percentage: silentPct,
       avg_project_value: avgValue,
+      audit_tab: calc.activeTab || null,
+      audit_pools_touched: touchedKeys.join(",") || null,
+      audit_combined_revenue: calc.combinedRevenue || null,
     };
     const notes = desc + "\n\n" + [
       `Quotes/year: ${quotes}`,
       `Go silent: ${silentPct}%`,
-      `Avg project value: ${symbol}${avgValue.toLocaleString(locale)}`,
-    ].join("\n");
+      `Avg project value: ${money(avgValue)}`,
+      ``,
+      `Audit tab open: ${calc.activeTab || "quotes"}`,
+      touchedKeys.length
+        ? `Pools they engaged with:`
+        : `Pools they engaged with: none (defaults only)`,
+      ...touchedKeys.map((k) => `  - ${k}: ${money(pools[k] && pools[k].revenue)} (${(pools[k] && pools[k].closed) || 0} deals)`),
+      calc.combinedRevenue ? `Combined: ${money(calc.combinedRevenue)}` : null,
+    ].filter((line) => line !== null).join("\n");
 
     try {
       await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: n, email: em, description: desc, ...extras }),
+        body: JSON.stringify({ name: n, email: em, description: notes, ...extras }),
       });
     } catch {
       // non-blocking
@@ -330,7 +350,7 @@ function CTA() {
                       />
                       {formState === "error" && (
                         <p style={{ margin: 0, fontSize: 12, color: "#7A2E3E", fontFamily: "var(--mono)" }}>
-                          Something went wrong — please try again.
+                          Something went wrong, please try again.
                         </p>
                       )}
                     </div>
@@ -362,21 +382,29 @@ function CTA() {
               gap: isMobile ? 20 : 20,
               flexWrap: isMobile ? "wrap" : "nowrap",
             }}>
-              {/* Map + favicon — bottom aligned together */}
+              {/* Map + favicon, bottom aligned together. The Netherlands outline
+                  reads as "Dutch company" to a UK or US prospect, so those markets
+                  get the same address as plain text instead. */}
               <div style={{ display: "flex", gap: 16, alignItems: "flex-end", paddingBottom: 18 }}>
                 <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker office, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
-                  <NetherlandsMap />
+                  {window.MARKET === 'nl'
+                    ? <NetherlandsMap />
+                    : <span style={{ ...linkStyle, color: "#3D2817", whiteSpace: "nowrap" }}>Den Bosch, Netherlands</span>}
                 </a>
                 <FooterMark size={44} />
               </div>
-              {/* Terms + Privacy */}
+              {/* Terms + Privacy + the other site variant. Without this link a
+                  kitchen company landing on the solar page has nowhere to go. */}
               <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18 }}>
+                <a href={window.SITE_VARIANT === 'home' ? '/' : '/home'} style={{ ...linkStyle, color: "#3D2817" }}>
+                  {t(window.SITE_VARIANT === 'home' ? 'cta.other_solar' : 'cta.other_home')}
+                </a>
                 <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.terms')}</a>
                 <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.privacy')}</a>
               </div>
               {/* Copyright */}
               <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#3D2817", whiteSpace: "nowrap" }}>
-                Lead Awaker 2026 &mdash; All rights reserved.
+                Lead Awaker 2026 · All rights reserved.
               </span>
             </div>
           </>
@@ -499,7 +527,7 @@ function QualifyingSliders({ t, locale, quotes, setQuotes, silentPct, setSilentP
   };
 
   const rows = [
-    { label: t('cta.q_quotes'), min: 50,   max: 2000,   step: 50,   value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString(locale) },
+    { label: t('cta.q_quotes'), min: 300,  max: 12000,  step: 100,  value: quotes,    setValue: setQuotes,    fmt: (v) => v.toLocaleString(locale) },
     { label: t('cta.q_silent'), min: 0,    max: 100,    step: 5,    value: silentPct, setValue: setSilentPct, fmt: (v) => v + "%" },
   ];
   const hasName = name && name.trim().length > 0;

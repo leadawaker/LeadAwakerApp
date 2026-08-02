@@ -11,7 +11,15 @@ window.TRANSLATIONS.nl.convUI = {
   niche_landscaping: "Tuin",
   niche_roofing:    "Dak",
 
+  // Zonnepagina (leadawaker.com) — tabs zijn diensthoeken, geen niches.
+  // niche_netmetering ontbreekt bewust: dat label is marktafhankelijk en komt
+  // uit de case zelf (zie DEADLINE_CASES in config.jsx).
+  niche_quotes:    "Offertes",
+  niche_dbr:       "Oude leads",
+  niche_referrals: "Referrals",
+
   enquired_ago:        "aanvraag",
+  installed_ago:       "geplaatst",
   months_ago:          "mnd. geleden",
   chat_enquired_note:  "aanvraag 6 maanden geleden",
 
@@ -48,7 +56,7 @@ window.TRANSLATIONS.nl.chatMessages = {
     { type: "user",   content: "dat is het ding", time: "11:09" },
     { type: "user",   content: "het voelt eerlijk gezegd wat standaard aan", time: "11:10" },
     { type: "system", content: "Onderscheidend voordeel zichtbaar" },
-    { type: "agent",  content: "Dat verschil valt in het echt meer op dan op een scherm. Hoe een front hangt, hoe een lade sluit, het gewicht van een detail — dat is moeilijk te beoordelen aan de hand van renders.", time: "11:11" },
+    { type: "agent",  content: "Dat verschil valt in het echt meer op dan op een scherm. Hoe een front hangt, hoe een lade sluit, het gewicht van een detail, dat is moeilijk te beoordelen aan de hand van renders.", time: "11:11" },
     { type: "agent",  content: "Is een bezoek aan onze showroom de moeite waard, zodat u de afwerkingskwaliteit naast elkaar kunt zien? Geen verplichtingen, gewoon een goed kijkje.", time: "11:12" },
     { type: "user",   content: "ja, ik denk dat dat echt zou helpen", time: "11:25" },
     { type: "system", content: "Lead gekwalificeerd" },
@@ -182,3 +190,124 @@ window.TRANSLATIONS.nl.chatMessages = {
     { type: "system", content: "Gesloten. Doorgestuurd naar klant", wine: true },
   ],
 };
+
+// Zonnepagina-overrides (leadawaker.com). Alleen de teksten die verkeerd
+// zouden vallen bij een zonne-installateur; de rest valt terug op de
+// gedeelde copy. Zie de lookup-volgorde in config.jsx (I18nProvider).
+window.TRANSLATIONS.nl.variants = {
+  solar: {
+    hero: {
+      badge: "Zon & duurzaam · Nederland",
+    },
+    cta: {
+      brand_desc: "Wij halen stilgevallen offertes weer tot leven, voor zonne- en installatiebedrijven in Nederland.",
+    },
+    demo: {
+      h2: "Probeer onze Solar AI",
+      chat_lead_label: "Aanvraag zonnepanelen",
+    },
+  },
+};
+
+// Zonnepagina-transcripten. Alleen de marktonafhankelijke tabs staan hier;
+// de deadline-tab wisselt per markt en draagt zijn eigen vertaling
+// (messagesNl) in config.jsx, zodat een NL-talige bezoeker in de UK niet
+// per ongeluk salderingscopy onder een Britse case te zien krijgt.
+window.TRANSLATIONS.nl.chatMessages.quotes = [
+  { type: "agent",  content: "Hoi Rob, dit is Northfield Solar. U had in maart een offerte van ons: 14 panelen op het zuiden, met de hybride omvormer.", time: "09:40" },
+  { type: "system", content: "Lead geactiveerd" },
+  { type: "user",   content: "ja, dat weet ik nog", time: "09:52" },
+  { type: "system", content: "Lead heeft gereageerd" },
+  { type: "agent",  content: "Even voorstellen: ik ben Dennis, de digitale assistent van Northfield Solar. Ik kan al uw technische vragen beantwoorden en breng u in contact met een van onze adviseurs als dat nodig is.", time: "09:53" },
+  { type: "system", content: "AI-melding verstuurd" },
+  { type: "agent",  content: "We hebben na de offerte niets meer gehoord en ik wilde niet blijven aandringen. Bent u uiteindelijk met een ander in zee gegaan?", time: "09:54" },
+  { type: "user",   content: "nee, nog steeds niets", time: "10:14" },
+  { type: "user",   content: "eerlijk gezegd hadden we drie offertes en die van u was niet de goedkoopste", time: "10:15" },
+  { type: "system", content: "Prijsbezwaar gesignaleerd" },
+  { type: "agent",  content: "Dat is eerlijk. Weet u ongeveer hoe groot het verschil was?", time: "10:16" },
+  { type: "user",   content: "ongeveer 1.400 minder bij een ander bedrijf", time: "10:27" },
+  { type: "agent",  content: "Dat is een reëel verschil. Die van u was met de hybride omvormer, was die van hen ook hybride, of een string-omvormer zonder voorbereiding op opslag?", time: "10:28" },
+  { type: "user",   content: "dat weet ik niet, ik zou de offerte erbij moeten pakken", time: "10:39" },
+  { type: "agent",  content: "De moeite waard om te checken. Bij 14 panelen zit het grootste deel van het verschil in de omvormer. Een string-opstelling is nu goedkoper, maar u kunt er later geen batterij op aansluiten zonder hem te vervangen.", time: "10:40" },
+  { type: "system", content: "Onderscheidend voordeel zichtbaar" },
+  { type: "user",   content: "dat is eigenlijk een goed punt", time: "10:51" },
+  { type: "user",   content: "we wilden volgend jaar een batterij", time: "10:51" },
+  { type: "agent",  content: "Dan telt het. Een batterij later toevoegen aan een string-opstelling kost meestal meer dan de 1.400 die u er nu op bespaart.", time: "10:52" },
+  { type: "agent",  content: "Zal ik u doorzetten naar Jesse, onze senior adviseur? Die kan beide opties doorrekenen op uw werkelijke verbruik. Een kwartier, en er wordt niets opnieuw geoffreerd.", time: "10:53" },
+  { type: "user",   content: "ja, dat zou nuttig zijn", time: "11:04" },
+  { type: "system", content: "Lead gekwalificeerd" },
+  { type: "agent",  content: "Jesse kan woensdag, donderdag of vrijdag deze week. Wat komt u het beste uit?", time: "11:05" },
+  { type: "user",   content: "donderdag waarschijnlijk", time: "11:15" },
+  { type: "agent",  content: "Donderdag kan. Er is nog 10:00, 14:30 of 16:00 vrij.", time: "11:16" },
+  { type: "user",   content: "16:00", time: "11:26" },
+  { type: "agent",  content: "Ingepland: donderdag om 16:00. Jesse belt u op dit nummer.", time: "11:27" },
+  { type: "system", content: "Gesprek met adviseur ingepland 📅", wine: true },
+  { type: "agent",  content: "Uw offerte van maart en de batterijvergelijking liggen dan al klaar, dus u hoeft niets opnieuw uit te leggen.", time: "11:28" },
+  { type: "user",   content: "top, dank u", time: "11:34" },
+  { type: "agent",  content: "Graag gedaan Rob. Jesse neemt het vanaf hier over 🙂", time: "11:35" },
+  { type: "system", content: "Gesloten. Doorgestuurd naar klant", wine: true },
+];
+
+window.TRANSLATIONS.nl.chatMessages.dbr = [
+  { type: "agent",  content: "Hoi, dit is Northfield Solar. Bent u dezelfde Mark die onze warmtepomp-gids van de website heeft gedownload? 🙂", time: "09:15" },
+  { type: "system", content: "Lead geactiveerd" },
+  { type: "user",   content: "ik denk het, dat is wel even geleden", time: "09:27" },
+  { type: "system", content: "Lead heeft gereageerd" },
+  { type: "agent",  content: "Klopt, ongeveer anderhalf jaar. Even voorstellen: ik ben Dennis, de digitale assistent van Northfield Solar. Ik kan al uw technische vragen beantwoorden en breng u in contact met een adviseur als dat nodig is.", time: "09:28" },
+  { type: "system", content: "AI-melding verstuurd" },
+  { type: "agent",  content: "We zijn er destijds nooit goed op teruggekomen en ik wilde even checken of er nog iets van gekomen is.", time: "09:29" },
+  { type: "user",   content: "nee, we hebben het nooit gedaan", time: "09:39" },
+  { type: "agent",  content: "Lag dat aan de kosten, of aan iets anders?", time: "09:40" },
+  { type: "user",   content: "vooral dat we niet konden inschatten of ons huis er wel geschikt voor was", time: "09:52" },
+  { type: "user",   content: "het is uit de jaren '70 en iemand zei dat we eerst alles moesten isoleren", time: "09:53" },
+  { type: "system", content: "Werkelijke blokkade zichtbaar" },
+  { type: "agent",  content: "Dat is verreweg de meest voorkomende reden waarom mensen hierop afhaken, en het is maar half waar.", time: "09:54" },
+  { type: "agent",  content: "Bij een huis uit de jaren '70 moeten het dak en de beglazing meestal in orde zijn, maar volledige isolatie is vaak niet nodig als u voor een hybride opstelling kiest in plaats van volledig elektrisch.", time: "09:55" },
+  { type: "user",   content: "daar had ik echt geen idee van", time: "10:07" },
+  { type: "agent",  content: "Het wordt vaak platgeslagen tot 'eerst isoleren'. Waar stookt u nu op, en is er sinds u er woont iets geïsoleerd?", time: "10:08" },
+  { type: "user",   content: "gewone cv-ketel. het dak is in 2019 gedaan", time: "10:20" },
+  { type: "system", content: "Lead gekwalificeerd" },
+  { type: "agent",  content: "Dat scheelt veel. Met het dak al gedaan zou een hybride opstelling hoogstwaarschijnlijk werken zonder de muren aan te pakken.", time: "10:21" },
+  { type: "agent",  content: "We doen een gratis geschiktheidscheck waarbij we de werkelijke warmtevraag meten in plaats van schatten. Zullen we dat inplannen?", time: "10:22" },
+  { type: "user",   content: "ja, dat zou echt nuttig zijn", time: "10:34" },
+  { type: "agent",  content: "Jesse doet die checks. Maandag, dinsdag of donderdag volgende week?", time: "10:35" },
+  { type: "user",   content: "maandag", time: "10:42" },
+  { type: "agent",  content: "Maandag kan. Er is nog 11:00 of 14:00 vrij.", time: "10:43" },
+  { type: "user",   content: "14:00", time: "10:49" },
+  { type: "agent",  content: "Ingepland: maandag om 14:00. Jesse komt bij u langs.", time: "10:50" },
+  { type: "system", content: "Huisbezoek met adviseur ingepland 📅", wine: true },
+  { type: "agent",  content: "Geheel vrijblijvend, en u krijgt de cijfers over de warmtevraag sowieso mee.", time: "10:51" },
+  { type: "user",   content: "dank u, fijn dat u er nog achteraan ging", time: "10:57" },
+  { type: "system", content: "Gesloten. Doorgestuurd naar klant", wine: true },
+];
+
+window.TRANSLATIONS.nl.chatMessages.referrals = [
+  { type: "agent",  content: "Hoi Ellen, dit is Northfield Solar. Uw 12 panelen en de batterij zijn in maart geplaatst. Hoe draait het systeem deze zomer?", time: "09:20" },
+  { type: "system", content: "Klant geactiveerd" },
+  { type: "user",   content: "eigenlijk heel goed, beter dan we hadden verwacht", time: "09:31" },
+  { type: "system", content: "Klant heeft gereageerd" },
+  { type: "agent",  content: "Fijn om te horen. Even voorstellen: ik ben Dennis, de digitale assistent van Northfield Solar. Ik kan al uw technische vragen beantwoorden en breng u in contact met een adviseur als dat nodig is.", time: "09:32" },
+  { type: "system", content: "AI-melding verstuurd" },
+  { type: "agent",  content: "Is er nog iets over het systeem dat u altijd al had willen vragen?", time: "09:33" },
+  { type: "user",   content: "ja eigenlijk wel, de app geeft aan dat we in juli veel hebben teruggeleverd. is dat normaal?", time: "09:41" },
+  { type: "system", content: "Servicevraag gesteld" },
+  { type: "agent",  content: "Voor juli is dat normaal, ja. Lange dagen en weinig verbruik overdag, dus de batterij zit begin van de middag al vol en de rest gaat het net op.", time: "09:42" },
+  { type: "agent",  content: "Wilt u er meer van zelf gebruiken, dan helpt het verplaatsen van de vaatwasser of het laden van de auto naar het midden van de dag het meest. Kost niets om te proberen.", time: "09:43" },
+  { type: "user",   content: "handig, dank u", time: "09:55" },
+  { type: "system", content: "Vraag opgelost" },
+  { type: "agent",  content: "Nu ik u toch spreek: heeft iemand u nog naar de panelen gevraagd sinds ze er liggen? Buren zien de steiger meestal als eerste, en er staat een bonus tegenover als iemand van hen uiteindelijk doorgaat.", time: "09:56" },
+  { type: "user",   content: "haha, een paar. mijn zwager blijft ernaar vragen, hij woont in Zwolle", time: "10:08" },
+  { type: "system", content: "Doorverwijzing gesignaleerd" },
+  { type: "agent",  content: "De moeite waard om hem in contact te brengen. Die bonus wordt uitgekeerd zodra zijn installatie doorgaat, en het gaat niet van zijn offerte af.", time: "10:09" },
+  { type: "user",   content: "hij wil vast weten wat wij precies betaald hebben", time: "10:20" },
+  { type: "agent",  content: "Jesse kan uw installatie als referentie gebruiken zonder uw bedragen te delen, tenzij u dat juist wel wilt.", time: "10:21" },
+  { type: "user",   content: "nee, dat mag hij weten. we hebben hem het meeste toch al verteld", time: "10:32" },
+  { type: "agent",  content: "Dan geeft u hem mijn nummer, of stuurt u mij het zijne en dan zeg ik erbij dat het via u komt. Wat u het prettigst vindt.", time: "10:33" },
+  { type: "system", content: "Toestemming vastgelegd" },
+  { type: "user",   content: "ik stuur u het zijne. hij heet Ruben", time: "10:45" },
+  { type: "agent",  content: "Genoteerd. Ik stuur Ruben vandaag een bericht en benoem dat het via u komt. Uw bonus volgt zodra zijn installatie is opgeleverd.", time: "10:46" },
+  { type: "system", content: "Doorverwijzing vastgelegd 🤝", wine: true },
+  { type: "user",   content: "top, bedankt Dennis", time: "10:58" },
+  { type: "agent",  content: "Graag gedaan Ellen. Ik laat weten hoe het bij hem loopt 🙂", time: "10:59" },
+  { type: "system", content: "Gesloten. Doorgestuurd naar klant", wine: true },
+];

@@ -2,14 +2,16 @@
 
 // tagKey resolves against process.illus.archive.tags so the pill translates.
 // Keep the labels short: the pill sits in a fixed 54px column.
+// Names come from MARKET_NAMES (config.jsx) so a UK visitor doesn't scan a
+// column of Dutch surnames. Tags and tones stay fixed.
 const ARCHIVE_ROWS_DATA = [
-  { who: 'M. van Dijk',    tagKey: 'high', tone: 'hot'  },
-  { who: 'T. de Boer',     tagKey: 'mid',  tone: 'warm' },
-  { who: 'Fam. Janssen',   tagKey: 'high', tone: 'hot'  },
-  { who: 'K. Vermeer',     tagKey: 'low',  tone: 'cool' },
-  { who: 'Sandra Visser',  tagKey: 'mid',  tone: 'warm' },
-  { who: 'Van Rooijen',    tagKey: 'high', tone: 'hot'  },
-];
+  { tagKey: 'high', tone: 'hot'  },
+  { tagKey: 'mid',  tone: 'warm' },
+  { tagKey: 'high', tone: 'hot'  },
+  { tagKey: 'low',  tone: 'cool' },
+  { tagKey: 'mid',  tone: 'warm' },
+  { tagKey: 'high', tone: 'hot'  },
+].map((r, i) => ({ ...r, who: window.marketNames().archive[i] }));
 const PILL_COLORS = {
   hot:  { bg: 'rgba(179,74,44,.12)',  color: '#a3401f' },
   warm: { bg: 'rgba(146,98,40,.13)',  color: '#7d5524' },
@@ -83,7 +85,7 @@ function ABVariantsIllus({ active = false }) {
 
   const ROWS = [
     { letter: 'A', msg: illusT.msgs[0], target: 12, winner: false, path: 'M0,11 L6.2,10.5 L12.4,11 L18.7,9.5 L24.9,10.5 L31.1,8.5 L37.3,9.5 L43.6,10.5 L49.8,9.5 L56,8.5' },
-    { letter: 'B', msg: illusT.msgs[1], target: 9, winner: true,  path: 'M0,11 L6.2,9.8 L12.4,8 L18.7,6 L24.9,4 L31.1,3 L37.3,1.8 L43.6,1.2 L49.8,0.8 L56,0.4' },
+    { letter: 'B', msg: illusT.msgs[1], target: 24, winner: true,  path: 'M0,11 L6.2,9.8 L12.4,8 L18.7,6 L24.9,4 L31.1,3 L37.3,1.8 L43.6,1.2 L49.8,0.8 L56,0.4' },
     { letter: 'C', msg: illusT.msgs[2], target: 19, winner: false, path: 'M0,10.5 L6.2,9.5 L12.4,8.5 L18.7,9.5 L24.9,7.5 L31.1,6 L37.3,7 L43.6,5 L49.8,5 L56,4.5' },
   ];
 
@@ -229,7 +231,8 @@ function WeekCalendarIllus({ active = false }) {
       </div>
       <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px dashed rgba(90,30,41,.15)', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
         <span>{illusT.footer_next}</span>
-        <span style={{ color: 'var(--wine)' }}>{illusT.footer_slot}</span>
+        {/* Day label stays translated, the name follows the market. */}
+        <span style={{ color: 'var(--wine)' }}>{illusT.footer_slot.split('·')[0].trim()} · {window.marketNames().archive[5]}</span>
       </div>
     </div>
   );
