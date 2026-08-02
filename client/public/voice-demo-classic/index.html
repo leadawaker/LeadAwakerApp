@@ -603,7 +603,7 @@
 
     var ephemeralToken;
     try {
-      ephemeralToken = await fetchEphemeralToken(language, companyName);
+      ephemeralToken = await fetchEphemeralToken(language, companyName, callerNumber);
     } catch (err) {
       stopTracks();
       showError(err.message || "Could not start the call. Try again.");
