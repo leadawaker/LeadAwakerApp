@@ -100,13 +100,15 @@
 
   .fields {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 0.85fr 1.15fr 1fr;
     gap: 18px;
     text-align: left;
     margin-bottom: 26px;
   }
-  @media (max-width: 620px) {
+  @media (max-width: 760px) {
     .fields { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 620px) {
     .card { padding: 32px 24px; }
     h1 { font-size: 25px; }
   }
@@ -291,6 +293,11 @@
         <input id="companyInput" type="text" placeholder="Brightside Solar" autocomplete="off" />
         <div class="field-hint">She answers as this company.</div>
       </div>
+      <div>
+        <label for="phoneInput">Your number</label>
+        <input id="phoneInput" type="tel" placeholder="+31 6 1234 5678" autocomplete="tel" />
+        <div class="field-hint">She sees this as caller ID, so she won't ask for it.</div>
+      </div>
     </div>
 
     <button id="callBtn" type="button">Call Emma</button>
@@ -343,6 +350,7 @@
   var OPENAI_REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 
   var DEFAULT_COMPANY = "Brightside Solar";
+  var PHONE_STORAGE_KEY = "leadawaker.voiceDemo.callerNumber";
 
   // ---------------------------------------------------------------------
 
@@ -353,6 +361,7 @@
   var hangupBtn = document.getElementById("hangupBtn");
   var langSelect = document.getElementById("langSelect");
   var companyInput = document.getElementById("companyInput");
+  var phoneInput = document.getElementById("phoneInput");
   var callbarName = document.getElementById("callbarName");
   var floorLabel = document.getElementById("floorLabel");
   var callTimer = document.getElementById("callTimer");
@@ -367,6 +376,7 @@
   var micStream = null;
   var dataChannel = null;
   var callId = null;
+  var callerNumber = "";
   var timerHandle = null;
   var startedAt = 0;
   // Bubbles still being spoken, so streaming deltas append to one bubble
@@ -452,7 +462,9 @@
         call_id: callId,
         account_id: DEMO_ACCOUNT_ID,
         campaign_id: DEMO_CAMPAIGN_ID,
-        phone: "web",
+        // Log against the caller's real number when there is one, so the CRM
+        // thread lands on a recognisable lead instead of a generic "web" one.
+        phone: callerNumber || "web",
         event: event
       })
     }).catch(function (err) {
@@ -492,11 +504,15 @@
 
   // --- Call lifecycle -----------------------------------------------------
 
-  async function fetchEphemeralToken(language, companyName) {
+  async function fetchEphemeralToken(language, companyName, callerNumber) {
     var res = await fetch(ENGINE_BASE_URL + "/voice/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: language, company_name: companyName })
+      body: JSON.stringify({
+        language: language,
+        company_name: companyName,
+        caller_number: callerNumber || null
+      })
     });
     if (!res.ok) {
       throw new Error("Could not reach the voice engine (HTTP " + res.status + ").");
@@ -529,7 +545,14 @@
     clearError();
     var language = langSelect.value;
     var companyName = companyInput.value.trim() || DEFAULT_COMPANY;
+    callerNumber = phoneInput.value.trim();
     copy = COPY[language] || COPY.en;
+
+    // Remember the number so it survives a reload between demos.
+    try {
+      if (callerNumber) localStorage.setItem(PHONE_STORAGE_KEY, callerNumber);
+      else localStorage.removeItem(PHONE_STORAGE_KEY);
+    } catch (e) { /* private mode — not worth failing a call over */ }
 
     callId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random();
     callBtn.disabled = true;
@@ -658,6 +681,11 @@
     leaveCallView();
     statusEl.textContent = "";
   }
+
+  try {
+    var savedPhone = localStorage.getItem(PHONE_STORAGE_KEY);
+    if (savedPhone) phoneInput.value = savedPhone;
+  } catch (e) { /* private mode */ }
 
   callBtn.addEventListener("click", startCall);
   hangupBtn.onclick = endCall;
