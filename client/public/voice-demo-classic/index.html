@@ -349,7 +349,10 @@
   // token is minted, so nothing model-related belongs in this file.
   var OPENAI_REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 
-  var DEFAULT_COMPANY = "Brightside Solar";
+  // Each language's seeded persona has its own demo brand, and the engine
+  // swaps that brand for whatever is typed here — so falling back to the
+  // English brand on a Dutch call would rename Zonnedak to "Brightside Solar".
+  var DEMO_COMPANY = { en: "Brightside Solar", nl: "Zonnedak", pt: "Sol Maior" };
   var PHONE_STORAGE_KEY = "leadawaker.voiceDemo.callerNumber";
 
   // ---------------------------------------------------------------------
@@ -580,7 +583,7 @@
   async function startCall() {
     clearError();
     var language = langSelect.value;
-    var companyName = companyInput.value.trim() || DEFAULT_COMPANY;
+    var companyName = companyInput.value.trim() || DEMO_COMPANY[language] || DEMO_COMPANY.en;
     callerNumber = phoneInput.value.trim();
     copy = COPY[language] || COPY.en;
 

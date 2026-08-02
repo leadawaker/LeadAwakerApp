@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Phone, PhoneOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DEMO_COMPANY } from "../useVoiceCall";
 import type { CallState, Floor, Turn, VoiceLang } from "../types";
 
 const FLOOR_LABEL: Record<Floor, string> = {
@@ -73,7 +74,7 @@ function Setup({
             id="vd-company"
             value={companyName}
             onChange={(e) => onCompany(e.target.value)}
-            placeholder="Brightside Solar"
+            placeholder={DEMO_COMPANY[language]}
             autoComplete="off"
             className="h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm"
           />

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import type { CallSetup, CallState, CrmReceipt, Floor, Turn } from "./types";
+import type { CallSetup, CallState, CrmReceipt, Floor, Turn, VoiceLang } from "./types";
 
 /**
  * The automation engine's /voice/* routes. The engine runs on the Pi while
@@ -15,7 +15,18 @@ const OPENAI_REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 const DEMO_ACCOUNT_ID = 52;
 const DEMO_CAMPAIGN_ID = 60;
 
-export const DEFAULT_COMPANY = "Brightside Solar";
+/**
+ * Each language has its own seeded persona with its own demo brand, and the
+ * engine swaps that brand for whatever is typed here. Defaulting every
+ * language to the English brand would rewrite Zonnedak as "Brightside Solar"
+ * on a Dutch call.
+ */
+export const DEMO_COMPANY: Record<VoiceLang, string> = {
+  en: "Brightside Solar",
+  nl: "Zonnedak",
+  pt: "Sol Maior",
+};
+
 export const PHONE_STORAGE_KEY = "leadawaker.voiceDemo.callerNumber";
 
 interface RealtimeEvent {
@@ -33,7 +44,7 @@ export function useVoiceCall() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [receipts, setReceipts] = useState<CrmReceipt[]>([]);
   const [leadId, setLeadId] = useState<number | null>(null);
-  const [company, setCompany] = useState(DEFAULT_COMPANY);
+  const [company, setCompany] = useState(DEMO_COMPANY.en);
   const [startedAt, setStartedAt] = useState<number | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -208,7 +219,7 @@ export function useVoiceCall() {
       setLeadId(null);
       openTurnRef.current = { them: null, you: null };
 
-      const companyName = setup.companyName.trim() || DEFAULT_COMPANY;
+      const companyName = setup.companyName.trim() || DEMO_COMPANY[setup.language];
       setCompany(companyName);
       callerNumberRef.current = setup.callerNumber.trim();
       callIdRef.current =

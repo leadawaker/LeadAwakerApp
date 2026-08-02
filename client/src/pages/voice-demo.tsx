@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CallPanel } from "@/features/voiceDemo/components/CallPanel";
 import { CrmPanel } from "@/features/voiceDemo/components/CrmPanel";
 import {
-  DEFAULT_COMPANY,
+  DEMO_COMPANY,
   PHONE_STORAGE_KEY,
   useVoiceCall,
 } from "@/features/voiceDemo/useVoiceCall";
@@ -16,8 +16,20 @@ import type { VoiceLang } from "@/features/voiceDemo/types";
 export default function VoiceDemoPage() {
   const call = useVoiceCall();
   const [language, setLanguage] = useState<VoiceLang>("en");
-  const [companyName, setCompanyName] = useState(DEFAULT_COMPANY);
+  const [companyName, setCompanyName] = useState(DEMO_COMPANY.en);
   const [callerNumber, setCallerNumber] = useState("");
+
+  /**
+   * Each language's persona has its own demo brand, so switching language
+   * moves the default with it — but only while the field is still untouched.
+   * A name the user typed themselves is never overwritten.
+   */
+  const handleLanguage = (next: VoiceLang) => {
+    setLanguage(next);
+    setCompanyName((current) =>
+      Object.values(DEMO_COMPANY).includes(current) ? DEMO_COMPANY[next] : current,
+    );
+  };
 
   useEffect(() => {
     try {
@@ -53,7 +65,7 @@ export default function VoiceDemoPage() {
             language={language}
             companyName={companyName}
             callerNumber={callerNumber}
-            onLanguage={setLanguage}
+            onLanguage={handleLanguage}
             onCompany={setCompanyName}
             onCallerNumber={setCallerNumber}
             onCall={handleCall}
