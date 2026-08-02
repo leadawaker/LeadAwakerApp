@@ -455,7 +455,7 @@
   // (relay -> CallLogger -> create_interaction -> NOTIFY -> sse-listener).
   // Fire-and-forget: a dropped relay must never disturb a live call.
   function relayEvent(event) {
-    fetch(ENGINE_BASE_URL + "/voice/relay", {
+    return fetch(ENGINE_BASE_URL + "/voice/relay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -467,9 +467,45 @@
         phone: callerNumber || "web",
         event: event
       })
+    }).then(function (res) {
+      return res.ok ? res.json() : null;
     }).catch(function (err) {
       console.error("voice-demo: /voice/relay failed", err);
+      return null;
     });
+  }
+
+  // A tool call stalls the conversation until the session is told how it went,
+  // so every book_appointment call must be answered — including when booking
+  // failed. Emma's prompt tells her how to recover from each outcome.
+  function sendToolResult(fnCallId, outcome) {
+    if (!dataChannel || dataChannel.readyState !== "open") return;
+    dataChannel.send(JSON.stringify({
+      type: "conversation.item.create",
+      item: {
+        type: "function_call_output",
+        call_id: fnCallId,
+        output: JSON.stringify(outcome)
+      }
+    }));
+    dataChannel.send(JSON.stringify({ type: "response.create" }));
+  }
+
+  function handleBookingCall(event, relayResult) {
+    var crm = relayResult && relayResult.crm;
+    var outcome;
+    if (crm && crm.booked_slot) {
+      outcome = { status: "booked", slot: crm.booked_slot };
+    } else {
+      // _book is still a stub server-side, so this is the live path today:
+      // tell her plainly it did not go through rather than leaving her to
+      // guess, and let the prompt's recovery wording take over.
+      outcome = {
+        status: "not_booked",
+        detail: "The diary could not confirm this slot. Take it as a message and promise a callback."
+      };
+    }
+    sendToolResult(event.call_id, outcome);
   }
 
   function handleEvent(event) {
@@ -604,7 +640,11 @@
           console.error("voice-demo: unparseable data channel message", e.data);
           return;
         }
-        relayEvent(event);
+        var isBooking = event.type === "response.function_call_arguments.done" &&
+                        event.name === "book_appointment";
+        relayEvent(event).then(function (relayResult) {
+          if (isBooking) handleBookingCall(event, relayResult);
+        });
         handleEvent(event);
       };
 

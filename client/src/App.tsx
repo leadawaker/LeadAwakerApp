@@ -18,6 +18,7 @@ const FAQ = lazy(() => import("@/pages/faq"));
 const BookCall = lazy(() => import("@/pages/book-call"));
 const Cases = lazy(() => import("@/pages/cases"));
 const IntakeDemo = lazy(() => import("@/pages/intake-demo"));
+const VoiceDemo = lazy(() => import("@/pages/voice-demo"));
 const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
 const LegacyHome = lazy(() => import("@/legacy/LegacyRoute"));
 const LegacyPrivacyPolicy = lazy(() => import("@/legacy/PrivacyPolicyRoute"));
@@ -118,6 +119,7 @@ function AppRoutes() {
       <Route path="/book-call" component={BookCall} />
       <Route path="/cases" component={Cases} />
       <Route path="/intake/:token" component={IntakeDemo} />
+      <Route path="/voice-demo" component={VoiceDemo} />
       <Route path="/accept-invite" component={AcceptInvite} />
       <Route path="/platform" component={AppArea} />
       <Route path="/platform/:rest*" component={AppArea} />
@@ -218,7 +220,10 @@ function Router() {
     location.startsWith("/platform") ||
     location.startsWith("/agency") ||
     location.startsWith("/subaccount") ||
-    location.startsWith("/intake/");
+    location.startsWith("/intake/") ||
+    // Standalone demo surface: sent to prospects as a bare link, so it renders
+    // without the marketing navbar/footer.
+    location.startsWith("/voice-demo");
 
   /* Legal pages render standalone (premium-styled, self-contained) —
      no legacy marketing Navbar/Footer. */
