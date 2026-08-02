@@ -14,10 +14,16 @@
     --text-muted: #6b6058;
     --accent: #7a2e2e;
     --accent-hover: #5f2222;
+    --accent-soft: #f3e7e4;
     --border: #e5ddd4;
+    --field-bg: #faf8f5;
     --error-bg: #fbe9e7;
     --error-text: #8a2c1f;
     --live-dot: #2e8b57;
+    --bubble-them-bg: #f3e7e4;
+    --bubble-them-text: #3a221d;
+    --bubble-you-bg: #ece7e0;
+    --bubble-you-text: #2b241f;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -27,17 +33,20 @@
       --text-muted: #b3a89d;
       --accent: #c98a6b;
       --accent-hover: #dba489;
+      --accent-soft: #3a2a24;
       --border: #3a322c;
+      --field-bg: #1f1a17;
       --error-bg: #3a201c;
       --error-text: #f0a89a;
       --live-dot: #4fbd82;
+      --bubble-them-bg: #3d2b25;
+      --bubble-them-text: #f6e9e2;
+      --bubble-you-bg: #2f2823;
+      --bubble-you-text: #ebe3da;
     }
   }
   * { box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
+  html, body { height: 100%; margin: 0; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -45,142 +54,265 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 32px 24px;
+    line-height: 1.5;
   }
+
   .card {
     width: 100%;
-    max-width: 420px;
+    max-width: 860px;
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px 28px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 44px 48px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.10);
   }
+  .card.is-live { padding: 0; overflow: hidden; }
+
+  /* ---------- Setup state ---------- */
+  .setup { text-align: center; }
   .avatar {
-    width: 72px;
-    height: 72px;
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-    margin: 0 auto 16px;
+    margin: 0 auto 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 38px;
     color: #fff;
     font-weight: 600;
+    letter-spacing: 0.02em;
   }
   h1 {
-    font-size: 22px;
-    margin: 0 0 4px;
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
   }
   .sub {
     color: var(--text-muted);
-    font-size: 14px;
-    margin: 0 0 24px;
-    line-height: 1.4;
+    font-size: 16px;
+    margin: 0 auto 32px;
+    max-width: 46ch;
   }
+
+  .fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    text-align: left;
+    margin-bottom: 26px;
+  }
+  @media (max-width: 620px) {
+    .fields { grid-template-columns: 1fr; }
+    .card { padding: 32px 24px; }
+    h1 { font-size: 25px; }
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+  }
+  input, select {
+    font: inherit;
+    font-size: 15px;
+    width: 100%;
+    padding: 12px 14px;
+    color: var(--text);
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    appearance: none;
+  }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                      linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 20px) calc(50% + 2px), calc(100% - 15px) calc(50% + 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 40px;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .field-hint {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
   button {
     font: inherit;
     cursor: pointer;
     border: none;
     border-radius: 999px;
-    padding: 13px 28px;
-    font-size: 15px;
+    padding: 15px 30px;
+    font-size: 16px;
     font-weight: 600;
     transition: background 0.15s ease, opacity 0.15s ease;
   }
-  button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-  #callBtn {
-    background: var(--accent);
-    color: #fff;
-    width: 100%;
-  }
-  #callBtn:hover:not(:disabled) {
-    background: var(--accent-hover);
-  }
-  #hangupBtn {
-    background: transparent;
+  button:disabled { cursor: not-allowed; opacity: 0.6; }
+  #callBtn { background: var(--accent); color: #fff; width: 100%; }
+  #callBtn:hover:not(:disabled) { background: var(--accent-hover); }
+
+  .status { margin-top: 16px; font-size: 14px; color: var(--text-muted); min-height: 20px; }
+  .error-box {
+    margin-top: 18px;
+    background: var(--error-bg);
     color: var(--error-text);
-    border: 1px solid var(--error-text);
-    width: 100%;
-    margin-top: 14px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    text-align: left;
   }
-  .status {
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-    min-height: 18px;
-  }
-  .live-row {
+
+  /* ---------- Call state ---------- */
+  .callbar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 500;
+    gap: 14px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--accent-soft);
+  }
+  .callbar .mini-avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 600; font-size: 17px;
+  }
+  .callbar-meta { flex: 1 1 auto; min-width: 0; }
+  .callbar-name {
+    font-weight: 600; font-size: 16px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .callbar-state {
+    font-size: 13px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 7px;
   }
   .pulse-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+    width: 8px; height: 8px; border-radius: 50%; flex: none;
     background: var(--live-dot);
     animation: pulse 1.4s ease-in-out infinite;
   }
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.85); }
+    50% { opacity: 0.45; transform: scale(0.8); }
   }
-  .error-box {
-    margin-top: 16px;
-    background: var(--error-bg);
-    color: var(--error-text);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    text-align: left;
+  #hangupBtn {
+    background: transparent; color: var(--error-text);
+    border: 1px solid var(--error-text);
+    padding: 10px 20px; font-size: 14px; flex: none;
   }
+  #hangupBtn:hover { background: var(--error-bg); }
+
   .transcript {
-    margin-top: 20px;
-    text-align: left;
-    max-height: 220px;
+    height: 440px;
     overflow-y: auto;
-    border-top: 1px solid var(--border);
-    padding-top: 12px;
-    font-size: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+  }
+  @media (max-width: 620px) { .transcript { height: 60vh; } }
+
+  .bubble {
+    max-width: 74%;
+    padding: 11px 15px;
+    border-radius: 18px;
+    font-size: 15.5px;
+    position: relative;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    animation: rise 0.18s ease-out;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .bubble.them {
+    align-self: flex-start;
+    background: var(--bubble-them-bg);
+    color: var(--bubble-them-text);
+    border-bottom-left-radius: 5px;
+  }
+  .bubble.you {
+    align-self: flex-end;
+    background: var(--bubble-you-bg);
+    color: var(--bubble-you-text);
+    border-bottom-right-radius: 5px;
+  }
+  .bubble.pending { opacity: 0.72; }
+
+  .transcript-empty {
+    margin: auto;
+    text-align: center;
     color: var(--text-muted);
+    font-size: 14.5px;
+    max-width: 34ch;
   }
-  .transcript div {
-    margin-bottom: 6px;
-    line-height: 1.4;
-  }
-  .transcript .who {
-    font-weight: 600;
-    color: var(--text);
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    .transcript { scroll-behavior: auto; }
   }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 
-<div class="card">
-  <div class="avatar">E</div>
-  <h1>Call Emma</h1>
-  <p class="sub">Your AI receptionist, live in the browser. No phone number needed — click, allow the mic, and talk.</p>
+<div class="card" id="card">
 
-  <button id="callBtn" type="button">Call Emma</button>
+  <!-- Setup -->
+  <div class="setup" id="setup">
+    <div class="avatar">E</div>
+    <h1>Call Emma</h1>
+    <p class="sub">An AI receptionist that answers the phone, handles the questions, and books the job. Pick a language, name the business, and talk to her.</p>
 
-  <div id="liveControls" hidden>
-    <div class="live-row"><span class="pulse-dot"></span> Live with Emma</div>
-    <button id="hangupBtn" type="button">Hang up</button>
+    <div class="fields">
+      <div>
+        <label for="langSelect">Language</label>
+        <select id="langSelect">
+          <option value="en" selected>English</option>
+          <option value="nl">Nederlands</option>
+          <option value="pt">Português (Brasil)</option>
+        </select>
+      </div>
+      <div>
+        <label for="companyInput">Business name</label>
+        <input id="companyInput" type="text" placeholder="Brightside Solar" autocomplete="off" />
+        <div class="field-hint">She answers as this company.</div>
+      </div>
+    </div>
+
+    <button id="callBtn" type="button">Call Emma</button>
+    <div id="status" class="status"></div>
+    <div id="errorBox" class="error-box" hidden></div>
   </div>
 
-  <div id="status" class="status"></div>
-  <div id="errorBox" class="error-box" hidden></div>
-  <div id="transcript" class="transcript" hidden></div>
+  <!-- Live call -->
+  <div id="callView" hidden>
+    <div class="callbar">
+      <div class="mini-avatar">E</div>
+      <div class="callbar-meta">
+        <div class="callbar-name" id="callbarName">Brightside Solar</div>
+        <div class="callbar-state"><span class="pulse-dot"></span><span id="floorLabel">Connecting</span><span id="callTimer"></span></div>
+      </div>
+      <button id="hangupBtn" type="button">Hang up</button>
+    </div>
+    <div class="transcript" id="transcript">
+      <div class="transcript-empty" id="transcriptEmpty">Emma picks up in a moment. Everything either of you says appears here.</div>
+    </div>
+  </div>
+
 </div>
 
 <audio id="remoteAudio" autoplay></audio>
@@ -190,93 +322,70 @@
   "use strict";
 
   // ---------------------------------------------------------------------
-  // EDITABLE CONSTS — everything demo-specific or environment-specific
-  // lives here so this page can be repointed without touching the logic
-  // below.
+  // EDITABLE CONSTS — everything environment-specific lives here.
   // ---------------------------------------------------------------------
 
-  // Base URL for the LeadAwaker automation engine's /voice/token and
-  // /voice/relay routes (see automations repo:
-  // src/webhooks/realtime_voice_routes.py). Empty string = same-origin
-  // relative paths, which only works if this static page is served from
-  // the same host as the engine. In production this page is served by
-  // the CRM frontend (Vercel), which is a DIFFERENT origin than the
-  // engine — so this almost certainly needs to point at the engine's
-  // public host before this page can work for real (e.g. the engine's
-  // public webhook host, "https://webhooks.leadawaker.com" per
-  // automations/src/config.py `public_webhook_url` — CONFIRM the exact
-  // public host to use for /voice/* at deploy time, and that CORS is
-  // open for it — the engine's CORSMiddleware currently allows
-  // allow_origins=["*"] so this should be fine as-is).
+  // The LeadAwaker automation engine's /voice/token and /voice/relay routes
+  // (automations repo: src/webhooks/realtime_voice_routes.py). This page is
+  // served by Vercel and the engine runs on the Pi, so this must be an
+  // absolute URL — same-origin does not work. The engine's CORSMiddleware
+  // allows all origins.
   var ENGINE_BASE_URL = "https://webhooks.leadawaker.com";
 
-  // Demo account/campaign this call gets logged against in the CRM
-  // (matches automations/tests/voice/test_web_relay.py fixture values).
+  // Demo account/campaign this call is logged against in the CRM.
   var DEMO_ACCOUNT_ID = 52;
   var DEMO_CAMPAIGN_ID = 60;
 
-  // OpenAI Realtime WebRTC "calls" endpoint: the browser POSTs its local
-  // SDP offer here (Content-Type: application/sdp, Authorization: Bearer
-  // <ephemeral client_secret from /voice/token>) and gets back the SDP
-  // answer as the raw response body.
-  //
-  // CONFIRM AT BUILD TIME: this exact path/host. This matches the shape
-  // OpenAI has documented for the GA Realtime API's browser/WebRTC flow
-  // (POST SDP offer to `${base}/realtime/calls` with the ephemeral
-  // client_secret as bearer, get SDP answer text back), consistent with
-  // the client_secrets mint endpoint already verified+built server-side
-  // in automations/src/webhooks/realtime_voice_routes.py
-  // (_REALTIME_CLIENT_SECRETS_PATH = "/realtime/client_secrets", same
-  // api.openai.com/v1 base). It has NOT been re-verified against live
-  // OpenAI docs in this task (out of scope per the brief — no live doc
-  // fetches, no live calls). Check for: (a) whether this is still the
-  // current path name/host, (b) whether an "OpenAI-Beta" header is still
-  // required on this call (older Realtime beta needed one; the GA
-  // client_secrets flow this repo already uses did not), (c) whether a
-  // `?model=...` query param is required here — the server-side mint in
-  // realtime_voice_routes.py currently sends a bare
-  // `{"session": {"type": "realtime"}}` with no model, so the model this
-  // call negotiates against is whatever OpenAI defaults to unless that
-  // changes.
+  // OpenAI Realtime WebRTC: POST the local SDP offer as a raw body with the
+  // ephemeral client_secret as bearer, get the SDP answer back as text.
+  // The session (model, voice, prompt, VAD) is fixed server-side when the
+  // token is minted, so nothing model-related belongs in this file.
   var OPENAI_REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
+
+  var DEFAULT_COMPANY = "Brightside Solar";
 
   // ---------------------------------------------------------------------
 
+  var card = document.getElementById("card");
+  var setup = document.getElementById("setup");
+  var callView = document.getElementById("callView");
   var callBtn = document.getElementById("callBtn");
   var hangupBtn = document.getElementById("hangupBtn");
-  var liveControls = document.getElementById("liveControls");
+  var langSelect = document.getElementById("langSelect");
+  var companyInput = document.getElementById("companyInput");
+  var callbarName = document.getElementById("callbarName");
+  var floorLabel = document.getElementById("floorLabel");
+  var callTimer = document.getElementById("callTimer");
   var statusEl = document.getElementById("status");
   var errorBox = document.getElementById("errorBox");
   var transcriptEl = document.getElementById("transcript");
+  var transcriptEmpty = document.getElementById("transcriptEmpty");
   var remoteAudio = document.getElementById("remoteAudio");
 
-  // Per-session state. Reset on every call attempt.
+  // Per-call state, reset on every attempt.
   var pc = null;
   var micStream = null;
   var dataChannel = null;
   var callId = null;
+  var timerHandle = null;
+  var startedAt = 0;
+  // Bubbles still being spoken, so streaming deltas append to one bubble
+  // instead of spawning a new one per fragment. Keyed per side.
+  var pendingBubbles = { them: null, you: null };
 
-  function setState(state) {
-    // idle | connecting | live | ended | error
-    callBtn.hidden = state === "live";
-    callBtn.disabled = state === "connecting";
-    liveControls.hidden = state !== "live";
-    if (state === "idle") {
-      statusEl.textContent = "";
-    } else if (state === "connecting") {
-      statusEl.textContent = "Connecting to Emma...";
-    } else if (state === "live") {
-      statusEl.textContent = "";
-    } else if (state === "ended") {
-      statusEl.textContent = "Call ended.";
-    }
-  }
+  var COPY = {
+    en: { connecting: "Connecting", listening: "Listening", speaking: "Emma is speaking" },
+    nl: { connecting: "Verbinden", listening: "Luistert", speaking: "Emma praat" },
+    pt: { connecting: "Conectando", listening: "Ouvindo", speaking: "Emma está falando" }
+  };
+  var copy = COPY.en;
 
   function showError(message) {
     errorBox.textContent = message;
     errorBox.hidden = false;
-    setState("idle");
+    statusEl.textContent = "";
     callBtn.disabled = false;
+    callBtn.textContent = "Call Emma";
   }
 
   function clearError() {
@@ -284,23 +393,57 @@
     errorBox.textContent = "";
   }
 
-  function appendTranscript(who, text) {
+  function setFloor(state) {
+    floorLabel.textContent = copy[state] || copy.listening;
+  }
+
+  function startTimer() {
+    startedAt = Date.now();
+    timerHandle = setInterval(function () {
+      var s = Math.floor((Date.now() - startedAt) / 1000);
+      var mm = String(Math.floor(s / 60)).padStart(2, "0");
+      var ss = String(s % 60).padStart(2, "0");
+      callTimer.textContent = "· " + mm + ":" + ss;
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
+  }
+
+  // --- Transcript bubbles -------------------------------------------------
+
+  function bubbleFor(side) {
+    if (pendingBubbles[side]) return pendingBubbles[side];
+    if (transcriptEmpty) { transcriptEmpty.hidden = true; }
+    var el = document.createElement("div");
+    el.className = "bubble " + side + " pending";
+    transcriptEl.appendChild(el);
+    pendingBubbles[side] = el;
+    return el;
+  }
+
+  function appendDelta(side, text) {
     if (!text) return;
-    transcriptEl.hidden = false;
-    var row = document.createElement("div");
-    var whoSpan = document.createElement("span");
-    whoSpan.className = "who";
-    whoSpan.textContent = who + ": ";
-    row.appendChild(whoSpan);
-    row.appendChild(document.createTextNode(text));
-    transcriptEl.appendChild(row);
+    var el = bubbleFor(side);
+    el.textContent += text;
     transcriptEl.scrollTop = transcriptEl.scrollHeight;
   }
 
-  // Forward one realtime event to the engine so it lands in the CRM
+  function commitBubble(side, finalText) {
+    var el = pendingBubbles[side];
+    if (!el && !finalText) return;
+    if (!el) el = bubbleFor(side);
+    if (finalText) el.textContent = finalText;
+    el.classList.remove("pending");
+    pendingBubbles[side] = null;
+    if (!el.textContent.trim()) { el.remove(); return; }
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  }
+
+  // Forward every realtime event to the engine so it lands in the CRM
   // (relay -> CallLogger -> create_interaction -> NOTIFY -> sse-listener).
-  // Fire-and-forget: a dropped relay call should never interrupt the live
-  // call, so failures are only logged to the console.
+  // Fire-and-forget: a dropped relay must never disturb a live call.
   function relayEvent(event) {
     fetch(ENGINE_BASE_URL + "/voice/relay", {
       method: "POST",
@@ -317,57 +460,100 @@
     });
   }
 
-  // Best-effort local transcript rendering. This is purely a demo nicety
-  // (the source of truth is the CRM Conversations thread via the relay
-  // path above) so it deliberately only handles the couple of event types
-  // that carry human-readable text; anything else is ignored on-page but
-  // still relayed above.
-  function maybeRenderTranscript(event) {
+  function handleEvent(event) {
     if (!event || !event.type) return;
-    if (event.type === "response.output_audio_transcript.done" && event.transcript) {
-      appendTranscript("Emma", event.transcript);
-    } else if (event.type === "conversation.item.input_audio_transcription.completed" && event.transcript) {
-      appendTranscript("You", event.transcript);
+    switch (event.type) {
+      // Emma, streaming then final.
+      case "response.output_audio_transcript.delta":
+        setFloor("speaking");
+        appendDelta("them", event.delta);
+        break;
+      case "response.output_audio_transcript.done":
+        commitBubble("them", event.transcript);
+        break;
+
+      // Caller, streaming then final. Deltas only arrive on transcription
+      // models that stream; the .completed event is the reliable one.
+      case "conversation.item.input_audio_transcription.delta":
+        appendDelta("you", event.delta);
+        break;
+      case "conversation.item.input_audio_transcription.completed":
+        commitBubble("you", event.transcript);
+        break;
+
+      case "input_audio_buffer.speech_started":
+        setFloor("listening");
+        break;
+      case "response.done":
+        setFloor("listening");
+        break;
     }
   }
 
-  async function fetchEphemeralToken() {
-    var res = await fetch(ENGINE_BASE_URL + "/voice/token", { method: "POST" });
+  // --- Call lifecycle -----------------------------------------------------
+
+  async function fetchEphemeralToken(language, companyName) {
+    var res = await fetch(ENGINE_BASE_URL + "/voice/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: language, company_name: companyName })
+    });
     if (!res.ok) {
       throw new Error("Could not reach the voice engine (HTTP " + res.status + ").");
     }
     var data = await res.json();
     if (!data || !data.value) {
-      throw new Error("Voice engine did not return a usable token.");
+      throw new Error("The voice engine did not return a usable token.");
     }
     return data.value;
   }
 
+  function enterCallView(companyName) {
+    setup.hidden = true;
+    callView.hidden = false;
+    card.classList.add("is-live");
+    callbarName.textContent = companyName;
+    setFloor("connecting");
+  }
+
+  function leaveCallView() {
+    setup.hidden = false;
+    callView.hidden = true;
+    card.classList.remove("is-live");
+    callBtn.disabled = false;
+    callBtn.textContent = "Call Emma";
+    callTimer.textContent = "";
+  }
+
   async function startCall() {
     clearError();
-    callId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random());
-    setState("connecting");
+    var language = langSelect.value;
+    var companyName = companyInput.value.trim() || DEFAULT_COMPANY;
+    copy = COPY[language] || COPY.en;
+
+    callId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random();
+    callBtn.disabled = true;
+    statusEl.textContent = "Connecting to Emma...";
 
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
-      showError("Microphone access was denied. Please allow the mic and try again.");
+      showError("Microphone access was blocked. Allow the mic in your browser, then call again.");
       return;
     }
 
     var ephemeralToken;
     try {
-      ephemeralToken = await fetchEphemeralToken();
+      ephemeralToken = await fetchEphemeralToken(language, companyName);
     } catch (err) {
       stopTracks();
-      showError(err.message || "Could not start the call. Please try again.");
+      showError(err.message || "Could not start the call. Try again.");
       return;
     }
 
     try {
       pc = new RTCPeerConnection();
 
-      // Play Emma's audio back through the page as soon as it arrives.
       pc.ontrack = function (event) {
         remoteAudio.srcObject = event.streams[0];
       };
@@ -379,10 +565,12 @@
       dataChannel = pc.createDataChannel("oai-events");
 
       dataChannel.onopen = function () {
-        // Speak-first: as soon as the channel is open, ask Emma to greet
-        // instead of waiting for the caller to speak first.
+        // Speak first, so Emma greets like someone picking up a phone
+        // rather than waiting for the caller to open.
         dataChannel.send(JSON.stringify({ type: "response.create" }));
-        setState("live");
+        statusEl.textContent = "";
+        startTimer();
+        setFloor("listening");
       };
 
       dataChannel.onmessage = function (e) {
@@ -390,24 +578,22 @@
         try {
           event = JSON.parse(e.data);
         } catch (err) {
-          console.error("voice-demo: could not parse data channel message", e.data);
+          console.error("voice-demo: unparseable data channel message", e.data);
           return;
         }
         relayEvent(event);
-        maybeRenderTranscript(event);
+        handleEvent(event);
       };
 
       dataChannel.onclose = function () {
-        if (pc) endCall("ended");
+        if (pc) endCall();
       };
+
+      enterCallView(companyName);
 
       var offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // CONFIRM AT BUILD TIME (see OPENAI_REALTIME_CALLS_URL above): exact
-      // request shape for the SDP exchange. Written here as documented for
-      // OpenAI's GA Realtime WebRTC flow: raw SDP body, `application/sdp`
-      // content type, ephemeral client_secret as bearer, raw SDP text back.
       var sdpResponse = await fetch(OPENAI_REALTIME_CALLS_URL, {
         method: "POST",
         body: offer.sdp,
@@ -425,8 +611,9 @@
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
     } catch (err) {
       console.error("voice-demo: WebRTC setup failed", err);
-      endCall("idle");
-      showError(err.message || "Could not connect to Emma. Please try again.");
+      teardown();
+      leaveCallView();
+      showError(err.message || "Could not connect to Emma. Try again.");
     }
   }
 
@@ -437,7 +624,8 @@
     }
   }
 
-  function endCall(nextState) {
+  function teardown() {
+    stopTimer();
     stopTracks();
     if (dataChannel) {
       try { dataChannel.close(); } catch (e) { /* no-op */ }
@@ -448,18 +636,31 @@
       pc = null;
     }
     remoteAudio.srcObject = null;
-    setState(nextState || "ended");
   }
 
-  callBtn.addEventListener("click", function () {
-    startCall();
-  });
+  function endCall() {
+    teardown();
+    commitBubble("them");
+    commitBubble("you");
+    floorLabel.textContent = "Call ended";
+    hangupBtn.textContent = "Start over";
+    hangupBtn.onclick = resetToSetup;
+  }
 
-  hangupBtn.addEventListener("click", function () {
-    endCall("ended");
-  });
+  function resetToSetup() {
+    teardown();
+    transcriptEl.innerHTML = "";
+    transcriptEl.appendChild(transcriptEmpty);
+    transcriptEmpty.hidden = false;
+    pendingBubbles = { them: null, you: null };
+    hangupBtn.textContent = "Hang up";
+    hangupBtn.onclick = endCall;
+    leaveCallView();
+    statusEl.textContent = "";
+  }
 
-  setState("idle");
+  callBtn.addEventListener("click", startCall);
+  hangupBtn.onclick = endCall;
 })();
 </script>
 
