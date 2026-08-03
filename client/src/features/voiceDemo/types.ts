@@ -34,4 +34,14 @@ export interface CallSetup {
   language: VoiceLang;
   companyName: string;
   callerNumber: string;
+  /** Realtime model and voice, validated server-side against an allow-list. */
+  model: string;
+  voice: string;
+  speed: number;
+}
+
+/** Model and voice ids this account can actually use, served by /voice/options. */
+export interface VoiceOptions {
+  models: string[];
+  voices: string[];
 }

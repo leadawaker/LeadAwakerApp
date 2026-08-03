@@ -1,5 +1,13 @@
-import { useCallback, useRef, useState } from "react";
-import type { CallSetup, CallState, CrmReceipt, Floor, Turn, VoiceLang } from "./types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+  CallSetup,
+  CallState,
+  CrmReceipt,
+  Floor,
+  Turn,
+  VoiceLang,
+  VoiceOptions,
+} from "./types";
 
 /**
  * The automation engine's /voice/* routes. The engine runs on the Pi while
@@ -29,6 +37,23 @@ export const DEMO_COMPANY: Record<VoiceLang, string> = {
 
 export const PHONE_STORAGE_KEY = "leadawaker.voiceDemo.callerNumber";
 
+/**
+ * Shown until /voice/options answers. The engine is the authority on what this
+ * account can use — a model it does not have is accepted when the token is
+ * minted and only rejected later at the SDP exchange, i.e. mid-call.
+ */
+export const FALLBACK_OPTIONS: VoiceOptions = {
+  models: ["gpt-realtime-2.1"],
+  voices: ["marin", "cedar"],
+};
+
+/** Reads as pace rather than as a number, which is what is being judged. */
+export const SPEED_CHOICES = [
+  { value: 0.9, label: "Unhurried" },
+  { value: 1.0, label: "Natural" },
+  { value: 1.1, label: "Brisk" },
+];
+
 interface RealtimeEvent {
   type?: string;
   delta?: string;
@@ -39,6 +64,7 @@ interface RealtimeEvent {
 
 export function useVoiceCall() {
   const [state, setState] = useState<CallState>("idle");
+  const [options, setOptions] = useState<VoiceOptions>(FALLBACK_OPTIONS);
   const [floor, setFloor] = useState<Floor>("connecting");
   const [error, setError] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -59,6 +85,21 @@ export function useVoiceCall() {
     them: null,
     you: null,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${ENGINE_BASE_URL}/voice/options`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: VoiceOptions | null) => {
+        if (!cancelled && data?.models?.length && data?.voices?.length) setOptions(data);
+      })
+      .catch(() => {
+        // Keep the fallback list; the picker still works.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const appendDelta = useCallback((side: "them" | "you", delta: string) => {
     if (!delta) return;
@@ -249,6 +290,9 @@ export function useVoiceCall() {
             language: setup.language,
             company_name: companyName,
             caller_number: callerNumberRef.current || null,
+            model: setup.model,
+            voice: setup.voice,
+            speed: setup.speed,
           }),
         });
         if (!res.ok) throw new Error(`Could not reach the voice engine (HTTP ${res.status}).`);
@@ -331,6 +375,7 @@ export function useVoiceCall() {
 
   return {
     state,
+    options,
     floor,
     error,
     turns,

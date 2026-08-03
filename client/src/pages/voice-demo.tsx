@@ -6,6 +6,7 @@ import {
   PHONE_STORAGE_KEY,
   useVoiceCall,
 } from "@/features/voiceDemo/useVoiceCall";
+import { DEFAULT_MODEL, DEFAULT_VOICE, DEFAULT_SPEED } from "@/features/voiceDemo/constants";
 import type { VoiceLang } from "@/features/voiceDemo/types";
 
 /**
@@ -18,6 +19,9 @@ export default function VoiceDemoPage() {
   const [language, setLanguage] = useState<VoiceLang>("en");
   const [companyName, setCompanyName] = useState(DEMO_COMPANY.en);
   const [callerNumber, setCallerNumber] = useState("");
+  const [model, setModel] = useState(DEFAULT_MODEL);
+  const [voice, setVoice] = useState(DEFAULT_VOICE);
+  const [speed, setSpeed] = useState(DEFAULT_SPEED);
 
   /**
    * Each language's persona has its own demo brand, so switching language
@@ -47,7 +51,7 @@ export default function VoiceDemoPage() {
     } catch {
       /* private mode — not worth failing a call over */
     }
-    void call.start({ language, companyName, callerNumber });
+    void call.start({ language, companyName, callerNumber, model, voice, speed });
   };
 
   return (
@@ -65,9 +69,16 @@ export default function VoiceDemoPage() {
             language={language}
             companyName={companyName}
             callerNumber={callerNumber}
+            model={model}
+            voice={voice}
+            speed={speed}
+            options={call.options}
             onLanguage={handleLanguage}
             onCompany={setCompanyName}
             onCallerNumber={setCallerNumber}
+            onModel={setModel}
+            onVoice={setVoice}
+            onSpeed={setSpeed}
             onCall={handleCall}
             onHangup={call.hangup}
             onReset={call.reset}
@@ -77,6 +88,7 @@ export default function VoiceDemoPage() {
           <CrmPanel
             receipts={call.receipts}
             leadId={call.leadId}
+            phone={callerNumber}
             live={call.state === "live"}
           />
         </div>

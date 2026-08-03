@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Phone, PhoneOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DEMO_COMPANY } from "../useVoiceCall";
-import type { CallState, Floor, Turn, VoiceLang } from "../types";
+import { DEMO_COMPANY, SPEED_CHOICES } from "../useVoiceCall";
+import type { CallState, Floor, Turn, VoiceLang, VoiceOptions } from "../types";
+
+const FIELD =
+  "h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm";
+const LABEL =
+  "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
+
+/** "gpt-realtime-2.1-mini" is not a thing to read out on a demo call. */
+function modelLabel(id: string) {
+  const base = id.replace("gpt-realtime", "Realtime").replace(/^Realtime$/, "Realtime 1.0");
+  return base.replace("-mini", " mini").replace("-", " ");
+}
 
 const FLOOR_LABEL: Record<Floor, string> = {
   connecting: "Connecting",
@@ -28,21 +39,34 @@ interface SetupProps {
   language: VoiceLang;
   companyName: string;
   callerNumber: string;
+  model: string;
+  voice: string;
+  speed: number;
+  options: VoiceOptions;
   onLanguage: (v: VoiceLang) => void;
   onCompany: (v: string) => void;
   onCallerNumber: (v: string) => void;
+  onModel: (v: string) => void;
+  onVoice: (v: string) => void;
+  onSpeed: (v: number) => void;
   onCall: () => void;
   busy: boolean;
   error: string | null;
 }
 
 function Setup({
-  language, companyName, callerNumber,
-  onLanguage, onCompany, onCallerNumber, onCall, busy, error,
+  language, companyName, callerNumber, model, voice, speed, options,
+  onLanguage, onCompany, onCallerNumber, onModel, onVoice, onSpeed,
+  onCall, busy, error,
 }: SetupProps) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
-      <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-primary-foreground">
+    // Scrolls rather than centring rigidly: opening the voice/model details
+    // makes this taller than the panel, and a centred flex column clips its
+    // overflow at the top where it cannot be scrolled to. `m-auto` still
+    // centres it whenever there is room.
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
+      <div className="m-auto flex w-full flex-col items-center text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
         E
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">Call Emma</h1>
@@ -50,16 +74,14 @@ function Setup({
         An AI receptionist that answers the phone, handles the questions, and books the job.
       </p>
 
-      <div className="mt-7 w-full max-w-sm space-y-4 text-left">
+      <div className="mt-6 w-full max-w-sm space-y-3.5 text-left">
         <div>
-          <label htmlFor="vd-lang" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Language
-          </label>
+          <label htmlFor="vd-lang" className={LABEL}>Language</label>
           <select
             id="vd-lang"
             value={language}
             onChange={(e) => onLanguage(e.target.value as VoiceLang)}
-            className="h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm"
+            className={FIELD}
           >
             <option value="en">English</option>
             <option value="nl">Nederlands</option>
@@ -67,7 +89,7 @@ function Setup({
           </select>
         </div>
         <div>
-          <label htmlFor="vd-company" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <label htmlFor="vd-company" className={LABEL}>
             Business name
           </label>
           <input
@@ -76,12 +98,12 @@ function Setup({
             onChange={(e) => onCompany(e.target.value)}
             placeholder={DEMO_COMPANY[language]}
             autoComplete="off"
-            className="h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm"
+            className={FIELD}
           />
           <p className="mt-1 text-xs text-muted-foreground">She answers as this company.</p>
         </div>
         <div>
-          <label htmlFor="vd-phone" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <label htmlFor="vd-phone" className={LABEL}>
             Your number
           </label>
           <input
@@ -91,13 +113,65 @@ function Setup({
             onChange={(e) => onCallerNumber(e.target.value)}
             placeholder="+31 6 1234 5678"
             autoComplete="tel"
-            className="h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm"
+            className={FIELD}
           />
           <p className="mt-1 text-xs text-muted-foreground">
             She sees this as caller ID, so she won&apos;t ask for it.
           </p>
         </div>
       </div>
+
+      <details className="mt-4 w-full max-w-sm text-left">
+        <summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground">
+          Voice &amp; model · {modelLabel(model)}, {voice}
+        </summary>
+        <div className="mt-3 grid grid-cols-3 gap-2.5">
+          <div>
+            <label htmlFor="vd-model" className={LABEL}>Model</label>
+            <select
+              id="vd-model"
+              value={model}
+              onChange={(e) => onModel(e.target.value)}
+              className={FIELD}
+            >
+              <optgroup label="OpenAI Realtime">
+                {options.models.map((m) => (
+                  <option key={m} value={m}>{modelLabel(m)}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Google (needs the Gemini door — not built)">
+                <option disabled>Gemini Live</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="vd-voice" className={LABEL}>Voice</label>
+            <select
+              id="vd-voice"
+              value={voice}
+              onChange={(e) => onVoice(e.target.value)}
+              className={FIELD}
+            >
+              {options.voices.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="vd-speed" className={LABEL}>Pace</label>
+            <select
+              id="vd-speed"
+              value={speed}
+              onChange={(e) => onSpeed(Number(e.target.value))}
+              className={FIELD}
+            >
+              {SPEED_CHOICES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </details>
 
       <button
         type="button"
@@ -114,6 +188,7 @@ function Setup({
           {error}
         </p>
       )}
+      </div>
     </div>
   );
 }
