@@ -20,7 +20,7 @@ const NICHE_IMAGE_STYLE = {
   landscaping: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.65, tx: -12, ty: 4,   rot: 0 } },
   roofing:     { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.6,  tx: -11, ty: 6,   rot: 0 } },
   quotes:      { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 1,    tx: -11, ty: 7,   rot: 0 } },
-  netmetering: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 1,    tx: -9,  ty: 4,   rot: 0 } },
+  netmetering: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.8,  tx: -9,  ty: 4,   rot: 0 } },
   dbr:         { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 1.1,  tx: -21, ty: 8,   rot: 0 } },
   referrals:   { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.8,  tx: -15, ty: 7,   rot: 0 } },
 };
