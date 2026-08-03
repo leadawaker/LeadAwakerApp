@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessagesSquare, CheckCircle2, Pencil } from "lucide-react";
+import { apiFetch } from "@/lib/apiUtils";
 import { Panel } from "../atoms";
 import { useCommunicationProfile } from "./useCommunicationProfile";
 import { useOnboardingFacts, type QAGrids } from "./useOnboardingFacts";
 import { ProfileWizard } from "./ProfileWizard";
-import { ProfileSummary } from "./ProfileSummary";
+import { ProfileSummary, type BookingSnapshot } from "./ProfileSummary";
 import { EMPTY_ANSWERS, recommendStatus, recommendedDefaults, type ProfileAnswers, type FactValues } from "./profileConstants";
 
-export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false, readOnly = false }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean; readOnly?: boolean }) {
+export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false, readOnly = false, onWizardActiveChange }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean; readOnly?: boolean; onWizardActiveChange?: (active: boolean) => void }) {
   const { t } = useTranslation("communicationProfile");
   const { profile, loading, saving, save } = useCommunicationProfile(accountId);
   const { values: factValues, grids, loading: factsLoading, saveAll } = useOnboardingFacts(accountId);
@@ -18,6 +19,40 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
 
   const exists = profile !== null;
   const showSummary = exists && !editing;
+
+  // Account-level answers (availability + meeting type) live on the Accounts
+  // table, not the profile row — the wizard's custom steps PATCH them directly.
+  // Fetched whenever the summary (re)shows so it reflects in-wizard edits.
+  const [booking, setBooking] = useState<BookingSnapshot | null>(null);
+  useEffect(() => {
+    if (!showSummary) return;
+    let cancelled = false;
+    apiFetch(`/api/accounts/${accountId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setBooking({
+          meetingType: data.meeting_type ?? null,
+          callingNumber: data.calling_number ?? null,
+          openDays: Array.isArray(data.open_days) ? data.open_days : null,
+          start: data.business_hours_start ?? null,
+          end: data.business_hours_end ?? null,
+          durationMinutes: data.default_call_duration_minutes ?? null,
+          noticeHours: data.min_booking_notice_hours ?? null,
+        });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [accountId, showSummary]);
+
+  // Tell the parent when the wizard itself is on screen (used to hide the
+  // Company Intel panel below so the onboarding call stays focused).
+  const wizardActive = !readOnly && !loading && !factsLoading && !celebrate && !showSummary;
+  useEffect(() => {
+    onWizardActiveChange?.(wizardActive);
+    return () => onWizardActiveChange?.(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wizardActive]);
 
   const openEditAt = (stepIndex: number) => { setStartStep(stepIndex); setEditing(true); };
 
@@ -68,7 +103,7 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           <button className="la-btn la-btn--wine" style={{ marginTop: 6 }} onClick={() => setCelebrate(false)}>{t("done.button")}</button>
         </div>
       ) : showSummary ? (
-        <ProfileSummary answers={profile!.answers} facts={factValues} grids={grids} onEditStep={readOnly ? undefined : openEditAt} />
+        <ProfileSummary answers={profile!.answers} facts={factValues} grids={grids} booking={booking} onEditStep={readOnly ? undefined : openEditAt} />
       ) : readOnly ? (
         <div style={{ padding: "24px 0", textAlign: "center", color: "var(--mute-2)", fontSize: 12.5, fontStyle: "italic" }}>No profile set up yet.</div>
       ) : (

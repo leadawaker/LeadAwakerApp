@@ -25,7 +25,8 @@
     "factsTitle": "Key facts",
     "complete": "Profile complete",
     "itemsMissing": "{{count}} item missing",
-    "itemsMissing_other": "{{count}} items missing"
+    "itemsMissing_other": "{{count}} items missing",
+    "noticeShort": "{{hours}}h notice"
   },
   "done": {
     "title": "Profile complete 🎉",
@@ -49,10 +50,12 @@
   },
   "questions": {
     "meetingType": {
-      "label": "How do you conduct booked calls with leads?"
+      "label": "How do you conduct booked calls with leads?",
+      "short": "Booked calls"
     },
     "availabilityHours": {
-      "label": "When can leads book a call with you?"
+      "label": "When can leads book a call with you?",
+      "short": "Availability"
     },
     "bookingUrl": {
       "label": "Which link do you use to book appointments?",

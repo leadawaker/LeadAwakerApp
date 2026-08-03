@@ -5,8 +5,16 @@ import type { Task } from "../types";
 export type DesktopFilter = 'all' | 'next7' | 'overdue' | 'waiting' | 'completed';
 
 // Assignee avatar backgrounds (shown behind transparent profile photos).
-// First user (Gabriel) dark red, second (Finn) dark purple, then fallbacks.
+// First user (Gabriel) dark red, then fallbacks.
 export const AVATAR_BG = ['#5E2230', '#3D2A66', '#2F5E4A', '#5E4A22'];
+
+// Users who still exist account-wide (comments, activity, Accounts page) but are
+// no longer assignable on Tasks. Finn (31) stepped back to Friday-only coaching.
+const HIDDEN_ASSIGNEE_IDS = new Set([31]);
+
+export function assignableUsers<T extends { id: number }>(users: T[]): T[] {
+  return users.filter(u => !HIDDEN_ASSIGNEE_IDS.has(u.id));
+}
 
 // ── localStorage helpers ─────────────────────────────────────────────
 export function loadLocal<T>(key: string, fallback: T): T {

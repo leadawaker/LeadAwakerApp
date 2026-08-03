@@ -118,6 +118,12 @@ export type Campaign = {
   account_whatsapp_quality_rating?: "green" | "yellow" | "red" | "unknown" | null;
   account_whatsapp_messaging_limit?: number | null;
   account_whatsapp_quality_checked_at?: string | null;
+  // Auto-throttle — see specs/whatsapp-quality-auto-throttle. account_whatsapp_max_daily_sends_is_manual
+  // is the source of truth for "human owns this field"; last_synced is audit-trail/tooltip copy only.
+  account_whatsapp_sender_sid?: string | null;
+  account_max_daily_sends?: number | null;
+  account_whatsapp_last_synced_max_daily_sends?: number | null;
+  account_whatsapp_max_daily_sends_is_manual?: boolean;
   [key: string]: any;
 };
 

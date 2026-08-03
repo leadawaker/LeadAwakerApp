@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Sparkles, SlidersHorizontal, Eye, Quote, Bot, MessageSquareWarning, Handshake,
   Banknote, Wallet, Truck, ShieldCheck, HelpCircle, Award, AlertTriangle,
-  CheckCircle2, XCircle,
+  CheckCircle2, XCircle, CalendarClock, Phone,
 } from "lucide-react";
 import {
   STEPS, formalityKey,
@@ -13,8 +13,22 @@ import type { QAGrids } from "./useOnboardingFacts";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// Account-level answers the wizard's custom steps write to the Accounts table
+// (via PATCH), fetched by the panel so the summary can display them.
+export interface BookingSnapshot {
+  meetingType: string | null;
+  callingNumber: string | null;
+  openDays: number[] | null;
+  start: string | null;
+  end: string | null;
+  durationMinutes: number | null;
+  noticeHours: number | null;
+}
+
 const STEP_ICON: Record<string, LucideIcon> = {
   openingStyle: Sparkles,
+  availabilityHours: CalendarClock,
+  meetingType: Phone,
   formality: SlidersHorizontal,
   perception: Eye,
   preferredWords: Quote,
@@ -34,6 +48,8 @@ const STEP_ICON: Record<string, LucideIcon> = {
 // mode) so each item gets a genuinely distinct hue instead of a single-color shade.
 const STEP_COLOR: Record<string, string> = {
   openingStyle: "var(--stage-new)",
+  availabilityHours: "var(--stage-booked)",
+  meetingType: "var(--stage-contacted)",
   formality: "var(--stage-contacted)",
   perception: "var(--stage-responded)",
   preferredWords: "var(--stage-multi)",
@@ -53,14 +69,19 @@ const STEP_COLOR: Record<string, string> = {
 // Right column = facts. Each inner array is a group of sections rendered under
 // one shared header (the first section's i18n label).
 const SECTION_COLUMNS: SectionKey[][][] = [
-  [["tone", "identity"], ["sales"]],
+  [["tone", "identity"], ["availability", "booking"], ["sales"]],
   [["facts"]],
 ];
 
-export function ProfileSummary({ answers, facts, grids, onEditStep }: {
-  answers: ProfileAnswers; facts: FactValues; grids: QAGrids; onEditStep?: (stepIndex: number) => void;
+// Mon...Sun display order, same as the wizard's AvailabilityCard day toggles.
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const hhmm = (v: string | null) => (v ? v.slice(0, 5) : "");
+
+export function ProfileSummary({ answers, facts, grids, booking, onEditStep }: {
+  answers: ProfileAnswers; facts: FactValues; grids: QAGrids; booking?: BookingSnapshot | null; onEditStep?: (stepIndex: number) => void;
 }) {
   const { t } = useTranslation("communicationProfile");
+  const { t: tAccounts } = useTranslation("accounts");
   const notSet = t("summary.notSet");
 
   function label(key: string, kind: string) {
@@ -106,6 +127,19 @@ export function ProfileSummary({ answers, facts, grids, onEditStep }: {
       }
       case "bookingUrl":
         return answers.bookingUrl.trim() || notSet;
+      case "availabilityHours": {
+        if (!booking || !booking.openDays?.length || !booking.start || !booking.end) return notSet;
+        const days = DAY_ORDER.filter((d) => booking.openDays!.includes(d)).map((d) => tAccounts(`availability.days.${d}`)).join(", ");
+        const parts = [days, `${hhmm(booking.start)}–${hhmm(booking.end)}`];
+        if (booking.durationMinutes != null) parts.push(`${booking.durationMinutes} min`);
+        if (booking.noticeHours != null) parts.push(t("summary.noticeShort", { hours: booking.noticeHours }));
+        return parts.join(" · ");
+      }
+      case "meetingType": {
+        if (!booking?.meetingType) return notSet;
+        const label = tAccounts(`meetingType.options.${booking.meetingType}`);
+        return booking.callingNumber ? `${label} · ${booking.callingNumber}` : label;
+      }
       default:
         return notSet;
     }

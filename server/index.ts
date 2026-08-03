@@ -114,6 +114,10 @@ app.use((req, res, next) => {
     });
   };
   app.get("/", sendFile(premiumDir, "index.html"));
+  // Landing-page variants: /home is the home-improvement page, /uk /us /nl force
+  // a market on the solar page. config.jsx resolves both from location.pathname,
+  // so these must serve the same HTML rather than redirect. Mirrors vercel.json.
+  app.get(["/home", "/uk", "/us", "/nl"], sendFile(premiumDir, "index.html"));
   app.get("/login", sendFile(publicDir, "login.html"));
   app.use("/premium", express.static(premiumDir));
 

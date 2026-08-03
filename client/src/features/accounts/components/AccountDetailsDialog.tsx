@@ -63,6 +63,7 @@ export interface AccountRow {
   business_hours_start?: string;
   business_hours_end?: string;
   max_daily_sends?: number;
+  whatsapp_max_daily_sends_is_manual?: boolean;
   price_per_booking?: string | number | null;
   webhook_url?: string;
   webhook_secret?: string;

@@ -68,7 +68,26 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
       ) : (
         <FieldRow label={t("fields.hoursOpen")} value={`${formatTimeDisplay(val("business_hours_start")) || "—"} – ${formatTimeDisplay(val("business_hours_end")) || "—"}`} mono />
       )}
-      <FieldRow label={t("fields.dailySends")} value={val("max_daily_sends")} mono editChild={isEditing ? <EditInput value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined} />
+      <FieldRow
+        label={t("fields.dailySends")}
+        value={val("max_daily_sends")}
+        mono
+        editChild={isEditing ? <EditInput value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined}
+        suffix={!isEditing && account.whatsapp_max_daily_sends_is_manual ? (
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--mute)", whiteSpace: "nowrap" }}>
+            {t("fields.dailySendsManual")}
+            <button
+              type="button"
+              className="la-btn la-btn--soft"
+              style={{ padding: "2px 8px", fontSize: 9.5 }}
+              onClick={() => onSave("whatsapp_max_daily_sends_is_manual", false as any)}
+              disabled={saving}
+            >
+              {t("fields.dailySendsReset")}
+            </button>
+          </span>
+        ) : undefined}
+      />
 
       <div style={{ height: 10 }} />
       <GroupLabel icon={<FileText size={13} />}>{t("sections.notes")}</GroupLabel>

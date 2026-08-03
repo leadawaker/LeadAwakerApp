@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Calendar,
+  Clock,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { updateLead, deleteLead } from "../../api/leadsApi";
@@ -319,6 +320,12 @@ export function LeadDetailView({
   const acctName = lead.account_name || lead.Account || "";
   const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const bookedDate = lead.booked_call_date || lead.bookedCallDate;
+  // Contact-later freeze: the lead named a date to be picked back up on, and
+  // the bump scheduler re-engages them then. Surfaced next to the booked pill
+  // so a deferred lead never reads as a dead one.
+  const resumeRaw = (leadTags || []).some((tg) => tg.name === "Contact Later")
+    ? (lead.next_action_at || lead.nextActionAt || null)
+    : null;
   const skipBooked = (() => {
     const cId = lead.Campaigns_id ?? lead.campaigns_id ?? lead.campaignsId;
     const mode = cId && campaignsById?.get(Number(cId))?.bookingMode;
@@ -444,6 +451,12 @@ export function LeadDetailView({
               {bookedDate && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--warn-tint)", border: "1px solid rgba(196,138,47,0.4)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--stage-booked)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
                   <Calendar className="h-[11px] w-[11px]" />Booked · {formatBookedDate(bookedDate, accountTimezone)}
+                </span>
+              )}
+              {resumeRaw && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--warn-tint)", border: "1px solid rgba(196,138,47,0.4)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--stage-booked)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                  <Clock className="h-[11px] w-[11px]" />
+                  {t("tags.resumesOn", { date: new Date(resumeRaw).toLocaleDateString(undefined, { month: "short", day: "numeric" }) })}
                 </span>
               )}
             </div>

@@ -147,6 +147,8 @@
     "hoursOpen": "Hours Open",
     "hoursClose": "Hours Close",
     "dailySends": "Daily Sends",
+    "dailySendsManual": "(manually set)",
+    "dailySendsReset": "Reset to auto-sync",
     "terminology": "Terminology",
     "email": "Email",
     "accountNamePlaceholder": "e.g. Acme Corp",

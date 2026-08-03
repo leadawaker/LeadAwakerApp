@@ -351,9 +351,21 @@ export function DetailViewHeader({
             t("meta.whatsappQuality"),
             campaign.account_whatsapp_messaging_limit != null ? campaign.account_whatsapp_messaging_limit : "—",
             <span className="h-2 w-2 rounded-full shrink-0" style={{ background: qualityDotColor(campaign.account_whatsapp_quality_rating) }} />,
-            campaign.account_whatsapp_quality_checked_at
-              ? t("meta.whatsappQualityCheckedAt", { date: formatDate(campaign.account_whatsapp_quality_checked_at) })
-              : t("meta.whatsappQualityUnknown")
+            [
+              campaign.account_whatsapp_quality_checked_at
+                ? t("meta.whatsappQualityCheckedAt", { date: formatDate(campaign.account_whatsapp_quality_checked_at) })
+                : t("meta.whatsappQualityUnknown"),
+              ...(campaign.account_whatsapp_sender_sid ? [
+                campaign.account_max_daily_sends == null
+                  ? t("meta.whatsappQualityCapPending")
+                  : !campaign.account_whatsapp_max_daily_sends_is_manual
+                    ? t("meta.whatsappQualitySyncedTo", { limit: campaign.account_max_daily_sends })
+                    : campaign.account_whatsapp_messaging_limit == null
+                      ? t("meta.whatsappQualityManualCapNoLimit", { cap: campaign.account_max_daily_sends })
+                      : t("meta.whatsappQualityManualCap", { cap: campaign.account_max_daily_sends, metaLimit: campaign.account_whatsapp_messaging_limit }),
+                t("meta.whatsappQualityUpgradeInfo"),
+              ] : []),
+            ].join("\n")
           )}
           {(campaign.active_hours_start || (campaign as any).activeHoursStart) && renderMetaChip(t("meta.activeHours"),
             `${((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)} – ${((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "-"}`

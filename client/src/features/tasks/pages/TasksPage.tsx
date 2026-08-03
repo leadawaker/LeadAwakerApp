@@ -35,7 +35,7 @@ export default function TasksPage() {
     <TagVisibilityContext.Provider value={true}>
       <CrmShell>
         {isMobile ? (
-          <MobileTasksView tasks={tasks} categories={categories} users={users} todayISO={todayISO} />
+          <MobileTasksView tasks={tasks} categories={categories} todayISO={todayISO} />
         ) : (
           <DesktopTasksView tasks={tasks} categories={categories} users={users} todayISO={todayISO} currentUserName={currentUserName} loading={tasksLoading} />
         )}

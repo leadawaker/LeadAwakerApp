@@ -1,16 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { Clock, ChevronRight } from "lucide-react";
 import { formatHours } from "../formFields/campaignFormatters";
+import { resolveLang } from "@shared/langField";
 
 /** Renders a single bump template block */
 export function BumpCard({
   bumpNumber,
   template,
   delayHours,
+  uiLang,
 }: {
   bumpNumber: number;
   template: string | null | undefined;
   delayHours: number | null | undefined;
+  uiLang: "en" | "nl";
 }) {
   const { t } = useTranslation("campaigns");
   return (
@@ -30,9 +33,9 @@ export function BumpCard({
           <span>{t("config.delayLabel", { value: formatHours(delayHours) })}</span>
         </div>
       </div>
-      {template ? (
+      {resolveLang(template, uiLang) ? (
         <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-          {template}
+          {resolveLang(template, uiLang)}
         </p>
       ) : (
         <p className="text-[11px] text-muted-foreground italic">{t("config.noTemplateSet")}</p>

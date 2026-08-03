@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
 import { LEAD_AVATAR_BG_DARK, LEAD_AVATAR_TEXT_DARK } from "@/lib/avatarUtils";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
-import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check } from "lucide-react";
+import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check, Clock } from "lucide-react";
 
 import { PIPELINE_HEX } from "./constants";
 import { getLeadId, getFullName, getInitials, getScore, getStatus, getPhone, getLastMessage, getLastMessageSender, getUnreadCount } from "./leadUtils";
@@ -30,7 +30,7 @@ export function LeadListCard({
   lead,
   isActive,
   onClick,
-  leadTags: _leadTags,
+  leadTags,
   campaignsById,
   showPeek = false,
   onOpenConversation,
@@ -70,6 +70,15 @@ export function LeadListCard({
   const avatarBg    = isDark ? (LEAD_AVATAR_BG_DARK[status] ?? "#2A2D33") : statusHex;
   const avatarText  = isDark ? (LEAD_AVATAR_TEXT_DARK[status] ?? "#9CA3AF") : "#FFFFFF";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+  // Contact-later leads sit at a normal pipeline stage but are frozen until a
+  // date the lead themselves named. Without this the card is indistinguishable
+  // from an actively-bumped lead. Gated on the tag, not on next_action_at
+  // alone: every active lead has a next_action_at (its next bump).
+  const isContactLater = (leadTags || []).some((tg) => tg.name === "Contact Later");
+  const resumeRaw = lead.next_action_at || lead.nextActionAt || null;
+  const resumeDate = isContactLater && resumeRaw
+    ? new Date(resumeRaw).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : "";
   const cId = Number(lead.Campaigns_id || lead.campaigns_id || lead.campaignsId || 0);
   const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
@@ -417,6 +426,15 @@ export function LeadListCard({
             <span className="text-[9px] max-md:text-[13px]" style={{ color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}{sourceLabel ? ` · ${sourceLabel}` : ''}
             </span>
+            {resumeDate && (
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] max-md:text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0"
+                title={t("tags.resumesOn", { date: resumeDate })}
+              >
+                <Clock className="h-2.5 w-2.5 shrink-0" />
+                {resumeDate}
+              </span>
+            )}
           </div>
 
           {/* Contact info — revealed on hover */}

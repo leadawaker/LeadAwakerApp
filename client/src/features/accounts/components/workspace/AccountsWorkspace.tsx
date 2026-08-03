@@ -79,6 +79,22 @@ export function AccountsWorkspace(p: Props) {
   // Reset to view mode whenever selection changes.
   useEffect(() => { setPanelMode("view"); }, [accountId]);
 
+  // After connecting a calendar via OAuth, the server redirects back here with
+  // ?calendar=connected&provider=… (see server/routes/calendar.ts). The calendar
+  // cards live on the Integrations tab, so open that instead of leaving the user
+  // on Overview, then strip the params so a later manual tab change isn't
+  // re-overridden if this component remounts.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("calendar")) return;
+    setTab("integrations");
+    params.delete("calendar");
+    params.delete("provider");
+    params.delete("reason");
+    const qs = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+  }, []);
+
   // Publish entity data for the AI chat context.
   const publishEntity = usePublishEntityData();
   useEffect(() => {

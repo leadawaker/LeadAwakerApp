@@ -13,7 +13,7 @@ import {
   PROVIDER_META,
   CalendarNotConfiguredError,
 } from "../calendar";
-import { provisionCaldiyForAccount, injectCalendarCredentialToCaldiy, injectCaldavCredentialToCaldiy, debouncedResyncCaldiySchedule } from "../calendar/caldiy";
+import { provisionCaldiyForAccount, injectCalendarCredentialToCaldiy, injectCaldavCredentialToCaldiy, debouncedResyncCaldiySchedule, CALDIY_ENGINE_BASE_URL } from "../calendar/caldiy";
 import { createOAuthState, consumeOAuthState, saveSessionThen } from "../oauthState";
 
 const OAUTH_PROVIDERS = new Set(["google", "outlook"]);
@@ -313,6 +313,25 @@ export function registerCalendarRoutes(app: Express): void {
     if (!conn || !conn.apiKeyEncrypted) return res.json(null);
     const password = decryptSecret<string>(conn.apiKeyEncrypted);
     res.json({ username: conn.externalId, password, bookingUrl: conn.displayName });
+  }));
+
+  // ─── Cal.diy: engine Bearer API key + base URL (internal, engine-only) ─────
+  // Called by the Python automations engine (tools/caldiy_api.py) to route each
+  // account's in-chat booking calls at its own provisioned Cal.diy user instead
+  // of the shared cal.com Cloud key. requireAgency's internal-key bypass is the
+  // only expected caller here — no interactive UI uses this endpoint.
+  app.get("/api/calendar/caldiy-engine-credentials", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const accountId = Number(req.query.accountId);
+    if (!accountId) return res.status(400).json({ message: "accountId required" });
+    const conn = await storage.getCalendarConnection(accountId, "caldiy");
+    if (!conn || !conn.caldiyApiKeyEncrypted) return res.json(null);
+    const apiKey = decryptSecret<string>(conn.caldiyApiKeyEncrypted);
+    res.json({
+      apiKey,
+      baseUrl: CALDIY_ENGINE_BASE_URL,
+      eventTypeId: conn.caldiyEventTypeId ?? null,
+      eventTypeSlug: conn.caldiyEventTypeSlug ?? null,
+    });
   }));
 
   // ─── White-label custom booking domain ─────────────────────────────────────

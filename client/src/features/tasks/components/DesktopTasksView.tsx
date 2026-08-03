@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Filter, Plus, Users } from "lucide-react";
+import { ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Filter, Plus } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,7 +24,6 @@ import TasksWeekCalendar, {
 } from "./TasksWeekCalendar";
 import { SORT_OPTIONS, sortTasks, type SortOption, type Task } from "../types";
 import { loadLocal, saveLocal, consumeSelectedId, useSelectedTaskListener } from "../lib/taskViewUtils";
-import { getUserAvatarColor } from "@/lib/avatarUtils";
 
 type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl: string | null };
 
@@ -53,11 +52,10 @@ const CAL_STATUS_OPTS = [
 
 type CalStatusFilter = (typeof CAL_STATUS_OPTS)[number]['key'];
 
-// Default category by user name (Gabriel=Dev/5, Finn=Sales/6)
+// Default category by user name (Gabriel=Dev/5)
 function defaultCategoryId(userName: string): number | null {
   const n = userName.toLowerCase();
   if (n.includes('gabriel')) return 5;
-  if (n.includes('finn'))    return 6;
   return null;
 }
 
@@ -81,7 +79,6 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
     const stored = loadLocal<string>("tasks-category-filter", "all");
     return stored === "all" ? "all" : Number(stored);
   });
-  const [desktopWho, setDesktopWho] = useState<string>(() => loadLocal<string>("tasks-desktop-who", "all"));
   const [desktopSearch, setDesktopSearch] = useState("");
   const [sort, setSort] = useState<SortOption>(() => loadLocal("tasks-sort", "due_date_asc"));
   const [calStatusFilter, setCalStatusFilter] = useState<CalStatusFilter>(() => loadLocal<CalStatusFilter>("tasks-cal-status", "all"));
@@ -93,7 +90,6 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
 
   const handlePriorityFilter = useCallback((p: PriorityFilter) => { setPriorityFilter(p); saveLocal('tasks-priority-filter', p); }, []);
   const handleCategoryFilter = useCallback((c: number | 'all') => { setCategoryFilter(c); saveLocal('tasks-category-filter', String(c)); }, []);
-  const handleDesktopWho = useCallback((w: string) => { setDesktopWho(w); saveLocal('tasks-desktop-who', w); }, []);
   const handleSort = useCallback((v: SortOption) => { setSort(v); saveLocal("tasks-sort", v); }, []);
   const handleCalStatus = useCallback((s: CalStatusFilter) => { setCalStatusFilter(s); saveLocal("tasks-cal-status", s); }, []);
   const handleHideWeekends = useCallback((v: boolean) => { setHideWeekends(v); saveLocal("tasks-hide-weekends", v); }, []);
@@ -111,16 +107,9 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
   }, []);
 
   // ── Filtered tasks ──────────────────────────────────────────────────
-  const baseByWho = useMemo(() => {
-    if (desktopWho === 'all') return tasks;
-    const uid = parseInt(desktopWho, 10);
-    const name = users.find(x => x.id === uid)?.fullName1 ?? null;
-    return tasks.filter(t => t.assignedToUserId === uid || (name && t.assigneeName === name));
-  }, [tasks, desktopWho, users]);
-
   // Board uses priority + category + date filters — calendar also inherits them via calendarTasks
   const boardTasks = useMemo(() => {
-    let result = priorityFilter === 'all' ? baseByWho : baseByWho.filter(t => t.priority === priorityFilter);
+    let result = priorityFilter === 'all' ? tasks : tasks.filter(t => t.priority === priorityFilter);
     if (categoryFilter !== 'all') result = result.filter(t => t.categoryId === categoryFilter);
     if (dateFrom) result = result.filter(t => { const iso = taskDueISO(t); return iso && iso >= dateFrom; });
     if (dateTo)   result = result.filter(t => { const iso = taskDueISO(t); return iso && iso <= dateTo; });
@@ -132,7 +121,7 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
         t.assigneeName?.toLowerCase().includes(q));
     }
     return sortTasks(result, sort);
-  }, [baseByWho, priorityFilter, categoryFilter, dateFrom, dateTo, desktopSearch, sort]);
+  }, [tasks, priorityFilter, categoryFilter, dateFrom, dateTo, desktopSearch, sort]);
 
   // Calendar gets the same base then optionally filtered by status only
   const calendarTasks = useMemo(() => {
@@ -141,12 +130,12 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
   }, [boardTasks, calStatusFilter]);
 
   const priorityCounts = useMemo(() => {
-    const map: Record<string, number> = { all: baseByWho.length };
+    const map: Record<string, number> = { all: tasks.length };
     for (const p of ['low', 'medium', 'high', 'urgent']) {
-      map[p] = baseByWho.filter(t => t.priority === p).length;
+      map[p] = tasks.filter(t => t.priority === p).length;
     }
     return map;
-  }, [baseByWho]);
+  }, [tasks]);
 
   // ── Wide-screen detection (≥1800px → right-rail monthly calendar) ───
   const [isWide, setIsWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1800);
@@ -187,11 +176,6 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
       if (taskDueISO(task) !== overId) updateMutation.mutate({ id: task.id, data: { dueDate: rescheduleDate(task, overId) } });
     }
   }, [tasks, updateMutation]);
-
-  // ── Assignee toggle helpers ─────────────────────────────────────────
-  const label = (u: AccountUser) => u.fullName1 ?? u.email ?? '?';
-  const firstName = (u: AccountUser) => label(u).split(' ')[0];
-  const initials = (u: AccountUser) => label(u).split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
   const handleCreate = useCallback(async () => {
     if (createMutation.isPending) return;
@@ -376,26 +360,6 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Assignee — inline segmented toggle */}
-          {users.length > 0 && (
-            <div className="la-seg" title="Assignee" style={{ height: BTN_H }}>
-              <button className={`la-seg-btn${desktopWho === 'all' ? ' on' : ''}`} onClick={() => handleDesktopWho('all')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: '100%' }}>
-                <Users size={12} /> Everyone
-              </button>
-              {users.map((u) => {
-                const bg = getUserAvatarColor(u.fullName1 || u.email || "");
-                return (
-                  <button key={u.id} className={`la-seg-btn${String(u.id) === desktopWho ? ' on' : ''}`} onClick={() => handleDesktopWho(String(u.id))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: '100%' }}>
-                    <span style={{ position: 'relative', width: 19, height: 19, borderRadius: '50%', background: bg, boxShadow: `0 0 7px ${bg}99`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                      {u.avatarUrl ? <img src={u.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ color: '#fff', fontFamily: 'var(--mono)', fontSize: 7, fontWeight: 700 }}>{initials(u)}</span>}
-                    </span>
-                    {firstName(u)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           <button title={t("create.title")} onClick={handleCreate} className="la-btn la-btn--wine la-btn--lg" style={{ height: BTN_H, padding: '0 18px' }}>
             <Plus size={14} /> Add task

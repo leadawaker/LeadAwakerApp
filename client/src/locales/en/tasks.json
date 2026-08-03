@@ -59,9 +59,6 @@
     "upcoming": "Upcoming",
     "completed": "Completed"
   },
-  "assignee": {
-    "everyone": "Everyone"
-  },
   "board": {
     "empty": "Empty"
   },

@@ -59,9 +59,6 @@
     "upcoming": "Proximas",
     "completed": "Concluidas"
   },
-  "assignee": {
-    "everyone": "Todos"
-  },
   "board": {
     "empty": "Vazio"
   },

@@ -25,7 +25,8 @@
     "factsTitle": "Belangrijke feiten",
     "complete": "Profiel compleet",
     "itemsMissing": "{{count}} item ontbreekt",
-    "itemsMissing_other": "{{count}} items ontbreken"
+    "itemsMissing_other": "{{count}} items ontbreken",
+    "noticeShort": "{{hours}}u van tevoren"
   },
   "done": {
     "title": "Profiel compleet 🎉",
@@ -49,10 +50,12 @@
   },
   "questions": {
     "meetingType": {
-      "label": "Hoe voer je geboekte gesprekken met leads?"
+      "label": "Hoe voer je geboekte gesprekken met leads?",
+      "short": "Geboekte gesprekken"
     },
     "availabilityHours": {
-      "label": "Wanneer kunnen leads een gesprek bij u boeken?"
+      "label": "Wanneer kunnen leads een gesprek bij u boeken?",
+      "short": "Beschikbaarheid"
     },
     "bookingUrl": {
       "label": "Welke link gebruiken jullie om afspraken in te plannen?",

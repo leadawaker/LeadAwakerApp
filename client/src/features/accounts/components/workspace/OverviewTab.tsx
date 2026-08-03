@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AccountDetailsPanel } from "./AccountDetailsPanel";
 import { CampaignsPanel } from "./CampaignsPanel";
 import { TeamPanel } from "./TeamPanel";
@@ -54,6 +55,9 @@ function OverviewMobile(p: OverviewData) {
 export function TabContent({ tab, isMobile, data, readOnly = false }: {
   tab: WorkspaceTab; isMobile: boolean; data: OverviewData; readOnly?: boolean;
 }) {
+  // While the onboarding wizard is on screen, the Company Intel panel below it
+  // is hidden so the call stays focused on one thing at a time.
+  const [commWizardActive, setCommWizardActive] = useState(false);
   if (tab === "overview") {
     if (isMobile) return <OverviewMobile {...data} />;
     return <OverviewRegular {...data} readOnly={readOnly} />;
@@ -63,8 +67,8 @@ export function TabContent({ tab, isMobile, data, readOnly = false }: {
   );
   if (tab === "communication") return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} readOnly={readOnly} />
-      {!readOnly && <KBPanel accountId={data.accountId} collapsible defaultCollapsed titleOverride="Company Intel" insetCrisp />}
+      <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} readOnly={readOnly} onWizardActiveChange={setCommWizardActive} />
+      {!readOnly && !commWizardActive && <KBPanel accountId={data.accountId} collapsible defaultCollapsed titleOverride="Company Intel" insetCrisp />}
     </div>
   );
   return null;
