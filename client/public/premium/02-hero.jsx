@@ -22,7 +22,7 @@ const NICHE_IMAGE_STYLE = {
   quotes:      { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -11, ty: 7,   rot: 0 } },
   netmetering: { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -9,  ty: 4,   rot: 0 } },
   dbr:         { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.7,  tx: -21, ty: 8,   rot: 0 } },
-  referrals:   { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.55, tx: -11, ty: 7,   rot: 0 } },
+  referrals:   { objectFit: "none",    objectPosition: "center",       transformOrigin: undefined,       defaultAdj: { scale: 0.45, tx: -15, ty: 7,   rot: 0 } },
 };
 
 const DEFAULT_ADJUST = { scale: 1, tx: 0, ty: 0, rot: 0 };
@@ -93,6 +93,8 @@ function Hero({ wineIntensity, textures }) {
                 key={key}
                 src={NICHE_IMAGES[key]}
                 alt=""
+                fetchpriority={key === niche ? "high" : "low"}
+                decoding="async"
                 style={isFree ? {
                   position: "absolute",
                   top: "50%", left: "50%",
