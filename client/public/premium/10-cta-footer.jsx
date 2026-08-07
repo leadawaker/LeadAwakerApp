@@ -56,7 +56,7 @@ function NetherlandsMap() {
         svg.style.height = "100%";
         svg.style.overflow = "visible";
         svg.querySelectorAll("path").forEach((p) => {
-          p.setAttribute("fill", "rgb(240, 234, 222)");
+          p.setAttribute("fill", "rgb(255, 255, 255)");
           p.setAttribute("stroke", "rgb(103, 95, 80)");
           p.setAttribute("stroke-width", "5");
           p.setAttribute("stroke-linejoin", "round");
@@ -102,7 +102,7 @@ function CTA() {
 
   /* ---- bg image debug adjustments ---- */
   const [bgAdj, setBgAdj] = React.useState(() =>
-    typeof loadCtaBgAdjustments !== "undefined" ? loadCtaBgAdjustments() : { scale: 1, tx: 0, ty: 5, rot: 0, flipX: false, flipY: false, brightness: 1, cropTop: 43, cropTilt: 0 }
+    typeof loadCtaBgAdjustments !== "undefined" ? loadCtaBgAdjustments() : { scale: 1, tx: 0, ty: 6, rot: 0, flipX: false, flipY: false, brightness: 1, cropTop: 45, cropTilt: 0 }
   );
   const handleBgAdjUpdate = React.useCallback((next) => {
     setBgAdj(next);
@@ -207,7 +207,8 @@ function CTA() {
   const linkStyle = {
     fontFamily: "var(--mono)", fontSize: 11,
     letterSpacing: "0.06em", color: "rgba(28,24,16,0.45)",
-    textDecoration: "none", lineHeight: 1.8, display: "block"
+    textDecoration: "none", lineHeight: 1.8, display: "block",
+    textShadow: "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,  2px 2px 0 #000",
   };
 
   return (
@@ -230,7 +231,7 @@ function CTA() {
                 pointerEvents: "none",
               }}>
                 <img
-                  src="/premium/uploads/textures/ctatext17.jpg"
+                  src="/premium/hero-images/pannels.webp"
                   style={{
                     position: "absolute", top: "50%", left: "50%",
                     width: "100%", height: "auto",
@@ -389,21 +390,21 @@ function CTA() {
                 <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker office, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
                   {window.MARKET === 'nl'
                     ? <NetherlandsMap />
-                    : <span style={{ ...linkStyle, color: "#3D2817", whiteSpace: "nowrap" }}>Den Bosch, Netherlands</span>}
+                    : <span style={{ ...linkStyle, color: "#FFFFFF", whiteSpace: "nowrap" }}>Den Bosch, Netherlands</span>}
                 </a>
                 <FooterMark size={44} />
               </div>
               {/* Terms + Privacy + the other site variant. Without this link a
                   kitchen company landing on the solar page has nowhere to go. */}
               <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18 }}>
-                <a href={window.SITE_VARIANT === 'home' ? '/' : '/home'} style={{ ...linkStyle, color: "#3D2817" }}>
+                <a href={window.SITE_VARIANT === 'home' ? '/' : '/home'} style={{ ...linkStyle, color: "#FFFFFF" }}>
                   {t(window.SITE_VARIANT === 'home' ? 'cta.other_solar' : 'cta.other_home')}
                 </a>
-                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.terms')}</a>
-                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#3D2817" }}>{t('cta.privacy')}</a>
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#FFFFFF" }}>{t('cta.terms')}</a>
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#FFFFFF" }}>{t('cta.privacy')}</a>
               </div>
               {/* Copyright */}
-              <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#3D2817", whiteSpace: "nowrap" }}>
+              <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#FFFFFF", whiteSpace: "nowrap" }}>
                 Lead Awaker 2026 · All rights reserved.
               </span>
             </div>
