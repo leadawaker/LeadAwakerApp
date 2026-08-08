@@ -562,6 +562,13 @@ export const campaigns = nocodb.table("Campaigns", {
   // EU AI Act (Art. 50) disclosure: when "on", the AI states it is a virtual
   // assistant early in the conversation. Defaults to "off" (legacy behavior).
   aiDisclosure: text("ai_disclosure").default("off"),
+  // "scoping" | "decision" | null. Forces the conversation flow regardless of
+  // the lead's derived stage. Needed by demo campaigns, which must ladder even
+  // when their stage would resolve to decision mode.
+  conversationModeOverride: text("conversation_mode_override"),
+  // Hard cap on balloons per AI reply. Default 1: every extra balloon is a
+  // separately billed message, and a ladder runs 8-10 turns.
+  maxMessagesPerReply: integer("max_messages_per_reply").default(1),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
@@ -726,6 +733,12 @@ export const leads = nocodb.table("Leads", {
   bookedAt: timestamp("booked_at", { withTimezone: true }),
   callDurationMinutes: integer("call_duration_minutes"),
   whatHasTheLeadDone: text("what_has_the_lead_done"),
+  // Free-text specifics for this lead, imported with the list. In decision mode
+  // this is the quote detail the AI can reference by name; in scoping mode it
+  // pre-fills ladder slots so the AI skips them. Distinct from
+  // whatHasTheLeadDone, which is a constrained dropdown feeding the stage
+  // classifier and must never carry free text.
+  leadContext: text("lead_context"),
   when: text("when"),
   accountId: bigint("account_id", { mode: "number" }),
   campaignId: bigint("campaign_id", { mode: "number" }),
