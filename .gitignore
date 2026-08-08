@@ -111,3 +111,6 @@ login.png
 /accounts-list.yaml
 /current-page.png
 /accounts-page.png
+
+# Playwright accessibility-tree snapshots (regenerated output, never source)
+/*.yaml
