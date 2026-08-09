@@ -27,6 +27,9 @@ export interface NicheContext {
   when_label: string;
   niche_question: string;
   first_message: string;
+  // The customer's own words for what they want ("new windows or doors"),
+  // reused by Prompt 93 as {opener_phrase}. Never the commercial arrangement.
+  opener_phrase: string;
   // Knowledge-base facts for the conversation prompt ({kb}).
   kb: string;
   // Per-niche vocabulary for Prompt 93 substitution.
@@ -79,7 +82,11 @@ Given a business niche description, output a JSON object with these exact keys:
 - project_term: what the engagement is about (e.g. "solar installation", "dental treatment", "fitness plan", "kitchen")
 - proposal_term: what this niche calls its offer document (e.g. "quote", "treatment plan", "membership offer", "design proposal")
 - visit_term: the on-location first touch for this niche (e.g. "site visit", "clinic visit", "gym tour", "showroom visit")
-- first_message: the Sophie opener — format exactly: "Hi, this is {agent_name} from [company_name]. Is this the same {first_name} who [what_lead_did] [when_label]?" — adapt to the output language (e.g. Dutch: "Hi, dit is {agent_name} van [company_name]. Ben jij dezelfde {first_name} die [what_lead_did] [when_label]?") — the name {first_name} appears ONLY ONCE in the identity question, never in the greeting
+- first_message: Write the opener as one sentence a real person would text. Use this exact shape:
+"Hi it's {agent_name} {disclosure_clause}, is that the same {first_name} who was looking at <NATURAL PLURAL PHRASE> a while back?"
+<NATURAL PLURAL PHRASE> is what the customer wants in their own words ("new windows or doors", "a new kitchen", "solar panels"). NEVER use the commercial arrangement ("supply and installation", "design and manufacturing"): nobody has ever described themselves as interested in supply and installation. Also return that phrase on its own as `opener_phrase`.
+Adapt the sentence to the output language (Dutch: "Hoi, dit is {agent_name} {disclosure_clause}, ben jij dezelfde {first_name} die een tijd geleden naar <NATURAL PLURAL PHRASE> keek?") but keep the {agent_name}, {disclosure_clause} and {first_name} tokens exactly as written. {first_name} appears ONLY ONCE, in the identity question, never in the greeting.
+- opener_phrase: the <NATURAL PLURAL PHRASE> from first_message on its own, in the output language, no leading article beyond what a person would say out loud
 
 The advisor_term, project_term, proposal_term and visit_term MUST be in the output language and natural for the niche. Output language will be specified in the user message. Return ONLY valid JSON, no markdown.`;
 
@@ -167,6 +174,9 @@ export async function generateNicheContext(
     parsed.project_term = (parsed.project_term || parsed.niche_label || niche).trim();
     parsed.proposal_term = (parsed.proposal_term || "").trim();
     parsed.visit_term = (parsed.visit_term || "").trim();
+    // {opener_phrase} is substituted into Prompt 93's examples as well as the
+    // opener, so an undefined here would render as an empty gap mid-sentence.
+    parsed.opener_phrase = (parsed.opener_phrase || parsed.niche_label || niche).trim();
     parsed.kb = (parsed.kb || "").toString();
     return applyDemoDefaults(parsed, language, scenario);
   } catch {
@@ -207,6 +217,9 @@ export function buildFallbackNicheContext(
     niche_label: niche,
     niche_question: t.niche_question,
     first_message: t.first_message,
+    // No model ran, so the raw niche the visitor typed is the closest thing we
+    // have to "what the customer wants in their own words".
+    opener_phrase: niche,
     kb: "",
     advisor_term: language === "nl" ? "adviseur" : language === "pt" ? "consultor" : "advisor",
     project_term: niche,
