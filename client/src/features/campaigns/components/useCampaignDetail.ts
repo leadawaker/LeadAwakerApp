@@ -25,6 +25,17 @@ const GENERATED_FIELD_KEYS = [
   "service_name",
 ] as const;
 
+// Save-boundary coercion for max_messages_per_reply. The field's onChange
+// (BehaviorSectionFields.tsx) is deliberately permissive while typing, so
+// empty, non-finite, or below-range values can still be sitting in the draft
+// when a save fires. This is the one place that guarantees what's persisted
+// is always an integer between 1 and 4.
+function coerceMaxMessagesPerReply(v: unknown): number {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(4, Math.max(1, Math.round(n)));
+}
+
 // ── Contract type (minimal, for financials) ──────────────────────────────────
 
 export interface ContractFinancials {
@@ -356,6 +367,9 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
         const campaignPatch = Object.fromEntries(
           Object.entries(rawPatch).map(([k, v]: [string, unknown]) => [k, v === "" ? null : v])
         );
+        if (campaignPatch.max_messages_per_reply !== undefined) {
+          campaignPatch.max_messages_per_reply = coerceMaxMessagesPerReply(campaignPatch.max_messages_per_reply);
+        }
         onSaveRef.current(prevId, campaignPatch);
       }
     }
@@ -428,6 +442,9 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
       const campaignPatch = Object.fromEntries(
         Object.entries(rawPatch).map(([k, v]) => [k, v === "" ? null : v])
       );
+      if (campaignPatch.max_messages_per_reply !== undefined) {
+        campaignPatch.max_messages_per_reply = coerceMaxMessagesPerReply(campaignPatch.max_messages_per_reply);
+      }
       await onSaveRef.current(id, campaignPatch);
       setOriginalDraft({ ...currentDraft });
     } catch (e) {
