@@ -3,7 +3,7 @@ import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
-  Gem, ShieldCheck, Mic, Contact,
+  Gem, ShieldCheck, Mic, Contact, GitBranch, MessageSquare,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
@@ -104,6 +104,28 @@ export function BehaviorSectionFields({
       <BoolRow icon={ShieldCheck} label={t("config.aiDisclosure")} value={(draft.ai_disclosure ?? campaign.ai_disclosure) === "on"}
         {...editFor("ai_disclosure")}
         editChild={isEditing ? <EditToggle value={(draft.ai_disclosure ?? campaign.ai_disclosure) === "on"} onChange={(v) => setDraft(d => ({...d, ai_disclosure: v ? "on" : "off"}))} /> : undefined}
+      />
+      <InfoRow icon={GitBranch} label={t("config.conversationMode")} value={t(`config.conversationModeOptions.${campaign.conversation_mode_override || "auto"}`)}
+        description={t("config.conversationModeHint")}
+        {...editFor("conversation_mode_override")}
+        editChild={isEditing ? (
+          <EditSelect
+            value={String(draft.conversation_mode_override ?? campaign.conversation_mode_override ?? "")}
+            onChange={(v) => setDraft(d => ({...d, conversation_mode_override: v}))}
+            options={["", "scoping", "decision"]}
+            labels={{
+              "": t("config.conversationModeOptions.auto"),
+              scoping: t("config.conversationModeOptions.scoping"),
+              decision: t("config.conversationModeOptions.decision"),
+            }}
+            {...focusFor("conversation_mode_override")}
+          />
+        ) : undefined}
+      />
+      <InfoRow icon={MessageSquare} label={t("config.maxMessagesPerReply")} value={campaign.max_messages_per_reply ?? 1}
+        description={t("config.maxMessagesPerReplyHint")}
+        {...editFor("max_messages_per_reply")}
+        editChild={isEditing ? <EditNumber value={String(draft.max_messages_per_reply ?? 1)} onChange={(v) => setDraft(d => ({...d, max_messages_per_reply: v === "" ? "" : Number(v)}))} placeholder="1" {...focusFor("max_messages_per_reply")} /> : undefined}
       />
       <BoolRow icon={Power} label={t("config.optOutNotice")} value={!!(draft.opt_out_notice ?? campaign.opt_out_notice)}
         {...editFor("opt_out_notice")}

@@ -318,6 +318,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     typo_count: (c as any).typo_count ?? "",
     positioning: (c as any).positioning || "premium",
     ai_disclosure: (c as any).ai_disclosure || "off",
+    conversation_mode_override: (c as any).conversation_mode_override || "",
+    max_messages_per_reply: (c as any).max_messages_per_reply ?? 1,
     use_account_kb: (c as any).use_account_kb !== false,
   }), []);
 
