@@ -125,7 +125,10 @@ export function BehaviorSectionFields({
       <InfoRow icon={MessageSquare} label={t("config.maxMessagesPerReply")} value={campaign.max_messages_per_reply ?? 1}
         description={t("config.maxMessagesPerReplyHint")}
         {...editFor("max_messages_per_reply")}
-        editChild={isEditing ? <EditNumber value={String(draft.max_messages_per_reply ?? 1)} onChange={(v) => setDraft(d => ({...d, max_messages_per_reply: v === "" ? "" : Number(v)}))} placeholder="1" {...focusFor("max_messages_per_reply")} /> : undefined}
+        editChild={isEditing ? <EditNumber value={String(draft.max_messages_per_reply ?? 1)} onChange={(v) => {
+          const n = Number(v);
+          setDraft(d => ({...d, max_messages_per_reply: Number.isFinite(n) ? Math.min(4, Math.max(1, n)) : 1}));
+        }} placeholder="1" {...focusFor("max_messages_per_reply")} /> : undefined}
       />
       <BoolRow icon={Power} label={t("config.optOutNotice")} value={!!(draft.opt_out_notice ?? campaign.opt_out_notice)}
         {...editFor("opt_out_notice")}
