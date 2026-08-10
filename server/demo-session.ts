@@ -106,9 +106,19 @@ function buildGenericScopingLadder(niche: string, language: string): string {
   if (language === "pt") {
     return [
       "SLOT 1 - escopo",
-      "Objetivo: define o que entra e o que fica fora do orcamento.",
-      `Pergunta: "o que exatamente voce gostaria de fazer em relacao a ${n}, com suas palavras?"`,
-      "Opcoes: aberto.",
+      "Objetivo: define o que entra e o que fica fora do orçamento.",
+      `Pergunta: "o que exatamente você gostaria de fazer em relação a ${n}, com suas próprias palavras?"`,
+      "Opções: aberto.",
+      "",
+      "SLOT 2 - tamanho ou quantidade",
+      "Objetivo: define quanta mão de obra e material entram no orçamento.",
+      'Pergunta: "mais ou menos que tamanho tem, ou quantos seriam?"',
+      "Opções: aberto.",
+      "",
+      "SLOT 3 - situação atual",
+      "Objetivo: define se algo precisa ser retirado ou reparado antes, o que normalmente vira um item separado no orçamento.",
+      'Pergunta: "já tem alguma coisa no local que precisa ser substituída, ou seria começar do zero?"',
+      "Opções: substituir o que existe, começar do zero, ainda não sei.",
     ].join("\n");
   }
   return [
@@ -185,7 +195,7 @@ Options: laminate, quartz, granite, solid wood, not sure.
 
 Note what that example never contains: no timeline slot, no budget slot, no financing or payment-options slot, and no "are you still interested" slot. Those four are banned outright, however natural they feel to add. Every Purpose line names a concrete consequence in the quote (unit count, whether the plumbing moves, which price bracket), never "to understand their needs".
 The slots must be the ones an experienced employee of THAT trade would ask, not generic sales questions. For dental implants that means the number of teeth being replaced, the condition of the jawbone and whether a temporary is needed while healing. It does not mean desired timeline or financing.
-The whole ladder, labels included, must be in the output language. The example above is English; in Dutch the three labels are "Doel:", "Vraag:" and "Opties:", never "Purpose:", "Ask:" and "Options:". Dutch addresses the reader as "je", never "u". Always produce at least 5 slots, and put the two biggest price drivers among them: for a trade that installs something, the run from the existing connection point and whether the existing supply or structure can take it are usually bigger price drivers than the customer's choice of features.
+The whole ladder, labels included, must be in the output language. The example above is English; in Dutch the three labels are "Doel:", "Vraag:" and "Opties:", never "Purpose:", "Ask:" and "Options:". Dutch addresses the reader as "je", never "u". In Portuguese the three labels are "Objetivo:", "Pergunta:" and "Opções:". Portuguese output is ALWAYS Brazilian Portuguese, never European Portuguese: use the gerund ("está pensando em"), never "está a pensar em"; write "paradas" not "paragens", "cabine" not "cabina", "equipe" not "equipa", "trem" not "comboio", "café da manhã" not "pequeno-almoço"; address the reader as "você" in the warm, everyday tone a Brazilian company actually uses on WhatsApp, not the formal distance of European Portuguese. Spell every accent correctly. Always produce at least 5 slots, and put the two biggest price drivers among them: for a trade that installs something, the run from the existing connection point and whether the existing supply or structure can take it are usually bigger price drivers than the customer's choice of features.
 - second_message: the follow-up — format: "Thank Goodness! The team asked me to go back through our older enquiries, and I'd rather drop you a message than have someone ring you out of the blue. Are you still interested in [opener_phrase]?" — never claim a manager asked you to reach out and never say you dislike phone calls: on a disclosure-on campaign the assistant must not claim anything only a human could claim
 
 Return ONLY valid JSON, no markdown.`;
@@ -205,7 +215,11 @@ export async function generateNicheContext(
     return null;
   }
 
-  const langLabel = { en: "English", nl: "Dutch", pt: "Portuguese" }[language];
+  // "Brazilian Portuguese", not bare "Portuguese": asking for "Portuguese"
+  // reliably yields EUROPEAN Portuguese ("esta a pensar", "paragens", "cabina"),
+  // which a Brazilian reader clocks instantly as foreign. Brazilian PT is the
+  // standing project rule and pt is a live demo market.
+  const langLabel = { en: "English", nl: "Dutch", pt: "Brazilian Portuguese" }[language];
 
   // Load system prompt from Prompt Library so it's editable from the UI.
   // Falls back to the hardcoded string if the DB entry is missing.
@@ -235,8 +249,11 @@ export async function generateNicheContext(
 
   try {
     const controller = new AbortController();
-    // 20s: this call now needs headroom for a full response (see max_tokens below).
-    const timer = setTimeout(() => controller.abort(), 20000);
+    // 60s, was 20s. gpt-5.6-luna reasons before it answers, so this call got much
+    // slower: measured 15.6s (en), 18.8s (nl), 20.1s (pt) on the real row 91
+    // prompt. The Portuguese run ALREADY EXCEEDED the old 20s abort, i.e. bumping
+    // the model without this line would have aborted pt demos outright.
+    const timer = setTimeout(() => controller.abort(), 60000);
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       signal: controller.signal,
@@ -245,7 +262,12 @@ export async function generateNicheContext(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        // gpt-5.6-luna, was gpt-4o-mini. 4o-mini was the residual quality ceiling
+        // on this path: it wrote formal Dutch "u" against campaign 60's "je" and
+        // missed real price drivers even after two rounds of explicit instruction
+        // were added to row 91. The reviewed Niche_Vocabulary ladders were
+        // generated with gpt-5.4-mini and came out clean first time.
+        model: "gpt-5.6-luna",
         messages: [
           { role: "system", content: system },
           { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nLead scenario: ${scenarioHint}` },
@@ -257,16 +279,25 @@ export async function generateNicheContext(
         // mid-JSON (finish_reason "length"), silently discarding the whole
         // generation (JSON.parse throws, caught below, falls back to the generic
         // template).
-        // Why 2500 and not the 1400 that was here: 1400 was sized on ENGLISH.
+        // Why 6000: see the max_completion_tokens note below. Historical: 1400 was sized on ENGLISH.
         // The same 7-slot ladder in Dutch measures ~478 tokens against ~418 in
         // English, so the real margin in the primary market language was only
-        // ~1.2-1.4x, not the 2x the old comment claimed. Row 91 has since grown
-        // a worked ladder example, which tightens it further. Output tokens on
-        // gpt-4o-mini are cheap and this runs once per demo signup, so buy the
-        // margin. Row 91's own max_tokens DB column (400) is not read anywhere
-        // in this file; this literal is the only knob.
-        max_tokens: 2500,
-        temperature: 0.7,
+        // ~1.2-1.4x, not the 2x the old comment claimed.
+        //
+        // max_completion_tokens, NOT max_tokens: gpt-5.6-luna rejects max_tokens
+        // outright ("Unsupported parameter ... use max_completion_tokens instead").
+        // 6000 and not 2500 because this model spends REASONING tokens that also
+        // count against this budget. Measured on the real row 91 prompt for
+        // "home lifts": en 1620 completion / 485 reasoning, nl 2105 / 853,
+        // pt 2139 / 890. At the old 2500 the Portuguese path had only ~1.17x
+        // headroom and reasoning spend is variable, so a truncated demo was a
+        // matter of time. 6000 restores ~2.8x on the worst measured language.
+        // Row 91's own max_tokens DB column (400) is not read anywhere in this
+        // file; this literal is the only knob.
+        max_completion_tokens: 6000,
+        // temperature is DELIBERATELY ABSENT: gpt-5.6-luna accepts only the
+        // default (1) and 400s on any explicit value, including the 0.7 that
+        // used to be here.
         // Guarantees parseable JSON. Without it a fenced ```json response
         // (which this file, unlike scripts/prompt93/generate_ladders.js, never
         // strips) throws in JSON.parse and silently discards the generation.
