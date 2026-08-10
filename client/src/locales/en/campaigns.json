@@ -301,6 +301,8 @@
     "positioning": "Positioning",
     "positioningOptions": { "premium": "Premium", "mid_market": "Mid-market" },
     "aiDisclosure": "AI Disclosure",
+    "aiDisclosureHint": "Where the AI says it is an AI. Off suits the UK. Opener suits the Netherlands and the rest of the EU, where it must be said before the conversation starts. Second message suits Brazil.",
+    "aiDisclosureOptions": { "off": "Off", "opener": "In the opener", "second_message": "In the second message" },
     "conversationMode": "Conversation mode",
     "conversationModeHint": "Scoping builds a project brief for leads with no quote on file. Decision diagnoses where a quoted lead stands. Auto picks from the lead's stage.",
     "conversationModeOptions": { "auto": "Auto", "scoping": "Scoping", "decision": "Decision" },

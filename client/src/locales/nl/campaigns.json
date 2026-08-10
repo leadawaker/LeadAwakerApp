@@ -301,6 +301,8 @@
     "positioning": "Positionering",
     "positioningOptions": { "premium": "Premium", "mid_market": "Middensegment" },
     "aiDisclosure": "AI-vermelding",
+    "aiDisclosureHint": "Waar de AI vermeldt dat het een AI is. Uit past bij het Verenigd Koninkrijk. In de opener past bij Nederland en de rest van de EU, waar het voor aanvang van het gesprek gezegd moet worden. In het tweede bericht past bij Brazilie.",
+    "aiDisclosureOptions": { "off": "Uit", "opener": "In de opener", "second_message": "In het tweede bericht" },
     "conversationMode": "Gespreksmodus",
     "conversationModeHint": "Scoping bouwt een projectbriefing op voor leads zonder offerte. Beslissing peilt waar een lead met offerte staat. Automatisch kiest op basis van de fase van de lead.",
     "conversationModeOptions": { "auto": "Automatisch", "scoping": "Scoping", "decision": "Beslissing" },

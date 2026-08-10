@@ -46,7 +46,35 @@ export interface NicheContext {
   inquiry_timeframe: string;
   first_touch: string;
   ai_style: string;
+  // AI disclosure mode for THIS session. Derived from the visitor's language,
+  // never produced by the model. See DEMO_AI_DISCLOSURE below.
+  ai_disclosure: AiDisclosureMode;
 }
+
+/** The three AI disclosure modes. Mirrors normalize_ai_disclosure() in the engine. */
+export type AiDisclosureMode = "off" | "opener" | "second_message";
+
+/**
+ * AI disclosure is a per-CAMPAIGN column, but every public demo runs on campaign
+ * 60 while each visitor picks their own language, and the disclosure requirement
+ * is jurisdictional. One campaign row cannot serve a UK visitor (no disclosure)
+ * and a Dutch visitor (opener disclosure) at the same time, which is exactly
+ * what sending demo links to UK, Brazilian and Dutch prospects requires.
+ *
+ * So the demo session carries its own mode on the lead, in demo_niche, the same
+ * way it already carries opener_phrase, scoping_ladder and the niche vocabulary.
+ * The engine's _overlay_demo_niche_onto_campaign passes it through as a plain
+ * value like all its siblings; it stays a dumb passthrough and learns no
+ * jurisdiction rules. This map is the only place the policy exists.
+ *
+ * Real campaigns are unaffected: the overlay only fires for leads carrying
+ * demo_niche, so for them the DB column remains the single source of truth.
+ */
+const DEMO_AI_DISCLOSURE: Record<string, AiDisclosureMode> = {
+  en: "off", // UK: no disclosure anywhere
+  nl: "opener", // Netherlands / EU (AI Act Art 50): disclose in the opener
+  pt: "second_message", // Brazil: not in the opener, in the AI's first reply
+};
 
 /** Localized "six months ago" default for {inquiry_timeframe}. */
 const INQUIRY_TIMEFRAME_DEFAULT: Record<string, string> = {
@@ -67,6 +95,11 @@ function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoSc
   ctx.inquiry_timeframe = INQUIRY_TIMEFRAME_DEFAULT[language] ?? INQUIRY_TIMEFRAME_DEFAULT.en;
   ctx.first_touch = ctx.visit_term || (language === "nl" ? "bezoek" : language === "pt" ? "visita" : "visit");
   ctx.ai_style = "Practical";
+  // Set in code, never asked of the model: this is a compliance setting, and an
+  // LLM-generated one would be a compliance setting that can hallucinate.
+  // Both construction paths (generateNicheContext and the fallback template)
+  // funnel through here, so neither can ship a session without a mode.
+  ctx.ai_disclosure = DEMO_AI_DISCLOSURE[language] ?? "opener";
   return ctx;
 }
 

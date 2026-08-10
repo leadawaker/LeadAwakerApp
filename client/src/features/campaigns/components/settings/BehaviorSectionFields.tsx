@@ -10,6 +10,7 @@ import {
   InfoRow, BoolRow, ContractSelect,
 } from "../formFields";
 import { NicheSelect } from "./NicheSelect";
+import { AI_DISCLOSURE_MODES, normalizeAiDisclosure } from "../useCampaignDetail";
 
 interface BehaviorSectionFieldsProps {
   campaign: any;
@@ -101,9 +102,23 @@ export function BehaviorSectionFields({
       />
 
       {/* AI Disclosure + Opt-out Notice — same row */}
-      <BoolRow icon={ShieldCheck} label={t("config.aiDisclosure")} value={(draft.ai_disclosure ?? campaign.ai_disclosure) === "on"}
+      <InfoRow icon={ShieldCheck} label={t("config.aiDisclosure")}
+        value={t(`config.aiDisclosureOptions.${normalizeAiDisclosure(campaign.ai_disclosure)}`)}
+        description={t("config.aiDisclosureHint")}
         {...editFor("ai_disclosure")}
-        editChild={isEditing ? <EditToggle value={(draft.ai_disclosure ?? campaign.ai_disclosure) === "on"} onChange={(v) => setDraft(d => ({...d, ai_disclosure: v ? "on" : "off"}))} /> : undefined}
+        editChild={isEditing ? (
+          <EditSelect
+            value={normalizeAiDisclosure(draft.ai_disclosure ?? campaign.ai_disclosure)}
+            onChange={(v) => setDraft(d => ({...d, ai_disclosure: v}))}
+            options={[...AI_DISCLOSURE_MODES]}
+            labels={{
+              off: t("config.aiDisclosureOptions.off"),
+              opener: t("config.aiDisclosureOptions.opener"),
+              second_message: t("config.aiDisclosureOptions.second_message"),
+            }}
+            {...focusFor("ai_disclosure")}
+          />
+        ) : undefined}
       />
       <InfoRow icon={GitBranch} label={t("config.conversationMode")} value={t(`config.conversationModeOptions.${campaign.conversation_mode_override || "auto"}`)}
         description={t("config.conversationModeHint")}

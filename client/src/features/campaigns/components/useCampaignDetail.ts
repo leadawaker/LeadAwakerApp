@@ -36,6 +36,21 @@ function coerceMaxMessagesPerReply(v: unknown): number {
   return Math.min(4, Math.max(1, Math.round(n)));
 }
 
+/** The three AI disclosure modes, in the order they appear in the settings select. */
+export const AI_DISCLOSURE_MODES = ["off", "opener", "second_message"] as const;
+
+/**
+ * Funnel any stored ai_disclosure value onto one of the three canonical modes.
+ * "on" is the pre-three-mode name for "opener". Anything unrecognised becomes
+ * "off", matching normalize_ai_disclosure() in the engine so the UI and the
+ * conversation never disagree about what a campaign is set to.
+ */
+export function normalizeAiDisclosure(v: unknown): string {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s === "on") return "opener";
+  return (AI_DISCLOSURE_MODES as readonly string[]).includes(s) ? s : "off";
+}
+
 // ── Contract type (minimal, for financials) ──────────────────────────────────
 
 export interface ContractFinancials {
@@ -328,7 +343,12 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     ],
     typo_count: (c as any).typo_count ?? "",
     positioning: (c as any).positioning || "premium",
-    ai_disclosure: (c as any).ai_disclosure || "off",
+    // Three modes: "off" (UK) / "opener" (NL, EU AI Act Art 50) / "second_message" (Brazil).
+    // "on" is the pre-three-mode name for "opener"; the migration rewrote the only
+    // row that held it, but normalise here too so a legacy value can never land in
+    // the select as an out-of-range option (which would render blank and then save
+    // blank on the next autosave). Mirrors normalize_ai_disclosure() in the engine.
+    ai_disclosure: normalizeAiDisclosure((c as any).ai_disclosure),
     conversation_mode_override: (c as any).conversation_mode_override || "",
     max_messages_per_reply: (c as any).max_messages_per_reply ?? 1,
     use_account_kb: (c as any).use_account_kb !== false,
