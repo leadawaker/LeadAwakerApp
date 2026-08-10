@@ -30,6 +30,9 @@ export interface NicheContext {
   // The customer's own words for what they want ("new windows or doors"),
   // reused by Prompt 93 as {opener_phrase}. Never the commercial arrangement.
   opener_phrase: string;
+  // Scoping ladder for this niche, generated at demo-creation time. Same text
+  // shape as Niche_Vocabulary.scoping_ladder so the prompt reads it identically.
+  scoping_ladder: string;
   // Knowledge-base facts for the conversation prompt ({kb}).
   kb: string;
   // Per-niche vocabulary for Prompt 93 substitution.
@@ -84,9 +87,17 @@ Given a business niche description, output a JSON object with these exact keys:
 - visit_term: the on-location first touch for this niche (e.g. "site visit", "clinic visit", "gym tour", "showroom visit")
 - first_message: Write the opener as one sentence a real person would text. Use this exact shape:
 "Hi it's {agent_name} {disclosure_clause}, is that the same {first_name} who was looking at <NATURAL PLURAL PHRASE> a while back?"
-<NATURAL PLURAL PHRASE> is what the customer wants in their own words ("new windows or doors", "a new kitchen", "solar panels"). NEVER use the commercial arrangement ("supply and installation", "design and manufacturing"): nobody has ever described themselves as interested in supply and installation. Also return that phrase on its own as `opener_phrase`.
+<NATURAL PLURAL PHRASE> is what the customer wants in their own words ("new windows or doors", "a new kitchen", "solar panels"). NEVER use the commercial arrangement ("supply and installation", "design and manufacturing"): nobody has ever described themselves as interested in supply and installation. Also return that phrase on its own as \`opener_phrase\`.
 Adapt the sentence to the output language (Dutch: "Hoi, dit is {agent_name} {disclosure_clause}, ben jij dezelfde {first_name} die een tijd geleden naar <NATURAL PLURAL PHRASE> keek?") but keep the {agent_name}, {disclosure_clause} and {first_name} tokens exactly as written. {first_name} appears ONLY ONCE, in the identity question, never in the greeting.
 - opener_phrase: the <NATURAL PLURAL PHRASE> from first_message on its own, in the output language, no leading article beyond what a person would say out loud
+- scoping_ladder: an ordered list of 5 to 7 slots, each collecting ONE fact the company needs to quote the job. Format each slot exactly like this:
+
+SLOT 1 - <short name>
+Purpose: <what this answer changes in the quote>
+Ask: "<one natural question a real employee would text>"
+Options: <closed set, or "open">
+
+Order them cheapest-to-answer first. Do NOT include slots for still-interested, timing or budget: those are universal and handled elsewhere. Every Purpose line must name something that changes the quote; "to understand their needs" is not acceptable. Include the two biggest price drivers for this specific trade.
 
 The advisor_term, project_term, proposal_term and visit_term MUST be in the output language and natural for the niche. Output language will be specified in the user message. Return ONLY valid JSON, no markdown.`;
 
@@ -125,7 +136,8 @@ export async function generateNicheContext(
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000);
+    // 20s: this call now needs headroom for a full response (see max_tokens below).
+    const timer = setTimeout(() => controller.abort(), 20000);
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       signal: controller.signal,
@@ -139,7 +151,15 @@ export async function generateNicheContext(
           { role: "system", content: system },
           { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nLead scenario: ${scenarioHint}` },
         ],
-        max_tokens: 600,
+        // Row 91 (universal_demo_niche_generator) now asks for ~20 keys including
+        // niche_question_bank, niche_objection_examples and the 5-7 slot
+        // scoping_ladder. Measured need for a full non-truncated response: ~706
+        // completion tokens (dental implants, en). 600 truncated every response
+        // mid-JSON (finish_reason "length"), silently discarding the whole
+        // generation (JSON.parse throws, caught below, falls back to the generic
+        // template). 1400 leaves ~2x margin. Row 91's own max_tokens DB column
+        // (400) is not read anywhere in this file; this literal is the only knob.
+        max_tokens: 1400,
         temperature: 0.7,
       }),
     });
@@ -151,6 +171,27 @@ export async function generateNicheContext(
     parsed.raw = niche;
     // Coerce kb from array to newline string if the model returned a list.
     if (Array.isArray((parsed as any).kb)) (parsed as any).kb = (parsed as any).kb.join("\n");
+    // The generator prompt asks for scoping_ladder as a plain SLOT-1/Purpose/Ask/
+    // Options text block, but the model sometimes returns it as a JSON array of
+    // per-slot objects instead (it IS already writing JSON, so this drifts easily).
+    // Reformat back into the same plain-text shape Niche_Vocabulary.scoping_ladder
+    // uses, rather than a bare Array.prototype.toString() ("[object Object],...").
+    if (Array.isArray((parsed as any).scoping_ladder)) {
+      (parsed as any).scoping_ladder = (parsed as any).scoping_ladder
+        .map((slot: unknown, i: number) => {
+          if (typeof slot === "string") return slot;
+          if (slot && typeof slot === "object") {
+            return Object.entries(slot as Record<string, unknown>)
+              .map(([key, value]) => {
+                const val = typeof value === "string" ? value : JSON.stringify(value);
+                return /^slot/i.test(key) ? `SLOT ${i + 1} - ${val}` : `${key}: ${val}`;
+              })
+              .join("\n");
+          }
+          return String(slot);
+        })
+        .join("\n\n");
+    }
     // Ensure {agent_name} and {first_name} placeholders are present
     if (parsed.first_message && !parsed.first_message.includes("{agent_name}")) {
       parsed.first_message = parsed.first_message.replace(/\bSophie\b/, "{agent_name}");
@@ -177,6 +218,10 @@ export async function generateNicheContext(
     // {opener_phrase} is substituted into Prompt 93's examples as well as the
     // opener, so an undefined here would render as an empty gap mid-sentence.
     parsed.opener_phrase = (parsed.opener_phrase || parsed.niche_label || niche).trim();
+    // Empty string (not niche-derived) on purpose: a blank scoping_ladder makes
+    // the engine's per-field __default__ fallback take over (kitchen ladder)
+    // rather than rendering a fabricated ladder that never went through review.
+    parsed.scoping_ladder = (parsed.scoping_ladder || "").toString().trim();
     parsed.kb = (parsed.kb || "").toString();
     return applyDemoDefaults(parsed, language, scenario);
   } catch {
@@ -220,6 +265,9 @@ export function buildFallbackNicheContext(
     // No model ran, so the raw niche the visitor typed is the closest thing we
     // have to "what the customer wants in their own words".
     opener_phrase: niche,
+    // No model ran, so there is no real ladder to offer: empty string lets the
+    // engine's per-field __default__ fallback (kitchen ladder) take over.
+    scoping_ladder: "",
     kb: "",
     advisor_term: language === "nl" ? "adviseur" : language === "pt" ? "consultor" : "advisor",
     project_term: niche,
