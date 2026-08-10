@@ -1,0 +1,70 @@
+#!/bin/bash
+# LeadAwaker pre-commit checks.
+#
+# WHY THIS EXISTS: an unescaped backtick inside a prompt template string in
+# server/demo-session.ts was a TypeScript syntax error that crash-looped the
+# `leadawaker` pm2 process for 13h43m, taking down app.leadawaker.com and
+# api.leadawaker.com. It escaped review because the defect sat inside prompt
+# copy, and escaped everything else because nothing in this workflow parses
+# TypeScript (the project rule is `npx tsc --noEmit` is never run
+# automatically). This hook parses staged .ts/.tsx files with esbuild —
+# parse only, NOT a type check — so a broken file never reaches a commit.
+#
+# ENABLE (once per clone/machine), pick one:
+#   git config core.hooksPath script/git-hooks
+#   -- or --
+#   cp script/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+#
+# NOTE: this repo has both script/ (tracked) and scripts/ (gitignored,
+# .gitignore:74). This hook MUST live under script/ (singular) or a fresh
+# clone silently loses it — that is the exact failure mode this hook exists
+# to close for demo-session.ts-style syntax errors, so don't reintroduce it
+# for the hook itself.
+#
+# SKIP for one commit: git commit --no-verify
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+
+# --- 1. Block files over 500KB (pre-existing check, kept here so enabling
+#        this hook via core.hooksPath doesn't silently drop it) -------------
+MAX_SIZE=512000
+for file in $STAGED; do
+  if [ -f "$REPO_ROOT/$file" ]; then
+    size=$(stat -c%s "$REPO_ROOT/$file" 2>/dev/null || stat -f%z "$REPO_ROOT/$file" 2>/dev/null)
+    if [ "$size" -gt "$MAX_SIZE" ]; then
+      echo "ERROR: $file is $(($size / 1024))KB — over 500KB limit."
+      echo "Convert to WebP/SVG or add to .gitignore before committing."
+      echo "Skip once with: git commit --no-verify"
+      exit 1
+    fi
+  fi
+done
+
+# --- 2. Parse-check staged .ts/.tsx files with esbuild ----------------------
+# Parse only (no type check, no bundling) — stays fast and doesn't duplicate
+# the project's "never run tsc automatically" rule.
+ESBUILD="$REPO_ROOT/node_modules/.bin/esbuild"
+if [ ! -x "$ESBUILD" ]; then
+  ESBUILD="npx esbuild"
+fi
+
+TS_FILES=$(echo "$STAGED" | grep -E '\.(ts|tsx)$' || true)
+if [ -n "$TS_FILES" ]; then
+  for f in $TS_FILES; do
+    if [ -f "$REPO_ROOT/$f" ]; then
+      ERR=$("$ESBUILD" "$REPO_ROOT/$f" --outfile=/dev/null 2>&1) || {
+        echo "ERROR: $f fails to parse (esbuild syntax check):"
+        echo "$ERR"
+        echo ""
+        echo "Fix the syntax error above before committing."
+        echo "Skip once with: git commit --no-verify"
+        exit 1
+      }
+    fi
+  done
+fi
+
+exit 0
