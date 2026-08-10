@@ -70,21 +70,88 @@ function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoSc
   return ctx;
 }
 
-const NICHE_GENERATOR_SYSTEM_FALLBACK = `You generate realistic demo context for a lead reactivation AI demo.
-Given a business niche description, output a JSON object with these exact keys:
-- company_name: a realistic local company name for that niche (e.g. "Huis & Haard Makelaars", "SolarMax NL")
-- what_lead_did: what a typical lead for this niche would have done (e.g. "een afspraak had staan voor een tandartscontrole", "interesse had in zonnepanelen via onze website", "zich had ingeschreven voor een gratis proefles")
-- when_label: a natural time reference (e.g. "een tijdje geleden", "some time ago", "há um tempo")
-- niche_question: ONE sharp qualifying question that reconnects the lead with their original intent (e.g. "Heb je inmiddels een andere tandarts gevonden, of ben je nog op zoek?", "Are you still thinking about going solar this year?")
-- niche_label: a short 1-2 word label for the niche in the output language (e.g. "real estate", "solar", "tandheelkunde")
-- service_name: what this business wants the lead to buy (e.g. "solar panel installation", "a dental check-up")
-- usp: the company's key value proposition in one short phrase
-- business_description: 1-2 sentence company description referencing the USP
-- kb: 4-6 concrete knowledge-base facts the AI should know (numbers, timelines, guarantees, objection rebuttals), newline-separated, NOT an array
-- advisor_term: the human role a lead would book a call/appointment with for this niche (e.g. "solar advisor", "dental hygienist", "personal trainer", "kitchen designer")
+/**
+ * Last-resort scoping ladder for when the generator produced none.
+ *
+ * It must never be empty. The engine's demo overlay skips empty values and the
+ * Niche_Vocabulary packs are merged BEFORE the overlay, so an empty ladder does
+ * not fall through to a neutral default: it inherits the underlying demo
+ * campaign's ladder (campaign 60 = Solar Panels). A generic ladder that asks
+ * about scope, size and the current situation is on-topic for any trade and
+ * cannot ask a dental-implant visitor about roof faces.
+ *
+ * Deliberately generic and only 3 slots. It claims no trade knowledge it does
+ * not have, and no timing / budget / financing slots (Prompt 93 handles those).
+ */
+function buildGenericScopingLadder(niche: string, language: string): string {
+  const n = (niche || "").trim() || "the project";
+  if (language === "nl") {
+    return [
+      "SLOT 1 - omvang van het werk",
+      "Doel: bepaalt welke onderdelen wel en niet in de offerte komen.",
+      `Vraag: "wat zou je precies gedaan willen hebben rond ${n}, in je eigen woorden?"`,
+      "Opties: open.",
+      "",
+      "SLOT 2 - grootte of aantal",
+      "Doel: bepaalt hoeveel arbeid en materiaal er in de offerte gaat.",
+      'Vraag: "om hoeveel of hoe groot gaat het ongeveer?"',
+      "Opties: open.",
+      "",
+      "SLOT 3 - huidige situatie",
+      "Doel: bepaalt of er eerst iets weg moet of hersteld moet worden, meestal een aparte post op de offerte.",
+      'Vraag: "is er nu al iets aanwezig dat vervangen moet worden, of beginnen we vanaf nul?"',
+      "Opties: vervangen, vanaf nul, weet ik nog niet.",
+    ].join("\n");
+  }
+  if (language === "pt") {
+    return [
+      "SLOT 1 - escopo",
+      "Objetivo: define o que entra e o que fica fora do orcamento.",
+      `Pergunta: "o que exatamente voce gostaria de fazer em relacao a ${n}, com suas palavras?"`,
+      "Opcoes: aberto.",
+    ].join("\n");
+  }
+  return [
+    "SLOT 1 - scope",
+    "Purpose: sets which parts of the job are in the quote and which are not.",
+    `Ask: "what exactly would you want done around ${n}, in your own words?"`,
+    "Options: open.",
+    "",
+    "SLOT 2 - size or quantity",
+    "Purpose: scales the labour and materials on the quote.",
+    'Ask: "roughly what size, or how many are we talking about?"',
+    "Options: open.",
+    "",
+    "SLOT 3 - current situation",
+    "Purpose: decides whether existing work has to come out or be made good first, usually a separate line on the quote.",
+    'Ask: "is there something there already that needs replacing, or is this starting from scratch?"',
+    "Options: replacing existing, starting from scratch, not sure.",
+  ].join("\n");
+}
+
+const NICHE_GENERATOR_SYSTEM_FALLBACK = `You generate realistic demo context for a lead reactivation AI sales demo.
+Given a business niche, output a JSON object with EXACTLY these keys:
+
+- niche_label: short 1-2 word label (e.g. "Solar", "Dental Care", "Gym")
+- company_name: a realistic local company name for that niche (e.g. "SolarMax", "SmileBright Dental", "Peak Performance Gym")
+- service_name: what this business wants the lead to buy: lowercase, verb in gerund (e.g. "getting solar panels installed", "booking a dental check-up", "signing up for a gym membership")
+- usp: the company's key value proposition — pick ONE: price driven, premium focused, speed, convenience, customization, innovation
+- business_description: 1-2 sentence company description referencing the USP (e.g. "We provide premium dental care with same-day appointments and a focus on patient comfort.")
+- booking_mode_call: boolean. true if the business closes leads via a phone or video call with a specialist before the service begins (solar quote, online legal advice, coaching intake, financial planning, insurance). false if the business takes direct in-person appointments at a physical location (dental checkup, physio, hair salon, gym class, doctor visit). When unsure for a physical location business, default to false.
+- what_lead_did: what the lead did in the past — do NOT include a time reference (that comes from when_label). If booking_mode_call is true, use one of: "had a consultation call with our team about [service]" / "requested a callback regarding [service]" / "spoke with one of our agents about [service]". If false: "booked a [service] appointment with us" / "made an inquiry about [service] on our website" / "signed up for a [service] trial"
+- when_label: time reference only, no action (e.g. "a few months ago", "some time ago", "recently")
+- kb: 4-6 concrete knowledge-base facts the AI should know about this business (numbers, timelines, guarantees, common objection rebuttals). Newline-separated, NOT an array.
+- advisor_term: the human role a lead books a call/appointment with for this niche (e.g. "solar advisor", "dental hygienist", "personal trainer", "kitchen designer")
 - project_term: what the engagement is about (e.g. "solar installation", "dental treatment", "fitness plan", "kitchen")
 - proposal_term: what this niche calls its offer document (e.g. "quote", "treatment plan", "membership offer", "design proposal")
 - visit_term: the on-location first touch for this niche (e.g. "site visit", "clinic visit", "gym tour", "showroom visit")
+- decision_term: what this niche naturally calls the pending decision (e.g. "decision", "choice"; Dutch: "beslissing")
+advisor_term, project_term, proposal_term, visit_term and decision_term MUST be in the output language and natural for the niche.
+
+- niche_question_bank: 3-4 open questions probing THIS niche's real decision factors (what a lead actually weighs when choosing, e.g. dental implants: treatment comfort, insurance coverage; gym: schedule fit, coaching support). One question per line, no numbering. These supplement a generic question bank, so make them niche-specific, not generic.
+- niche_objection_examples: the 2 most common objections a lead in THIS niche raises, each followed on the next line by a strong open counter-question. Blank line between the two pairs.
+
+- niche_question: ONE qualifying question tied to a concrete pain point or key decision factor for this niche — easy to answer over SMS. Examples — Solar: "Roughly how much are you currently paying per month on electricity?" / Dental: "Are you experiencing any discomfort, or is it more of a routine check-up?" / Gym: "Are you looking to lose weight, build muscle, or something else?"
 - first_message: Write the opener as one sentence a real person would text. Use this exact shape:
 "Hi it's {agent_name} {disclosure_clause}, is that the same {first_name} who was looking at <NATURAL PLURAL PHRASE> a while back?"
 <NATURAL PLURAL PHRASE> is what the customer wants in their own words ("new windows or doors", "a new kitchen", "solar panels"). NEVER use the commercial arrangement ("supply and installation", "design and manufacturing"): nobody has ever described themselves as interested in supply and installation. Also return that phrase on its own as \`opener_phrase\`.
@@ -99,7 +166,29 @@ Options: <closed set, or "open">
 
 Order them cheapest-to-answer first. Do NOT include slots for still-interested, timing or budget: those are universal and handled elsewhere. Every Purpose line must name something that changes the quote; "to understand their needs" is not acceptable. Include the two biggest price drivers for this specific trade.
 
-The advisor_term, project_term, proposal_term and visit_term MUST be in the output language and natural for the niche. Output language will be specified in the user message. Return ONLY valid JSON, no markdown.`;
+Worked example of a correct ladder (kitchens, abridged to 3 of its 6 slots). Match this depth, specificity and formatting exactly:
+
+SLOT 1 - room size
+Purpose: sizes the job before anything else. Everything downstream scales off it.
+Ask: "roughly how big is the kitchen, in metres or in steps across?"
+Options: open.
+
+SLOT 2 - layout
+Purpose: drives unit count and whether the plumbing moves.
+Ask: "what shape is it at the moment, galley, L-shaped, U-shaped or open plan?"
+Options: galley, L-shaped, U-shaped, island, open plan.
+
+SLOT 3 - worktop material
+Purpose: the largest visible price driver, and a strong quality signal.
+Ask: "any thoughts on worktops yet, laminate, quartz, granite or solid wood?"
+Options: laminate, quartz, granite, solid wood, not sure.
+
+Note what that example never contains: no timeline slot, no budget slot, no financing or payment-options slot, and no "are you still interested" slot. Those four are banned outright, however natural they feel to add. Every Purpose line names a concrete consequence in the quote (unit count, whether the plumbing moves, which price bracket), never "to understand their needs".
+The slots must be the ones an experienced employee of THAT trade would ask, not generic sales questions. For dental implants that means the number of teeth being replaced, the condition of the jawbone and whether a temporary is needed while healing. It does not mean desired timeline or financing.
+The whole ladder, labels included, must be in the output language. The example above is English; in Dutch the three labels are "Doel:", "Vraag:" and "Opties:", never "Purpose:", "Ask:" and "Options:". Dutch addresses the reader as "je", never "u". Always produce at least 5 slots, and put the two biggest price drivers among them: for a trade that installs something, the run from the existing connection point and whether the existing supply or structure can take it are usually bigger price drivers than the customer's choice of features.
+- second_message: the follow-up — format: "Thank Goodness! The team asked me to go back through our older enquiries, and I'd rather drop you a message than have someone ring you out of the blue. Are you still interested in [opener_phrase]?" — never claim a manager asked you to reach out and never say you dislike phone calls: on a disclosure-on campaign the assistant must not claim anything only a human could claim
+
+Return ONLY valid JSON, no markdown.`;
 
 export async function generateNicheContext(
   niche: string,
@@ -107,7 +196,14 @@ export async function generateNicheContext(
   scenario: DemoScenario = "inquired",
 ): Promise<NicheContext | null> {
   const apiKey = process.env.OPEN_AI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    // Every return-null path in this function logs. A silent null is
+    // indistinguishable at the call site (server/routes/demo.ts) from a
+    // successful generation, so the demo quietly serves the generic template
+    // and nobody notices for hours. Log loudly, grep later.
+    console.error("[demo-niche] no OPEN_AI_API_KEY set, falling back to the generic template");
+    return null;
+  }
 
   const langLabel = { en: "English", nl: "Dutch", pt: "Portuguese" }[language];
 
@@ -121,8 +217,11 @@ export async function generateNicheContext(
       .where(eq(promptLibrary.useCase, "universal_demo_niche_generator"))
       .limit(1);
     if (row?.promptText) system = row.promptText;
-  } catch {
-    // silently fall back
+  } catch (err) {
+    console.error(
+      "[demo-niche] Prompt_Library read failed, using the in-file fallback:",
+      (err as Error)?.message,
+    );
   }
   system = system + `\n\nOutput language: ${langLabel}.`;
 
@@ -151,21 +250,52 @@ export async function generateNicheContext(
           { role: "system", content: system },
           { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nLead scenario: ${scenarioHint}` },
         ],
-        // Row 91 (universal_demo_niche_generator) now asks for ~20 keys including
+        // Row 91 (universal_demo_niche_generator) asks for ~20 keys including
         // niche_question_bank, niche_objection_examples and the 5-7 slot
         // scoping_ladder. Measured need for a full non-truncated response: ~706
         // completion tokens (dental implants, en). 600 truncated every response
         // mid-JSON (finish_reason "length"), silently discarding the whole
         // generation (JSON.parse throws, caught below, falls back to the generic
-        // template). 1400 leaves ~2x margin. Row 91's own max_tokens DB column
-        // (400) is not read anywhere in this file; this literal is the only knob.
-        max_tokens: 1400,
+        // template).
+        // Why 2500 and not the 1400 that was here: 1400 was sized on ENGLISH.
+        // The same 7-slot ladder in Dutch measures ~478 tokens against ~418 in
+        // English, so the real margin in the primary market language was only
+        // ~1.2-1.4x, not the 2x the old comment claimed. Row 91 has since grown
+        // a worked ladder example, which tightens it further. Output tokens on
+        // gpt-4o-mini are cheap and this runs once per demo signup, so buy the
+        // margin. Row 91's own max_tokens DB column (400) is not read anywhere
+        // in this file; this literal is the only knob.
+        max_tokens: 2500,
         temperature: 0.7,
+        // Guarantees parseable JSON. Without it a fenced ```json response
+        // (which this file, unlike scripts/prompt93/generate_ladders.js, never
+        // strips) throws in JSON.parse and silently discards the generation.
+        // Deliberately json_object and NOT json_schema: a strict schema would
+        // freeze row 91's key set into this file, so adding a key from the
+        // prompt-library UI would silently drop it. That trades one silent
+        // failure for a worse one. Shape drift within valid JSON is still
+        // handled by the kb / scoping_ladder coercions below.
+        response_format: { type: "json_object" },
       }),
     });
     clearTimeout(timer);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(
+        `[demo-niche] OpenAI HTTP ${res.status} for niche "${niche}" (${language}), falling back to the generic template:`,
+        (await res.text().catch(() => "")).slice(0, 300),
+      );
+      return null;
+    }
     const json = await res.json() as any;
+    const finishReason = json?.choices?.[0]?.finish_reason;
+    if (finishReason === "length") {
+      // The response is truncated mid-JSON, so the JSON.parse below will throw
+      // and the catch will return null. Name the real cause here: without this
+      // line the only symptom is a demo that quietly serves generic copy.
+      console.error(
+        `[demo-niche] response truncated (finish_reason=length) for niche "${niche}" (${language}). Raise max_tokens.`,
+      );
+    }
     const raw = (json?.choices?.[0]?.message?.content || "").trim();
     const parsed = JSON.parse(raw) as NicheContext;
     parsed.raw = niche;
@@ -218,13 +348,29 @@ export async function generateNicheContext(
     // {opener_phrase} is substituted into Prompt 93's examples as well as the
     // opener, so an undefined here would render as an empty gap mid-sentence.
     parsed.opener_phrase = (parsed.opener_phrase || parsed.niche_label || niche).trim();
-    // Empty string (not niche-derived) on purpose: a blank scoping_ladder makes
-    // the engine's per-field __default__ fallback take over (kitchen ladder)
-    // rather than rendering a fabricated ladder that never went through review.
-    parsed.scoping_ladder = (parsed.scoping_ladder || "").toString().trim();
+    // NEVER leave this empty. The comment that used to sit here claimed a blank
+    // ladder lets the engine's __default__ (kitchen) ladder take over. It does
+    // not, and the truth is worse: the demo overlay in the engine
+    // (src/automations/conversation/prompt_builder.py, `_set`) skips empty
+    // values, and the Niche_Vocabulary packs are merged onto the campaign
+    // BEFORE the overlay runs. So an empty ladder here inherits whatever ladder
+    // the underlying demo campaign carries, which for campaign 60 is Solar
+    // Panels. A failed dental-implants generation would then interrogate the
+    // visitor about roof faces and battery storage.
+    // A generic on-topic ladder is strictly better than another trade's ladder.
+    parsed.scoping_ladder =
+      (parsed.scoping_ladder || "").toString().trim() ||
+      buildGenericScopingLadder(parsed.niche_label || niche, language);
     parsed.kb = (parsed.kb || "").toString();
     return applyDemoDefaults(parsed, language, scenario);
-  } catch {
+  } catch (err) {
+    // Covers the abort timeout, network failures and (most often) JSON.parse on
+    // a truncated or fenced response. If finish_reason was "length" the line
+    // above already named the real cause.
+    console.error(
+      `[demo-niche] generation failed for niche "${niche}" (${language}), falling back to the generic template:`,
+      (err as Error)?.message,
+    );
     return null;
   }
 }
@@ -265,9 +411,11 @@ export function buildFallbackNicheContext(
     // No model ran, so the raw niche the visitor typed is the closest thing we
     // have to "what the customer wants in their own words".
     opener_phrase: niche,
-    // No model ran, so there is no real ladder to offer: empty string lets the
-    // engine's per-field __default__ fallback (kitchen ladder) take over.
-    scoping_ladder: "",
+    // No model ran, so there is no niche-specific ladder. It must still not be
+    // empty: an empty ladder does NOT fall through to the engine's __default__
+    // (see the note at the same assignment in generateNicheContext). It inherits
+    // the demo campaign's own ladder, which is Solar Panels on campaign 60.
+    scoping_ladder: buildGenericScopingLadder(niche, language),
     kb: "",
     advisor_term: language === "nl" ? "adviseur" : language === "pt" ? "consultor" : "advisor",
     project_term: niche,
