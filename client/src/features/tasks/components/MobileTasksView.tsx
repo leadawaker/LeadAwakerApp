@@ -1,34 +1,29 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Check, Users } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { PRIORITY_OPTIONS, TYPE_OPTIONS, type TaskPriority, type TaskType } from "../types";
 import { cn } from "@/lib/utils";
 import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
-import { MobileListHeader, MobileTabSeg, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
+import { MobileListHeader, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
 import { useUpdateTask } from "../api/tasksApi";
-import { MobileTaskBoardCard, initials } from "./MobileTaskListCard";
+import { MobileTaskBoardCard } from "./MobileTaskListCard";
 import MobileTaskDetailPanel from "./MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "./MobileTaskCreatePanel";
 import MobileTaskWeekStrip from "./MobileTaskWeekStrip";
 import { sortTasks, SORT_OPTIONS, type SortOption, type Task, type TaskStatus } from "../types";
 import { loadLocal, saveLocal, applyDesktopFilter, consumeSelectedId, useSelectedTaskListener, type DesktopFilter } from "../lib/taskViewUtils";
-import { getUserAvatarColor } from "@/lib/avatarUtils";
-
-type AccountUser = { id: number; fullName1: string | null; email: string | null; avatarUrl?: string | null };
 
 interface Props {
   tasks: Task[];
   categories: any[];
-  users: AccountUser[];
   todayISO: string;
 }
 
-export default function MobileTasksView({ tasks, categories, users, todayISO }: Props) {
+export default function MobileTasksView({ tasks, categories, todayISO }: Props) {
   const { t } = useTranslation("tasks");
   const updateMutation = useUpdateTask();
 
   const [mobileFilter, setMobileFilter] = useState<DesktopFilter>(() => loadLocal<DesktopFilter>("tasks-mobile-filter", "all"));
-  const [mobileWho, setMobileWho] = useState<string>(() => loadLocal<string>("tasks-mobile-who", "all"));
   const [filterPriority, setFilterPriority] = useState<TaskPriority[]>(() => loadLocal<TaskPriority[]>("tasks-mobile-filter-priority", []));
   const [filterType, setFilterType] = useState<TaskType[]>(() => loadLocal<TaskType[]>("tasks-mobile-filter-type", []));
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(() => consumeSelectedId("selected-task-id"));
@@ -38,7 +33,6 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
   const [sort, setSort] = useState<SortOption>(() => loadLocal<SortOption>("tasks-sort", "due_date_asc"));
 
   const handleMobileFilter = useCallback((f: DesktopFilter) => { setMobileFilter(f); saveLocal("tasks-mobile-filter", f); }, []);
-  const handleMobileWho = useCallback((w: string) => { setMobileWho(w); saveLocal("tasks-mobile-who", w); }, []);
   const toggleFilterPriority = useCallback((p: TaskPriority) => {
     setFilterPriority((prev) => {
       const next = prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p];
@@ -61,27 +55,20 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
     [t]
   );
 
-  const baseByWho = useMemo(() => {
-    if (mobileWho === "all") return tasks;
-    const uid = parseInt(mobileWho, 10);
-    const name = users.find(x => x.id === uid)?.fullName1 ?? null;
-    return tasks.filter(tk => tk.assignedToUserId === uid || (name && tk.assigneeName === name));
-  }, [tasks, mobileWho, users]);
-
   const filtered = useMemo(() => {
-    let result = applyDesktopFilter(baseByWho, mobileFilter, todayISO);
+    let result = applyDesktopFilter(tasks, mobileFilter, todayISO);
     if (filterPriority.length > 0) result = result.filter((tk) => filterPriority.includes(tk.priority as TaskPriority));
     if (filterType.length > 0) result = result.filter((tk) => filterType.includes(tk.taskType as TaskType));
     return sortTasks(result, sort);
-  }, [baseByWho, mobileFilter, todayISO, filterPriority, filterType, sort]);
+  }, [tasks, mobileFilter, todayISO, filterPriority, filterType, sort]);
 
   const chipCounts = useMemo(() => ({
-    all: baseByWho.length,
-    next7: applyDesktopFilter(baseByWho, 'next7', todayISO).length,
-    overdue: applyDesktopFilter(baseByWho, 'overdue', todayISO).length,
-    waiting: applyDesktopFilter(baseByWho, 'waiting', todayISO).length,
-    completed: applyDesktopFilter(baseByWho, 'completed', todayISO).length,
-  }) as Record<DesktopFilter, number>, [baseByWho, todayISO]);
+    all: tasks.length,
+    next7: applyDesktopFilter(tasks, 'next7', todayISO).length,
+    overdue: applyDesktopFilter(tasks, 'overdue', todayISO).length,
+    waiting: applyDesktopFilter(tasks, 'waiting', todayISO).length,
+    completed: applyDesktopFilter(tasks, 'completed', todayISO).length,
+  }) as Record<DesktopFilter, number>, [tasks, todayISO]);
 
   const filterChips: Array<[DesktopFilter, string]> = [
     ["all", t("filter.all")], ["next7", t("filter.next7")], ["overdue", t("filter.overdue")],
@@ -104,39 +91,9 @@ export default function MobileTasksView({ tasks, categories, users, todayISO }: 
       <MobileRecede open={selectedTaskId !== null}>
       <div className="relative h-full min-h-0 flex flex-col overflow-hidden" style={{ background: 'var(--bg)' }} data-testid="page-tasks">
 
-        {/* Top bar: shared mobile header — assignee tabs (title row) + filter/sort drawers */}
+        {/* Top bar: shared mobile header — filter/sort drawers */}
         <MobileListHeader
           title={t("page.title")}
-          tabSwitcher={(
-            <MobileTabSeg
-              tabs={[
-                { id: "all", label: t("assignee.everyone"), icon: Users },
-                ...users.map((u) => {
-                  const name = u.fullName1 ?? u.email ?? "?";
-                  const bg = getUserAvatarColor(name);
-                  return {
-                    id: String(u.id),
-                    label: name.split(/\s+/)[0],
-                    iconNode: (
-                      <span style={{
-                        position: "relative", width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-                        background: bg, boxShadow: `0 0 6px ${bg}99`,
-                        display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
-                      }}>
-                        {u.avatarUrl ? (
-                          <img src={u.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        ) : (
-                          <span style={{ color: "#fff", fontFamily: "var(--mono)", fontSize: 7, fontWeight: 700 }}>{initials(name)}</span>
-                        )}
-                      </span>
-                    ),
-                  };
-                }),
-              ]}
-              activeId={mobileWho}
-              onChange={handleMobileWho}
-            />
-          )}
           filterPanel={(
             <>
               <MobileDrawerSubheading>{t("filter.title", "Date")}</MobileDrawerSubheading>

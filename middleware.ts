@@ -35,10 +35,23 @@ function resolveCurrency(request: Request): "GBP" | "EUR" {
   return country === "GB" ? "GBP" : "EUR";
 }
 
-function injectCurrency(html: string, currency: "GBP" | "EUR"): string {
+// The solar hero's deadline case study is market-specific: the Dutch pitch is
+// salderingsregeling ending 1 Jan 2027, the UK pitch is 0% VAT reverting to 5%
+// on 1 Apr 2027. Geo decides the default; ?m=nl|uk|us overrides it so a link
+// sent after a sales call can force the right one.
+type Market = "nl" | "uk" | "us";
+
+function resolveMarket(request: Request): Market {
+  const country = request.headers.get("x-vercel-ip-country");
+  if (country === "GB") return "uk";
+  if (country === "US") return "us";
+  return "nl";
+}
+
+function injectCurrency(html: string, currency: "GBP" | "EUR", market: Market): string {
   return html.replace(
     '<meta charset="utf-8" />',
-    `<meta charset="utf-8" />\n<script>window.__CURRENCY__="${currency}";</script>`
+    `<meta charset="utf-8" />\n<script>window.__CURRENCY__="${currency}";window.__MARKET__="${market}";</script>`
   );
 }
 

@@ -317,21 +317,25 @@ export function CampaignDetailPanel({
                 bumpNumber={1}
                 template={campaign.bump_1_template}
                 delayHours={campaign.bump_1_delay_hours}
+                uiLang={uiLang === "pt" ? "en" : uiLang}
               />
               <BumpCard
                 bumpNumber={2}
                 template={campaign.bump_2_template}
                 delayHours={campaign.bump_2_delay_hours}
+                uiLang={uiLang === "pt" ? "en" : uiLang}
               />
               <BumpCard
                 bumpNumber={3}
                 template={campaign.bump_3_template}
                 delayHours={campaign.bump_3_delay_hours}
+                uiLang={uiLang === "pt" ? "en" : uiLang}
               />
               <BumpCard
                 bumpNumber={4}
                 template={campaign.bump_4_template}
                 delayHours={campaign.bump_4_delay_hours}
+                uiLang={uiLang === "pt" ? "en" : uiLang}
               />
             </div>
           </section>

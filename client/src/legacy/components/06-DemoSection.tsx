@@ -121,8 +121,9 @@ function HereIsHow() {
   );
 }
 
-// TODO: replace with your demo/contact form submission endpoint
-const DEMO_API_ENDPOINT = "YOUR_API_ENDPOINT";
+// Universal demo flow: firstName + free-text niche → campaign 60. Same endpoint
+// the premium landing page uses; see server/routes/demo.ts.
+const DEMO_API_ENDPOINT = "/api/demo/create-session";
 
 function UniversalDemoForm() {
   const { t } = useTranslation("home");

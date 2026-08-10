@@ -44,12 +44,16 @@ interface BusinessSectionFieldsProps {
   /** Transient "demo lead name" that feeds the Launch Campaign button (not saved). */
   launchName?: string;
   setLaunchName?: (v: string) => void;
+  /** Universal demo: render only the opener surface (demo lead name, First
+      Message, agent name). The rest of the persona is generated per lead. */
+  openerOnly?: boolean;
 }
 
 export function BusinessSectionFields({
   campaign, isEditing, draft, setDraft,
   focusField, onStartEditField,
   launchName, setLaunchName,
+  openerOnly = false,
 }: BusinessSectionFieldsProps) {
   const { t, i18n } = useTranslation("campaigns");
 
@@ -248,10 +252,12 @@ export function BusinessSectionFields({
   return (
     <>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-form, 20px)' }}>
+      {!openerOnly && (
       <InfoRow icon={Building2} label={t("config.companyName")} value={String(draft.company_name ?? campaign.company_name ?? "")}
         {...editFor("company_name")}
         editChild={isEditing ? <EditText value={String(draft.company_name ?? "")} onChange={(v) => setDraft(d => ({...d, company_name: v}))} placeholder="Company name…" {...focusFor("company_name")} /> : undefined}
       />
+      )}
 
       {/* Demo lead name — transient, drives the Launch Campaign button. Always
           editable (no save needed): typed live during a discovery screenshare. */}
@@ -265,13 +271,13 @@ export function BusinessSectionFields({
               placeholder={t("config.launchNamePlaceholder")}
               maxLength={80}
               className="la-input"
-              style={{ width: '100%', fontSize: 13, padding: '8px 12px' }}
             />
           }
         />
       )}
 
       {/* Service — multilingual dropdown */}
+      {!openerOnly && (
       <InfoRow icon={Megaphone} label={t("config.service")}
         value={displayLabel("service_name", campaign.service_name)}
         {...editFor("service_name")}
@@ -284,8 +290,10 @@ export function BusinessSectionFields({
           />
         ) : undefined}
       />
+      )}
 
       {/* USP — multilingual dropdown */}
+      {!openerOnly && (
       <InfoRow icon={Award} label={t("config.usp")}
         value={displayLabel("campaign_usp", campaign.campaign_usp)}
         {...editFor("campaign_usp")}
@@ -298,8 +306,10 @@ export function BusinessSectionFields({
           />
         ) : undefined}
       />
+      )}
 
       {/* Knowledge base — full width. */}
+      {!openerOnly && (
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={BookOpen} label={t("config.kb")}
           value={displayText(draft.kb ?? campaign.kb)} richText={true} noBorder
@@ -315,6 +325,7 @@ export function BusinessSectionFields({
           ) : undefined}
         />
       </div>
+      )}
 
       {/* First Message — the opener template. This is the field Finn live-edits
           on screenshare during the demo (Part 1 of the trust-kit spec). Click the
@@ -378,7 +389,9 @@ export function BusinessSectionFields({
         ) : undefined}
       />
 
-      {/* AI Style — multilingual dropdown */}
+      {/* AI Style — multilingual dropdown. Hidden for the universal demo: the
+          persona generator sets ai_style per lead, overriding this field. */}
+      {!openerOnly && (
       <InfoRow icon={Paintbrush} label={t("config.aiStyleOverride")}
         value={displayLabel("ai_style_override", campaign.ai_style_override)}
         {...editFor("ai_style_override")}
@@ -391,9 +404,11 @@ export function BusinessSectionFields({
           />
         ) : undefined}
       />
+      )}
 
       {/* Objection playbook — up to 5 owner-approved objection/answer pairs,
           injected into the AI's system prompt (Part 3 of the trust-kit spec). */}
+      {!openerOnly && (
       <div style={{ gridColumn: '1 / -1' }}>
         <InfoRow icon={HelpCircle} label={t("config.objectionPlaybook")} value={null}
           editChild={
@@ -448,6 +463,7 @@ export function BusinessSectionFields({
           }
         />
       </div>
+      )}
     </div>
     <OpenerTemplatePicker
       open={templatesOpen}

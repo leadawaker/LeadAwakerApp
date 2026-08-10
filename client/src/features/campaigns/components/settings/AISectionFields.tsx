@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   MessageSquare, Bot, Mic, Link, Zap, Building2, Clock, MapPin, MousePointerClick,
-  Thermometer, Radio, MessageCircle, HelpCircle,
+  Thermometer, Radio, MessageCircle, HelpCircle, BookOpen,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditSelect, EditToggle, InfoRow, CopyButton,
@@ -91,13 +91,13 @@ export function AISectionFields({
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
             <EditText
-              value={String(draft[templateField] ?? campaign[templateField] ?? "")}
-              onChange={(v) => setDraft(d => ({ ...d, [templateField]: v }))}
+              value={displayText(draft[templateField] ?? campaign[templateField])}
+              onChange={(v) => onTextChange(templateField, draft[templateField] ?? campaign[templateField], v)}
               multiline
               minRows={2}
               placeholder={t("config.bumpTemplate", { n }) || `Bump ${n} template…`}
             />
-            <CopyButton value={String(draft[templateField] || campaign[templateField] || "")} />
+            <CopyButton value={displayText(draft[templateField] ?? campaign[templateField])} />
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
@@ -177,6 +177,23 @@ export function AISectionFields({
       </div>
 
       {[1, 2, 3, 4].map(n => renderBump(n))}
+
+      {/* Account KB opt-out — whether the account-level Knowledge Base entries
+          are injected into this campaign's prompt. Demo campaigns keep this off
+          so they run purely on their generated / campaign-authored kb. */}
+      <InfoRow icon={BookOpen} label={t("config.useAccountKb")}
+        value={(draft.use_account_kb ?? campaign.use_account_kb) === false ? t("config.off") : t("config.on")}
+        {...editFor("use_account_kb")}
+        editChild={isEditing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
+            <EditToggle
+              value={(draft.use_account_kb ?? campaign.use_account_kb) !== false}
+              onChange={(v) => setDraft(d => ({ ...d, use_account_kb: v }))}
+            />
+            <span style={{ fontSize: 11, color: 'var(--mute)' }}>{t("config.useAccountKbHint")}</span>
+          </div>
+        ) : undefined}
+      />
 
       {/* Business context fields — moved here from the Business panel so that
           panel contains only the owner-voice surface (opener + objection

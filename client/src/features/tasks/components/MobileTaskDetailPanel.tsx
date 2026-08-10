@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
 import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks, useTaskCategories, useAccountUsers } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, STATUS_COLORS, PRIORITY_COLORS, type TaskStatus, type TaskPriority } from "../types";
+import { assignableUsers } from "../lib/taskViewUtils";
 import { hapticSave, hapticDelete } from "@/lib/haptics";
 import { MTAvatar, MTStatusPill } from "./MobileTaskListCard";
 import { CommentsSection } from "./TaskDetailSections";
@@ -361,7 +362,7 @@ export default function MobileTaskDetailPanel({ taskId, open, onBack }: Props) {
                     <User className="h-3.5 w-3.5" style={{ color: "var(--mute)" }} />
                     <span>{t("fields.assigneePlaceholder", "Unassigned")}</span>
                   </button>
-                  {(users as any[]).map((u: any) => {
+                  {assignableUsers(users as any[]).map((u: any) => {
                     const name = u.fullName1 || u.email || "";
                     if (!name) return null;
                     return (

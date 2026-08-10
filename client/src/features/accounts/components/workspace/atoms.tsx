@@ -56,8 +56,8 @@ export function GroupLabel({ icon, children }: { icon?: ReactNode; children: Rea
 }
 
 // ── FieldRow — label + inset value chip (or edit input) ───────────────────────
-export function FieldRow({ label, value, mono, dropdown, muted, editChild }: {
-  label: ReactNode; value?: ReactNode; mono?: boolean; dropdown?: boolean; muted?: boolean; editChild?: ReactNode;
+export function FieldRow({ label, value, mono, dropdown, muted, editChild, suffix }: {
+  label: ReactNode; value?: ReactNode; mono?: boolean; dropdown?: boolean; muted?: boolean; editChild?: ReactNode; suffix?: ReactNode;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "7px 0" }}>
@@ -69,7 +69,10 @@ export function FieldRow({ label, value, mono, dropdown, muted, editChild }: {
           flex: 1, minWidth: 0, padding: "5px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
           fontSize: 13, color: muted ? "var(--mute-2)" : "var(--ink-soft)", fontFamily: mono ? "var(--mono)" : "var(--sans)",
         }}>
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value || <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>—</span>}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value || <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>—</span>}</span>
+            {suffix}
+          </span>
           {dropdown && <span style={{ color: "var(--mute-2)", display: "flex" }}><ChevronDown size={12} /></span>}
         </div>
       )}

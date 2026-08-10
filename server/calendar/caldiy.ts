@@ -10,6 +10,9 @@ const execFile = promisify(execFileCb);
 
 const CALDIY = "/home/gabriel/caldiy";
 
+/** Self-hosted Cal.diy v2 REST API (pm2 "caldiy-api", port 5555) — same host as this server. */
+export const CALDIY_ENGINE_BASE_URL = "http://localhost:5555";
+
 function parseLastJsonLine<T>(stdout: string): T {
   const lastLine = stdout.trim().split("\n").pop() || "";
   return JSON.parse(lastLine) as T;
@@ -39,6 +42,10 @@ export interface CaldiyCredentials {
   username: string;
   password: string;
   bookingUrl: string;
+  /** Only present on a fresh (first-time) provision — the plaintext is shown once. */
+  apiKey?: string;
+  eventTypeId: number;
+  eventTypeSlug: string;
 }
 
 /** Best-effort: provisions a Cal.diy page for an account. Returns null (and logs) on any failure. */
@@ -64,6 +71,10 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
           LA_TIMEZONE: account.timezone || "Europe/Amsterdam",
           ...(account.businessHoursStart ? { LA_BUSINESS_HOURS_START: account.businessHoursStart } : {}),
           ...(account.businessHoursEnd ? { LA_BUSINESS_HOURS_END: account.businessHoursEnd } : {}),
+          // Onboarding wizard's call-length answer → the Cal.diy event type's
+          // actual duration (defaults to 30 in provision-leadawaker-user.ts
+          // when unset, matching the account's own schema default).
+          ...(account.defaultCallDurationMinutes ? { LA_DURATION_MINUTES: String(account.defaultCallDurationMinutes) } : {}),
           LA_WEBHOOK_URL: "https://webhooks.leadawaker.com/webhooks/booking",
           LA_WEBAPP_URL: "https://cal.leadawaker.com",
           // Meeting type configuration for Cal.diy location object.
@@ -83,6 +94,12 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
       externalId: creds.username,
       displayName: creds.bookingUrl,
       apiKeyEncrypted: encryptSecret(creds.password),
+      // The provision script only returns apiKey on a fresh mint (re-provision
+      // reuses the existing key server-side and omits it) — never clobber a
+      // previously stored key with a blank value on re-provision.
+      ...(creds.apiKey ? { caldiyApiKeyEncrypted: encryptSecret(creds.apiKey) } : {}),
+      caldiyEventTypeId: creds.eventTypeId,
+      caldiyEventTypeSlug: creds.eventTypeSlug,
     } as any);
 
     return creds;

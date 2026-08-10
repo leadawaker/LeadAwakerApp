@@ -13,6 +13,7 @@ import {
   buildWhatsAppLink,
   generateNicheContext,
   buildFallbackNicheContext,
+  buildSolarNicheContext,
 } from "../demo-session";
 
 const createSessionSchema = z.object({
@@ -31,6 +32,10 @@ const universalSessionSchema = z.object({
   language: z.enum(["en", "nl", "pt"]),
   // Scenario toggle → Prompt 98 lead_stage. Optional; defaults to "inquired".
   scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+  // Solar landing page: skip the LLM and use the curated context instead.
+  preset: z.enum(["solar"]).optional(),
+  // The visitor's own firm, so the demo AI opens in their name.
+  companyName: z.string().trim().max(120).optional(),
 });
 
 function clientIp(req: Request): string {
@@ -62,8 +67,12 @@ export function registerDemoRoutes(app: Express): void {
         const parsed = universalSessionSchema.safeParse(req.body);
         if (!parsed.success) return handleZodError(res, parsed.error);
 
-        const { firstName, niche, language, scenario } = parsed.data;
-        const nicheCtx = (await generateNicheContext(niche, language, scenario)) ?? buildFallbackNicheContext(niche, language, scenario);
+        const { firstName, niche, language, scenario, preset, companyName } = parsed.data;
+        const nicheCtx =
+          preset === "solar"
+            ? buildSolarNicheContext(language, scenario, companyName)
+            : (await generateNicheContext(niche, language, scenario)) ??
+              buildFallbackNicheContext(niche, language, scenario);
         const { token } = generateToken();
 
         await createPendingDemoLead({

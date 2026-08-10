@@ -11,6 +11,7 @@ import { useTasks, useUpdateTask, useDeleteTask, useTaskCategories, useAccountUs
 import { CommentsSection, AttachmentsSection, SubtaskSection } from "./TaskDetailSections";
 import { ActivitySection } from "./ActivitySection";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, STATUS_COLORS, PRIORITY_COLORS, type TaskStatus, type TaskPriority } from "../types";
+import { assignableUsers } from "../lib/taskViewUtils";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 
 // ── i18n key maps ─────────────────────────────────────────────────────────────
@@ -449,7 +450,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                     <User className="h-3.5 w-3.5 text-muted-foreground" />
                     Unassigned
                   </button>
-                  {users.map((u) => {
+                  {assignableUsers(users).map((u) => {
                     const name = u.fullName1 || u.email || "";
                     if (!name) return null;
                     const inits = name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();

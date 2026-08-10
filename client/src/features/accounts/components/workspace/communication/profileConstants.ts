@@ -64,7 +64,7 @@ export function recommendStatus(aiStyle: string | null): string {
 // so the facilitator can say "now we're on part 3 of 4". Labels live in i18n
 // (`sections.<key>`).
 export type SectionKey = "tone" | "identity" | "availability" | "sales" | "facts" | "booking";
-export const SECTIONS: SectionKey[] = ["tone", "identity", "availability", "sales", "facts", "booking"];
+export const SECTIONS: SectionKey[] = ["tone", "identity", "availability", "booking", "sales", "facts"];
 
 // ── Merged step list ─────────────────────────────────────────────────────────
 export type StepKind = "style" | "fact" | "qagrid" | "custom";
@@ -77,6 +77,7 @@ export const STEPS: StepDef[] = [
   { key: "preferredWords", kind: "style", section: "identity" },
   { key: "agentName", kind: "style", section: "identity" },    // name + custom + avatar
   { key: "availabilityHours", kind: "custom", section: "availability" }, // open days/hours/duration/notice (account-level)
+  { key: "meetingType", kind: "custom", section: "booking" },  // how the booked call happens (account-level)
   { key: "objections", kind: "qagrid", section: "sales" },     // → KB "objections"
   { key: "negotiation", kind: "fact", section: "facts" },
   { key: "financing", kind: "fact", section: "facts" },
@@ -86,7 +87,6 @@ export const STEPS: StepDef[] = [
   { key: "faq", kind: "qagrid", section: "facts" },            // → KB "faq"
   { key: "differentiator", kind: "style", section: "facts" },  // USP arguments: after FAQ, before sensitive topics
   { key: "sensitiveTopics", kind: "fact", section: "facts" },  // → KB "policies"
-  { key: "meetingType", kind: "custom", section: "booking" },  // how the booked call happens (account-level)
 ];
 
 export type StyleField =

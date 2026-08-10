@@ -147,6 +147,8 @@
     "hoursOpen": "Openingsuren",
     "hoursClose": "Sluitingsuren",
     "dailySends": "Dagelijkse Verzendingen",
+    "dailySendsManual": "(handmatig ingesteld)",
+    "dailySendsReset": "Herstel naar automatisch",
     "terminology": "Terminologie",
     "email": "Email",
     "accountNamePlaceholder": "bijv. Acme Corp",

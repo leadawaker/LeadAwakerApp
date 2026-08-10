@@ -59,9 +59,6 @@
     "upcoming": "Aankomend",
     "completed": "Voltooid"
   },
-  "assignee": {
-    "everyone": "Iedereen"
-  },
   "board": {
     "empty": "Leeg"
   },

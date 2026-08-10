@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Phone, MessageCircle, Video, Loader2, Check } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
@@ -31,6 +31,27 @@ export function MeetingTypeCard({ accountId, meetingType: initialType, callingNu
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The wizard renders this card with only accountId, so without this fetch it
+  // would always show the defaults (phone_call / empty number) even when the
+  // account already has values — which reads as "my answer didn't save".
+  useEffect(() => {
+    if (initialType !== undefined || initialNumber !== undefined) return;
+    let cancelled = false;
+    apiFetch(`/api/accounts/${accountId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        if (data.meeting_type) setMeetingType(data.meeting_type);
+        if (data.calling_number) {
+          setCallingNumber(data.calling_number);
+          setSavedNumber(data.calling_number);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId]);
 
   async function persist(body: Record<string, string | null>) {
     setSaving(true);

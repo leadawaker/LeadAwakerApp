@@ -14,6 +14,8 @@ const REDIRECT_URI =
 const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events.freebusy",
   "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+  "https://www.googleapis.com/auth/userinfo.email",
 ];
 
 function oauthClient() {
@@ -48,10 +50,13 @@ export const googleAdapter: CalendarAdapter = {
   async exchangeCode(code: string): Promise<Partial<CalendarConnection>> {
     const client = oauthClient();
     const { tokens } = await client.getToken(code);
+    client.setCredentials(tokens);
+    const oauth2 = google.oauth2({ version: "v2", auth: client });
+    const profile = await oauth2.userinfo.get();
     return {
       provider: "google",
       status: "connected",
-      displayName: "Google Calendar",
+      displayName: profile.data.email || "Google Calendar",
       calendarId: "primary",
       oauthTokensEncrypted: encryptSecret(tokens),
     };

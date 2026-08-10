@@ -100,6 +100,12 @@ export const accounts = nocodb.table("Accounts", {
   whatsappPreviousQualityRating: text("whatsapp_previous_quality_rating"),
   whatsappMessagingLimit: bigint("whatsapp_messaging_limit", { mode: "number" }),
   whatsappQualityCheckedAt: timestamp("whatsapp_quality_checked_at", { withTimezone: true }),
+  // Auto-throttle — see specs/whatsapp-quality-auto-throttle. whatsappLastSyncedMaxDailySends is
+  // the last messaging_limit value the poller synced (audit trail / tooltip copy only).
+  // whatsappMaxDailySendsIsManual is the explicit "human owns this field" flag — set true on any
+  // PATCH that edits maxDailySends, cleared via "Reset to auto-sync". See addendum-manual-override-flag.md.
+  whatsappLastSyncedMaxDailySends: bigint("whatsapp_last_synced_max_daily_sends", { mode: "number" }),
+  whatsappMaxDailySendsIsManual: boolean("whatsapp_max_daily_sends_is_manual").default(false),
   // Missed-Call Text-Back (Voice service Tier 1/2) — see specs/missed-call-textback.
   // A forwarded missed call → instant WhatsApp text-back from the client's own number → AI chat.
   // missedCallNumber is the provisioned Twilio voice number that receives forwarded calls; it is the
@@ -287,6 +293,7 @@ export const accountCommunicationProfile = nocodb.table("Account_Communication_P
   preferredWords: jsonb("preferred_words").$type<{ projectTerm?: string; proposalTerm?: string; decisionTerm?: string }>(),
   perception: jsonb("perception").$type<string[]>(),
   bookingUrl: text("booking_url"),           // calendar / booking link the AI sends to leads
+  differentiator: text("differentiator"),    // why customers choose them (newline-separated USP lines)
   // Wizard progress.
   status: text("status"),                    // draft | in_progress | completed
   completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -550,6 +557,9 @@ export const campaigns = nocodb.table("Campaigns", {
   language: text("language"),
   isDemo: boolean("is_demo").default(false),
   optOutNotice: boolean("opt_out_notice").default(false),
+  // Whether the account-level Knowledge Base is injected into this campaign's
+  // AI prompt. false = campaign runs only on its own kb field (demo campaigns).
+  useAccountKb: boolean("use_account_kb").default(true),
   demoClientName: text("demo_client_name"),
   companyName: text("company_name"),
   aiStyleOverride: text("ai_style_override"),
@@ -1537,9 +1547,17 @@ export const calendarConnections = nocodb.table("Calendar_Connections", {
   calendarId: text("calendar_id"),       // primary calendar id used for event writes
   externalId: text("external_id"),       // calendly user uri / cal.com username, etc.
   timezone: text("timezone"),
-  // Secret material (only one is set depending on provider).
+  // Secret material (only the field(s) relevant to the provider are set).
   oauthTokensEncrypted: text("oauth_tokens_encrypted"), // google / outlook
-  apiKeyEncrypted: text("api_key_encrypted"),           // calcom / calendly
+  apiKeyEncrypted: text("api_key_encrypted"),           // calcom / calendly · caldiy: login PASSWORD (web UI)
+  caldiyApiKeyEncrypted: text("caldiy_api_key_encrypted"), // caldiy: Bearer API key (engine's REST auth)
+  // caldiy: the account's default provisioned event type (always slug "30min"
+  // today). The self-hosted v2 API has no general event-types lookup endpoint,
+  // so the engine can't resolve this by slug at request time — it's captured
+  // once at provisioning and reused. Only valid when the campaign's own
+  // calendar_link slug matches caldiyEventTypeSlug (see resolve_account_credentials).
+  caldiyEventTypeId: integer("caldiy_event_type_id"),
+  caldiyEventTypeSlug: text("caldiy_event_type_slug"),
   icalUrl: text("ical_url"),                            // ical read-only feed
   // White-label booking domain (book.clientwebsite.com → Cloudflare Tunnel).
   // Stored on the account's `caldiy` connection row. status: pending | active.
