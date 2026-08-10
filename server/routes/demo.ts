@@ -129,4 +129,44 @@ export function registerDemoRoutes(app: Express): void {
       res.json({ whatsappUrl });
     }),
   );
+
+  // ── Internal: generate a niche context WITHOUT creating a lead ──
+  // Used by the automations engine's `/generate <free text>` VIP WhatsApp
+  // command (src/webhooks/demo_commands.py), which re-themes the sender's OWN
+  // demo lead mid-conversation by overwriting leads.demo_niche.
+  //
+  // It deliberately reuses generateNicheContext + buildFallbackNicheContext, the
+  // exact pair the public /api/demo/create-session universal flow above runs, so
+  // a phone-driven regeneration and a homepage submission can never diverge.
+  // Splitting generation from lead creation is the whole point: the engine
+  // already has a lead, and minting a throwaway one just to harvest its
+  // demo_niche would burn a rate-limit slot and leave orphan rows behind.
+  //
+  // requireAuth, not the public rate limiter: this is reached with the engine's
+  // X-Internal-Key (same as /api/demo/create-link), never from a browser.
+  const nicheContextSchema = z.object({
+    niche: z.string().trim().min(3).max(300),
+    language: z.enum(["en", "nl", "pt"]),
+    scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+  });
+
+  app.post(
+    "/api/demo/niche-context",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      const parsed = nicheContextSchema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+
+      const { niche, language, scenario } = parsed.data;
+      const generated = await generateNicheContext(niche, language, scenario);
+      // `generated` tells the caller whether the model actually ran. The fallback
+      // context is valid and safe to use, but it carries none of the niche detail
+      // the demo is being regenerated FOR, so the engine reports it back to the
+      // VIP rather than pretending the regeneration succeeded.
+      res.json({
+        generated: generated !== null,
+        context: generated ?? buildFallbackNicheContext(niche, language, scenario),
+      });
+    }),
+  );
 }
