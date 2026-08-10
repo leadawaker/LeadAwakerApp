@@ -345,31 +345,43 @@ export function WhatsAppDemoLinkButton({
 // the demo link inline. WhatsApp needs a name + language (pre-primes a Lead);
 // Telegram is an instant deep link.
 
+// Only the Universal Demo campaign runs the per-lead niche overlay
+// (context_injection.py gates it on `campaign_id == 60`), so the niche and
+// company fields below are shown for that campaign alone. Offering them
+// elsewhere would accept input the engine then silently ignores.
+const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
+
 export function ShareButton({ campaign }: { campaign: Campaign }) {
   const { t } = useTranslation("campaigns");
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"choose" | "whatsapp" | "telegram">("choose");
 
-  // WhatsApp form state
+  // Demo-link form state
   const [firstName, setFirstName] = useState("");
   const [language, setLanguage] = useState<"en" | "nl" | "pt">("en");
+  const [niche, setNiche] = useState("");
+  const [prospectCompany, setProspectCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [demoLink, setDemoLink] = useState<string | null>(null);
   const [waLink, setWaLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [fellBack, setFellBack] = useState(false);
+  const [copied, setCopied] = useState<"demo" | "wa" | null>(null);
 
   const campaignId = (campaign.id || (campaign as any).Id) as number;
+  const canGenerateNiche = campaignId === UNIVERSAL_DEMO_CAMPAIGN_ID;
   const botUsername = import.meta.env.VITE_TELEGRAM_DEMO_BOT_USERNAME || "Demo_Lead_Awaker_bot";
   const telegramLink = `https://t.me/${botUsername}?start=campaign_${campaignId}`;
 
   const reset = () => {
     setStep("choose");
-    setFirstName(""); setLanguage("en"); setLoading(false);
-    setError(null); setWaLink(null); setCopied(false);
+    setFirstName(""); setLanguage("en"); setNiche(""); setProspectCompany("");
+    setLoading(false);
+    setError(null); setDemoLink(null); setWaLink(null); setFellBack(false); setCopied(null);
   };
 
-  const copy = async (value: string) => {
-    try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
+  const copy = async (value: string, which: "demo" | "wa") => {
+    try { await navigator.clipboard.writeText(value); setCopied(which); setTimeout(() => setCopied(null), 2000); } catch {}
   };
 
   const handleGenerateWa = async (e: React.FormEvent) => {
@@ -380,15 +392,29 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
       const res = await apiFetch("/api/demo/create-link", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ firstName: firstName.trim(), language, campaignId }),
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          language,
+          campaignId,
+          // Omitted entirely when blank: the endpoint only runs the generator
+          // when `niche` is present, so an empty string would be a validation
+          // error rather than "use the campaign as-is".
+          ...(canGenerateNiche && niche.trim() ? { niche: niche.trim() } : {}),
+          ...(canGenerateNiche && prospectCompany.trim() ? { companyName: prospectCompany.trim() } : {}),
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError((data as any).message || t("share.createFailed", "Could not create link.")); setLoading(false); return;
       }
       const data = await res.json();
+      setDemoLink(data.demoUrl || null);
       setWaLink(data.whatsappUrl);
-      copy(data.whatsappUrl);
+      // The server only sends `generated` when a niche was requested. false
+      // means the model did not run and the link carries a generic context,
+      // which is worth knowing BEFORE it is sent to a named prospect.
+      setFellBack(data.generated === false);
+      copy(data.demoUrl || data.whatsappUrl, data.demoUrl ? "demo" : "wa");
     } catch {
       setError(t("share.networkError", "Network error. Try again."));
     } finally { setLoading(false); }
@@ -414,8 +440,8 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                 <MessageCircle className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground">WhatsApp</div>
-                <div className="text-[11px] text-muted-foreground">{t("share.whatsappHint", "Pre-fills a prospect's session")}</div>
+                <div className="text-[13px] font-semibold text-foreground">{t("share.demoLink", "Demo link")}</div>
+                <div className="text-[11px] text-muted-foreground">{t("share.demoLinkHint", "Browser page plus a WhatsApp version")}</div>
               </div>
             </button>
             <button
@@ -448,6 +474,32 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                     className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
                   />
                 </div>
+                {canGenerateNiche && (
+                  <>
+                    <div>
+                      <label className="block text-[12px] font-medium mb-1">{t("share.niche", "Their niche")}</label>
+                      <input
+                        type="text" value={niche} onChange={(e) => setNiche(e.target.value)}
+                        placeholder={t("share.nichePlaceholder", "e.g. cabinet hardware, dental implants")}
+                        maxLength={300}
+                        className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                      />
+                      <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                        {t("share.nicheHint", "Leave blank to send the campaign as it is. Filling it in generates this prospect's own vocabulary, questions and opener.")}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-[12px] font-medium mb-1">{t("share.prospectCompany", "Their company")}</label>
+                      <input
+                        type="text" value={prospectCompany} onChange={(e) => setProspectCompany(e.target.value)}
+                        placeholder={t("share.prospectCompanyPlaceholder", "Hoffman Puxadores")}
+                        maxLength={120}
+                        disabled={!niche.trim()}
+                        className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors disabled:opacity-50"
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <label className="block text-[12px] font-medium mb-1">{t("share.language", "Language")}</label>
                   <div className="flex gap-1.5">
@@ -463,18 +515,46 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                 {error && <div className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">{error}</div>}
                 <button type="submit" disabled={loading}
                   className="w-full h-9 rounded-full bg-brand-indigo text-white font-medium text-[13px] hover:opacity-90 disabled:opacity-50 transition-opacity">
-                  {loading ? t("share.generating", "Generating…") : t("share.generateLink", "Generate link")}
+                  {loading
+                    ? (niche.trim()
+                        ? t("share.generatingNiche", "Building their demo…")
+                        : t("share.generating", "Generating…"))
+                    : t("share.generateLink", "Generate link")}
                 </button>
               </form>
             ) : (
-              <div className="space-y-2">
-                <p className="text-[11px] text-muted-foreground">{t("share.copiedHint", "Link copied to clipboard.")}</p>
-                <div className="flex items-center gap-2">
-                  <input type="text" value={waLink} readOnly className="flex-1 h-8 px-2.5 text-[11px] border border-black/[0.125] rounded-md bg-muted/50 font-mono" />
-                  <button onClick={() => copy(waLink)} className="h-8 w-8 rounded-full bg-brand-indigo text-white hover:opacity-90 transition-opacity flex items-center justify-center shrink-0">
-                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  </button>
+              <div className="space-y-2.5">
+                {fellBack && (
+                  <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 leading-snug">
+                    {t("share.fellBack", "The niche generator did not run, so this link uses a generic demo. Generate another before sending it.")}
+                  </div>
+                )}
+                {demoLink && (
+                  <div>
+                    <p className="text-[11px] font-medium text-foreground mb-1">{t("share.browserLink", "Browser link")}</p>
+                    <div className="flex items-center gap-2">
+                      <input type="text" value={demoLink} readOnly className="flex-1 h-8 px-2.5 text-[11px] border border-black/[0.125] rounded-md bg-muted/50 font-mono" />
+                      <button onClick={() => copy(demoLink, "demo")} className="h-8 w-8 rounded-full bg-brand-indigo text-white hover:opacity-90 transition-opacity flex items-center justify-center shrink-0">
+                        {copied === "demo" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                    <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                      {t("share.browserLinkHint", "Works on a desktop with no WhatsApp. The page offers WhatsApp itself.")}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] font-medium text-foreground mb-1">{t("share.whatsappLink", "WhatsApp version")}</p>
+                  <div className="flex items-center gap-2">
+                    <input type="text" value={waLink} readOnly className="flex-1 h-8 px-2.5 text-[11px] border border-black/[0.125] rounded-md bg-muted/50 font-mono" />
+                    <button onClick={() => copy(waLink, "wa")} className="h-8 w-8 rounded-full bg-muted text-foreground hover:bg-muted/70 transition-colors flex items-center justify-center shrink-0">
+                      {copied === "wa" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
+                <p className="text-[10.5px] text-muted-foreground leading-snug">
+                  {t("share.sameSession", "Same session either way: whichever the prospect opens first claims it.")}
+                </p>
               </div>
             )}
           </div>
@@ -488,8 +568,8 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
             <p className="text-[11px] text-muted-foreground">{t("share.telegramShare", "Share this Telegram link — the bot asks for language and name on first message.")}</p>
             <div className="flex items-center gap-2">
               <input type="text" value={telegramLink} readOnly className="flex-1 h-8 px-2.5 text-[11px] border border-black/[0.125] rounded-md bg-muted/50 font-mono" />
-              <button onClick={() => copy(telegramLink)} className="h-8 w-8 rounded-full bg-brand-indigo text-white hover:opacity-90 transition-opacity flex items-center justify-center shrink-0">
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              <button onClick={() => copy(telegramLink, "demo")} className="h-8 w-8 rounded-full bg-brand-indigo text-white hover:opacity-90 transition-opacity flex items-center justify-center shrink-0">
+                {copied === "demo" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>

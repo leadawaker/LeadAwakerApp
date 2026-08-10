@@ -757,6 +757,10 @@ export const leads = nocodb.table("Leads", {
   // whatHasTheLeadDone, which is a constrained dropdown feeding the stage
   // classifier and must never carry free text.
   leadContext: text("lead_context"),
+  // Browser demo (/demo/<token>) lifetime restart counter. Survives the
+  // interaction wipe a restart performs, which is what actually caps the cost
+  // of a demo link that ends up somewhere public.
+  demoRestarts: integer("demo_restarts").default(0),
   when: text("when"),
   accountId: bigint("account_id", { mode: "number" }),
   campaignId: bigint("campaign_id", { mode: "number" }),

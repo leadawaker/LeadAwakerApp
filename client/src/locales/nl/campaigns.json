@@ -40,6 +40,33 @@
     "allComplete": "Alle velden hebben al beide talen.",
     "generateFailed": "Genereren mislukt"
   },
+  "share": {
+    "choosePrompt": "Kies een kanaal om de demolink te delen.",
+    "demoLink": "Demolink",
+    "demoLinkHint": "Browserpagina plus een WhatsApp-versie",
+    "telegramHint": "Directe deeplink, geen berichtlimiet",
+    "back": "Terug",
+    "prospectName": "Voornaam prospect",
+    "niche": "Hun niche",
+    "nichePlaceholder": "bijv. meubelbeslag, tandheelkundige implantaten",
+    "nicheHint": "Laat leeg om de campagne te sturen zoals die is. Vul je iets in, dan genereren we het vakjargon, de vragen en de opener van deze prospect.",
+    "prospectCompany": "Hun bedrijf",
+    "prospectCompanyPlaceholder": "Hoffman Puxadores",
+    "language": "Taal",
+    "nameRequired": "Vul de voornaam van de prospect in.",
+    "createFailed": "Kon geen link aanmaken.",
+    "networkError": "Netwerkfout. Probeer het opnieuw.",
+    "generating": "Bezig...",
+    "generatingNiche": "Hun demo wordt gebouwd...",
+    "generateLink": "Link genereren",
+    "fellBack": "De nichegenerator heeft niet gedraaid, dus deze link gebruikt een algemene demo. Genereer een nieuwe voordat je hem verstuurt.",
+    "browserLink": "Browserlink",
+    "browserLinkHint": "Werkt op een desktop zonder WhatsApp. De pagina biedt WhatsApp zelf aan.",
+    "whatsappLink": "WhatsApp-versie",
+    "sameSession": "Hoe dan ook dezelfde sessie: wie het eerst opent, claimt hem.",
+    "copiedHint": "Link gekopieerd naar klembord.",
+    "telegramShare": "Deel deze Telegram-link, de bot vraagt bij het eerste bericht om taal en naam."
+  },
   "niche": {
     "new": "Nieuwe niche…",
     "newPlaceholder": "bijv. Tandartsen",
@@ -302,13 +329,24 @@
     "selectNichePlaceholder": "Selecteer niche…",
     "nicheLoadError": "Niches konden niet worden geladen. Probeer het opnieuw.",
     "positioning": "Positionering",
-    "positioningOptions": { "premium": "Premium", "mid_market": "Middensegment" },
+    "positioningOptions": {
+      "premium": "Premium",
+      "mid_market": "Middensegment"
+    },
     "aiDisclosure": "AI-vermelding",
     "aiDisclosureHint": "Waar de AI vermeldt dat het een AI is. Uit past bij het Verenigd Koninkrijk. In de opener past bij Nederland en de rest van de EU, waar het voor aanvang van het gesprek gezegd moet worden. In het tweede bericht past bij Brazilie.",
-    "aiDisclosureOptions": { "off": "Uit", "opener": "In de opener", "second_message": "In het tweede bericht" },
+    "aiDisclosureOptions": {
+      "off": "Uit",
+      "opener": "In de opener",
+      "second_message": "In het tweede bericht"
+    },
     "conversationMode": "Gespreksmodus",
     "conversationModeHint": "Scoping bouwt een projectbriefing op voor leads zonder offerte. Beslissing peilt waar een lead met offerte staat. Automatisch kiest op basis van de fase van de lead.",
-    "conversationModeOptions": { "auto": "Automatisch", "scoping": "Scoping", "decision": "Beslissing" },
+    "conversationModeOptions": {
+      "auto": "Automatisch",
+      "scoping": "Scoping",
+      "decision": "Beslissing"
+    },
     "maxMessagesPerReply": "Berichten per antwoord",
     "maxMessagesPerReplyHint": "Elk extra bericht wordt apart gefactureerd. Standaard 1.",
     "whatLeadDid": "Wat de lead heeft gedaan",

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Live demo — Lead Awaker</title>
+  <link rel="icon" href="/premium/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/premium/design-tokens.css" />
+  <style>
+    /* This page deliberately does NOT inherit the landing page's bone palette.
+       It is a product surface shown to one named prospect, and the dark ground
+       makes the conversation the only lit thing on screen. The tokens above are
+       still loaded (fonts, and the build inlines them), then overridden here. */
+    :root {
+      --d-bg: #0B0B0D;
+      --d-bg-2: #111114;
+      --d-surface: #17171B;
+      --d-surface-2: #1E1E24;
+      --d-line: rgba(255,255,255,0.08);
+      --d-line-2: rgba(255,255,255,0.14);
+      --d-ink: #F2F0EC;
+      --d-mute: #8B8B95;
+      --d-mute-2: #5E5E68;
+      --d-accent: #B23A50;
+      --d-accent-soft: #8E2C3E;
+      --d-ok: #4FA97A;
+      --d-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --d-serif: "Instrument Serif", Georgia, serif;
+      --d-mono: "Geist Mono", ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: var(--d-bg);
+      color: var(--d-ink);
+      font-family: var(--d-sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------------- header ---------------- */
+    .hdr {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--d-line);
+      background: var(--d-bg-2);
+      position: sticky; top: 0; z-index: 20;
+    }
+    .hdr-logo { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; }
+    .hdr-logo img { height: 22px; width: auto; display: block; }
+    .hdr-logo span { font-family: var(--d-serif); font-size: 18px; letter-spacing: -0.01em; }
+    .hdr-spacer { flex: 1 1 auto; }
+    .pill {
+      flex: 0 0 auto;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+      padding: 6px 13px; border-radius: 999px;
+      background: var(--d-surface-2); border: 1px solid var(--d-line-2);
+      color: var(--d-ink);
+      max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ---------------- stage tracker ----------------
+       The centrepiece. It narrates the pipeline moving while the conversation
+       happens, so a prospect sees a lead being worked rather than a chatbot
+       being clever. Every stage is driven by a signal the engine already emits. */
+    .track { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
+    .track-step { display: flex; align-items: center; gap: 8px; }
+    .track-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--d-mute-2); flex: 0 0 auto;
+      transition: background 400ms ease, box-shadow 400ms ease;
+    }
+    .track-label {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: var(--d-mute-2); white-space: nowrap;
+      transition: color 400ms ease;
+    }
+    .track-line {
+      width: 34px; height: 1px; background: var(--d-line-2); margin: 0 12px; flex: 0 0 auto;
+      transition: background 400ms ease;
+    }
+    .track-step.on .track-dot { background: var(--d-accent); box-shadow: 0 0 0 4px rgba(178,58,80,0.16); }
+    .track-step.on .track-label { color: var(--d-ink); }
+    .track-step.done .track-dot { background: var(--d-ok); box-shadow: none; }
+    .track-step.done .track-label { color: var(--d-mute); }
+
+    /* ---------------- layout ---------------- */
+    .wrap { flex: 1 1 auto; display: flex; min-height: 0; }
+    .chat-col { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .stream {
+      flex: 1 1 auto; overflow-y: auto; min-height: 0;
+      padding: 26px 20px 10px;
+      display: flex; flex-direction: column; gap: 14px;
+      max-width: 720px; width: 100%; margin: 0 auto;
+    }
+
+    /* ---------------- bubbles ---------------- */
+    .row { display: flex; gap: 10px; align-items: flex-end; }
+    .row.me { flex-direction: row-reverse; }
+    .av {
+      width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
+      background: var(--d-accent-soft); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+      margin-bottom: 17px;
+    }
+    .bub-wrap { max-width: min(78%, 520px); display: flex; flex-direction: column; }
+    .row.me .bub-wrap { align-items: flex-end; }
+    .bub {
+      padding: 10px 14px; border-radius: 16px;
+      font-size: 14.5px; line-height: 1.5;
+      white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere;
+      animation: rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .row.ai .bub {
+      background: var(--d-surface); border: 1px solid var(--d-line);
+      border-bottom-left-radius: 5px;
+    }
+    .row.me .bub {
+      background: var(--d-accent); color: #fff;
+      border-bottom-right-radius: 5px;
+    }
+    .ts { font-size: 10.5px; color: var(--d-mute-2); margin: 5px 4px 0; font-family: var(--d-mono); }
+    @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+
+    .typing { display: flex; gap: 4px; padding: 13px 15px; }
+    .typing i {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--d-mute);
+      animation: blink 1.3s infinite ease-in-out; display: block;
+    }
+    .typing i:nth-child(2) { animation-delay: 0.18s; }
+    .typing i:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes blink { 0%, 70%, 100% { opacity: 0.25; } 35% { opacity: 1; } }
+
+    /* ---------------- composer ---------------- */
+    .composer-wrap { border-top: 1px solid var(--d-line); background: var(--d-bg-2); padding: 14px 20px 16px; }
+    .composer { max-width: 720px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+    .input-shell {
+      flex: 1 1 auto; display: flex; align-items: flex-end; gap: 8px;
+      background: var(--d-surface); border: 1px solid var(--d-line-2);
+      border-radius: 22px; padding: 7px 7px 7px 16px;
+      transition: border-color 180ms ease;
+    }
+    .input-shell:focus-within { border-color: rgba(178,58,80,0.6); }
+    .input-shell textarea {
+      flex: 1 1 auto; background: none; border: none; outline: none; resize: none;
+      color: var(--d-ink); font-family: inherit; font-size: 14.5px; line-height: 1.5;
+      max-height: 120px; padding: 6px 0;
+    }
+    .input-shell textarea::placeholder { color: var(--d-mute-2); }
+    .send {
+      width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+      background: var(--d-accent); border: none; cursor: pointer; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+    .send:hover:not(:disabled) { transform: scale(1.06); }
+    .send:disabled { opacity: 0.35; cursor: default; }
+    .ghost {
+      flex: 0 0 auto; height: 40px; padding: 0 15px; border-radius: 20px;
+      background: none; border: 1px solid var(--d-line-2); color: var(--d-mute);
+      font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .ghost:hover:not(:disabled) { color: var(--d-ink); border-color: var(--d-mute); }
+    .ghost:disabled { opacity: 0.4; cursor: default; }
+    .foot {
+      max-width: 720px; margin: 11px auto 0; text-align: center;
+      font-size: 12px; color: var(--d-mute-2);
+    }
+    .foot a { color: var(--d-mute); text-decoration: underline; text-underline-offset: 2px; }
+    .foot a:hover { color: var(--d-ink); }
+
+    /* ---------------- recap panel ---------------- */
+    .recap {
+      flex: 0 0 360px; border-left: 1px solid var(--d-line);
+      background: var(--d-bg-2); overflow-y: auto; padding: 24px 22px 30px;
+      animation: slide 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes slide { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+    .recap h2 { font-family: var(--d-serif); font-size: 23px; font-weight: 400; margin-bottom: 4px; }
+    .recap .sub { font-size: 12.5px; color: var(--d-mute); margin-bottom: 22px; }
+    .recap h3 {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--d-mute-2); margin: 0 0 11px;
+    }
+    .recap-card {
+      background: var(--d-surface); border: 1px solid var(--d-line);
+      border-radius: 12px; padding: 15px 16px; margin-bottom: 20px;
+    }
+    .recap-card p { font-size: 13.5px; line-height: 1.62; white-space: pre-wrap; }
+    .brief-row {
+      display: flex; justify-content: space-between; gap: 14px;
+      padding: 9px 0; border-bottom: 1px solid var(--d-line);
+    }
+    .brief-row:last-child { border-bottom: none; }
+    .brief-k { font-size: 12.5px; color: var(--d-mute); flex: 0 0 auto; }
+    .brief-v { font-size: 13px; font-weight: 600; text-align: right; }
+    .recap .note { font-size: 12px; color: var(--d-mute-2); line-height: 1.55; }
+
+    .banner {
+      max-width: 720px; margin: 0 auto 4px; padding: 11px 15px;
+      background: var(--d-surface); border: 1px solid var(--d-line-2);
+      border-radius: 11px; font-size: 13px; color: var(--d-mute);
+    }
+    .center-msg {
+      margin: auto; text-align: center; padding: 40px 24px; max-width: 420px;
+    }
+    .center-msg h1 { font-family: var(--d-serif); font-size: 30px; font-weight: 400; margin-bottom: 10px; }
+    .center-msg p { color: var(--d-mute); font-size: 14px; }
+
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    @media (max-width: 900px) {
+      .hdr { flex-wrap: wrap; gap: 10px 14px; padding: 11px 15px; }
+      .track { order: 3; width: 100%; justify-content: space-between; }
+      .track-line { width: auto; flex: 1 1 auto; margin: 0 7px; }
+      .track-label { font-size: 9px; letter-spacing: 0.06em; }
+      .pill { max-width: 55vw; }
+      .wrap { flex-direction: column; }
+      .recap { flex: 1 1 auto; border-left: none; border-top: 1px solid var(--d-line); }
+      .stream { padding: 18px 14px 8px; }
+      .composer-wrap { padding: 11px 14px 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ---- token ------------------------------------------------------------
+    // The URL is /demo/<token>. Both Vercel and the Pi rewrite that to this
+    // file with the path preserved, the same trick the landing page uses for
+    // its /home variant, so the token is read from the path rather than a query
+    // string. A query fallback exists only so the page can be opened directly
+    // during development.
+    var m = location.pathname.match(/\/demo\/([A-Za-z0-9]{4,64})/);
+    var TOKEN = m ? m[1] : new URLSearchParams(location.search).get("token") || "";
+
+    // Same-origin: Vercel rewrites /api/* to api.leadawaker.com, and the Pi
+    // serves both. The page never needs to know which host it is on.
+    var API = "/api/web-demo/" + encodeURIComponent(TOKEN);
+
+    var STAGES = [
+      { key: "new",       label: "New lead" },
+      { key: "responded", label: "Responded" },
+      { key: "qualified", label: "Qualified" },
+      { key: "objective", label: "Objective reached" }
+    ];
+
+    var root = document.getElementById("root");
+    var state = null;
+    var recap = null;
+    var pending = false;     // a visitor message is queued, awaiting a reply
+    var busy = false;        // a fetch is in flight (send/restart)
+    var pollTimer = null;
+    var lastSig = "";
+    var draft = "";
+    var fatal = null;
+
+    // ---- helpers ----------------------------------------------------------
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function clock(iso) {
+      if (!iso) return "";
+      var d = new Date(iso);
+      if (isNaN(d)) return "";
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function initials(name) {
+      var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return "AI";
+      return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+    }
+
+    function signature(s) {
+      // Cheap change detector so a poll that returns nothing new does not
+      // re-render and blow away the caret position in the composer.
+      if (!s) return "";
+      return [s.stage, s.done, s.turnsUsed, s.messages.length,
+              s.messages.length ? s.messages[s.messages.length - 1].text : ""].join("|");
+    }
+
+    function api(path, opts) {
+      return fetch(API + (path || ""), opts).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (body) {
+          if (!r.ok) {
+            var e = new Error(body.message || "Request failed");
+            e.code = body.code; e.status = r.status;
+            throw e;
+          }
+          return body;
+        });
+      });
+    }
+
+    // ---- rendering --------------------------------------------------------
+    function stageIndex(key) {
+      for (var i = 0; i < STAGES.length; i++) if (STAGES[i].key === key) return i;
+      return 0;
+    }
+
+    function trackerHtml(current) {
+      var at = stageIndex(current);
+      var out = [];
+      for (var i = 0; i < STAGES.length; i++) {
+        var cls = i < at ? "track-step done" : (i === at ? "track-step on" : "track-step");
+        out.push('<div class="' + cls + '"><span class="track-dot"></span><span class="track-label">' + esc(STAGES[i].label) + "</span></div>");
+        if (i < STAGES.length - 1) out.push('<div class="track-line"></div>');
+      }
+      return '<div class="track">' + out.join("") + "</div>";
+    }
+
+    function messagesHtml(s) {
+      var out = [];
+      for (var i = 0; i < s.messages.length; i++) {
+        var msg = s.messages[i];
+        var mine = msg.role === "visitor";
+        var prev = s.messages[i - 1];
+        var showAv = !mine && (!prev || prev.role !== "ai");
+        out.push(
+          '<div class="row ' + (mine ? "me" : "ai") + '">' +
+            (mine ? "" : (showAv
+              ? '<div class="av">' + esc(initials(s.agent)) + "</div>"
+              : '<div class="av" style="visibility:hidden"></div>')) +
+            '<div class="bub-wrap">' +
+              '<div class="bub">' + esc(msg.text) + "</div>" +
+              '<div class="ts">' + esc(clock(msg.at)) + "</div>" +
+            "</div>" +
+          "</div>"
+        );
+      }
+      if (pending) {
+        out.push(
+          '<div class="row ai">' +
+            '<div class="av">' + esc(initials(s.agent)) + "</div>" +
+            '<div class="bub-wrap"><div class="bub typing"><i></i><i></i><i></i></div></div>' +
+          "</div>"
+        );
+      }
+      return out.join("");
+    }
+
+    function recapHtml() {
+      if (!recap) {
+        return '<aside class="recap"><h2>Wrapping up</h2><p class="sub">Reading back the conversation...</p></aside>';
+      }
+      var briefRows = "";
+      if (recap.brief && recap.brief.length) {
+        for (var i = 0; i < recap.brief.length; i++) {
+          briefRows +=
+            '<div class="brief-row"><span class="brief-k">' + esc(recap.brief[i].label) +
+            '</span><span class="brief-v">' + esc(recap.brief[i].value) + "</span></div>";
+        }
+      }
+      return (
+        '<aside class="recap">' +
+          "<h2>What just happened</h2>" +
+          '<p class="sub">This is what lands in the CRM, automatically.</p>' +
+          (recap.summary
+            ? '<h3>Conversation</h3><div class="recap-card"><p>' + esc(recap.summary) + "</p></div>"
+            : "") +
+          (briefRows
+            ? '<h3>The brief</h3><div class="recap-card">' + briefRows + "</div>" +
+              '<p class="note">Every line came from the conversation. Nothing here was assumed.</p>'
+            : '<p class="note">The conversation ended before a full brief was collected. Restart it and answer a few more questions to see the whole thing.</p>') +
+        "</aside>"
+      );
+    }
+
+    function render() {
+      if (fatal) {
+        root.innerHTML =
+          '<div class="center-msg"><h1>' + esc(fatal.title) + "</h1><p>" + esc(fatal.body) + "</p></div>";
+        return;
+      }
+      if (!state) {
+        root.innerHTML = '<div class="center-msg"><p>Loading...</p></div>';
+        return;
+      }
+
+      var s = state;
+      var waUrl = "https://wa.me/?text=" + encodeURIComponent("Press Send to start the demo (code #" + TOKEN + ")");
+      var restartsLeft = Math.max(0, (s.restartsMax || 0) - (s.restartsUsed || 0));
+
+      root.innerHTML =
+        '<header class="hdr">' +
+          '<div class="hdr-logo"><img src="/premium/logo-icon.svg" alt="" /><span>Lead Awaker</span></div>' +
+          '<div class="hdr-spacer"></div>' +
+          trackerHtml(s.stage) +
+          '<div class="hdr-spacer"></div>' +
+          (s.company ? '<div class="pill">' + esc(s.company) + "</div>" : "") +
+        "</header>" +
+        '<div class="wrap">' +
+          '<div class="chat-col">' +
+            '<div class="stream" id="stream">' +
+              (s.done && s.cappedReason === "turns"
+                ? '<div class="banner">This demo has reached its message limit. Restart it to run it again.</div>'
+                : "") +
+              messagesHtml(s) +
+            "</div>" +
+            '<div class="composer-wrap">' +
+              '<div class="composer">' +
+                '<div class="input-shell">' +
+                  '<label class="sr" for="msg">Your reply</label>' +
+                  '<textarea id="msg" rows="1" placeholder="' +
+                    (s.done ? "This demo has finished" : "Reply as if you were the lead...") +
+                    '"' + (s.done || busy ? " disabled" : "") + "></textarea>" +
+                  '<button class="send" id="send" title="Send"' + (s.done || busy ? " disabled" : "") + ">" +
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
+                  "</button>" +
+                "</div>" +
+                '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">Restart</button>" +
+              "</div>" +
+              '<p class="foot">On your phone? <a href="' + waUrl + '" target="_blank" rel="noopener">Run it in WhatsApp instead</a>.' +
+                (restartsLeft > 0 ? " " + restartsLeft + " restart" + (restartsLeft === 1 ? "" : "s") + " left." : "") +
+              "</p>" +
+            "</div>" +
+          "</div>" +
+          (s.done ? recapHtml() : "") +
+        "</div>";
+
+      wire();
+    }
+
+    // ---- interaction ------------------------------------------------------
+    function wire() {
+      var ta = document.getElementById("msg");
+      var send = document.getElementById("send");
+      var restart = document.getElementById("restart");
+      var stream = document.getElementById("stream");
+
+      if (stream) stream.scrollTop = stream.scrollHeight;
+
+      if (ta) {
+        ta.value = draft;
+        ta.style.height = "auto";
+        ta.style.height = Math.min(120, ta.scrollHeight) + "px";
+        if (!state.done && !busy) ta.focus();
+        ta.addEventListener("input", function () {
+          draft = ta.value;
+          ta.style.height = "auto";
+          ta.style.height = Math.min(120, ta.scrollHeight) + "px";
+        });
+        ta.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doSend(); }
+        });
+      }
+      if (send) send.addEventListener("click", doSend);
+      if (restart) restart.addEventListener("click", doRestart);
+    }
+
+    function doSend() {
+      if (busy || pending || !state || state.done) return;
+      var text = draft.trim();
+      if (!text) return;
+
+      // Optimistic: the visitor's own bubble appears instantly, then the typing
+      // indicator. Waiting for the round trip to echo their own words back is
+      // the single thing that makes a web chat feel broken.
+      state.messages.push({ role: "visitor", text: text, at: new Date().toISOString() });
+      draft = "";
+      pending = true;
+      busy = true;
+      render();
+
+      api("/message", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: text })
+      }).then(function () {
+        busy = false;
+        lastSig = "";      // force the next poll to re-render
+        schedulePoll(1200);
+      }).catch(function (err) {
+        busy = false;
+        pending = false;
+        handleError(err);
+      });
+    }
+
+    function doRestart() {
+      if (busy || !state) return;
+      busy = true;
+      pending = false;
+      recap = null;
+      draft = "";
+      render();
+      api("/restart", { method: "POST" }).then(function (next) {
+        busy = false;
+        state = next;
+        lastSig = signature(next);
+        render();
+        schedulePoll(4000);
+      }).catch(function (err) {
+        busy = false;
+        handleError(err);
+      });
+    }
+
+    function handleError(err) {
+      if (err && err.status === 404) {
+        fatal = { title: "This link is not valid", body: "It may have expired. Ask for a fresh one and it will work again." };
+      } else if (err && err.code === "claimed_by_whatsapp") {
+        fatal = { title: "Already running in WhatsApp", body: "This demo was opened on WhatsApp. Continue the conversation there." };
+      } else if (err && err.code === "restart_limit") {
+        // Not fatal: the conversation on screen is still readable.
+        var el = document.querySelector(".foot");
+        if (el) el.textContent = "This link has been restarted the maximum number of times.";
+        return;
+      } else {
+        fatal = { title: "Something went wrong", body: "Reload the page and it should pick up where it left off." };
+      }
+      render();
+    }
+
+    // ---- polling ----------------------------------------------------------
+    // The engine debounces before it calls the model, so a reply can be several
+    // seconds out. Polling keeps each request short and lets a multi-message
+    // reply arrive balloon by balloon, the way it does on WhatsApp.
+    function schedulePoll(delay) {
+      clearTimeout(pollTimer);
+      pollTimer = setTimeout(poll, delay);
+    }
+
+    function poll() {
+      if (busy) { schedulePoll(1500); return; }
+      api("").then(function (next) {
+        var sig = signature(next);
+        var grew = state && next.messages.length > state.messages.length;
+        state = next;
+        if (grew) pending = false;
+        if (sig !== lastSig) { lastSig = sig; render(); }
+
+        if (next.done) {
+          if (!recap) loadRecap();
+          schedulePoll(15000);       // idle: keep the session warm, nothing more
+        } else {
+          schedulePoll(pending ? 1600 : 6000);
+        }
+      }).catch(function (err) {
+        if (err && (err.status === 404 || err.code === "claimed_by_whatsapp")) return handleError(err);
+        schedulePoll(6000);          // transient: keep trying quietly
+      });
+    }
+
+    function loadRecap() {
+      if (recap) return;
+      api("/recap").then(function (data) {
+        recap = data || { summary: "", brief: [] };
+        render();
+      }).catch(function () {
+        recap = { summary: "", brief: [] };
+        render();
+      });
+    }
+
+    // ---- boot -------------------------------------------------------------
+    if (!TOKEN) {
+      fatal = { title: "No demo link", body: "This page needs a demo link. Ask for one and open it directly." };
+      render();
+    } else {
+      render();
+      api("").then(function (s) {
+        state = s;
+        lastSig = signature(s);
+        render();
+        if (s.done) loadRecap();
+        schedulePoll(s.done ? 15000 : 6000);
+      }).catch(handleError);
+    }
+  })();
+  </script>
+</body>
+</html>

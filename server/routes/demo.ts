@@ -11,6 +11,7 @@ import {
   generateToken,
   createPendingDemoLead,
   buildWhatsAppLink,
+  buildDemoPageLink,
   generateNicheContext,
   buildFallbackNicheContext,
   buildSolarNicheContext,
@@ -115,6 +116,20 @@ export function registerDemoRoutes(app: Express): void {
     email: z.string().trim().email().max(200).optional(),
     language: z.enum(["en", "nl", "pt"]),
     campaignId: z.number().int(),
+    // Per-prospect generation. When `niche` is present the link is themed for
+    // that prospect: the same generator the public homepage runs produces the
+    // company, vocabulary, scoping ladder and opener, and it rides on the demo
+    // lead's demo_niche rather than being written to the campaign. That is what
+    // lets one demo campaign serve every prospect at once, and it is why this
+    // never mutates the shared campaign row.
+    niche: z.string().trim().min(3).max(300).optional(),
+    // The prospect's own firm, so the AI introduces itself in their name. This
+    // is the difference between "a clever chatbot" and "their receptionist".
+    companyName: z.string().trim().max(120).optional(),
+    scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+    // Jurisdiction, not preference: UK none, EU in the opener, Brazil in the
+    // first reply. Omitted means the campaign's own setting applies.
+    aiDisclosure: z.enum(["off", "opener", "second_message"]).optional(),
   });
 
   app.post(
@@ -124,7 +139,7 @@ export function registerDemoRoutes(app: Express): void {
       const parsed = adminSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      const { firstName, language, campaignId } = parsed.data;
+      const { firstName, language, campaignId, niche, companyName, scenario, aiDisclosure } = parsed.data;
 
       if (!(await isDemoCampaign(campaignId))) {
         return res.status(400).json({
@@ -132,10 +147,35 @@ export function registerDemoRoutes(app: Express): void {
         });
       }
 
+      // Same generate-then-fall-back pair the public universal flow uses, so a
+      // link minted here and a homepage submission can never diverge. `generated`
+      // is reported back rather than swallowed: the fallback context is safe but
+      // carries none of the niche detail the link was created FOR, and sending a
+      // prospect a generic demo believing it is theirs is the worst outcome here.
+      let demoNiche: string | undefined;
+      let generated: boolean | undefined;
+      if (niche) {
+        // null means the model did not run (timeout, HTTP error, unparseable
+        // JSON). Checked on the return value, not on a field of the context,
+        // because the fallback is a fully-populated object and every field-based
+        // test for "did this really generate" has a false positive in it.
+        const model = await generateNicheContext(niche, language, scenario);
+        generated = model !== null;
+        const ctx = model ?? buildFallbackNicheContext(niche, language, scenario);
+        if (companyName) ctx.company_name = companyName;
+        if (aiDisclosure) ctx.ai_disclosure = aiDisclosure;
+        demoNiche = JSON.stringify(ctx);
+      }
+
       const { token } = generateToken();
-      await createPendingDemoLead({ token, firstName, language, campaignId });
-      const whatsappUrl = buildWhatsAppLink({ token });
-      res.json({ whatsappUrl });
+      await createPendingDemoLead({ token, firstName, language, campaignId, demoNiche });
+      res.json({
+        // Browser first: it is the link that works for a prospect reading email
+        // on a desktop, and the page carries its own WhatsApp handoff.
+        demoUrl: buildDemoPageLink({ token }),
+        whatsappUrl: buildWhatsAppLink({ token }),
+        ...(generated === undefined ? {} : { generated }),
+      });
     }),
   );
 
@@ -178,4 +218,54 @@ export function registerDemoRoutes(app: Express): void {
       });
     }),
   );
+
+  // ── Browser demo proxy ───────────────────────────────────────────────────
+  // The /demo/<token> page (client/public/premium/demo.html) talks to the
+  // Python engine, which owns the conversation pipeline. It is proxied through
+  // Express rather than called directly for two reasons: the engine's port 8100
+  // is not publicly exposed, and Vercel already rewrites /api/* to this host,
+  // so the page can use a same-origin path and never learn which host it is on.
+  //
+  // Deliberately UNAUTHENTICATED: the token IS the credential. It is minted by
+  // an authenticated CRM user, is unguessable, expires in 7 days, and the engine
+  // caps both turns per session and lifetime restarts. Requiring a login here
+  // would defeat the entire point of a link you send to a prospect.
+  const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
+  // Only these suffixes are reachable. Without the allowlist this becomes an
+  // open proxy into every engine route (webhooks, booking, voice) for anyone
+  // who can guess a path.
+  const WEB_DEMO_SUFFIXES = new Set(["", "message", "restart", "recap"]);
+
+  // Express 4 optional param, not the Express 5 `{/*splat}` form: this repo is
+  // on express ^4.21. Every suffix is a single segment, so one route covers all.
+  app.all("/api/web-demo/:token/:suffix?", wrapAsync(async (req, res) => {
+    const token = String(req.params.token || "");
+    if (!/^[A-Za-z0-9]{4,64}$/.test(token)) {
+      return res.status(400).json({ code: "bad_token", message: "Invalid demo link." });
+    }
+    const segment = String(req.params.suffix || "");
+    if (!WEB_DEMO_SUFFIXES.has(segment)) {
+      return res.status(404).json({ code: "not_found", message: "Unknown demo endpoint." });
+    }
+    const suffix = segment ? `/${segment}` : "";
+    if (req.method !== "GET" && req.method !== "POST") {
+      return res.status(405).json({ code: "method_not_allowed", message: "Method not allowed." });
+    }
+
+    try {
+      const upstream = await fetch(`${ENGINE_BASE}/web-demo/${token}${suffix}`, {
+        method: req.method,
+        headers: { "content-type": "application/json" },
+        body: req.method === "POST" ? JSON.stringify(req.body ?? {}) : undefined,
+        // The recap runs two model calls, and a scoping reply can be slow.
+        signal: AbortSignal.timeout(120_000),
+      });
+      const text = await upstream.text();
+      res.status(upstream.status).type("application/json").send(text);
+    } catch {
+      // The page retries quietly on 5xx, so a restarting engine looks like a
+      // pause rather than a broken demo.
+      res.status(502).json({ code: "engine_unreachable", message: "The demo service is starting up. Try again in a moment." });
+    }
+  }));
 }

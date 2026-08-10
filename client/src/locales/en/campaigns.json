@@ -40,6 +40,33 @@
     "allComplete": "All fields already have both languages.",
     "generateFailed": "Generation failed"
   },
+  "share": {
+    "choosePrompt": "Choose a channel to share the demo link.",
+    "demoLink": "Demo link",
+    "demoLinkHint": "Browser page plus a WhatsApp version",
+    "telegramHint": "Instant deep link, no message cap",
+    "back": "Back",
+    "prospectName": "Prospect first name",
+    "niche": "Their niche",
+    "nichePlaceholder": "e.g. cabinet hardware, dental implants",
+    "nicheHint": "Leave blank to send the campaign as it is. Filling it in generates this prospect's own vocabulary, questions and opener.",
+    "prospectCompany": "Their company",
+    "prospectCompanyPlaceholder": "Hoffman Puxadores",
+    "language": "Language",
+    "nameRequired": "Fill in the prospect's first name.",
+    "createFailed": "Could not create link.",
+    "networkError": "Network error. Try again.",
+    "generating": "Generating...",
+    "generatingNiche": "Building their demo...",
+    "generateLink": "Generate link",
+    "fellBack": "The niche generator did not run, so this link uses a generic demo. Generate another before sending it.",
+    "browserLink": "Browser link",
+    "browserLinkHint": "Works on a desktop with no WhatsApp. The page offers WhatsApp itself.",
+    "whatsappLink": "WhatsApp version",
+    "sameSession": "Same session either way: whichever the prospect opens first claims it.",
+    "copiedHint": "Link copied to clipboard.",
+    "telegramShare": "Share this Telegram link, the bot asks for language and name on first message."
+  },
   "niche": {
     "new": "New niche…",
     "newPlaceholder": "e.g. Dentists",
@@ -302,13 +329,24 @@
     "selectNichePlaceholder": "Select niche…",
     "nicheLoadError": "Could not load niches. Please try again.",
     "positioning": "Positioning",
-    "positioningOptions": { "premium": "Premium", "mid_market": "Mid-market" },
+    "positioningOptions": {
+      "premium": "Premium",
+      "mid_market": "Mid-market"
+    },
     "aiDisclosure": "AI Disclosure",
     "aiDisclosureHint": "Where the AI says it is an AI. Off suits the UK. Opener suits the Netherlands and the rest of the EU, where it must be said before the conversation starts. Second message suits Brazil.",
-    "aiDisclosureOptions": { "off": "Off", "opener": "In the opener", "second_message": "In the second message" },
+    "aiDisclosureOptions": {
+      "off": "Off",
+      "opener": "In the opener",
+      "second_message": "In the second message"
+    },
     "conversationMode": "Conversation mode",
     "conversationModeHint": "Scoping builds a project brief for leads with no quote on file. Decision diagnoses where a quoted lead stands. Auto picks from the lead's stage.",
-    "conversationModeOptions": { "auto": "Auto", "scoping": "Scoping", "decision": "Decision" },
+    "conversationModeOptions": {
+      "auto": "Auto",
+      "scoping": "Scoping",
+      "decision": "Decision"
+    },
     "maxMessagesPerReply": "Messages per reply",
     "maxMessagesPerReplyHint": "Each extra message is billed separately. Default 1.",
     "whatLeadDid": "What the lead has done",

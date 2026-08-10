@@ -39,6 +39,12 @@ export interface NicheContext {
   // Scoping ladder for this niche, generated at demo-creation time. Same text
   // shape as Niche_Vocabulary.scoping_ladder so the prompt reads it identically.
   scoping_ladder: string;
+  // What this lead already told the business, in their own words. Lands on the
+  // campaign's lead_context via the demo overlay, so the ladder can skip a slot
+  // it was already given instead of asking a question the lead just answered.
+  // One short sentence: two facts at most, or it pre-fills the whole ladder and
+  // there is nothing left for the demo to demonstrate.
+  lead_context: string;
   // Knowledge-base facts for the conversation prompt ({kb}).
   kb: string;
   // Per-niche vocabulary for Prompt 93 substitution.
@@ -207,6 +213,7 @@ advisor_term, project_term, proposal_term, visit_term and decision_term MUST be 
 - niche_question_bank: 3-4 open questions probing THIS niche's real decision factors (what a lead actually weighs when choosing, e.g. dental implants: treatment comfort, insurance coverage; gym: schedule fit, coaching support). One question per line, no numbering. These supplement a generic question bank, so make them niche-specific, not generic.
 - niche_objection_examples: the 2 most common objections a lead in THIS niche raises, each followed on the next line by a strong open counter-question. Blank line between the two pairs.
 
+- lead_context: ONE short sentence, in the output language, describing what this lead already told the business when they first got in touch. Include at MOST two concrete facts, and only facts a website enquiry form would realistically capture (e.g. "enquired through the website about a new kitchen for a 3-bed terrace, no quote was ever sent"). It must be consistent with what_lead_did. Never include budget, timing or a decision: those are the payoff of the conversation, not its starting point.
 - niche_question: ONE qualifying question tied to a concrete pain point or key decision factor for this niche — easy to answer over SMS. Examples — Solar: "Roughly how much are you currently paying per month on electricity?" / Dental: "Are you experiencing any discomfort, or is it more of a routine check-up?" / Gym: "Are you looking to lose weight, build muscle, or something else?"
 - first_message: Write the opener as one sentence a real person would text. Use this exact shape:
 "Hi it's {agent_name} {disclosure_clause}, is that the same {first_name} who was looking at <NATURAL PLURAL PHRASE> a while back?"
@@ -440,6 +447,11 @@ export async function generateNicheContext(
       (parsed.scoping_ladder || "").toString().trim() ||
       buildGenericScopingLadder(parsed.niche_label || niche, language);
     parsed.kb = (parsed.kb || "").toString();
+    // Empty is fine here, unlike scoping_ladder: the engine's overlay skips
+    // empty values, so a missing lead_context just leaves the campaign's own
+    // (usually blank), and the ladder starts from slot one. That is the
+    // pre-existing behaviour, not a broken demo.
+    parsed.lead_context = (parsed.lead_context || "").toString().trim();
     // Example packs: coerce array output to newline strings; empty is fine
     // (the engine then keeps the __default__ packs untouched).
     for (const key of ["niche_question_bank", "niche_objection_examples"] as const) {
@@ -500,6 +512,9 @@ export function buildFallbackNicheContext(
     // (see the note at the same assignment in generateNicheContext). It inherits
     // the demo campaign's own ladder, which is Solar Panels on campaign 60.
     scoping_ladder: buildGenericScopingLadder(niche, language),
+    // Deliberately empty: no model ran, so inventing what this lead "already
+    // said" would put words in a real prospect's mouth on the very first screen.
+    lead_context: "",
     kb: "",
     advisor_term: language === "nl" ? "adviseur" : language === "pt" ? "consultor" : "advisor",
     project_term: niche,
@@ -598,6 +613,10 @@ export function buildSolarNicheContext(
         ? `Hi, dit is {agent_name} van ${displayCompany}. Ben jij dezelfde {first_name} die {what_lead_did} {when_label}?`
         : `Hi, this is {agent_name} from ${displayCompany}. Is this the same {first_name} who {what_lead_did} {when_label}?`,
       kb,
+      // The solar preset is the public homepage demo: a stranger who typed
+      // nothing but a first name. Claiming they already told us something
+      // specific would be a lie on the first screen, so the ladder starts cold.
+      lead_context: "",
       advisor_term: nl ? "adviseur" : "advisor",
       project_term: nl ? "installatie" : "installation",
       proposal_term: nl ? "offerte" : "quote",
@@ -753,6 +772,20 @@ export async function findPendingLeadByToken(token: string) {
     .where(eq(leads.channelIdentifier, `wa-demo:${token}`))
     .limit(1);
   return rows[0] ?? null;
+}
+
+// Public origin for the browser demo page. Overridable so a Pi-only test can
+// point at app.leadawaker.com, but the default is the host a prospect should
+// ever see in a pasted link.
+const DEMO_PAGE_ORIGIN = (process.env.DEMO_PAGE_ORIGIN || "https://leadawaker.com").replace(/\/+$/, "");
+
+/**
+ * The browser demo link: /demo/<token>, served by client/public/premium/demo.html.
+ * Same token as the wa.me link, so one minted session serves both surfaces and
+ * whichever the prospect opens first claims it.
+ */
+export function buildDemoPageLink(params: { token: string }): string {
+  return `${DEMO_PAGE_ORIGIN}/demo/${params.token}`;
 }
 
 export function buildWhatsAppLink(params: { token: string }): string {

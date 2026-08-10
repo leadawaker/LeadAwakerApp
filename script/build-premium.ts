@@ -14,6 +14,13 @@ const SRC_PREMIUM = path.resolve("client/public/premium");
 // is exactly how terms.html silently 404'd until 2026-07.
 const LEGAL_PAGES = ["terms.html", "privacy.html"];
 
+// Hand-written HTML pages that are NOT part of the bundle but DO <link>
+// design-tokens.css, so they need the same link-to-<style> inlining and the
+// same protection from pruneDistPremium. demo.html is the browser demo, served
+// at /demo/<token>; it is vanilla JS on purpose, so it never enters the React
+// bundle and never inherits the landing page's bone palette.
+const STANDALONE_PAGES = [...LEGAL_PAGES, "demo.html"];
+
 // Every pretty URL that vercel.json is expected to rewrite into this directory,
 // checked against the real dist output by assertRewriteTargets() below.
 //
@@ -33,6 +40,10 @@ const REWRITE_TARGETS = [
   { source: "/home", destination: "/premium/index.html" },
   { source: "/terms-of-service", destination: "/premium/terms.html" },
   { source: "/privacy-policy", destination: "/premium/privacy.html" },
+  // /demo/:token is the browser demo. Without this rewrite the catch-all serves
+  // app.html (the CRM shell) with a 200, so a prospect clicking a demo link
+  // lands on a login screen and nobody sees a 404 in the logs.
+  { source: "/demo/:token", destination: "/premium/demo.html" },
 ];
 
 // Everything else under dist/public/premium/ is deleted once the build below
@@ -46,7 +57,7 @@ const KEEP_FILES = new Set([
   "logo-v2.svg",
   "logo-v2-dark.svg",
   "netherlands.svg",
-  ...LEGAL_PAGES,
+  ...STANDALONE_PAGES,
 ]);
 const KEEP_DIRS = new Set(["assets", "hero-images"]);
 const UPLOADS_KEEP = new Set(["ctatext17.jpg"]); // inside uploads/textures/
@@ -260,7 +271,7 @@ async function main() {
   await writeFile(indexPath, html);
   console.log("build-premium: rewrote index.html");
 
-  for (const page of LEGAL_PAGES) {
+  for (const page of STANDALONE_PAGES) {
     const pagePath = path.join(DIST_PREMIUM, page);
     const pageHtml = await readFile(pagePath, "utf-8");
     await writeFile(
