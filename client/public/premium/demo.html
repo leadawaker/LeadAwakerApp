@@ -397,7 +397,10 @@
       }
 
       var s = state;
-      var waUrl = "https://wa.me/?text=" + encodeURIComponent("Press Send to start the demo (code #" + TOKEN + ")");
+      // Server-provided: it carries the demo's real WhatsApp number, which only
+      // the CRM knows. Absent it, the handoff line is hidden rather than
+      // rendered as a wa.me link with no recipient.
+      var waUrl = s.waLink || "";
       var restartsLeft = Math.max(0, (s.restartsMax || 0) - (s.restartsUsed || 0));
 
       root.innerHTML =
@@ -429,7 +432,10 @@
                 "</div>" +
                 '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">Restart</button>" +
               "</div>" +
-              '<p class="foot">On your phone? <a href="' + waUrl + '" target="_blank" rel="noopener">Run it in WhatsApp instead</a>.' +
+              '<p class="foot">' +
+                (waUrl
+                  ? 'On your phone? <a href="' + esc(waUrl) + '" target="_blank" rel="noopener">Run it in WhatsApp instead</a>.'
+                  : "") +
                 (restartsLeft > 0 ? " " + restartsLeft + " restart" + (restartsLeft === 1 ? "" : "s") + " left." : "") +
               "</p>" +
             "</div>" +

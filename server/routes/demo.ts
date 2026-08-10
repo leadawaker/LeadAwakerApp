@@ -261,6 +261,24 @@ export function registerDemoRoutes(app: Express): void {
         signal: AbortSignal.timeout(120_000),
       });
       const text = await upstream.text();
+
+      // Inject the WhatsApp handoff link into the state response. The demo
+      // number lives in server/demo-session.ts (DEMO_WHATSAPP_NUMBER) and the
+      // engine has no copy of it, deliberately: two copies of a phone number
+      // drift, and the failure mode is a prospect tapping through to a dead
+      // number. Same builder the minting endpoint uses, so the page's handoff
+      // and the link you paste are always the same session on the same number.
+      if (req.method === "GET" && suffix === "" && upstream.ok) {
+        try {
+          const body = JSON.parse(text);
+          body.waLink = buildWhatsAppLink({ token });
+          return res.status(upstream.status).json(body);
+        } catch {
+          // Fall through to the raw passthrough below: a state response we
+          // cannot parse is still better delivered than swallowed.
+        }
+      }
+
       res.status(upstream.status).type("application/json").send(text);
     } catch {
       // The page retries quietly on 5xx, so a restarting engine looks like a
