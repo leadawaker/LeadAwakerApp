@@ -14,6 +14,27 @@ const SRC_PREMIUM = path.resolve("client/public/premium");
 // is exactly how terms.html silently 404'd until 2026-07.
 const LEGAL_PAGES = ["terms.html", "privacy.html"];
 
+// Every pretty URL that vercel.json is expected to rewrite into this directory,
+// checked against the real dist output by assertRewriteTargets() below.
+//
+// This exists because a rewrite is the OTHER half of shipping a page here, and
+// it has now been lost twice. terms.html silently 404'd until 2026-07 for the
+// build-step half of the problem; /home silently served the CRM shell because
+// the rewrite half was written on feature/gbp-currency-uk-visitors (070d3673)
+// and that branch never merged to main. Both failures are invisible in
+// production: vercel.json's catch-all `/(.*)` -> /app.html answers 200 with the
+// wrong document rather than 404ing, so nobody notices until a prospect is
+// already looking at the wrong page.
+//
+// /home is not a separate file: config.jsx:761 resolves SITE_VARIANT from
+// location.pathname, which a Vercel rewrite preserves, so /home and / are the
+// same index.html rendering two different products.
+const REWRITE_TARGETS = [
+  { source: "/home", destination: "/premium/index.html" },
+  { source: "/terms-of-service", destination: "/premium/terms.html" },
+  { source: "/privacy-policy", destination: "/premium/privacy.html" },
+];
+
 // Everything else under dist/public/premium/ is deleted once the build below
 // finishes: the compiled .jsx files (their content now lives only in the
 // bundle), dead HTML duplicates, docs, debug source, and design-tokens.css
@@ -155,6 +176,47 @@ async function pruneDistPremium(bundleName: string) {
   }
 }
 
+// Asserts each REWRITE_TARGETS entry is still declared in vercel.json AND still
+// points at a file that survived pruneDistPremium. Run last, so it validates
+// what actually ships rather than what existed mid-build. Throws rather than
+// warns, matching replaceRequired's philosophy: a silently unreachable page is
+// worse than a red build.
+async function assertRewriteTargets() {
+  const vercelPath = path.resolve("vercel.json");
+  const config = JSON.parse(await readFile(vercelPath, "utf-8")) as {
+    rewrites?: { source: string; destination: string }[];
+  };
+  const rewrites = config.rewrites || [];
+
+  for (const target of REWRITE_TARGETS) {
+    const match = rewrites.find((r) => r.source === target.source);
+    if (!match) {
+      throw new Error(
+        `build-premium: vercel.json has no rewrite for ${target.source}. It would fall through ` +
+          `to the /(.*) catch-all and serve /app.html (the CRM shell) with a 200, not a 404. ` +
+          `Expected: { "source": "${target.source}", "destination": "${target.destination}" }`
+      );
+    }
+    if (match.destination !== target.destination) {
+      throw new Error(
+        `build-premium: vercel.json rewrites ${target.source} to ${match.destination}, ` +
+          `expected ${target.destination}`
+      );
+    }
+    const file = path.join(DIST_PREMIUM, match.destination.replace(/^\/premium\//, ""));
+    try {
+      await readFile(file);
+    } catch {
+      throw new Error(
+        `build-premium: vercel.json rewrites ${target.source} to ${match.destination}, ` +
+          `but that file is not in the build output. It was never emitted, or pruneDistPremium ` +
+          `deleted it (add it to KEEP_FILES)`
+      );
+    }
+    console.log(`build-premium: verified ${target.source} -> ${match.destination}`);
+  }
+}
+
 async function main() {
   const indexPath = path.join(DIST_PREMIUM, "index.html");
   let html = await readFile(indexPath, "utf-8");
@@ -210,6 +272,8 @@ async function main() {
 
   await pruneDistPremium(bundleName);
   console.log("build-premium: pruned non-public files from dist/public/premium/");
+
+  await assertRewriteTargets();
 }
 
 main().catch((err) => {

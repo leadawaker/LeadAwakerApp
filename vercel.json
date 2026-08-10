@@ -5,6 +5,7 @@
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://api.leadawaker.com/api/:path*" },
     { "source": "/login", "destination": "/login.html" },
+    { "source": "/home", "destination": "/premium/index.html" },
     { "source": "/terms-of-service", "destination": "/premium/terms.html" },
     { "source": "/privacy-policy", "destination": "/premium/privacy.html" },
     { "source": "/(.*)", "destination": "/app.html" }
