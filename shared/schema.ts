@@ -579,6 +579,14 @@ export const campaigns = nocodb.table("Campaigns", {
   // Hard cap on balloons per AI reply. Default 1: every extra balloon is a
   // separately billed message, and a ladder runs 8-10 turns.
   maxMessagesPerReply: integer("max_messages_per_reply").default(1),
+  // Free-text specifics about what this campaign's leads did, in the lead's own
+  // terms ("enquired about 3 windows via the website, no quote sent"). The
+  // campaign-level default; Leads.lead_context overrides it per row so an
+  // imported client list can carry real quote details. Multilingual {en,nl}
+  // JSON like the other campaign copy fields. Distinct from whatLeadDid, which
+  // is a dropdown the engine keyword-matches to derive the lead stage: free
+  // text there breaks the classifier, which is why this field exists.
+  leadContext: text("lead_context"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);

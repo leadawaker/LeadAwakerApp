@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   MessageSquare, Bot, Mic, Link, Zap, Building2, Clock, MapPin, MousePointerClick,
-  Thermometer, Radio, MessageCircle, HelpCircle, BookOpen,
+  Thermometer, Radio, MessageCircle, HelpCircle, BookOpen, Megaphone,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditSelect, EditToggle, InfoRow, CopyButton,
@@ -10,7 +10,7 @@ import { LocalizedCombo } from "../formFields/LocalizedCombo";
 import { MODEL_OPTIONS } from "@/features/prompts/types";
 import {
   asCampaignLang, placeholderFor,
-  WHAT_LEAD_DID_OPTIONS, FIRST_TOUCH_OPTIONS, optionLabel, optionStore,
+  WHAT_LEAD_DID_OPTIONS, FIRST_TOUCH_OPTIONS, SERVICE_OPTIONS, optionLabel, optionStore,
 } from "./fieldLocale";
 import { resolveLang } from "@shared/langField";
 
@@ -213,6 +213,21 @@ export function AISectionFields({
           ) : undefined}
         />
       </div>
+      {/* Service — moved here from the Business panel. It is a dropdown the
+          prompt renders as a variable, not owner-voice copy, so it sits with
+          the other prompt inputs. Its old slot now holds Lead context. */}
+      <InfoRow icon={Megaphone} label={t("config.service")}
+        value={displayLabel("service_name", campaign.service_name)}
+        {...editFor("service_name")}
+        editChild={isEditing ? (
+          <LocalizedCombo
+            displayValue={displayLabel("service_name", draft.service_name ?? campaign.service_name)}
+            onChange={(store) => setDraft(d => ({...d, service_name: store}))}
+            options={comboOptions("service_name", SERVICE_OPTIONS)}
+            {...focusFor("service_name")}
+          />
+        ) : undefined}
+      />
       <InfoRow icon={Clock} label={t("config.inquiryDate")} value={displayText(campaign.inquiry_timeframe)}
         {...editFor("inquiry_timeframe")}
         editChild={isEditing ? (

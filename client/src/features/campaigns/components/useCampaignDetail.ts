@@ -351,6 +351,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     ai_disclosure: normalizeAiDisclosure((c as any).ai_disclosure),
     conversation_mode_override: (c as any).conversation_mode_override || "",
     max_messages_per_reply: (c as any).max_messages_per_reply ?? 1,
+    lead_context: (c as any).lead_context ?? "",
     use_account_kb: (c as any).use_account_kb !== false,
   }), []);
 

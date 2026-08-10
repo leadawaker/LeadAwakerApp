@@ -11,7 +11,7 @@ import {
 import { LocalizedCombo } from "../formFields/LocalizedCombo";
 import {
   asCampaignLang,
-  USP_OPTIONS, AI_STYLE_OPTIONS, SERVICE_OPTIONS,
+  USP_OPTIONS, AI_STYLE_OPTIONS,
   placeholderFor, optionLabel, optionStore,
 } from "./fieldLocale";
 import { resolveLang } from "@shared/langField";
@@ -276,20 +276,28 @@ export function BusinessSectionFields({
         />
       )}
 
-      {/* Service — multilingual dropdown */}
+      {/* Lead context — free text, took Service's slot here. Service moved to the
+          AI panel: it is a dropdown the prompt renders, not something you write.
+          This one is prose the AI reads to know what it already knows about the
+          lead, so it belongs next to the company voice fields. A per-lead value
+          on Leads.lead_context overrides it row by row. */}
       {!openerOnly && (
-      <InfoRow icon={Megaphone} label={t("config.service")}
-        value={displayLabel("service_name", campaign.service_name)}
-        {...editFor("service_name")}
-        editChild={isEditing ? (
-          <LocalizedCombo
-            displayValue={displayLabel("service_name", draft.service_name ?? campaign.service_name)}
-            onChange={(store) => setDraft(d => ({...d, service_name: store}))}
-            options={comboOptions("service_name", SERVICE_OPTIONS)}
-            {...focusFor("service_name")}
-          />
-        ) : undefined}
-      />
+      <div style={{ gridColumn: '1 / -1' }}>
+        <InfoRow icon={Megaphone} label={t("config.leadContext")}
+          value={displayText(draft.lead_context ?? campaign.lead_context)}
+          description={t("config.leadContextHint")}
+          {...editFor("lead_context")}
+          editChild={isEditing ? (
+            <EditText
+              value={displayText(draft.lead_context ?? campaign.lead_context)}
+              onChange={(v) => onTextChange("lead_context", draft.lead_context ?? campaign.lead_context, v)}
+              multiline minRows={2}
+              placeholder={t("config.leadContextPlaceholder")}
+              {...focusFor("lead_context")}
+            />
+          ) : undefined}
+        />
+      </div>
       )}
 
       {/* USP — multilingual dropdown */}
