@@ -29,7 +29,14 @@ export const EMPTY_FORM: PromptFormData = {
   campaignsId: "",
 };
 
+// Order matters: the first entry is what a new campaign/prompt is nudged towards.
+// gpt-5.6-terra is the engine default (src/config.py). The 5.6 family rejects
+// max_tokens and temperature, so only call sites that already send
+// max_completion_tokens can use them.
 export const MODEL_OPTIONS = [
+  "gpt-5.6-terra",
+  "gpt-5.6-luna",
+  "gpt-5.6-sol",
   "gpt-5.5",
   "gpt-5.4",
   "gpt-5.4-pro",
