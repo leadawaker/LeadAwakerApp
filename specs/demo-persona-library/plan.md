@@ -371,7 +371,42 @@ there: has the scope moved, has the timing moved, is the same person deciding.
 Deliberately NOT a ladder, because §4.6 already forbids re-litigating a quote and eight
 questions would read as "we lost your file".
 
-### Phase 1c — restart the demo as a DIFFERENT scenario (both surfaces)
+### Phase 1c — restart the demo as a DIFFERENT scenario (both surfaces) — **DONE 2026-08-11**
+
+Shipped: engine `a65bef5`, page `64321866`, and the `demo_invited` groundwork in `5ef3b666`.
+
+**What landed.** `src/automations/demo_restart.py` is the whole feature in one place:
+cap check, optional re-stage, wipe, count, replay. The browser endpoint, the new
+WhatsApp digit trigger and `/scenario` all call `restart_demo(lead, scenario)`. The only
+per-surface argument is `send_opener`, because the browser records a synthetic outbound
+(it has no transport) and WhatsApp sends a real message.
+
+- **Bare digit, not `/1`.** `parse_restart_reply` is strict: `"2"` and `"2."` restart,
+  `"2 bathrooms"` and `"about 2"` do not. The other half of the guard is
+  `maybe_handle_demo_turn` only consulting it once the recap or cap has been sent, which
+  is exactly when the offer was printed. That function now takes the inbound `text`
+  (defaulted, so every other caller is unaffected).
+- **Invited-only, both surfaces.** `Leads.demo_invited`. The browser goes further than
+  hiding the buttons: `POST /restart` with a `scenario` returns 403 for a public session,
+  so the page is not trusted.
+- **Per-language offer** (en/nl/pt) in the `build_disclosure_clause` style, plus a
+  localized exhausted line and localized button labels sent to the page in
+  `state.restartOptions`. The page holds no scenario words and no translations.
+- **The shared core uses the RICHER reset** (`demo_commands._reset_lead_history`), so a
+  browser demo that booked a call now cancels the Cal.diy booking on restart. It did not
+  before, and the stale booking's webhook could re-mark the fresh session as booked.
+- `/scenario` passes `enforce_cap=False`: the cap stops a leaked link billing forever,
+  and a VIP on a screenshare is not that. The counter still increments.
+
+**Verified live**, not asserted. Browser: an invited link returns both options, restarts
+as `quoted` and the opener flips from the identity check to the decision opener, back to
+`inquired` again, `what_has_the_lead_done` and `demo_niche.lead_stage` both written,
+`demo_restarts` counting 0-1-2. Public link: no options, 403 on a scenario switch, plain
+Restart still 200. Unknown scenario 400; spent link 429 with its options gone from state.
+WhatsApp gating 7/7 with the core and sender stubbed (nothing sent), pure helpers 24/24.
+Probe leads deleted.
+
+**Original scope, kept below as the record of what was decided.**
 
 **Spec it for WhatsApp too. Gabriel asked, and the "wait for the browser page" argument
 is now out of date.**
@@ -584,7 +619,37 @@ deferred, and `/scenario` still offers two options (see the backlog note below).
    - quotes opener does NOT verify identity (they already know you): current shape.
      Second message asks where they are in the decision.
 
-### Phase 3 — disclosure placement + archiving
+### Phase 3 — disclosure placement + archiving — **DONE 2026-08-11** (CRM `652b4af0`)
+
+**What landed.**
+- `client/src/features/campaigns/components/settings/AiDisclosureField.tsx`, rendered by
+  `BusinessSectionFields` so ONE component covers both tab layouts: a normal campaign
+  opens on Business, the universal demo hides Business and renders the same component in
+  `openerOnly` mode at the top of its AI tab. It sits directly above the opener, because
+  the opener is what it rewrites. The "what changes" reveal prints the actual clause each
+  mode splices in (`"...from X"` vs `"...the AI assistant at X"`), mirroring
+  `_DISCLOSURE_CLAUSE_ON/_OFF` in the engine's `_helpers.py` rather than paraphrasing it.
+- The language→jurisdiction map in `server/demo-session.ts` is GONE.
+  `applyDemoDefaults` now sets `ctx.ai_disclosure = ""`, and the engine's overlay skips
+  empty values, so the order is: explicit `aiDisclosure` on `/api/demo/create-link`, else
+  the campaign's own column. `NicheContext.ai_disclosure` widened to `AiDisclosureMode | ""`.
+- Campaigns 61, 65, 66 archived (status `Archived`, the same state the UI's own archive
+  action writes). Not deleted. 61 keeps its 14 leads and any links already out there, and
+  the engine's `/campaign quote|upsell|dbr` aliases resolve by id with no status filter.
+
+**Verified:** two links minted, both Dutch, one with no `aiDisclosure` and one with
+`"opener"`, then rendered through the real `render_demo_first_message`: `"Hoi, dit is
+Mark, van Oak & Beam..."` vs `"...de AI-assistent van Oak & Beam..."`. Before the change
+both were the AI-assistent variant. Browser-checked on campaign 60 (AI tab) and 58
+(Business tab); Behavior tab has zero disclosure references left; console clean.
+
+**⚠ Consequence Gabriel should decide on:** campaign 60 is set to `off`, so with the map
+gone the public homepage demo no longer discloses to Dutch visitors (it used to, via
+`nl→opener`). If that is not wanted, set AI Disclosure to "In the opener" on campaign 60:
+one dropdown on the first tab.
+
+**Original scope, kept below.**
+
 5. Move the AI disclosure control to the FIRST settings tab, with a "what changes"
    reveal on click. Gabriel picked **explicit picker in the UI** over language-derived:
    language must stop implying jurisdiction, so a UK-style no-disclosure conversation can
