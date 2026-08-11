@@ -64,9 +64,9 @@ export const AI_STYLE_OPTIONS: Record<CampaignLang, string[]> = {
 };
 
 export const WHAT_LEAD_DID_OPTIONS: Record<CampaignLang, string[]> = {
-  en: ["", "Inquired about a quote", "Received a quote", "Had a site visit / assessment", "In the decision phase", "Declined / went with another provider"],
-  nl: ["", "Heeft een offerte aangevraagd", "Heeft een offerte ontvangen", "Heeft een bezoek / keuring gehad", "In de beslissingsfase", "Afgewezen / naar een andere aanbieder"],
-  pt: ["", "Pediu um orçamento", "Recebeu um orçamento", "Teve uma visita / avaliação", "Na fase de decisão", "Recusou / foi para outro fornecedor"],
+  en: ["", "Inquired about a quote", "Received a quote", "Existing customer (bought from us)", "Had a site visit / assessment", "In the decision phase", "Declined / went with another provider"],
+  nl: ["", "Heeft een offerte aangevraagd", "Heeft een offerte ontvangen", "Bestaande klant (heeft bij ons gekocht)", "Heeft een bezoek / keuring gehad", "In de beslissingsfase", "Afgewezen / naar een andere aanbieder"],
+  pt: ["", "Pediu um orçamento", "Recebeu um orçamento", "Cliente existente (já comprou conosco)", "Teve uma visita / avaliação", "Na fase de decisão", "Recusou / foi para outro fornecedor"],
 };
 
 export const SERVICE_OPTIONS: Record<CampaignLang, string[]> = {
