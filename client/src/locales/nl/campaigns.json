@@ -65,7 +65,10 @@
     "whatsappLink": "WhatsApp-versie",
     "sameSession": "Hoe dan ook dezelfde sessie: wie het eerst opent, claimt hem.",
     "copiedHint": "Link gekopieerd naar klembord.",
-    "telegramShare": "Deel deze Telegram-link, de bot vraagt bij het eerste bericht om taal en naam."
+    "telegramShare": "Deel deze Telegram-link, de bot vraagt bij het eerste bericht om taal en naam.",
+    "savedClient": "Bewaarde klant",
+    "savedClientNone": "Nieuwe aanmaken",
+    "reusing": "Demo voorbereiden..."
   },
   "niche": {
     "new": "Nieuwe niche…",

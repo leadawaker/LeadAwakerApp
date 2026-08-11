@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiFetch } from "@/lib/apiUtils";
 import { xBase, xDefault, xSpan } from "./constants";
+import { useDemoClients } from "../../api/demoClientsApi";
 
 // ── Duplicate button (inline confirm) ─────────────────────────────────────────
 export function DuplicateButton({
@@ -360,6 +361,8 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   const [firstName, setFirstName] = useState("");
   const [language, setLanguage] = useState<"en" | "nl" | "pt">("en");
   const [niche, setNiche] = useState("");
+  // A saved Client, re-picked instead of generated. Wins over `niche` when set.
+  const [savedClient, setSavedClient] = useState("");
   const [prospectCompany, setProspectCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -367,6 +370,9 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   const [waLink, setWaLink] = useState<string | null>(null);
   const [fellBack, setFellBack] = useState(false);
   const [copied, setCopied] = useState<"demo" | "wa" | null>(null);
+  // Saved personas, for the re-pick dropdown. Cheap and cached by the query
+  // client, so it costs nothing when the dialog is never opened.
+  const { data: savedClients } = useDemoClients();
 
   const campaignId = (campaign.id || (campaign as any).Id) as number;
   const canGenerateNiche = campaignId === UNIVERSAL_DEMO_CAMPAIGN_ID;
@@ -399,7 +405,11 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
           // Omitted entirely when blank: the endpoint only runs the generator
           // when `niche` is present, so an empty string would be a validation
           // error rather than "use the campaign as-is".
-          ...(canGenerateNiche && niche.trim() ? { niche: niche.trim() } : {}),
+          ...(canGenerateNiche && savedClient
+            ? { clientNiche: savedClient }
+            : canGenerateNiche && niche.trim()
+              ? { niche: niche.trim() }
+              : {}),
           ...(canGenerateNiche && prospectCompany.trim() ? { companyName: prospectCompany.trim() } : {}),
         }),
       });
@@ -476,13 +486,37 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                 </div>
                 {canGenerateNiche && (
                   <>
+                    {/* Re-pick a saved Client instead of generating. Skips the
+                        model round-trip entirely and reuses a persona that has
+                        already been read and approved, which is the difference
+                        between a link you send in 20 seconds and one you have
+                        to check first. See specs/demo-persona-library. */}
+                    {(savedClients ?? []).length > 0 && (
+                      <div>
+                        <label className="block text-[12px] font-medium mb-1">{t("share.savedClient", "Saved Client")}</label>
+                        <select
+                          value={savedClient}
+                          onChange={(e) => setSavedClient(e.target.value)}
+                          className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                        >
+                          <option value="">{t("share.savedClientNone", "Generate a new one")}</option>
+                          {(savedClients ?? []).map((c) => (
+                            <option key={c.id} value={c.niche}>
+                              {c.label || c.niche}
+                              {c.companyName ? ` — ${c.companyName}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-[12px] font-medium mb-1">{t("share.niche", "Their niche")}</label>
                       <input
                         type="text" value={niche} onChange={(e) => setNiche(e.target.value)}
                         placeholder={t("share.nichePlaceholder", "e.g. cabinet hardware, dental implants")}
                         maxLength={300}
-                        className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                        disabled={Boolean(savedClient)}
+                        className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors disabled:opacity-50"
                       />
                       <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
                         {t("share.nicheHint", "Leave blank to send the campaign as it is. Filling it in generates this prospect's own vocabulary, questions and opener.")}
@@ -494,7 +528,9 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                         type="text" value={prospectCompany} onChange={(e) => setProspectCompany(e.target.value)}
                         placeholder={t("share.prospectCompanyPlaceholder", "Hoffman Puxadores")}
                         maxLength={120}
-                        disabled={!niche.trim()}
+                        // Applies on top of BOTH paths: the company override
+                        // never writes back to the saved Client.
+                        disabled={!niche.trim() && !savedClient}
                         className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors disabled:opacity-50"
                       />
                     </div>
@@ -516,9 +552,13 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                 <button type="submit" disabled={loading}
                   className="w-full h-9 rounded-full bg-brand-indigo text-white font-medium text-[13px] hover:opacity-90 disabled:opacity-50 transition-opacity">
                   {loading
-                    ? (niche.trim()
-                        ? t("share.generatingNiche", "Building their demo…")
-                        : t("share.generating", "Generating…"))
+                    ? (savedClient
+                        // Re-pick skips the model, so it is near-instant. Saying
+                        // "building" would be a lie the user notices.
+                        ? t("share.reusing", "Preparing their demo…")
+                        : niche.trim()
+                          ? t("share.generatingNiche", "Building their demo…")
+                          : t("share.generating", "Generating…"))
                     : t("share.generateLink", "Generate link")}
                 </button>
               </form>

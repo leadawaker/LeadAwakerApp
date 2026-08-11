@@ -65,7 +65,10 @@
     "whatsappLink": "WhatsApp version",
     "sameSession": "Same session either way: whichever the prospect opens first claims it.",
     "copiedHint": "Link copied to clipboard.",
-    "telegramShare": "Share this Telegram link, the bot asks for language and name on first message."
+    "telegramShare": "Share this Telegram link, the bot asks for language and name on first message.",
+    "savedClient": "Saved Client",
+    "savedClientNone": "Generate a new one",
+    "reusing": "Preparing their demo..."
   },
   "niche": {
     "new": "New niche…",
