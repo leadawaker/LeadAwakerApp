@@ -145,13 +145,37 @@ Requirements:
 - **Editable in the UI.** Generated is a starting point, never the final word. Same edit
   affordance as the rest of the Clients tab.
 
-**Blocked on a prompt-93 defect, fix it in the same phase.** `{lead_context}` appears
-exactly ONCE in prompt 93 and sits inside `{{#if conversation_mode == "scoping"}}`.
-The resolver strips non-matching branches before the call, so a decision-mode lead has
-its `lead_context` computed by the engine and then thrown away. Generating quotes without
-fixing this produces data that is discarded at exactly the moment it is needed. Move
-`{lead_context}` to the shared header so both modes see it, or add it to the decision
-branch. Archive-then-patch, like every other prompt 93 edit.
+### TWO fields on the Client, ONE variable at render time
+
+**CORRECTION to an earlier note in this file: the current placement of `{lead_context}`
+is NOT a defect, and it must NOT be moved.** It appears once, at prompt 93 line 315,
+inside `{{#if conversation_mode == "scoping"}}`: *"Skip any slot the prospect already
+answered unprompted, and any slot already covered by {lead_context}."* That is the LADDER
+PRE-FILL use and it is correct. Moving it out would make the ladder re-ask things the
+lead already volunteered. The engine's own comment states the dual intent: *"quote detail
+in decision mode, ladder pre-fill in scoping mode"*. Only the decision half was ever
+written; the scoping half works.
+
+The real problem is REUSE, and it is why one stored field cannot work. A Client is meant
+to be reused across types. If "Ferragens" stores *"enquired via the site about black
+handles"* and the same persona is flipped to quoted, the AI references an enquiry in a
+conversation about a quote; store the quote instead and the scoping ladder gets pre-filled
+with line items from a quote that by definition does not exist yet.
+
+So:
+- **`enquiry_context`** on the Client — what they said when they came in. Ladder pre-fill.
+- **`quote_context`** on the Client — the example quote: total, line items, relative date,
+  decision-maker role. Change detection.
+- The ENGINE picks which one to put in `{lead_context}` based on `conversation_mode`.
+  One prompt variable, so the scoping side needs NO change; the decision branch gains its
+  first-ever `{lead_context}` reference. Archive-then-patch like every other p93 edit.
+- The per-lead override sits on top of whichever was selected, and stays empty for demos.
+
+**DONE ALREADY (engine 94462bf): `/scenario` now resets and replays.** Gabriel:
+*"ideally when we switch between inquired/quoted, the demo will restart from scratch."*
+This is what makes the two-field design safe: a transcript can never straddle both modes,
+so the two fields can never both be live in one conversation. It also becomes mandatory
+once phase 2's per-type openers land, since the opener itself changes with the type.
 
 Worth pairing with it (small, same area): decision mode has NO change-detection
 questions. Its block is verbatim the original Step 3 text. Two or three questions belong
