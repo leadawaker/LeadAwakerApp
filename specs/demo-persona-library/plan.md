@@ -508,7 +508,67 @@ button is therefore "generate (or pick) a Client, then mint a link from it", and
 it generates is selectable again afterwards. Wording in an earlier draft implied two
 paths; there is one.
 
-### Phase 2 — campaign type + per-type openers
+### Phase 2 — campaign type + per-type openers — **DONE 2026-08-11**
+
+Shipped as CRM `00bcf439` + engine `2a9bf3e`, schema by `migrate-per-type-openers.js`.
+
+**What landed**
+
+- **The picker is transient, as specified.** `demoMode` local state in
+  `CampaignSettingsLayout`, modelled on `launchName`, rendered beside the demo lead name
+  on the AI tab. `conversation_mode_override` was NOT touched. It rides in the Launch
+  payload (`/start 60 scoping Nick`) and the engine writes `what_has_the_lead_done` per
+  lead. The same control is in the Share dialog, feeding the `scenario` argument
+  `create-link` already accepted but nothing ever sent.
+- **`Campaigns.first_message_scoping`**, so a campaign holds one opener per type.
+  Direction chosen deliberately: `First_Message` keeps its meaning (universal fallback
+  AND the decision-mode opener), the new column is the additive one. Campaign 60's live
+  text was already the decision shape, the homepage form defaults to the quoted scenario,
+  and every other campaign keeps behaving identically until someone fills the column in.
+- **`Opener_Templates.type`** = `scoping | decision | both`, picker filters to the type
+  being edited. `both` is a real answer, not a hedge: 6 of the 11 existing archetypes
+  name neither an enquiry nor a quote. Typed: B/E/G decision, C/K scoping, rest both.
+  New template **L "Identity check (never quoted)"** is the archetype the plan asked for,
+  and campaign 60's scoping opener is its disclosure-carrying variant.
+- **Engine:** `apply_mode_opener` + `resolve_conversation_mode` in `prompt_builder.py`.
+  The opener swap runs in the overlay (so ai_service's `{first_message}` pre-render sees
+  the opener that was actually sent) AND in `render_demo_first_message` (the overlay
+  returns early for a lead with no persona blob, which a CRM-launched VIP lead usually
+  is). Idempotent, so both firing is a no-op the second time.
+- **`_parse_start_payload`** extracted from `cmd_start` so it is testable without a DB.
+  The scenario is matched against the alias table, not by position, so the old
+  `<id> <name>` form still parses.
+
+**Bug found and fixed on the way.** The persona overlay derived the mode from
+`ctx.what_lead_did or campaign.what_lead_did`, never from the LEAD's own
+`what_has_the_lead_done`, while `ai_service` reads the lead column first. A `/scenario`
+or `/start` on a lead with no persona blob therefore picked the wrong `lead_context`
+while the prompt picked the right mode. One shared helper now, so they cannot disagree.
+
+**One vocabulary, one documented exception.** `scoping`/`decision` are the engine's
+conversation_mode tokens, the `Opener_Templates.type` values, and words `/scenario`
+already aliases, so the same word travels UI → launch payload → engine. The exception is
+`create-link`, whose older lead-SCENARIO enum (`inquired|deciding|declined`) predates the
+control; the mapping lives in `client/src/features/campaigns/demoMode.ts` and nowhere
+else.
+
+**Verified** (browser + API + engine, not by reading):
+- Picker swaps the field label and the live opener preview; launch link reads
+  `/start 60 scoping Nick`.
+- Template list filters to 9 of 12 each way, with B/E/G hidden under Inquiry and C/K/L
+  hidden under Quotes.
+- `PATCH /api/opener-templates/:id` → 400 on an unknown type, 404 on an unknown id.
+- Two links minted from the SAME saved Client produced one `inquired` lead and one
+  `deciding` lead, and the real send path rendered the two different openers from real
+  persona data.
+- 16 unit checks on mode derivation + opener selection, 11 on the `/start` parser
+  (including the whitespace-only arg that used to raise `IndexError`).
+
+**Not done, deliberately.** The second message already varies by type through prompt
+93's `conversation_mode` branch, so no prompt edit was needed. The upsell type stays
+deferred, and `/scenario` still offers two options (see the backlog note below).
+
+#### Original scope (kept for reference)
 3. Type toggle on campaign 60: **inquiry / quotes**. (Upsell deferred, see below.)
    Replaces the
    scoping/decision picker (Gabriel: "I don't think that I will switch it tbh" — the
@@ -584,5 +644,11 @@ paths; there is one.
   than planned: consolidated into ONE `_LANGUAGE_NAMES` in `tools/lang_field.py`
   instead of the three duplicated tables. Do not re-fix.
 - kb price deflection: point at outcomes rather than inventing figures.
-- `/scenario` will need `upsell` back as a third option once phase 2 lands (it was cut to
-  two on 2026-08-11, before the upsell type was agreed).
+- `/scenario` will need `upsell` back as a third option once the upsell TYPE is built (it
+  was cut to two on 2026-08-11, before that type was agreed). Phase 2 shipping does not
+  trigger this on its own: it built inquiry/quotes only, which is exactly the two options
+  `/scenario` already has.
+- Phase 2 left `Campaigns.first_message_scoping` empty on 61/65/66 on purpose (the
+  non-goal below). If 66 (DBR) is ever revived, it is the campaign that most wants an
+  identity-verification opener, and the engine path already supports it: fill the column,
+  nothing else needed.
