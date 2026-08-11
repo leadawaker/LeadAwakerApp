@@ -382,6 +382,10 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   const reset = () => {
     setStep("choose");
     setFirstName(""); setLanguage("en"); setNiche(""); setProspectCompany("");
+    // savedClient belongs here too: it disables the niche input, so leaving it
+    // set would silently hand the next prospect the previous prospect's persona
+    // with no obvious way back.
+    setSavedClient("");
     setLoading(false);
     setError(null); setDemoLink(null); setWaLink(null); setFellBack(false); setCopied(null);
   };

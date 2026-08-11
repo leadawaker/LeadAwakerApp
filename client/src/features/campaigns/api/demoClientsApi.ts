@@ -52,6 +52,8 @@ export interface DemoClientSummary {
   label: string;
   companyName: string;
   languages: DemoLang[];
+  /** False for the curated niche packs: listed and editable, never deletable. */
+  isDemoClient: boolean;
   updatedAt: string | null;
 }
 
@@ -59,6 +61,7 @@ export interface EditableDemoClient {
   id: number;
   niche: string;
   bookingModeCall: boolean;
+  isDemoClient: boolean;
   updatedAt: string | null;
   text: Record<ClientTextField, NicheText>;
   terms: Record<TermGroup, Record<DemoLang, string[]>>;

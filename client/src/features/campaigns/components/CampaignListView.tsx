@@ -190,6 +190,16 @@ export function CampaignListView({
       .map((tab) => ({ ...tab, label: t(tab.labelKey) })),
   [t, isAgencyUser]);
 
+  // detailTab is restored from localStorage, which does not know who is logged
+  // in: a non-agency user can land on an agency-only tab that is not in their
+  // tab strip, and then see an empty panel with no control to leave it. Send
+  // them back to the one tab everybody has.
+  useEffect(() => {
+    if (!isAgencyUser && (detailTab === "clients" || detailTab === "configurations")) {
+      onDetailTabChange("summary");
+    }
+  }, [isAgencyUser, detailTab, onDetailTabChange]);
+
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 20;
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
@@ -874,8 +884,11 @@ export function CampaignListView({
         {/* Detail view */}
         <div className="flex-1 min-h-0 overflow-hidden">
           {/* The Clients library is page-level, not per-campaign: it renders
-              whether or not a campaign is selected, and ignores the selection. */}
-          {detailTab === "clients" ? (
+              whether or not a campaign is selected, and ignores the selection.
+              isAgencyUser is re-checked here and not only in the tab list:
+              detailTab is restored from localStorage, so a user who loses
+              agency access would otherwise land straight back on the tab. */}
+          {detailTab === "clients" && isAgencyUser ? (
             <ClientsTab />
           ) : loading && !selectedCampaign ? (
             <SkeletonCampaignPanel tab={detailTab} />

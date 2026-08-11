@@ -1,7 +1,7 @@
 import type { Express, Request } from "express";
 import { z } from "zod";
 import { wrapAsync, handleZodError } from "./_helpers";
-import { requireAuth } from "../auth";
+import { requireAuth, requireAgency } from "../auth";
 import {
   DEMO_CAMPAIGNS,
   UNIVERSAL_DEMO_CAMPAIGN_ID,
@@ -64,10 +64,14 @@ export function registerDemoRoutes(app: Express): void {
 
   // ── The Clients library ──────────────────────────────────────────────────
   // Saved demo personas, for the Clients tab and the Share dialog's picker.
-  // Auth-gated: these are Gabriel's prospects, not public demo content.
+  // requireAgency, not requireAuth: Niche_Vocabulary is a GLOBAL table with no
+  // accountsId, and it holds the curated niche packs that real campaigns merge
+  // in. Under requireAuth any logged-in client user could read every prospect
+  // persona and edit shared vocabulary. This matches the client-side gate,
+  // where the tab itself is behind isAgencyUser.
   app.get(
     "/api/demo/clients",
-    requireAuth,
+    requireAgency,
     wrapAsync(async (_req, res) => {
       res.json({ clients: await listDemoClients() });
     }),
@@ -77,7 +81,7 @@ export function registerDemoRoutes(app: Express): void {
   // so the editor shows what is stored rather than what a reader resolves to.
   app.get(
     "/api/demo/clients/:niche",
-    requireAuth,
+    requireAgency,
     wrapAsync(async (req, res) => {
       const row = await getDemoClient(String(req.params.niche));
       if (!row) return res.status(404).json({ message: "No such Client." });
@@ -93,7 +97,7 @@ export function registerDemoRoutes(app: Express): void {
 
   app.patch(
     "/api/demo/clients/:niche",
-    requireAuth,
+    requireAgency,
     wrapAsync(async (req, res) => {
       const parsed = clientPatchSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
@@ -106,10 +110,16 @@ export function registerDemoRoutes(app: Express): void {
 
   app.delete(
     "/api/demo/clients/:niche",
-    requireAuth,
+    requireAgency,
     wrapAsync(async (req, res) => {
-      const ok = await deleteDemoClient(String(req.params.niche));
-      if (!ok) return res.status(404).json({ message: "No such Client." });
+      const result = await deleteDemoClient(String(req.params.niche));
+      if (result === "missing") return res.status(404).json({ message: "No such Client." });
+      if (result === "curated") {
+        return res.status(409).json({
+          message:
+            "That niche is shared vocabulary, not a saved Client. Real campaigns read its word lists, so it cannot be deleted here.",
+        });
+      }
       res.json({ ok: true });
     }),
   );

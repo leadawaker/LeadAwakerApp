@@ -130,6 +130,12 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
     [terms],
   );
 
+  // Curated niche packs are listed and editable but not deletable: real
+  // campaigns read their word lists. The server refuses with a 409, so do not
+  // offer a button that cannot work. This reads the flag rather than guessing
+  // from content, because every curated row has a description too.
+  const canDelete = client?.isDemoClient ?? false;
+
   if (isLoading || !client) {
     return (
       <div className="flex items-center justify-center" style={{ padding: 48, color: "var(--mute)" }}>
@@ -153,13 +159,15 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button
-            className="la-btn la-btn--soft"
-            onClick={() => setConfirmDelete(true)}
-            title={t("clients.delete", "Delete Client")}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {canDelete && (
+            <button
+              className="la-btn la-btn--soft"
+              onClick={() => setConfirmDelete(true)}
+              title={t("clients.delete", "Delete Client")}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
           <button
             className="la-btn la-btn--wine la-btn--pill"
             onClick={save}

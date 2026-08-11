@@ -35,6 +35,13 @@ import {
 /** Languages a demo can run in. Mirrors the demo route's zod enum. */
 export type DemoLang = "en" | "nl" | "pt";
 
+const DEMO_LANGS: readonly DemoLang[] = ["en", "nl", "pt"];
+
+/** Narrows a caller-supplied key before it is used to pick a column. */
+function isDemoLang(value: string): value is DemoLang {
+  return (DEMO_LANGS as readonly string[]).includes(value);
+}
+
 /** The fallback row. Never a selectable Client. */
 const DEFAULT_NICHE = "__default__";
 
@@ -56,10 +63,19 @@ function pick(text: NicheText | null | undefined, lang: DemoLang): string {
   return "";
 }
 
-/** Write one language slot without disturbing the others. */
-function put(text: NicheText | null | undefined, lang: DemoLang, value: string): NicheText {
+/**
+ * Write one language slot without disturbing the others.
+ *
+ * `value` is typed as string but is read straight off a NicheContext, where an
+ * optional field can be absent. Guarding it matters more than it looks:
+ * saveDemoClient builds all fourteen slots before it writes and swallows its
+ * own errors, so one undefined field used to throw past every other slot and
+ * lose the entire Client with nothing but a log line.
+ */
+function put(text: NicheText | null | undefined, lang: DemoLang, value: string | undefined): NicheText {
   const next: NicheText = { ...(text ?? {}) };
-  if (value.trim()) next[lang] = value.trim();
+  const v = (value ?? "").trim();
+  if (v) next[lang] = v;
   return next;
 }
 
@@ -112,6 +128,8 @@ export interface DemoClientSummary {
   companyName: string;
   /** Languages this Client has content for, so the picker can warn on a gap. */
   languages: DemoLang[];
+  /** False for the curated niche packs, which the tab lists but cannot delete. */
+  isDemoClient: boolean;
   updatedAt: Date | null;
 }
 
@@ -140,6 +158,7 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
       label: pick(r.nicheLabel as NicheText, "en") || r.niche,
       companyName: pick(r.companyNameTemplate as NicheText, "en"),
       languages,
+      isDemoClient: r.isDemoClient ?? false,
       updatedAt: r.updatedAt ?? null,
     };
   });
@@ -211,9 +230,16 @@ export async function saveDemoClient(
     };
 
     if (existing) {
+      // isDemoClient is deliberately NOT set here. Minting a demo whose niche
+      // happens to match a curated pack (which is how "Kitchens" ended up with
+      // a demo company name) writes persona content onto that shared row, but
+      // it does not make the row disposable: the engine still reads its word
+      // lists for real campaigns. Only a row this feature CREATED is deletable.
       await db.update(nicheVocabulary).set(values).where(eq(nicheVocabulary.id, existing.id));
     } else {
-      await db.insert(nicheVocabulary).values({ niche: key, createdAt: new Date(), ...values });
+      await db
+        .insert(nicheVocabulary)
+        .values({ niche: key, createdAt: new Date(), isDemoClient: true, ...values });
     }
     return { saved: true, niche: key };
   } catch (err) {
@@ -270,12 +296,20 @@ export async function updateDemoClient(niche: string, patch: ClientPatch): Promi
 
   const values: Record<string, unknown> = { updatedAt: new Date() };
 
+  // Both loops key straight into a Drizzle .set(), so an unknown field name or
+  // language would become a column write. `text: { niche: {...} }` would put a
+  // JS object in the unique key column; an unknown language would index
+  // TERM_COLUMNS to undefined. The route's schema is z.record(z.record(...)),
+  // which validates the VALUES and nothing about the keys, so the whitelist has
+  // to live here, next to the write.
   for (const [field, slots] of Object.entries(patch.text ?? {})) {
+    if (!(field in CLIENT_TEXT_FIELDS)) continue;
     let next: NicheText = { ...((existing as Record<string, unknown>)[field] as NicheText | null ?? {}) };
     for (const [lang, value] of Object.entries(slots ?? {})) {
+      if (!isDemoLang(lang)) continue;
       const v = (value ?? "").trim();
-      if (v) next[lang as DemoLang] = v;
-      else delete next[lang as DemoLang];
+      if (v) next[lang] = v;
+      else delete next[lang];
     }
     values[field] = next;
   }
@@ -284,7 +318,8 @@ export async function updateDemoClient(niche: string, patch: ClientPatch): Promi
     const index = TERM_GROUPS.indexOf(group as TermGroup) as 0 | 1 | 2 | 3 | 4;
     if (index < 0) continue;
     for (const [lang, list] of Object.entries(byLang ?? {})) {
-      const col = termColumn(index, lang as DemoLang);
+      if (!isDemoLang(lang)) continue;
+      const col = termColumn(index, lang);
       values[col] = Array.from(
         new Set((list ?? []).map((w) => String(w).trim()).filter(Boolean)),
       );
@@ -298,10 +333,24 @@ export async function updateDemoClient(niche: string, patch: ClientPatch): Promi
 }
 
 /** Delete a Client. `__default__` is never deletable: it is the fallback row. */
-export async function deleteDemoClient(niche: string): Promise<boolean> {
-  if (niche === DEFAULT_NICHE) return false;
+export async function deleteDemoClient(
+  niche: string,
+): Promise<"deleted" | "missing" | "curated"> {
+  if (niche === DEFAULT_NICHE) return "curated";
+  const row = await getDemoClient(niche);
+  if (!row) return "missing";
+
+  // The Clients tab lists every Niche_Vocabulary row, which includes the
+  // curated niche packs that predate this feature and that the engine merges
+  // into REAL campaigns (word lists, question banks, objection examples).
+  // Those are not personas anyone minted, and deleting one silently degrades a
+  // live campaign. Only the flag decides: all 16 curated rows carry a
+  // description_template from the campaign business-profile pre-fill, so any
+  // content-based test would wave every one of them through.
+  if (!row.isDemoClient) return "curated";
+
   const rows = await db.delete(nicheVocabulary).where(eq(nicheVocabulary.niche, niche)).returning();
-  return rows.length > 0;
+  return rows.length > 0 ? "deleted" : "missing";
 }
 
 /**
@@ -327,6 +376,7 @@ export function demoClientToEditable(row: ClientRow) {
     id: row.id,
     niche: row.niche,
     bookingModeCall: row.bookingModeCall ?? false,
+    isDemoClient: row.isDemoClient ?? false,
     updatedAt: row.updatedAt ?? null,
     text,
     terms,

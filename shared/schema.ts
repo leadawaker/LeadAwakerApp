@@ -399,6 +399,12 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // Does this niche book a CALL or an on-site visit? Per-niche, so it is part
   // of the persona rather than the run.
   bookingModeCall: boolean("booking_mode_call").default(false),
+  // Saved by minting a demo (true), or one of the curated niche packs that the
+  // engine merges into REAL campaigns (false)? Only a saved Client may be
+  // deleted from the Clients tab. Explicit rather than inferred: every curated
+  // row also has a description_template, so content alone cannot tell them
+  // apart.
+  isDemoClient: boolean("is_demo_client").default(false),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
