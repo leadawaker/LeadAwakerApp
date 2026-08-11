@@ -105,11 +105,15 @@ gets locked in.
 Why this is not cosmetic. Three sessions independently found the same gap: the quote
 demo is thinner than the DBR demo, and it is a DATA problem, not prompt craft. On a
 quote-reactivation conversation the AI can never say "the £8,400 for the two French doors
-we sent you in March" because no quote data exists anywhere. Verified: the Leads table
-has 86 columns and zero matching `quote|amount|price|value|deal|proposal|line_item|
-scope|budget|estimat`. `lead_context` is the intended carrier and is set on 0 of 662
-leads. The DBR flow ends with a seven-field brief; the quote flow ends with a status.
-A generated example quote closes that gap for demos without waiting on the import work.
+we sent you in March" because no quote data exists anywhere: the Leads table has 86
+columns and zero matching `quote|amount|price|value|deal|proposal|line_item|scope|
+budget|estimat`. The DBR flow ends with a seven-field brief; the quote flow ends with a
+status.
+
+IGNORE the "0 of 662 leads have lead_context" figure that earlier notes leaned on.
+Gabriel, 2026-08-11: the current leads are seeded rows for showcasing the CRM. Emptiness
+across them is not evidence of anything, and it should not be used to argue for a
+per-lead write path.
 
 What to generate, per Client:
 - a total amount in the Client's currency, plausible for that niche and job size
@@ -117,12 +121,29 @@ What to generate, per Client:
 - a quote date, expressed relatively ("March", "about five months ago")
 - optionally the decision-maker's role, since it feeds change detection
 
+### WHERE lead_context LIVES (Gabriel's call, 2026-08-11)
+
+**The Client/campaign level is the real home. Per-lead is an override that stays empty
+for demos.**
+
+- The example quote is stored on the **Client** row and read from there. One niche, one
+  quote, reused by every demo built from it. It belongs beside the ladder and the
+  vocabulary, which are already Client-level for exactly the same reason.
+- **Do NOT copy it down onto the lead** when a demo is created. Universal-demo leads keep
+  `lead_context` EMPTY so the Client value is what resolves. Copying it down would create
+  two places holding the same sentence and guarantee they drift.
+- The engine's existing precedence (lead-first, campaign-second) already does the right
+  thing: empty lead falls through to the Client/campaign value.
+- Per-lead stays available for a REAL client whose imported rows carry genuine per-row
+  quote detail. That is a production concern, not a demo one.
+
+**Therefore OUT OF SCOPE here:** the per-lead write path (a field on the lead panel, a
+column in the lead import). Earlier notes proposed it as the priority. It is not needed
+for any demo, and the seeded-lead figure that motivated it is not evidence.
+
 Requirements:
 - **Editable in the UI.** Generated is a starting point, never the final word. Same edit
   affordance as the rest of the Clients tab.
-- Stored on the Client row, and copied onto the lead's `lead_context` when a demo is
-  created from that Client, so the engine reads it through the path that already exists.
-- Per-lead override still wins, so a real prospect's real numbers can replace it.
 
 **Blocked on a prompt-93 defect, fix it in the same phase.** `{lead_context}` appears
 exactly ONCE in prompt 93 and sits inside `{{#if conversation_mode == "scoping"}}`.
