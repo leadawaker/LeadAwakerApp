@@ -353,58 +353,48 @@ paths; there is one.
   removing it, and it is why 61's broken opener went unnoticed for months.
 - Do NOT delete any campaign.
 
-## State at the time of writing
-- Prompt 93 live at **v8.25**. Patch modules 01-10 in `/home/gabriel/automations/scripts/prompt93/`.
-  Apply with `NODE_PATH=/home/gabriel/LeadAwakerApp/node_modules node --env-file=/home/gabriel/LeadAwakerApp/.env apply_edit.js ./NN-name.js "label"`.
+## State at the time of writing (refreshed 2026-08-11, pre-compaction)
+
+- **Prompt 93 live at v8.26** (Prompt_Versions archived through v8.25), 42289 chars.
+  Patch modules 01-11 in `/home/gabriel/automations/scripts/prompt93/`. Apply with:
+  `cd scripts/prompt93 && NODE_PATH=/home/gabriel/LeadAwakerApp/node_modules \
+   node --env-file=/home/gabriel/LeadAwakerApp/.env apply_edit.js ./NN-name.js "label"`
+  (NODE_PATH is required: `pg` lives in the CRM's node_modules, not the engine's.)
+  Module 11 is another session's English-only-body pass. VERIFIED after it landed: all
+  six of this session's prompt changes survived it (`assistente de IA`, the manager line,
+  §6.3d, the closing-question variant, the precedence line, `immediate_callback`).
 - Campaigns: 60 Universal Demo (terra, disclosure off), 61 Discovery Demo - Quotes
-  (disclosure opener), 65 Upsell, 66 DBR. 58/61/65/66 still on `gpt-5.6-sol`.
-- Both repos committed through: CRM `cbe62c19` (branch merge), engine `828c32b`.
-- UNCOMMITTED AND NOT OURS — leave alone: `demo_recap.py`, `AiSummaryView.tsx`,
-  `locales/{en,nl}/leads.json` (another session's demo-recap + Brazilian PT work),
-  and the hubspot/outreach tooling files in the engine repo.
+  (opener), 65 Upsell, 66 DBR. 58/61/65/66 still pin `gpt-5.6-sol`; Gabriel flips those
+  in the UI himself now that the picker offers the 5.6 family.
+- Engine committed through `fb22f9c`, CRM through the docs commit that follows this edit.
+- UNCOMMITTED AND NOT OURS — leave alone: `tools/hubspot_enricher.py`,
+  `tools/CHANGELOG-OUTREACH.md`, `tools/OUTREACH-TOOLS.md`, `tools/PRE-CALL-SIGNALS.md`,
+  `tools/leadiq_to_hubspot.py` (engine); `specs/dbr-scoping-mode/implementation-plan.md`,
+  `demo-page.png`, `docs/AI VOICE RESEARCH/` (CRM).
 
-## Landed in parallel on 2026-08-11 (verified, not taken on trust)
-
-A third session shipped three things that touch this spec. All verified against live
-state, not accepted from its report:
-
-- **`Campaigns.lead_context`** exists as a column. Sits where Service used to in Business
-  Setup; Service moved to the AI section. Precedence is lead-first then campaign-second,
-  matching `what_lead_did`. The generator now emits it too (prompt row 91 updated), so a
-  saved Client should carry it: **add it to the Clients table in phase 1.**
-- **Browser demo at `/demo/<token>`**, routed through `/api/web-demo/:token/:suffix?`
-  (`server/routes/demo.ts:241`). A visitor message is packed into the same payload the
-  WhatsApp webhook builds and handed to the same `process_inbound`, so browser transcripts
-  land in the CRM identically. **Consequence for this spec: "send a prospect a demo" now
-  has two surfaces, and the Clients picker must serve both.** The URL points at
-  leadawaker.com, so on the Pi test with `app.leadawaker.com/demo/<token>`.
-- **A real bug it caught:** the niche overlay was gated on a `wa-demo:` prefix, so a
-  personalised BROWSER link would have opened with the right first message and then held
-  the entire conversation in campaign 60's solar vocabulary. Same gate was wrong in the
-  retention purge and the post-booking vCard. Fixed there.
-
-Pre-existing test failures, confirmed NOT caused by this session's work: 5 failures in
-`tests/test_day_followup.py` and `tests/test_slot_signal.py`, stale fakes against
-`raise_on_error` in the Cal.diy booking code (from commit 2070a83). Reproduced identically
-against the pre-change `booking_execution.py`, so the link-fallback edit is not implicated.
-
-Its open item is now CLOSED: the Portuguese disclosure rendered the English phrase
-"digital assistant" inside Portuguese text. Gabriel asked for "assistente de IA da
-{empresa}". Fixed in prompt 93 v8.25 (patch module 10): the term is now named per
-language (en "digital assistant", nl "digitale assistent", pt "assistente de IA") instead
-of a rule saying not to drop the English words "in any language", which pt read literally
-while the Dutch example localised. Verified: with ai_disclosure=second_message the
-resolved prompt carries the pt term and neither of the other two.
-NOTE the OPENER side was already correct and needed no change:
-`_DISCLOSURE_CLAUSE_ON["pt"]` in `_helpers.py` is "o assistente de IA da {company}".
+### Shipped this session, beyond the plan itself
+- `/campaign universal|quote|upsell|dbr` name aliases (ids still work).
+- `/scenario` cut to inquired|quoted, and it now RESETS and replays.
+- Campaign 61's opener given `{agent_name}` + `{disclosure_clause}` (it had neither).
+- Manager line verbatim in disclosure-off, with a decision-mode closing-question variant.
+- §6.3d "speak to someone right now": promises a callback + sends the contact card,
+  gated on `immediate_callback` (derived from `is_demo`).
+- Booking: link fallback when the availability lookup fails, instead of a dead-end stall.
+- The Cal.diy engine-credentials endpoint, recovered by merging
+  `feature/gbp-currency-uk-visitors`. Slots verified live: 79 for the demo account, 95
+  for account 1. Also brought `/uk` `/us` `/nl` routes with it.
+- Persona commands work on generator-less leads and on campaign 61.
+- `extract_project_brief` no longer fabricates a brief from decision transcripts.
+- VIP test-then-send handover (`fb22f9c`).
 
 ## Still open / backlog
 - `/model` and `/wait` write the SHARED campaign row: one `/model luna` repoints the
   public homepage demo for every visitor, permanently. Reported, unfixed.
 - Save-time guard: nothing stops an `opener`-mode campaign whose First_Message lacks
   `{disclosure_clause}` from disclosing nowhere. 61 and 66 both hit this.
-- `_LANG_NAMES` in `_helpers.py` / `ai_service.py` still says "Portuguese", not
-  "Brazilian Portuguese" (another session is fixing the demo_recap copy of this).
+- ~~Brazilian Portuguese in the language tables~~ CLOSED by another session, and better
+  than planned: consolidated into ONE `_LANGUAGE_NAMES` in `tools/lang_field.py`
+  instead of the three duplicated tables. Do not re-fix.
 - kb price deflection: point at outcomes rather than inventing figures.
 - `/scenario` will need `upsell` back as a third option once phase 2 lands (it was cut to
   two on 2026-08-11, before the upsell type was agreed).
