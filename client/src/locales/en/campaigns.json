@@ -770,13 +770,14 @@
       "description": "Business description",
       "kb": "Knowledge base",
       "nicheQuestion": "Niche question",
-      "leadContext": "What the lead already told them",
       "scopingLadder": "Scoping ladder",
       "questionBank": "Question bank",
       "objections": "Objections",
       "firstMessage": "First message",
       "openerPhrase": "Opener phrase",
-      "whenLabel": "Time reference"
+      "whenLabel": "Time reference",
+      "enquiryContext": "What they said when they enquired",
+      "quoteContext": "The quote they are sitting on"
     }
   }
 }

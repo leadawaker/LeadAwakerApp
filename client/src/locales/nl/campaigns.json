@@ -770,13 +770,14 @@
       "description": "Bedrijfsomschrijving",
       "kb": "Kennisbank",
       "nicheQuestion": "Nichevraag",
-      "leadContext": "Wat de lead al verteld heeft",
       "scopingLadder": "Scoping ladder",
       "questionBank": "Vragenbank",
       "objections": "Bezwaren",
       "firstMessage": "Eerste bericht",
       "openerPhrase": "Openingszin",
-      "whenLabel": "Tijdsaanduiding"
+      "whenLabel": "Tijdsaanduiding",
+      "enquiryContext": "Wat ze zeiden bij hun aanvraag",
+      "quoteContext": "De offerte waar ze op zitten"
     }
   }
 }

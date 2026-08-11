@@ -385,7 +385,16 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   usp: jsonb("usp").$type<NicheText>().default({}),
   nicheQuestion: jsonb("niche_question").$type<NicheText>().default({}),
   firstMessage: jsonb("first_message").$type<NicheText>().default({}),
-  leadContext: jsonb("lead_context").$type<NicheText>().default({}),
+  // The two halves of what the prompt reads as {lead_context}. A Client is
+  // reused across conversation types, and the variable does two different jobs:
+  // in scoping mode it pre-fills the ladder (skip what they already told us),
+  // in decision mode it is the quote being reconsidered. One field cannot serve
+  // both, so the row holds both and the engine picks by conversation_mode.
+  // What they said when they first came in. Ladder pre-fill.
+  enquiryContext: jsonb("enquiry_context").$type<NicheText>().default({}),
+  // The example quote: total, 2-4 line items, a relative date, optionally the
+  // decision-maker's role. Change detection.
+  quoteContext: jsonb("quote_context").$type<NicheText>().default({}),
   // Time reference only, no action ("a few months ago"). Stored rather than
   // re-derived so a re-picked Client reads exactly like a freshly generated one.
   whenLabel: jsonb("when_label").$type<NicheText>().default({}),

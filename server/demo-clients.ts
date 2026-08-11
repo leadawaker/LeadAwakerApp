@@ -210,7 +210,8 @@ export async function saveDemoClient(
       usp: put(existing?.usp as NicheText, language, ctx.usp),
       nicheQuestion: put(existing?.nicheQuestion as NicheText, language, ctx.niche_question),
       firstMessage: put(existing?.firstMessage as NicheText, language, ctx.first_message),
-      leadContext: put(existing?.leadContext as NicheText, language, ctx.lead_context),
+      enquiryContext: put(existing?.enquiryContext as NicheText, language, ctx.enquiry_context),
+      quoteContext: put(existing?.quoteContext as NicheText, language, ctx.quote_context),
       whenLabel: put(existing?.whenLabel as NicheText, language, ctx.when_label),
     };
 
@@ -258,7 +259,8 @@ export const CLIENT_TEXT_FIELDS = {
   descriptionTemplate: "description_template",
   kbTemplate: "kb_template",
   nicheQuestion: "niche_question",
-  leadContext: "lead_context",
+  enquiryContext: "enquiry_context",
+  quoteContext: "quote_context",
   scopingLadder: "scoping_ladder",
   openerPhrase: "opener_phrase",
   firstMessage: "first_message",
@@ -430,7 +432,8 @@ export function demoClientToContext(
     // dental prospect about roof faces. Same guard the generator uses.
     scoping_ladder:
       pick(row.scopingLadder as NicheText, language) || buildGenericScopingLadder(label, language),
-    lead_context: pick(row.leadContext as NicheText, language),
+    enquiry_context: pick(row.enquiryContext as NicheText, language),
+    quote_context: pick(row.quoteContext as NicheText, language),
     kb: pick(row.kbTemplate as NicheText, language),
     advisor_term: firstTerm(row, 3, language),
     project_term: firstTerm(row, 0, language) || label,

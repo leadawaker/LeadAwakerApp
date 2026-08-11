@@ -31,7 +31,11 @@ const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: numb
   { field: "descriptionTemplate", labelKey: "clients.fields.description", rows: 3 },
   { field: "kbTemplate", labelKey: "clients.fields.kb", rows: 6 },
   { field: "nicheQuestion", labelKey: "clients.fields.nicheQuestion", rows: 2 },
-  { field: "leadContext", labelKey: "clients.fields.leadContext", rows: 2 },
+  // The two halves of {lead_context}. Adjacent on purpose: which one the demo
+  // uses is decided by the scenario, not here, and seeing them together is what
+  // makes that legible.
+  { field: "enquiryContext", labelKey: "clients.fields.enquiryContext", rows: 2 },
+  { field: "quoteContext", labelKey: "clients.fields.quoteContext", rows: 5 },
   { field: "scopingLadder", labelKey: "clients.fields.scopingLadder", rows: 8 },
   { field: "questionBank", labelKey: "clients.fields.questionBank", rows: 4 },
   { field: "objectionExamples", labelKey: "clients.fields.objections", rows: 4 },
