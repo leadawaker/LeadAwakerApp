@@ -402,6 +402,12 @@
       // rendered as a wa.me link with no recipient.
       var waUrl = s.waLink || "";
       var restartsLeft = Math.max(0, (s.restartsMax || 0) - (s.restartsUsed || 0));
+      // Only invited links (a prospect Gabriel sent this to) get to restart as
+      // the OTHER scenario. Null on a public homepage session and on a link
+      // that has spent its restarts; the server decides, not the page.
+      var opts = restartsLeft > 0 && s.restartOptions && s.restartOptions.length
+        ? s.restartOptions
+        : null;
 
       root.innerHTML =
         '<header class="hdr">' +
@@ -420,6 +426,10 @@
               messagesHtml(s) +
             "</div>" +
             '<div class="composer-wrap">' +
+              // Reads as a label for the two scenario buttons below it, so the
+              // buttons can stay short ("never got a quote" / "already has a
+              // quote"). Absent on a public session, which has one button.
+              (opts ? '<p class="foot">' + esc(opts[0].heading) + "</p>" : "") +
               '<div class="composer">' +
                 '<div class="input-shell">' +
                   '<label class="sr" for="msg">Your reply</label>' +
@@ -430,7 +440,16 @@
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
                   "</button>" +
                 "</div>" +
-                '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">Restart</button>" +
+                // Invited links get the two scenarios as buttons; a public
+                // homepage session keeps the plain Restart it always had.
+                // Labels and heading come from the server, already in the
+                // lead's language (src/automations/demo_restart.py).
+                (opts
+                  ? opts.map(function (o) {
+                      return '<button class="ghost restart-opt" data-scenario="' + esc(o.value) + '"' +
+                        (busy || restartsLeft <= 0 ? " disabled" : "") + ">" + esc(o.label) + "</button>";
+                    }).join("")
+                  : '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">Restart</button>") +
               "</div>" +
               '<p class="foot">' +
                 (waUrl
@@ -470,7 +489,10 @@
         });
       }
       if (send) send.addEventListener("click", doSend);
-      if (restart) restart.addEventListener("click", doRestart);
+      if (restart) restart.addEventListener("click", function () { doRestart(null); });
+      Array.prototype.forEach.call(document.querySelectorAll(".restart-opt"), function (b) {
+        b.addEventListener("click", function () { doRestart(b.getAttribute("data-scenario")); });
+      });
     }
 
     function doSend() {
@@ -502,14 +524,20 @@
       });
     }
 
-    function doRestart() {
+    // `scenario` is null for the plain replay (public sessions) and one of the
+    // server-supplied values for the two-option restart on an invited link.
+    function doRestart(scenario) {
       if (busy || !state) return;
       busy = true;
       pending = false;
       recap = null;
       draft = "";
       render();
-      api("/restart", { method: "POST" }).then(function (next) {
+      api("/restart", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(scenario ? { scenario: scenario } : {})
+      }).then(function (next) {
         busy = false;
         state = next;
         lastSig = signature(next);
