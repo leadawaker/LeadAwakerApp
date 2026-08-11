@@ -72,6 +72,59 @@ Campaigns page**. It is no longer part of the Prompts page.
   (`src/automations/conversation/prompt_builder.py`). The library adds REUSE, not new
   capability. Say so honestly — it is an ergonomics change, which is what was asked for.
 
+## Where each control lives (decided 2026-08-11, post-compaction)
+
+Gabriel asked whether the Business tab should come back for campaign 60 now that the
+Clients library exists. It should not, and the reasoning generalises into a rule for the
+whole demo surface.
+
+**The split is "who is this demo for" (durable) vs "run it now" (transient).**
+
+- **Clients tab** = where a persona is authored and kept. This is the resurrected Business
+  tab, promoted to first-class and detached from the campaign row.
+- **AI tab on campaign 60** = the run strip. Client picker, demo lead name, scenario,
+  opener + template picker, agent name. Everything touched in the minute before a link is
+  sent, nothing that is authored.
+
+**1. The scenario picker moves to the AI tab, beside the demo lead name, and MUST be
+transient.** Do NOT reuse `conversation_mode_override`
+(`settings/BehaviorSectionFields.tsx:123`): it is a column on the Campaigns row, so
+flipping it on campaign 60 repoints the PUBLIC homepage demo permanently, for every
+visitor. Same footgun as `/model` and `/wait` (already in Still Open below). Model it on
+`launchName` instead: local state that rides along into the Launch button's `/start`
+message and into the Share dialog's minted link. WhatsApp `/scenario` is already safe
+because it writes per lead and then resets and replays (`demo_commands.py:875`).
+
+**2. The Business tab does NOT come back on campaign 60, and nothing gets deleted
+either.** Its fields are, near enough one for one, the Client row. Restoring them on 60
+would create a second place to edit the same thing, where the edits hit the SHARED
+campaign row and get overwritten by `_overlay_demo_niche_onto_campaign` on the next demo
+anyway: the original "persona dies with the lead" problem with extra steps. It stays
+hidden on 60 (`CampaignSettingsLayout.tsx:71`) and stays fully present on real client
+campaigns, where it is the only surface that configures company/service/USP/KB/language
+for a paying client. It simply stops being part of the demo story.
+
+Related: the tab's demo rationale is a dead sales motion. The code still describes
+First_Message as "the field Finn live-edits on screenshare during the demo"
+(`BusinessSectionFields.tsx:338`, trust kit Part 1). Finn is Friday-only coaching now and
+the demo is a post-call CTA link, not a narrated screenshare. Comment is stale, behaviour
+is fine, do not rip it out on this pass.
+
+**3. The objection playbook does NOT go on the Client row.** Gabriel: it is spectacle for
+a prospect, and "we adjust to your answers during onboarding" covers it. It also costs
+nothing to drop, because it was never in the demo generation path in the first place:
+
+- `generateNicheContext` emits `niche_objection_examples` (`server/demo-session.ts:214`,
+  written at `:626`) plus objection rebuttals folded into the `kb` line. BOTH are already
+  Niche_Vocabulary columns (`objection_examples`, `kb_template`), so per-Client objection
+  handling already exists and already survives.
+- `Campaigns.objection_playbook` is a separate campaign-level field, read from the
+  campaign row by `ai_conversation.py:443` via `_format_objection_playbook_block`.
+  Campaign 60's own playbook stays as the shared generic backstop.
+
+So: no new column, no editor, no phase 1 scope change. Recorded only so a later session
+does not "notice the gap" and add it back.
+
 ## Phases
 
 ### Phase 1 — save and re-pick personas (START HERE, self-contained)
