@@ -125,6 +125,45 @@ nothing to drop, because it was never in the demo generation path in the first p
 So: no new column, no editor, no phase 1 scope change. Recorded only so a later session
 does not "notice the gap" and add it back.
 
+## A Client is ENGLISH, except its terms (tested 2026-08-11)
+
+Gabriel asked whether a Client needs content per language at all, or whether one
+English persona can serve every demo and let the AI translate live. Tested rather than
+reasoned about, because it decides how much work every new Client costs.
+
+**Test:** generated an English-only Client ("bespoke staircase joinery"), minted a demo
+from it with `language: nl`, ran a real conversation through the browser demo.
+
+**Result:** the AI's reply was native Dutch with correct trade vocabulary ("een open eiken
+trap naar de eerste verdieping", "van de afgewerkte vloer beneden tot de afgewerkte vloer
+boven") produced from an ENGLISH kb and an ENGLISH scoping ladder. The model read English
+and wrote Dutch. It reached for "trap" itself without being given the word.
+
+**The one leak, in the opener: "Je nam een tijd geleden contact met ons op over je
+staircase".** `{project_term}` is substituted verbatim by `render_demo_first_message`
+(`demo_recap.py`), which carries an explicit do-not-retranslate rule. No model sees it.
+
+Note what was NOT the problem: the opener TEMPLATE rendered correct Dutch, because it
+comes from campaign 60's bilingual `First_Message`, not from the Client.
+
+**So the rule for the library:**
+
+| Client field | Language |
+|---|---|
+| `kb_template`, `description_template`, `scoping_ladder`, `question_bank`, `objection_examples`, `usp`, `niche_question`, `lead_context` | **English only.** The model translates. Do not generate these per language. |
+| the five term lists (project/proposal/decision/advisor/visit) | **Per language.** Substituted verbatim into the opener. Five short words. |
+| the opener itself | Per language, but campaign-level today. Phase 2's job. |
+
+This is why the `*_pt` term columns added in phase 1 earn their place and the parallel
+`*_pt` TEXT columns would not have. It also means a new Client costs one generation plus
+five words per extra language, not a full second generation.
+
+Corollary, recorded so it is not rediscovered: the engine's `Niche_Vocabulary` reader
+normalises `pt` to `en` (`_norm_lang`, changed by the language session on 2026-08-11), so
+the `*_pt` columns are invisible to THAT path. Demos are unaffected, because demo terms
+travel in `demo_niche` through `_overlay_demo_niche_onto_campaign` and never through the
+vocabulary lookup. It only matters if a Client is ever consumed outside the demo path.
+
 ## Phases
 
 ### Phase 1 — save and re-pick personas (START HERE, self-contained)
