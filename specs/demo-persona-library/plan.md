@@ -98,6 +98,46 @@ is written to `leads.demo_niche` and dies there. So phase 1 is now only:
 Touches neither the opener nor the campaign structure, so nothing still under discussion
 gets locked in.
 
+### Phase 1b — every Client carries an example quote (Gabriel, 2026-08-11)
+
+**Each generated Client also gets a plausible quote for its niche, editable in the UI.**
+
+Why this is not cosmetic. Three sessions independently found the same gap: the quote
+demo is thinner than the DBR demo, and it is a DATA problem, not prompt craft. On a
+quote-reactivation conversation the AI can never say "the £8,400 for the two French doors
+we sent you in March" because no quote data exists anywhere. Verified: the Leads table
+has 86 columns and zero matching `quote|amount|price|value|deal|proposal|line_item|
+scope|budget|estimat`. `lead_context` is the intended carrier and is set on 0 of 662
+leads. The DBR flow ends with a seven-field brief; the quote flow ends with a status.
+A generated example quote closes that gap for demos without waiting on the import work.
+
+What to generate, per Client:
+- a total amount in the Client's currency, plausible for that niche and job size
+- 2-4 line items with the scope a real quote would name
+- a quote date, expressed relatively ("March", "about five months ago")
+- optionally the decision-maker's role, since it feeds change detection
+
+Requirements:
+- **Editable in the UI.** Generated is a starting point, never the final word. Same edit
+  affordance as the rest of the Clients tab.
+- Stored on the Client row, and copied onto the lead's `lead_context` when a demo is
+  created from that Client, so the engine reads it through the path that already exists.
+- Per-lead override still wins, so a real prospect's real numbers can replace it.
+
+**Blocked on a prompt-93 defect, fix it in the same phase.** `{lead_context}` appears
+exactly ONCE in prompt 93 and sits inside `{{#if conversation_mode == "scoping"}}`.
+The resolver strips non-matching branches before the call, so a decision-mode lead has
+its `lead_context` computed by the engine and then thrown away. Generating quotes without
+fixing this produces data that is discarded at exactly the moment it is needed. Move
+`{lead_context}` to the shared header so both modes see it, or add it to the decision
+branch. Archive-then-patch, like every other prompt 93 edit.
+
+Worth pairing with it (small, same area): decision mode has NO change-detection
+questions. Its block is verbatim the original Step 3 text. Two or three questions belong
+there: has the scope moved, has the timing moved, is the same person deciding.
+Deliberately NOT a ladder, because §4.6 already forbids re-litigating a quote and eight
+questions would read as "we lost your file".
+
 ### Phase 2 — campaign type + per-type openers
 3. Type toggle on campaign 60: **inquiry / quotes / upsell**. Replaces the
    scoping/decision picker (Gabriel: "I don't think that I will switch it tbh" — the
@@ -131,7 +171,7 @@ gets locked in.
 - Do NOT delete any campaign.
 
 ## State at the time of writing
-- Prompt 93 live at **v8.24**. Patch modules 01-09 in `/home/gabriel/automations/scripts/prompt93/`.
+- Prompt 93 live at **v8.25**. Patch modules 01-10 in `/home/gabriel/automations/scripts/prompt93/`.
   Apply with `NODE_PATH=/home/gabriel/LeadAwakerApp/node_modules node --env-file=/home/gabriel/LeadAwakerApp/.env apply_edit.js ./NN-name.js "label"`.
 - Campaigns: 60 Universal Demo (terra, disclosure off), 61 Discovery Demo - Quotes
   (disclosure opener), 65 Upsell, 66 DBR. 58/61/65/66 still on `gpt-5.6-sol`.
@@ -165,9 +205,15 @@ Pre-existing test failures, confirmed NOT caused by this session's work: 5 failu
 `raise_on_error` in the Cal.diy booking code (from commit 2070a83). Reproduced identically
 against the pre-change `booking_execution.py`, so the link-fallback edit is not implicated.
 
-Its open item, Gabriel's call: the Portuguese disclosure renders the English phrase
-"digital assistant" inside Portuguese text. That is prompt 93's deliberate rule from the
-three-mode work, not a regression, but it reads oddly.
+Its open item is now CLOSED: the Portuguese disclosure rendered the English phrase
+"digital assistant" inside Portuguese text. Gabriel asked for "assistente de IA da
+{empresa}". Fixed in prompt 93 v8.25 (patch module 10): the term is now named per
+language (en "digital assistant", nl "digitale assistent", pt "assistente de IA") instead
+of a rule saying not to drop the English words "in any language", which pt read literally
+while the Dutch example localised. Verified: with ai_disclosure=second_message the
+resolved prompt carries the pt term and neither of the other two.
+NOTE the OPENER side was already correct and needed no change:
+`_DISCLOSURE_CLAUSE_ON["pt"]` in `_helpers.py` is "o assistente de IA da {company}".
 
 ## Still open / backlog
 - `/model` and `/wait` write the SHARED campaign row: one `/model luna` repoints the
