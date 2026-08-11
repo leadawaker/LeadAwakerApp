@@ -259,6 +259,49 @@ existing-customer phrasing fell through to unclassified, which resolves to SCOPI
 a lead who had already bought would be walked through a fresh scoping ladder. Campaign
 65 and the `/campaign upsell` alias are untouched and still reachable.
 
+## DEFERRED: demo-as-them from a prospect's website URL (Gabriel, 2026-08-11)
+
+Paste the prospect's URL, generate the demo as THEIR firm, mint the link. Gabriel's
+call after seeing the shape: *"it does look pretty complicated, maybe defer it actually."*
+Not rejected, parked. Two findings worth keeping so it is not re-estimated from zero:
+
+- **The scraper exists and is better than a naive fetch.** `_scrape_homepage(url)` at
+  `tools/prospect_enricher.py:546` (aiohttp + browser headers + redirects), with
+  `_extract_internal_links` doing priority-scored internal crawling, BeautifulSoup/lxml
+  parsing, and Firecrawl keys already configured (`_firecrawl_keys`). Firecrawl is
+  exactly the answer to the "JS-rendered pages return an empty shell / sites block
+  scraping" risk that was flagged as the main danger. So the input side is mostly a
+  mapping job onto the shape `generateCampaignContext` already consumes, not new
+  infrastructure.
+- It stays deferred anyway because it only pays off if the demo becomes the CTA in cold
+  outreach rather than something shown after a discovery call. That sequencing is not
+  settled, and phase 1 (reusable Clients) is the prerequisite either way: a per-URL demo
+  that cannot be saved and re-picked has the same dead-end problem this whole spec exists
+  to fix.
+
+## >>> LIVE PROBLEM, unrelated to the deferral: you cannot test a link and then send it
+
+Gabriel asked whether he could test a demo before sending it. Today, on a minted
+WhatsApp link, effectively NO, and this affects links he is sending right now.
+
+`_claim_demo_lead` (`src/webhooks/whatsapp_cloud_routes.py:174`) attaches the sender's
+phone to the demo lead on a first-writer-wins UPDATE (`WHERE id = $1 AND phone IS NULL`).
+Any other phone that later opens the same link is REFUSED, silently
+(`token_already_claimed_by_other`, `:341-347`). So if Gabriel tests the link himself, his
+own phone claims it and the prospect gets nothing.
+
+The browser surface has the mirror of this: `web_demo_restart` refuses with
+`claimed_by_whatsapp` when `channel_identifier` does not start with `web-demo:`
+(`web_demo_routes.py:339`).
+
+Options when this is picked up (NOT decided):
+1. Mint two links per prospect, one to burn on testing and one to send.
+2. A `preview` flag that exercises the session without setting `phone`.
+3. Let Gabriel's own VIP numbers test without claiming, since they are already a known
+   frozenset (`VIP_PHONES`).
+(3) is the smallest and matches how he actually works. Worth doing alongside the invited
+flag in phase 1c, since both are mint-time concerns on the same code path.
+
 ### Phase 2 — campaign type + per-type openers
 3. Type toggle on campaign 60: **inquiry / quotes**. (Upsell deferred, see below.)
    Replaces the
