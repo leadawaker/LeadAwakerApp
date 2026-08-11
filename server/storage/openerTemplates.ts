@@ -7,6 +7,16 @@ export interface OpenerTemplateEdit {
   titleNl?: string;
   bodyEn?: string;
   bodyNl?: string;
+  type?: OpenerTemplateType;
+}
+
+/** Which conversation type an archetype is written for. Same tokens the engine
+ *  branches on; "both" means the copy commits to neither. */
+export const OPENER_TEMPLATE_TYPES = ["scoping", "decision", "both"] as const;
+export type OpenerTemplateType = (typeof OPENER_TEMPLATE_TYPES)[number];
+
+export function isOpenerTemplateType(v: unknown): v is OpenerTemplateType {
+  return typeof v === "string" && (OPENER_TEMPLATE_TYPES as readonly string[]).includes(v);
 }
 
 export const openerTemplatesStorage = {

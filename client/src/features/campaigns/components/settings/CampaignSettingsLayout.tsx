@@ -6,6 +6,7 @@ import { BusinessSectionFields } from "./BusinessSectionFields";
 import { AISectionFields } from "./AISectionFields";
 import { BehaviorSectionFields } from "./BehaviorSectionFields";
 import { CampaignGenerateButton } from "./CampaignGenerateButton";
+import type { DemoMode } from "../../demoMode";
 
 // Opens WhatsApp on a chat with the Lead Awaker AI line, "/start" prefilled.
 // wa.me can only prefill the text box — the operator taps send and the AI replies.
@@ -58,8 +59,19 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   // switches the VIP lead to this campaign and sets first_name before replaying
   // the opener. Name empty → "/start <campaignId>"; both empty → plain "/start".
   const [launchName, setLaunchName] = useState("");
+  // Which conversation type to run THIS demo as. Transient on purpose, exactly
+  // like launchName above: conversation_mode_override is a column on the
+  // Campaigns row, so setting it on campaign 60 would repoint the public
+  // homepage demo for every visitor at once, permanently. This rides along in
+  // the /start payload instead and the engine writes it per lead.
+  // Defaults to "scoping" because that is what the engine already derives for a
+  // lead with no stage set (derive_conversation_mode("") -> "scoping"), so the
+  // control starts by describing what would happen anyway.
+  const [demoMode, setDemoMode] = useState<DemoMode>("scoping");
   const launchCampaignId = (props.campaign?.id || props.campaign?.Id) as number | undefined;
-  const launchText = [LAUNCH_WA_MESSAGE, launchCampaignId, launchName.trim()]
+  // "scoping"/"decision" are accepted verbatim by the engine's /scenario alias
+  // table, so the token is the same word end to end: UI, launch payload, engine.
+  const launchText = [LAUNCH_WA_MESSAGE, launchCampaignId, isUniversal ? demoMode : "", launchName.trim()]
     .filter((p) => p !== undefined && p !== "" && p !== null)
     .join(" ");
 
@@ -152,7 +164,12 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
                   generated per lead, so only the opener surface is shown here. */}
               {isUniversal && (
                 <div style={{ marginBottom: 'var(--gap-form, 24px)' }}>
-                  <BusinessSectionFields {...props} launchName={launchName} setLaunchName={setLaunchName} openerOnly />
+                  <BusinessSectionFields
+                    {...props}
+                    launchName={launchName} setLaunchName={setLaunchName}
+                    demoMode={demoMode} setDemoMode={setDemoMode}
+                    openerOnly
+                  />
                 </div>
               )}
               <AISectionFields {...props} conversationPrompts={props.conversationPrompts ?? []} />

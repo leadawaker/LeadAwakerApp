@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { apiFetch } from "@/lib/apiUtils";
 import { xBase, xDefault, xSpan } from "./constants";
 import { useDemoClients } from "../../api/demoClientsApi";
+import { DEMO_MODES, DEMO_MODE_SCENARIO, type DemoMode } from "../../demoMode";
 
 // ── Duplicate button (inline confirm) ─────────────────────────────────────────
 export function DuplicateButton({
@@ -363,6 +364,11 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   const [niche, setNiche] = useState("");
   // A saved Client, re-picked instead of generated. Wins over `niche` when set.
   const [savedClient, setSavedClient] = useState("");
+  // Which conversation this minted link should open in: a lead who was never
+  // quoted, or one sitting on a quote. Defaults to "decision" because that is
+  // what the public homepage form defaults to, so a link minted here without
+  // touching the control behaves like the demo everyone else sees.
+  const [demoMode, setDemoMode] = useState<DemoMode>("decision");
   const [prospectCompany, setProspectCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -386,6 +392,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
     // set would silently hand the next prospect the previous prospect's persona
     // with no obvious way back.
     setSavedClient("");
+    setDemoMode("decision");
     setLoading(false);
     setError(null); setDemoLink(null); setWaLink(null); setFellBack(false); setCopied(null);
   };
@@ -415,6 +422,10 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
               ? { niche: niche.trim() }
               : {}),
           ...(canGenerateNiche && prospectCompany.trim() ? { companyName: prospectCompany.trim() } : {}),
+          // Sent on the re-pick path too: demoClientToContext takes the scenario
+          // as an argument, so the same saved Client can be minted as either
+          // conversation without being re-generated.
+          ...(canGenerateNiche ? { scenario: DEMO_MODE_SCENARIO[demoMode] } : {}),
         }),
       });
       if (!res.ok) {
@@ -539,6 +550,23 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                       />
                     </div>
                   </>
+                )}
+                {canGenerateNiche && (
+                  <div>
+                    <label className="block text-[12px] font-medium mb-1">{t("share.demoMode", "Conversation")}</label>
+                    <div className="flex gap-1.5">
+                      {DEMO_MODES.map((m) => (
+                        <button key={m} type="button" onClick={() => setDemoMode(m)}
+                          className={cn("px-3 py-1 rounded-md border text-[12px] font-medium transition-colors",
+                            demoMode === m ? "border-brand-indigo bg-brand-indigo text-white" : "border-black/[0.125] bg-white hover:bg-muted/50")}>
+                          {t(`share.demoModeOptions.${m}`)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                      {t("share.demoModeHint", "Whether this prospect's lead was ever quoted. Decides the opener and how the AI opens the conversation.")}
+                    </p>
+                  </div>
                 )}
                 <div>
                   <label className="block text-[12px] font-medium mb-1">{t("share.language", "Language")}</label>

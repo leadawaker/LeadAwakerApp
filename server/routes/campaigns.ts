@@ -13,6 +13,7 @@ import {
   insertPromptVersionsSchema,
   openerTemplates,
 } from "@shared/schema";
+import { OPENER_TEMPLATE_TYPES, isOpenerTemplateType, type OpenerTemplateEdit } from "../storage/openerTemplates";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
@@ -257,12 +258,21 @@ export function registerCampaignsRoutes(app: Express): void {
   }));
 
   app.patch("/api/opener-templates/:id", requireAgency, wrapAsync(async (req, res) => {
-    const { titleEn, titleNl, bodyEn, bodyNl } = fromDbKeys(req.body, openerTemplates);
-    const edit: Record<string, string> = {};
+    const { titleEn, titleNl, bodyEn, bodyNl, type } = fromDbKeys(req.body, openerTemplates);
+    const edit: OpenerTemplateEdit = {};
     if (typeof titleEn === "string") edit.titleEn = titleEn;
     if (typeof titleNl === "string") edit.titleNl = titleNl;
     if (typeof bodyEn === "string") edit.bodyEn = bodyEn;
     if (typeof bodyNl === "string") edit.bodyNl = bodyNl;
+    // Validated rather than passed through: the column is NOT NULL and the
+    // picker filters on it, so an arbitrary string would hide the template from
+    // every filter with no way to get it back from the UI.
+    if (type !== undefined) {
+      if (!isOpenerTemplateType(type)) {
+        return res.status(400).json({ message: `type must be one of ${OPENER_TEMPLATE_TYPES.join(", ")}` });
+      }
+      edit.type = type;
+    }
 
     const row = await storage.updateOpenerTemplate(req.params.id, edit);
     if (!row) return res.status(404).json({ message: "Template not found" });

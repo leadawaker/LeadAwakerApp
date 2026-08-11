@@ -68,7 +68,13 @@
     "telegramShare": "Deel deze Telegram-link, de bot vraagt bij het eerste bericht om taal en naam.",
     "savedClient": "Bewaarde klant",
     "savedClientNone": "Nieuwe aanmaken",
-    "reusing": "Demo voorbereiden..."
+    "reusing": "Demo voorbereiden...",
+    "demoMode": "Gesprek",
+    "demoModeHint": "Of deze prospect zijn lead ooit een offerte heeft gehad. Bepaalt de opener en hoe de AI het gesprek begint.",
+    "demoModeOptions": {
+      "scoping": "Nooit geofferteerd",
+      "decision": "Heeft een offerte"
+    }
   },
   "niche": {
     "new": "Nieuwe niche…",
@@ -446,6 +452,22 @@
       "behavior": "Gedrag",
       "behaviorTitle": "Gedrag",
       "behaviorDesc": "Planning, limieten, kanaal en boekingsregels"
+    },
+    "demoMode": "Type gesprek",
+    "demoModeHint": "Alleen voor deze run. Er wordt niets opgeslagen op de campagne, dus een demo die je hier start verandert niets voor bezoekers.",
+    "demoModeOptions": {
+      "scoping": "Aanvraag",
+      "decision": "Offertes"
+    },
+    "firstMessageFor": {
+      "scoping": "Eerste bericht (aanvraag)",
+      "decision": "Eerste bericht (offertes)"
+    },
+    "templateType": "Geschreven voor",
+    "templateTypeOptions": {
+      "scoping": "Aanvraag",
+      "decision": "Offertes",
+      "both": "Allebei"
     }
   },
   "meta": {

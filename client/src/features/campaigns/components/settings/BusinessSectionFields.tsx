@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Bot, Building2, MessageSquare,
   Award, Megaphone, BookOpen, Paintbrush, UserRound,
-  HelpCircle, X, Plus, LayoutTemplate,
+  HelpCircle, X, Plus, LayoutTemplate, GitBranch,
 } from "lucide-react";
 import {
   EditText, InfoRow, CopyButton,
@@ -19,6 +19,7 @@ import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { buildMap, resolvePreviewPlainText, DEFAULT_NICHE_TERMS, type CampaignForPreview } from "@/features/prompts/utils/resolveVariables";
 import { OpenerTemplatePicker, type OpenerTemplate } from "./OpenerTemplatePicker";
+import { DEMO_MODES, type DemoMode } from "../../demoMode";
 
 // The four built-in assistant personas (same set as the onboarding wizard). The
 // operator picks one or types a custom name — it's a pick-or-type combobox.
@@ -44,6 +45,11 @@ interface BusinessSectionFieldsProps {
   /** Transient "demo lead name" that feeds the Launch Campaign button (not saved). */
   launchName?: string;
   setLaunchName?: (v: string) => void;
+  /** Transient conversation type for THIS demo run (not saved — see the note on
+   *  the state in CampaignSettingsLayout). Also decides which opener column the
+   *  First Message field below edits. Absent on campaigns with one opener. */
+  demoMode?: DemoMode;
+  setDemoMode?: (v: DemoMode) => void;
   /** Universal demo: render only the opener surface (demo lead name, First
       Message, agent name). The rest of the persona is generated per lead. */
   openerOnly?: boolean;
@@ -53,6 +59,7 @@ export function BusinessSectionFields({
   campaign, isEditing, draft, setDraft,
   focusField, onStartEditField,
   launchName, setLaunchName,
+  demoMode, setDemoMode,
   openerOnly = false,
 }: BusinessSectionFieldsProps) {
   const { t, i18n } = useTranslation("campaigns");
@@ -210,9 +217,23 @@ export function BusinessSectionFields({
     };
   };
 
+  /* ── Which opener is being edited ───────────────────────────────────────
+     A campaign that runs both conversation types holds one opener per type: a
+     lead who was never quoted has to be asked to confirm they are the right
+     person, a lead sitting on a quote already knows exactly who is writing.
+     `demoMode` is only passed on such a campaign; everywhere else there is one
+     First_Message and this collapses to the previous behaviour. */
+  const openerField = demoMode === "scoping" ? "first_message_scoping" : "First_Message";
+  const openerValue = openerField === "first_message_scoping"
+    ? (draft.first_message_scoping ?? (campaign as any).first_message_scoping)
+    : (draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template);
+
   // Merge unsaved edits over the saved campaign so a First Message the operator
   // is actively typing (or a Company Name change made moments ago) shows live.
-  const previewRaw: Record<string, unknown> = { ...campaign, ...draft };
+  // First_Message is forced to the opener actually being edited so the whole
+  // preview chain (buildMap -> previewMap.first_message) resolves the right one
+  // without every layer below needing to know a second column exists.
+  const previewRaw: Record<string, unknown> = { ...campaign, ...draft, First_Message: openerValue };
   // Send language: what the engine will actually deliver — the whole point of
   // the main preview is to catch language/token bugs before they go out.
   const sendLang: "en" | "nl" = String(previewRaw.language ?? "en").toLowerCase().startsWith("nl") ? "nl" : "en";
@@ -245,7 +266,7 @@ export function BusinessSectionFields({
     });
 
   const handlePickTemplate = (tpl: OpenerTemplate) => {
-    setDraft(d => ({ ...d, First_Message: JSON.stringify({ en: tpl.body.en, nl: tpl.body.nl }) }));
+    setDraft(d => ({ ...d, [openerField]: JSON.stringify({ en: tpl.body.en, nl: tpl.body.nl }) }));
     setFirstMessageFocused(false); // land back on the live preview showing the applied template
   };
 
@@ -272,6 +293,31 @@ export function BusinessSectionFields({
               maxLength={80}
               className="la-input"
             />
+          }
+        />
+      )}
+
+      {/* Conversation type for THIS run. Transient, like the demo lead name
+          above: it rides along in the Launch button's /start payload and the
+          engine writes it per lead. It also picks which opener the First
+          Message field below edits. */}
+      {demoMode && setDemoMode && (
+        <InfoRow icon={GitBranch} label={t("config.demoMode")} value={null}
+          description={t("config.demoModeHint")}
+          editChild={
+            <div className="la-seg la-seg--fill">
+              {DEMO_MODES.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setDemoMode(m)}
+                  className={`la-seg-btn${m === demoMode ? ' on' : ''}`}
+                  style={{ padding: '9px 0', fontSize: 11, letterSpacing: '0.08em' }}
+                >
+                  {t(`config.demoModeOptions.${m}`)}
+                </button>
+              ))}
+            </div>
           }
         />
       )}
@@ -339,8 +385,9 @@ export function BusinessSectionFields({
           on screenshare during the demo (Part 1 of the trust-kit spec). Click the
           preview to edit; blur reverts to preview (draft autosaves as-you-type). */}
       <div style={{ gridColumn: '1 / -1' }}>
-        <InfoRow icon={MessageSquare} label={t("config.firstMessage")}
-          value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
+        <InfoRow icon={MessageSquare}
+          label={demoMode ? t(`config.firstMessageFor.${demoMode}`) : t("config.firstMessage")}
+          value={displayText(openerValue)}
           editChild={isEditing ? (
             <div style={{ position: 'relative' }}>
               <button
@@ -355,8 +402,8 @@ export function BusinessSectionFields({
               {firstMessageFocused ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs, 6px)' }}>
                   <EditText
-                    value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)}
-                    onChange={(v) => onTextChange("First_Message", draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template, v)}
+                    value={displayText(openerValue)}
+                    onChange={(v) => onTextChange(openerField, openerValue, v)}
                     onBlur={() => setFirstMessageFocused(false)}
                     multiline
                     minRows={3}
@@ -364,7 +411,7 @@ export function BusinessSectionFields({
                     placeholder={t("config.firstMessagePlaceholder") || "First message template…"}
                   />
                   <div style={{ alignSelf: 'flex-start' }}>
-                    <CopyButton value={displayText(draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)} />
+                    <CopyButton value={displayText(openerValue)} />
                   </div>
                 </div>
               ) : (
@@ -479,6 +526,7 @@ export function BusinessSectionFields({
       uiLang={templateUiLang}
       resolveBody={resolveTemplateBody}
       onPick={handlePickTemplate}
+      filterType={demoMode ?? null}
     />
     </>
   );

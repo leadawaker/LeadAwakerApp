@@ -298,6 +298,10 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     kb: c.kb || "",
     prompt_linked_id: lp ? String(lp.id || lp.Id) : "",
     First_Message: c.First_Message || c.first_message_template || "",
+    // Second opener, used when conversation_mode resolves to "scoping". Empty on
+    // every campaign that has not authored one, which is the fallback the engine
+    // expects — do not default it to First_Message here.
+    first_message_scoping: (c as any).first_message_scoping || "",
     bump_1_template: c.bump_1_template || "",
     bump_1_delay_hours: c.bump_1_delay_hours ?? "",
     bump_1_ai_reference: c.bump_1_ai_reference ?? false,

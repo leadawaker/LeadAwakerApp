@@ -582,6 +582,13 @@ export const campaigns = nocodb.table("Campaigns", {
   inquiryTimeframe: text("inquiry_timeframe"),
   whatLeadDid: text("what_lead_did"),
   firstMessage: text("First_Message"),
+  // Opener used when conversation_mode resolves to "scoping" (no quote exists
+  // yet), so a lead who only ever enquired can be asked to confirm they are the
+  // right person instead of being greeted as a known contact. Same {en,nl} JSON
+  // shape as First_Message, which stays the universal fallback and the
+  // decision-mode opener. Empty on every campaign but 60 — a campaign that
+  // never fills it in keeps its single opener and behaves exactly as before.
+  firstMessageScoping: text("first_message_scoping"),
   // Discovery Demo Trust Kit: up to 3 owner-approved {objection, answer} pairs,
   // injected into the AI's system prompt verbatim-in-substance (see Part 3 of
   // docs/superpowers/specs/2026-07-02-discovery-demo-trust-kit-design.md).
@@ -1711,13 +1718,19 @@ export type CalendarBlock = typeof calendarBlocks.$inferSelect;
 export type InsertCalendarBlock = z.infer<typeof insertCalendarBlockSchema>;
 
 // ─── Opener Templates ─────────────────────────────────────────────────────────
-// The 9 "First Message" opener archetypes shown in the campaign settings
+// The "First Message" opener archetypes shown in the campaign settings
 // template picker. One shared global library (not per-account) — English and
 // Dutch copy are separate columns so each language can be edited independently.
 
 export const openerTemplates = nocodb.table("Opener_Templates", {
-  id: text("id").primaryKey(), // "A".."I"
+  id: text("id").primaryKey(), // "A".."L"
   sortOrder: integer("sort_order").notNull(),
+  // Which conversation type this archetype is written for: "scoping" (no quote
+  // yet), "decision" (a quote is on the table), or "both". The picker filters
+  // to the type being edited, so a "your quote is still open" opener is never
+  // offered for a lead who was never quoted. Same tokens the engine branches on
+  // (derive_conversation_mode), not a third vocabulary.
+  type: text("type").notNull().default("both"),
   titleEn: text("title_en").notNull(),
   titleNl: text("title_nl").notNull(),
   bodyEn: text("body_en").notNull(),

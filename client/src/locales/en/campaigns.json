@@ -68,7 +68,13 @@
     "telegramShare": "Share this Telegram link, the bot asks for language and name on first message.",
     "savedClient": "Saved Client",
     "savedClientNone": "Generate a new one",
-    "reusing": "Preparing their demo..."
+    "reusing": "Preparing their demo...",
+    "demoMode": "Conversation",
+    "demoModeHint": "Whether this prospect's lead was ever quoted. Decides the opener and how the AI opens the conversation.",
+    "demoModeOptions": {
+      "scoping": "Never quoted",
+      "decision": "Has a quote"
+    }
   },
   "niche": {
     "new": "New niche…",
@@ -446,6 +452,22 @@
       "behavior": "Behavior",
       "behaviorTitle": "Behavior",
       "behaviorDesc": "Scheduling, limits, channel, and booking rules"
+    },
+    "demoMode": "Conversation type",
+    "demoModeHint": "For this run only. Nothing is saved to the campaign, so a demo you start here does not change what public visitors get.",
+    "demoModeOptions": {
+      "scoping": "Inquiry",
+      "decision": "Quotes"
+    },
+    "firstMessageFor": {
+      "scoping": "First Message (inquiry)",
+      "decision": "First Message (quotes)"
+    },
+    "templateType": "Written for",
+    "templateTypeOptions": {
+      "scoping": "Inquiry",
+      "decision": "Quotes",
+      "both": "Either"
     }
   },
   "meta": {
