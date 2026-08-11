@@ -15,6 +15,38 @@ Why a campaign row is the wrong container for a persona: a real client needs its
 campaign because it needs its own booking calendar, account, billing and number. None of
 that varies between demos. The campaign row is right for a customer and wrong for a niche.
 
+## Naming and placement (Gabriel, 2026-08-11)
+
+**`Niche_Vocabulary` is renamed "Clients" in the UI**, and moves to a **third tab on the
+Campaigns page**. It is no longer part of the Prompts page.
+
+- Today it renders as `NicheVocabularyPanel`, mounted at
+  `client/src/features/prompts/components/PromptsListView.tsx:1147`. Move it out.
+- The Campaigns page currently has two detail tabs:
+  `CampaignDetailTab = "summary" | "configurations"`
+  (`client/src/features/campaigns/pages/CampaignsPage.tsx:23`, persisted under the
+  `campaigns-detail-tab` localStorage key). Add `"clients"` as the third.
+- Rename in the UI and in new code. The DB table name can stay `Niche_Vocabulary` to
+  avoid a migration across the engine's `_PACK_COLS` reads; if it is renamed, the engine
+  side (`tools/db/niche_vocabulary.py`, the overlay in `prompt_builder.py`) has to move
+  with it in the same change.
+- "Clients" is the right word because that is what these rows model: the business the
+  demo is pretending to be. It is also why they do NOT belong on the Prompts page.
+
+## Company name: per Client AND per lead (answering Gabriel's question)
+
+**Both, and that already works.** Keep it that way.
+
+- The **Client** row carries the default via `company_name_template`.
+- The **lead** keeps its override in `demo_niche.company_name`, which the overlay applies
+  on top (`_overlay_demo_niche_onto_campaign` `_set`s it over the campaign's own), and
+  which `/companyname` and the Share dialog already write.
+- So: pick the "Ferragens" Client, its default company fills in, override it to
+  "Hoffman Puxadores" for that one prospect, and the saved Client is untouched. The next
+  prospect in the same niche starts from the default again.
+- `build_disclosure_clause` reads the same company chain, so the disclosure sentence
+  renames along with it. No extra wiring needed.
+
 ## What ALREADY EXISTS (verified 2026-08-11, do not rebuild)
 
 - **`Niche_Vocabulary`** — the persona library, already built. 17 rows, 23 columns:
@@ -43,11 +75,26 @@ that varies between demos. The campaign row is right for a customer and wrong fo
 ## Phases
 
 ### Phase 1 — save and re-pick personas (START HERE, self-contained)
-1. `/generate` and the homepage form INSERT into `Niche_Vocabulary` instead of only
-   writing `leads.demo_niche`. Add the missing columns listed above.
-2. A persona picker when creating a demo link: choose a saved niche or generate a fresh
-   one. **Company name overridable at pick time**, so "Hoffman Puxadores" is a field edit,
-   not a regeneration.
+
+**Scope shrank on 2026-08-11.** A parallel session shipped the "generate a fresh persona
+for this prospect" half: `POST /api/demo/create-link` already accepts
+`{ niche, companyName, scenario, aiDisclosure, language, firstName, campaignId }`, runs
+`generateNicheContext`, applies `companyName` over the result, and returns a browser link
+plus a WhatsApp link. Verified live against Hoffman Puxadores (Portuguese, correct
+Brazilian second-message disclosure, real hardware ladder). **Do not rebuild that.**
+
+What is still missing is the part Gabriel actually complained about: the generated persona
+is written to `leads.demo_niche` and dies there. So phase 1 is now only:
+
+1. **Persist.** `create-link`, `/generate` and the homepage form INSERT the generated
+   context into the Clients table as well as onto the lead. Add the columns it emits that
+   the table lacks: `first_message`, `service_name`, `usp`, `niche_question`,
+   and `lead_context` (new, see below).
+2. **Re-pick.** The Share dialog and `/generate` accept an existing Client instead of a
+   free-text niche, skipping generation entirely. Company name stays an override field on
+   top of the picked Client (see the section above).
+3. **The Clients tab** on the Campaigns page: list, edit, delete, and "use for a demo".
+
 Touches neither the opener nor the campaign structure, so nothing still under discussion
 gets locked in.
 
@@ -71,6 +118,10 @@ gets locked in.
    reveal on click. Gabriel picked **explicit picker in the UI** over language-derived:
    language must stop implying jurisdiction, so a UK-style no-disclosure conversation can
    be shown in Dutch.
+   **Partly done already:** `create-link` takes an `aiDisclosure` argument, so the
+   per-demo override exists at the API. What is missing is the UI control and killing the
+   language→jurisdiction default in `server/demo-session.ts` (`en→off / nl→opener /
+   pt→second_message`).
 6. Archive (NOT delete) campaigns 61, 65, 66. All three are already `Draft`.
    61 has 14 leads and possibly shared links; 65 and 66 have never had a single lead.
 
@@ -88,6 +139,35 @@ gets locked in.
 - UNCOMMITTED AND NOT OURS — leave alone: `demo_recap.py`, `AiSummaryView.tsx`,
   `locales/{en,nl}/leads.json` (another session's demo-recap + Brazilian PT work),
   and the hubspot/outreach tooling files in the engine repo.
+
+## Landed in parallel on 2026-08-11 (verified, not taken on trust)
+
+A third session shipped three things that touch this spec. All verified against live
+state, not accepted from its report:
+
+- **`Campaigns.lead_context`** exists as a column. Sits where Service used to in Business
+  Setup; Service moved to the AI section. Precedence is lead-first then campaign-second,
+  matching `what_lead_did`. The generator now emits it too (prompt row 91 updated), so a
+  saved Client should carry it: **add it to the Clients table in phase 1.**
+- **Browser demo at `/demo/<token>`**, routed through `/api/web-demo/:token/:suffix?`
+  (`server/routes/demo.ts:241`). A visitor message is packed into the same payload the
+  WhatsApp webhook builds and handed to the same `process_inbound`, so browser transcripts
+  land in the CRM identically. **Consequence for this spec: "send a prospect a demo" now
+  has two surfaces, and the Clients picker must serve both.** The URL points at
+  leadawaker.com, so on the Pi test with `app.leadawaker.com/demo/<token>`.
+- **A real bug it caught:** the niche overlay was gated on a `wa-demo:` prefix, so a
+  personalised BROWSER link would have opened with the right first message and then held
+  the entire conversation in campaign 60's solar vocabulary. Same gate was wrong in the
+  retention purge and the post-booking vCard. Fixed there.
+
+Pre-existing test failures, confirmed NOT caused by this session's work: 5 failures in
+`tests/test_day_followup.py` and `tests/test_slot_signal.py`, stale fakes against
+`raise_on_error` in the Cal.diy booking code (from commit 2070a83). Reproduced identically
+against the pre-change `booking_execution.py`, so the link-fallback edit is not implicated.
+
+Its open item, Gabriel's call: the Portuguese disclosure renders the English phrase
+"digital assistant" inside Portuguese text. That is prompt 93's deliberate rule from the
+three-mode work, not a regression, but it reads oddly.
 
 ## Still open / backlog
 - `/model` and `/wait` write the SHARED campaign row: one `/model luna` repoints the
