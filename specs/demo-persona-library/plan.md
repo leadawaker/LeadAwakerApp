@@ -166,7 +166,37 @@ vocabulary lookup. It only matters if a Client is ever consumed outside the demo
 
 ## Phases
 
-### Phase 1 — save and re-pick personas (START HERE, self-contained)
+### Phase 1 — save and re-pick personas — **DONE 2026-08-11**
+
+Shipped in `94a1f1c3`, `c5476d6a`, `47de0fcb`. What exists now:
+
+- Generating a persona from `/create-link` or `/generate` SAVES it as a Client. Not from
+  the public homepage form: anonymous traffic would bury the real personas (decided with
+  Gabriel). Fallback contexts are not saved either, since they carry no niche detail.
+- `demoClientToContext` rebuilds a full NicheContext from a saved row and re-applies the
+  per-run half, so a re-picked demo is indistinguishable from a fresh one. Verified
+  end to end, including a pt/en merge on one row.
+- `GET/PATCH/DELETE /api/demo/clients[/:niche]`, all `requireAuth`.
+- The **Clients tab** on the Campaigns page (agency-only, third tab), with the editor
+  split English-persona / per-language-terms per the finding above.
+- The **Share dialog** takes a saved Client instead of a typed niche.
+
+Columns added beyond what this plan originally listed, each for round-trip fidelity:
+`niche_label` and `booking_mode_call` (read by the engine overlay), `when_label`, and the
+five `*_pt` term columns. Term lists are UNIONED on save so a generated word cannot
+flatten a curated synonym list; the editor REPLACES them, because a human editing a list
+has to be able to remove a word.
+
+Left for later, deliberately: `/generate` from WhatsApp accepts `clientNiche` server-side
+but the engine does not yet send it (it would need to match free text against saved
+Client names). Everything else in phase 1 is reachable from the UI.
+
+**Known data issue, not introduced here:** the `Kitchens` Client carries company name
+"Hoffman Puxadores" in both slots, left by an earlier session's live test of `create-link`
+before the override-is-not-saved rule existed. Harmless but wrong; fix it by hand in the
+Clients tab. The current code cannot reproduce it.
+
+### Phase 1 — original scope (kept for reference)
 
 **Scope shrank on 2026-08-11.** A parallel session shipped the "generate a fresh persona
 for this prospect" half: `POST /api/demo/create-link` already accepts
