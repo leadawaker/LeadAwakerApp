@@ -196,6 +196,42 @@ Client names). Everything else in phase 1 is reachable from the UI.
 before the override-is-not-saved rule existed. Harmless but wrong; fix it by hand in the
 Clients tab. The current code cannot reproduce it.
 
+#### Review pass — `3b5f59b2` (2026-08-11)
+
+`/code-review` on the phase-1 diff found seven holes, all fixed and verified against the
+running server. Two are worth carrying forward as facts rather than as changelog:
+
+- **A curated niche pack is NOT distinguishable by content.** The delete guard was first
+  written as "no description and no opener means it is vocabulary-only", the same predicate
+  `demoClientToContext` uses. Querying the live table killed that: all 16 curated rows have
+  `description_template`, seeded by the campaign business-profile pre-fill, so the guard
+  would have authorised deleting every shared vocabulary in the database. There is now an
+  explicit `is_demo_client` column, set on INSERT only. Not on update, because minting a
+  demo whose niche matches a curated pack writes onto that shared row (exactly how
+  `Kitchens` got its demo company name) without making the row disposable.
+- **The same finding makes one branch dead.** Since every curated row has a description,
+  `demoClientToContext` never returns null in practice and the re-pick 409 cannot fire on
+  today's data. Re-picking a curated niche gives a persona built from its curated
+  description and ladder, which is a better demo than generating from scratch. Left as is.
+
+Also fixed: the CRUD was `requireAuth` on a table with no `accountsId` (now `requireAgency`),
+`updateDemoClient` wrote caller-supplied keys straight into a Drizzle `.set()`, `put()` threw
+on an absent optional field and `saveDemoClient`'s catch swallowed it (one missing field lost
+the entire Client), the Share dialog's `reset()` left `savedClient` set, and a stale
+localStorage `detailTab` could strand a non-agency user on an empty panel.
+
+**The migration now exists**: `migrate-demo-client-persona-columns.js`. The persona columns
+were applied to the Pi by hand while phase 1 was being built and recorded nowhere, so a
+database rebuilt from this repo would have had the `schema.ts` declarations and no columns.
+It is idempotent and verified as a no-op on the live table.
+
+One review finding did **not** hold. The three campaign-context generators were flagged as
+truncating because `gpt-5.4-mini` spends reasoning tokens against `max_completion_tokens`.
+Measured first: 0 reasoning tokens and 3-4s on all three. The 485-890 reasoning tokens and
+15.6-20.1s in this file's comments are `gpt-5.6-luna`, which only `generateNicheContext`
+uses. Budgets were raised anyway in `323b0a76` for margin on variable-length `kb`, but the
+abort windows were left alone. **Do not generalise the luna measurements to mini.**
+
 ### Phase 1 — original scope (kept for reference)
 
 **Scope shrank on 2026-08-11.** A parallel session shipped the "generate a fresh persona
