@@ -256,7 +256,37 @@ is written to `leads.demo_niche` and dies there. So phase 1 is now only:
 Touches neither the opener nor the campaign structure, so nothing still under discussion
 gets locked in.
 
-### Phase 1b — every Client carries an example quote (Gabriel, 2026-08-11)
+### Phase 1b — every Client carries an example quote — **DONE 2026-08-11**
+
+Shipped in `ecdf34b7` (CRM) and automations `3bdc5e6` (engine). Prompt 91 patched in
+place, prompt 93 at **8.29**. Both patch scripts are committed and idempotent, and both
+archive the previous text into `specs/demo-persona-library/`.
+
+What exists now:
+
+- `Niche_Vocabulary.lead_context` is RENAMED to `enquiry_context`, and `quote_context` is
+  new. Verified empty on every row before the rename, so nothing was reinterpreted in
+  place. `Campaigns.lead_context` and `Leads.lead_context` keep their names: those are the
+  real per-campaign and per-lead overrides and are not part of a persona.
+- Prompt 91 emits both. Checked against two live generations rather than assumed: English
+  "bespoke orangeries" gave £58,400 with foundations / shell / plastering as line items;
+  Dutch "dakkapellen" gave €12.850 with a prefab dakkapel and HR++ ramen. Currency follows
+  the output language's market and both dates came out relative, as the spec demands.
+- The engine picks the half at overlay time (`_overlay_demo_niche_onto_campaign`), deriving
+  the mode from the SAME inputs `ai_service` uses moments later, so the two cannot
+  disagree. Falls back to the enquiry when a Client has no quote, and still reads the old
+  single `lead_context` key for demo leads minted before the split.
+- Prompt 93's decision branch has its first-ever `{lead_context}` plus the three
+  change-detection questions. The scoping `{lead_context}` was left exactly where it was.
+
+**The generator writes the quote in the demo's language, not in English.** This looks like
+it contradicts the "a Client is ENGLISH, except its terms" finding above, and it does not:
+that finding is about what the MODEL READS at conversation time. `quote_context` is
+generated once per language slot alongside the rest of the persona, so it costs nothing
+extra, and a figure carries a currency symbol that is market-specific rather than
+language-specific. Left as generated.
+
+**Original scope, kept for reference:**
 
 **Each generated Client also gets a plausible quote for its niche, editable in the UI.**
 
