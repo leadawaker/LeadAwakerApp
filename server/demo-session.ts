@@ -848,7 +848,15 @@ export async function generateCampaignContext(niche: string): Promise<CampaignCo
           { role: "system", content: CAMPAIGN_GENERATOR_SYSTEM },
           { role: "user", content: `Business niche: ${niche}` },
         ],
-        max_completion_tokens: 600,
+        // Measured on gpt-5.4-mini ("dental implants", 2026-08-11): 404
+        // completion tokens, 0 reasoning, 3.3s. Unlike gpt-5.6-luna on the
+        // generateNicheContext path, this model spends NO reasoning tokens, so
+        // the budget only has to cover the visible JSON. 1200 not 600 because
+        // kb is 4-6 free-length facts plus two bump templates, so a verbose
+        // niche can run well past the measured case, and truncation here is
+        // silent: finish_reason "length" -> JSON.parse throws -> return null.
+        // This is a cap, not a prepaid spend: raising it costs nothing unused.
+        max_completion_tokens: 1200,
       }),
     });
     clearTimeout(timer);
@@ -970,7 +978,9 @@ export async function generateBilingualContext(niche: string): Promise<Bilingual
           { role: "system", content: BILINGUAL_GENERATOR_SYSTEM },
           { role: "user", content: `Business niche: ${niche}` },
         ],
-        max_completion_tokens: 900,
+        // Measured: 450 completion / 0 reasoning / 4.4s. Doubled anyway: this
+        // one emits kb TWICE (en + nl), the single most length-variable field.
+        max_completion_tokens: 1800,
       }),
     });
     clearTimeout(timer);
@@ -1016,7 +1026,12 @@ export async function translateFields(
           { role: "system", content: TRANSLATE_SYSTEM },
           { role: "user", content: `Translate from ${langName(fromLang)} to ${langName(toLang)}:\n${JSON.stringify(values, null, 2)}` },
         ],
-        max_completion_tokens: 600,
+        // Measured: 44 completion / 0 reasoning / 1.3s on two short fields, but
+        // the size here is the CALLER's: routes/campaigns.ts sends every
+        // en-only field at once, kb included, so the output is roughly as long
+        // as the input. 2000 covers a full field sweep; truncation returns {}
+        // and the fields silently stay single-language.
+        max_completion_tokens: 2000,
       }),
     });
     clearTimeout(timer);
