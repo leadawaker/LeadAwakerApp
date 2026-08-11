@@ -222,12 +222,10 @@ exactly when the offer is shown. Outside that window a digit is just conversatio
 pattern as `build_disclosure_clause` in `_helpers.py`: a per-language table, not an
 English string with a translation bolted on. It is the last thing a prospect reads.
 
-**The three options ARE the three campaign types** from phase 2, which is a nice
-alignment and should be kept exact:
-  1 = inquired (DBR, no quote yet) · 2 = quoted · 3 = upsell (past customer)
-Until phase 2 lands, `/scenario` only knows inquired and quoted, so ship 1 and 2 first
-and add 3 with the type toggle. Note `/scenario` already resets and replays (engine
-94462bf), so its behaviour and the restart core's are the same thing: unify them.
+**TWO options, not three: 1 = inquired (DBR, no quote yet) · 2 = quoted.**
+Upsell was added and then reverted on 2026-08-11 (engine 504f21d, CRM 1ffd9530) — see
+"Upsell is deferred" below. Note `/scenario` already resets and replays (engine 94462bf),
+so its behaviour and the restart core's are the same thing: unify them.
 
 **The one piece of DATA that genuinely does not exist: the invited flag.** An invited
 WhatsApp lead and a public homepage lead are indistinguishable today. Both carry
@@ -241,8 +239,29 @@ works and is per link, which is the right unit. A "3 per phone per 24h" rule nee
 timestamp column and a phone-level rollup for no benefit a per-link total does not
 already give.
 
+## Upsell is DEFERRED, deliberately (Gabriel, 2026-08-11)
+
+Added and reverted the same day. Do not re-add it as a toggle value or a dropdown
+option; if it comes back it comes back as its own conversation flow.
+
+Why: `derive_lead_stage` maps an existing customer to the `owner` stage, and
+`derive_conversation_mode` sends `owner` to **decision**. Decision mode is written
+entirely around "you are holding our quote, what is stopping you": it references a
+quote that does not exist for an upsell lead, §4.6 forbids re-litigating a quote that
+was never sent, and the price-is-not-an-objection rules assume a quoted price. The
+honest shape of an upsell conversation is scoping-WITH-history (they own panels, you
+are scoping a battery), i.e. a third prompt-93 branch and a third flow to write and
+test. Gabriel: "it sounds like a whole can of worms tbh". Correct, and out of scope.
+
+KEPT from the reverted work, on purpose: `"cliente existente"` in the `owner` keyword
+list (`tools/ai_service.py`). Independent correctness fix. Without it any Portuguese
+existing-customer phrasing fell through to unclassified, which resolves to SCOPING, so
+a lead who had already bought would be walked through a fresh scoping ladder. Campaign
+65 and the `/campaign upsell` alias are untouched and still reachable.
+
 ### Phase 2 — campaign type + per-type openers
-3. Type toggle on campaign 60: **inquiry / quotes / upsell**. Replaces the
+3. Type toggle on campaign 60: **inquiry / quotes**. (Upsell deferred, see below.)
+   Replaces the
    scoping/decision picker (Gabriel: "I don't think that I will switch it tbh" — the
    type words are the ones he actually uses). `conversation_mode` stays the engine-side
    token; the toggle is its front end.
