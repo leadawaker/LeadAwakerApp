@@ -446,7 +446,9 @@ export function demoClientToContext(
     inquiry_timeframe: "",
     first_touch: "",
     ai_style: "",
-    ai_disclosure: "opener",
+    // Placeholder: applyDemoDefaults below owns this field and blanks it, so
+    // the campaign column (or an explicit per-link override) decides.
+    ai_disclosure: "",
   };
 
   return applyDemoDefaults(ctx, language, scenario);

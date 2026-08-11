@@ -71,35 +71,33 @@ export interface NicheContext {
   inquiry_timeframe: string;
   first_touch: string;
   ai_style: string;
-  // AI disclosure mode for THIS session. Derived from the visitor's language,
-  // never produced by the model. See DEMO_AI_DISCLOSURE below.
-  ai_disclosure: AiDisclosureMode;
+  // AI disclosure mode for THIS session. Empty means "no per-session override",
+  // and the engine's overlay then falls through to the campaign's own column.
+  // Never produced by the model. See the note above applyDemoDefaults.
+  ai_disclosure: AiDisclosureMode | "";
 }
 
 /** The three AI disclosure modes. Mirrors normalize_ai_disclosure() in the engine. */
 export type AiDisclosureMode = "off" | "opener" | "second_message";
 
 /**
- * AI disclosure is a per-CAMPAIGN column, but every public demo runs on campaign
- * 60 while each visitor picks their own language, and the disclosure requirement
- * is jurisdictional. One campaign row cannot serve a UK visitor (no disclosure)
- * and a Dutch visitor (opener disclosure) at the same time, which is exactly
- * what sending demo links to UK, Brazilian and Dutch prospects requires.
+ * The per-session AI disclosure override still exists (it rides in demo_niche,
+ * the same way opener_phrase and the niche vocabulary do, because every public
+ * demo runs on campaign 60 and one row cannot serve a UK and a Dutch prospect
+ * at once). What is GONE is the map that derived it from the visitor's language:
  *
- * So the demo session carries its own mode on the lead, in demo_niche, the same
- * way it already carries opener_phrase, scoping_ladder and the niche vocabulary.
- * The engine's _overlay_demo_niche_onto_campaign passes it through as a plain
- * value like all its siblings; it stays a dumb passthrough and learns no
- * jurisdiction rules. This map is the only place the policy exists.
+ *     en -> off  ·  nl -> opener  ·  pt -> second_message
  *
- * Real campaigns are unaffected: the overlay only fires for leads carrying
- * demo_niche, so for them the DB column remains the single source of truth.
+ * Language is not jurisdiction. A UK prospect who prefers to read Dutch was
+ * getting an EU-style disclosure because of the language toggle, and a Dutch
+ * prospect shown an English demo was getting none. The two are independent, so
+ * the mode is now an explicit choice: `aiDisclosure` on /api/demo/create-link
+ * per link, and the campaign's own ai_disclosure column (surfaced on the FIRST
+ * settings tab, see AiDisclosureField.tsx) when no override is given.
+ *
+ * Leaving it empty is what makes the campaign column govern: the engine's
+ * _overlay_demo_niche_onto_campaign skips empty values.
  */
-const DEMO_AI_DISCLOSURE: Record<string, AiDisclosureMode> = {
-  en: "off", // UK: no disclosure anywhere
-  nl: "opener", // Netherlands / EU (AI Act Art 50): disclose in the opener
-  pt: "second_message", // Brazil: not in the opener, in the AI's first reply
-};
 
 /** Localized "six months ago" default for {inquiry_timeframe}. */
 const INQUIRY_TIMEFRAME_DEFAULT: Record<string, string> = {
@@ -120,11 +118,13 @@ export function applyDemoDefaults(ctx: NicheContext, language: string, scenario:
   ctx.inquiry_timeframe = INQUIRY_TIMEFRAME_DEFAULT[language] ?? INQUIRY_TIMEFRAME_DEFAULT.en;
   ctx.first_touch = ctx.visit_term || (language === "nl" ? "bezoek" : language === "pt" ? "visita" : "visit");
   ctx.ai_style = "Practical";
-  // Set in code, never asked of the model: this is a compliance setting, and an
-  // LLM-generated one would be a compliance setting that can hallucinate.
-  // Both construction paths (generateNicheContext and the fallback template)
-  // funnel through here, so neither can ship a session without a mode.
-  ctx.ai_disclosure = DEMO_AI_DISCLOSURE[language] ?? "opener";
+  // Blanked, never asked of the model: this is a compliance setting, and an
+  // LLM-generated one would be a compliance setting that can hallucinate. Both
+  // construction paths (generateNicheContext and the fallback template) funnel
+  // through here, so neither can smuggle a mode in from the generator. Empty
+  // hands the decision to create-link's explicit `aiDisclosure` argument, or
+  // failing that to the campaign's own column.
+  ctx.ai_disclosure = "";
   return ctx;
 }
 

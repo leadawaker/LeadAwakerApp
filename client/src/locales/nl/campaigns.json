@@ -350,6 +350,14 @@
       "opener": "In de opener",
       "second_message": "In het tweede bericht"
     },
+    "aiDisclosureWhatChanges": "Wat er verandert",
+    "aiDisclosureCompanyFallback": "het bedrijf",
+    "aiDisclosureEffects": {
+      "off": "Nergens wordt vermeld dat de AI een AI is. Past bij het Verenigd Koninkrijk.",
+      "opener": "Het allereerste bericht vermeldt het, voordat de lead heeft geantwoord. Verplicht in Nederland en de rest van de EU (AI-verordening art. 50).",
+      "second_message": "De opener blijft neutraal en de AI vermeldt het in zijn eerste antwoord. Past bij Brazilie."
+    },
+    "aiDisclosureLangNote": "Stel dit per campagne of per demolink in. De taal van het gesprek bepaalt het niet: een gesprek zonder vermelding, zoals in het Verenigd Koninkrijk, kan gewoon in het Nederlands.",
     "conversationMode": "Gespreksmodus",
     "conversationModeHint": "Scoping bouwt een projectbriefing op voor leads zonder offerte. Beslissing peilt waar een lead met offerte staat. Automatisch kiest op basis van de fase van de lead.",
     "conversationModeOptions": {

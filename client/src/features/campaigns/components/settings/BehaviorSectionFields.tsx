@@ -3,14 +3,13 @@ import {
   Globe, MapPin, Building2, Calendar, Clock, Hash, Link,
   MessageCircle, AlertTriangle, BarChart3, DollarSign, CreditCard,
   Eye, Type, Play, Pause, Power, SplitSquareVertical, Radio, Zap,
-  Gem, ShieldCheck, Mic, Contact, GitBranch, MessageSquare,
+  Gem, Mic, Contact, GitBranch, MessageSquare,
 } from "lucide-react";
 import {
   EditText, EditNumber, EditDate, EditSelect, EditToggle,
   InfoRow, BoolRow, ContractSelect,
 } from "../formFields";
 import { NicheSelect } from "./NicheSelect";
-import { AI_DISCLOSURE_MODES, normalizeAiDisclosure } from "../useCampaignDetail";
 
 interface BehaviorSectionFieldsProps {
   campaign: any;
@@ -101,25 +100,10 @@ export function BehaviorSectionFields({
         ) : undefined}
       />
 
-      {/* AI Disclosure + Opt-out Notice — same row */}
-      <InfoRow icon={ShieldCheck} label={t("config.aiDisclosure")}
-        value={t(`config.aiDisclosureOptions.${normalizeAiDisclosure(campaign.ai_disclosure)}`)}
-        description={t("config.aiDisclosureHint")}
-        {...editFor("ai_disclosure")}
-        editChild={isEditing ? (
-          <EditSelect
-            value={normalizeAiDisclosure(draft.ai_disclosure ?? campaign.ai_disclosure)}
-            onChange={(v) => setDraft(d => ({...d, ai_disclosure: v}))}
-            options={[...AI_DISCLOSURE_MODES]}
-            labels={{
-              off: t("config.aiDisclosureOptions.off"),
-              opener: t("config.aiDisclosureOptions.opener"),
-              second_message: t("config.aiDisclosureOptions.second_message"),
-            }}
-            {...focusFor("ai_disclosure")}
-          />
-        ) : undefined}
-      />
+      {/* AI Disclosure used to live here. It moved to the FIRST settings tab
+          (AiDisclosureField, rendered by BusinessSectionFields) because it is
+          jurisdictional and rewrites the opener's first sentence, which is not
+          a thing to bury three tabs deep next to opt-out notices. */}
       <InfoRow icon={GitBranch} label={t("config.conversationMode")} value={t(`config.conversationModeOptions.${campaign.conversation_mode_override || "auto"}`)}
         description={t("config.conversationModeHint")}
         {...editFor("conversation_mode_override")}

@@ -19,6 +19,7 @@ import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { buildMap, resolvePreviewPlainText, DEFAULT_NICHE_TERMS, type CampaignForPreview } from "@/features/prompts/utils/resolveVariables";
 import { OpenerTemplatePicker, type OpenerTemplate } from "./OpenerTemplatePicker";
+import { AiDisclosureField } from "./AiDisclosureField";
 import { DEMO_MODES, type DemoMode } from "../../demoMode";
 
 // The four built-in assistant personas (same set as the onboarding wizard). The
@@ -380,6 +381,22 @@ export function BusinessSectionFields({
         />
       </div>
       )}
+
+      {/* AI disclosure — moved here from the Behavior tab. It sits directly
+          above the opener because that is what it rewrites: its "what changes"
+          reveal shows the exact clause each mode splices into the first
+          sentence. Rendered in openerOnly mode too, which is how it reaches the
+          universal demo's first tab (that campaign hides Business entirely). */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <AiDisclosureField
+          campaign={campaign}
+          isEditing={isEditing}
+          draft={draft}
+          setDraft={setDraft}
+          focusField={focusField}
+          onStartEditField={onStartEditField}
+        />
+      </div>
 
       {/* First Message — the opener template. This is the field Finn live-edits
           on screenshare during the demo (Part 1 of the trust-kit spec). Click the

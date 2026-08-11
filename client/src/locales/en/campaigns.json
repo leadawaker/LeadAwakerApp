@@ -350,6 +350,14 @@
       "opener": "In the opener",
       "second_message": "In the second message"
     },
+    "aiDisclosureWhatChanges": "What changes",
+    "aiDisclosureCompanyFallback": "the business",
+    "aiDisclosureEffects": {
+      "off": "Nothing anywhere says the AI is an AI. Suits the UK.",
+      "opener": "The very first message says it, before the lead has replied. Required in the Netherlands and the rest of the EU (AI Act Art 50).",
+      "second_message": "The opener stays neutral and the AI says it in its first reply instead. Suits Brazil."
+    },
+    "aiDisclosureLangNote": "Set this per campaign or per demo link. The language of the conversation does not decide it: a UK-style conversation with no disclosure can be shown in Dutch.",
     "conversationMode": "Conversation mode",
     "conversationModeHint": "Scoping builds a project brief for leads with no quote on file. Decision diagnoses where a quoted lead stands. Auto picks from the lead's stage.",
     "conversationModeOptions": {
