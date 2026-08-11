@@ -18,6 +18,7 @@ import {
   PanelLeftClose,
   FileText,
   FlaskConical,
+  Users,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -34,6 +35,7 @@ import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
+import { ClientsTab } from "./clients/ClientsTab";
 import { MobileCampaignDetailPanel } from "./MobileCampaignDetailPanel";
 import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
 import { MobileListHeader, MobileHeaderIconBtn, MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
@@ -85,6 +87,9 @@ const STATUS_GROUP_ORDER = ["Active", "Paused", "Completed", "Finished", "Draft"
 const DETAIL_TAB_DEFS = [
   { id: "summary",        labelKey: "tabs.summary",        icon: LayoutDashboard },
   { id: "configurations", labelKey: "tabs.configurations", icon: Settings2 },
+  // The saved demo-persona library. Agency-only, like configurations: it is
+  // Gabriel's prospects, not something a client account should browse.
+  { id: "clients",        labelKey: "tabs.clients",        icon: Users },
 ];
 
 // ── Virtual list item types ──────────────────────────────────────────────────
@@ -181,7 +186,7 @@ export function CampaignListView({
 
   const DETAIL_TABS: TabDef[] = useMemo(() =>
     DETAIL_TAB_DEFS
-      .filter((tab) => isAgencyUser || tab.id !== "configurations")
+      .filter((tab) => isAgencyUser || (tab.id !== "configurations" && tab.id !== "clients"))
       .map((tab) => ({ ...tab, label: t(tab.labelKey) })),
   [t, isAgencyUser]);
 
@@ -868,7 +873,11 @@ export function CampaignListView({
 
         {/* Detail view */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          {loading && !selectedCampaign ? (
+          {/* The Clients library is page-level, not per-campaign: it renders
+              whether or not a campaign is selected, and ignores the selection. */}
+          {detailTab === "clients" ? (
+            <ClientsTab />
+          ) : loading && !selectedCampaign ? (
             <SkeletonCampaignPanel tab={detailTab} />
           ) : selectedCampaign ? (
             <CampaignDetailView

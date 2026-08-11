@@ -20,7 +20,10 @@ import { createCampaign, deleteCampaign, updateCampaign, fetchCampaignPreflight 
 import { useToast } from "@/hooks/use-toast";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 
-export type CampaignDetailTab = "summary" | "configurations";
+// "clients" is the saved demo-persona library (specs/demo-persona-library). It
+// is page-level rather than per-campaign: a Client belongs to no single
+// campaign, which is the whole point of it.
+export type CampaignDetailTab = "summary" | "configurations" | "clients";
 export type CampaignGroupBy = "status" | "account" | "type" | "none";
 export type CampaignSortBy = "recent" | "name_asc" | "name_desc" | "leads_desc" | "response_desc";
 
@@ -98,7 +101,7 @@ function CampaignsContent() {
   const [detailTab, setDetailTab] = useState<CampaignDetailTab>(() => {
     try {
       const stored = localStorage.getItem(DETAIL_TAB_KEY);
-      if (stored && ["summary", "configurations"].includes(stored)) return stored as CampaignDetailTab;
+      if (stored && ["summary", "configurations", "clients"].includes(stored)) return stored as CampaignDetailTab;
     } catch {}
     return "summary";
   });

@@ -19,7 +19,15 @@ import {
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
-import { saveDemoClient, listDemoClients, getDemoClient, demoClientToContext } from "../demo-clients";
+import {
+  saveDemoClient,
+  listDemoClients,
+  getDemoClient,
+  demoClientToContext,
+  demoClientToEditable,
+  updateDemoClient,
+  deleteDemoClient,
+} from "../demo-clients";
 
 const createSessionSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
@@ -62,6 +70,47 @@ export function registerDemoRoutes(app: Express): void {
     requireAuth,
     wrapAsync(async (_req, res) => {
       res.json({ clients: await listDemoClients() });
+    }),
+  );
+
+  // One Client, in editable shape: raw slots with no language fallback applied,
+  // so the editor shows what is stored rather than what a reader resolves to.
+  app.get(
+    "/api/demo/clients/:niche",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      const row = await getDemoClient(String(req.params.niche));
+      if (!row) return res.status(404).json({ message: "No such Client." });
+      res.json({ client: demoClientToEditable(row) });
+    }),
+  );
+
+  const clientPatchSchema = z.object({
+    text: z.record(z.record(z.string())).optional(),
+    terms: z.record(z.record(z.array(z.string()))).optional(),
+    bookingModeCall: z.boolean().optional(),
+  });
+
+  app.patch(
+    "/api/demo/clients/:niche",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      const parsed = clientPatchSchema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+      const ok = await updateDemoClient(String(req.params.niche), parsed.data as never);
+      if (!ok) return res.status(404).json({ message: "No such Client." });
+      const row = await getDemoClient(String(req.params.niche));
+      res.json({ client: row ? demoClientToEditable(row) : null });
+    }),
+  );
+
+  app.delete(
+    "/api/demo/clients/:niche",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      const ok = await deleteDemoClient(String(req.params.niche));
+      if (!ok) return res.status(404).json({ message: "No such Client." });
+      res.json({ ok: true });
     }),
   );
 

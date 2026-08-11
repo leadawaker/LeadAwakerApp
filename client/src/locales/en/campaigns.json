@@ -165,7 +165,8 @@
   "tabs": {
     "summary": "Summary",
     "configurations": "Settings",
-    "tags": "Tags"
+    "tags": "Tags",
+    "clients": "Clients"
   },
   "summary": {
     "eyebrows": {
@@ -723,6 +724,56 @@
       "phoneFormat": "{{count}} phone(s) not E.164",
       "phoneFormatOk": "Phone numbers valid",
       "bumpTemplates": "Bump templates set"
+    }
+  },
+  "clients": {
+    "eyebrow": "Demo personas",
+    "title": "Clients",
+    "intro": "Every demo you mint for a prospect is saved here as a Client, so the next demo in the same niche starts from a persona you have already read and approved instead of a fresh generation. The company name is a default: override it per prospect when you send the link, and the saved Client stays as it is.",
+    "searchPlaceholder": "Search Clients...",
+    "loading": "Loading...",
+    "noCompany": "No company name yet",
+    "vocabOnly": "WORDS ONLY",
+    "noMatches": "No Clients match that search.",
+    "emptyLibrary": "No Clients saved yet. Mint a demo link for a prospect and the persona lands here automatically.",
+    "back": "Back",
+    "editing": "Client",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel",
+    "empty": "(empty)",
+    "confirmDeleteTitle": "Delete this Client?",
+    "confirmDeleteBody": "{{niche}} will be removed from the library. Demos already sent keep working: they carry their own copy of the persona.",
+    "termsTitle": "Words",
+    "termsHint": "These are pasted straight into the opener without a model translating them, so each language needs its own. Separate alternatives with commas.",
+    "openerTitle": "Opener",
+    "openerHint": "Sent to the prospect exactly as written, with only the variables filled in. No model sees it first, so each language needs its own version.",
+    "personaTitle": "Persona",
+    "personaHint": "The AI reads these and writes its replies in the language of the lead, so English is enough. Tested: an English knowledge base and scoping ladder produced native Dutch.",
+    "terms": {
+      "project": "Project",
+      "proposal": "Quote",
+      "decision": "Decision",
+      "advisor": "Advisor",
+      "visit": "Visit"
+    },
+    "fields": {
+      "nicheLabel": "Niche label",
+      "companyName": "Company name (default)",
+      "serviceName": "Service",
+      "usp": "What makes them different",
+      "description": "Business description",
+      "kb": "Knowledge base",
+      "nicheQuestion": "Niche question",
+      "leadContext": "What the lead already told them",
+      "scopingLadder": "Scoping ladder",
+      "questionBank": "Question bank",
+      "objections": "Objections",
+      "firstMessage": "First message",
+      "openerPhrase": "Opener phrase",
+      "whenLabel": "Time reference"
     }
   }
 }

@@ -223,6 +223,118 @@ export async function saveDemoClient(
   }
 }
 
+/** The text fields the Clients tab edits, mapped to their columns. */
+export const CLIENT_TEXT_FIELDS = {
+  nicheLabel: "niche_label",
+  companyNameTemplate: "company_name_template",
+  serviceName: "service_name",
+  usp: "usp",
+  descriptionTemplate: "description_template",
+  kbTemplate: "kb_template",
+  nicheQuestion: "niche_question",
+  leadContext: "lead_context",
+  scopingLadder: "scoping_ladder",
+  openerPhrase: "opener_phrase",
+  firstMessage: "first_message",
+  questionBank: "question_bank",
+  objectionExamples: "objection_examples",
+  whenLabel: "when_label",
+} as const;
+
+export type ClientTextField = keyof typeof CLIENT_TEXT_FIELDS;
+
+/** The five term groups, in the order the columns are declared. */
+export const TERM_GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
+export type TermGroup = (typeof TERM_GROUPS)[number];
+
+export interface ClientPatch {
+  /** Text slots to merge, per field, per language. */
+  text?: Partial<Record<ClientTextField, Partial<Record<DemoLang, string>>>>;
+  /** Term lists to REPLACE, per group, per language. */
+  terms?: Partial<Record<TermGroup, Partial<Record<DemoLang, string[]>>>>;
+  bookingModeCall?: boolean;
+}
+
+/**
+ * Apply an edit from the Clients tab.
+ *
+ * Text slots merge (sending only `{ en: "..." }` leaves nl and pt alone), while
+ * term lists REPLACE for the language sent, because the editor shows the whole
+ * list and removing a word has to be possible. That asymmetry is deliberate:
+ * saveDemoClient unions terms because it is adding one generated word to a
+ * curated list, whereas this is a human editing the list itself.
+ */
+export async function updateDemoClient(niche: string, patch: ClientPatch): Promise<boolean> {
+  const existing = await getDemoClient(niche);
+  if (!existing) return false;
+
+  const values: Record<string, unknown> = { updatedAt: new Date() };
+
+  for (const [field, slots] of Object.entries(patch.text ?? {})) {
+    let next: NicheText = { ...((existing as Record<string, unknown>)[field] as NicheText | null ?? {}) };
+    for (const [lang, value] of Object.entries(slots ?? {})) {
+      const v = (value ?? "").trim();
+      if (v) next[lang as DemoLang] = v;
+      else delete next[lang as DemoLang];
+    }
+    values[field] = next;
+  }
+
+  for (const [group, byLang] of Object.entries(patch.terms ?? {})) {
+    const index = TERM_GROUPS.indexOf(group as TermGroup) as 0 | 1 | 2 | 3 | 4;
+    if (index < 0) continue;
+    for (const [lang, list] of Object.entries(byLang ?? {})) {
+      const col = termColumn(index, lang as DemoLang);
+      values[col] = Array.from(
+        new Set((list ?? []).map((w) => String(w).trim()).filter(Boolean)),
+      );
+    }
+  }
+
+  if (patch.bookingModeCall !== undefined) values.bookingModeCall = patch.bookingModeCall;
+
+  await db.update(nicheVocabulary).set(values).where(eq(nicheVocabulary.id, existing.id));
+  return true;
+}
+
+/** Delete a Client. `__default__` is never deletable: it is the fallback row. */
+export async function deleteDemoClient(niche: string): Promise<boolean> {
+  if (niche === DEFAULT_NICHE) return false;
+  const rows = await db.delete(nicheVocabulary).where(eq(nicheVocabulary.niche, niche)).returning();
+  return rows.length > 0;
+}
+
+/**
+ * One Client in the shape the editor wants: every text field as a full
+ * {en,nl,pt} object and every term group as three lists, with no fallback
+ * applied. The editor must show what is actually stored, not what a reader
+ * would resolve to, or saving would write the fallback into the empty slot.
+ */
+export function demoClientToEditable(row: ClientRow) {
+  const text = {} as Record<ClientTextField, NicheText>;
+  for (const field of Object.keys(CLIENT_TEXT_FIELDS) as ClientTextField[]) {
+    text[field] = ((row as Record<string, unknown>)[field] as NicheText | null) ?? {};
+  }
+  const terms = {} as Record<TermGroup, Record<DemoLang, string[]>>;
+  TERM_GROUPS.forEach((group, i) => {
+    terms[group] = {
+      en: ((row as Record<string, unknown>)[termColumn(i as 0 | 1 | 2 | 3 | 4, "en")] as string[]) ?? [],
+      nl: ((row as Record<string, unknown>)[termColumn(i as 0 | 1 | 2 | 3 | 4, "nl")] as string[]) ?? [],
+      pt: ((row as Record<string, unknown>)[termColumn(i as 0 | 1 | 2 | 3 | 4, "pt")] as string[]) ?? [],
+    };
+  });
+  return {
+    id: row.id,
+    niche: row.niche,
+    bookingModeCall: row.bookingModeCall ?? false,
+    updatedAt: row.updatedAt ?? null,
+    text,
+    terms,
+  };
+}
+
+export type EditableDemoClient = ReturnType<typeof demoClientToEditable>;
+
 /**
  * Rebuild a full NicheContext from a saved Client, for a specific run.
  *
