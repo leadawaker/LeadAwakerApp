@@ -183,6 +183,64 @@ there: has the scope moved, has the timing moved, is the same person deciding.
 Deliberately NOT a ladder, because §4.6 already forbids re-litigating a quote and eight
 questions would read as "we lost your file".
 
+### Phase 1c — restart the demo as a DIFFERENT scenario (both surfaces)
+
+**Spec it for WhatsApp too. Gabriel asked, and the "wait for the browser page" argument
+is now out of date.**
+
+That argument was: restart is a button on a page you control, so building the WhatsApp
+version first means building it twice. The browser page HAS shipped, and the picture
+underneath it is different from what that argument assumed.
+
+**What is already built (verified 2026-08-11, `src/webhooks/web_demo_routes.py`):**
+- `Leads.demo_restarts` column, live and in use.
+- `MAX_RESTARTS = 5` with a 429 when exceeded (`:345`).
+- A real reset: DELETE the lead's Interactions, null `ai_memory` / `ai_summary`, set
+  `Conversion_Status='New'`, bump the counter, re-fire the opener (`:347-362`).
+- A surface guard: refuses with `claimed_by_whatsapp` when `channel_identifier` does not
+  start with `web-demo:` (`:339`).
+
+**What is built on NEITHER surface: restarting as a different scenario.** The browser
+restart replays the SAME scenario. The comment at `web_demo_routes.py:67` even says the
+cap is sized so a prospect can try "three different scenarios", so the intent was there
+and the implementation only ever reset. So this is not "port the browser feature to
+WhatsApp". The feature does not exist yet anywhere, and the reset half is already shared.
+
+**Build the core ONCE, surface-agnostic**, and give it two thin triggers:
+`restart_demo(lead, scenario | None)` = cap check, wipe, set `what_has_the_lead_done`
+from the scenario, re-fire the opener. Extract it from `web_demo_routes.py`; do not
+duplicate it into `demo_commands.py`. Triggers: a button/picker on the page, a digit
+reply on WhatsApp.
+
+**WhatsApp trigger: plain digits, NOT `/1 /2 /3`.** A prospect will not naturally type a
+slash command; slashes are the VIP idiom and teaching them to a stranger mid-demo is
+friction. The collision risk (a lead answering "2" to "how many bathrooms?") is solved by
+only accepting a bare digit when the conversation is in a TERMINAL state, which is
+exactly when the offer is shown. Outside that window a digit is just conversation.
+
+**The offer line MUST be translated**, en/nl/pt, keyed off the lead's language. Same
+pattern as `build_disclosure_clause` in `_helpers.py`: a per-language table, not an
+English string with a translation bolted on. It is the last thing a prospect reads.
+
+**The three options ARE the three campaign types** from phase 2, which is a nice
+alignment and should be kept exact:
+  1 = inquired (DBR, no quote yet) · 2 = quoted · 3 = upsell (past customer)
+Until phase 2 lands, `/scenario` only knows inquired and quoted, so ship 1 and 2 first
+and add 3 with the type toggle. Note `/scenario` already resets and replays (engine
+94462bf), so its behaviour and the restart core's are the same thing: unify them.
+
+**The one piece of DATA that genuinely does not exist: the invited flag.** An invited
+WhatsApp lead and a public homepage lead are indistinguishable today. Both carry
+`Source = 'WhatsApp Demo'` and a `wa-demo:<hex>` channel_identifier. Restart must be
+offered ONLY on links Gabriel minted, never on public homepage sessions, so `create-link`
+has to mark them. Add a flag or a distinct identifier prefix at mint time. Everything
+else in this phase is wiring; this is the only new fact.
+
+**Cap: keep ONE number and ONE column.** `MAX_RESTARTS = 5` on `demo_restarts` already
+works and is per link, which is the right unit. A "3 per phone per 24h" rule needs a
+timestamp column and a phone-level rollup for no benefit a per-link total does not
+already give.
+
 ### Phase 2 — campaign type + per-type openers
 3. Type toggle on campaign 60: **inquiry / quotes / upsell**. Replaces the
    scoping/decision picker (Gabriel: "I don't think that I will switch it tbh" — the
