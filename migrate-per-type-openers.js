@@ -59,17 +59,19 @@ const TEMPLATE_L = {
   type: "scoping",
   title_en: "Identity check (never quoted)",
   title_nl: "Identiteitscheck (nooit geofferteerd)",
+  // No leading {first_name}, deliberately: greeting someone by name and THEN
+  // asking whether they are that person undercuts the question.
   body_en:
-    "Hi {first_name}, {business} here. Are you the same {first_name} who reached out about your {project} a while back? We never did get a quote over to you.",
+    "Hi, {business} here. Are you the same {first_name} who reached out about your {project} a while back? We never did get a quote over to you.",
   body_nl:
-    "Hoi {first_name}, {business} hier. Ben jij dezelfde {first_name} die een tijd geleden contact opnam over je {project}? We hebben je toen nooit een offerte gestuurd.",
+    "Hoi, {business} hier. Ben jij dezelfde {first_name} die een tijd geleden contact opnam over je {project}? We hebben je toen nooit een offerte gestuurd.",
 };
 
 // Campaign 60's scoping opener. Same shape as template L plus {agent_name} and
 // {disclosure_clause}, matching the existing First_Message on that row.
 const CAMPAIGN_60_SCOPING = {
-  en: "Hi {first_name}, this is {agent_name}, {disclosure_clause}. Are you the same {first_name} who reached out to us about your {project} a while back? We never did get a quote over to you.",
-  nl: "Hoi {first_name}, dit is {agent_name}, {disclosure_clause}. Ben jij dezelfde {first_name} die een tijd geleden contact met ons opnam over je {project}? We hebben je toen nooit een offerte gestuurd.",
+  en: "Hi, this is {agent_name}, {disclosure_clause}. Are you the same {first_name} who reached out to us about your {project} a while back? We never did get a quote over to you.",
+  nl: "Hoi, dit is {agent_name}, {disclosure_clause}. Ben jij dezelfde {first_name} die een tijd geleden contact met ons opnam over je {project}? We hebben je toen nooit een offerte gestuurd.",
 };
 
 async function main() {

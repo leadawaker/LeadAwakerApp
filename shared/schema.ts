@@ -824,6 +824,14 @@ export const leads = nocodb.table("Leads", {
   // interaction wipe a restart performs, which is what actually caps the cost
   // of a demo link that ends up somewhere public.
   demoRestarts: integer("demo_restarts").default(0),
+  // True when this demo lead came from a link Gabriel minted (the CRM Share
+  // dialog or /api/demo/create-link), false for a public homepage session.
+  // The two are otherwise indistinguishable: both carry Source='WhatsApp Demo'
+  // and a wa-demo:<hex> channel_identifier. Anything offered only to an invited
+  // prospect (restarting as a different scenario, above all) has to gate on
+  // this, because a public visitor being offered a restart menu is a stranger
+  // being handed the controls.
+  demoInvited: boolean("demo_invited").default(false),
   when: text("when"),
   accountId: bigint("account_id", { mode: "number" }),
   campaignId: bigint("campaign_id", { mode: "number" }),

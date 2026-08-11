@@ -757,8 +757,13 @@ export async function createPendingDemoLead(params: {
   language: string;
   campaignId: number;
   demoNiche?: string;
+  /** True for a link Gabriel minted (/api/demo/create-link), false for a public
+   *  homepage session. Gates anything only an invited prospect should be
+   *  offered — restarting as a different scenario, above all. Defaults to false
+   *  so a new mint path has to opt IN, never leaks the offer by forgetting. */
+  invited?: boolean;
 }): Promise<number> {
-  const { token, firstName, language, campaignId, demoNiche } = params;
+  const { token, firstName, language, campaignId, demoNiche, invited = false } = params;
   const now = new Date();
   const [row] = await db
     .insert(leads)
@@ -773,6 +778,7 @@ export async function createPendingDemoLead(params: {
       // Explicitly NOT 'queued' so the campaign launcher never picks it up.
       // The demo flow sends First_Message itself in demo_recap.py.
       automationStatus: "demo_pending",
+      demoInvited: invited,
       ...(demoNiche ? { demoNiche } : {}),
       createdAt: now,
       updatedAt: now,

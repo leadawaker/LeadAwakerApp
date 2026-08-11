@@ -281,7 +281,10 @@ export function registerDemoRoutes(app: Express): void {
       }
 
       const { token } = generateToken();
-      await createPendingDemoLead({ token, firstName, language, campaignId, demoNiche });
+      // The ONLY invited mint path: this endpoint is requireAgency, so a lead
+      // that comes through here is a link Gabriel sent a named prospect. The two
+      // public paths above (homepage form, legacy /try) leave the flag false.
+      await createPendingDemoLead({ token, firstName, language, campaignId, demoNiche, invited: true });
       res.json({
         // Browser first: it is the link that works for a prospect reading email
         // on a desktop, and the page carries its own WhatsApp handoff.
