@@ -94,7 +94,7 @@ export default async function middleware(request: Request): Promise<Response> {
   if (!hasCalcParams) {
     const baseOg = translations[lang];
     const res = await fetch(new URL("/index.html", url.origin), request);
-    const html = injectCurrency(await res.text(), resolveCurrency(request));
+    const html = injectCurrency(await res.text(), resolveCurrency(request), resolveMarket(request));
 
     const updated = html
       .replace(
@@ -188,7 +188,7 @@ export default async function middleware(request: Request): Promise<Response> {
   }
 
   const res = await fetch(new URL("/index.html", url.origin), request);
-  const html = injectCurrency(await res.text(), resolveCurrency(request));
+  const html = injectCurrency(await res.text(), resolveCurrency(request), resolveMarket(request));
 
   const escTitle = escapeHtml(title);
   const escDesc = escapeHtml(description);
