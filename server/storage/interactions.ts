@@ -126,11 +126,23 @@ export const interactionsStorage = {
     return row;
   },
 
+  // An OUTBOUND row with no Content is bookkeeping, never a message: we never send
+  // an empty one. The demo recap reserves an Interactions row before sending, as
+  // its idempotency marker, and on a VIP session nothing is ever sent (the summary
+  // goes to the lead's Summary tab instead). That marker has to stay in the table
+  // or the recap retriggers, but it should not render as an empty bubble.
+  //
+  // Deliberately NOT applied to inbound: an empty inbound row is a message that
+  // arrived and failed to capture (untranscribed voice notes and one SMS exist in
+  // the table today). Hiding those would erase the evidence that a lead replied.
   async getInteractionsByLeadId(leadId: number): Promise<Interactions[]> {
     return db
       .select()
       .from(interactions)
-      .where(eq(interactions.leadsId, leadId))
+      .where(and(
+        eq(interactions.leadsId, leadId),
+        sql`(${interactions.direction} <> 'outbound' OR COALESCE(${interactions.content}, '') <> '')`,
+      ))
       .orderBy(desc(interactions.createdAt));
   },
 
