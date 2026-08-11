@@ -1,0 +1,288 @@
+/**
+ * The Clients library — phase 1 of specs/demo-persona-library/plan.md.
+ *
+ * A generated demo persona used to be written to `leads.demo_niche` and die
+ * there: mint a link for a prospect, and the company, vocabulary, scoping
+ * ladder and opener existed only for that one lead. This module gives the
+ * persona somewhere to live, so it can be picked again for the next prospect
+ * in the same niche.
+ *
+ * A "Client" IS a `Niche_Vocabulary` row. That table was already the persona
+ * library in everything but name (17 rows, per-niche terms, templates and
+ * example packs), so this adds REUSE rather than a second store. The company
+ * name on the row is a DEFAULT: a single demo overrides it per lead without
+ * writing back, which is what lets one saved "Ferragens" Client serve both
+ * Hoffman Puxadores and the next hardware firm.
+ *
+ * ── Durable vs per-run ────────────────────────────────────────────────────
+ * Only the persona is stored. The per-run half (scenario, ai_disclosure,
+ * lead_stage, inquiry_timeframe, first_touch, ai_style, the lead's first name
+ * and the company override) is deliberately NOT persisted: it comes from the
+ * run controls at mint time and is re-applied by applyDemoDefaults() on
+ * re-pick. Storing it would freeze a jurisdiction and a scenario into a row
+ * that is meant to be reusable across both.
+ */
+import { db } from "./db";
+import { nicheVocabulary, type NicheText } from "@shared/schema";
+import { eq, ne, asc } from "drizzle-orm";
+import {
+  applyDemoDefaults,
+  buildGenericScopingLadder,
+  type NicheContext,
+  type DemoScenario,
+} from "./demo-session";
+
+/** Languages a demo can run in. Mirrors the demo route's zod enum. */
+export type DemoLang = "en" | "nl" | "pt";
+
+/** The fallback row. Never a selectable Client. */
+const DEFAULT_NICHE = "__default__";
+
+type ClientRow = typeof nicheVocabulary.$inferSelect;
+
+/**
+ * Read one language slot, falling back the way the rest of the app does:
+ * pt → en → nl → any non-empty slot. The last step matters because a Client
+ * generated in Dutch is still worth re-picking for an English demo, where a
+ * Dutch scoping ladder beats campaign 60's Solar Panels one.
+ */
+function pick(text: NicheText | null | undefined, lang: DemoLang): string {
+  if (!text) return "";
+  const order: DemoLang[] = lang === "pt" ? ["pt", "en", "nl"] : lang === "nl" ? ["nl", "en", "pt"] : ["en", "nl", "pt"];
+  for (const key of order) {
+    const v = (text[key] ?? "").trim();
+    if (v) return v;
+  }
+  return "";
+}
+
+/** Write one language slot without disturbing the others. */
+function put(text: NicheText | null | undefined, lang: DemoLang, value: string): NicheText {
+  const next: NicheText = { ...(text ?? {}) };
+  if (value.trim()) next[lang] = value.trim();
+  return next;
+}
+
+/** The term columns, per language. `nl` is the bare column, the others suffixed. */
+const TERM_COLUMNS = {
+  nl: ["projectTerms", "proposalTerms", "decisionTerms", "advisorTerms", "visitTerms"],
+  en: ["projectTermsEn", "proposalTermsEn", "decisionTermsEn", "advisorTermsEn", "visitTermsEn"],
+  pt: ["projectTermsPt", "proposalTermsPt", "decisionTermsPt", "advisorTermsPt", "visitTermsPt"],
+} as const;
+
+/** Column name for a term group in a given language. */
+function termColumn(group: 0 | 1 | 2 | 3 | 4, lang: DemoLang): string {
+  return TERM_COLUMNS[lang][group];
+}
+
+/**
+ * First entry of a term list for `lang`, falling back across languages.
+ * The engine wants a single term per variable ({advisor_term}); the table
+ * stores lists because the onboarding wizard lets people add synonyms.
+ */
+function firstTerm(row: ClientRow, group: 0 | 1 | 2 | 3 | 4, lang: DemoLang): string {
+  const order: DemoLang[] = lang === "pt" ? ["pt", "en", "nl"] : lang === "nl" ? ["nl", "en", "pt"] : ["en", "nl", "pt"];
+  for (const l of order) {
+    const list = (row as Record<string, unknown>)[termColumn(group, l)] as string[] | null | undefined;
+    const v = (list ?? []).map((s) => String(s).trim()).find(Boolean);
+    if (v) return v;
+  }
+  return "";
+}
+
+/**
+ * Add a generated term to a saved list without dropping what is there.
+ *
+ * Union, not replace: the curated rows (Kitchens, Solar Panels, ...) carry
+ * hand-written synonym lists that the onboarding wizard depends on, and one
+ * generated demo must not flatten them to a single word.
+ */
+function mergeTerm(existing: unknown, term: string): string[] {
+  const list = Array.isArray(existing) ? existing.map((s) => String(s).trim()).filter(Boolean) : [];
+  const t = term.trim();
+  if (t && !list.some((w) => w.toLowerCase() === t.toLowerCase())) list.push(t);
+  return list;
+}
+
+/** Summary shape for the Clients tab and the re-pick picker. */
+export interface DemoClientSummary {
+  id: number;
+  niche: string;
+  label: string;
+  companyName: string;
+  /** Languages this Client has content for, so the picker can warn on a gap. */
+  languages: DemoLang[];
+  updatedAt: Date | null;
+}
+
+/**
+ * Every saved Client, newest first. Excludes `__default__`, which is a fallback
+ * row rather than a persona anyone would demo.
+ */
+export async function listDemoClients(): Promise<DemoClientSummary[]> {
+  const rows = await db
+    .select()
+    .from(nicheVocabulary)
+    .where(ne(nicheVocabulary.niche, DEFAULT_NICHE))
+    .orderBy(asc(nicheVocabulary.niche));
+
+  return rows.map((r) => {
+    // Raw slots, NOT pick(): pick falls back across languages, which would
+    // report every Client as trilingual and make the badge worthless.
+    const languages = (["en", "nl", "pt"] as DemoLang[]).filter((l) =>
+      [r.descriptionTemplate, r.firstMessage, r.scopingLadder].some(
+        (f) => ((f as NicheText | null)?.[l] ?? "").trim(),
+      ),
+    );
+    return {
+      id: r.id,
+      niche: r.niche,
+      label: pick(r.nicheLabel as NicheText, "en") || r.niche,
+      companyName: pick(r.companyNameTemplate as NicheText, "en"),
+      languages,
+      updatedAt: r.updatedAt ?? null,
+    };
+  });
+}
+
+/** One Client by niche key. */
+export async function getDemoClient(niche: string): Promise<ClientRow | undefined> {
+  const [row] = await db.select().from(nicheVocabulary).where(eq(nicheVocabulary.niche, niche));
+  return row;
+}
+
+/**
+ * Persist a generated persona as a Client, keyed on the free-text niche.
+ *
+ * Upsert semantics, chosen deliberately:
+ *  - Only the generating language's slots are written. Generating a Portuguese
+ *    demo for a niche that already has English content adds pt and leaves en
+ *    alone, so one row serves every language it has ever been demoed in.
+ *  - Term lists are unioned (see mergeTerm), never replaced.
+ *  - `company_name` is stored as the row's DEFAULT. The per-demo override that
+ *    create-link applies on top is NOT saved: it belongs to one prospect.
+ *
+ * Never throws into the caller's path: a demo link that works is worth more
+ * than a library write, so failures are logged and swallowed. The caller has
+ * already generated the context and put it on the lead by the time this runs.
+ */
+export async function saveDemoClient(
+  niche: string,
+  language: DemoLang,
+  ctx: NicheContext,
+): Promise<{ saved: boolean; niche: string }> {
+  const key = niche.trim();
+  if (!key || key === DEFAULT_NICHE) return { saved: false, niche: key };
+
+  try {
+    const existing = await getDemoClient(key);
+
+    // Text slots: merge this language into whatever is already there.
+    const text = {
+      nicheLabel: put(existing?.nicheLabel as NicheText, language, ctx.niche_label),
+      companyNameTemplate: put(existing?.companyNameTemplate as NicheText, language, ctx.company_name),
+      descriptionTemplate: put(existing?.descriptionTemplate as NicheText, language, ctx.business_description),
+      kbTemplate: put(existing?.kbTemplate as NicheText, language, ctx.kb),
+      questionBank: put(existing?.questionBank as NicheText, language, ctx.niche_question_bank),
+      objectionExamples: put(existing?.objectionExamples as NicheText, language, ctx.niche_objection_examples),
+      scopingLadder: put(existing?.scopingLadder as NicheText, language, ctx.scoping_ladder),
+      openerPhrase: put(existing?.openerPhrase as NicheText, language, ctx.opener_phrase),
+      serviceName: put(existing?.serviceName as NicheText, language, ctx.service_name),
+      usp: put(existing?.usp as NicheText, language, ctx.usp),
+      nicheQuestion: put(existing?.nicheQuestion as NicheText, language, ctx.niche_question),
+      firstMessage: put(existing?.firstMessage as NicheText, language, ctx.first_message),
+      leadContext: put(existing?.leadContext as NicheText, language, ctx.lead_context),
+      whenLabel: put(existing?.whenLabel as NicheText, language, ctx.when_label),
+    };
+
+    // Term lists for this language only.
+    const terms: Record<string, string[]> = {};
+    const generated = [ctx.project_term, ctx.proposal_term, ctx.decision_term, ctx.advisor_term, ctx.visit_term];
+    for (let group = 0; group < 5; group++) {
+      const col = termColumn(group as 0 | 1 | 2 | 3 | 4, language);
+      terms[col] = mergeTerm((existing as Record<string, unknown> | undefined)?.[col], generated[group] ?? "");
+    }
+
+    const values = {
+      ...text,
+      ...terms,
+      bookingModeCall: ctx.booking_mode_call,
+      updatedAt: new Date(),
+    };
+
+    if (existing) {
+      await db.update(nicheVocabulary).set(values).where(eq(nicheVocabulary.id, existing.id));
+    } else {
+      await db.insert(nicheVocabulary).values({ niche: key, createdAt: new Date(), ...values });
+    }
+    return { saved: true, niche: key };
+  } catch (err) {
+    // Deliberately non-fatal: see the doc comment.
+    console.error(`[demo-clients] failed to save Client "${key}":`, err);
+    return { saved: false, niche: key };
+  }
+}
+
+/**
+ * Rebuild a full NicheContext from a saved Client, for a specific run.
+ *
+ * The inverse of saveDemoClient, plus the per-run half applied on top by
+ * applyDemoDefaults (scenario, disclosure, ai_style, timeframe, first touch).
+ * The result is indistinguishable from a fresh generation, which is the point:
+ * re-picking must not produce a second-class demo.
+ *
+ * Returns null when the row carries no usable content in any language, so the
+ * caller can fall back to generating rather than mint a hollow demo.
+ */
+export function demoClientToContext(
+  row: ClientRow,
+  language: DemoLang,
+  scenario: DemoScenario,
+): NicheContext | null {
+  const label = pick(row.nicheLabel as NicheText, language) || row.niche;
+  const description = pick(row.descriptionTemplate as NicheText, language);
+  const firstMessage = pick(row.firstMessage as NicheText, language);
+  // A row with neither a description nor an opener is a vocabulary-only niche
+  // (the pre-existing curated rows are like this). Generating gives a better
+  // demo than dressing those five word lists up as a persona.
+  if (!description && !firstMessage) return null;
+
+  const visitTerm = firstTerm(row, 4, language);
+  const ctx: NicheContext = {
+    raw: row.niche,
+    niche_label: label,
+    company_name: pick(row.companyNameTemplate as NicheText, language),
+    service_name: pick(row.serviceName as NicheText, language),
+    usp: pick(row.usp as NicheText, language),
+    business_description: description,
+    booking_mode_call: row.bookingModeCall ?? false,
+    // Overwritten by applyDemoDefaults from the scenario; present so the object
+    // is a complete NicheContext even if that call is ever skipped.
+    what_lead_did: "",
+    when_label: pick(row.whenLabel as NicheText, language),
+    niche_question: pick(row.nicheQuestion as NicheText, language),
+    first_message: firstMessage,
+    opener_phrase: pick(row.openerPhrase as NicheText, language) || label,
+    // Never allowed to be empty: an empty ladder does not fall through to a
+    // neutral default, it inherits campaign 60's Solar Panels ladder and asks a
+    // dental prospect about roof faces. Same guard the generator uses.
+    scoping_ladder:
+      pick(row.scopingLadder as NicheText, language) || buildGenericScopingLadder(label, language),
+    lead_context: pick(row.leadContext as NicheText, language),
+    kb: pick(row.kbTemplate as NicheText, language),
+    advisor_term: firstTerm(row, 3, language),
+    project_term: firstTerm(row, 0, language) || label,
+    proposal_term: firstTerm(row, 1, language),
+    visit_term: visitTerm,
+    decision_term: firstTerm(row, 2, language),
+    niche_question_bank: pick(row.questionBank as NicheText, language),
+    niche_objection_examples: pick(row.objectionExamples as NicheText, language),
+    lead_stage: scenario,
+    inquiry_timeframe: "",
+    first_touch: "",
+    ai_style: "",
+    ai_disclosure: "opener",
+  };
+
+  return applyDemoDefaults(ctx, language, scenario);
+}

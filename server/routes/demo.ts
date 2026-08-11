@@ -16,6 +16,10 @@ import {
   buildFallbackNicheContext,
   buildSolarNicheContext,
 } from "../demo-session";
+// The Clients library. Deliberately NOT wired into /create-session: that form
+// is anonymous public traffic, and one row per curious visitor would bury the
+// personas Gabriel actually minted for a prospect (decided 2026-08-11).
+import { saveDemoClient, listDemoClients, getDemoClient, demoClientToContext } from "../demo-clients";
 
 const createSessionSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
@@ -49,6 +53,17 @@ export function registerDemoRoutes(app: Express): void {
   app.get("/api/demo/campaigns", (_req, res) => {
     res.json({ campaigns: DEMO_CAMPAIGNS });
   });
+
+  // ── The Clients library ──────────────────────────────────────────────────
+  // Saved demo personas, for the Clients tab and the Share dialog's picker.
+  // Auth-gated: these are Gabriel's prospects, not public demo content.
+  app.get(
+    "/api/demo/clients",
+    requireAuth,
+    wrapAsync(async (_req, res) => {
+      res.json({ clients: await listDemoClients() });
+    }),
+  );
 
   app.post(
     "/api/demo/create-session",
@@ -123,6 +138,11 @@ export function registerDemoRoutes(app: Express): void {
     // lets one demo campaign serve every prospect at once, and it is why this
     // never mutates the shared campaign row.
     niche: z.string().trim().min(3).max(300).optional(),
+    // Re-pick: the key of a saved Client. Mutually exclusive with `niche` in
+    // practice (this one wins), and it skips generation entirely, which is the
+    // difference between a demo link that takes 20 seconds to mint and one
+    // that takes a model round-trip and might come back generic.
+    clientNiche: z.string().trim().min(1).max(300).optional(),
     // The prospect's own firm, so the AI introduces itself in their name. This
     // is the difference between "a clever chatbot" and "their receptionist".
     companyName: z.string().trim().max(120).optional(),
@@ -139,7 +159,7 @@ export function registerDemoRoutes(app: Express): void {
       const parsed = adminSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      const { firstName, language, campaignId, niche, companyName, scenario, aiDisclosure } = parsed.data;
+      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure } = parsed.data;
 
       if (!(await isDemoCampaign(campaignId))) {
         return res.status(400).json({
@@ -154,7 +174,29 @@ export function registerDemoRoutes(app: Express): void {
       // prospect a generic demo believing it is theirs is the worst outcome here.
       let demoNiche: string | undefined;
       let generated: boolean | undefined;
-      if (niche) {
+      // Re-pick beats generate. A saved Client is a persona that has already
+      // been read and approved, so re-running the model over the same niche
+      // would only introduce drift.
+      let reused: string | undefined;
+      if (clientNiche) {
+        const row = await getDemoClient(clientNiche);
+        if (!row) {
+          return res.status(404).json({ message: `No saved Client named "${clientNiche}".` });
+        }
+        const ctx = demoClientToContext(row, language, scenario);
+        if (!ctx) {
+          // Vocabulary-only rows (the pre-existing curated niches) have word
+          // lists but no persona. Say so instead of minting a hollow demo:
+          // the caller can generate one and it will be saved under this key.
+          return res.status(409).json({
+            message: `"${clientNiche}" has no saved persona yet. Generate one for this niche instead.`,
+          });
+        }
+        if (companyName) ctx.company_name = companyName;
+        if (aiDisclosure) ctx.ai_disclosure = aiDisclosure;
+        demoNiche = JSON.stringify(ctx);
+        reused = row.niche;
+      } else if (niche) {
         // null means the model did not run (timeout, HTTP error, unparseable
         // JSON). Checked on the return value, not on a field of the context,
         // because the fallback is a fully-populated object and every field-based
@@ -162,6 +204,18 @@ export function registerDemoRoutes(app: Express): void {
         const model = await generateNicheContext(niche, language, scenario);
         generated = model !== null;
         const ctx = model ?? buildFallbackNicheContext(niche, language, scenario);
+
+        // Save to the Clients library BEFORE the per-prospect overrides below,
+        // so the row keeps the model's own company name as its DEFAULT and this
+        // one prospect's override stays with this one lead. That separation is
+        // the whole point: pick "Ferragens" again next month, override the
+        // company to the next firm, and the saved Client is untouched.
+        //
+        // Only when the model actually ran. The fallback context is safe to
+        // demo with but carries none of the niche detail, so saving it would
+        // put a Client in the library that is generic in everything but name.
+        if (model) await saveDemoClient(niche, language, model);
+
         if (companyName) ctx.company_name = companyName;
         if (aiDisclosure) ctx.ai_disclosure = aiDisclosure;
         demoNiche = JSON.stringify(ctx);
@@ -175,6 +229,7 @@ export function registerDemoRoutes(app: Express): void {
         demoUrl: buildDemoPageLink({ token }),
         whatsappUrl: buildWhatsAppLink({ token }),
         ...(generated === undefined ? {} : { generated }),
+        ...(reused === undefined ? {} : { reused }),
       });
     }),
   );
@@ -197,6 +252,10 @@ export function registerDemoRoutes(app: Express): void {
     niche: z.string().trim().min(3).max(300),
     language: z.enum(["en", "nl", "pt"]),
     scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+    // `/generate <name of a saved Client>` re-themes the sender's demo from the
+    // library instead of burning a model call. The engine sends this when the
+    // VIP's free text exactly matches a saved Client.
+    clientNiche: z.string().trim().min(1).max(300).optional(),
   });
 
   app.post(
@@ -206,8 +265,23 @@ export function registerDemoRoutes(app: Express): void {
       const parsed = nicheContextSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      const { niche, language, scenario } = parsed.data;
+      const { niche, language, scenario, clientNiche } = parsed.data;
+
+      // Re-pick, same precedence as /create-link.
+      if (clientNiche) {
+        const row = await getDemoClient(clientNiche);
+        const ctx = row ? demoClientToContext(row, language, scenario) : null;
+        if (ctx) return res.json({ generated: true, reused: row!.niche, context: ctx });
+        // Fall through to generation when the Client is missing or has no
+        // persona: the engine's caller wants a working demo, and the result
+        // gets saved under this key anyway.
+      }
+
       const generated = await generateNicheContext(niche, language, scenario);
+      // Same library write as /create-link, and for the same reason: a persona
+      // Gabriel generated from his own phone is one he generated for a real
+      // prospect. Fallback contexts are not saved (see the note there).
+      if (generated) await saveDemoClient(niche, language, generated);
       // `generated` tells the caller whether the model actually ran. The fallback
       // context is valid and safe to use, but it carries none of the niche detail
       // the demo is being regenerated FOR, so the engine reports it back to the

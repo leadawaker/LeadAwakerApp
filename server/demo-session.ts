@@ -108,7 +108,7 @@ const INQUIRY_TIMEFRAME_DEFAULT: Record<string, string> = {
  * niche's own visit term (e.g. "showroom visit" for kitchens), and the chosen
  * scenario as both lead_stage and a canonical what_lead_did the engine can map.
  */
-function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoScenario): NicheContext {
+export function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoScenario): NicheContext {
   ctx.lead_stage = scenario;
   ctx.what_lead_did = SCENARIO_WHAT_LEAD_DID[scenario];
   ctx.inquiry_timeframe = INQUIRY_TIMEFRAME_DEFAULT[language] ?? INQUIRY_TIMEFRAME_DEFAULT.en;
@@ -135,7 +135,7 @@ function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoSc
  * Deliberately generic and only 3 slots. It claims no trade knowledge it does
  * not have, and no timing / budget / financing slots (Prompt 93 handles those).
  */
-function buildGenericScopingLadder(niche: string, language: string): string {
+export function buildGenericScopingLadder(niche: string, language: string): string {
   const n = (niche || "").trim() || "the project";
   if (language === "nl") {
     return [

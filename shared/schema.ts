@@ -321,6 +321,14 @@ export type InsertAccountCommunicationProfile = z.infer<typeof insertAccountComm
 // ─── Niche_Vocabulary ─────────────────────────────────────────────────────────
 // One row per niche (or __default__). Stores the word lists for the preferred-words
 // wizard step. Inline-added words persist per niche.
+//
+// Also the "Clients" library behind the demo persona work: a niche row IS a
+// Client, and the company name on it is a default that a single demo can
+// override without touching the saved row (specs/demo-persona-library/plan.md).
+
+/** A per-language text slot. Partial: a Client generated in one language has
+ *  only that language filled, and every reader falls back (pt → en). */
+export type NicheText = { nl?: string; en?: string; pt?: string };
 
 export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   id: serial("id").primaryKey(),
@@ -358,6 +366,39 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   badExamples: jsonb("bad_examples").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
   objectionExamples: jsonb("objection_examples").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
   scenarioExamples: jsonb("scenario_examples").$type<{ nl: string; en: string }>().default({ nl: "", en: "" }),
+  // Present in the live table since the universal demo landed, but never
+  // declared here. Added so the Clients library can read/write them through
+  // Drizzle instead of raw SQL.
+  scopingLadder: jsonb("scoping_ladder").$type<NicheText>().default({}),
+  openerPhrase: jsonb("opener_phrase").$type<NicheText>().default({}),
+  // ── Demo persona ("Clients" library, specs/demo-persona-library) ──────────
+  // A generated demo persona used to live only on leads.demo_niche and die with
+  // the lead. These hold the DURABLE half of it so it can be re-picked. The
+  // per-run half (scenario, disclosure, lead name, company override, ai_style,
+  // inquiry_timeframe, first_touch) is deliberately NOT stored: it comes from
+  // the run strip on campaign 60's AI tab and is re-applied at re-pick time.
+  // Short display label ("Solar", "zonne-energie"). The engine reads it as
+  // {niche}, so it has to round-trip per language or a re-picked Dutch Client
+  // shows an English niche name in the prompt.
+  nicheLabel: jsonb("niche_label").$type<NicheText>().default({}),
+  serviceName: jsonb("service_name").$type<NicheText>().default({}),
+  usp: jsonb("usp").$type<NicheText>().default({}),
+  nicheQuestion: jsonb("niche_question").$type<NicheText>().default({}),
+  firstMessage: jsonb("first_message").$type<NicheText>().default({}),
+  leadContext: jsonb("lead_context").$type<NicheText>().default({}),
+  // Time reference only, no action ("a few months ago"). Stored rather than
+  // re-derived so a re-picked Client reads exactly like a freshly generated one.
+  whenLabel: jsonb("when_label").$type<NicheText>().default({}),
+  // Portuguese term lists. The columns above cover nl (bare) and en (_en) only,
+  // so without these a re-picked Brazilian Client came back speaking Dutch.
+  projectTermsPt: jsonb("project_terms_pt").$type<string[]>().default([]),
+  proposalTermsPt: jsonb("proposal_terms_pt").$type<string[]>().default([]),
+  decisionTermsPt: jsonb("decision_terms_pt").$type<string[]>().default([]),
+  advisorTermsPt: jsonb("advisor_terms_pt").$type<string[]>().default([]),
+  visitTermsPt: jsonb("visit_terms_pt").$type<string[]>().default([]),
+  // Does this niche book a CALL or an on-site visit? Per-niche, so it is part
+  // of the persona rather than the run.
+  bookingModeCall: boolean("booking_mode_call").default(false),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
