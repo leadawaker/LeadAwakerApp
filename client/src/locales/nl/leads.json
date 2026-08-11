@@ -357,6 +357,7 @@
       "painPoints": "Pijnpunten",
       "qualification": "Kwalificatie",
       "sentiment": "Sentiment",
+      "projectBrief": "Projectbriefing",
       "outcome": "Uitkomst"
     },
     "gradientTester": "Gradiënt-tester"

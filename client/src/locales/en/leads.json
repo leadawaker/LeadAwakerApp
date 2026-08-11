@@ -357,6 +357,7 @@
       "painPoints": "Pain points",
       "qualification": "Qualification",
       "sentiment": "Sentiment",
+      "projectBrief": "Project brief",
       "outcome": "Outcome"
     },
     "gradientTester": "Gradient tester"

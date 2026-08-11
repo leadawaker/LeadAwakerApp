@@ -1,12 +1,16 @@
 // Shared renderer for AI conversation summaries (lead-close + demo recap).
 //
-// The stored `ai_summary` text is dual-purpose: it is also sent verbatim to the
-// prospect's WhatsApp by the demo recap, so it must stay plain text. This component
-// keeps the text intact and only *renders* it richly — parsing it into sections and
-// giving each one an icon, an accent label, and the answer below ("icon + accent rows").
+// The stored `ai_summary` text stays plain text so any surface can render it: this
+// card, and the browser demo page's recap panel. (It is NOT what the demo texts to
+// the prospect: that is a separate, shorter bullet recap built by `_build_summary`
+// in demo_recap.py. `_build_structured_summary` writes this field and nothing else.)
+// This component keeps the text intact and only *renders* it richly — parsing it into
+// sections and giving each one an icon, an accent label, and the answer below.
 //
 // Handles three text shapes that land in `ai_summary`:
-//   • labeled sections  → "Interest: …", "Pain points: …", "Sentiment: …", "Outcome: …"
+//   • labeled sections  → "Interest: …", "Pain points: …", "Qualification: …",
+//                          "Sentiment: …", "Project brief: …", "Outcome: …"
+//                          (Project brief appears only on scoping conversations)
 //   • plain bullets      → "- you asked …", "- the AI answered …" (demo recap, no labels)
 //   • plain prose        → a paragraph with no bullets/labels
 //
@@ -14,7 +18,7 @@
 // JSON-structured summaries are handled by the callers' own branches, not here.
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, AlertTriangle, BadgeCheck, Smile, Meh, Frown, Info, ArrowRight } from "lucide-react";
+import { Sparkles, AlertTriangle, BadgeCheck, Smile, Meh, Frown, Info, ArrowRight, ClipboardList } from "lucide-react";
 import { resolveLang } from "@shared/langField";
 
 type Tone = "good" | "warn" | "neutral";
@@ -91,6 +95,11 @@ function metaFor(label: string, body: string, t: (k: string, o?: any) => string)
     const ic = tone === "good" ? <Smile className={ICON} /> : tone === "warn" ? <Frown className={ICON} /> : <Meh className={ICON} />;
     return { title: t("detail.summarySections.sentiment", { defaultValue: "Sentiment" }), icon: ic, accent: TONE_COLOR[tone], isOutcome: false };
   }
+  // Scoping conversations end with a specification the advisor could quote from.
+  // The engine omits this line entirely when none was collected, so an absent row
+  // means "no brief", never "empty brief".
+  if (/^(project brief|brief|projectbriefing|briefing)/.test(n))
+    return { title: t("detail.summarySections.projectBrief", { defaultValue: "Project brief" }), icon: <ClipboardList className={ICON} />, accent: "var(--good)", isOutcome: false };
   if (/^(outcome|uitkomst|resultaat|resultado)/.test(n))
     return { title: t("detail.summarySections.outcome", { defaultValue: "Outcome" }), icon: <ArrowRight className={ICON} />, accent: "var(--wine)", isOutcome: true };
 
