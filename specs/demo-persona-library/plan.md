@@ -279,28 +279,46 @@ Not rejected, parked. Two findings worth keeping so it is not re-estimated from 
   that cannot be saved and re-picked has the same dead-end problem this whole spec exists
   to fix.
 
-## >>> LIVE PROBLEM, unrelated to the deferral: you cannot test a link and then send it
+## FIXED: testing a link no longer destroys it (engine fb22f9c)
 
-Gabriel asked whether he could test a demo before sending it. Today, on a minted
-WhatsApp link, effectively NO, and this affects links he is sending right now.
+Demo claims are first-writer-wins (`_claim_demo_lead`), so testing a minted link with
+your own phone attached it to the lead and the prospect was then refused silently.
+A link could be tested OR sent, never both.
 
-`_claim_demo_lead` (`src/webhooks/whatsapp_cloud_routes.py:174`) attaches the sender's
-phone to the demo lead on a first-writer-wins UPDATE (`WHERE id = $1 AND phone IS NULL`).
-Any other phone that later opens the same link is REFUSED, silently
-(`token_already_claimed_by_other`, `:341-347`). So if Gabriel tests the link himself, his
-own phone claims it and the prospect gets nothing.
+Gabriel's call: his own numbers test without claiming. Implemented as a HANDOVER rather
+than a skip, because a demo lead with no phone cannot be replied to: a VIP-held link is
+released to the prospect on their first message, with the test conversation deleted so
+they do not open their "personalised" demo halfway through someone else's chat. One
+direction only, VIP -> prospect; the reverse would let a mistyped token hijack a live
+conversation. Verified end to end on a throwaway lead, then deleted.
 
-The browser surface has the mirror of this: `web_demo_restart` refuses with
-`claimed_by_whatsapp` when `channel_identifier` does not start with `web-demo:`
-(`web_demo_routes.py:339`).
+Still open on the same code path, and worth doing together in phase 1c: the **invited
+flag**. An invited WhatsApp lead and a public homepage visitor are indistinguishable
+(both `Source = 'WhatsApp Demo'`, both `wa-demo:<hex>`), and restart must be offered only
+on minted links.
 
-Options when this is picked up (NOT decided):
-1. Mint two links per prospect, one to burn on testing and one to send.
-2. A `preview` flag that exercises the session without setting `phone`.
-3. Let Gabriel's own VIP numbers test without claiming, since they are already a known
-   frozenset (`VIP_PHONES`).
-(3) is the smallest and matches how he actually works. Worth doing alongside the invited
-flag in phase 1c, since both are mint-time concerns on the same code path.
+## SETTLED: the demo is a POST-CALL CTA (Gabriel, 2026-08-11)
+
+*"I was thinking about sending the demo as a CTA after phone calls with prospects
+really."* This closes the sequencing question left open above, and it has consequences:
+
+- It CONFIRMS deferring the URL-scraping "demo-as-them" feature. Its entire justification
+  was cold outreach, where a generic demo sent to a kitchen firm gets ignored. After a
+  call you already know their niche, their company and their words, and typing the niche
+  is faster than scraping it.
+- It raises the value of phase 1. Many calls land in the same niche, so a saved,
+  re-pickable Client is used constantly rather than occasionally.
+- It makes the Share flow the critical path: generate or pick, edit anything wrong, test,
+  send, all within a few minutes of hanging up. Optimise THAT, not bulk generation.
+
+## ONE generation path, not two (clarifying a confusion this file caused)
+
+There is no separate "generate a Client" button distinct from the Share button. Phase 1
+step 1 persists EVERY generated context into the Clients table, whichever entry point
+produced it: the Share dialog, `/generate` on WhatsApp, or the homepage form. The Share
+button is therefore "generate (or pick) a Client, then mint a link from it", and anything
+it generates is selectable again afterwards. Wording in an earlier draft implied two
+paths; there is one.
 
 ### Phase 2 — campaign type + per-type openers
 3. Type toggle on campaign 60: **inquiry / quotes**. (Upsell deferred, see below.)
