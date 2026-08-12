@@ -54,6 +54,13 @@
     "prospectCompanyPlaceholder": "Hoffman Puxadores",
     "prospectCompanyHint": "Fill in their niche or pick a saved client first.",
     "language": "Language",
+    "market": "Market",
+    "marketOptions": {
+      "uk": "UK",
+      "us": "US",
+      "nl": "NL"
+    },
+    "marketHint": "Which market they sell into, not the language they read in. Sets the currency on the quote and the local rules the AI knows. Dutch and Portuguese set their own.",
     "aiDisclosure": "AI disclosure",
     "aiDisclosureHint": "This link's own choice, independent of Language above. Off by default.",
     "nameRequired": "Fill in the prospect's first name.",

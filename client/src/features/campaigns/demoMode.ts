@@ -19,3 +19,10 @@ export const DEMO_MODE_SCENARIO: Record<DemoMode, "inquired" | "deciding"> = {
   scoping: "inquired",
   decision: "deciding",
 };
+
+// The market an English demo is pointed at. Only English needs it: Dutch and
+// Portuguese each have one market and the server resolves those itself. This
+// mirrors DemoMarket in server/demo-session.ts, the same way DEMO_MODES above
+// mirrors the server's scenario enum. Keep the two lists in step.
+export const DEMO_MARKETS = ["uk", "us", "nl"] as const;
+export type DemoMarket = (typeof DEMO_MARKETS)[number];

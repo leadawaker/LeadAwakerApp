@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { apiFetch } from "@/lib/apiUtils";
 import { xBase, xDefault, xSpan } from "./constants";
 import { useDemoClients } from "../../api/demoClientsApi";
-import { DEMO_MODES, DEMO_MODE_SCENARIO, type DemoMode } from "../../demoMode";
+import { DEMO_MODES, DEMO_MODE_SCENARIO, DEMO_MARKETS, type DemoMode, type DemoMarket } from "../../demoMode";
 
 // ── Duplicate button (inline confirm) ─────────────────────────────────────────
 export function DuplicateButton({
@@ -380,6 +380,11 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   // test, and Gabriel would rather opt IN to disclosure than have it sprung
   // on a call by whichever language happened to be selected.
   const [aiDisclosure, setAiDisclosure] = useState<"off" | "opener" | "second_message">("off");
+  // Which market the prospect sells into. Only asked when the language is
+  // English, because that is the only language whose market is ambiguous.
+  // Defaults to the Netherlands rather than the UK: that is where the demos
+  // are actually being run, and it was what the model got wrong on its own.
+  const [market, setMarket] = useState<DemoMarket>("nl");
   const [prospectCompany, setProspectCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -405,6 +410,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
     setSavedClient("");
     setDemoMode("scoping");
     setAiDisclosure("off");
+    setMarket("nl");
     setLoading(false);
     setError(null); setDemoLink(null); setWaLink(null); setFellBack(false); setCopied(null);
   };
@@ -441,6 +447,10 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
           // Always sent (not omitted at "off"): this is now an explicit choice
           // made on this link, not a fallback to the campaign's own column.
           ...(canGenerateNiche ? { aiDisclosure } : {}),
+          // English only, and generate-only. A saved Client's currency is
+          // already baked into its stored quote text, so sending a market on
+          // that path would be a field the server can do nothing with.
+          ...(canGenerateNiche && !savedClient && language === "en" ? { market } : {}),
         }),
       });
       if (!res.ok) {
@@ -609,6 +619,23 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                     ))}
                   </div>
                 </div>
+                {canGenerateNiche && !savedClient && language === "en" && (
+                  <div>
+                    <label className="block text-[12px] font-medium mb-1">{t("share.market", "Market")}</label>
+                    <div className="flex gap-1.5">
+                      {DEMO_MARKETS.map((m) => (
+                        <button key={m} type="button" onClick={() => setMarket(m)}
+                          className={cn("px-3 py-1 rounded-md border text-[12px] font-medium transition-colors",
+                            market === m ? "border-brand-indigo bg-brand-indigo text-white" : "border-black/[0.125] bg-white hover:bg-muted/50")}>
+                          {t(`share.marketOptions.${m}`)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                      {t("share.marketHint", "Which market they sell into, not the language they read in. Sets the currency on the quote and the local rules the AI knows. Dutch and Portuguese set their own.")}
+                    </p>
+                  </div>
+                )}
                 {canGenerateNiche && (
                   <div>
                     <label className="block text-[12px] font-medium mb-1">{t("share.aiDisclosure", "AI disclosure")}</label>

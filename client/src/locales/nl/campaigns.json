@@ -54,6 +54,13 @@
     "prospectCompanyPlaceholder": "Hoffman Puxadores",
     "prospectCompanyHint": "Vul eerst hun niche in of kies een opgeslagen klant.",
     "language": "Taal",
+    "market": "Markt",
+    "marketOptions": {
+      "uk": "VK",
+      "us": "VS",
+      "nl": "NL"
+    },
+    "marketHint": "In welke markt ze verkopen, niet in welke taal ze lezen. Bepaalt de valuta op de offerte en de lokale regels die de AI kent. Nederlands en Portugees bepalen dat zelf.",
     "aiDisclosure": "AI-openheid",
     "aiDisclosureHint": "Eigen keuze voor deze link, los van Taal hierboven. Standaard uit.",
     "nameRequired": "Vul de voornaam van de prospect in.",
