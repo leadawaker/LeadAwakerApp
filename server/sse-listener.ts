@@ -23,6 +23,20 @@ const TAGS_CHANNEL = "tags_changed";
 
 const RECONNECT_DELAY_MS = 5_000;
 
+/**
+ * Is this payload account-less on purpose?
+ *
+ * The triggers always include the key, so an explicit `null` means the row
+ * itself has no account (a scheduler-level Automation_Logs row, say) — nothing
+ * to broadcast, and nothing worth warning about. A *missing* key, or a present
+ * non-numeric one, is a malformed payload and still deserves a warning.
+ * `??` collapses null and undefined together, so the distinction has to be read
+ * off the raw payload.
+ */
+function isAccountlessByDesign(data: Record<string, unknown>): boolean {
+  return data.accounts_id === null || data.Accounts_id === null;
+}
+
 export function startSseListener() {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 
@@ -54,8 +68,12 @@ export function startSseListener() {
           if (typeof accountId === "number") {
             broadcast(accountId, msg.channel, { id: data.id, op: data.op });
             console.log(`[sse-listener] Broadcast sent: event=${msg.channel}, accountId=${accountId}, id=${data.id}`);
-          } else {
-            console.warn(`[sse-listener] Skipped broadcast: accountId is not a number (got ${JSON.stringify(accountId)})`);
+          } else if (!isAccountlessByDesign(data)) {
+            // Silent for account-less rows: ~85% of Automation_Logs rows are
+            // scheduler-level (campaign_launcher, bump_scheduler,
+            // booking_reminder…) and belong to no single account, so there is
+            // nobody to broadcast them to and nothing to fix.
+            console.warn(`[sse-listener] Skipped broadcast on ${msg.channel}: accountId is not a number (got ${JSON.stringify(accountId)})`);
           }
           return;
         }
@@ -75,8 +93,8 @@ export function startSseListener() {
         if (typeof accountId === "number") {
           broadcast(accountId, eventName, data);
           console.log(`[sse-listener] Broadcast sent: event=${eventName}, accountId=${accountId}`);
-        } else {
-          console.warn(`[sse-listener] Skipped broadcast: accountId is not a number (got ${JSON.stringify(accountId)})`);
+        } else if (!isAccountlessByDesign(data)) {
+          console.warn(`[sse-listener] Skipped broadcast on ${msg.channel}: accountId is not a number (got ${JSON.stringify(accountId)})`);
         }
       } catch (e) {
         console.error("[sse-listener] Failed to parse notification payload:", e);

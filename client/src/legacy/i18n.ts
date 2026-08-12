@@ -48,7 +48,7 @@ i18n
     ],
     interpolation: { escapeValue: false },
     detection: {
-      order: ["localStorage", "path"],
+      order: ["path", "localStorage"],
       lookupLocalStorage: "app_lang",
       lookupFromPathIndex: 0,
       caches: ["localStorage"],

@@ -88,10 +88,20 @@
   }
 
   async function checkForChanges() {
+    // A background tab has nothing to reload for, and the dev server restarts
+    // often enough that parked tabs otherwise poll 20 files every 2s forever.
+    if (document.hidden) return;
+
     let reloadNeeded = false;
+    let serverUnreachable = false;
     for (const file of filesToWatch) {
       try {
         const response = await fetch(file + '?t=' + Date.now());
+        // A non-OK response is an error page, not the file. Hashing it would
+        // register a phantom "change" and reload. Skipping only this file (vs
+        // aborting the pass) keeps auto-reload working if one entry above is
+        // stale/deleted.
+        if (!response.ok) continue;
         const text = await response.text();
         const hash = await hashContent(text);
 
@@ -101,10 +111,16 @@
         }
         hashes[file] = hash;
       } catch (e) {
-        console.error(`Error checking ${file}:`, e);
+        // fetch() only throws on a network-level failure, which here means the
+        // dev server is mid-restart (pm2 watch restarts it on every server/
+        // edit) or the tunnel blipped.
+        serverUnreachable = true;
       }
     }
-    if (reloadNeeded) {
+    // Never reload while the server is down: the reload lands on a dead server,
+    // renders blank, and the fresh page immediately polls into the same state —
+    // that loop is the white-screen-and-refresh symptom, not a real file change.
+    if (reloadNeeded && !serverUnreachable) {
       console.log('🔄 Reloading...');
       setTimeout(() => window.location.reload(), 500);
     }
