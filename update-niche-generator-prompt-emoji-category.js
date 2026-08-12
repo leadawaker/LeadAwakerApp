@@ -24,34 +24,36 @@ async function main() {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
 
-  const { rows } = await client.query(
-    `SELECT id, prompt_text FROM "p2mxx34fvbf3ll6"."Prompt_Library" WHERE use_case = $1 LIMIT 1`,
-    [USE_CASE],
-  );
-  if (rows.length === 0) {
-    throw new Error(`No Prompt_Library row with use_case="${USE_CASE}". Nothing to update.`);
-  }
-  const { id, prompt_text: text } = rows[0];
-
-  if (text.includes("- emoji:")) {
-    console.log(`Row ${id} already documents the emoji key. No-op.`);
-    await client.end();
-    return;
-  }
-
-  if (!ANCHOR.test(text)) {
-    throw new Error(
-      `Could not find the decision_term anchor sentence in row ${id}'s prompt_text. ` +
-        `The live row has drifted from NICHE_GENERATOR_SYSTEM_FALLBACK — edit it by hand in the Prompt Library UI instead, ` +
-        `pasting in:\n\n${NEW_LINES}`,
+  try {
+    const { rows } = await client.query(
+      `SELECT id, prompt_text FROM "p2mxx34fvbf3ll6"."Prompt_Library" WHERE use_case = $1 LIMIT 1`,
+      [USE_CASE],
     );
+    if (rows.length === 0) {
+      throw new Error(`No Prompt_Library row with use_case="${USE_CASE}". Nothing to update.`);
+    }
+    const { id, prompt_text: text } = rows[0];
+
+    if (text.includes("- emoji:")) {
+      console.log(`Row ${id} already documents the emoji key. No-op.`);
+      return;
+    }
+
+    if (!ANCHOR.test(text)) {
+      throw new Error(
+        `Could not find the decision_term anchor sentence in row ${id}'s prompt_text. ` +
+          `The live row has drifted from NICHE_GENERATOR_SYSTEM_FALLBACK — edit it by hand in the Prompt Library UI instead, ` +
+          `pasting in:\n\n${NEW_LINES}`,
+      );
+    }
+
+    const updated = text.replace(ANCHOR, (match) => match + NEW_LINES);
+
+    await client.query(`UPDATE "p2mxx34fvbf3ll6"."Prompt_Library" SET prompt_text = $1 WHERE id = $2`, [updated, id]);
+    console.log(`Updated Prompt_Library row ${id} (${USE_CASE}) with emoji + category keys.`);
+  } finally {
+    await client.end();
   }
-
-  const updated = text.replace(ANCHOR, (match) => match + NEW_LINES);
-
-  await client.query(`UPDATE "p2mxx34fvbf3ll6"."Prompt_Library" SET prompt_text = $1 WHERE id = $2`, [updated, id]);
-  console.log(`Updated Prompt_Library row ${id} (${USE_CASE}) with emoji + category keys.`);
-  await client.end();
 }
 
 main().catch((err) => {
