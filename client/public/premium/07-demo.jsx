@@ -41,6 +41,11 @@ function Demo() {
           niche: niche.trim(),
           language: lang,
           scenario,
+          // The market this page already resolved (config.jsx: /uk and /us win,
+          // then ?m=, then geo). Everything on screen is priced in its currency
+          // by now, so the demo has to be generated against the same one or a
+          // visitor reads a page in pounds and gets a chat quoting euros.
+          market: window.MARKET,
           ...(isSolar ? { preset: "solar", companyName: companyName.trim() } : {}),
         }),
       });

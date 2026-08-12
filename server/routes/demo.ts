@@ -49,7 +49,24 @@ const universalSessionSchema = z.object({
   preset: z.enum(["solar"]).optional(),
   // The visitor's own firm, so the demo AI opens in their name.
   companyName: z.string().trim().max(120).optional(),
+  // The market the landing page already resolved for this visitor (window.MARKET
+  // in client/public/premium/config.jsx: the /uk and /us paths win, then ?m=,
+  // then the geo value middleware.ts injects). The page has priced everything on
+  // screen in that market's currency by the time this form is submitted, so
+  // sending it keeps the demo from quoting in a different one.
+  market: z.enum(["uk", "us", "nl"]).optional(),
 });
+
+/** Saved Client backing the solar landing page, per market. Data rather than a
+ *  hardcoded context, so the persona is editable from the Clients tab without a
+ *  deploy, and so it stays consistent with the currency work.
+ *
+ *  A market with no entry (or a row that has been deleted) falls through to
+ *  buildSolarNicheContext(), which quotes no money and is safe anywhere. */
+const SOLAR_CLIENT_BY_MARKET: Partial<Record<"uk" | "us" | "nl", string>> = {
+  nl: "solar energy installer",
+  uk: "solar energy installer uk",
+};
 
 function clientIp(req: Request): string {
   const fwd = req.headers["x-forwarded-for"];
@@ -142,12 +159,28 @@ export function registerDemoRoutes(app: Express): void {
         const parsed = universalSessionSchema.safeParse(req.body);
         if (!parsed.success) return handleZodError(res, parsed.error);
 
-        const { firstName, niche, language, scenario, preset, companyName } = parsed.data;
-        const nicheCtx =
-          preset === "solar"
-            ? buildSolarNicheContext(language, scenario, companyName)
-            : (await generateNicheContext(niche, language, scenario)) ??
-              buildFallbackNicheContext(niche, language, scenario);
+        const { firstName, niche, language, scenario, preset, companyName, market } = parsed.data;
+
+        let nicheCtx;
+        if (preset === "solar") {
+          // Prefer the saved Client for this visitor's market, so /uk quotes in
+          // pounds against UK facts and / and /nl quote in euros. Falls back to
+          // the hardcoded context when the market has no Client or the row has
+          // no persona yet, which keeps the public page working even if someone
+          // renames or deletes a row from the Clients tab.
+          const clientKey = SOLAR_CLIENT_BY_MARKET[market ?? "nl"];
+          const row = clientKey ? await getDemoClient(clientKey) : undefined;
+          nicheCtx =
+            (row && demoClientToContext(row, language, scenario)) ||
+            buildSolarNicheContext(language, scenario, companyName);
+          // The visitor's own firm always wins over the Client's default name,
+          // exactly as it does on the admin create-link path.
+          if (companyName) nicheCtx.company_name = companyName;
+        } else {
+          nicheCtx =
+            (await generateNicheContext(niche, language, scenario, market)) ??
+            buildFallbackNicheContext(niche, language, scenario);
+        }
         const { token } = generateToken();
 
         await createPendingDemoLead({
