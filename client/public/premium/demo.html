@@ -79,18 +79,24 @@
       background: var(--paper);
       position: sticky; top: 0; z-index: 20;
     }
-    /* One centred cluster — logo, client, progress — rather than the logo and
-       the client pill pinned to opposite corners with the tracker marooned in
-       between. Everything that identifies the conversation sits together. */
+    /* Three columns so the TRACKER itself lands dead centre over the chat, not
+       a logo+pill+tracker cluster whose midpoint happens to sit there. The two
+       1fr rails balance each other regardless of how wide the logo or the
+       company name is; the pill is left-aligned in the right rail so it reads
+       as attached to the tracker rather than stranded in the corner. */
     .hdr-inner {
-      display: flex; align-items: center; justify-content: center;
-      gap: 20px; flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 18px;
     }
+    .hdr-logo { justify-self: start; }
+    .track { justify-self: center; }
+    .pill { justify-self: start; }
     /* Logo only. The wordmark is already inside logo-v2.svg, so the adjacent
        "Lead Awaker" text this used to carry printed the name twice. */
     .hdr-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
     .hdr-logo img { height: 28px; width: auto; display: block; }
-    .hdr-div { width: 1px; height: 24px; background: var(--d-line); flex: 0 0 auto; }
     .pill {
       flex: 0 0 auto;
       display: inline-flex; align-items: center; gap: 7px;
@@ -109,16 +115,15 @@
        being clever. Every stage is driven by a signal the engine already emits. */
     .track { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
     /* Each stage carries its OWN colour in --c (set inline from STAGES), applied
-       to the icon and the label together via currentColor. Stages not yet
-       reached show that same colour faded rather than going grey, so the row
-       still reads as one coloured progression while making clear how far the
-       conversation actually got. */
+       to the icon and the label together via currentColor — but only once the
+       conversation has actually reached it. Stages still ahead stay grey, so
+       colour marks real progress instead of decorating the whole row. */
     .track-step {
       display: flex; align-items: center; gap: 9px;
-      color: var(--c); opacity: 0.42;
-      transition: opacity 400ms ease;
+      color: var(--d-mute-2);
+      transition: color 400ms ease;
     }
-    .track-step.on, .track-step.done { opacity: 1; }
+    .track-step.on, .track-step.done { color: var(--c); }
     .track-ic {
       width: 21px; height: 21px; flex: 0 0 auto;
       transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -326,9 +331,13 @@
 
     @media (max-width: 1080px) {
       .hdr { padding: 11px 16px; }
-      .hdr-inner { gap: 10px 16px; }
+      /* Not enough width for three rails: fall back to logo + pill on one row
+         and the tracker spanning its own beneath them. */
+      .hdr-inner {
+        display: flex; flex-wrap: wrap; align-items: center;
+        justify-content: space-between; gap: 10px 16px;
+      }
       .hdr-logo img { height: 25px; }
-      .hdr-div { display: none; }
       .track { order: 3; width: 100%; justify-content: space-between; }
       .track-line { width: auto; flex: 1 1 auto; margin: 0 6px; }
       .track-label { font-size: 9.5px; letter-spacing: 0.05em; }
@@ -572,11 +581,10 @@
         '<header class="hdr">' +
           '<div class="hdr-inner">' +
             '<div class="hdr-logo"><img src="/premium/logo-v2.svg" alt="Lead Awaker" /></div>' +
+            trackerHtml(s.stage) +
             (s.company
               ? '<div class="pill">' + icon("sparkles", 14) + "<span>" + esc(s.company) + "</span></div>"
               : "") +
-            '<div class="hdr-div"></div>' +
-            trackerHtml(s.stage) +
           "</div>" +
         "</header>" +
         '<div class="wrap">' +
