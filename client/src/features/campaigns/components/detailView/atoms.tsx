@@ -365,10 +365,13 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   // A saved Client, re-picked instead of generated. Wins over `niche` when set.
   const [savedClient, setSavedClient] = useState("");
   // Which conversation this minted link should open in: a lead who was never
-  // quoted, or one sitting on a quote. Defaults to "decision" because that is
-  // what the public homepage form defaults to, so a link minted here without
-  // touching the control behaves like the demo everyone else sees.
-  const [demoMode, setDemoMode] = useState<DemoMode>("decision");
+  // quoted, or one sitting on a quote. Defaults to "scoping" (never quoted),
+  // which is also what the API itself defaults to when the field is omitted
+  // (server/routes/demo.ts, `scenario` defaults to "inquired"). The panel used
+  // to open on "decision" to match the public homepage form, which meant the
+  // one surface that always sends the field disagreed with the one that does
+  // not. Most links minted here are for a lead who was never quoted anyway.
+  const [demoMode, setDemoMode] = useState<DemoMode>("scoping");
   // Independent of `language`: the demo used to derive disclosure from which
   // language was picked (en->off, nl->opener, pt->second_message), which
   // conflated "what the prospect reads in" with "which jurisdiction's rules
@@ -400,7 +403,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
     // set would silently hand the next prospect the previous prospect's persona
     // with no obvious way back.
     setSavedClient("");
-    setDemoMode("decision");
+    setDemoMode("scoping");
     setAiDisclosure("off");
     setLoading(false);
     setError(null); setDemoLink(null); setWaLink(null); setFellBack(false); setCopied(null);
@@ -536,19 +539,28 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                         </select>
                       </div>
                     )}
-                    <div>
-                      <label className="block text-[12px] font-medium mb-1">{t("share.niche", "Their niche")}</label>
-                      <input
-                        type="text" value={niche} onChange={(e) => setNiche(e.target.value)}
-                        placeholder={t("share.nichePlaceholder", "e.g. cabinet hardware, dental implants")}
-                        maxLength={300}
-                        disabled={Boolean(savedClient)}
-                        className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors disabled:opacity-50"
-                      />
-                      <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
-                        {t("share.nicheHint", "Leave blank to send the campaign as it is. Filling it in generates this prospect's own vocabulary, questions and opener.")}
-                      </p>
-                    </div>
+                    {/* Hidden, not disabled, on the re-pick path: a saved
+                        Client already carries its own vocabulary, so the field
+                        can never be used there and a greyed-out input is just
+                        height. "Their company" below stays, because that one
+                        IS live on both paths. The typed value is deliberately
+                        not cleared: the payload already ignores it while a
+                        saved Client is set, so keeping it means switching back
+                        to "Generate a new one" restores what was typed. */}
+                    {!savedClient && (
+                      <div>
+                        <label className="block text-[12px] font-medium mb-1">{t("share.niche", "Their niche")}</label>
+                        <input
+                          type="text" value={niche} onChange={(e) => setNiche(e.target.value)}
+                          placeholder={t("share.nichePlaceholder", "e.g. cabinet hardware, dental implants")}
+                          maxLength={300}
+                          className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                        />
+                        <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                          {t("share.nicheHint", "Leave blank to send the campaign as it is. Filling it in generates this prospect's own vocabulary, questions and opener.")}
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-[12px] font-medium mb-1">{t("share.prospectCompany", "Their company")}</label>
                       <input
