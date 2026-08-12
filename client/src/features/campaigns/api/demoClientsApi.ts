@@ -47,11 +47,32 @@ export type ClientTextField = (typeof CLIENT_TEXT_FIELDS)[number];
 export const TERM_GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
 export type TermGroup = (typeof TERM_GROUPS)[number];
 
+/**
+ * "🍳 kitchens — Kitchens NL — Keukens BV — #12", dropping the label segment
+ * when it equals niche (no custom label) and the company segment when empty.
+ * Shared by ClientEditor's header and ClientsTab's grid cards (spec §4).
+ */
+export function formatClientTitle(client: {
+  id: number;
+  niche: string;
+  label: string;
+  companyName: string;
+  emoji: string | null;
+}): string {
+  const parts = [client.niche];
+  if (client.label && client.label !== client.niche) parts.push(client.label);
+  if (client.companyName) parts.push(client.companyName);
+  const prefix = client.emoji ? `${client.emoji} ` : "";
+  return `${prefix}${parts.join(" — ")} — #${client.id}`;
+}
+
 export interface DemoClientSummary {
   id: number;
   niche: string;
   label: string;
   companyName: string;
+  category: string | null;
+  emoji: string | null;
   languages: DemoLang[];
   /** False for the curated niche packs: listed and editable, never deletable. */
   isDemoClient: boolean;
@@ -61,6 +82,10 @@ export interface DemoClientSummary {
 export interface EditableDemoClient {
   id: number;
   niche: string;
+  label: string;
+  companyName: string;
+  category: string | null;
+  emoji: string | null;
   bookingModeCall: boolean;
   isDemoClient: boolean;
   updatedAt: string | null;
@@ -74,6 +99,8 @@ export interface DemoClientPatch {
   /** Replaced per language: the editor shows the whole list, so removal works. */
   terms?: Partial<Record<TermGroup, Partial<Record<DemoLang, string[]>>>>;
   bookingModeCall?: boolean;
+  category?: string | null;
+  emoji?: string | null;
 }
 
 const CLIENTS_KEY = ["/api/demo/clients"];
@@ -119,6 +146,23 @@ export function useDeleteDemoClient() {
   return useMutation({
     mutationFn: (niche: string) =>
       apiRequest("DELETE", `/api/demo/clients/${encodeURIComponent(niche)}`).then((r) => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: CLIENTS_KEY }),
+  });
+}
+
+export function useDuplicateDemoClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ niche, newNiche }: { niche: string; newNiche: string }) => {
+      const res = await apiFetch(`/api/demo/clients/${encodeURIComponent(niche)}/duplicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newNiche }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { message?: string }).message || "Could not duplicate this Client.");
+      return data as { client: EditableDemoClient };
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: CLIENTS_KEY }),
   });
 }
