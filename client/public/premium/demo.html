@@ -71,16 +71,14 @@
     }
 
     /* ---------------- header ---------------- */
-    /* A warm mid-taupe bar over the bone chat and the cream composer, so the
-       three surfaces read darkest-at-the-top. The tone is chosen for the logo:
-       logo-v2.svg is two-tone (white LEAD, near-black #3d0905 Awaker), so the
-       header has to be dark enough for the white half to carry and light
-       enough for the dark half to survive. Going darker for more "pop" starts
-       swallowing "Awaker". */
+    /* Same colour as the CRM's own left nav bar (--chrome in
+       client/src/styles/variables.css, light mode). Hardcoded rather than a
+       shared variable: the CRM and this static landing/demo build are
+       separate apps with separate CSS, nothing to reference across them. */
     .hdr {
       padding: 12px 22px;
-      border-bottom: 1px solid rgba(90, 76, 50, 0.22);
-      background: #B5A88E;
+      border-bottom: 1px solid rgba(90, 76, 50, 0.18);
+      background: #E4DCCC;
       position: sticky; top: 0; z-index: 20;
     }
     /* One centred cluster with an equal 50px gutter on either side of the
@@ -97,7 +95,16 @@
     /* Logo only. The wordmark is already inside logo-v2.svg, so the adjacent
        "Lead Awaker" text this used to carry printed the name twice. */
     .hdr-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
-    .hdr-logo img { height: 28px; width: auto; display: block; }
+    .hdr-logo img {
+      height: 28px; width: auto; display: block;
+      /* This chrome tone is light enough that the logo's own white LEAD
+         glyphs (a per-glyph feDropShadow baked into logo-v2.svg) lose their
+         edge again — the exact problem an earlier pass fixed by editing the
+         SVG directly, which got reverted because that file is shared with the
+         homepage nav. This CSS filter is scoped to demo.html only: nothing
+         outside this page is touched. */
+      filter: drop-shadow(0 1px 1.5px rgba(61, 9, 5, 0.5));
+    }
     .pill {
       flex: 0 0 auto;
       display: inline-flex; align-items: center; gap: 7px;
@@ -393,14 +400,16 @@
     // serves both. The page never needs to know which host it is on.
     var API = "/api/web-demo/" + encodeURIComponent(TOKEN);
 
-    // Each stage owns a colour and an icon. The colours run neutral -> gold ->
-    // wine -> green so the row reads as a journey ending in a win, and all four
-    // are drawn from the site palette rather than generic status colours.
+    // Each stage owns a colour and an icon. Deliberately bright and saturated
+    // (Gabriel's call) rather than the site's muted earth tones — this is the
+    // one place on the page that should look alive at a glance, since it's
+    // the thing narrating the pipeline moving. Runs blue -> gold -> rose ->
+    // green so the row still reads as a journey ending in a win.
     var STAGES = [
-      { key: "new",       label: "New lead",          icon: "user-plus",      color: "#4A6B82" },
-      { key: "responded", label: "Responded",         icon: "message-circle", color: "#B8901F" },
-      { key: "qualified", label: "Qualified",         icon: "badge-check",    color: "#7A2E3E" },
-      { key: "objective", label: "Objective reached", icon: "calendar-check", color: "#4C7A5B" }
+      { key: "new",       label: "New lead",          icon: "user-plus",      color: "#1D7FD1" },
+      { key: "responded", label: "Responded",         icon: "message-circle", color: "#E3A008" },
+      { key: "qualified", label: "Qualified",         icon: "badge-check",    color: "#C81E52" },
+      { key: "objective", label: "Objective reached", icon: "calendar-check", color: "#15A354" }
     ];
 
     // Lucide paths, inlined: the page is standalone vanilla JS under a strict
