@@ -2,22 +2,28 @@
  * The Clients tab on the Campaigns page — the saved demo persona library
  * (specs/demo-persona-library/plan.md, phase 1).
  *
- * This is the durable half of the demo. "Who is this demo for" lives here;
- * "run it now" (scenario, lead name, company override) lives on campaign 60's
- * AI tab. Personas land here automatically whenever a demo link is minted from
- * the Share dialog or regenerated with /generate, so the list fills itself.
+ * "Which Client is open" is controlled from CampaignListView (selectedNiche /
+ * onSelectNiche), not local state here: the topbar's "..." menu
+ * (ClientActionsMenu.tsx) needs to know which Client is open too, and it
+ * lives in CampaignListView's shared topbar, a sibling of this tab's body.
  */
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, Users, Loader2 } from "lucide-react";
-import { useDemoClients, type DemoClientSummary } from "../../api/demoClientsApi";
+import { GroupHeader } from "@/components/crm/primitives/GroupHeader";
+import { useDemoClients, formatClientTitle, type DemoClientSummary } from "../../api/demoClientsApi";
 import { ClientEditor } from "./ClientEditor";
 
-export function ClientsTab() {
+export function ClientsTab({
+  selectedNiche,
+  onSelectNiche,
+}: {
+  selectedNiche: string | null;
+  onSelectNiche: (niche: string | null) => void;
+}) {
   const { t } = useTranslation("campaigns");
   const { data: clients, isLoading } = useDemoClients();
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -31,15 +37,31 @@ export function ClientsTab() {
     );
   }, [clients, search]);
 
+  // Grouped by category, alphabetical, "Uncategorized" last — the fix for a
+  // flat 23+ card grid nobody could scan.
+  const groups = useMemo(() => {
+    const byCategory = new Map<string, DemoClientSummary[]>();
+    for (const c of filtered) {
+      const key = (c.category ?? "").trim();
+      if (!byCategory.has(key)) byCategory.set(key, []);
+      byCategory.get(key)!.push(c);
+    }
+    const named = Array.from(byCategory.keys())
+      .filter((k) => k !== "")
+      .sort((a, b) => a.localeCompare(b))
+      .map((label) => ({ label, items: byCategory.get(label)! }));
+    const uncategorized = byCategory.get("");
+    if (uncategorized?.length) {
+      named.push({ label: t("clients.noCategory", "Uncategorized"), items: uncategorized });
+    }
+    return named;
+  }, [filtered, t]);
+
   return (
     <div className="h-full overflow-y-auto min-h-0" style={{ padding: "22px 24px" }}>
       <div className="max-w-[1386px] mr-auto">
-        {selected ? (
-          <ClientEditor
-            niche={selected}
-            onBack={() => setSelected(null)}
-            onDeleted={() => setSelected(null)}
-          />
+        {selectedNiche ? (
+          <ClientEditor niche={selectedNiche} onBack={() => onSelectNiche(null)} />
         ) : (
           <>
             {/* ── Header ── */}
@@ -80,7 +102,7 @@ export function ClientsTab() {
               />
             </div>
 
-            {/* ── List ── */}
+            {/* ── Grouped list ── */}
             {isLoading ? (
               <div className="flex items-center gap-2" style={{ color: "var(--mute)", padding: 24 }}>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -89,15 +111,23 @@ export function ClientsTab() {
             ) : filtered.length === 0 ? (
               <EmptyState hasClients={(clients ?? []).length > 0} />
             ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))",
-                  gap: 12,
-                }}
-              >
-                {filtered.map((c) => (
-                  <ClientCard key={c.id} client={c} onOpen={() => setSelected(c.niche)} />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {groups.map((g) => (
+                  <div key={g.label}>
+                    <GroupHeader label={g.label} count={g.items.length} />
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))",
+                        gap: 12,
+                        padding: "12px 0 20px",
+                      }}
+                    >
+                      {g.items.map((c) => (
+                        <ClientCard key={c.id} client={c} onOpen={() => onSelectNiche(c.niche)} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -127,11 +157,8 @@ function ClientCard({ client, onOpen }: { client: DemoClientSummary; onOpen: () 
         gap: 8,
       }}
     >
-      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", lineHeight: 1.3 }}>
-        {client.label || client.niche}
-      </div>
-      <div style={{ fontSize: 12.5, color: "var(--mute)", lineHeight: 1.4 }}>
-        {client.companyName || t("clients.noCompany", "No company name yet")}
+      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.35 }}>
+        {formatClientTitle(client)}
       </div>
       <div style={{ display: "flex", gap: 5, marginTop: 2 }}>
         {client.languages.length === 0 ? (

@@ -56,6 +56,7 @@ import { useListPanelState } from "@/hooks/useListPanelState";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ShareButton } from "./detailView/atoms";
+import { ClientActionsMenu } from "./clients/ClientActionsMenu";
 import {
   DETAIL_SORT_LABEL_KEYS,
   DETAIL_GROUP_LABEL_KEYS,
@@ -183,6 +184,12 @@ export function CampaignListView({
   const isMobile768 = useIsMobile(768);
   const isNarrow = useIsMobile(1024);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  // Which Client is open in the Clients tab. Lifted up here (not local to
+  // ClientsTab) because the topbar's "..." menu below needs to know, and the
+  // topbar is a sibling of ClientsTab's body in this tree, the same reason
+  // selectedCampaign is a prop of this component rather than local to
+  // whatever renders the campaign list.
+  const [selectedClientNiche, setSelectedClientNiche] = useState<string | null>(null);
 
   const DETAIL_TABS: TabDef[] = useMemo(() =>
     DETAIL_TAB_DEFS
@@ -650,6 +657,14 @@ export function CampaignListView({
             {leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
           <div className="flex-1" />
+          {/* Duplicate/Delete — Clients tab only, when a Client is open */}
+          {detailTab === "clients" && isAgencyUser && selectedClientNiche && (
+            <ClientActionsMenu
+              niche={selectedClientNiche}
+              onDeleted={() => setSelectedClientNiche(null)}
+              onDuplicated={(newNiche) => setSelectedClientNiche(newNiche)}
+            />
+          )}
           {/* Share — demo campaigns only */}
           {selectedCampaign?.is_demo && <ShareButton campaign={selectedCampaign} />}
           {/* Prompt panel — agency only */}
@@ -889,7 +904,7 @@ export function CampaignListView({
               detailTab is restored from localStorage, so a user who loses
               agency access would otherwise land straight back on the tab. */}
           {detailTab === "clients" && isAgencyUser ? (
-            <ClientsTab />
+            <ClientsTab selectedNiche={selectedClientNiche} onSelectNiche={setSelectedClientNiche} />
           ) : loading && !selectedCampaign ? (
             <SkeletonCampaignPanel tab={detailTab} />
           ) : selectedCampaign ? (
