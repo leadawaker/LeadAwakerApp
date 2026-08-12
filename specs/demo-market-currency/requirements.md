@@ -169,13 +169,25 @@ for `nl` and `pt`; only English reads the market. That precedence is deliberate
 and unchanged from slice 1.
 
 **R9 — the solar site picks a saved Client by market.**
-`SOLAR_CLIENT_BY_MARKET` maps `nl` to `solar energy installer` (row 45) and `uk`
-to `solar energy installer uk` (row 49, created for this). A market with no
-entry, which today means US, falls through to `buildSolarNicheContext()` as
-before. So does a mapped market whose row has been renamed or deleted from the
-Clients tab: the public page must not break because of an edit made in an admin
-UI. The visitor's own company name still overrides the Client's default, exactly
-as on the admin create-link path.
+`SOLAR_CLIENT_BY_MARKET` maps each market to a saved Client:
+
+| Market | Client key | Row | Currency |
+|--------|-----------|-----|----------|
+| `nl` | `solar energy installer` | 45 | EUR |
+| `uk` | `solar energy installer uk` | 49 | GBP |
+| `us` | `solar energy installer us` | 50 | USD |
+
+Rows 49 and 50 were created for this and are English only. Each one's facts
+match that market's deadline case on the landing page, because a chat that
+contradicts the page the visitor just read is worse than no chat: UK is 0% VAT
+reverting to 5% on 31 March 2027, US is the §25D credit terminating for systems
+completed after 31 December 2025 with third-party ownership as the surviving
+route and a 31 December 2027 placed-in-service cutoff.
+
+A mapped market whose row has been renamed or deleted from the Clients tab falls
+through to `buildSolarNicheContext()`: the public page must not break because of
+an edit made in an admin UI. The visitor's own company name still overrides the
+Client's default, exactly as on the admin create-link path.
 
 This replaces a hardcoded context with data that is editable from the Clients
 tab without a deploy.
@@ -194,10 +206,9 @@ honouring that choice is not the lie the original comment guarded against.
 - Retro-fitting a market onto the other four saved demo Clients (rows 43, 44,
   46, 47). They keep whatever currency they were generated with; regenerate them
   through the new toggle if and when they are next needed.
-- A US solar Client. The US deadline case on the landing page is a different
-  argument entirely (the §25D credit terminated after 31 Dec 2025), so a US
-  persona is a copy job, not a currency swap. US falls through to the hardcoded
-  context until one is written.
+- Dutch or Portuguese slots on the UK and US Clients. Both are English only. A
+  Dutch-language visitor on `/uk` reads the English persona with pounds, which is
+  what the landing page itself does to its prices in that combination.
 - Storing a market on the saved Client row. The persona's currency is already
   implicit in its stored text, and adding a column would create a second source
   of truth that the text could contradict.

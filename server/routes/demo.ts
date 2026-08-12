@@ -66,6 +66,7 @@ const universalSessionSchema = z.object({
 const SOLAR_CLIENT_BY_MARKET: Partial<Record<"uk" | "us" | "nl", string>> = {
   nl: "solar energy installer",
   uk: "solar energy installer uk",
+  us: "solar energy installer us",
 };
 
 function clientIp(req: Request): string {
