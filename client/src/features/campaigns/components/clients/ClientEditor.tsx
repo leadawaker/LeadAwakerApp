@@ -7,20 +7,25 @@
  * lists are substituted verbatim into the opener with no model in the loop, so
  * only those get a slot per language. That is why the long fields below are a
  * single English column and the terms are a three-column grid.
+ *
+ * Autosaves 1.5s after the last edit (mirrors useCampaignDetail.ts). Duplicate
+ * and Delete live in the topbar's "..." menu (ClientActionsMenu.tsx), not here.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import {
   TERM_GROUPS,
   useDemoClient,
   useUpdateDemoClient,
-  useDeleteDemoClient,
+  formatClientTitle,
   type ClientTextField,
   type DemoLang,
   type DemoClientPatch,
+  type EditableDemoClient,
   type TermGroup,
 } from "../../api/demoClientsApi";
+import { CategorySelect } from "./CategorySelect";
 
 /** Long fields, in the order they read as a persona. `multiline` drives height. */
 const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
@@ -31,9 +36,6 @@ const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: numb
   { field: "descriptionTemplate", labelKey: "clients.fields.description", rows: 3 },
   { field: "kbTemplate", labelKey: "clients.fields.kb", rows: 6 },
   { field: "nicheQuestion", labelKey: "clients.fields.nicheQuestion", rows: 2 },
-  // The two halves of {lead_context}. Adjacent on purpose: which one the demo
-  // uses is decided by the scenario, not here, and seeing them together is what
-  // makes that legible.
   { field: "enquiryContext", labelKey: "clients.fields.enquiryContext", rows: 2 },
   { field: "quoteContext", labelKey: "clients.fields.quoteContext", rows: 5 },
   { field: "scopingLadder", labelKey: "clients.fields.scopingLadder", rows: 8 },
@@ -75,72 +77,176 @@ const inputStyle: React.CSSProperties = {
 interface ClientEditorProps {
   niche: string;
   onBack: () => void;
-  onDeleted: () => void;
 }
 
-export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
+/** Everything ClientEditor autosaves, as one flat draft object. */
+interface Draft {
+  text: Partial<Record<ClientTextField, Partial<Record<DemoLang, string>>>>;
+  terms: Partial<Record<TermGroup, Partial<Record<DemoLang, string>>>>;
+  category: string;
+  emoji: string;
+}
+
+function buildDraft(client: EditableDemoClient): Draft {
+  const terms: Draft["terms"] = {};
+  for (const group of TERM_GROUPS) {
+    terms[group] = {
+      en: (client.terms[group]?.en ?? []).join(", "),
+      nl: (client.terms[group]?.nl ?? []).join(", "),
+      pt: (client.terms[group]?.pt ?? []).join(", "),
+    };
+  }
+  return {
+    text: client.text,
+    terms,
+    category: client.category ?? "",
+    emoji: client.emoji ?? "",
+  };
+}
+
+/** "keuken, keukenproject" -> ["keuken", "keukenproject"]. */
+function splitTerms(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((w) => w.trim())
+    .filter(Boolean);
+}
+
+function buildPatch(d: Draft): DemoClientPatch {
+  const patch: DemoClientPatch = {
+    text: d.text as DemoClientPatch["text"],
+    terms: {},
+    category: d.category.trim() || null,
+    emoji: d.emoji.trim() || null,
+  };
+  for (const group of TERM_GROUPS) {
+    patch.terms![group] = {
+      en: splitTerms(d.terms[group]?.en),
+      nl: splitTerms(d.terms[group]?.nl),
+      pt: splitTerms(d.terms[group]?.pt),
+    };
+  }
+  return patch;
+}
+
+function draftsEqual(a: Draft | null, b: Draft | null): boolean {
+  if (!a || !b) return a === b;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export function ClientEditor({ niche, onBack }: ClientEditorProps) {
   const { t } = useTranslation("campaigns");
   const { data: client, isLoading } = useDemoClient(niche);
   const update = useUpdateDemoClient();
-  const remove = useDeleteDemoClient();
 
-  // Local draft so typing is not fighting a refetch. Seeded once per Client.
-  const [text, setText] = useState<Partial<Record<ClientTextField, Partial<Record<DemoLang, string>>>>>({});
-  const [terms, setTerms] = useState<Partial<Record<TermGroup, Partial<Record<DemoLang, string>>>>>({});
-  const [dirty, setDirty] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [originalDraft, setOriginalDraft] = useState<Draft | null>(null);
+  const [saving, setSaving] = useState(false);
 
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const originalDraftRef = useRef(originalDraft);
+  originalDraftRef.current = originalDraft;
+  const nicheRef = useRef(niche);
+  nicheRef.current = niche;
+
+  // Load this Client's data into the draft. Re-fires when the fetched row
+  // actually changes (new niche resolved, or a save round-tripped a fresh
+  // updatedAt) — never on every render.
   useEffect(() => {
     if (!client) return;
-    setText(client.text);
-    // Terms live as arrays; the editor edits them as one comma-separated line
-    // per language, which is how people actually think about a synonym list.
-    const asLines: Partial<Record<TermGroup, Partial<Record<DemoLang, string>>>> = {};
-    for (const group of TERM_GROUPS) {
-      asLines[group] = {
-        en: (client.terms[group]?.en ?? []).join(", "),
-        nl: (client.terms[group]?.nl ?? []).join(", "),
-        pt: (client.terms[group]?.pt ?? []).join(", "),
-      };
-    }
-    setTerms(asLines);
-    setDirty(false);
+    const d = buildDraft(client);
+    setDraft(d);
+    setOriginalDraft(d);
   }, [client?.niche, client?.updatedAt]);
 
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const doSave = useCallback(
+    (d: Draft) => {
+      setSaving(true);
+      update.mutate(
+        { niche: nicheRef.current, patch: buildPatch(d) },
+        {
+          onSuccess: () => {
+            setOriginalDraft(d);
+            setSaving(false);
+          },
+          onError: () => setSaving(false),
+        },
+      );
+    },
+    [update],
+  );
+
+  // Fire-and-forget variant for the flush paths below: the component is
+  // switching to a different Client (or unmounting), so there is no local
+  // state left to reconcile an onSuccess into.
+  const flushSave = useCallback(
+    (targetNiche: string, d: Draft) => {
+      update.mutate({ niche: targetNiche, patch: buildPatch(d) });
+    },
+    [update],
+  );
+
+  // Debounced autosave: 1.5s after the last edit, mirrors useCampaignDetail.ts.
+  useEffect(() => {
+    if (draftsEqual(draft, originalDraft)) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      if (draftRef.current) doSave(draftRef.current);
+    }, 1500);
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [draft, originalDraft, doSave]);
+
+  // Flush a pending save for the PREVIOUS niche when the parent switches which
+  // Client is open (no remount: ClientsTab swaps the `niche` prop in place).
+  const prevNicheRef = useRef(niche);
+  useEffect(() => {
+    if (autoSaveTimer.current && prevNicheRef.current !== niche) {
+      clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = null;
+      const prevNiche = prevNicheRef.current;
+      const d = draftRef.current;
+      const orig = originalDraftRef.current;
+      if (d && !draftsEqual(d, orig)) flushSave(prevNiche, d);
+    }
+    prevNicheRef.current = niche;
+  }, [niche, flushSave]);
+
+  // Flush on unmount (navigating off the Clients tab entirely).
+  const flushSaveRef = useRef(flushSave);
+  flushSaveRef.current = flushSave;
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+        const d = draftRef.current;
+        const orig = originalDraftRef.current;
+        if (d && !draftsEqual(d, orig)) flushSaveRef.current(nicheRef.current, d);
+      }
+    };
+  }, []);
+
   const setTextSlot = (field: ClientTextField, lang: DemoLang, value: string) => {
-    setText((d) => ({ ...d, [field]: { ...(d[field] ?? {}), [lang]: value } }));
-    setDirty(true);
+    setDraft((d) => (d ? { ...d, text: { ...d.text, [field]: { ...(d.text[field] ?? {}), [lang]: value } } } : d));
   };
 
   const setTermSlot = (group: TermGroup, lang: DemoLang, value: string) => {
-    setTerms((d) => ({ ...d, [group]: { ...(d[group] ?? {}), [lang]: value } }));
-    setDirty(true);
+    setDraft((d) => (d ? { ...d, terms: { ...d.terms, [group]: { ...(d.terms[group] ?? {}), [lang]: value } } } : d));
   };
 
-  const save = () => {
-    const patch: DemoClientPatch = { text: text as DemoClientPatch["text"], terms: {} };
-    for (const group of TERM_GROUPS) {
-      patch.terms![group] = {
-        en: splitTerms(terms[group]?.en),
-        nl: splitTerms(terms[group]?.nl),
-        pt: splitTerms(terms[group]?.pt),
-      };
-    }
-    update.mutate({ niche, patch }, { onSuccess: () => setDirty(false) });
-  };
+  const setCategory = (value: string) => setDraft((d) => (d ? { ...d, category: value } : d));
+  const setEmoji = (value: string) => setDraft((d) => (d ? { ...d, emoji: value } : d));
 
   const languagesWithTerms = useMemo(
-    () => LANGS.filter((l) => TERM_GROUPS.some((g) => (terms[g]?.[l] ?? "").trim())),
-    [terms],
+    () => (draft ? LANGS.filter((l) => TERM_GROUPS.some((g) => (draft.terms[g]?.[l] ?? "").trim())) : []),
+    [draft],
   );
 
-  // Curated niche packs are listed and editable but not deletable: real
-  // campaigns read their word lists. The server refuses with a 409, so do not
-  // offer a button that cannot work. This reads the flag rather than guessing
-  // from content, because every curated row has a description too.
-  const canDelete = client?.isDemoClient ?? false;
-
-  if (isLoading || !client) {
+  if (isLoading || !client || !draft) {
     return (
       <div className="flex items-center justify-center" style={{ padding: 48, color: "var(--mute)" }}>
         <Loader2 className="h-5 w-5 animate-spin" />
@@ -158,28 +264,33 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
         </button>
         <div style={{ flex: 1, minWidth: 180 }}>
           <div className="eyebrow wine">{t("clients.editing", "Client")}</div>
-          <div className="serif italic" style={{ fontSize: 30, color: "var(--ink)", lineHeight: 1.1 }}>
-            {client.niche}
+          <div className="serif italic" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.25 }}>
+            {formatClientTitle(client)}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {canDelete && (
-            <button
-              className="la-btn la-btn--soft"
-              onClick={() => setConfirmDelete(true)}
-              title={t("clients.delete", "Delete Client")}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            className="la-btn la-btn--wine la-btn--pill"
-            onClick={save}
-            disabled={!dirty || update.isPending}
-            style={{ opacity: !dirty || update.isPending ? 0.5 : 1 }}
-          >
-            {update.isPending ? t("clients.saving", "Saving...") : t("clients.save", "Save")}
-          </button>
+        {saving && (
+          <span className="inline-flex items-center gap-1.5" style={{ fontSize: 12, color: "var(--mute)" }}>
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            {t("clients.saving", "Saving...")}
+          </span>
+        )}
+      </div>
+
+      {/* ── Identity: category + emoji ── */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ width: 240 }}>
+          <label style={labelStyle}>{t("clients.categoryLabel", "Category")}</label>
+          <CategorySelect value={draft.category} onChange={setCategory} />
+        </div>
+        <div style={{ width: 90 }}>
+          <label style={labelStyle}>{t("clients.emojiLabel", "Emoji")}</label>
+          <input
+            value={draft.emoji}
+            onChange={(e) => setEmoji(e.target.value)}
+            maxLength={8}
+            placeholder="🍳"
+            style={inputStyle}
+          />
         </div>
       </div>
 
@@ -203,7 +314,7 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
             <ClientTermRow
               key={group}
               label={t(`clients.terms.${group}`)}
-              values={terms[group] ?? {}}
+              values={draft.terms[group] ?? {}}
               onChange={(lang, v) => setTermSlot(group, lang, v)}
             />
           ))}
@@ -224,7 +335,7 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
                 {LANGS.map((l) => (
                   <textarea
                     key={l}
-                    value={text[field]?.[l] ?? ""}
+                    value={draft.text[field]?.[l] ?? ""}
                     onChange={(e) => setTextSlot(field, l, e.target.value)}
                     rows={rows ?? 1}
                     placeholder={l.toUpperCase()}
@@ -248,7 +359,7 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
             <div key={field}>
               <label style={labelStyle}>{t(labelKey)}</label>
               <textarea
-                value={text[field]?.en ?? ""}
+                value={draft.text[field]?.en ?? ""}
                 onChange={(e) => setTextSlot(field, "en", e.target.value)}
                 rows={rows ?? 1}
                 style={inputStyle}
@@ -257,15 +368,6 @@ export function ClientEditor({ niche, onBack, onDeleted }: ClientEditorProps) {
           ))}
         </div>
       </section>
-
-      {confirmDelete && (
-        <ConfirmDelete
-          niche={client.niche}
-          pending={remove.isPending}
-          onCancel={() => setConfirmDelete(false)}
-          onConfirm={() => remove.mutate(client.niche, { onSuccess: onDeleted })}
-        />
-      )}
     </div>
   );
 }
@@ -293,55 +395,4 @@ function ClientTermRow({
       ))}
     </>
   );
-}
-
-/** Destructive confirmation. Dialog is allowed here and only here. */
-function ConfirmDelete({
-  niche,
-  pending,
-  onCancel,
-  onConfirm,
-}: {
-  niche: string;
-  pending: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  const { t } = useTranslation("campaigns");
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.4)" }}
-      onClick={onCancel}
-    >
-      <div
-        className="neu-raised"
-        style={{ background: "var(--card)", padding: 26, borderRadius: "var(--r-card)", maxWidth: 380, margin: 16 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="serif" style={{ fontSize: 20, color: "var(--ink)", marginBottom: 8 }}>
-          {t("clients.confirmDeleteTitle", "Delete this Client?")}
-        </div>
-        <p style={{ fontSize: 13, color: "var(--mute)", lineHeight: 1.5, marginBottom: 18 }}>
-          {t("clients.confirmDeleteBody", { niche })}
-        </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="la-btn la-btn--soft" onClick={onCancel}>
-            {t("clients.cancel", "Cancel")}
-          </button>
-          <button className="la-btn la-btn--wine" onClick={onConfirm} disabled={pending}>
-            {pending ? t("clients.deleting", "Deleting...") : t("clients.delete", "Delete")}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** "keuken, keukenproject" → ["keuken", "keukenproject"]. */
-function splitTerms(raw: string | undefined): string[] {
-  return (raw ?? "")
-    .split(",")
-    .map((w) => w.trim())
-    .filter(Boolean);
 }
