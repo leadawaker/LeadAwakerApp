@@ -22,15 +22,29 @@ function Demo() {
   const scenarioNote = activeScenario.note;
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
+  // Which required fields are currently empty/invalid — shown by turning the
+  // field's placeholder red instead of a separate error banner. Niche is only
+  // ever user-entered on /home (solar hardcodes it, see the niche useState
+  // default above), so it can only actually go invalid there.
+  const [nameInvalid, setNameInvalid] = React.useState(false);
+  const [nicheInvalid, setNicheInvalid] = React.useState(false);
 
 
-  async function handleSubmit(e) {
+  // "browser" (the primary CTA) and "whatsapp" (the secondary link) each mint
+  // their own token/lead — the engine already keeps a separate conversation
+  // per surface (see buildDemoPageLink in server/demo-session.ts), so there's
+  // no session to share between the two buttons.
+  const [surface, setSurface] = React.useState(null);
+
+  async function handleSubmit(e, targetSurface = "browser") {
     e.preventDefault();
     setError(null);
-    if (!firstName.trim() || niche.trim().length < 3) {
-      setError(t('demo.err_fill'));
-      return;
-    }
+    const nameBad = !firstName.trim();
+    const nicheBad = !isSolar && niche.trim().length < 3;
+    setNameInvalid(nameBad);
+    setNicheInvalid(nicheBad);
+    if (nameBad || nicheBad) return;
+    setSurface(targetSurface);
     setLoading(true);
     try {
       const res = await fetch("/api/demo/create-session", {
@@ -56,7 +70,7 @@ function Demo() {
         return;
       }
       const data = await res.json();
-      window.location.href = data.whatsappUrl;
+      window.location.href = targetSurface === "whatsapp" ? data.whatsappUrl : data.demoUrl;
     } catch {
       setError(t('demo.err_network'));
       setLoading(false);
@@ -75,6 +89,7 @@ function Demo() {
         .typing-dot:nth-child(3) { animation-delay: 0.36s; }
         .demo-input { width: 100%; border: none; outline: none; padding: 14px 18px; border-radius: 8px; color: var(--ink); font-family: var(--sans); font-size: 15px; background: transparent; }
         .demo-input::placeholder { color: var(--mute-2); }
+        .demo-input.invalid::placeholder { color: var(--wine); }
       `}</style>
 
       <div style={{
@@ -112,10 +127,10 @@ function Demo() {
             <div className="neu-inset-crisp" style={{ borderRadius: 10 }}>
               <input
                 type="text"
-                className="demo-input"
+                className={"demo-input" + (nameInvalid ? " invalid" : "")}
                 placeholder={t('demo.ph_name')}
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(e) => { setFirstName(e.target.value); if (nameInvalid) setNameInvalid(false); }}
                 maxLength={80}
               />
             </div>
@@ -126,10 +141,13 @@ function Demo() {
             <div className="neu-inset-crisp" style={{ borderRadius: 10 }}>
               <input
                 type="text"
-                className="demo-input"
+                className={"demo-input" + (nicheInvalid ? " invalid" : "")}
                 placeholder={t(isSolar ? 'demo.ph_company' : 'demo.ph_trade')}
                 value={isSolar ? companyName : niche}
-                onChange={(e) => (isSolar ? setCompanyName : setNiche)(e.target.value)}
+                onChange={(e) => {
+                  (isSolar ? setCompanyName : setNiche)(e.target.value);
+                  if (nicheInvalid) setNicheInvalid(false);
+                }}
                 maxLength={isSolar ? 120 : 200}
               />
             </div>
@@ -176,15 +194,35 @@ function Demo() {
               style={{
                 marginTop: 4, padding: "14px 28px", borderRadius: 10,
                 fontSize: 14, cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.7 : 1
+                opacity: loading ? 0.7 : 1, justifyContent: "center"
               }}
             >
-              {loading ? t('demo.btn_loading') : t('demo.btn_submit')}
+              {loading && surface === "browser" ? t('demo.btn_loading') : t('demo.btn_submit')}
             </button>
 
-            <p style={{ fontSize: 12, color: "var(--mute-2)", marginTop: 4 }}>
-              {t('demo.hint')}
-            </p>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              gap: 12, flexWrap: "wrap", marginTop: 4
+            }}>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={(e) => handleSubmit(e, "whatsapp")}
+                style={{
+                  background: "none", border: "none", padding: "2px 4px",
+                  fontFamily: "var(--sans)", fontSize: 13, color: "var(--wine)",
+                  textDecoration: "underline", textUnderlineOffset: 3,
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.7 : 1, textAlign: "left"
+                }}
+              >
+                {loading && surface === "whatsapp" ? t('demo.btn_whatsapp_loading') : t('demo.btn_whatsapp')}
+              </button>
+
+              <p style={{ fontSize: 12, color: "var(--mute-2)", margin: 0, textAlign: "right" }}>
+                {t('demo.hint')}
+              </p>
+            </div>
           </form>
         </div>
 

@@ -192,7 +192,10 @@ export function registerDemoRoutes(app: Express): void {
           demoNiche: JSON.stringify(nicheCtx),
         });
 
-        return res.json({ whatsappUrl: buildWhatsAppLink({ token }) });
+        return res.json({
+          demoUrl: buildDemoPageLink({ token }),
+          whatsappUrl: buildWhatsAppLink({ token }),
+        });
       }
 
       // Legacy flow: body has `campaignId` (admin direct links + old /try form)
