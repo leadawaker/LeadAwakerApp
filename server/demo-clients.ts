@@ -372,6 +372,37 @@ export async function deleteDemoClient(
 }
 
 /**
+ * Copy a Client under a new niche key. Always creates a saved (deletable)
+ * Client, even when the source is one of the curated packs the engine reads
+ * for real campaigns — duplicating a curated niche is exactly how you get an
+ * editable, deletable copy of it without touching the shared original.
+ */
+export async function duplicateDemoClient(
+  sourceNiche: string,
+  newNiche: string,
+): Promise<{ ok: true; row: ClientRow } | { ok: false; reason: "missing" | "conflict" }> {
+  const source = await getDemoClient(sourceNiche);
+  if (!source) return { ok: false, reason: "missing" };
+
+  const key = newNiche.trim();
+  const conflict = await getDemoClient(key);
+  if (conflict) return { ok: false, reason: "conflict" };
+
+  const { id: _id, niche: _niche, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = source;
+  const [row] = await db
+    .insert(nicheVocabulary)
+    .values({
+      ...(rest as typeof nicheVocabulary.$inferInsert),
+      niche: key,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isDemoClient: true,
+    })
+    .returning();
+  return { ok: true, row };
+}
+
+/**
  * One Client in the shape the editor wants: every text field as a full
  * {en,nl,pt} object and every term group as three lists, with no fallback
  * applied. The editor must show what is actually stored, not what a reader
