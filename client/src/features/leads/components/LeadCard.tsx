@@ -22,6 +22,7 @@ import {
   PIPELINE_HEX,
 } from "./LeadsCardView";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { isDemoLead } from "@/features/leads/demoLead";
 
 // ── Status colour map (must stay in sync with LeadsCardView) ──────────────────
 const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string; badge: string }> = {
@@ -119,8 +120,7 @@ export function LeadCard({
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
 
-  const isDemo = (lead.source || lead.Source) === "WhatsApp Demo" ||
-    (lead.channel_identifier || lead.channelIdentifier || "").startsWith("wa-demo:");
+  const isDemo = isDemoLead(lead);
   const demoNicheLabel = (() => {
     const raw = lead.demoNiche || lead.demo_niche || "";
     if (!raw) return "";

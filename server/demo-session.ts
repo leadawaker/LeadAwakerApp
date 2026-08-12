@@ -697,7 +697,6 @@ const RATE_MAX_GLOBAL = 100;
  */
 export const DEMO_VIP_IPS: string[] = [];
 export const DEMO_VIP_PHONES = new Set<string>([
-  "+31617862359", // Danique (girlfriend) — unlimited demo uses for internal dogfooding
   "+554774002162", // Gabriel (founder) — unlimited demos + /commands from his phone
 ]);
 
@@ -787,15 +786,6 @@ export async function createPendingDemoLead(params: {
   return row.id as number;
 }
 
-export async function findPendingLeadByToken(token: string) {
-  const rows = await db
-    .select()
-    .from(leads)
-    .where(eq(leads.channelIdentifier, `wa-demo:${token}`))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
 // Public origin for the browser demo page. Overridable so a Pi-only test can
 // point at app.leadawaker.com, but the default is the host a prospect should
 // ever see in a pasted link.
@@ -803,8 +793,11 @@ const DEMO_PAGE_ORIGIN = (process.env.DEMO_PAGE_ORIGIN || "https://leadawaker.co
 
 /**
  * The browser demo link: /demo/<token>, served by client/public/premium/demo.html.
- * Same token as the wa.me link, so one minted session serves both surfaces and
- * whichever the prospect opens first claims it.
+ * Same token as the wa.me link, but the two surfaces run independent
+ * conversations: the engine keeps a separate lead per surface
+ * (web-demo:<token> alongside the wa-demo:<token> row minted here), created on
+ * first open. Opening one never advances or locks the other.
+ * See specs/demo-surface-split.
  */
 export function buildDemoPageLink(params: { token: string }): string {
   return `${DEMO_PAGE_ORIGIN}/demo/${params.token}`;

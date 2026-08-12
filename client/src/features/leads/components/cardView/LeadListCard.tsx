@@ -10,6 +10,7 @@ import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check, Cloc
 import { PIPELINE_HEX } from "./constants";
 import { getLeadId, getFullName, getInitials, getScore, getStatus, getPhone, getLastMessage, getLastMessageSender, getUnreadCount } from "./leadUtils";
 import { formatRelativeTime } from "./formatUtils";
+import { isDemoLead } from "@/features/leads/demoLead";
 import { ScoreArcDonut } from "./atoms";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
@@ -83,8 +84,7 @@ export function LeadListCard({
   const campaignName = lead.Campaign || lead.campaign || lead.campaign_name || (cId && campaignsById?.get(cId)?.name) || "";
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
-  const isDemo = (lead.source || lead.Source) === "WhatsApp Demo" ||
-    (lead.channel_identifier || lead.channelIdentifier || "").startsWith("wa-demo:");
+  const isDemo = isDemoLead(lead);
   const sourceRaw   = String(lead.source || lead.Source || "");
   const sourceLabel = isDemo ? "" : (SOURCE_LABELS[sourceRaw] || (sourceRaw.startsWith("zapier:") ? "Zapier" : ""));
 

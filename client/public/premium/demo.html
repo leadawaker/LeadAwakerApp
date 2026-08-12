@@ -573,8 +573,6 @@
     function handleError(err) {
       if (err && err.status === 404) {
         fatal = { title: "This link is not valid", body: "It may have expired. Ask for a fresh one and it will work again." };
-      } else if (err && err.code === "claimed_by_whatsapp") {
-        fatal = { title: "Already running in WhatsApp", body: "This demo was opened on WhatsApp. Continue the conversation there." };
       } else if (err && err.code === "restart_limit") {
         // Not fatal: the conversation on screen is still readable. Render first
         // so the recap panel (restored by doRestart's catch) reflects the old
@@ -628,7 +626,7 @@
         }
       }).catch(function (err) {
         if (pollEpoch !== epoch) { schedulePoll(pending ? 1600 : 6000); return; }
-        if (err && (err.status === 404 || err.code === "claimed_by_whatsapp")) return handleError(err);
+        if (err && err.status === 404) return handleError(err);
         schedulePoll(6000);          // transient: keep trying quietly
       });
     }

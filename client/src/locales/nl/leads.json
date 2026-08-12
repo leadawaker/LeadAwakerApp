@@ -346,6 +346,7 @@
       "neutral": "Neutraal"
     },
     "notScored": "Niet gescoord",
+    "browserTest": "Browsertest",
     "aiSummary": "AI Samenvatting",
     "noAiSummary": "Nog geen AI-samenvatting gegenereerd",
     "summaryLocked": "De samenvatting wordt gegenereerd zodra het gesprek eindigt",

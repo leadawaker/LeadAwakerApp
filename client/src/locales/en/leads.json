@@ -346,6 +346,7 @@
       "neutral": "Neutral"
     },
     "notScored": "Not scored",
+    "browserTest": "Browser test",
     "aiSummary": "AI Summary",
     "noAiSummary": "No AI summary generated yet",
     "summaryLocked": "Summary will be generated once the conversation ends",

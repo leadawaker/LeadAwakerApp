@@ -52,6 +52,10 @@ interface InlineEditFieldProps {
   type?: "text" | "email" | "tel";
   testId?: string;
   selectOptions?: string[];
+  /** Show the value as plain text with no edit affordance. For fields that
+   *  cannot meaningfully be filled in, such as the phone number of a demo run
+   *  in the browser, where no number is ever collected. */
+  readOnly?: boolean;
 }
 
 export function InlineEditField({
@@ -62,6 +66,7 @@ export function InlineEditField({
   type = "text",
   testId,
   selectOptions,
+  readOnly = false,
 }: InlineEditFieldProps) {
   const [editing, setEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
@@ -112,7 +117,11 @@ export function InlineEditField({
         <span className="text-[11px] text-muted-foreground">{label}</span>
       </div>
 
-      {editing ? (
+      {readOnly ? (
+        <span className="text-[12px] text-muted-foreground italic text-right break-words max-w-[140px] truncate">
+          {value || "—"}
+        </span>
+      ) : editing ? (
         <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
           {selectOptions ? (
             <select

@@ -4,6 +4,7 @@ import { User, Phone, Mail, Activity, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiUtils";
 import { SectionTitle, InlineEditField, InfoRow } from "./atoms";
+import { isBrowserDemoLead } from "@/features/leads/demoLead";
 
 interface LeadContactSectionProps {
   lead: Record<string, any>;
@@ -33,6 +34,7 @@ export function LeadContactSection({
   aiModel,
 }: LeadContactSectionProps) {
   const { t } = useTranslation("leads");
+  const isBrowserDemo = isBrowserDemoLead(lead);
   return (
     <>
       {/* Contact Info — with inline editing */}
@@ -58,11 +60,15 @@ export function LeadContactSection({
           }}
           testId="inline-edit-name"
         />
+        {/* A browser demo never collects a number, so an empty phone field
+            here is expected rather than missing data. Label it instead of
+            leaving a dash that reads as an import gap. */}
         <InlineEditField
           label={t("detail.fields.phone")}
-          value={lead.phone || ""}
+          value={isBrowserDemo ? t("detail.browserTest") : (lead.phone || "")}
           icon={<Phone className="h-3 w-3" />}
           type="tel"
+          readOnly={isBrowserDemo}
           onSave={(v) => handleInlineFieldSave("phone", v)}
           testId="inline-edit-phone"
         />
