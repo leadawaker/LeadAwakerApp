@@ -209,6 +209,11 @@ export function registerDemoRoutes(app: Express): void {
     // Jurisdiction, not preference: UK none, EU in the opener, Brazil in the
     // first reply. Omitted means the campaign's own setting applies.
     aiDisclosure: z.enum(["off", "opener", "second_message"]).optional(),
+    // Which market the prospect sells into, which is NOT the language they read
+    // in: a Dutch firm demoed to in English still quotes in euros. Only sent
+    // when the language is English; nl and pt resolve their own market inside
+    // generateNicheContext().
+    market: z.enum(["uk", "us", "nl"]).optional(),
   });
 
   app.post(
@@ -218,7 +223,7 @@ export function registerDemoRoutes(app: Express): void {
       const parsed = adminSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure } = parsed.data;
+      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure, market } = parsed.data;
 
       if (!(await isDemoCampaign(campaignId))) {
         return res.status(400).json({
@@ -260,7 +265,7 @@ export function registerDemoRoutes(app: Express): void {
         // JSON). Checked on the return value, not on a field of the context,
         // because the fallback is a fully-populated object and every field-based
         // test for "did this really generate" has a false positive in it.
-        const model = await generateNicheContext(niche, language, scenario);
+        const model = await generateNicheContext(niche, language, scenario, market);
         generated = model !== null;
         const ctx = model ?? buildFallbackNicheContext(niche, language, scenario);
 

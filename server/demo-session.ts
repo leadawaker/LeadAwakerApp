@@ -197,6 +197,39 @@ export function buildGenericScopingLadder(niche: string, language: string): stri
   ].join("\n");
 }
 
+/** The markets the English demo can be pointed at. English alone needs this:
+ *  "the English market" is the UK, the US, Ireland or Australia, and left to
+ *  itself the model picks one (which is where the £ on the SolarMax persona
+ *  came from). Dutch and Portuguese each have one market and resolve on their
+ *  own. Mirrored client-side in client/src/features/campaigns/demoMode.ts. */
+export type DemoMarket = "uk" | "us" | "nl";
+
+/** Every market the generator can be pointed at. Wider than DemoMarket: "br"
+ *  is implied by the Portuguese language and never appears in the toggle. */
+type ResolvedMarket = DemoMarket | "br";
+
+const MARKET_PROFILE: Record<ResolvedMarket, { name: string; currency: string; symbol: string }> = {
+  uk: { name: "the United Kingdom", currency: "GBP", symbol: "£" },
+  us: { name: "the United States", currency: "USD", symbol: "$" },
+  nl: { name: "the Netherlands", currency: "EUR", symbol: "€" },
+  br: { name: "Brazil", currency: "BRL", symbol: "R$" },
+};
+
+/** Language and market are independent: a Dutch prospect demoed to in English
+ *  still sells into the Netherlands and still needs euros. This is the same
+ *  conflation already corrected for AI disclosure, which used to be derived
+ *  from the language picker.
+ *
+ *  Resolving here rather than at each call site is deliberate: the public
+ *  homepage flow and the /generate command from WhatsApp both call this
+ *  function without a market, and both should get the same answer the share
+ *  panel would give them. English defaults to the Netherlands. */
+function resolveMarket(language: "en" | "nl" | "pt", market?: DemoMarket): ResolvedMarket {
+  if (language === "nl") return "nl";
+  if (language === "pt") return "br";
+  return market ?? "nl";
+}
+
 const NICHE_GENERATOR_SYSTEM_FALLBACK = `You generate realistic demo context for a lead reactivation AI sales demo.
 Given a business niche, output a JSON object with EXACTLY these keys:
 
@@ -220,7 +253,7 @@ advisor_term, project_term, proposal_term, visit_term and decision_term MUST be 
 - niche_objection_examples: the 2 most common objections a lead in THIS niche raises, each followed on the next line by a strong open counter-question. Blank line between the two pairs.
 
 - enquiry_context: ONE short sentence, in the output language, describing what this lead already told the business when they first got in touch. Include at MOST two concrete facts, and only facts a website enquiry form would realistically capture (e.g. "enquired through the website about a new kitchen for a 3-bed terrace, no quote was ever sent"). It must be consistent with what_lead_did. Never include budget, timing or a decision: those are the payoff of the conversation, not its starting point.
-- quote_context: the quote this lead is already sitting on, for the version of this conversation where one was sent. 2-4 short lines in the output language, newline-separated: a total amount in the currency of the output language's market, plausible for this niche and this job size; 2-4 line items naming the scope a real quote for this niche would itemise; and a RELATIVE date, never an absolute one ("sent about five months ago", not "sent 12 March 2026"). Optionally name the role who signs off. It must describe the SAME job as enquiry_context, priced: do not invent a different project, and do not restate the enquiry sentence.
+- quote_context: the quote this lead is already sitting on, for the version of this conversation where one was sent. 2-4 short lines in the output language, newline-separated: a total amount in the target market's currency, named in the Target market line at the end of this prompt, plausible for this niche and this job size in that market; 2-4 line items naming the scope a real quote for this niche would itemise; and a RELATIVE date, never an absolute one ("sent about five months ago", not "sent 12 March 2026"). Optionally name the role who signs off. It must describe the SAME job as enquiry_context, priced: do not invent a different project, and do not restate the enquiry sentence.
 - niche_question: ONE qualifying question tied to a concrete pain point or key decision factor for this niche — easy to answer over SMS. Examples — Solar: "Roughly how much are you currently paying per month on electricity?" / Dental: "Are you experiencing any discomfort, or is it more of a routine check-up?" / Gym: "Are you looking to lose weight, build muscle, or something else?"
 - first_message: Write the opener as one sentence a real person would text. Use this exact shape:
 "Hi it's {agent_name} {disclosure_clause}, is that the same {first_name} who was looking at <NATURAL PLURAL PHRASE> a while back?"
@@ -264,6 +297,7 @@ export async function generateNicheContext(
   niche: string,
   language: "en" | "nl" | "pt",
   scenario: DemoScenario = "inquired",
+  market?: DemoMarket,
 ): Promise<NicheContext | null> {
   const apiKey = process.env.OPEN_AI_API_KEY;
   if (!apiKey) {
@@ -297,7 +331,14 @@ export async function generateNicheContext(
       (err as Error)?.message,
     );
   }
-  system = system + `\n\nOutput language: ${langLabel}.`;
+  const profile = MARKET_PROFILE[resolveMarket(language, market)];
+  system =
+    system +
+    `\n\nOutput language: ${langLabel}.` +
+    `\nTarget market: ${profile.name}.` +
+    ` Every money amount you write, including the quote total, its line items and any figure inside kb, must be in ${profile.currency} (${profile.symbol}) and priced realistically for ${profile.name}.` +
+    ` This overrides any other instruction about which currency to use.` +
+    ` Regulations, grid and tax rules, housing stock, units of measurement and company naming must all be the ones a business operating in ${profile.name} would actually deal with, regardless of the output language.`;
 
   // Hint the model so what_lead_did / first_message / niche_question match the
   // scenario the visitor chose. lead_stage itself is set authoritatively in code.
@@ -330,7 +371,7 @@ export async function generateNicheContext(
         model: "gpt-5.6-luna",
         messages: [
           { role: "system", content: system },
-          { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nLead scenario: ${scenarioHint}` },
+          { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nTarget market: ${profile.name} (${profile.currency})\nLead scenario: ${scenarioHint}` },
         ],
         // Row 91 (universal_demo_niche_generator) asks for ~20 keys including
         // niche_question_bank, niche_objection_examples and the 5-7 slot
