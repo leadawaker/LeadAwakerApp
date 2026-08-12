@@ -126,6 +126,10 @@ export interface DemoClientSummary {
   niche: string;
   label: string;
   companyName: string;
+  /** Null until set by hand or by the generator's category preference. */
+  category: string | null;
+  /** Null until set by hand or by the generator. */
+  emoji: string | null;
   /** Languages this Client has content for, so the picker can warn on a gap. */
   languages: DemoLang[];
   /** False for the curated niche packs, which the tab lists but cannot delete. */
@@ -157,6 +161,8 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
       niche: r.niche,
       label: pick(r.nicheLabel as NicheText, "en") || r.niche,
       companyName: pick(r.companyNameTemplate as NicheText, "en"),
+      category: r.category ?? null,
+      emoji: r.emoji ?? null,
       languages,
       isDemoClient: r.isDemoClient ?? false,
       updatedAt: r.updatedAt ?? null,
@@ -223,12 +229,17 @@ export async function saveDemoClient(
       terms[col] = mergeTerm((existing as Record<string, unknown> | undefined)?.[col], generated[group] ?? "");
     }
 
-    const values = {
+    const values: Record<string, unknown> = {
       ...text,
       ...terms,
       bookingModeCall: ctx.booking_mode_call,
       updatedAt: new Date(),
     };
+    // Written once, never clobbered: a human editing the Clients tab, or a
+    // second demo minted later for the same niche, must win over whatever a
+    // fresh generation returns.
+    if (!existing?.category && ctx.category) values.category = ctx.category.trim();
+    if (!existing?.emoji && ctx.emoji) values.emoji = ctx.emoji.trim();
 
     if (existing) {
       // isDemoClient is deliberately NOT set here. Minting a demo whose niche
@@ -281,6 +292,9 @@ export interface ClientPatch {
   /** Term lists to REPLACE, per group, per language. */
   terms?: Partial<Record<TermGroup, Partial<Record<DemoLang, string[]>>>>;
   bookingModeCall?: boolean;
+  /** Empty/whitespace collapses to null, same as clearing any other field. */
+  category?: string | null;
+  emoji?: string | null;
 }
 
 /**
@@ -329,6 +343,8 @@ export async function updateDemoClient(niche: string, patch: ClientPatch): Promi
   }
 
   if (patch.bookingModeCall !== undefined) values.bookingModeCall = patch.bookingModeCall;
+  if (patch.category !== undefined) values.category = (patch.category ?? "").trim() || null;
+  if (patch.emoji !== undefined) values.emoji = (patch.emoji ?? "").trim() || null;
 
   await db.update(nicheVocabulary).set(values).where(eq(nicheVocabulary.id, existing.id));
   return true;
@@ -376,6 +392,10 @@ export function demoClientToEditable(row: ClientRow) {
   });
   return {
     id: row.id,
+    label: pick(row.nicheLabel as NicheText, "en") || row.niche,
+    companyName: pick(row.companyNameTemplate as NicheText, "en"),
+    category: row.category ?? null,
+    emoji: row.emoji ?? null,
     niche: row.niche,
     bookingModeCall: row.bookingModeCall ?? false,
     isDemoClient: row.isDemoClient ?? false,
