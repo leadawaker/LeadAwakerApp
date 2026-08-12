@@ -269,6 +269,12 @@
     var lastSig = "";
     var draft = "";
     var fatal = null;
+    // Bumped by any action that replaces `state` outside of poll() itself
+    // (send, restart). poll() captures this before it fetches and checks it
+    // again when the response lands; a mismatch means a restart/send already
+    // moved state on while this fetch was in flight, so the response is
+    // discarded instead of clobbering fresher state.
+    var epoch = 0;
 
     // ---- helpers ----------------------------------------------------------
     function esc(s) {
@@ -500,6 +506,12 @@
       var text = draft.trim();
       if (!text) return;
 
+      // Invalidate any poll fetch already in flight: without this, a response
+      // that predates the send can land after the optimistic push below and
+      // overwrite state.messages with server data that doesn't include it yet,
+      // making the visitor's own message flicker or vanish.
+      epoch++;
+
       // Optimistic: the visitor's own bubble appears instantly, then the typing
       // indicator. Waiting for the round trip to echo their own words back is
       // the single thing that makes a web chat feel broken.
@@ -530,8 +542,16 @@
       if (busy || !state) return;
       busy = true;
       pending = false;
+      var prevRecap = recap;   // snapshot so a failed restart can put the recap
+                                // panel back to what it showed a moment ago,
+                                // instead of leaving it stuck on the "wrapping
+                                // up" placeholder until the next idle poll.
       recap = null;
       draft = "";
+      // Invalidate any poll fetch already in flight: a routine poll started
+      // before the restart can otherwise resolve AFTER it and silently revert
+      // the UI to the old scenario's messages.
+      epoch++;
       render();
       api("/restart", {
         method: "POST",
@@ -545,6 +565,7 @@
         schedulePoll(4000);
       }).catch(function (err) {
         busy = false;
+        recap = prevRecap;   // restore what was on screen before the optimistic clear
         handleError(err);
       });
     }
@@ -555,7 +576,11 @@
       } else if (err && err.code === "claimed_by_whatsapp") {
         fatal = { title: "Already running in WhatsApp", body: "This demo was opened on WhatsApp. Continue the conversation there." };
       } else if (err && err.code === "restart_limit") {
-        // Not fatal: the conversation on screen is still readable.
+        // Not fatal: the conversation on screen is still readable. Render first
+        // so the recap panel (restored by doRestart's catch) reflects the old
+        // conversation again rather than staying on the placeholder, then patch
+        // the foot text to explain why the restart didn't go through.
+        render();
         var el = document.querySelector(".foot");
         if (el) el.textContent = "This link has been restarted the maximum number of times.";
         return;
@@ -576,7 +601,19 @@
 
     function poll() {
       if (busy) { schedulePoll(1500); return; }
+      var pollEpoch = epoch;   // captured before the fetch fires
       api("").then(function (next) {
+        if (pollEpoch !== epoch) {
+          // A restart or send landed while this fetch was in flight and moved
+          // state on already; applying this response now would clobber that
+          // fresher state with stale data. The action that bumped the epoch
+          // already scheduled its own follow-up poll, but reschedule anyway
+          // (rather than trusting this response's own `done`/messages, which
+          // may no longer be accurate) so the loop can't stall if that action
+          // is still pending or failed outright.
+          schedulePoll(pending ? 1600 : 6000);
+          return;
+        }
         var sig = signature(next);
         var grew = state && next.messages.length > state.messages.length;
         state = next;
@@ -590,6 +627,7 @@
           schedulePoll(pending ? 1600 : 6000);
         }
       }).catch(function (err) {
+        if (pollEpoch !== epoch) { schedulePoll(pending ? 1600 : 6000); return; }
         if (err && (err.status === 404 || err.code === "claimed_by_whatsapp")) return handleError(err);
         schedulePoll(6000);          // transient: keep trying quietly
       });

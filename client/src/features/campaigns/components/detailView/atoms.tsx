@@ -369,6 +369,14 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   // what the public homepage form defaults to, so a link minted here without
   // touching the control behaves like the demo everyone else sees.
   const [demoMode, setDemoMode] = useState<DemoMode>("decision");
+  // Independent of `language`: the demo used to derive disclosure from which
+  // language was picked (en->off, nl->opener, pt->second_message), which
+  // conflated "what the prospect reads in" with "which jurisdiction's rules
+  // apply" — see the note in server/demo-session.ts. Off by default: most
+  // links minted here are for a live sales conversation, not a compliance
+  // test, and Gabriel would rather opt IN to disclosure than have it sprung
+  // on a call by whichever language happened to be selected.
+  const [aiDisclosure, setAiDisclosure] = useState<"off" | "opener" | "second_message">("off");
   const [prospectCompany, setProspectCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -393,6 +401,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
     // with no obvious way back.
     setSavedClient("");
     setDemoMode("decision");
+    setAiDisclosure("off");
     setLoading(false);
     setError(null); setDemoLink(null); setWaLink(null); setFellBack(false); setCopied(null);
   };
@@ -426,6 +435,9 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
           // as an argument, so the same saved Client can be minted as either
           // conversation without being re-generated.
           ...(canGenerateNiche ? { scenario: DEMO_MODE_SCENARIO[demoMode] } : {}),
+          // Always sent (not omitted at "off"): this is now an explicit choice
+          // made on this link, not a fallback to the campaign's own column.
+          ...(canGenerateNiche ? { aiDisclosure } : {}),
         }),
       });
       if (!res.ok) {
@@ -548,6 +560,11 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                         disabled={!niche.trim() && !savedClient}
                         className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors disabled:opacity-50"
                       />
+                      {!niche.trim() && !savedClient && (
+                        <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                          {t("share.prospectCompanyHint", "Fill in their niche or pick a saved client first.")}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
@@ -580,6 +597,23 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                     ))}
                   </div>
                 </div>
+                {canGenerateNiche && (
+                  <div>
+                    <label className="block text-[12px] font-medium mb-1">{t("share.aiDisclosure", "AI disclosure")}</label>
+                    <div className="flex gap-1.5">
+                      {(["off", "opener", "second_message"] as const).map((mode) => (
+                        <button key={mode} type="button" onClick={() => setAiDisclosure(mode)}
+                          className={cn("px-3 py-1 rounded-md border text-[12px] font-medium transition-colors",
+                            aiDisclosure === mode ? "border-brand-indigo bg-brand-indigo text-white" : "border-black/[0.125] bg-white hover:bg-muted/50")}>
+                          {t(`config.aiDisclosureOptions.${mode}`)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                      {t("share.aiDisclosureHint", "This link's own choice, independent of Language above. Off by default.")}
+                    </p>
+                  </div>
+                )}
                 {error && <div className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">{error}</div>}
                 <button type="submit" disabled={loading}
                   className="w-full h-9 rounded-full bg-brand-indigo text-white font-medium text-[13px] hover:opacity-90 disabled:opacity-50 transition-opacity">

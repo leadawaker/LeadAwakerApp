@@ -278,6 +278,19 @@ export function registerDemoRoutes(app: Express): void {
         if (companyName) ctx.company_name = companyName;
         if (aiDisclosure) ctx.ai_disclosure = aiDisclosure;
         demoNiche = JSON.stringify(ctx);
+      } else if (aiDisclosure || companyName) {
+        // Neither a fresh niche nor a re-pick: "send the campaign as it is."
+        // Without this branch a disclosure/company override typed here would
+        // be silently dropped, because demoNiche stays undefined and nothing
+        // ever gets written to the lead — the campaign's own ai_disclosure
+        // column would govern instead of the explicit choice made on this
+        // link. A sparse override is exactly what the engine's overlay
+        // already supports (_overlay_demo_niche_onto_campaign only sets keys
+        // present in the blob, same as a saved Client's own sparse rows).
+        demoNiche = JSON.stringify({
+          ...(aiDisclosure ? { ai_disclosure: aiDisclosure } : {}),
+          ...(companyName ? { company_name: companyName } : {}),
+        });
       }
 
       const { token } = generateToken();

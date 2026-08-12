@@ -972,7 +972,7 @@ git commit -m "feat: author Windows & Doors and Kitchens scoping ladders"
 - Modify: `Prompt_Library` row 93
 
 **Interfaces:**
-- Consumes: `ai_disclosure` (exists in the variable map), `niche_opener_phrase` (Task 4)
+- Consumes: `ai_disclosure` (exists in the variable map), `opener_phrase` (Task 4)
 - Produces: prompt variable `disclosure_clause`; Prompt 93 Step 1/Step 2/§6.3 disclosure branches
 
 - [ ] **Step 1: Add the `disclosure_clause` variable**
@@ -1018,7 +1018,7 @@ Create `/home/gabriel/automations/scripts/prompt93/02-disclosure.js`:
 const STEP2_DISCLOSURE = `
 {{#if ai_disclosure == "on"}}
 The opener already disclosed that you are an AI assistant. Do NOT disclose again in this reply: saying it twice in two consecutive messages reads as broken. Skip the disclosure clause entirely and go straight into substance.
-Your second message must not claim anything a human would claim and an AI would not. Never say a manager asked you to reach out, and never say you dislike making phone calls. Instead do the same three jobs in your own terms: give the reason for contact, take the fear of a cold call off the table, and ask the interest question. Example (English): "Thanks for confirming. The team asked me to go back through our older enquiries, and I'd rather drop you a message than have someone ring you out of the blue. Are you still interested in {niche_opener_phrase}?"
+Your second message must not claim anything a human would claim and an AI would not. Never say a manager asked you to reach out, and never say you dislike making phone calls. Instead do the same three jobs in your own terms: give the reason for contact, take the fear of a cold call off the table, and ask the interest question. Example (English): "Thanks for confirming. The team asked me to go back through our older enquiries, and I'd rather drop you a message than have someone ring you out of the blue. Are you still interested in {opener_phrase}?"
 {{/if}}
 {{#if ai_disclosure == "off"}}
 `;
@@ -1027,7 +1027,7 @@ const SIX_THREE = `
 {{#if ai_disclosure == "off"}}
 ## 6.3b AI question, disclosure-off campaigns
 Nothing was disclosed in the opener, so never say "as I mentioned".
-First time they ask or accuse: do not debate what you are and do not deny it. State who you are with and move the conversation to what they want. Example: "I'm {agent_name} with {company_name}. Are you looking at {niche_opener_phrase}, or is now not a good time?"
+First time they ask or accuse: do not debate what you are and do not deny it. State who you are with and move the conversation to what they want. Example: "I'm {agent_name} with {company_name}. Are you looking at {opener_phrase}, or is now not a good time?"
 Second time they ask, or if they push at all: confirm plainly, then continue. Never deny being an AI. Example: "Fair enough, yes: I'm the digital assistant here. I'm mainly checking whether you still need anything, or whether we should leave you be."
 Do not pitch, qualify or push for a call in the same message as either answer.
 {{/if}}
