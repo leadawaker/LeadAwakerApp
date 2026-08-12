@@ -39,6 +39,7 @@ pnpm-debug.log*
 .playwright-cli/
 .playwright/
 .claude/worktrees/
+.superpowers/
 
 # Screenshots & references (not needed in repo)
 references/
