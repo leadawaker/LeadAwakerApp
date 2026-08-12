@@ -71,53 +71,66 @@
     }
 
     /* ---------------- header ---------------- */
+    /* Cream chrome over the bone chat ground: the two shared tokens, used as
+       the two surfaces, so the header reads as a distinct plate. */
     .hdr {
-      display: flex; align-items: center; gap: 16px;
-      padding: 13px 22px;
+      padding: 12px 22px;
       border-bottom: 1px solid var(--d-line);
-      background: var(--glass-bg-strong);
-      -webkit-backdrop-filter: saturate(160%) blur(22px);
-      backdrop-filter: saturate(160%) blur(22px);
+      background: var(--paper);
       position: sticky; top: 0; z-index: 20;
+    }
+    /* One centred cluster — logo, client, progress — rather than the logo and
+       the client pill pinned to opposite corners with the tracker marooned in
+       between. Everything that identifies the conversation sits together. */
+    .hdr-inner {
+      display: flex; align-items: center; justify-content: center;
+      gap: 20px; flex-wrap: wrap;
     }
     /* Logo only. The wordmark is already inside logo-v2.svg, so the adjacent
        "Lead Awaker" text this used to carry printed the name twice. */
     .hdr-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
-    .hdr-logo img { height: 30px; width: auto; display: block; }
-    .hdr-spacer { flex: 1 1 auto; }
+    .hdr-logo img { height: 28px; width: auto; display: block; }
+    .hdr-div { width: 1px; height: 24px; background: var(--d-line); flex: 0 0 auto; }
     .pill {
       flex: 0 0 auto;
-      font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
-      padding: 7px 14px; border-radius: 999px;
-      background: var(--surface); box-shadow: var(--sh-raised-crisp);
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em;
+      padding: 6px 14px; border-radius: 999px;
+      background: var(--bg); border: 1px solid var(--d-line);
       color: var(--d-ink);
-      max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 42vw; overflow: hidden; white-space: nowrap;
     }
+    .pill span { overflow: hidden; text-overflow: ellipsis; }
+    .pill svg { color: var(--wine); flex: 0 0 auto; }
 
     /* ---------------- stage tracker ----------------
        The centrepiece. It narrates the pipeline moving while the conversation
        happens, so a prospect sees a lead being worked rather than a chatbot
        being clever. Every stage is driven by a signal the engine already emits. */
     .track { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
-    .track-step { display: flex; align-items: center; gap: 8px; }
-    .track-dot {
-      width: 9px; height: 9px; border-radius: 50%;
-      background: var(--d-mute-2); flex: 0 0 auto;
-      transition: background 400ms ease, box-shadow 400ms ease;
+    /* Each stage carries its OWN colour in --c (set inline from STAGES), applied
+       to the icon and the label together via currentColor. Stages not yet
+       reached show that same colour faded rather than going grey, so the row
+       still reads as one coloured progression while making clear how far the
+       conversation actually got. */
+    .track-step {
+      display: flex; align-items: center; gap: 9px;
+      color: var(--c); opacity: 0.42;
+      transition: opacity 400ms ease;
     }
+    .track-step.on, .track-step.done { opacity: 1; }
+    .track-ic {
+      width: 21px; height: 21px; flex: 0 0 auto;
+      transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .track-step.on .track-ic { transform: scale(1.14); }
     .track-label {
-      font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-      color: var(--d-mute-2); white-space: nowrap;
-      transition: color 400ms ease;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.085em; text-transform: uppercase;
+      color: currentColor; white-space: nowrap;
     }
     .track-line {
-      width: 34px; height: 1px; background: var(--d-line-2); margin: 0 12px; flex: 0 0 auto;
-      transition: background 400ms ease;
+      width: 30px; height: 1px; background: var(--d-line-2); margin: 0 12px; flex: 0 0 auto;
     }
-    .track-step.on .track-dot { background: var(--d-accent); box-shadow: 0 0 0 4px var(--wine-tint); }
-    .track-step.on .track-label { color: var(--d-ink); }
-    .track-step.done .track-dot { background: var(--d-ok); box-shadow: none; }
-    .track-step.done .track-label { color: var(--d-mute); }
 
     /* ---------------- layout ---------------- */
     .wrap { flex: 1 1 auto; display: flex; min-height: 0; }
@@ -144,12 +157,10 @@
     .row.me { flex-direction: row-reverse; }
     .av {
       width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
-      background: linear-gradient(145deg, var(--wine-soft), var(--wine));
-      color: var(--paper);
+      background: var(--wine); color: var(--paper);
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
       margin-bottom: 17px;
-      box-shadow: var(--sh-raised-crisp);
     }
     .bub-wrap { max-width: min(78%, 520px); display: flex; flex-direction: column; }
     .row.me .bub-wrap { align-items: flex-end; }
@@ -159,15 +170,15 @@
       white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere;
       animation: rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
     }
+    /* Flat, not neumorphic: white on the bone ground carries the separation on
+       its own, and the raised treatment fought the calm of the palette. The
+       visitor's side goes flat with it so the two read as one system. */
     .row.ai .bub {
-      background: var(--paper);
-      box-shadow: var(--sh-raised-crisp);
+      background: #FFFFFF;
       border-bottom-left-radius: 5px;
     }
     .row.me .bub {
-      background: linear-gradient(145deg, #6E2638, #4B1A26);
-      color: var(--paper);
-      box-shadow: var(--sh-raised-crisp);
+      background: var(--wine); color: var(--paper);
       border-bottom-right-radius: 5px;
     }
     .ts { font-size: 10.5px; color: var(--d-mute-2); margin: 5px 4px 0; font-family: var(--d-mono); }
@@ -185,9 +196,7 @@
     /* ---------------- composer ---------------- */
     .composer-wrap {
       border-top: 1px solid var(--d-line);
-      background: var(--glass-bg-strong);
-      -webkit-backdrop-filter: saturate(160%) blur(22px);
-      backdrop-filter: saturate(160%) blur(22px);
+      background: var(--paper);
       padding: 16px 26px 18px;
     }
     .composer { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
@@ -217,36 +226,54 @@
     .send:hover:not(:disabled) { transform: scale(1.06); }
     .send:disabled { opacity: 0.35; cursor: default; }
 
-    /* ---- restart, below the composer ----
-       These used to sit inside .composer, to the right of the input, where they
-       squeezed the writing area and read as send-adjacent actions. They are a
-       separate offer ("run it again as..."), so they get their own row under the
-       editor, with the server's heading directly above them. */
-    .restart-head {
-      max-width: 760px; margin: 14px auto 0; text-align: center;
-      font-size: 11px; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase;
-      color: var(--d-mute-2); font-family: var(--d-mono);
-    }
-    .restart-row {
-      max-width: 760px; margin: 9px auto 0;
-      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
-    }
-    .ghost {
-      flex: 0 0 auto; height: 38px; padding: 0 18px; border-radius: 19px;
-      background: var(--surface); border: none; color: var(--d-ink);
-      box-shadow: var(--sh-raised-crisp);
+    /* ---- restart: one button beside the composer, options in a popover ----
+       Two full scenario labels sat inline here at first and squeezed the
+       writing area; stacked underneath they pushed the composer up and made a
+       secondary action the loudest thing on the page. A single button that
+       opens the choices on demand keeps the editor the focus. */
+    .restart-anchor { position: relative; flex: 0 0 auto; }
+    .restart-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 44px; padding: 0 16px; border-radius: 22px;
+      background: var(--bg); border: 1px solid var(--d-line-2); color: var(--d-ink);
       font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: box-shadow 200ms cubic-bezier(.2,.7,.2,1), transform 200ms cubic-bezier(.2,.7,.2,1);
+      transition: background 160ms ease, border-color 160ms ease;
     }
-    .ghost:hover:not(:disabled) { transform: translateY(-1px); }
-    .ghost:active:not(:disabled) { box-shadow: var(--sh-inset-crisp); transform: none; }
+    .restart-btn:hover:not(:disabled),
+    .restart-btn[aria-expanded="true"] { background: var(--surface); border-color: var(--mute-2); }
+    .restart-btn:disabled { opacity: 0.45; cursor: default; }
+    .restart-btn svg { flex: 0 0 auto; }
+
+    .restart-pop {
+      position: absolute; bottom: calc(100% + 10px); right: 0;
+      width: 290px; z-index: 40;
+      background: var(--paper);
+      border: 1px solid var(--d-line-2); border-radius: 14px;
+      padding: 15px 15px 13px;
+      box-shadow: 0 14px 38px -12px rgba(60, 45, 20, 0.32), 0 3px 10px -3px rgba(60, 45, 20, 0.14);
+      animation: pop 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .restart-pop[hidden] { display: none; }
+    @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .pop-head {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--d-mute-2); font-family: var(--d-mono);
+      margin-bottom: 10px; line-height: 1.45;
+    }
+    .pop-opts { display: flex; flex-direction: column; gap: 7px; }
+    .ghost {
+      width: 100%; text-align: left;
+      padding: 10px 13px; border-radius: 9px;
+      background: var(--bg); border: 1px solid var(--d-line); color: var(--d-ink);
+      font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .ghost:hover:not(:disabled) { background: var(--surface); border-color: var(--mute-2); }
     .ghost:disabled { opacity: 0.4; cursor: default; }
-    .foot {
-      max-width: 760px; margin: 13px auto 0; text-align: center;
-      font-size: 12px; color: var(--d-mute-2);
-    }
-    .foot a { color: var(--d-mute); text-decoration: underline; text-underline-offset: 2px; }
-    .foot a:hover { color: var(--d-ink); }
+    .pop-rule { height: 1px; background: var(--d-line); margin: 13px 0 11px; }
+    .pop-foot { font-size: 11.5px; line-height: 1.55; color: var(--d-mute-2); }
+    .pop-foot a { color: var(--wine); text-decoration: underline; text-underline-offset: 2px; }
+    .pop-foot a:hover { color: var(--wine-soft); }
 
     /* ---------------- recap panel ---------------- */
     .recap {
@@ -297,18 +324,36 @@
       display: block;
     }
 
-    @media (max-width: 900px) {
-      .hdr { flex-wrap: wrap; gap: 10px 14px; padding: 11px 16px; }
-      .hdr-logo img { height: 26px; }
+    @media (max-width: 1080px) {
+      .hdr { padding: 11px 16px; }
+      .hdr-inner { gap: 10px 16px; }
+      .hdr-logo img { height: 25px; }
+      .hdr-div { display: none; }
       .track { order: 3; width: 100%; justify-content: space-between; }
-      .track-line { width: auto; flex: 1 1 auto; margin: 0 7px; }
-      .track-label { font-size: 9px; letter-spacing: 0.06em; }
+      .track-line { width: auto; flex: 1 1 auto; margin: 0 6px; }
+      .track-label { font-size: 9.5px; letter-spacing: 0.05em; }
+      .track-ic { width: 18px; height: 18px; }
       .pill { max-width: 55vw; }
       .wrap { flex-direction: column; }
       .recap { flex: 1 1 auto; border-left: none; border-top: 1px solid var(--d-line); }
       .stream { padding: 20px 16px 10px; }
       .composer-wrap { padding: 13px 16px 15px; }
-      .restart-head { margin-top: 12px; }
+    }
+    /* Below this the label alongside the icons costs more width than it earns;
+       the icons alone still read as a progression. */
+    @media (max-width: 700px) {
+      .track-label { display: none; }
+      .track { justify-content: center; gap: 0; }
+      .track-line { max-width: 34px; }
+    }
+    /* "Really small": the restart button stops fighting the input for width and
+       takes its own full-width row under it, popover stretched to match. */
+    @media (max-width: 560px) {
+      .composer { flex-wrap: wrap; }
+      .input-shell { width: 100%; flex: 1 1 100%; }
+      .restart-anchor { width: 100%; }
+      .restart-btn { width: 100%; justify-content: center; height: 40px; }
+      .restart-pop { left: 0; right: 0; width: auto; }
     }
   </style>
 </head>
@@ -332,12 +377,32 @@
     // serves both. The page never needs to know which host it is on.
     var API = "/api/web-demo/" + encodeURIComponent(TOKEN);
 
+    // Each stage owns a colour and an icon. The colours run neutral -> gold ->
+    // wine -> green so the row reads as a journey ending in a win, and all four
+    // are drawn from the site palette rather than generic status colours.
     var STAGES = [
-      { key: "new",       label: "New lead" },
-      { key: "responded", label: "Responded" },
-      { key: "qualified", label: "Qualified" },
-      { key: "objective", label: "Objective reached" }
+      { key: "new",       label: "New lead",          icon: "user-plus",      color: "#4A6B82" },
+      { key: "responded", label: "Responded",         icon: "message-circle", color: "#B8901F" },
+      { key: "qualified", label: "Qualified",         icon: "badge-check",    color: "#7A2E3E" },
+      { key: "objective", label: "Objective reached", icon: "calendar-check", color: "#4C7A5B" }
     ];
+
+    // Lucide paths, inlined: the page is standalone vanilla JS under a strict
+    // CSP, so it cannot pull the icon library off a CDN.
+    var ICONS = {
+      "user-plus": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>',
+      "message-circle": '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+      "badge-check": '<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/>',
+      "calendar-check": '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+      "sparkles": '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
+      "rotate-ccw": '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'
+    };
+
+    function icon(name, size, cls) {
+      return '<svg class="' + (cls || "") + '" width="' + size + '" height="' + size + '" ' +
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + "</svg>";
+    }
 
     var root = document.getElementById("root");
     var state = null;
@@ -348,6 +413,10 @@
     var lastSig = "";
     var draft = "";
     var fatal = null;
+    // Whether the restart popover is open. Kept out here rather than in the DOM
+    // so a poll re-render (which rebuilds the whole tree) doesn't slam it shut
+    // under the visitor mid-decision.
+    var popOpen = false;
     // Bumped by any action that replaces `state` outside of poll() itself
     // (send, restart). poll() captures this before it fetches and checks it
     // again when the response lands; a mismatch means a restart/send already
@@ -407,7 +476,12 @@
       var out = [];
       for (var i = 0; i < STAGES.length; i++) {
         var cls = i < at ? "track-step done" : (i === at ? "track-step on" : "track-step");
-        out.push('<div class="' + cls + '"><span class="track-dot"></span><span class="track-label">' + esc(STAGES[i].label) + "</span></div>");
+        out.push(
+          '<div class="' + cls + '" style="--c:' + STAGES[i].color + '" title="' + esc(STAGES[i].label) + '">' +
+            icon(STAGES[i].icon, 21, "track-ic") +
+            '<span class="track-label">' + esc(STAGES[i].label) + "</span>" +
+          "</div>"
+        );
         if (i < STAGES.length - 1) out.push('<div class="track-line"></div>');
       }
       return '<div class="track">' + out.join("") + "</div>";
@@ -496,11 +570,14 @@
 
       root.innerHTML =
         '<header class="hdr">' +
-          '<div class="hdr-logo"><img src="/premium/logo-v2.svg" alt="Lead Awaker" /></div>' +
-          '<div class="hdr-spacer"></div>' +
-          trackerHtml(s.stage) +
-          '<div class="hdr-spacer"></div>' +
-          (s.company ? '<div class="pill">' + esc(s.company) + "</div>" : "") +
+          '<div class="hdr-inner">' +
+            '<div class="hdr-logo"><img src="/premium/logo-v2.svg" alt="Lead Awaker" /></div>' +
+            (s.company
+              ? '<div class="pill">' + icon("sparkles", 14) + "<span>" + esc(s.company) + "</span></div>"
+              : "") +
+            '<div class="hdr-div"></div>' +
+            trackerHtml(s.stage) +
+          "</div>" +
         "</header>" +
         '<div class="wrap">' +
           '<div class="chat-col">' +
@@ -521,30 +598,43 @@
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
                   "</button>" +
                 "</div>" +
+                // Restart sits BESIDE the editor as one button; the choices,
+                // the WhatsApp handoff and the remaining-restarts count all
+                // live in the popover it opens, so none of that competes with
+                // the composer until it is asked for.
+                //
+                // Invited links get the two scenarios; a public homepage
+                // session gets the plain Restart it always had. Labels and
+                // heading come from the server, already in the lead's language
+                // (src/automations/demo_restart.py).
+                '<div class="restart-anchor">' +
+                  '<button class="restart-btn" id="restart-toggle" aria-haspopup="dialog" aria-expanded="' +
+                    (popOpen ? "true" : "false") + '" aria-controls="restart-pop"' + (busy ? " disabled" : "") + ">" +
+                    icon("rotate-ccw", 15) + "<span>Restart</span>" +
+                  "</button>" +
+                  '<div class="restart-pop" id="restart-pop" role="dialog" aria-label="Restart this demo"' +
+                    (popOpen ? "" : " hidden") + ">" +
+                    (opts ? '<p class="pop-head">' + esc(opts[0].heading) + "</p>" : "") +
+                    '<div class="pop-opts">' +
+                      (opts
+                        ? opts.map(function (o) {
+                            return '<button class="ghost restart-opt" data-scenario="' + esc(o.value) + '"' +
+                              (busy || restartsLeft <= 0 ? " disabled" : "") + ">" + esc(o.label) + "</button>";
+                          }).join("")
+                        : '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">Restart</button>") +
+                    "</div>" +
+                    '<div class="pop-rule"></div>' +
+                    '<p class="pop-foot" id="pop-foot">' +
+                      (waUrl
+                        ? 'On your phone? <a href="' + esc(waUrl) + '" target="_blank" rel="noopener">Run it in WhatsApp instead</a>.'
+                        : "") +
+                      (restartsLeft > 0
+                        ? " " + restartsLeft + " restart" + (restartsLeft === 1 ? "" : "s") + " left."
+                        : " No restarts left.") +
+                    "</p>" +
+                  "</div>" +
+                "</div>" +
               "</div>" +
-              // Restart lives BELOW the editor, not beside it: it is a separate
-              // offer rather than a send-adjacent action, and inline it ate the
-              // width of the writing area.
-              //
-              // Invited links get the two scenarios as buttons; a public
-              // homepage session keeps the plain Restart it always had. Labels
-              // and heading come from the server, already in the lead's
-              // language (src/automations/demo_restart.py).
-              (opts ? '<p class="restart-head">' + esc(opts[0].heading) + "</p>" : "") +
-              '<div class="restart-row">' +
-                (opts
-                  ? opts.map(function (o) {
-                      return '<button class="ghost restart-opt" data-scenario="' + esc(o.value) + '"' +
-                        (busy || restartsLeft <= 0 ? " disabled" : "") + ">" + esc(o.label) + "</button>";
-                    }).join("")
-                  : '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">Restart</button>") +
-              "</div>" +
-              '<p class="foot">' +
-                (waUrl
-                  ? 'On your phone? <a href="' + esc(waUrl) + '" target="_blank" rel="noopener">Run it in WhatsApp instead</a>.'
-                  : "") +
-                (restartsLeft > 0 ? " " + restartsLeft + " restart" + (restartsLeft === 1 ? "" : "s") + " left." : "") +
-              "</p>" +
             "</div>" +
           "</div>" +
           (s.done ? recapHtml() : "") +
@@ -554,19 +644,48 @@
     }
 
     // ---- interaction ------------------------------------------------------
+    // Toggles the popover in place instead of re-rendering: a render would
+    // rebuild the textarea and throw focus back into it, yanking the visitor
+    // out of the menu they just opened.
+    function setPop(open) {
+      popOpen = open;
+      var pop = document.getElementById("restart-pop");
+      var btn = document.getElementById("restart-toggle");
+      if (pop) { if (open) pop.removeAttribute("hidden"); else pop.setAttribute("hidden", ""); }
+      if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    // Bound once, at module scope: wire() runs on every render and would stack
+    // a fresh copy of these on the document each time.
+    document.addEventListener("click", function (e) {
+      if (!popOpen) return;
+      if (e.target && e.target.closest && e.target.closest(".restart-anchor")) return;
+      setPop(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape" || !popOpen) return;
+      setPop(false);
+      var btn = document.getElementById("restart-toggle");
+      if (btn) btn.focus();
+    });
+
     function wire() {
       var ta = document.getElementById("msg");
       var send = document.getElementById("send");
       var restart = document.getElementById("restart");
+      var toggle = document.getElementById("restart-toggle");
       var stream = document.getElementById("stream");
 
       if (stream) stream.scrollTop = stream.scrollHeight;
+
+      if (toggle) toggle.addEventListener("click", function () { setPop(!popOpen); });
 
       if (ta) {
         ta.value = draft;
         ta.style.height = "auto";
         ta.style.height = Math.min(120, ta.scrollHeight) + "px";
-        if (!state.done && !busy) ta.focus();
+        // Never steal focus while the popover is open.
+        if (!state.done && !busy && !popOpen) ta.focus();
         ta.addEventListener("input", function () {
           draft = ta.value;
           ta.style.height = "auto";
@@ -643,6 +762,7 @@
         busy = false;
         state = next;
         lastSig = signature(next);
+        popOpen = false;          // the choice was made; the menu has no reason to stay up
         render();
         // A restart is a fresh conversation, so it re-arms the celebration:
         // booking again in the new run should be celebrated again.
@@ -663,9 +783,11 @@
         // Not fatal: the conversation on screen is still readable. Render first
         // so the recap panel (restored by doRestart's catch) reflects the old
         // conversation again rather than staying on the placeholder, then patch
-        // the foot text to explain why the restart didn't go through.
+        // the popover's foot text to explain why the restart didn't go through.
+        // popOpen is left as it was, so the message lands in the menu the
+        // visitor still has open.
         render();
-        var el = document.querySelector(".foot");
+        var el = document.getElementById("pop-foot");
         if (el) el.textContent = "This link has been restarted the maximum number of times.";
         return;
       } else {
