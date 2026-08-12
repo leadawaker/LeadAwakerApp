@@ -164,12 +164,16 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
 
   const doSave = useCallback(
     (d: Draft) => {
+      const savedNiche = nicheRef.current;
       setSaving(true);
       update.mutate(
-        { niche: nicheRef.current, patch: buildPatch(d) },
+        { niche: savedNiche, patch: buildPatch(d) },
         {
           onSuccess: () => {
-            setOriginalDraft(d);
+            // Only reconcile `originalDraft` if we're still looking at the
+            // Client this save was for — the parent may have swapped `niche`
+            // in place (no remount) while this PATCH was in flight.
+            if (nicheRef.current === savedNiche) setOriginalDraft(d);
             setSaving(false);
           },
           onError: () => setSaving(false),
@@ -194,6 +198,9 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
     if (draftsEqual(draft, originalDraft)) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
+      // Clear first: once this fires, no timer is pending anymore, so the
+      // switch/unmount flush paths below must not treat it as still pending.
+      autoSaveTimer.current = null;
       if (draftRef.current) doSave(draftRef.current);
     }, 1500);
     return () => {
