@@ -150,15 +150,19 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
   const nicheRef = useRef(niche);
   nicheRef.current = niche;
 
-  // Load this Client's data into the draft. Re-fires when the fetched row
-  // actually changes (new niche resolved, or a save round-tripped a fresh
-  // updatedAt) — never on every render.
+  // Load this Client's data into the draft. Re-fires only when the Client
+  // IDENTITY changes (a different niche opened), never on a same-entity
+  // refetch: reseeding on `updatedAt` would replace the user's live draft
+  // with the server's just-saved (and server-trimmed) copy ~200-500ms after
+  // every autosave, mangling text under the cursor (trailing space/newline
+  // eaten mid-keystroke). Mirrors useCampaignDetail.ts, which reseeds only
+  // on identity change too.
   useEffect(() => {
     if (!client) return;
     const d = buildDraft(client);
     setDraft(d);
     setOriginalDraft(d);
-  }, [client?.niche, client?.updatedAt]);
+  }, [client?.niche]);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 

@@ -146,7 +146,14 @@ export function useDeleteDemoClient() {
   return useMutation({
     mutationFn: (niche: string) =>
       apiRequest("DELETE", `/api/demo/clients/${encodeURIComponent(niche)}`).then((r) => r.json()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: CLIENTS_KEY }),
+    onSuccess: (_data, niche) => {
+      // `exact: true`: a bare prefix match would also invalidate every other
+      // already-cached single-Client query ([...CLIENTS_KEY, otherNiche]).
+      // The deleted niche's own query is removed outright rather than
+      // invalidated, since refetching it would just 404.
+      qc.invalidateQueries({ queryKey: CLIENTS_KEY, exact: true });
+      qc.removeQueries({ queryKey: [...CLIENTS_KEY, niche] });
+    },
   });
 }
 

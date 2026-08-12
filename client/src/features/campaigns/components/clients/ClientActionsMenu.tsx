@@ -125,7 +125,7 @@ export function ClientActionsMenu({
                   value={newNiche}
                   onChange={(e) => setNewNiche(e.target.value)}
                   maxLength={300}
-                  className="w-full h-8 rounded-md border border-black/[0.125] bg-white px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                  className="w-full h-8 rounded-md border border-black/[0.125] bg-background px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
                 />
               </div>
               {error && (

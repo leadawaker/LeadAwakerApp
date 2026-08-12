@@ -254,7 +254,7 @@ Given a business niche, output a JSON object with EXACTLY these keys:
 - decision_term: what this niche naturally calls the pending decision (e.g. "decision", "choice"; Dutch: "beslissing")
 advisor_term, project_term, proposal_term, visit_term and decision_term MUST be in the output language and natural for the niche.
 - emoji: ONE emoji that best represents this niche visually (e.g. "☀️" for solar, "🍳" for kitchens). Return a single emoji character, no text.
-- category: a short category name (1-3 words) grouping this niche with similar ones (e.g. "Climate & Energy", "Kitchens & Interiors"). If the caller lists EXISTING CATEGORIES below, reuse one of them when it genuinely fits this niche; only invent a new one if none do.
+- category: a short category name (1-3 words) grouping this niche with similar ones (e.g. "Climate & Energy", "Kitchens & Interiors"). If the caller lists EXISTING CATEGORIES below, reuse one of them when it genuinely fits this niche; only invent a new one if none do. Always write the category in English, regardless of the output language — it is an internal grouping key, never shown to the lead.
 
 - niche_question_bank: 3-4 open questions probing THIS niche's real decision factors (what a lead actually weighs when choosing, e.g. dental implants: treatment comfort, insurance coverage; gym: schedule fit, coaching support). One question per line, no numbering. These supplement a generic question bank, so make them niche-specific, not generic.
 - niche_objection_examples: the 2 most common objections a lead in THIS niche raises, each followed on the next line by a strong open counter-question. Blank line between the two pairs.

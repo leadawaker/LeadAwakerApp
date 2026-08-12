@@ -33,12 +33,16 @@ export function ClientsTab({
       (c) =>
         c.niche.toLowerCase().includes(q) ||
         c.label.toLowerCase().includes(q) ||
-        c.companyName.toLowerCase().includes(q),
+        c.companyName.toLowerCase().includes(q) ||
+        (c.category ?? "").toLowerCase().includes(q),
     );
   }, [clients, search]);
 
   // Grouped by category, alphabetical, "Uncategorized" last — the fix for a
-  // flat 23+ card grid nobody could scan.
+  // flat 23+ card grid nobody could scan. `key` is a stable, collision-proof
+  // group identity separate from the display `label`: a user can freely name
+  // a real category "Uncategorized" via CategorySelect's free-text create
+  // without colliding with the synthetic uncategorized bucket's React key.
   const groups = useMemo(() => {
     const byCategory = new Map<string, DemoClientSummary[]>();
     for (const c of filtered) {
@@ -49,10 +53,14 @@ export function ClientsTab({
     const named = Array.from(byCategory.keys())
       .filter((k) => k !== "")
       .sort((a, b) => a.localeCompare(b))
-      .map((label) => ({ label, items: byCategory.get(label)! }));
+      .map((label) => ({ key: label, label, items: byCategory.get(label)! }));
     const uncategorized = byCategory.get("");
     if (uncategorized?.length) {
-      named.push({ label: t("clients.noCategory", "Uncategorized"), items: uncategorized });
+      named.push({
+        key: "__uncategorized__",
+        label: t("clients.noCategory", "Uncategorized"),
+        items: uncategorized,
+      });
     }
     return named;
   }, [filtered, t]);
@@ -113,7 +121,7 @@ export function ClientsTab({
             ) : (
               <div style={{ display: "flex", flexDirection: "column" }}>
                 {groups.map((g) => (
-                  <div key={g.label}>
+                  <div key={g.key}>
                     <GroupHeader label={g.label} count={g.items.length} />
                     <div
                       style={{
@@ -157,7 +165,19 @@ function ClientCard({ client, onOpen }: { client: DemoClientSummary; onOpen: () 
         gap: 8,
       }}
     >
-      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.35 }}>
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: "var(--ink)",
+          lineHeight: 1.35,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical" as const,
+          overflow: "hidden",
+          overflowWrap: "anywhere",
+        }}
+      >
         {formatClientTitle(client)}
       </div>
       <div style={{ display: "flex", gap: 5, marginTop: 2 }}>
