@@ -17,7 +17,9 @@ export default {
     "demoForm": {
       "firstNamePlaceholder": "Jouw naam",
       "submit": "Probeer Demo",
-      "fineprint": "Geen aanmelding. Opent WhatsApp met een live AI.",
+      "whatsapp": "Liever testen via WhatsApp? Klik hier in plaats daarvan",
+      "whatsappLoading": "WhatsApp openen…",
+      "fineprint": "Geen aanmelding nodig. Start direct in je browser.",
       "errors": {
         "missingFields": "Vul beide velden in (min. 5 tekens voor de niche).",
         "rateLimited": "Te veel verzoeken. Probeer het over een uur opnieuw.",
@@ -190,7 +192,7 @@ export default {
   },
   "trySixty": {
     "title": "Probeer Het in 60 Seconden",
-    "subtitle": "Vul je naam en branche in. We openen een live WhatsApp-gesprek met jouw AI.",
+    "subtitle": "Vul je naam en branche in. We starten een live chat met jouw AI, direct in je browser.",
     "mockChat": {
       "customer1": "Hey, ik had een tijdje niet gereageerd maar ben nu weer geïnteresseerd.",
       "ai1": "Fijn om je terug te zien! Wat kan ik voor je betekenen?",

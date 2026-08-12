@@ -17,7 +17,9 @@ export default {
     "demoForm": {
       "firstNamePlaceholder": "Seu nome",
       "submit": "Testar Demo",
-      "fineprint": "Sem cadastro. Abre o WhatsApp com uma IA ao vivo.",
+      "whatsapp": "Prefere testar pelo WhatsApp? Clique aqui",
+      "whatsappLoading": "Abrindo o WhatsApp…",
+      "fineprint": "Sem cadastro. Começa direto no seu navegador.",
       "errors": {
         "missingFields": "Preencha os dois campos (mín. 5 caracteres para o nicho).",
         "rateLimited": "Muitas requisições. Tente novamente em uma hora.",
@@ -190,7 +192,7 @@ export default {
   },
   "trySixty": {
     "title": "Teste em 60 Segundos",
-    "subtitle": "Digite seu nome e segmento. Vamos abrir uma conversa ao vivo no WhatsApp com sua IA.",
+    "subtitle": "Digite seu nome e segmento. Vamos iniciar um chat ao vivo com sua IA, direto no navegador.",
     "mockChat": {
       "customer1": "Oi, parei de responder um tempo mas estou interessado de novo.",
       "ai1": "Que bom ter você de volta! Como posso te ajudar agora?",

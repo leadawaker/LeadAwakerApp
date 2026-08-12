@@ -17,7 +17,9 @@ export default {
     "demoForm": {
       "firstNamePlaceholder": "Your name",
       "submit": "Try Demo",
-      "fineprint": "No sign-up. Opens WhatsApp with a live AI.",
+      "whatsapp": "Prefer to test on WhatsApp? Click here instead",
+      "whatsappLoading": "Opening WhatsApp…",
+      "fineprint": "No sign-up. Starts right in your browser.",
       "errors": {
         "missingFields": "Please fill in both fields (min 5 chars for the niche).",
         "rateLimited": "Too many requests. Try again in an hour.",
@@ -190,7 +192,7 @@ export default {
   },
   "trySixty": {
     "title": "Try It in 60 Seconds",
-    "subtitle": "Enter your name and industry. We’ll open a live WhatsApp conversation with your AI.",
+    "subtitle": "Enter your name and industry. We’ll start a live chat with your AI, right here in the browser.",
     "mockChat": {
       "customer1": "Hey, I stopped responding a while back but I’m interested again.",
       "ai1": "Happy to pick up where we left off! What would be most helpful right now?",

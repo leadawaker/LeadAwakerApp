@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Live demo — Lead Awaker</title>
   <link rel="icon" href="/premium/favicon.svg" />
@@ -254,6 +254,13 @@
     .restart-btn:disabled { opacity: 0.45; cursor: default; }
     .restart-btn svg { flex: 0 0 auto; }
 
+    /* Once a demo is done the editor is gone (nothing left to type into) and
+       the restart button is the only control left in the composer row — give
+       it the full row instead of leaving it stranded on one side. */
+    .composer.is-done { justify-content: center; }
+    .composer.is-done .restart-anchor { width: 100%; max-width: 320px; }
+    .composer.is-done .restart-btn { width: 100%; justify-content: center; height: 44px; }
+
     .restart-pop {
       position: absolute; bottom: calc(100% + 10px); right: 0;
       width: 290px; z-index: 40;
@@ -294,9 +301,9 @@
       animation: slide 420ms cubic-bezier(0.22, 1, 0.36, 1);
     }
     @keyframes slide { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
-    .recap h2 { font-family: var(--d-serif); font-size: 23px; font-weight: 400; margin-bottom: 4px; }
-    .recap .sub { font-size: 12.5px; color: var(--d-mute); margin-bottom: 22px; }
-    .recap h3 {
+    .recap h2, .recap-inline h2 { font-family: var(--d-serif); font-size: 23px; font-weight: 400; margin-bottom: 4px; }
+    .recap .sub, .recap-inline .sub { font-size: 12.5px; color: var(--d-mute); margin-bottom: 22px; }
+    .recap h3, .recap-inline h3 {
       font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--d-mute-2); margin: 0 0 11px;
     }
@@ -312,7 +319,16 @@
     .brief-row:last-child { border-bottom: none; }
     .brief-k { font-size: 12.5px; color: var(--d-mute); flex: 0 0 auto; }
     .brief-v { font-size: 13px; font-weight: 600; text-align: right; }
-    .recap .note { font-size: 12px; color: var(--d-mute-2); line-height: 1.55; }
+    .recap .note, .recap-inline .note { font-size: 12px; color: var(--d-mute-2); line-height: 1.55; }
+
+    /* ---------------- recap, inline-in-stream (mobile only) ----------------
+       On mobile the aside becomes a tiny strip pinned below the composer —
+       barely readable. Instead this renders the SAME recap content as a card
+       sitting in the chat stream, right after the last message, so it reads
+       as part of the conversation rather than a separate cramped panel.
+       Hidden by default; the media query below swaps it in for `.recap`
+       below the breakpoint where `.wrap` stacks to a column anyway. */
+    .recap-inline { display: none; }
 
     .banner {
       max-width: 760px; margin: 0 auto 4px; padding: 11px 15px;
@@ -354,16 +370,27 @@
       .track-ic { width: 18px; height: 18px; }
       .pill { max-width: 55vw; }
       .wrap { flex-direction: column; }
-      .recap { flex: 1 1 auto; border-left: none; border-top: 1px solid var(--d-line); }
+      /* The aside is desktop-only below this width — its content now renders
+         inline in the stream instead (`.recap-inline`, appended in JS). */
+      .recap { display: none; }
+      .recap-inline {
+        display: block;
+        margin-top: 10px; padding-top: 16px;
+        border-top: 1px solid var(--d-line);
+      }
       .stream { padding: 20px 16px 10px; }
       .composer-wrap { padding: 13px 16px 15px; }
     }
-    /* Below this the label alongside the icons costs more width than it earns;
-       the icons alone still read as a progression. */
+    /* Below this the icons alone still read as a progression, but they still
+       want the full row width (space-between, flexible lines) rather than
+       clustering in the middle — a name next to a bare icon cluster reads as
+       cramped. Only the CURRENT stage keeps its label; past/future stages
+       stay icon-only so the row doesn't fight for space. */
     @media (max-width: 700px) {
+      .track { justify-content: space-between; gap: 0; }
+      .track-line { flex: 1 1 auto; max-width: none; margin: 0 6px; }
       .track-label { display: none; }
-      .track { justify-content: center; gap: 0; }
-      .track-line { max-width: 34px; }
+      .track-step.on .track-label { display: inline; font-size: 9.5px; letter-spacing: 0.04em; }
     }
     /* "Really small": the restart button stops fighting the input for width and
        takes its own full-width row under it, popover stretched to match. */
@@ -540,9 +567,12 @@
       return out.join("");
     }
 
-    function recapHtml() {
+    // Shared markup for both the desktop aside and the mobile in-stream card
+    // (`recapHtml` / `recapInlineHtml` below) — one source of truth so the two
+    // surfaces can never drift apart.
+    function recapContentHtml() {
       if (!recap) {
-        return '<aside class="recap"><h2>Wrapping up</h2><p class="sub">Reading back the conversation...</p></aside>';
+        return "<h2>Wrapping up</h2><p class=\"sub\">Reading back the conversation...</p>";
       }
       var briefRows = "";
       if (recap.brief && recap.brief.length) {
@@ -553,18 +583,28 @@
         }
       }
       return (
-        '<aside class="recap">' +
-          "<h2>What just happened</h2>" +
-          '<p class="sub">This is what lands in the CRM, automatically.</p>' +
-          (recap.summary
-            ? '<h3>Conversation</h3><div class="recap-card"><p>' + esc(recap.summary) + "</p></div>"
-            : "") +
-          (briefRows
-            ? '<h3>The brief</h3><div class="recap-card">' + briefRows + "</div>" +
-              '<p class="note">Every line came from the conversation. Nothing here was assumed.</p>'
-            : '<p class="note">The conversation ended before a full brief was collected. Restart it and answer a few more questions to see the whole thing.</p>') +
-        "</aside>"
+        "<h2>What just happened</h2>" +
+        '<p class="sub">This is what lands in the CRM, automatically.</p>' +
+        (recap.summary
+          ? '<h3>Conversation</h3><div class="recap-card"><p>' + esc(recap.summary) + "</p></div>"
+          : "") +
+        (briefRows
+          ? '<h3>The brief</h3><div class="recap-card">' + briefRows + "</div>" +
+            '<p class="note">Every line came from the conversation. Nothing here was assumed.</p>'
+          : '<p class="note">The conversation ended before a full brief was collected. Restart it and answer a few more questions to see the whole thing.</p>')
       );
+    }
+
+    // Desktop: the right-rail aside, unchanged.
+    function recapHtml() {
+      return '<aside class="recap">' + recapContentHtml() + "</aside>";
+    }
+
+    // Mobile: the same content rendered as a card inside the stream, right
+    // after the last message — CSS hides whichever of the two doesn't apply
+    // at the current width (see the 1080px media query).
+    function recapInlineHtml() {
+      return '<div class="recap-inline">' + recapContentHtml() + "</div>";
     }
 
     function render() {
@@ -609,18 +649,22 @@
                 ? '<div class="banner">This demo has reached its message limit. Restart it to run it again.</div>'
                 : "") +
               messagesHtml(s) +
+              (s.done ? recapInlineHtml() : "") +
             "</div>" +
             '<div class="composer-wrap">' +
-              '<div class="composer">' +
+              '<div class="composer' + (s.done ? " is-done" : "") + '">' +
+                // The editor only exists while the conversation is live —
+                // once it's done there's nothing left to type into, so it's
+                // dropped entirely rather than left disabled and greyed out.
+                (s.done ? "" :
                 '<div class="input-shell">' +
                   '<label class="sr" for="msg">Your reply</label>' +
-                  '<textarea id="msg" rows="1" placeholder="' +
-                    (s.done ? "This demo has finished" : "Reply as if you were the lead...") +
-                    '"' + (s.done || busy ? " disabled" : "") + "></textarea>" +
-                  '<button class="send" id="send" title="Send"' + (s.done || busy ? " disabled" : "") + ">" +
+                  '<textarea id="msg" rows="1" placeholder="Reply as if you were the lead..."' +
+                    (busy ? " disabled" : "") + "></textarea>" +
+                  '<button class="send" id="send" title="Send"' + (busy ? " disabled" : "") + ">" +
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
                   "</button>" +
-                "</div>" +
+                "</div>") +
                 // Restart sits BESIDE the editor as one button; the choices,
                 // the WhatsApp handoff and the remaining-restarts count all
                 // live in the popover it opens, so none of that competes with
@@ -960,6 +1004,21 @@
         requestAnimationFrame(frame);
       }
       requestAnimationFrame(frame);
+    }
+
+    // ---- keyboard-safe header (mobile) -------------------------------------
+    // iOS Safari's own "scroll the focused input into view" behaviour moves
+    // the whole page (via the visual viewport, not any CSS overflow rule) when
+    // the on-screen keyboard opens on the bottom-docked composer, dragging the
+    // sticky header off the top of the screen with it. The composer is already
+    // positioned correctly by the flex layout once the keyboard is up, so that
+    // scroll is never needed here — this just undoes it as soon as it happens.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", function () {
+        if (window.scrollY || document.documentElement.scrollTop) {
+          window.scrollTo(0, 0);
+        }
+      });
     }
 
     // ---- boot -------------------------------------------------------------

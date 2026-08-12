@@ -136,6 +136,10 @@ function UniversalDemoForm() {
   const [error, setError] = useState<string | null>(null);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [focused, setFocused] = useState(false);
+  // "browser" (the primary CTA) vs "whatsapp" (the secondary link) — tracked
+  // so the loading spinner shows on whichever one was actually clicked, same
+  // as the premium landing page's dual-surface form.
+  const [surface, setSurface] = useState<"browser" | "whatsapp" | null>(null);
 
   const placeholders = t("hero.demoForm.nichePlaceholders", { returnObjects: true }) as string[];
 
@@ -145,13 +149,14 @@ function UniversalDemoForm() {
     return () => clearInterval(iv);
   }, [focused, placeholders.length]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent | React.MouseEvent, target: "browser" | "whatsapp" = "browser") {
     e.preventDefault();
     setError(null);
     if (!firstName.trim() || niche.trim().length < 5) {
       setError(t("hero.demoForm.errors.missingFields"));
       return;
     }
+    setSurface(target);
     setLoading(true);
     try {
       const res = await fetch(DEMO_API_ENDPOINT, {
@@ -162,7 +167,7 @@ function UniversalDemoForm() {
       if (res.status === 429) { setError(t("hero.demoForm.errors.rateLimited")); setLoading(false); return; }
       if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.message || t("hero.demoForm.errors.generic")); setLoading(false); return; }
       const data = await res.json();
-      window.location.href = data.whatsappUrl;
+      window.location.href = target === "whatsapp" ? data.whatsappUrl : data.demoUrl;
     } catch {
       setError(t("hero.demoForm.errors.network"));
       setLoading(false);
@@ -194,9 +199,9 @@ function UniversalDemoForm() {
       <button
         type="submit"
         disabled={loading}
-        className="bg-[#25D366] hover:bg-[#20BC5A] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-3 rounded-full transition inline-flex items-center justify-center gap-1.5"
+        className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground text-sm font-semibold px-5 py-3 rounded-full transition inline-flex items-center justify-center gap-1.5"
       >
-        {loading ? (
+        {loading && surface === "browser" ? (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
@@ -206,6 +211,16 @@ function UniversalDemoForm() {
         )}
         {t("hero.demoForm.submit")}
       </button>
+
+      <button
+        type="button"
+        disabled={loading}
+        onClick={(e) => handleSubmit(e, "whatsapp")}
+        className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed px-1 text-left w-fit"
+      >
+        {loading && surface === "whatsapp" ? t("hero.demoForm.whatsappLoading") : t("hero.demoForm.whatsapp")}
+      </button>
+
       {error && <p className="text-xs text-red-600 px-1">{error}</p>}
       <p className="text-xs text-muted-foreground px-1">{t("hero.demoForm.fineprint")}</p>
     </form>
