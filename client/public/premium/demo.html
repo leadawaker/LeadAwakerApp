@@ -95,16 +95,8 @@
     /* Logo only. The wordmark is already inside logo-v2.svg, so the adjacent
        "Lead Awaker" text this used to carry printed the name twice. */
     .hdr-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
-    .hdr-logo img {
-      height: 28px; width: auto; display: block;
-      /* This chrome tone is light enough that the logo's own white LEAD
-         glyphs (a per-glyph feDropShadow baked into logo-v2.svg) lose their
-         edge again — the exact problem an earlier pass fixed by editing the
-         SVG directly, which got reverted because that file is shared with the
-         homepage nav. This CSS filter is scoped to demo.html only: nothing
-         outside this page is touched. */
-      filter: drop-shadow(0 1px 1.5px rgba(61, 9, 5, 0.5));
-    }
+    .hdr-logo img { height: 28px; width: auto; display: block; }
+    .hdr-div { width: 1px; height: 22px; background: rgba(90, 76, 50, 0.22); flex: 0 0 auto; }
     .pill {
       flex: 0 0 auto;
       display: inline-flex; align-items: center; gap: 7px;
@@ -352,6 +344,10 @@
         gap: 10px 16px;
       }
       .hdr-logo img { height: 25px; }
+      /* The tracker drops to its own full-width row below (order: 3), so a
+         divider meant to sit between it and its neighbours has no sensible
+         place to render here. */
+      .hdr-div { display: none; }
       .track { order: 3; width: 100%; justify-content: space-between; }
       .track-line { width: auto; flex: 1 1 auto; margin: 0 6px; }
       .track-label { font-size: 9.5px; letter-spacing: 0.05em; }
@@ -400,16 +396,18 @@
     // serves both. The page never needs to know which host it is on.
     var API = "/api/web-demo/" + encodeURIComponent(TOKEN);
 
-    // Each stage owns a colour and an icon. Deliberately bright and saturated
-    // (Gabriel's call) rather than the site's muted earth tones — this is the
-    // one place on the page that should look alive at a glance, since it's
-    // the thing narrating the pipeline moving. Runs blue -> gold -> rose ->
-    // green so the row still reads as a journey ending in a win.
+    // One shared colour for every reached stage — the same green the final
+    // stage ("Objective reached") always used — rather than a different colour
+    // per stage. Deliberately bright and saturated (Gabriel's call, pushed
+    // brighter still on a second pass) against the site's muted earth tones
+    // everywhere else: this is the one place on the page meant to look alive
+    // at a glance, since it's what narrates the pipeline moving.
+    var STAGE_ACTIVE_COLOR = "#22C55E";
     var STAGES = [
-      { key: "new",       label: "New lead",          icon: "user-plus",      color: "#1D7FD1" },
-      { key: "responded", label: "Responded",         icon: "message-circle", color: "#E3A008" },
-      { key: "qualified", label: "Qualified",         icon: "badge-check",    color: "#C81E52" },
-      { key: "objective", label: "Objective reached", icon: "calendar-check", color: "#15A354" }
+      { key: "new",       label: "New lead",          icon: "user-plus" },
+      { key: "responded", label: "Responded",         icon: "message-circle" },
+      { key: "qualified", label: "Qualified",         icon: "badge-check" },
+      { key: "objective", label: "Objective reached", icon: "calendar-check" }
     ];
 
     // Lucide paths, inlined: the page is standalone vanilla JS under a strict
@@ -502,7 +500,7 @@
       for (var i = 0; i < STAGES.length; i++) {
         var cls = i < at ? "track-step done" : (i === at ? "track-step on" : "track-step");
         out.push(
-          '<div class="' + cls + '" style="--c:' + STAGES[i].color + '" title="' + esc(STAGES[i].label) + '">' +
+          '<div class="' + cls + '" style="--c:' + STAGE_ACTIVE_COLOR + '" title="' + esc(STAGES[i].label) + '">' +
             icon(STAGES[i].icon, 21, "track-ic") +
             '<span class="track-label">' + esc(STAGES[i].label) + "</span>" +
           "</div>"
@@ -597,9 +595,10 @@
         '<header class="hdr">' +
           '<div class="hdr-inner">' +
             '<div class="hdr-logo"><img src="/premium/logo-v2.svg" alt="Lead Awaker" /></div>' +
+            '<div class="hdr-div"></div>' +
             trackerHtml(s.stage) +
             (s.company
-              ? '<div class="pill">' + icon("sparkles", 14) + "<span>" + esc(s.company) + "</span></div>"
+              ? '<div class="hdr-div"></div><div class="pill">' + icon("sparkles", 14) + "<span>" + esc(s.company) + "</span></div>"
               : "") +
           "</div>" +
         "</header>" +
