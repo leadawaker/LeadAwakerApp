@@ -27,6 +27,7 @@ import {
   demoClientToEditable,
   updateDemoClient,
   deleteDemoClient,
+  duplicateDemoClient,
 } from "../demo-clients";
 
 const createSessionSchema = z.object({
@@ -111,6 +112,8 @@ export function registerDemoRoutes(app: Express): void {
     text: z.record(z.record(z.string())).optional(),
     terms: z.record(z.record(z.array(z.string()))).optional(),
     bookingModeCall: z.boolean().optional(),
+    category: z.string().trim().max(60).nullable().optional(),
+    emoji: z.string().trim().max(8).nullable().optional(),
   });
 
   app.patch(
@@ -139,6 +142,27 @@ export function registerDemoRoutes(app: Express): void {
         });
       }
       res.json({ ok: true });
+    }),
+  );
+
+  const duplicateSchema = z.object({
+    newNiche: z.string().trim().min(1).max(300),
+  });
+
+  app.post(
+    "/api/demo/clients/:niche/duplicate",
+    requireAgency,
+    wrapAsync(async (req, res) => {
+      const parsed = duplicateSchema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+      const result = await duplicateDemoClient(String(req.params.niche), parsed.data.newNiche);
+      if (!result.ok) {
+        if (result.reason === "missing") return res.status(404).json({ message: "No such Client." });
+        return res.status(409).json({
+          message: `A Client named "${parsed.data.newNiche.trim()}" already exists.`,
+        });
+      }
+      res.json({ client: demoClientToEditable(result.row) });
     }),
   );
 
