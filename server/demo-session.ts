@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { db } from "./db";
-import { leads, campaigns, promptLibrary } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { leads, campaigns, promptLibrary, nicheVocabulary } from "@shared/schema";
+import { eq, isNotNull } from "drizzle-orm";
 
 export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 
@@ -75,6 +75,11 @@ export interface NicheContext {
   // and the engine's overlay then falls through to the campaign's own column.
   // Never produced by the model. See the note above applyDemoDefaults.
   ai_disclosure: AiDisclosureMode | "";
+  // Clients-tab card identity (specs/demo-persona-library). Optional: an
+  // older or hand-generated Client may not have either, and neither is ever
+  // required for the demo conversation itself to work.
+  emoji?: string;
+  category?: string;
 }
 
 /** The three AI disclosure modes. Mirrors normalize_ai_disclosure() in the engine. */
@@ -248,6 +253,8 @@ Given a business niche, output a JSON object with EXACTLY these keys:
 - visit_term: the on-location first touch for this niche (e.g. "site visit", "clinic visit", "gym tour", "showroom visit")
 - decision_term: what this niche naturally calls the pending decision (e.g. "decision", "choice"; Dutch: "beslissing")
 advisor_term, project_term, proposal_term, visit_term and decision_term MUST be in the output language and natural for the niche.
+- emoji: ONE emoji that best represents this niche visually (e.g. "☀️" for solar, "🍳" for kitchens). Return a single emoji character, no text.
+- category: a short category name (1-3 words) grouping this niche with similar ones (e.g. "Climate & Energy", "Kitchens & Interiors"). If the caller lists EXISTING CATEGORIES below, reuse one of them when it genuinely fits this niche; only invent a new one if none do.
 
 - niche_question_bank: 3-4 open questions probing THIS niche's real decision factors (what a lead actually weighs when choosing, e.g. dental implants: treatment comfort, insurance coverage; gym: schedule fit, coaching support). One question per line, no numbering. These supplement a generic question bank, so make them niche-specific, not generic.
 - niche_objection_examples: the 2 most common objections a lead in THIS niche raises, each followed on the next line by a strong open counter-question. Blank line between the two pairs.
@@ -332,13 +339,35 @@ export async function generateNicheContext(
     );
   }
   const profile = MARKET_PROFILE[resolveMarket(language, market)];
+
+  // Existing categories, so a freshly generated niche prefers reusing one
+  // instead of fragmenting the Clients-tab taxonomy every time it runs.
+  // Best-effort: a DB failure here degrades to "no preference list", it
+  // never blocks generation.
+  let categoryList: string[] = [];
+  try {
+    const rows = await db
+      .selectDistinct({ category: nicheVocabulary.category })
+      .from(nicheVocabulary)
+      .where(isNotNull(nicheVocabulary.category));
+    categoryList = rows
+      .map((r) => (r.category ?? "").trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  } catch (err) {
+    console.error("[demo-niche] failed to load existing categories:", (err as Error)?.message);
+  }
+
   system =
     system +
     `\n\nOutput language: ${langLabel}.` +
     `\nTarget market: ${profile.name}.` +
     ` Every money amount you write, including the quote total, its line items and any figure inside kb, must be in ${profile.currency} (${profile.symbol}) and priced realistically for ${profile.name}.` +
     ` This overrides any other instruction about which currency to use.` +
-    ` Regulations, grid and tax rules, housing stock, units of measurement and company naming must all be the ones a business operating in ${profile.name} would actually deal with, regardless of the output language.`;
+    ` Regulations, grid and tax rules, housing stock, units of measurement and company naming must all be the ones a business operating in ${profile.name} would actually deal with, regardless of the output language.` +
+    (categoryList.length
+      ? `\n\nEXISTING CATEGORIES: ${categoryList.join(", ")}. Reuse one of these for the "category" key if it genuinely fits this niche; only invent a new one if none do.`
+      : "");
 
   // Hint the model so what_lead_did / first_message / niche_question match the
   // scenario the visitor chose. lead_stage itself is set authoritatively in code.
@@ -510,6 +539,8 @@ export async function generateNicheContext(
       const v = (parsed as any)[key];
       (parsed as any)[key] = (Array.isArray(v) ? v.join("\n") : (v || "").toString()).trim();
     }
+    parsed.emoji = (parsed.emoji || "").toString().trim() || undefined;
+    parsed.category = (parsed.category || "").toString().trim() || undefined;
     return applyDemoDefaults(parsed, language, scenario);
   } catch (err) {
     // Covers the abort timeout, network failures and (most often) JSON.parse on
