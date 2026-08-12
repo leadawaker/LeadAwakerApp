@@ -405,6 +405,11 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   decisionTermsPt: jsonb("decision_terms_pt").$type<string[]>().default([]),
   advisorTermsPt: jsonb("advisor_terms_pt").$type<string[]>().default([]),
   visitTermsPt: jsonb("visit_terms_pt").$type<string[]>().default([]),
+  // Clients-tab card identity (specs/demo-persona-library): grouping + a
+  // per-entry emoji, so a 23+ row grid is scannable. Both nullable with no
+  // default — an unset Client is "Uncategorized" in the UI, not an error.
+  category: text("category"),
+  emoji: text("emoji"),
   // Does this niche book a CALL or an on-site visit? Per-niche, so it is part
   // of the persona rather than the run.
   bookingModeCall: boolean("booking_mode_call").default(false),
