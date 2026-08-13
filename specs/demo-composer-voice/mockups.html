@@ -1,0 +1,1044 @@
+<title>Mic and Menu</title>
+<style>
+  /* ------------------------------------------------------------------
+     Frame palette: cool, quiet slate so the warm bone mockups own the
+     page's colour. One accent (deep teal) picked to sit beside the
+     demo's wine without competing with it.
+     ------------------------------------------------------------------ */
+  :root {
+    --ground: #EDEDF0;
+    --panel: #F8F8FA;
+    --panel-2: #E4E4E9;
+    --ink: #191A1E;
+    --ink-soft: #33353D;
+    --mute: #6A6C76;
+    --mute-2: #8E909B;
+    --line: rgba(25, 26, 30, 0.12);
+    --line-soft: rgba(25, 26, 30, 0.07);
+    --accent: #0F6F6C;
+    --accent-soft: rgba(15, 111, 108, 0.10);
+    --ok: #2E7D5B;
+    --warn: #96601A;
+    --shadow: 0 1px 2px rgba(20, 22, 30, 0.06), 0 12px 30px -18px rgba(20, 22, 30, 0.35);
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* The demo page's real tokens, so every mockup below is accurate. */
+    --d-bg: #ECE6DA;
+    --d-bg-2: #E5DECF;
+    --d-paper: #F4EFE3;
+    --d-surface: #EDE7DB;
+    --d-hdr: #E4DCCC;
+    --d-ink: #1F1A14;
+    --d-mute: #6C6354;
+    --d-mute-2: #948A77;
+    --d-line: rgba(110, 95, 65, 0.18);
+    --d-wine: #5E2230;
+    --d-wine-soft: #7A2E3E;
+    --d-green: #22C55E;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #131418;
+      --panel: #1C1E23;
+      --panel-2: #26282F;
+      --ink: #ECEDF1;
+      --ink-soft: #C9CBD3;
+      --mute: #979AA5;
+      --mute-2: #74777F;
+      --line: rgba(255, 255, 255, 0.12);
+      --line-soft: rgba(255, 255, 255, 0.06);
+      --accent: #4FD1C5;
+      --accent-soft: rgba(79, 209, 197, 0.12);
+      --ok: #5FBF8E;
+      --warn: #D6A44C;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 34px -18px rgba(0, 0, 0, 0.8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131418;
+    --panel: #1C1E23;
+    --panel-2: #26282F;
+    --ink: #ECEDF1;
+    --ink-soft: #C9CBD3;
+    --mute: #979AA5;
+    --mute-2: #74777F;
+    --line: rgba(255, 255, 255, 0.12);
+    --line-soft: rgba(255, 255, 255, 0.06);
+    --accent: #4FD1C5;
+    --accent-soft: rgba(79, 209, 197, 0.12);
+    --ok: #5FBF8E;
+    --warn: #D6A44C;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 34px -18px rgba(0, 0, 0, 0.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Every mock control sets its own display, which beats the UA sheet's
+     [hidden] rule. Without this, toggling .hidden in JS does nothing. */
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+
+  .prose { max-width: 66ch; }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(38px, 6vw, 56px); line-height: 1.04; letter-spacing: -0.015em; }
+  h2 { font-size: clamp(25px, 3.4vw, 32px); line-height: 1.15; }
+  h3 { font-size: 19px; line-height: 1.3; }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mute-2);
+  }
+
+  .lede { font-size: 17.5px; color: var(--ink-soft); line-height: 1.62; }
+  .note { font-size: 14px; color: var(--mute); line-height: 1.6; }
+
+  /* ---------------- masthead ---------------- */
+  .masthead { display: flex; flex-direction: column; gap: 18px; }
+  .masthead .rule { height: 1px; background: var(--line); }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 22px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--mute-2);
+  }
+  .meta b { color: var(--mute); font-weight: 500; }
+
+  /* ---------------- verdict cards ---------------- */
+  .verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  .verdict {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px 24px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .verdict .q { font-family: var(--serif); font-size: 20px; line-height: 1.25; }
+  .verdict .a { font-size: 14.5px; color: var(--ink-soft); }
+  .yes {
+    align-self: flex-start;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-soft);
+    padding: 4px 9px; border-radius: 3px;
+  }
+
+  /* ---------------- sections ---------------- */
+  section { display: flex; flex-direction: column; gap: 26px; }
+  .sec-head { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ---------------- controls ---------------- */
+  .switch { display: flex; flex-wrap: wrap; gap: 8px; }
+  .switch button {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 9px 14px; border-radius: 3px;
+    background: var(--panel); color: var(--mute);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+  }
+  .switch button:hover { color: var(--ink); border-color: var(--mute-2); }
+  .switch button[aria-pressed="true"] {
+    background: var(--ink); color: var(--ground); border-color: var(--ink);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------------- device frames ---------------- */
+  .frames { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  @media (max-width: 860px) { .frames { grid-template-columns: 1fr; } }
+
+  .frame { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .frame-cap {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--mute-2);
+  }
+  .screen {
+    position: relative;
+    background: var(--d-bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    color: var(--d-ink);
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    /* The demo page is a committed light surface; the mockup keeps its real
+       colours in both themes rather than pretending it has a dark mode. */
+  }
+  .screen.phone { max-width: 340px; }
+
+  /* --- mock header --- */
+  .m-hdr {
+    background: var(--d-hdr);
+    border-bottom: 1px solid rgba(90, 76, 50, 0.18);
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .m-logo { font-family: var(--serif); font-size: 14.5px; letter-spacing: -0.01em; white-space: nowrap; }
+  .m-track { display: flex; align-items: center; gap: 0; flex: 1 1 auto; justify-content: center; min-width: 0; }
+  .m-step { display: flex; align-items: center; gap: 6px; color: #5C5241; }
+  .m-step.on { color: var(--d-green); }
+  .m-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid currentColor; flex: 0 0 auto; }
+  .m-step.on .m-dot { background: currentColor; }
+  .m-lab {
+    font-size: 8.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    white-space: nowrap; color: currentColor;
+  }
+  .m-line { width: 22px; height: 1px; background: rgba(90, 76, 50, 0.3); margin: 0 7px; flex: 0 0 auto; }
+  .m-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--d-paper); border: 1px solid rgba(90, 76, 50, 0.22);
+    white-space: nowrap;
+  }
+
+  /* --- mock stream --- */
+  .m-stream {
+    padding: 16px 14px 12px;
+    display: flex; flex-direction: column; gap: 9px;
+    min-height: 132px;
+    justify-content: flex-end;
+  }
+  .m-row { display: flex; gap: 7px; align-items: flex-end; }
+  .m-row.me { flex-direction: row-reverse; }
+  .m-av {
+    width: 21px; height: 21px; border-radius: 50%; flex: 0 0 auto;
+    background: var(--d-wine); color: var(--d-paper);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8.5px; font-weight: 700; margin-bottom: 12px;
+  }
+  .m-bubwrap { max-width: 78%; display: flex; flex-direction: column; }
+  .m-row.me .m-bubwrap { align-items: flex-end; }
+  .m-bub {
+    padding: 8px 11px; border-radius: 13px; font-size: 12.5px; line-height: 1.45;
+    background: #FFFFFF; border-bottom-left-radius: 4px;
+    animation: rise 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .m-row.me .m-bub { background: var(--d-wine); color: var(--d-paper); border-bottom-left-radius: 13px; border-bottom-right-radius: 4px; }
+  .m-ts { font-family: var(--mono); font-size: 8.5px; color: var(--d-mute-2); margin: 4px 3px 0; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .m-typing { display: flex; gap: 3px; padding: 11px 12px; }
+  .m-typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--d-mute); display: block; animation: blink 1.3s infinite ease-in-out; }
+  .m-typing i:nth-child(2) { animation-delay: 0.18s; }
+  .m-typing i:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes blink { 0%, 70%, 100% { opacity: 0.25; } 35% { opacity: 1; } }
+
+  /* --- mock composer --- */
+  .m-comp-wrap { border-top: 1px solid var(--d-line); background: var(--d-paper); padding: 11px 14px 13px; }
+  .m-comp { display: flex; gap: 8px; align-items: flex-end; }
+  .m-shell {
+    flex: 1 1 auto; display: flex; align-items: center; gap: 7px;
+    background: linear-gradient(145deg, var(--d-bg-2), var(--d-paper));
+    box-shadow: inset 1px 1px 3px rgba(110, 95, 65, 0.16), inset -1px -1px 2px rgba(255, 255, 255, 0.7);
+    border-radius: 18px; padding: 5px 5px 5px 14px;
+    min-width: 0;
+  }
+  .m-input {
+    flex: 1 1 auto; min-width: 0;
+    background: none; border: none; outline: none;
+    font-family: inherit; font-size: 12.5px; color: var(--d-ink); padding: 5px 0;
+  }
+  .m-input::placeholder { color: var(--d-mute-2); }
+  .m-circle {
+    width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
+    background: linear-gradient(145deg, #6E2638, #4B1A26);
+    border: none; cursor: pointer; color: var(--d-paper);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 1px 1px 3px rgba(75, 26, 38, 0.35);
+    transition: transform 140ms ease;
+  }
+  .m-circle:hover { transform: scale(1.07); }
+  .m-ghost {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 30px; padding: 0 12px; border-radius: 15px;
+    background: var(--d-bg); border: 1px solid rgba(110, 95, 65, 0.28); color: var(--d-ink);
+    font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+    white-space: nowrap;
+  }
+  .m-ghost:hover { background: var(--d-surface); }
+  .m-icon-btn {
+    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+    background: var(--d-bg); border: 1px solid rgba(110, 95, 65, 0.28); color: var(--d-ink);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .m-icon-btn:hover { background: var(--d-surface); }
+
+  /* --- popover / sheet --- */
+  .m-pop {
+    position: absolute; z-index: 5;
+    width: 232px;
+    background: var(--d-paper);
+    border: 1px solid rgba(110, 95, 65, 0.28); border-radius: 11px;
+    padding: 12px 12px 10px;
+    box-shadow: 0 14px 34px -12px rgba(60, 45, 20, 0.4);
+    animation: pop 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .m-pop-head {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--d-mute-2); margin-bottom: 8px; line-height: 1.4;
+  }
+  .m-opt {
+    display: block; width: 100%; text-align: left;
+    padding: 8px 10px; border-radius: 7px; margin-bottom: 6px;
+    background: var(--d-bg); border: 1px solid var(--d-line); color: var(--d-ink);
+    font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+  }
+  .m-opt:hover { background: var(--d-surface); }
+  .m-pop-foot { font-size: 10px; line-height: 1.5; color: var(--d-mute-2); border-top: 1px solid var(--d-line); padding-top: 8px; }
+  .m-pop-foot a { color: var(--d-wine); }
+  /* The line that leaves the demo. Ruled off from the demo's own controls so
+     "WhatsApp the AI" and "WhatsApp Gabriel" cannot be mistaken for each other. */
+  .m-pop-human {
+    font-size: 10px; line-height: 1.55; color: var(--d-mute-2);
+    border-top: 1px solid var(--d-line); margin-top: 8px; padding-top: 8px;
+  }
+  .m-pop-human a { color: var(--d-wine); font-weight: 700; }
+
+  .m-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; width: auto;
+    border-radius: 16px 16px 0 0; padding: 14px 16px 18px;
+    animation: sheet 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+  .m-sheet .grab { width: 34px; height: 4px; border-radius: 2px; background: rgba(110, 95, 65, 0.3); margin: 0 auto 12px; }
+  .m-scrim {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(40, 30, 15, 0.28);
+    animation: fade 200ms ease;
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* --- voice bits --- */
+  .m-rec {
+    flex: 1 1 auto; display: flex; align-items: center; gap: 9px;
+    background: linear-gradient(145deg, var(--d-bg-2), var(--d-paper));
+    box-shadow: inset 1px 1px 3px rgba(110, 95, 65, 0.16), inset -1px -1px 2px rgba(255, 255, 255, 0.7);
+    border-radius: 18px; padding: 5px 5px 5px 12px; min-width: 0;
+  }
+  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #C0392B; flex: 0 0 auto; animation: pulse 1.1s infinite ease-in-out; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+  .rec-time { font-family: var(--mono); font-size: 11.5px; color: var(--d-ink); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+  .rec-meter { flex: 1 1 auto; display: flex; align-items: center; gap: 2px; height: 18px; overflow: hidden; min-width: 0; }
+  .rec-meter i { width: 2px; border-radius: 1px; background: var(--d-mute-2); display: block; animation: bob 0.9s infinite ease-in-out; }
+  @keyframes bob { 0%, 100% { height: 4px; } 50% { height: 15px; } }
+  .rec-trash {
+    width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto;
+    background: none; border: none; color: var(--d-mute); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rec-trash:hover { color: #C0392B; }
+
+  .vplayer { display: flex; align-items: center; gap: 8px; }
+  .vplay {
+    width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--d-paper); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .vwave { display: flex; align-items: center; gap: 2px; height: 20px; flex: 1 1 auto; min-width: 60px; }
+  .vwave i { width: 2px; border-radius: 1px; background: rgba(255, 255, 255, 0.42); display: block; }
+  .vwave i.played { background: var(--d-paper); }
+  .vtime { font-family: var(--mono); font-size: 9.5px; opacity: 0.75; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+  .vtranscript { font-size: 11.5px; font-style: italic; opacity: 0.82; line-height: 1.45; margin-top: 7px; }
+  .vpending { display: inline-block; width: 120px; height: 9px; border-radius: 4px; margin-top: 9px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.42), rgba(255,255,255,0.18));
+    background-size: 200% 100%; animation: shimmer 1.2s infinite linear; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  /* ---------------- reuse map ---------------- */
+  .chain { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+  .link {
+    flex: 1 1 150px; min-width: 150px;
+    border: 1px solid var(--line); border-radius: 4px;
+    padding: 13px 14px 14px; background: var(--panel);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .link .tag {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .link.built { border-left: 3px solid var(--ok); }
+  .link.built .tag { color: var(--ok); }
+  .link.new { border-left: 3px solid var(--warn); }
+  .link.new .tag { color: var(--warn); }
+  .link .what { font-size: 14px; color: var(--ink); line-height: 1.4; }
+  .link .where { font-family: var(--mono); font-size: 10.5px; color: var(--mute-2); word-break: break-all; }
+
+  /* ---------------- lists ---------------- */
+  .qlist { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+  .qrow {
+    display: grid; grid-template-columns: 26px minmax(0, 1fr);
+    gap: 14px; padding: 16px 2px;
+    border-bottom: 1px solid var(--line);
+  }
+  .qnum { font-family: var(--mono); font-size: 11px; color: var(--mute-2); padding-top: 3px; }
+  .qtext { display: flex; flex-direction: column; gap: 4px; }
+  .qtext b { font-weight: 600; font-size: 15px; }
+  .qtext span { font-size: 14px; color: var(--mute); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 14px 18px; border-radius: 0 4px 4px 0;
+    font-size: 14.5px; color: var(--ink-soft);
+  }
+
+  code {
+    font-family: var(--mono); font-size: 0.88em;
+    background: var(--panel-2); padding: 1px 5px; border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Design proposal &middot; browser demo</p>
+    <h1>Mic and Menu</h1>
+    <p class="lede prose">
+      Two changes to the <code>/demo/&lt;token&gt;</code> composer: Restart moves out of the message row and into a
+      header menu, and an empty input offers a voice memo that comes back as a player with its transcription
+      underneath. Everything below is clickable. Nothing has been built yet.
+    </p>
+    <div class="rule"></div>
+    <div class="meta">
+      <span><b>Surface</b> client/public/premium/demo.html</span>
+      <span><b>Spec</b> specs/demo-composer-voice/design.md</span>
+      <span><b>Status</b> decided 13 Aug, ready to build</span>
+    </div>
+  </header>
+
+  <div class="verdicts">
+    <div class="verdict">
+      <span class="yes">Recommended</span>
+      <p class="q">Restart belongs in the header.</p>
+      <p class="a">
+        On a phone it is currently a full width button sitting under the composer, louder than Send on a page
+        whose only job is to get one more message sent. It is also not really a button: it holds the scenario
+        switch, the WhatsApp handoff and the quota. That is page chrome.
+      </p>
+    </div>
+    <div class="verdict">
+      <span class="yes">Recommended</span>
+      <p class="q">Yes to voice memos, and it is cheap.</p>
+      <p class="a">
+        The engine already transcribes inbound audio and stores it as a player-ready attachment, because
+        WhatsApp leads send voice notes constantly. The browser demo builds the exact payload shape that
+        pipeline reads, with the media fields left empty. Fill them in and it works.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================ 01 ============================ -->
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">01 &mdash; Where Restart goes</p>
+      <h2>Three placements, same menu</h2>
+      <p class="note prose">
+        The menu content does not change: two scenario buttons on an invited link, the WhatsApp handoff, the
+        restarts-left count, and now the line that reaches a real person. Only its anchor moves. Switch between
+        them and open the menu.
+      </p>
+    </div>
+
+    <div class="switch" role="group" aria-label="Restart placement option">
+      <button type="button" data-variant="a" aria-pressed="true">A &middot; Header (chosen)</button>
+      <button type="button" data-variant="b" aria-pressed="false">B &middot; Beside composer</button>
+      <button type="button" data-variant="c" aria-pressed="false">C &middot; Today</button>
+      <button type="button" id="menu-toggle" aria-pressed="false">Open the menu</button>
+    </div>
+
+    <div class="frames" id="rvariants" data-variant="a">
+      <div class="frame">
+        <p class="frame-cap">Desktop</p>
+        <div class="screen" id="screen-desktop">
+          <div class="m-hdr">
+            <span class="m-logo">Lead&nbsp;Awaker</span>
+            <div class="m-track">
+              <span class="m-step on"><span class="m-dot"></span><span class="m-lab">New lead</span></span>
+              <span class="m-line"></span>
+              <span class="m-step on"><span class="m-dot"></span><span class="m-lab">Responded</span></span>
+              <span class="m-line"></span>
+              <span class="m-step"><span class="m-dot"></span><span class="m-lab">Qualified</span></span>
+              <span class="m-line"></span>
+              <span class="m-step"><span class="m-dot"></span><span class="m-lab">Booked</span></span>
+            </div>
+            <span class="m-pill">&#10022; SolarMax</span>
+            <button type="button" class="m-ghost r-header" data-menu>&#8635; Restart</button>
+          </div>
+          <div class="m-stream">
+            <div class="m-row ai">
+              <span class="m-av">TB</span>
+              <div class="m-bubwrap">
+                <div class="m-bub">Zou je nog steeds willen weten wat zonnepanelen bij jou opleveren?</div>
+                <div class="m-ts">14:02</div>
+              </div>
+            </div>
+          </div>
+          <div class="m-comp-wrap">
+            <div class="m-comp">
+              <button type="button" class="m-icon-btn r-composer" data-menu aria-label="Restart">&#8635;</button>
+              <div class="m-shell">
+                <input class="m-input" placeholder="Reply as if you were the lead..." aria-label="Reply" />
+                <button type="button" class="m-circle" aria-label="Send">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+              <button type="button" class="m-ghost r-today" data-menu>&#8635; Restart</button>
+            </div>
+          </div>
+          <div class="m-pop" id="pop-desktop" hidden>
+            <p class="m-pop-head">Run it again as</p>
+            <button type="button" class="m-opt">A homeowner who is ready</button>
+            <button type="button" class="m-opt">A homeowner who is hesitant</button>
+            <p class="m-pop-foot">On your phone? <a href="#0">Run it in WhatsApp instead</a>. 2 restarts left.</p>
+            <p class="m-pop-human">Rather talk to a person? <a href="#0">Message Gabriel on WhatsApp</a> or <a href="#0">email him</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <p class="frame-cap">Phone</p>
+        <div class="screen phone" id="screen-phone">
+          <div class="m-hdr" style="flex-wrap: wrap; gap: 8px 10px;">
+            <span class="m-logo" style="font-size: 13px;">Lead&nbsp;Awaker</span>
+            <span class="m-pill" style="margin-left: auto;">&#10022; SolarMax</span>
+            <button type="button" class="m-icon-btn r-header" data-menu aria-label="Demo options" style="width: 26px; height: 26px;">&#8942;</button>
+            <div class="m-track" style="width: 100%; order: 3; justify-content: space-between;">
+              <span class="m-step on"><span class="m-dot"></span></span>
+              <span class="m-line" style="flex: 1 1 auto; width: auto;"></span>
+              <span class="m-step on"><span class="m-dot"></span><span class="m-lab">Responded</span></span>
+              <span class="m-line" style="flex: 1 1 auto; width: auto;"></span>
+              <span class="m-step"><span class="m-dot"></span></span>
+              <span class="m-line" style="flex: 1 1 auto; width: auto;"></span>
+              <span class="m-step"><span class="m-dot"></span></span>
+            </div>
+          </div>
+          <div class="m-stream" style="min-height: 118px;">
+            <div class="m-row ai">
+              <span class="m-av">TB</span>
+              <div class="m-bubwrap">
+                <div class="m-bub">Zou je nog steeds willen weten wat zonnepanelen opleveren?</div>
+                <div class="m-ts">14:02</div>
+              </div>
+            </div>
+          </div>
+          <div class="m-comp-wrap">
+            <div class="m-comp" style="flex-wrap: wrap;">
+              <button type="button" class="m-icon-btn r-composer" data-menu aria-label="Restart">&#8635;</button>
+              <div class="m-shell">
+                <input class="m-input" placeholder="Reply as the lead..." aria-label="Reply" />
+                <button type="button" class="m-circle" aria-label="Send">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+              <button type="button" class="m-ghost r-today" data-menu style="width: 100%; justify-content: center; height: 32px;">&#8635; Restart</button>
+            </div>
+          </div>
+          <div class="m-scrim" id="scrim-phone" hidden></div>
+          <div class="m-pop m-sheet" id="pop-phone" hidden>
+            <div class="grab"></div>
+            <p class="m-pop-head">Run it again as</p>
+            <button type="button" class="m-opt">A homeowner who is ready</button>
+            <button type="button" class="m-opt">A homeowner who is hesitant</button>
+            <p class="m-pop-foot">On your phone? <a href="#0">Run it in WhatsApp instead</a>. 2 restarts left.</p>
+            <p class="m-pop-human">Rather talk to a person? <a href="#0">Message Gabriel on WhatsApp</a> or <a href="#0">email him</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="callout prose">
+      One thing that must not regress: when the demo finishes, the composer disappears and Restart is the only
+      control left, which is correct. Move it to a header icon and that moment loses its call to action. So the
+      recap gets its own <b>Run it again</b> button at the end, on both the desktop rail and the mobile card.
+    </p>
+  </section>
+
+  <!-- ============================ 02 ============================ -->
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">02 &mdash; The voice memo</p>
+      <h2>Empty input, so the button is a mic</h2>
+      <p class="note prose">
+        The mic sits in the send button's own slot and morphs into the send arrow the moment anything is typed,
+        the way WhatsApp does, so there is nothing to learn and nothing shifts. Try it: type in the box, clear
+        it again, then tap the mic and record for a few seconds.
+      </p>
+    </div>
+
+    <div class="frames">
+      <div class="frame">
+        <p class="frame-cap">Live prototype &middot; nothing is actually recorded</p>
+        <div class="screen" id="voice-screen">
+          <div class="m-hdr">
+            <span class="m-logo">Lead&nbsp;Awaker</span>
+            <div class="m-track">
+              <span class="m-step on"><span class="m-dot"></span><span class="m-lab">New lead</span></span>
+              <span class="m-line"></span>
+              <span class="m-step on"><span class="m-dot"></span><span class="m-lab">Responded</span></span>
+              <span class="m-line"></span>
+              <span class="m-step" id="stage-qual"><span class="m-dot"></span><span class="m-lab">Qualified</span></span>
+              <span class="m-line"></span>
+              <span class="m-step"><span class="m-dot"></span><span class="m-lab">Booked</span></span>
+            </div>
+            <span class="m-pill">&#10022; SolarMax</span>
+            <button type="button" class="m-ghost" aria-label="Demo options">&#8635; Restart</button>
+          </div>
+
+          <div class="m-stream" id="vstream" style="min-height: 210px;">
+            <div class="m-row ai">
+              <span class="m-av">TB</span>
+              <div class="m-bubwrap">
+                <div class="m-bub">Zou je nog steeds willen weten wat zonnepanelen bij jou opleveren?</div>
+                <div class="m-ts">14:02</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="m-comp-wrap">
+            <div class="m-comp" id="vcomp">
+              <div class="m-shell" id="vshell">
+                <input class="m-input" id="vinput" placeholder="Reply as if you were the lead..." aria-label="Reply" />
+                <button type="button" class="m-circle" id="vmic" aria-label="Record a voice memo">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                </button>
+                <button type="button" class="m-circle" id="vsend" aria-label="Send" hidden>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+
+              <div class="m-rec" id="vrec" hidden>
+                <button type="button" class="rec-trash" id="vcancel" aria-label="Discard recording">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path></svg>
+                </button>
+                <span class="rec-dot"></span>
+                <span class="rec-time" id="vtimer">0:00</span>
+                <span class="rec-meter" id="vmeter" aria-hidden="true"></span>
+                <button type="button" class="m-circle" id="vstop" aria-label="Send voice memo">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <p class="frame-cap">What each state is doing</p>
+        <div class="qlist" style="border-top: none;">
+          <div class="qrow" style="border-top: 1px solid var(--line);">
+            <span class="qnum">idle</span>
+            <span class="qtext"><b>Mic, not Send</b><span>The input is empty, so there is nothing to send. One button, two jobs, no extra chrome in the row.</span></span>
+          </div>
+          <div class="qrow">
+            <span class="qnum">typing</span>
+            <span class="qtext"><b>Morphs to Send</b><span>Same position, same size, no layout shift. Clear the box and the mic comes back.</span></span>
+          </div>
+          <div class="qrow">
+            <span class="qnum">rec</span>
+            <span class="qtext"><b>Tap to start, tap to send</b><span>Not hold-to-talk: that is awkward with a mouse and a first-time visitor will never find it. Trash on the left, 30 second cap, timer turns amber at 25.</span></span>
+          </div>
+          <div class="qrow">
+            <span class="qnum">sent</span>
+            <span class="qtext"><b>Player first, transcript second</b><span>The bubble appears instantly from the local recording. Whisper takes one to three seconds, so the transcript fades in under it.</span></span>
+          </div>
+          <div class="qrow">
+            <span class="qnum">why</span>
+            <span class="qtext"><b>The transcript is the trust</b><span>Showing what the AI heard turns a noisy-room mistranscription into "I mumbled" instead of "this thing is broken".</span></span>
+          </div>
+        </div>
+        <button type="button" class="m-ghost" id="vreset" style="align-self: flex-start; margin-top: 14px;">Reset the prototype</button>
+      </div>
+    </div>
+
+    <p class="callout prose">
+      The commercial argument, not the design one: real leads in home improvement send voice notes because they
+      are driving or standing on a roof. A prospect who rambles for fifteen seconds and watches a clean brief
+      come out of it has seen the product. On a phone, speaking is also just easier than typing a convincing
+      lead reply, so more visitors reach the recap, which is where the demo actually sells.
+    </p>
+  </section>
+
+  <!-- ============================ 03 ============================ -->
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">03 &mdash; What it costs</p>
+      <h2>Most of the pipeline is already there</h2>
+      <p class="note prose">
+        A browser voice memo walks the same path a WhatsApp one already does. Green is built and running today.
+        Amber is the new work.
+      </p>
+    </div>
+
+    <div class="chain">
+      <div class="link new">
+        <span class="tag">New</span>
+        <span class="what">Record in the page, POST as base64 JSON</span>
+        <span class="where">demo.html &rarr; /web-demo/&lt;token&gt;/voice</span>
+      </div>
+      <div class="link new">
+        <span class="tag">New, small</span>
+        <span class="what">Fill the media fields on the payload the demo already builds</span>
+        <span class="where">web_demo_routes.py:380</span>
+      </div>
+      <div class="link built">
+        <span class="tag">Built</span>
+        <span class="what">Audio branch: transcribe, prefix, attach, fallback line if it fails</span>
+        <span class="where">inbound_handler.py:190</span>
+      </div>
+      <div class="link built">
+        <span class="tag">Built</span>
+        <span class="what">Groq Whisper on bytes, base64 attachment out</span>
+        <span class="where">tools/voice_service.py:158</span>
+      </div>
+      <div class="link built">
+        <span class="tag">Built</span>
+        <span class="what">Lands in the CRM inbox as a voice note, player and transcript already rendering</span>
+        <span class="where">ChatBubble.tsx:169</span>
+      </div>
+    </div>
+
+    <div class="qlist">
+      <div class="qrow">
+        <span class="qnum">01</span>
+        <span class="qtext"><b>The proxy cannot carry multipart</b><span>
+          <code>server/routes/demo.ts:456</code> re-serialises every POST as JSON and only allows four suffixes.
+          That allowlist is a security property, not an oversight, so the audio goes up as base64 inside JSON
+          instead. Needs a 2mb body limit on that one route: the Express default of 100kb is already too small for a 30 second memo.
+        </span></span>
+      </div>
+      <div class="qrow">
+        <span class="qnum">02</span>
+        <span class="qtext"><b>Never put the audio in the polled state</b><span>
+          The page re-fetches the whole conversation every 1.6 to 6 seconds. Two base64 memos would make every
+          poll about a megabyte. The state carries an id, the page fetches the audio once, on play, and only
+          if it is not already holding the blob it just recorded.
+        </span></span>
+      </div>
+      <div class="qrow">
+        <span class="qnum">03</span>
+        <span class="qtext"><b><code>render()</code> rebuilds the entire page</b><span>
+          An <code>&lt;audio&gt;</code> element inside a bubble dies on every poll, mid-sentence. One singleton
+          player lives on <code>body</code> and the bubbles just paint its state, which is how the CRM's own
+          player manages playback across a list.
+        </span></span>
+      </div>
+      <div class="qrow">
+        <span class="qnum">04</span>
+        <span class="qtext"><b>Chrome records webm, Safari records mp4</b><span>
+          <code>audio/webm;codecs=opus</code> misses the extension map today and silently falls back to
+          <code>.ogg</code>. Both copies of that map need webm, and the content type needs normalising first.
+          Worth verifying Groq accepts webm before building, because a transcode step on the Pi would change the maths.
+        </span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 04 ============================ -->
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">04 &mdash; Settled</p>
+      <h2>The four calls, made</h2>
+    </div>
+    <div class="qlist">
+      <div class="qrow">
+        <span class="qnum">01</span>
+        <span class="qtext"><b>Labelled on desktop, icon on mobile</b><span>"&#8635; Restart" while there is room, the icon alone below 700px. Discoverability where it is free, a clean header where it is not.</span></span>
+      </div>
+      <div class="qrow">
+        <span class="qnum">02</span>
+        <span class="qtext"><b>The menu reaches Gabriel himself</b><span>WhatsApp on +31 6 84446349 or gabriel@leadawaker.com, both prefilled with which demo the visitor is looking at, ruled off from the demo's own controls so the two WhatsApp links cannot be confused. Deliberately not a booking page, and not the campaign's booking chain, which points at the calendar the demo is simulating.</span></span>
+      </div>
+      <div class="qrow">
+        <span class="qnum">03</span>
+        <span class="qtext"><b>30 second cap</b><span>Timer turns amber at 25, hard stop at 30. Keeps answers punchy and every upload under 80KB.</span></span>
+      </div>
+      <div class="qrow">
+        <span class="qnum">04</span>
+        <span class="qtext"><b>The mic lives in the send button's slot</b><span>Exactly one round button in the composer: a mic while the box is empty, the send arrow the moment anything is typed. Not advertised in the placeholder, because a mic in that position needs no explaining. A hint is a one line change later if usage says otherwise.</span></span>
+      </div>
+    </div>
+    <p class="note prose">
+      Not proposed here: the AI replying with voice. The stack has TTS and it would demo well, but it adds
+      latency, cost and a per-language voice matrix to a page whose whole promise is speed. Separate decision.
+    </p>
+  </section>
+
+</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    /* ---------- 01: restart placement ---------- */
+    var variants = document.getElementById("rvariants");
+    var menuToggle = document.getElementById("menu-toggle");
+    var popD = document.getElementById("pop-desktop");
+    var popP = document.getElementById("pop-phone");
+    var scrimP = document.getElementById("scrim-phone");
+
+    function each(sel, fn) {
+      Array.prototype.forEach.call(document.querySelectorAll(sel), fn);
+    }
+
+    function applyVariant(v) {
+      variants.setAttribute("data-variant", v);
+      // Show exactly one restart control per frame.
+      each(".r-header", function (el) { el.hidden = v !== "a"; });
+      each(".r-composer", function (el) { el.hidden = v !== "b"; });
+      each(".r-today", function (el) { el.hidden = v !== "c"; });
+      positionPopovers(v);
+    }
+
+    // The popover hangs off whichever control is showing: down from the header
+    // in A, up from the composer in B and C.
+    function positionPopovers(v) {
+      if (v === "a") {
+        popD.style.top = "46px";
+        popD.style.bottom = "auto";
+        popD.style.left = "auto";
+        popD.style.right = "12px";
+        // Header anchored on a phone means the menu would open at the top of
+        // the screen, away from the thumb, so it becomes a bottom sheet.
+        // Inline styles from the other branch would outrank the sheet's own
+        // rules, so they are cleared rather than overridden.
+        popP.style.left = "";
+        popP.style.right = "";
+        popP.style.width = "";
+        popP.style.bottom = "";
+        popP.classList.add("m-sheet");
+      } else {
+        popD.style.top = "auto";
+        popD.style.bottom = "62px";
+        popD.style.right = v === "b" ? "auto" : "14px";
+        popD.style.left = v === "b" ? "12px" : "auto";
+        // B and C anchor to the composer, so the phone keeps a plain popover
+        // sitting above it.
+        popP.classList.remove("m-sheet");
+        popP.style.left = "12px";
+        popP.style.right = "12px";
+        popP.style.width = "auto";
+        popP.style.bottom = v === "c" ? "88px" : "56px";
+      }
+    }
+
+    function setMenu(open) {
+      popD.hidden = !open;
+      popP.hidden = !open;
+      scrimP.hidden = !open;
+      menuToggle.setAttribute("aria-pressed", open ? "true" : "false");
+      menuToggle.textContent = open ? "Close the menu" : "Open the menu";
+    }
+
+    each(".switch button[data-variant]", function (btn) {
+      btn.addEventListener("click", function () {
+        each(".switch button[data-variant]", function (b) { b.setAttribute("aria-pressed", "false"); });
+        btn.setAttribute("aria-pressed", "true");
+        applyVariant(btn.getAttribute("data-variant"));
+      });
+    });
+    menuToggle.addEventListener("click", function () {
+      setMenu(popD.hidden);
+    });
+    each("[data-menu]", function (btn) {
+      btn.addEventListener("click", function () { setMenu(popD.hidden); });
+    });
+    scrimP.addEventListener("click", function () { setMenu(false); });
+
+    applyVariant("a");
+
+    /* ---------- 02: voice prototype ---------- */
+    var input = document.getElementById("vinput");
+    var mic = document.getElementById("vmic");
+    var send = document.getElementById("vsend");
+    var shell = document.getElementById("vshell");
+    var rec = document.getElementById("vrec");
+    var timer = document.getElementById("vtimer");
+    var meter = document.getElementById("vmeter");
+    var stop = document.getElementById("vstop");
+    var cancel = document.getElementById("vcancel");
+    var stream = document.getElementById("vstream");
+    var reset = document.getElementById("vreset");
+    var stageQual = document.getElementById("stage-qual");
+
+    var ticking = null;
+    var seconds = 0;
+    var timeouts = [];
+
+    // Level meter bars: fixed pseudo-random heights and offsets so the motion
+    // reads as speech rather than a uniform equaliser.
+    for (var i = 0; i < 26; i++) {
+      var bar = document.createElement("i");
+      bar.style.animationDelay = (i * 47 % 900) / 1000 + "s";
+      bar.style.animationDuration = (0.7 + (i % 5) * 0.09).toFixed(2) + "s";
+      meter.appendChild(bar);
+    }
+
+    function later(fn, ms) { timeouts.push(setTimeout(fn, ms)); }
+    function clearLater() { timeouts.forEach(clearTimeout); timeouts = []; }
+
+    input.addEventListener("input", function () {
+      var typed = input.value.trim().length > 0;
+      mic.hidden = typed;
+      send.hidden = !typed;
+    });
+
+    mic.addEventListener("click", function () {
+      shell.hidden = true;
+      rec.hidden = false;
+      seconds = 0;
+      timer.textContent = "0:00";
+      timer.style.color = "";
+      ticking = setInterval(function () {
+        seconds++;
+        timer.textContent = "0:" + (seconds < 10 ? "0" : "") + seconds;
+        if (seconds >= 25) timer.style.color = "#96601A";
+        if (seconds >= 30) finish();
+      }, 1000);
+    });
+
+    function stopTicking() {
+      clearInterval(ticking);
+      ticking = null;
+      rec.hidden = true;
+      shell.hidden = false;
+    }
+
+    cancel.addEventListener("click", stopTicking);
+    stop.addEventListener("click", function () { finish(); });
+
+    function finish() {
+      var len = Math.max(seconds, 1);
+      stopTicking();
+
+      var row = document.createElement("div");
+      row.className = "m-row me";
+      row.innerHTML =
+        '<div class="m-bubwrap"><div class="m-bub">' +
+          '<div class="vplayer">' +
+            '<button type="button" class="vplay" aria-label="Play"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></button>' +
+            '<span class="vwave">' + waveBars() + '</span>' +
+            '<span class="vtime">0:' + (len < 10 ? "0" : "") + len + '</span>' +
+          '</div>' +
+          '<span class="vpending" aria-label="Transcribing"></span>' +
+        '</div><div class="m-ts">14:03</div></div>';
+      stream.appendChild(row);
+
+      // Whisper's real latency, roughly: the bubble is already on screen, only
+      // the transcript is waiting.
+      later(function () {
+        var pending = row.querySelector(".vpending");
+        if (!pending) return;
+        var t = document.createElement("div");
+        t.className = "vtranscript";
+        t.textContent = "Ja hoi, ik wilde eigenlijk gewoon even weten wat het ongeveer kost, we hebben een schuin dak op het zuiden en de rekening loopt best hard op.";
+        pending.replaceWith(t);
+      }, 1500);
+
+      later(function () {
+        var typing = document.createElement("div");
+        typing.className = "m-row ai";
+        typing.id = "vtyping";
+        typing.innerHTML = '<span class="m-av">TB</span><div class="m-bubwrap"><div class="m-bub m-typing"><i></i><i></i><i></i></div></div>';
+        stream.appendChild(typing);
+      }, 2300);
+
+      later(function () {
+        var typing = document.getElementById("vtyping");
+        if (typing) typing.remove();
+        var reply = document.createElement("div");
+        reply.className = "m-row ai";
+        reply.innerHTML =
+          '<span class="m-av">TB</span><div class="m-bubwrap"><div class="m-bub">' +
+          'Helder, zuid op een schuin dak is precies waar het rendement zit. Wat betaal je nu ongeveer per maand?' +
+          '</div><div class="m-ts">14:03</div></div>';
+        stream.appendChild(reply);
+        stageQual.classList.add("on");
+      }, 4200);
+
+      wirePlayback(row, len);
+    }
+
+    function waveBars() {
+      var out = "";
+      for (var i = 0; i < 34; i++) {
+        var h = 3 + Math.round(Math.abs(Math.sin((i + 1) * 1.7)) * 14);
+        out += '<i style="height:' + h + 'px"></i>';
+      }
+      return out;
+    }
+
+    // Fake playback: the point is the treatment, not the audio.
+    function wirePlayback(row, len) {
+      var btn = row.querySelector(".vplay");
+      var bars = row.querySelectorAll(".vwave i");
+      var playing = false;
+      var step = null;
+      var at = 0;
+
+      btn.addEventListener("click", function () {
+        if (playing) { halt(); return; }
+        playing = true;
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+        step = setInterval(function () {
+          at++;
+          for (var i = 0; i < bars.length; i++) {
+            bars[i].classList.toggle("played", i < at);
+          }
+          if (at >= bars.length) halt();
+        }, (len * 1000) / bars.length);
+      });
+
+      function halt() {
+        playing = false;
+        clearInterval(step);
+        at = 0;
+        for (var i = 0; i < bars.length; i++) bars[i].classList.remove("played");
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>';
+      }
+    }
+
+    reset.addEventListener("click", function () {
+      clearLater();
+      stopTicking();
+      input.value = "";
+      mic.hidden = false;
+      send.hidden = true;
+      stageQual.classList.remove("on");
+      stream.innerHTML =
+        '<div class="m-row ai"><span class="m-av">TB</span><div class="m-bubwrap">' +
+        '<div class="m-bub">Zou je nog steeds willen weten wat zonnepanelen bij jou opleveren?</div>' +
+        '<div class="m-ts">14:02</div></div></div>';
+    });
+  })();
+</script>
