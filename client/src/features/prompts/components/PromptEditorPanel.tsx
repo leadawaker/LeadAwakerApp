@@ -809,9 +809,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                     {([
                       { key: "lead_stage", label: t("preview.cond.leadStage", { defaultValue: "Lead stage" }), opts: [
                         ["inquired", t("preview.cond.stage.inquired", { defaultValue: "Inquired" })],
-                        ["visited", t("preview.cond.stage.visited", { defaultValue: "Had a site visit" })],
                         ["deciding", t("preview.cond.stage.deciding", { defaultValue: "Deciding" })],
-                        ["declined", t("preview.cond.stage.declined", { defaultValue: "Declined" })],
                         ["quoted", t("preview.cond.stage.quoted", { defaultValue: "Received a quote (baseline)" })],
                       ] },
                       { key: "positioning", label: t("preview.cond.positioning", { defaultValue: "Positioning" }), opts: [

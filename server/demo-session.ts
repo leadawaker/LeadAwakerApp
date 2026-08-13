@@ -12,13 +12,12 @@ export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 export const NICHE_GENERATOR_MODEL = "gpt-5.4-mini";
 
 /** Scenario picked on the homepage toggle. Maps onto Prompt 93's lead_stage. */
-export type DemoScenario = "inquired" | "deciding" | "declined";
+export type DemoScenario = "inquired" | "deciding";
 
 /** Canonical English phrasing per scenario; derive_lead_stage (engine) keys off these. */
 const SCENARIO_WHAT_LEAD_DID: Record<DemoScenario, string> = {
   inquired: "Inquired about a quote",
   deciding: "In the decision phase",
-  declined: "Declined / went with another provider",
 };
 
 export interface NicheContext {
@@ -51,6 +50,12 @@ export interface NicheContext {
   // two French doors we sent in March" instead of talking about a quote in the
   // abstract. Empty for a scoping-only Client; the engine falls through.
   quote_context: string;
+  // The same job as quote_context, compressed for the OPENER: a naming phrase
+  // ({quote_subject}) and its age ({quote_when}). The opener has room for a
+  // clause, not four lines, and it is sent before the AI ever reasons about
+  // quote_context, so it cannot summarise that field itself.
+  quote_subject: string;
+  quote_when: string;
   // Knowledge-base facts for the conversation prompt ({kb}).
   kb: string;
   // Per-niche vocabulary for Prompt 93 substitution.
@@ -71,6 +76,13 @@ export interface NicheContext {
   inquiry_timeframe: string;
   first_touch: string;
   ai_style: string;
+  // The AI's own name for this session, set per language by applyDemoDefaults
+  // (not by the model). The engine's overlay copies it onto the campaign, so
+  // it names the agent in both the opener and the conversation prompt.
+  // Optional for the same reason emoji/category are: a Client stored before
+  // this existed does not carry one, and the engine's overlay skips empties
+  // and falls through to the campaign's own agent_name.
+  agent_name?: string;
   // AI disclosure mode for THIS session. Empty means "no per-session override",
   // and the engine's overlay then falls through to the campaign's own column.
   // Never produced by the model. See the note above applyDemoDefaults.
@@ -104,6 +116,22 @@ export type AiDisclosureMode = "off" | "opener" | "second_message";
  * _overlay_demo_niche_onto_campaign skips empty values.
  */
 
+/**
+ * The AI's name, per language. A demo is a first impression, and "Mark" reads
+ * as a foreign call-centre agent to a Brazilian prospect the same way "Marcos"
+ * would to a Dutch one.
+ *
+ * Set on every generated session rather than left to campaign 60's own
+ * agent_name column, because one column cannot serve three languages at once.
+ * A per-session override (the /ainame WhatsApp command) writes the same key in
+ * demo_niche and still wins, since it is applied after generation.
+ */
+const AGENT_NAME_BY_LANGUAGE: Record<string, string> = {
+  en: "Mark",
+  nl: "Mark",
+  pt: "Marcos",
+};
+
 /** Localized "six months ago" default for {inquiry_timeframe}. */
 const INQUIRY_TIMEFRAME_DEFAULT: Record<string, string> = {
   en: "six months ago",
@@ -122,6 +150,7 @@ export function applyDemoDefaults(ctx: NicheContext, language: string, scenario:
   ctx.what_lead_did = SCENARIO_WHAT_LEAD_DID[scenario];
   ctx.inquiry_timeframe = INQUIRY_TIMEFRAME_DEFAULT[language] ?? INQUIRY_TIMEFRAME_DEFAULT.en;
   ctx.first_touch = ctx.visit_term || (language === "nl" ? "bezoek" : language === "pt" ? "visita" : "visit");
+  ctx.agent_name = AGENT_NAME_BY_LANGUAGE[language] ?? AGENT_NAME_BY_LANGUAGE.en;
   ctx.ai_style = "Practical";
   // Blanked, never asked of the model: this is a compliance setting, and an
   // LLM-generated one would be a compliance setting that can hallucinate. Both
@@ -261,6 +290,8 @@ advisor_term, project_term, proposal_term, visit_term and decision_term MUST be 
 
 - enquiry_context: ONE short sentence, in the output language, describing what this lead already told the business when they first got in touch. Include at MOST two concrete facts, and only facts a website enquiry form would realistically capture (e.g. "enquired through the website about a new kitchen for a 3-bed terrace, no quote was ever sent"). It must be consistent with what_lead_did. Never include budget, timing or a decision: those are the payoff of the conversation, not its starting point.
 - quote_context: the quote this lead is already sitting on, for the version of this conversation where one was sent. 2-4 short lines in the output language, newline-separated: a total amount in the target market's currency, named in the Target market line at the end of this prompt, plausible for this niche and this job size in that market; 2-4 line items naming the scope a real quote for this niche would itemise; and a RELATIVE date, never an absolute one ("sent about five months ago", not "sent 12 March 2026"). Optionally name the role who signs off. It must describe the SAME job as enquiry_context, priced: do not invent a different project, and do not restate the enquiry sentence.
+- quote_subject: the SAME job as quote_context, compressed into one short noun phrase for the opening message, in the output language. This is what a salesperson says out loud to remind someone which quote you mean: "the ten panels and the battery", "de twee openslaande deuren en het raam". 2 to 6 words, no price, no date, no verb, and it must read naturally straight after the phrase "your quote for ...". Name the one or two headline items only, never the full itemisation.
+- quote_when: how long ago that quote went out, as a short RELATIVE phrase in the output language ("about five months ago", "een maand of vijf geleden"). It must agree with the date inside quote_context. Never an absolute date.
 - niche_question: ONE qualifying question tied to a concrete pain point or key decision factor for this niche — easy to answer over SMS. Examples — Solar: "Roughly how much are you currently paying per month on electricity?" / Dental: "Are you experiencing any discomfort, or is it more of a routine check-up?" / Gym: "Are you looking to lose weight, build muscle, or something else?"
 - first_message: Write the opener as one sentence a real person would text. Use this exact shape:
 "Hi it's {agent_name}{disclosure_clause}, is that the same {first_name} who was looking at <NATURAL PLURAL PHRASE> a while back?"
@@ -374,7 +405,6 @@ export async function generateNicheContext(
   const scenarioHint = {
     inquired: "The lead only INQUIRED and has NOT received a quote/proposal yet.",
     deciding: "The lead already received a quote/proposal and is actively deciding between options.",
-    declined: "The lead leaned toward another provider or went quiet after comparing.",
   }[scenario];
 
   try {
@@ -533,6 +563,14 @@ export async function generateNicheContext(
     // several short lines and may return them as an array.
     const q = (parsed as any).quote_context;
     parsed.quote_context = (Array.isArray(q) ? q.join("\n") : (q || "").toString()).trim();
+    // Opener halves. Single-line by contract, but coerce arrays the same way:
+    // the model occasionally returns a one-element list for a short string.
+    // Left empty when absent — personalize_message then falls back to the
+    // niche's own project term rather than rendering a hole in message one.
+    for (const key of ["quote_subject", "quote_when"] as const) {
+      const v = (parsed as any)[key];
+      parsed[key] = (Array.isArray(v) ? v.join(" ") : (v || "").toString()).trim();
+    }
     // Example packs: coerce array output to newline strings; empty is fine
     // (the engine then keeps the __default__ packs untouched).
     for (const key of ["niche_question_bank", "niche_objection_examples"] as const) {
@@ -602,6 +640,8 @@ export function buildFallbackNicheContext(
     // decision branch simply talks about the quote without quoting a figure.
     enquiry_context: "",
     quote_context: "",
+    quote_subject: "",
+    quote_when: "",
     kb: "",
     advisor_term: language === "nl" ? "adviseur" : language === "pt" ? "consultor" : "advisor",
     project_term: niche,
@@ -705,6 +745,8 @@ export function buildSolarNicheContext(
       // specific would be a lie on the first screen, so the ladder starts cold.
       enquiry_context: "",
       quote_context: "",
+      quote_subject: "",
+      quote_when: "",
       advisor_term: nl ? "adviseur" : "advisor",
       project_term: nl ? "installatie" : "installation",
       proposal_term: nl ? "offerte" : "quote",

@@ -395,6 +395,12 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // The example quote: total, 2-4 line items, a relative date, optionally the
   // decision-maker's role. Change detection.
   quoteContext: jsonb("quote_context").$type<NicheText>().default({}),
+  // The same quote compressed for the OPENER: a naming phrase ("the ten panels
+  // and the battery") and its age ("about five months ago"). Stored rather than
+  // summarised from quoteContext at send time, because the opener goes out
+  // before any model reasons about this row.
+  quoteSubject: jsonb("quote_subject").$type<NicheText>().default({}),
+  quoteWhen: jsonb("quote_when").$type<NicheText>().default({}),
   // Time reference only, no action ("a few months ago"). Stored rather than
   // re-derived so a re-picked Client reads exactly like a freshly generated one.
   whenLabel: jsonb("when_label").$type<NicheText>().default({}),
@@ -594,6 +600,14 @@ export const campaigns = nocodb.table("Campaigns", {
   // decision-mode opener. Empty on every campaign but 60 — a campaign that
   // never fills it in keeps its single opener and behaves exactly as before.
   firstMessageScoping: text("first_message_scoping"),
+  // Opener used when the lead already HAS a quote on file (lead_stage "quoted"
+  // or "deciding"). First_Message frames the lead as someone who merely
+  // enquired ("you reached out ... is that still on your radar?"), which reads
+  // to a quoted lead as though nobody opened their file. This one names the job
+  // and how long ago it went out. Same {en,nl} JSON shape. Empty on every
+  // campaign but 60; apply_mode_opener falls back to First_Message when unset,
+  // so a campaign that never fills it in behaves exactly as before.
+  firstMessageQuoted: text("first_message_quoted"),
   // Discovery Demo Trust Kit: up to 3 owner-approved {objection, answer} pairs,
   // injected into the AI's system prompt verbatim-in-substance (see Part 3 of
   // docs/superpowers/specs/2026-07-02-discovery-demo-trust-kit-design.md).

@@ -218,6 +218,8 @@ export async function saveDemoClient(
       firstMessage: put(existing?.firstMessage as NicheText, language, ctx.first_message),
       enquiryContext: put(existing?.enquiryContext as NicheText, language, ctx.enquiry_context),
       quoteContext: put(existing?.quoteContext as NicheText, language, ctx.quote_context),
+      quoteSubject: put(existing?.quoteSubject as NicheText, language, ctx.quote_subject),
+      quoteWhen: put(existing?.quoteWhen as NicheText, language, ctx.quote_when),
       whenLabel: put(existing?.whenLabel as NicheText, language, ctx.when_label),
     };
 
@@ -272,6 +274,8 @@ export const CLIENT_TEXT_FIELDS = {
   nicheQuestion: "niche_question",
   enquiryContext: "enquiry_context",
   quoteContext: "quote_context",
+  quoteSubject: "quote_subject",
+  quoteWhen: "quote_when",
   scopingLadder: "scoping_ladder",
   openerPhrase: "opener_phrase",
   firstMessage: "first_message",
@@ -485,6 +489,8 @@ export function demoClientToContext(
       pick(row.scopingLadder as NicheText, language) || buildGenericScopingLadder(label, language),
     enquiry_context: pick(row.enquiryContext as NicheText, language),
     quote_context: pick(row.quoteContext as NicheText, language),
+    quote_subject: pick(row.quoteSubject as NicheText, language),
+    quote_when: pick(row.quoteWhen as NicheText, language),
     kb: pick(row.kbTemplate as NicheText, language),
     advisor_term: firstTerm(row, 3, language),
     project_term: firstTerm(row, 0, language) || label,
