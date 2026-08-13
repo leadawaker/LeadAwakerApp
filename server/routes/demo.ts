@@ -45,7 +45,7 @@ const universalSessionSchema = z.object({
   niche: z.string().trim().min(3).max(300),
   language: z.enum(["en", "nl", "pt"]),
   // Scenario toggle → Prompt 98 lead_stage. Optional; defaults to "inquired".
-  scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+  scenario: z.enum(["inquired", "deciding"]).optional().default("inquired"),
   // Solar landing page: skip the LLM and use the curated context instead.
   preset: z.enum(["solar"]).optional(),
   // The visitor's own firm, so the demo AI opens in their name.
@@ -266,7 +266,7 @@ export function registerDemoRoutes(app: Express): void {
     // The prospect's own firm, so the AI introduces itself in their name. This
     // is the difference between "a clever chatbot" and "their receptionist".
     companyName: z.string().trim().max(120).optional(),
-    scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+    scenario: z.enum(["inquired", "deciding"]).optional().default("inquired"),
     // Jurisdiction, not preference: UK none, EU in the opener, Brazil in the
     // first reply. Omitted means the campaign's own setting applies.
     aiDisclosure: z.enum(["off", "opener", "second_message"]).optional(),
@@ -392,7 +392,7 @@ export function registerDemoRoutes(app: Express): void {
   const nicheContextSchema = z.object({
     niche: z.string().trim().min(3).max(300),
     language: z.enum(["en", "nl", "pt"]),
-    scenario: z.enum(["inquired", "deciding", "declined"]).optional().default("inquired"),
+    scenario: z.enum(["inquired", "deciding"]).optional().default("inquired"),
     // `/generate <name of a saved Client>` re-themes the sender's demo from the
     // library instead of burning a model call. The engine sends this when the
     // VIP's free text exactly matches a saved Client.
@@ -449,7 +449,11 @@ export function registerDemoRoutes(app: Express): void {
   // Only these suffixes are reachable. Without the allowlist this becomes an
   // open proxy into every engine route (webhooks, booking, voice) for anyone
   // who can guess a path.
-  const WEB_DEMO_SUFFIXES = new Set(["", "message", "restart", "recap"]);
+  // "bump" is the presenter's on-demand follow-up. The engine gates it to
+  // invited links on its own side; this list only decides which engine routes
+  // are reachable at all, and leaving it out here 404s the button before the
+  // request ever gets there.
+  const WEB_DEMO_SUFFIXES = new Set(["", "message", "restart", "recap", "bump"]);
 
   // Express 4 optional param, not the Express 5 `{/*splat}` form: this repo is
   // on express ^4.21. Every suffix is a single segment, so one route covers all.
