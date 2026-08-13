@@ -543,6 +543,70 @@ button is therefore "generate (or pick) a Client, then mint a link from it", and
 it generates is selectable again afterwards. Wording in an earlier draft implied two
 paths; there is one.
 
+## UN-DEFERRED: demo-as-them, now targeting PRE-CALL (Gabriel, 2026-08-13)
+
+Reverses "SETTLED: the demo is a POST-CALL CTA" above. Gabriel, after walking through the
+mechanics: *"I have decided to show the demo pre call and an overview of the client's
+website can actually be super powerful."* The post-call reasoning ("typing the niche is
+faster than scraping it") is still true for the post-call case, but pre-call changes the
+value proposition entirely: sent cold or ahead of a call, the demo becomes proof of
+attention paid to THIS prospect specifically, before you've ever spoken to them. That is
+a stronger warm-up than a generic demo.
+
+**This also widens scope beyond the original deferred paragraph.** That paragraph only
+covered generating the CONTENT BEHIND the AI's conversation (company name, niche match,
+ladder). Pre-call adds a second, new surface: a **prospect-facing overview panel on the
+demo page itself** ("here's what we understood about your business"), sitting alongside
+the chat, not just informing it. This needs its own short summary field, separate from
+`kbTemplate`: the KB is written to feed the model, not to be read as prose by a human.
+
+**Two decisions locked 2026-08-13, resolving the open items from the original deferral:**
+
+1. **Niche mismatch (no good match among the 20 `Niche_Vocabulary` niches):** generate a
+   fresh ladder live, using the two hand-authored ladders (Windows & Doors, Kitchens) as
+   few-shots, and flag the resulting Client `unvalidated`. Rejected alternatives: falling
+   back to the generic `__default__` pack silently, or blocking generation until Gabriel
+   manually picks the closest niche. Chosen because it keeps the flow one-step while still
+   surfacing the risk rather than hiding it.
+2. **Review gate:** a freshly-generated Client always lands in the Clients tab for review
+   before it can be minted into a sendable link. No paste-and-send-in-one-step path. This
+   is the same reasoning as the `unvalidated` flag: a bad scrape or a wrong niche match
+   must not reach a real prospect unreviewed, especially now that this is a cold/pre-call
+   touch rather than something sent after you already know the business firsthand.
+
+**End-to-end flow (design, not yet built):**
+
+1. New "Generate from URL" entry point next to the existing Share/Clients flow: paste a
+   website URL instead of typing a niche.
+2. Scrape via the existing `_scrape_homepage()` (`tools/prospect_enricher.py:546`,
+   Firecrawl-backed for JS-rendered sites), homepage plus a couple of internal pages.
+3. Niche match against the 20 existing niches; on a good match, inherit that niche's
+   validated ladder/question bank/objections. On no match, generate fresh per decision 1
+   above and flag `unvalidated`.
+4. Populate a Client record: company name, USP, business description (scraped), plus the
+   new prospect-facing `websiteOverview` field.
+5. Lands in the Clients tab flagged for review (decision 2). Gabriel edits, especially on
+   an `unvalidated` one.
+6. Mint and send through the existing Share flow, unchanged.
+7. On the demo page: the header pill already shows the prospect's own company name
+   (phase 3, shipped). NEW: an overview panel rendered from step 4's summary, next to the
+   chat. The AI conversation underneath runs the matched-or-generated ladder as normal.
+
+**Net new work, beyond what phases 1-3 already shipped:** the URL-to-Client generator
+(scrape output -> Client fields, with the match-or-generate branch), the `unvalidated`
+flag and its surfacing in the Clients tab UI, the `websiteOverview` field (schema +
+generation + Clients tab editor), and the demo-page overview panel component
+(`client/public/premium/07-demo.jsx`). Reused as-is: the scraper, the Client schema/tab,
+the mint/share flow, the ladder mechanism, the header pill.
+
+**Not yet resolved, needs a dedicated planning pass before implementation:** the exact
+niche-matching algorithm (keyword match vs. LLM classification, and what confidence
+threshold counts as "no good match"), whether `websiteOverview` needs per-language
+variants like the other Client text fields or renders in one language only, and how the
+overview panel behaves on a re-scrape/regenerate of an existing Client. Per the project's
+95%-confidence rule, recommend a new session opens with `superpowers:writing-plans` (or
+`create-spec`) to settle these before touching code, the same pattern phases 1-3 followed.
+
 ### Phase 2 — campaign type + per-type openers — **DONE 2026-08-11**
 
 Shipped as CRM `00bcf439` + engine `2a9bf3e`, schema by `migrate-per-type-openers.js`.
