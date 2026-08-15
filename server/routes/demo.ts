@@ -44,7 +44,14 @@ const universalSessionSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   niche: z.string().trim().min(3).max(300),
   language: z.enum(["en", "nl", "pt"]),
-  // Scenario toggle → Prompt 98 lead_stage. Optional; defaults to "inquired".
+  // Scenario toggle. Becomes the persona's what_lead_did, which the engine
+  // collapses to a lead_stage (derive_lead_stage in tools/ai_service.py) and
+  // then to a conversation_mode. Optional; defaults to "inquired".
+  //
+  // NOT prompt 98, which this used to say: that row ("Universal Prompt", scoped
+  // to campaign 60) is archived. Campaign 60 has no campaign-scoped conversation
+  // prompt, so get_prompt_for_campaign misses and it resolves up to account 1's
+  // — prompt 93, the Discovery Prompt, which is what the demo really talks with.
   scenario: z.enum(["inquired", "deciding"]).optional().default("inquired"),
   // Solar landing page: skip the LLM and use the curated context instead.
   preset: z.enum(["solar"]).optional(),
@@ -445,6 +452,21 @@ export function registerDemoRoutes(app: Express): void {
   // an authenticated CRM user, is unguessable, expires in 7 days, and the engine
   // caps both turns per session and lifetime restarts. Requiring a login here
   // would defeat the entire point of a link you send to a prospect.
+  //
+  // One exception: a request carrying an authenticated AGENCY session skips
+  // both caps, so Gabriel can re-run a link forever while testing instead of
+  // minting a new one every fifth restart.
+  //
+  // The gate is the session, not the hostname. Whether the cookie reaches this
+  // route depends on where the CRM login was performed (the session cookie is
+  // Secure, and COOKIE_DOMAIN is unset, so it is scoped to the host that set
+  // it); in practice that is app.leadawaker.com, the host the CRM is served
+  // from. What matters for safety is the other direction, and it holds
+  // unconditionally: a prospect has no CRM session at all, so a minted link
+  // always enforces the normal caps for them no matter which host they open.
+  //
+  // Same test requireAgency uses, applied read-only here rather than as gating
+  // middleware, since this route must stay open to logged-out visitors.
   const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
   // Only these suffixes are reachable. Without the allowlist this becomes an
   // open proxy into every engine route (webhooks, booking, voice) for anyone
@@ -471,10 +493,16 @@ export function registerDemoRoutes(app: Express): void {
       return res.status(405).json({ code: "method_not_allowed", message: "Method not allowed." });
     }
 
+    const user = req.isAuthenticated() ? req.user : undefined;
+    const unlimited = !!user && (user.accountsId === 1 || user.role === "Owner" || user.role === "Admin");
+
     try {
       const upstream = await fetch(`${ENGINE_BASE}/web-demo/${token}${suffix}`, {
         method: req.method,
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(unlimited ? { "x-demo-unlimited": "1" } : {}),
+        },
         body: req.method === "POST" ? JSON.stringify(req.body ?? {}) : undefined,
         // The recap runs two model calls, and a scoping reply can be slow.
         signal: AbortSignal.timeout(120_000),
