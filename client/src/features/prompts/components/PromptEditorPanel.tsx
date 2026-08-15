@@ -807,10 +807,21 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
                   </p>
                   <div className="flex flex-col gap-2.5">
                     {([
+                      // These must stay in step with what the ENGINE can actually
+                      // emit: _LEAD_STAGE_KEYWORDS in tools/ai_service.py, which
+                      // yields inquired / deciding / quoted / owner (and "" when
+                      // nothing matches). "visited" and "declined" were retired
+                      // 2026-08-12 and are correctly absent.
+                      //
+                      // "owner" is an existing customer: it shares
+                      // conversation_mode "decision" with "quoted" but must not
+                      // get the quote-comparison flow, so live prompt 93 branches
+                      // on it separately and it needs its own preview.
                       { key: "lead_stage", label: t("preview.cond.leadStage", { defaultValue: "Lead stage" }), opts: [
                         ["inquired", t("preview.cond.stage.inquired", { defaultValue: "Inquired" })],
                         ["deciding", t("preview.cond.stage.deciding", { defaultValue: "Deciding" })],
                         ["quoted", t("preview.cond.stage.quoted", { defaultValue: "Received a quote (baseline)" })],
+                        ["owner", t("preview.cond.stage.owner", { defaultValue: "Existing customer" })],
                       ] },
                       { key: "positioning", label: t("preview.cond.positioning", { defaultValue: "Positioning" }), opts: [
                         ["mid_market", t("preview.cond.pos.midMarket", { defaultValue: "Mid-market" })],
