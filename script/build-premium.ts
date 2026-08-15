@@ -59,7 +59,11 @@ const KEEP_FILES = new Set([
   "netherlands.svg",
   ...STANDALONE_PAGES,
 ]);
-const KEEP_DIRS = new Set(["assets", "hero-images"]);
+// "demo" holds demo.html's stylesheet and ES modules. demo.html is a bare shell
+// that <link>s and <script src>es them, so losing this directory ships a demo
+// page that renders nothing at all — and, like every other failure in this
+// file, does it with a 200. assertDemoAssets() below checks they survived.
+const KEEP_DIRS = new Set(["assets", "hero-images", "demo"]);
 const UPLOADS_KEEP = new Set(["ctatext17.jpg"]); // inside uploads/textures/
 
 // The only files allowed to be silently missing from a checkout. These 3 are
@@ -166,13 +170,30 @@ async function pruneUploads() {
   }
 }
 
+// Tests live beside the modules they cover (demo/demo.test.mjs), which is where
+// they are most likely to be kept up to date — but a kept directory is a PUBLIC
+// directory, and there is no reason to serve them. Dropped from the build
+// output only; the source stays put.
+async function pruneTestsIn(dirName: string) {
+  const dir = path.join(DIST_PREMIUM, dirName);
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.test\.(mjs|js)$/.test(entry.name)) {
+      await rm(path.join(dir, entry.name), { force: true });
+      console.log(`build-premium: dropped test file ${dirName}/${entry.name} from the build`);
+    }
+  }
+}
+
 async function pruneDistPremium(bundleName: string) {
   const entries = await readdir(DIST_PREMIUM, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.name === "index.html" || entry.name === bundleName) continue;
 
     if (entry.isDirectory()) {
-      if (KEEP_DIRS.has(entry.name)) continue;
+      if (KEEP_DIRS.has(entry.name)) {
+        await pruneTestsIn(entry.name);
+        continue;
+      }
       if (entry.name === "uploads") {
         await pruneUploads();
         continue;
@@ -226,6 +247,35 @@ async function assertRewriteTargets() {
     }
     console.log(`build-premium: verified ${target.source} -> ${match.destination}`);
   }
+}
+
+// demo.html is a shell: every byte it renders comes from these. A rewrite that
+// resolves to a page whose stylesheet and modules were pruned still answers 200
+// with a blank screen, which is the same invisible failure assertRewriteTargets
+// exists to catch, one level down. Parsed out of the HTML rather than listed
+// here, so renaming a module cannot leave this check quietly validating a file
+// nobody loads any more.
+async function assertDemoAssets() {
+  const html = await readFile(path.join(DIST_PREMIUM, "demo.html"), "utf-8");
+  const refs = [...html.matchAll(/(?:href|src)="\/premium\/(demo\/[^"]+)"/g)].map((m) => m[1]);
+  if (refs.length === 0) {
+    throw new Error(
+      "build-premium: demo.html references no /premium/demo/ assets — it is supposed to be a " +
+        "shell that loads demo.css and main.js. Check the markup hasn't changed shape."
+    );
+  }
+  for (const ref of refs) {
+    try {
+      await readFile(path.join(DIST_PREMIUM, ref));
+    } catch {
+      throw new Error(
+        `build-premium: demo.html loads /premium/${ref}, but that file is not in the build ` +
+          `output. It was never emitted, or pruneDistPremium deleted it (add its directory ` +
+          `to KEEP_DIRS)`
+      );
+    }
+  }
+  console.log(`build-premium: verified ${refs.length} demo assets: ${refs.join(", ")}`);
 }
 
 async function main() {
@@ -285,6 +335,7 @@ async function main() {
   console.log("build-premium: pruned non-public files from dist/public/premium/");
 
   await assertRewriteTargets();
+  await assertDemoAssets();
 }
 
 main().catch((err) => {
