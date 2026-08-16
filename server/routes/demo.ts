@@ -23,12 +23,36 @@ import {
   saveDemoClient,
   listDemoClients,
   getDemoClient,
+  clientLanguages,
   demoClientToContext,
   demoClientToEditable,
   updateDemoClient,
   deleteDemoClient,
   duplicateDemoClient,
+  type DemoLang,
 } from "../demo-clients";
+
+/**
+ * Can this Client be demoed in this language?
+ *
+ * A Client stores its opener (and the phrases substituted into it) per
+ * language, and only the languages someone actually generated or typed. Running
+ * one in a language it lacks used to fall back across languages and splice, for
+ * example, a Portuguese noun phrase into an English opener. See clientLanguages().
+ *
+ * Every caller here does something different with a "no" — the admin mint says
+ * so, the VIP command regenerates, the public page uses its own template — so
+ * this returns the answer rather than a response.
+ */
+function clientSupportsLanguage(
+  row: Parameters<typeof clientLanguages>[0],
+  language: DemoLang,
+): boolean {
+  const langs = clientLanguages(row);
+  // Empty means unrestricted: the curated niche packs have word lists but no
+  // opener in any language, so there is nothing to splice.
+  return langs.length === 0 || langs.includes(language);
+}
 
 const createSessionSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
@@ -76,6 +100,52 @@ const SOLAR_CLIENT_BY_MARKET: Partial<Record<"uk" | "us" | "nl", string>> = {
   uk: "solar energy installer uk",
   us: "solar energy installer us",
 };
+
+/** Country → market for the English demo. Everything English that is not the US
+ *  or Canada is pointed at the UK: it is the closest of the three markets we
+ *  actually have, and any English market beats the Netherlands, which is what a
+ *  visitor used to get. Adding au/ca/ie properly is a content job (each market
+ *  needs its own DEADLINE_CASES entry and MARKET_NAMES list in config.jsx), so
+ *  it waits until someone asks for it. */
+const MARKET_BY_COUNTRY: Record<string, "uk" | "us" | "nl"> = {
+  US: "us", CA: "us",
+  GB: "uk", IE: "uk", AU: "uk", NZ: "uk", ZA: "uk",
+  NL: "nl", BE: "nl",
+};
+
+/** Fallback market for a visitor who never picked one, read from the browser's
+ *  own locale.
+ *
+ *  Why the locale and not the IP: Vercel strips x-vercel-ip-country on the
+ *  /api/* rewrite to the Pi, and the cf-ipcountry that does arrive describes
+ *  Vercel's edge node (FRA → "DE" for everyone), so it would label every visitor
+ *  German. The real client IP is in x-vercel-forwarded-for, but turning that
+ *  into a country means either a MaxMind database to maintain or shipping
+ *  visitor IPs to a third-party lookup. accept-language survives the rewrite
+ *  intact, costs nothing, and for "which market does this business sell into" a
+ *  browser locale is arguably the better signal anyway: a Dutch owner reading
+ *  from a hotel in Spain still has nl-NL and still quotes in euros.
+ *
+ *  Returns undefined when the locale says nothing useful, which leaves the
+ *  existing default alone. Only consulted for the English demo: nl and pt
+ *  resolve their own market inside generateNicheContext(). */
+function marketFromLocale(req: Request): "uk" | "us" | "nl" | undefined {
+  const header = req.headers["accept-language"];
+  if (typeof header !== "string") return undefined;
+  for (const part of header.split(",")) {
+    const tag = part.split(";")[0]!.trim();
+    if (!tag || tag === "*") continue;
+    const [lang, region] = tag.split("-");
+    const byRegion = region ? MARKET_BY_COUNTRY[region.toUpperCase()] : undefined;
+    if (byRegion) return byRegion;
+    // A bare language tag still narrows it: "nl" is the Netherlands, and bare
+    // "en" means English-speaking-somewhere, which is any of our markets except
+    // the Dutch one.
+    if (lang?.toLowerCase() === "nl") return "nl";
+    if (lang?.toLowerCase() === "en") return "uk";
+  }
+  return undefined;
+}
 
 function clientIp(req: Request): string {
   const fwd = req.headers["x-forwarded-for"];
@@ -191,7 +261,13 @@ export function registerDemoRoutes(app: Express): void {
         const parsed = universalSessionSchema.safeParse(req.body);
         if (!parsed.success) return handleZodError(res, parsed.error);
 
-        const { firstName, niche, language, scenario, preset, companyName, market } = parsed.data;
+        const { firstName, niche, language, scenario, preset, companyName } = parsed.data;
+        // The picker wins when the page sent one. It only does on the landing
+        // page (07-demo.jsx forwards window.MARKET); the standalone demo at
+        // /demo/:token sends nothing, and middleware.ts only injects __MARKET__
+        // on /, /pt and /nl anyway, so most visitors arrive with no market at
+        // all and used to be handed a Dutch company in an English conversation.
+        const market = parsed.data.market ?? marketFromLocale(req);
 
         let nicheCtx;
         if (preset === "solar") {
@@ -202,8 +278,15 @@ export function registerDemoRoutes(app: Express): void {
           // renames or deletes a row from the Clients tab.
           const clientKey = SOLAR_CLIENT_BY_MARKET[market ?? "nl"];
           const row = clientKey ? await getDemoClient(clientKey) : undefined;
+          // ...or when the row has no opener in the visitor's language. The
+          // hardcoded context is written per language, so it is a better answer
+          // than a saved Client speaking the wrong one. Reachable today only by
+          // an odd market/language pairing (the UK and US rows are English-only
+          // while their markets are picked by an English-language path), but it
+          // costs one condition to keep it impossible rather than unlikely.
+          const usable = row && clientSupportsLanguage(row, language);
           nicheCtx =
-            (row && demoClientToContext(row, language, scenario)) ||
+            (usable && demoClientToContext(row!, language, scenario)) ||
             buildSolarNicheContext(language, scenario, companyName);
           // The visitor's own firm always wins over the Client's default name,
           // exactly as it does on the admin create-link path.
@@ -315,6 +398,17 @@ export function registerDemoRoutes(app: Express): void {
         if (!row) {
           return res.status(404).json({ message: `No saved Client named "${clientNiche}".` });
         }
+        // Before the context is built, because a mismatch is not a broken
+        // Client, it is the wrong pairing: the Client is fine in the languages
+        // it has, and this link just asked for one it does not. Naming those
+        // languages makes the fix obvious (add the missing opener on the
+        // Clients tab, or mint the link in a language it already speaks).
+        if (!clientSupportsLanguage(row, language)) {
+          const have = clientLanguages(row).map((l) => l.toUpperCase()).join(", ");
+          return res.status(409).json({
+            message: `"${clientNiche}" has no ${language.toUpperCase()} version — it only exists in ${have}. Add the ${language.toUpperCase()} opener fields on the Clients tab, or mint this link in ${have}.`,
+          });
+        }
         const ctx = demoClientToContext(row, language, scenario);
         if (!ctx) {
           // Vocabulary-only rows (the pre-existing curated niches) have word
@@ -418,11 +512,17 @@ export function registerDemoRoutes(app: Express): void {
       // Re-pick, same precedence as /create-link.
       if (clientNiche) {
         const row = await getDemoClient(clientNiche);
-        const ctx = row ? demoClientToContext(row, language, scenario) : null;
+        // A Client that does not speak `language` is treated exactly like a
+        // Client with no persona: fall through and generate. Unlike /create-link
+        // there is nobody here to read an error — this is a VIP typing
+        // `/generate <client>` into WhatsApp mid-conversation — so a working
+        // demo in the right language beats a refusal.
+        const usable = row && clientSupportsLanguage(row, language);
+        const ctx = usable ? demoClientToContext(row!, language, scenario) : null;
         if (ctx) return res.json({ generated: true, reused: row!.niche, context: ctx });
-        // Fall through to generation when the Client is missing or has no
-        // persona: the engine's caller wants a working demo, and the result
-        // gets saved under this key anyway.
+        // Fall through to generation when the Client is missing, has no
+        // persona, or has none in this language: the engine's caller wants a
+        // working demo, and the result gets saved under this key anyway.
       }
 
       const generated = await generateNicheContext(niche, language, scenario);
@@ -475,7 +575,23 @@ export function registerDemoRoutes(app: Express): void {
   // invited links on its own side; this list only decides which engine routes
   // are reachable at all, and leaving it out here 404s the button before the
   // request ever gets there.
-  const WEB_DEMO_SUFFIXES = new Set(["", "message", "restart", "recap", "bump"]);
+  //
+  // "voice" carries a composer recording as base64 inside JSON, and "audio"
+  // reads one back for playback after a reload. Base64-in-JSON rather than
+  // multipart is deliberate: this proxy re-serialises every POST as JSON, and
+  // that plus the allowlist above is what stops the route being an open proxy
+  // into every engine endpoint. Rewriting it to stream multipart would be more
+  // surgery on a security-sensitive file than a voice memo is worth.
+  const WEB_DEMO_SUFFIXES = new Set(["", "message", "restart", "recap", "bump", "voice", "audio"]);
+
+  // A 30-second Opus memo is 30 to 60KB of audio, so 40 to 80KB of base64. This
+  // is a wide margin around that. express.json() is mounted globally at 20mb
+  // (server/index.ts), which is right for the CRM's own uploads and far too
+  // generous for this route, so the ceiling is applied here: without it a
+  // crafted request could push 20mb of base64 into the engine. The engine
+  // restates the same limit on the decoded bytes, where port 8100 cannot be
+  // reached around it.
+  const MAX_DEMO_VOICE_BYTES = 1_500_000;
 
   // Express 4 optional param, not the Express 5 `{/*splat}` form: this repo is
   // on express ^4.21. Every suffix is a single segment, so one route covers all.
@@ -493,17 +609,35 @@ export function registerDemoRoutes(app: Express): void {
       return res.status(405).json({ code: "method_not_allowed", message: "Method not allowed." });
     }
 
+    const body = req.method === "POST" ? JSON.stringify(req.body ?? {}) : undefined;
+    if (segment === "voice" && Buffer.byteLength(body ?? "") > MAX_DEMO_VOICE_BYTES) {
+      return res.status(413).json({ code: "audio_too_large", message: "That recording is too long." });
+    }
+
+    // The only route here that takes a query string, and it is rebuilt from a
+    // validated integer rather than forwarded: passing req.query through
+    // wholesale would hand a caller a channel into the engine that the suffix
+    // allowlist above does not cover.
+    let query = "";
+    if (segment === "audio") {
+      const id = Number(req.query.id);
+      if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({ code: "bad_id", message: "Unknown message." });
+      }
+      query = `?id=${id}`;
+    }
+
     const user = req.isAuthenticated() ? req.user : undefined;
     const unlimited = !!user && (user.accountsId === 1 || user.role === "Owner" || user.role === "Admin");
 
     try {
-      const upstream = await fetch(`${ENGINE_BASE}/web-demo/${token}${suffix}`, {
+      const upstream = await fetch(`${ENGINE_BASE}/web-demo/${token}${suffix}${query}`, {
         method: req.method,
         headers: {
           "content-type": "application/json",
           ...(unlimited ? { "x-demo-unlimited": "1" } : {}),
         },
-        body: req.method === "POST" ? JSON.stringify(req.body ?? {}) : undefined,
+        body,
         // The recap runs two model calls, and a scoping reply can be slow.
         signal: AbortSignal.timeout(120_000),
       });

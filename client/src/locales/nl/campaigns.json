@@ -54,6 +54,8 @@
     "prospectCompanyPlaceholder": "Hoffman Puxadores",
     "prospectCompanyHint": "Vul eerst hun niche in of kies een opgeslagen klant.",
     "language": "Taal",
+    "languageMissing": "Deze client heeft nog geen openingsbericht in deze taal.",
+    "languageLimitedHint": "Deze client bestaat alleen in {{langs}}. Vul de ontbrekende openingsvelden in op het tabblad Clients om hem in een andere taal aan te maken.",
     "market": "Markt",
     "marketOptions": {
       "uk": "VK",
@@ -826,7 +828,9 @@
       "openerPhrase": "Openingszin",
       "whenLabel": "Tijdsaanduiding",
       "enquiryContext": "Wat ze zeiden bij hun aanvraag",
-      "quoteContext": "De offerte waar ze op zitten"
+      "quoteContext": "De offerte waar ze op zitten",
+      "quoteSubject": "Waar de offerte voor was",
+      "quoteWhen": "Wanneer de offerte is verstuurd"
     }
   }
 }

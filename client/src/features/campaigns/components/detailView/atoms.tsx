@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Copy, Megaphone, Link as LinkIcon, Check, Share2, Send, MessageCircle, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -398,6 +398,34 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
 
   const campaignId = (campaign.id || (campaign as any).Id) as number;
   const canGenerateNiche = campaignId === UNIVERSAL_DEMO_CAMPAIGN_ID;
+
+  // Which languages the picked Client can actually be minted in.
+  //
+  // A Client stores its opener, opener phrase, time reference and the two
+  // quoted-opener halves per language, and only for the languages someone
+  // generated or typed. Minting one in a language it lacks used to fall back
+  // across languages and splice, say, a Portuguese noun phrase into an English
+  // opener. The server refuses that pairing outright now (409 from
+  // /api/demo/create-link); this list is here so the button is never offered in
+  // the first place. Empty means unrestricted, matching the server's rule for
+  // the curated niche packs, which have no opener in any language to splice.
+  const clientLanguages = useMemo<readonly ("en" | "nl" | "pt")[]>(() => {
+    if (!savedClient) return [];
+    return (savedClients ?? []).find((c) => c.niche === savedClient)?.languages ?? [];
+  }, [savedClient, savedClients]);
+
+  const languageAllowed = (l: "en" | "nl" | "pt") =>
+    clientLanguages.length === 0 || clientLanguages.includes(l);
+
+  // Picking a Client that does not speak the currently-selected language moves
+  // the selection rather than leaving a disabled button highlighted (and a
+  // payload the server would reject). Its own first language is the only
+  // sensible landing spot.
+  useEffect(() => {
+    if (clientLanguages.length > 0 && !clientLanguages.includes(language)) {
+      setLanguage(clientLanguages[0]);
+    }
+  }, [clientLanguages, language]);
   const botUsername = import.meta.env.VITE_TELEGRAM_DEMO_BOT_USERNAME || "Demo_Lead_Awaker_bot";
   const telegramLink = `https://t.me/${botUsername}?start=campaign_${campaignId}`;
 
@@ -612,12 +640,23 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                   <div className="flex gap-1.5">
                     {(["en", "nl", "pt"] as const).map((l) => (
                       <button key={l} type="button" onClick={() => setLanguage(l)}
-                        className={cn("px-3 py-1 rounded-md border text-[12px] font-medium transition-colors",
+                        disabled={!languageAllowed(l)}
+                        title={languageAllowed(l) ? undefined : t("share.languageMissing", "This client has no opener in this language yet.")}
+                        className={cn("px-3 py-1 rounded-md border text-[12px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
                           language === l ? "border-brand-indigo bg-brand-indigo text-white" : "border-black/[0.125] bg-white hover:bg-muted/50")}>
                         {l.toUpperCase()}
                       </button>
                     ))}
                   </div>
+                  {clientLanguages.length > 0 && clientLanguages.length < 3 && (
+                    <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
+                      {t("share.languageLimitedHint", {
+                        defaultValue:
+                          "This client only exists in {{langs}}. Add the missing opener fields on the Clients tab to mint it in another language.",
+                        langs: clientLanguages.map((l) => l.toUpperCase()).join(", "),
+                      })}
+                    </p>
+                  )}
                 </div>
                 {canGenerateNiche && !savedClient && language === "en" && (
                   <div>

@@ -2,6 +2,25 @@
 
 Status: **design settled 2026-08-13. Not built yet.**
 Date: 2026-08-12, decisions 2026-08-13
+
+> **Stale line references, read this first (added 2026-08-15).** This spec was written against the
+> monolithic `demo.html`. Commit `25cb078d` split that file into ES modules afterwards, so every
+> `demo.html:NNN` reference below is dead. The design itself is unaffected. Current locations:
+>
+> | Spec says | Now lives in |
+> |---|---|
+> | `demo.html` render / `root.innerHTML` | `client/public/premium/demo/main.js:69` (still `innerHTML`, so the singleton-player rule stands) |
+> | composer markup | `main.js:142-160` |
+> | `wire()`, `doSend()`, `poll()`, `setPop()` | `main.js:235 / 271 / 406 / 213` |
+> | `signature()`, `esc()`, `clock()` | `format.js:61 / 8 / 48` |
+> | `messagesHtml()` | `chat.js:13` |
+> | recap content | `recap.js:180` (`railContentHtml`) |
+> | all CSS | `demo/demo.css` |
+>
+> Two things also changed that the spec did not know about: the page now has a **copy layer**
+> (`demo/copy.js`, `t(key)` with `en` / `nl` / `pt` packs), so new UI strings go there rather than being
+> hardcoded; and the proxy allowlist has gained a `bump` suffix (`server/routes/demo.ts:526`).
+> There are now tests: `node client/public/premium/demo/demo.test.mjs`.
 Surface: `client/public/premium/demo.html` (the `/demo/<token>` page), plus
 `server/routes/demo.ts` (proxy) and `automations/src/webhooks/web_demo_routes.py` (engine).
 
@@ -219,18 +238,23 @@ So: **send the audio as base64 inside JSON.**
 
 1. `POST /api/web-demo/{token}/voice` with `{ audio: "data:audio/webm;base64,...", durationMs }`.
    Add `voice` and `audio` to `WEB_DEMO_SUFFIXES`.
-2. **Body limit.** `express.json()` defaults to 100kb. A 30 second Opus note is roughly 30 to 60KB raw,
-   so 40 to 80KB base64, which is already over that default on the long end, and a browser that falls
-   back to a less efficient codec will blow past it. Mount a 2mb limit on this path only, and reject
-   anything over 1.5MB in the handler before it reaches the engine.
+2. **Body limit: nothing to do.** An earlier draft of this spec said `express.json()`'s 100kb default
+   would reject the upload. That was wrong: `server/index.ts:34` already mounts
+   `express.json({ limit: "20mb" })` globally, and the CRM's own dictation route has been posting
+   base64 audio through it for months. Keep a size guard in the handler anyway (reject over 1.5MB) so a
+   crafted request cannot push 20mb of base64 into the engine.
 3. Engine handler decodes the data URL and builds the same `webhook_data` as `/message`, with
    `num_media: 1`, `media_bytes_0: <bytes>`, `media_content_type_0: <normalised>`, `body: ""`. Nothing
    else changes.
 4. `voice_service.py` `ext_map` (both copies, lines 120 and 182) needs `audio/webm: ".webm"`, and the
    content type must be normalised first: Chrome reports `audio/webm;codecs=opus`, which misses the map
-   today and silently falls back to `.ogg`. Safari reports `audio/mp4`, already mapped. **Verify Groq
-   accepts `.webm`** before building; if not, the fallback is to record as `audio/ogg` where supported
-   and transcode on the Pi, which would be a real cost increase and should change the decision.
+   today and silently falls back to `.ogg`. Safari reports `audio/mp4`, already mapped.
+
+   **Groq accepts webm, confirmed, no transcode needed.** An earlier draft made this a build-blocking
+   unknown. It is not: `server/routes/user-settings.ts:96` has been shipping browser webm straight to
+   `whisper-large-v3-turbo` in production. It normalises with `rawMime.split(";")[0].trim()` and then
+   maps to an extension, which is exactly the fix `voice_service.py` needs, already written in
+   TypeScript twelve lines from the Groq call. Port that logic, do not re-derive it.
 5. Optional, three lines, worth it: pass the lead's language to `transcribe_audio_bytes` as a Whisper
    hint. Dutch transcription accuracy on short clips improves noticeably with a language hint.
 

@@ -54,6 +54,8 @@
     "prospectCompanyPlaceholder": "Hoffman Puxadores",
     "prospectCompanyHint": "Fill in their niche or pick a saved client first.",
     "language": "Language",
+    "languageMissing": "This client has no opener in this language yet.",
+    "languageLimitedHint": "This client only exists in {{langs}}. Add the missing opener fields on the Clients tab to mint it in another language.",
     "market": "Market",
     "marketOptions": {
       "uk": "UK",
@@ -826,7 +828,9 @@
       "openerPhrase": "Opener phrase",
       "whenLabel": "Time reference",
       "enquiryContext": "What they said when they enquired",
-      "quoteContext": "The quote they are sitting on"
+      "quoteContext": "The quote they are sitting on",
+      "quoteSubject": "What the quote was for",
+      "quoteWhen": "When the quote was sent"
     }
   }
 }

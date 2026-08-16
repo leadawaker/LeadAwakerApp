@@ -52,6 +52,18 @@ export function clock(iso) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+// m:ss, for the recording timer and the voice player's elapsed/total. Both
+// count in seconds and neither can reach an hour (the recorder caps at 30
+// seconds), so there is no hours branch to get wrong. A non-finite duration
+// reads as 0:00 rather than NaN:NaN: webm from MediaRecorder often reports
+// Infinity until it has been played through once.
+export function mmss(seconds) {
+  var s = Math.floor(Number(seconds));
+  if (!isFinite(s) || s < 0) s = 0;
+  var rest = s % 60;
+  return Math.floor(s / 60) + ":" + (rest < 10 ? "0" : "") + rest;
+}
+
 export function initials(name) {
   var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "AI";
@@ -61,7 +73,14 @@ export function initials(name) {
 export function signature(s) {
   // Cheap change detector so a poll that returns nothing new does not
   // re-render and blow away the caret position in the composer.
+  //
+  // The last message's id and kind are in here because stage, done, the turn
+  // count, the message count and the last message's text can ALL be unchanged
+  // while something the page has to repaint did change: a voice memo whose
+  // transcript arrives, or one interaction row replaced by another with the
+  // same text. Without them that repaint waits for the AI's next reply.
   if (!s) return "";
+  var last = s.messages.length ? s.messages[s.messages.length - 1] : null;
   return [s.stage, s.done, s.turnsUsed, s.messages.length,
-          s.messages.length ? s.messages[s.messages.length - 1].text : ""].join("|");
+          last ? last.text : "", last ? last.id : "", last ? last.kind : ""].join("|");
 }

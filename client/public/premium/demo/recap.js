@@ -56,8 +56,17 @@ function calendarHtml(b) {
   // Day 0 of the NEXT month is the last day of this one, which is also how
   // February gets its leap year right without a rule for it.
   var days = new Date(Date.UTC(b.year, b.month, 0)).getUTCDate();
+  // The visitor's own real-world today, in their local calendar (not UTC:
+  // unlike the booking fields above, this has no server-resolved timezone to
+  // borrow, so it has to be the date on the device actually looking at the
+  // screen). Only lights up when the calendar is already showing that month.
+  var now = new Date();
+  var isTodayMonth = now.getFullYear() === b.year && now.getMonth() + 1 === b.month;
   for (var n = 1; n <= days; n++) {
-    cells.push('<span class="cal-d' + (n === b.day ? " is-pick" : "") + '">' + n + "</span>");
+    var cls = "cal-d";
+    if (n === b.day) cls += " is-pick";
+    if (isTodayMonth && n === now.getDate()) cls += " is-today";
+    cells.push('<span class="' + cls + '">' + n + "</span>");
   }
 
   return (

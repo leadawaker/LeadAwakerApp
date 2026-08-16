@@ -223,11 +223,28 @@ export function BusinessSectionFields({
      lead who was never quoted has to be asked to confirm they are the right
      person, a lead sitting on a quote already knows exactly who is writing.
      `demoMode` is only passed on such a campaign; everywhere else there is one
-     First_Message and this collapses to the previous behaviour. */
-  const openerField = demoMode === "scoping" ? "first_message_scoping" : "First_Message";
-  const openerValue = openerField === "first_message_scoping"
-    ? (draft.first_message_scoping ?? (campaign as any).first_message_scoping)
-    : (draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template);
+     First_Message and this collapses to the previous behaviour.
+
+     Three columns, matching apply_mode_opener() in the engine
+     (automations/src/automations/conversation/prompt_builder.py):
+
+       scoping   -> first_message_scoping   (no quote exists yet)
+       decision  -> first_message_quoted    (a quote is on file)
+       neither   -> First_Message           (the universal fallback)
+
+     "decision" mapped to First_Message until 2026-08-15, so this panel edited
+     the universal opener while the engine sent first_message_quoted to exactly
+     the leads this mode selects — the label already read "First Message
+     (quotes)", and the edit went somewhere else. DEMO_MODE_SCENARIO maps
+     decision -> "deciding", which is one of the engine's _QUOTED_STAGES, so the
+     two now pick the same column for the same lead. */
+  const openerField =
+    demoMode === "scoping" ? "first_message_scoping"
+    : demoMode === "decision" ? "first_message_quoted"
+    : "First_Message";
+  const openerValue = openerField === "First_Message"
+    ? (draft.First_Message ?? campaign.First_Message ?? campaign.first_message_template)
+    : (draft[openerField] ?? (campaign as any)[openerField]);
 
   // Merge unsaved edits over the saved campaign so a First Message the operator
   // is actively typing (or a Company Name change made moments ago) shows live.

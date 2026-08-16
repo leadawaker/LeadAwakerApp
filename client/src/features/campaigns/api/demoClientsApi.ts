@@ -29,6 +29,12 @@ export const CLIENT_TEXT_FIELDS = [
   "nicheQuestion",
   "enquiryContext",
   "quoteContext",
+  // The two halves of the quoted opener. Per-language despite sitting next to
+  // quoteContext, which is English-only: the model READS quoteContext, but
+  // these two are substituted verbatim into first_message_quoted ("about the
+  // {quote_subject} we quoted {quote_when}"), so they follow the opener rules.
+  "quoteSubject",
+  "quoteWhen",
   "scopingLadder",
   "openerPhrase",
   "firstMessage",

@@ -298,10 +298,18 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     kb: c.kb || "",
     prompt_linked_id: lp ? String(lp.id || lp.Id) : "",
     First_Message: c.First_Message || c.first_message_template || "",
-    // Second opener, used when conversation_mode resolves to "scoping". Empty on
-    // every campaign that has not authored one, which is the fallback the engine
-    // expects — do not default it to First_Message here.
+    // Second and third openers, used when conversation_mode resolves to
+    // "scoping" and when the lead already has a quote on file. Empty on every
+    // campaign that has not authored one, which is the fallback the engine
+    // expects — do not default either to First_Message here.
+    //
+    // Both MUST be listed: the dirty check and doSave below both iterate
+    // Object.keys(originalDraft), which is this object, so a field missing here
+    // is never compared and never PATCHed. first_message_quoted was missing
+    // until 2026-08-15 and the settings panel had no box for it at all; adding
+    // the box without this line would have typed fine and reverted on reload.
     first_message_scoping: (c as any).first_message_scoping || "",
+    first_message_quoted: (c as any).first_message_quoted || "",
     bump_1_template: c.bump_1_template || "",
     bump_1_delay_hours: c.bump_1_delay_hours ?? "",
     bump_1_ai_reference: c.bump_1_ai_reference ?? false,

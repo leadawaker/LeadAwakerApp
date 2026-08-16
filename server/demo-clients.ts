@@ -52,6 +52,15 @@ type ClientRow = typeof nicheVocabulary.$inferSelect;
  * pt → en → nl → any non-empty slot. The last step matters because a Client
  * generated in Dutch is still worth re-picking for an English demo, where a
  * Dutch scoping ladder beats campaign 60's Solar Panels one.
+ *
+ * ONLY for fields the MODEL READS (description, kb, quote_context, the scoping
+ * ladder, the question bank, ...). That is the rule the Clients tab already
+ * encodes — see the header of ClientEditor.tsx, "A Client is ENGLISH, except
+ * its terms" — and it is why the fallback is safe here: the model is handed
+ * English source material and writes its reply in the demo's language, so a
+ * cross-language slot never reaches the prospect verbatim.
+ *
+ * Fields that ARE substituted verbatim must use pickStrict instead.
  */
 function pick(text: NicheText | null | undefined, lang: DemoLang): string {
   if (!text) return "";
@@ -61,6 +70,29 @@ function pick(text: NicheText | null | undefined, lang: DemoLang): string {
     if (v) return v;
   }
   return "";
+}
+
+/**
+ * Read one language slot with NO cross-language fallback.
+ *
+ * For the fields that land in the prospect's message verbatim, with no model in
+ * between: the opener, the opener phrase, the when-label, and the two halves of
+ * the quoted opener ({quote_subject} / {quote_when}). pick()'s fallback would
+ * splice one language into a sentence written in another — a Portuguese
+ * quote_subject inside an English opener, which is what a Client that exists in
+ * only one language used to produce.
+ *
+ * Empty is the correct degraded result: every consumer of these fields already
+ * has a same-language fallback of its own (personalize_message falls back to
+ * project_term then inquiry_timeframe for {quote_subject}, and the engine's
+ * overlay skips empty values so the campaign's own copy stands). A blank that
+ * falls through beats a foreign phrase that does not.
+ *
+ * Belt and braces: clientLanguages() + the route guard should stop a Client
+ * ever being run in a language it has no opener for. This is the braces.
+ */
+function pickStrict(text: NicheText | null | undefined, lang: DemoLang): string {
+  return (text?.[lang] ?? "").trim();
 }
 
 /**
@@ -92,18 +124,19 @@ function termColumn(group: 0 | 1 | 2 | 3 | 4, lang: DemoLang): string {
 }
 
 /**
- * First entry of a term list for `lang`, falling back across languages.
- * The engine wants a single term per variable ({advisor_term}); the table
- * stores lists because the onboarding wizard lets people add synonyms.
+ * First entry of a term list for `lang`. The engine wants a single term per
+ * variable ({advisor_term}); the table stores lists because the onboarding
+ * wizard lets people add synonyms.
+ *
+ * No cross-language fallback, for the same reason as pickStrict: these five
+ * words are substituted into the opener verbatim, so falling back turned an
+ * English demo on a Dutch-only Client into "your keuken project". Empty is
+ * handled downstream — the engine's overlay skips empty values, leaving the
+ * campaign's own term in place.
  */
 function firstTerm(row: ClientRow, group: 0 | 1 | 2 | 3 | 4, lang: DemoLang): string {
-  const order: DemoLang[] = lang === "pt" ? ["pt", "en", "nl"] : lang === "nl" ? ["nl", "en", "pt"] : ["en", "nl", "pt"];
-  for (const l of order) {
-    const list = (row as Record<string, unknown>)[termColumn(group, l)] as string[] | null | undefined;
-    const v = (list ?? []).map((s) => String(s).trim()).find(Boolean);
-    if (v) return v;
-  }
-  return "";
+  const list = (row as Record<string, unknown>)[termColumn(group, lang)] as string[] | null | undefined;
+  return (list ?? []).map((s) => String(s).trim()).find(Boolean) ?? "";
 }
 
 /**
@@ -118,6 +151,26 @@ function mergeTerm(existing: unknown, term: string): string[] {
   const t = term.trim();
   if (t && !list.some((w) => w.toLowerCase() === t.toLowerCase())) list.push(t);
   return list;
+}
+
+/**
+ * The languages a Client can actually be demoed in.
+ *
+ * Keyed on `first_message` alone, because that is the one field sent to the
+ * prospect verbatim and unedited: it IS the demo's first impression, and there
+ * is no fallback that could rescue it. Everything else either has a
+ * same-language fallback or is read by the model, which translates as it writes
+ * (see pick() above).
+ *
+ * An EMPTY result means "unrestricted", not "unusable". The sixteen curated
+ * niche packs (Kitchens, Bathrooms, ...) carry word lists and a description but
+ * no opener in any language, so there is nothing to splice and nothing to gate;
+ * they keep behaving exactly as they did. Only a Client that HAS openers is
+ * held to the languages it has them in.
+ */
+export function clientLanguages(row: ClientRow): DemoLang[] {
+  const opener = row.firstMessage as NicheText | null;
+  return DEMO_LANGS.filter((l) => ((opener?.[l] ?? "").trim() !== ""));
 }
 
 /** Summary shape for the Clients tab and the re-pick picker. */
@@ -149,13 +202,11 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
     .orderBy(asc(nicheVocabulary.niche));
 
   return rows.map((r) => {
-    // Raw slots, NOT pick(): pick falls back across languages, which would
-    // report every Client as trilingual and make the badge worthless.
-    const languages = (["en", "nl", "pt"] as DemoLang[]).filter((l) =>
-      [r.descriptionTemplate, r.firstMessage, r.scopingLadder].some(
-        (f) => ((f as NicheText | null)?.[l] ?? "").trim(),
-      ),
-    );
+    // The same helper the create-link guard uses, so the badge can never
+    // promise a language the guard then refuses. Raw slots, NOT pick(): pick
+    // falls back across languages, which would report every Client as
+    // trilingual and make the badge worthless.
+    const languages = clientLanguages(r);
     return {
       id: r.id,
       niche: r.niche,
@@ -460,7 +511,13 @@ export function demoClientToContext(
 ): NicheContext | null {
   const label = pick(row.nicheLabel as NicheText, language) || row.niche;
   const description = pick(row.descriptionTemplate as NicheText, language);
-  const firstMessage = pick(row.firstMessage as NicheText, language);
+  // Strict: the opener is sent verbatim, so a Client with no opener in
+  // `language` must yield an empty one rather than one in whatever language
+  // happened to be filled in first. Note this does NOT make the guard below
+  // fire: `description` keeps its fallback (by design — the model reads it),
+  // so a language-less Client still returns a context. Refusing that pairing
+  // is the route guard's job, via clientLanguages().
+  const firstMessage = pickStrict(row.firstMessage as NicheText, language);
   // A row with neither a description nor an opener is a vocabulary-only niche
   // (the pre-existing curated rows are like this). Generating gives a better
   // demo than dressing those five word lists up as a persona.
@@ -478,10 +535,10 @@ export function demoClientToContext(
     // Overwritten by applyDemoDefaults from the scenario; present so the object
     // is a complete NicheContext even if that call is ever skipped.
     what_lead_did: "",
-    when_label: pick(row.whenLabel as NicheText, language),
+    when_label: pickStrict(row.whenLabel as NicheText, language),
     niche_question: pick(row.nicheQuestion as NicheText, language),
     first_message: firstMessage,
-    opener_phrase: pick(row.openerPhrase as NicheText, language) || label,
+    opener_phrase: pickStrict(row.openerPhrase as NicheText, language) || label,
     // Never allowed to be empty: an empty ladder does not fall through to a
     // neutral default, it inherits campaign 60's Solar Panels ladder and asks a
     // dental prospect about roof faces. Same guard the generator uses.
@@ -489,8 +546,11 @@ export function demoClientToContext(
       pick(row.scopingLadder as NicheText, language) || buildGenericScopingLadder(label, language),
     enquiry_context: pick(row.enquiryContext as NicheText, language),
     quote_context: pick(row.quoteContext as NicheText, language),
-    quote_subject: pick(row.quoteSubject as NicheText, language),
-    quote_when: pick(row.quoteWhen as NicheText, language),
+    // Strict: these two are substituted straight into campaign 60's
+    // first_message_quoted ("about the {quote_subject} we quoted {quote_when}"),
+    // so a fallback lands a foreign noun phrase mid-sentence.
+    quote_subject: pickStrict(row.quoteSubject as NicheText, language),
+    quote_when: pickStrict(row.quoteWhen as NicheText, language),
     kb: pick(row.kbTemplate as NicheText, language),
     advisor_term: firstTerm(row, 3, language),
     project_term: firstTerm(row, 0, language) || label,

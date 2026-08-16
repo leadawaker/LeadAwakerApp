@@ -129,23 +129,45 @@ body {
    happens, so a prospect sees a lead being worked rather than a chatbot
    being clever. Every stage is driven by a signal the engine already emits. */
 .track { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
-/* Each stage carries its OWN colour in --c (set inline from STAGES), applied
-   to the icon and the label together via currentColor — but only once the
-   conversation has actually reached it. Stages still ahead stay grey, so
-   colour marks real progress instead of decorating the whole row. */
+/* Each stage carries its OWN colour in --c (set inline from STAGES). Reached
+   stages (done) and the live stage (on) both fill with it; only stages still
+   ahead stay a plain grey outline. So the row reads as a trail of everywhere
+   the lead has actually been, with the live stage picked out by its extra
+   scale-up rather than being the only one with any colour at all. */
 .track-step {
   display: flex; align-items: center; gap: 9px;
   /* Darker than the --d-mute-2 grey used elsewhere: that tone was picked
-     against cream and all but vanishes on the taupe bar. */
+     against cream and all but vanishes on the taupe bar. Drives the label;
+     the dot/icon below take their own lighter grey since they carry their
+     own outline instead of relying on legible text-weight contrast. */
   color: #5C5241;
   transition: color 400ms ease;
 }
-.track-step.on, .track-step.done { color: var(--c); }
-.track-ic {
-  width: 21px; height: 21px; flex: 0 0 auto;
-  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+.track-step.on { color: var(--c); }
+/* The circle. Empty and outlined by default — every stage starts (and
+   past ones settle back into) this same understated ring, so the live
+   stage is the only thing the eye has to land on. */
+.track-dot {
+  width: 36px; height: 36px; border-radius: 50%; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid rgba(90, 76, 50, 0.32);
+  background: transparent;
+  transition: background 400ms ease, border-color 400ms ease;
 }
-.track-step.on .track-ic { transform: scale(1.14); }
+.track-ic {
+  width: 18px; height: 18px; flex: 0 0 auto;
+  /* Light grey by default, independent of the label's darker currentColor —
+     the outline ring gives it enough contrast on its own. */
+  color: rgba(90, 76, 50, 0.45);
+  transition: color 400ms ease, transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Reached and live stages both get the ring filled solid with the stage's
+   own colour, and the icon flips to white, so it reads as a filled marker
+   rather than an outline. The live stage alone also scales up, which is
+   what marks it as "here" rather than "already passed". */
+.track-step.on .track-dot, .track-step.done .track-dot { background: var(--c); border-color: var(--c); }
+.track-step.on .track-ic, .track-step.done .track-ic { color: #fff; }
+.track-step.on .track-ic { transform: scale(1.1); }
 .track-label {
   font-size: 11px; font-weight: 700; letter-spacing: 0.085em; text-transform: uppercase;
   color: currentColor; white-space: nowrap;
@@ -260,6 +282,82 @@ body {
 .typing i:nth-child(3) { animation-delay: 0.36s; }
 @keyframes blink { 0%, 70%, 100% { opacity: 0.25; } 35% { opacity: 1; } }
 
+/* ---------------- voice memos ----------------
+   A visitor's recording renders as a player with the transcript underneath,
+   matching the CRM's treatment of a WhatsApp voice note. The player sits on
+   top because it IS the message; the transcript is dimmed and italic under it
+   because it is what the AI heard, and reading that back is what turns a
+   noisy-room mistranscription into "I mumbled" instead of "this is broken". */
+.bub.is-voice {
+  /* The bubble's pre-wrap is for message text; here the content is elements,
+     and pre-wrap would turn the whitespace between them into visible gaps. */
+  white-space: normal;
+  min-width: 212px; padding: 9px 12px 10px;
+}
+.vplayer { display: flex; align-items: center; gap: 9px; }
+.vplay {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto; padding: 0;
+  background: var(--bg-2); border: 1px solid var(--d-line-2); color: var(--d-ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+.vplay:hover { transform: scale(1.07); }
+/* Bars are seeded from the message id rather than decoded from the audio (see
+   chat.js). They carry position, not shape, so currentColor at two opacities
+   is the whole treatment and it works on either bubble colour. */
+.vwave {
+  display: flex; align-items: center; gap: 2px; overflow: hidden;
+  height: 20px; flex: 1 1 auto; min-width: 60px;
+}
+.vwave i {
+  width: 2px; border-radius: 1px; display: block; flex: 0 0 auto;
+  background: currentColor; opacity: 0.36;
+  transition: opacity 90ms linear;
+}
+.vwave i.played { opacity: 1; }
+.vtime {
+  font-family: var(--d-mono); font-size: 9.5px; flex: 0 0 auto;
+  opacity: 0.75; font-variant-numeric: tabular-nums;
+}
+.vtranscript {
+  font-size: 12.5px; font-style: italic; line-height: 1.45;
+  opacity: 0.85; margin-top: 8px;
+}
+.vtranscript.is-none { opacity: 0.55; }
+/* Stands in for the player when there is no audio to play (see chat.js): a
+   label saying what the message was, rather than a control that does nothing. */
+.vgone {
+  display: flex; align-items: center; gap: 6px; opacity: 0.7;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+}
+/* A placeholder exactly where the transcript will land. The bubble is on
+   screen from the moment recording stops and Whisper takes another second or
+   three; a spinner where the visitor's own message should be is precisely the
+   feeling this page exists to disprove. */
+.vpending {
+  display: block; width: 130px; max-width: 100%; height: 9px;
+  border-radius: 4px; margin-top: 10px;
+  background: linear-gradient(90deg,
+    rgba(110, 95, 65, 0.12), rgba(110, 95, 65, 0.3), rgba(110, 95, 65, 0.12));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* On the visitor's wine bubble both of those sit on dark ground instead of
+   bone, so they invert — the same base-plus-override shape `.bub .lnk` uses. */
+.row.me .vplay {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--paper);
+}
+.row.me .vplay:hover { background: rgba(255, 255, 255, 0.26); }
+.row.me .vpending {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16));
+  background-size: 200% 100%;
+}
+
 /* ---------------- composer ---------------- */
 .composer-wrap {
   border-top: 1px solid var(--d-line);
@@ -292,6 +390,55 @@ body {
 }
 .send:hover:not(:disabled) { transform: scale(1.06); }
 .send:disabled { opacity: 0.35; cursor: default; }
+
+/* ---- recording bar ----
+   Replaces the editor outright for the few seconds a memo is being recorded,
+   rather than sitting beside it: the timer, the discard and the send ARE the
+   composer then. Same inset shell and radius as .input-shell so the swap reads
+   as one control changing state, not as a panel appearing. Discard and send sit
+   at opposite ends, so neither is hit while reaching for the other. */
+.rec-bar {
+  flex: 1 1 auto; display: flex; align-items: center; gap: 9px; min-width: 0;
+  background: linear-gradient(145deg, var(--bg-2), var(--paper));
+  box-shadow: var(--sh-inset-crisp);
+  border-radius: 22px; padding: 7px 7px 7px 10px;
+}
+.rec-trash {
+  width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto; padding: 0;
+  background: none; border: none; color: var(--d-mute); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 160ms ease;
+}
+.rec-trash:hover { color: #A03A32; }
+.rec-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+  background: #A03A32; animation: rec-pulse 1.1s infinite ease-in-out;
+}
+@keyframes rec-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+.rec-time {
+  font-family: var(--d-mono); font-size: 12px; flex: 0 0 auto;
+  color: var(--d-ink); font-variant-numeric: tabular-nums;
+  transition: color 200ms ease;
+}
+/* Five seconds before the hard stop at 30, so the cut-off is a warning rather
+   than a surprise. Amber, not red: nothing has gone wrong yet. */
+.rec-time.is-amber { color: #96601A; }
+/* Decoration, not measurement: reading real levels means an AudioContext and an
+   analyser running beside the recorder for the sake of a moving bar. What this
+   has to say is "it is live and it is listening", and staggered timings say it. */
+.rec-meter {
+  flex: 1 1 auto; display: flex; align-items: center; gap: 2px;
+  height: 18px; overflow: hidden; min-width: 0;
+}
+.rec-meter i {
+  width: 2px; border-radius: 1px; flex: 0 0 auto; display: block;
+  background: var(--d-mute-2); animation: rec-bob 0.9s infinite ease-in-out;
+}
+@keyframes rec-bob { 0%, 100% { height: 4px; } 50% { height: 15px; } }
+@media (prefers-reduced-motion: reduce) {
+  .rec-meter i { animation: none; height: 9px; }
+  .rec-dot, .vpending { animation: none; }
+}
 
 /* ---- restart: one button beside the composer, options in a popover ----
    Two full scenario labels sat inline here at first and squeezed the
@@ -428,6 +575,17 @@ body {
   background: var(--sc); color: var(--paper); font-weight: 700;
   box-shadow: 0 2px 7px -1px color-mix(in srgb, var(--sc) 55%, transparent);
 }
+/* Today, independent of whichever day got booked (--sc, a different colour
+   on every row): a bright wine ring so "today" and "the booked day" read as
+   two separate facts even on the rare month where they land on the same
+   cell. Outline rather than border/background, so it sits on top of is-pick's
+   fill without fighting it for the cell's one background layer. */
+.cal-d.is-today {
+  outline: 2px solid var(--wine-soft);
+  outline-offset: -1px;
+  color: var(--wine-soft); font-weight: 700;
+}
+.cal-d.is-today.is-pick { color: var(--paper); }
 .cal-time {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--d-line);
@@ -520,7 +678,8 @@ body {
   .track { order: 3; width: 100%; justify-content: space-between; }
   .track-line { width: auto; flex: 1 1 auto; margin: 0 6px; }
   .track-label { font-size: 9.5px; letter-spacing: 0.05em; }
-  .track-ic { width: 18px; height: 18px; }
+  .track-dot { width: 30px; height: 30px; }
+  .track-ic { width: 16px; height: 16px; }
   .pill { max-width: 55vw; }
   .wrap { flex-direction: column; }
   /* The aside is desktop-only below this width — its content now renders
@@ -557,7 +716,7 @@ body {
    takes its own full-width row under it, popover stretched to match. */
 @media (max-width: 560px) {
   .composer { flex-wrap: wrap; }
-  .input-shell { width: 100%; flex: 1 1 100%; }
+  .input-shell, .rec-bar { width: 100%; flex: 1 1 100%; }
   .restart-anchor { width: 100%; }
   .restart-btn { width: 100%; justify-content: center; height: 40px; }
   .restart-pop { left: 0; right: 0; width: auto; }

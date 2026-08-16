@@ -79,7 +79,7 @@ export function trackerHtml(current, dnc) {
     var label = t("stage_" + step.key);
     out.push(
       '<div class="' + cls + '" style="--c:' + step.color + '" title="' + esc(label) + '">' +
-        icon(step.icon, 21, "track-ic") +
+        '<span class="track-dot">' + icon(step.icon, 18, "track-ic") + "</span>" +
         '<span class="track-label">' + esc(label) + "</span>" +
       "</div>"
     );

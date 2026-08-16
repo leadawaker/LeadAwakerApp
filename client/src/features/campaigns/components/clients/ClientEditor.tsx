@@ -43,11 +43,22 @@ const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: numb
   { field: "objectionExamples", labelKey: "clients.fields.objections", rows: 4 },
 ];
 
-/** Fields that ARE substituted verbatim, so they get the per-language treatment. */
+/**
+ * Fields that ARE substituted verbatim, so they get the per-language treatment.
+ *
+ * quoteSubject and quoteWhen are the two halves of the QUOTED opener, the one
+ * campaign 60 sends to a lead who already has a price ("about the
+ * {quote_subject} we quoted {quote_when}"). They belong here and not in
+ * TEXT_FIELDS for the usual reason: no model sees them, they are pasted into
+ * the sentence as typed. Leaving a slot empty is safe — the engine falls back
+ * to the project term, then to the inquiry timeframe.
+ */
 const OPENER_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
   { field: "firstMessage", labelKey: "clients.fields.firstMessage", rows: 3 },
   { field: "openerPhrase", labelKey: "clients.fields.openerPhrase" },
   { field: "whenLabel", labelKey: "clients.fields.whenLabel" },
+  { field: "quoteSubject", labelKey: "clients.fields.quoteSubject" },
+  { field: "quoteWhen", labelKey: "clients.fields.quoteWhen" },
 ];
 
 const LANGS: DemoLang[] = ["en", "nl", "pt"];
