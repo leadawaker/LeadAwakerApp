@@ -24,7 +24,14 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+html {
+  font-size: 16px;
+  /* iOS Safari otherwise inflates text inside tall block containers on its
+     own ("text autosizing"), which reads as the page being randomly zoomed.
+     100% keeps the sizes we actually wrote without disabling pinch-zoom. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 /* Background and the warm directional light come from design-tokens.css
    (body, body::before, body::after) — not restated here, so this page can
    never drift from the homepage's ground. */
@@ -700,6 +707,11 @@ body {
   }
   .stream { padding: 20px 16px 10px; }
   .composer-wrap { padding: 13px 16px 15px; }
+  /* 16px is a hard floor, not a taste call: iOS Safari zooms the whole page
+     in when a text field smaller than that takes focus, and never zooms back
+     out, so the first tap on the composer left the demo stuck magnified.
+     The desktop 14.5px stays above this breakpoint. */
+  .input-shell textarea { font-size: 16px; }
 }
 /* Below this the icons alone still read as a progression, but they still
    want the full row width (space-between, flexible lines) rather than
