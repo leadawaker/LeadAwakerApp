@@ -25,6 +25,7 @@ import enProspects from "./locales/en/prospects.json";
 import enCadence from "./locales/en/cadence.json";
 import enTasks from "./locales/en/tasks.json";
 import enAutomation from "./locales/en/automation.json";
+import enDemos from "./locales/en/demos.json";
 import enPrompts from "./locales/en/prompts.json";
 import enUsers from "./locales/en/users.json";
 import enCalendar from "./locales/en/calendar.json";
@@ -53,6 +54,7 @@ import ptProspects from "./locales/pt/prospects.json";
 import ptCadence from "./locales/pt/cadence.json";
 import ptTasks from "./locales/pt/tasks.json";
 import ptAutomation from "./locales/pt/automation.json";
+import ptDemos from "./locales/pt/demos.json";
 import ptPrompts from "./locales/pt/prompts.json";
 import ptUsers from "./locales/pt/users.json";
 import ptCalendar from "./locales/pt/calendar.json";
@@ -81,6 +83,7 @@ import nlProspects from "./locales/nl/prospects.json";
 import nlCadence from "./locales/nl/cadence.json";
 import nlTasks from "./locales/nl/tasks.json";
 import nlAutomation from "./locales/nl/automation.json";
+import nlDemos from "./locales/nl/demos.json";
 import nlPrompts from "./locales/nl/prompts.json";
 import nlUsers from "./locales/nl/users.json";
 import nlCalendar from "./locales/nl/calendar.json";
@@ -111,6 +114,7 @@ const resources = {
     cadence: enCadence,
     tasks: enTasks,
     automation: enAutomation,
+    demos: enDemos,
     prompts: enPrompts,
     users: enUsers,
     calendar: enCalendar,
@@ -140,6 +144,7 @@ const resources = {
     cadence: ptCadence,
     tasks: ptTasks,
     automation: ptAutomation,
+    demos: ptDemos,
     prompts: ptPrompts,
     users: ptUsers,
     calendar: ptCalendar,
@@ -169,6 +174,7 @@ const resources = {
     cadence: nlCadence,
     tasks: nlTasks,
     automation: nlAutomation,
+    demos: nlDemos,
     prompts: nlPrompts,
     users: nlUsers,
     calendar: nlCalendar,
@@ -209,6 +215,7 @@ i18n
       "prospects",
       "tasks",
       "automation",
+      "demos",
       "prompts",
       "users",
       "calendar",

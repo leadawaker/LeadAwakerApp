@@ -124,19 +124,32 @@ function termColumn(group: 0 | 1 | 2 | 3 | 4, lang: DemoLang): string {
 }
 
 /**
- * First entry of a term list for `lang`. The engine wants a single term per
- * variable ({advisor_term}); the table stores lists because the onboarding
- * wizard lets people add synonyms.
+ * First entry of a term list for `lang`, falling back pt→en→nl→any the way
+ * pick() does when the requested language has no synonyms of its own. The
+ * engine wants a single term per variable ({advisor_term}); the table stores
+ * lists because the onboarding wizard lets people add synonyms.
  *
- * No cross-language fallback, for the same reason as pickStrict: these five
- * words are substituted into the opener verbatim, so falling back turned an
- * English demo on a Dutch-only Client into "your keuken project". Empty is
- * handled downstream — the engine's overlay skips empty values, leaving the
- * campaign's own term in place.
+ * Restored after a same-language-only cut (matched to pickStrict, on the
+ * assumption these five words land verbatim in a visitor-facing message)
+ * regressed every {advisor_term}/{project_term}/... in Prompt 93 to a bare
+ * empty string whenever a Client's list for the requested language was
+ * blank — confirmed against the live prompt: none of its ~27 uses (e.g.
+ * "Shall I set up a short call with a {advisor_term}?") are guarded by a
+ * conditional, so an empty value breaks the sentence rather than degrading
+ * it. Unlike opener_phrase/quote_subject, these terms are read by the MODEL
+ * as prompt scaffolding, not spliced verbatim into a message sent unedited —
+ * the model writes its own reply in the demo's language regardless, so a
+ * wrong-language synonym here reads as odd but grammatically whole, which
+ * beats a sentence with no noun in it at all.
  */
 function firstTerm(row: ClientRow, group: 0 | 1 | 2 | 3 | 4, lang: DemoLang): string {
-  const list = (row as Record<string, unknown>)[termColumn(group, lang)] as string[] | null | undefined;
-  return (list ?? []).map((s) => String(s).trim()).find(Boolean) ?? "";
+  const order: DemoLang[] = lang === "pt" ? ["pt", "en", "nl"] : lang === "nl" ? ["nl", "en", "pt"] : ["en", "nl", "pt"];
+  for (const key of order) {
+    const list = (row as Record<string, unknown>)[termColumn(group, key)] as string[] | null | undefined;
+    const found = (list ?? []).map((s) => String(s).trim()).find(Boolean);
+    if (found) return found;
+  }
+  return "";
 }
 
 /**
@@ -538,7 +551,14 @@ export function demoClientToContext(
     when_label: pickStrict(row.whenLabel as NicheText, language),
     niche_question: pick(row.nicheQuestion as NicheText, language),
     first_message: firstMessage,
-    opener_phrase: pickStrict(row.openerPhrase as NicheText, language) || label,
+    // Strict all the way down: falling back to `label` here (computed via
+    // pick(), which crosses languages) reintroduced the exact splice this
+    // field was moved to pickStrict to prevent, just relocated to the
+    // fallback branch — a Client with a Dutch opener but only an English
+    // nicheLabel would still glue an English label into a Dutch sentence.
+    // row.niche (a plain slug) is the one fallback with no language to leak.
+    opener_phrase: pickStrict(row.openerPhrase as NicheText, language) ||
+      pickStrict(row.nicheLabel as NicheText, language) || row.niche,
     // Never allowed to be empty: an empty ladder does not fall through to a
     // neutral default, it inherits campaign 60's Solar Panels ladder and asks a
     // dental prospect about roof faces. Same guard the generator uses.

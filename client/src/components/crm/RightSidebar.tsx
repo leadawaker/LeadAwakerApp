@@ -9,6 +9,7 @@ import {
   Calendar,
   CalendarDays,
   ScrollText,
+  MonitorPlay,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -312,6 +313,16 @@ export function RightSidebar({
       labelKey: "Automations",
       icon: ScrollText,
       testId: "nav-automations",
+      ownerOnly: true,
+    },
+    // Browser-demo links and their sessions. ownerOnly for the same reason the
+    // API behind it is: the list names every prospect who has been demoed to.
+    {
+      href: `${prefix}/demos`,
+      label: t("sidebar.demos"),
+      labelKey: "Demos",
+      icon: MonitorPlay,
+      testId: "nav-demos",
       ownerOnly: true,
     },
   ];
@@ -673,7 +684,7 @@ export function RightSidebar({
             const sections = [
               { section: "Engage", items: visibleNavItems.filter(it => ["Conversations", "Calendar", "Contacts"].includes(it.labelKey)) },
               { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
-              { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations"].includes(it.labelKey)) },
+              { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations", "Demos"].includes(it.labelKey)) },
               { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
             ];
             return sections.map((g) => {

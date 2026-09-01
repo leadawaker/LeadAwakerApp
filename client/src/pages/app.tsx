@@ -21,6 +21,7 @@ const AppProspects = lazy(() => import("@/pages/AppProspects"));
 const AppCadence = lazy(() => import("@/pages/AppCadence"));
 const CalendarPage = lazy(() => import("@/pages/Calendar"));
 const AutomationLogsPage = lazy(() => import("@/pages/AutomationLogs"));
+const DemosPage = lazy(() => import("@/features/demos/pages/DemosPage").then(m => ({ default: m.DemosPage })));
 // UsersPage removed — user management now lives in Settings > Team tab
 const PromptsPage = lazy(() => import("@/features/prompts/pages/PromptsPage"));
 const BillingPage = lazy(() => import("@/features/billing/pages/BillingPage").then(m => ({ default: m.BillingPage })));
@@ -199,6 +200,10 @@ export default function AppArea() {
           </Route>
           <Route path="/platform/automation-logs">
             <AgencyOnly prefix="/platform"><AutomationLogsPage /></AgencyOnly>
+          </Route>
+          {/* Owner-only: the list names every prospect who has been demoed to. */}
+          <Route path="/platform/demos">
+            <OwnerOnly prefix="/platform"><DemosPage /></OwnerOnly>
           </Route>
           <Route path="/platform/prompt-library">
             <AgencyOnly prefix="/platform"><PromptsPage /></AgencyOnly>

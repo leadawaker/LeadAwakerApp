@@ -39,6 +39,10 @@
     "allComplete": "Todos os campos já têm ambos os idiomas.",
     "generateFailed": "Geração falhou"
   },
+  "share": {
+    "languageMissing": "Este cliente ainda não tem uma abertura nesse idioma.",
+    "languageLimitedHint": "Este cliente só existe em {{langs}}. Preencha os campos de abertura que faltam na aba Clientes para gerá-lo em outro idioma."
+  },
   "columns": {
     "name": "Nome",
     "status": "Status",
@@ -599,6 +603,12 @@
       "phoneFormat": "{{count}} telefone(s) fora do E.164",
       "phoneFormatOk": "Telefones válidos",
       "bumpTemplates": "Modelos de bump definidos"
+    }
+  },
+  "clients": {
+    "fields": {
+      "quoteSubject": "Do que era o orçamento",
+      "quoteWhen": "Quando o orçamento foi enviado"
     }
   }
 }

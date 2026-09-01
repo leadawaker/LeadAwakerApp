@@ -15,7 +15,9 @@ import {
   generateNicheContext,
   buildFallbackNicheContext,
   buildSolarNicheContext,
+  type DemoScenario,
 } from "../demo-session";
+import { getWebDemoConfig, updateWebDemoConfig, listDemoSessions } from "../demo-admin";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -53,6 +55,25 @@ function clientSupportsLanguage(
   // opener in any language, so there is nothing to splice.
   return langs.length === 0 || langs.includes(language);
 }
+
+/**
+ * Is this request Gabriel (or anyone else who runs the agency)?
+ *
+ * Read-only rather than gating middleware, because both callers must stay open
+ * to logged-out visitors: the state route serves prospects, and answers this
+ * only to decide whether to hand the page its presenter panel.
+ *
+ * Extracted so the route that SHOWS the panel and the routes that OBEY it can
+ * never drift apart. Two copies of this predicate, one of them stale, is a
+ * panel that renders for someone whose writes then 403, or worse the reverse.
+ */
+function isDemoAdmin(req: Request): boolean {
+  const user = req.isAuthenticated() ? (req.user as any) : undefined;
+  return !!user && (user.accountsId === 1 || user.role === "Owner" || user.role === "Admin");
+}
+
+/** Tokens are 16 hex chars; this is the shape every demo route validates. */
+const DEMO_TOKEN_RE = /^[A-Za-z0-9]{4,64}$/;
 
 const createSessionSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
@@ -420,6 +441,11 @@ export function registerDemoRoutes(app: Express): void {
         }
         if (companyName) ctx.company_name = companyName;
         if (aiDisclosure) ctx.ai_disclosure = aiDisclosure;
+        // Which Client this link was minted from, so the presenter panel's
+        // picker can show it as the current selection rather than opening on
+        // "Campaign default". Inert to the engine, which overlays an explicit
+        // key list and ignores anything not on it.
+        (ctx as Record<string, unknown>).client_niche = row.niche;
         demoNiche = JSON.stringify(ctx);
         reused = row.niche;
       } else if (niche) {
@@ -593,11 +619,179 @@ export function registerDemoRoutes(app: Express): void {
   // reached around it.
   const MAX_DEMO_VOICE_BYTES = 1_500_000;
 
+  // ── Presenter panel: read and edit a running browser demo ──
+  //
+  // The ⋯ menu on /demo/<token>. Both routes edit the BROWSER lead
+  // (`web-demo:<token>`) and never the WhatsApp one (`wa-demo:<token>`), which
+  // is what makes the panel structurally incapable of disturbing a WhatsApp
+  // demo or the VIP `/` commands that drive it.
+  //
+  // requireAuth AND isDemoAdmin: requireAuth alone would let any logged-in
+  // client of the CRM re-theme a demo link that is not theirs.
+
+  // ── The Demos page's index ──
+  // Every demo link, newest first, one row per token with both surfaces folded
+  // in. Owner-only for the same reason the config routes are: it lists every
+  // prospect Gabriel has demoed to.
+  app.get(
+    "/api/demo/sessions",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      if (!isDemoAdmin(req)) return res.status(403).json({ message: "Not allowed." });
+      const raw = Number(req.query.limit);
+      const limit = Number.isSafeInteger(raw) && raw > 0 ? Math.min(raw, 500) : 200;
+      res.json({ sessions: await listDemoSessions(limit) });
+    }),
+  );
+
+  app.get(
+    "/api/demo/:token/config",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      if (!isDemoAdmin(req)) return res.status(403).json({ message: "Not allowed." });
+      const token = String(req.params.token || "");
+      if (!DEMO_TOKEN_RE.test(token)) return res.status(400).json({ message: "Bad token." });
+
+      const config = await getWebDemoConfig(token);
+      // The engine creates the browser lead on first open, so "no row" means
+      // the page has never been opened rather than a bad link. Either way there
+      // is nothing to configure yet.
+      if (!config) return res.status(404).json({ message: "This demo has not been opened yet." });
+      res.json(config);
+    }),
+  );
+
+  const configPatchSchema = z
+    .object({
+      firstName: z.string().trim().min(1).max(80).optional(),
+      language: z.enum(["en", "nl", "pt"]).optional(),
+      companyName: z.string().trim().max(120).optional(),
+      // "" is a real value here, not "omitted": it is what the presenter
+      // panel's "Campaign default" option sends to clear a per-session
+      // override back to the campaign's own ai_disclosure column. An omitted
+      // field can't be told apart from "leave the current override alone".
+      aiDisclosure: z.union([z.enum(["off", "opener", "second_message"]), z.literal("")]).optional(),
+      // A saved Client key. Replaces the persona wholesale, which is why the
+      // page confirms and restarts around it.
+      clientNiche: z.string().trim().min(1).max(300).optional(),
+      // No default: an omitted scenario means "leave it as it is", resolved
+      // against `current.scenario` below. Defaulting it here would silently
+      // reset a "deciding" demo to "inquired" on any PATCH that didn't happen
+      // to also name the scenario (e.g. a Client switch or a language change).
+      scenario: z.enum(["inquired", "deciding"]).optional(),
+    })
+    // An empty body would report success while doing nothing, which reads on
+    // the page as the panel silently failing.
+    .refine(
+      (v) =>
+        v.firstName !== undefined ||
+        v.language !== undefined ||
+        v.companyName !== undefined ||
+        v.aiDisclosure !== undefined ||
+        v.clientNiche !== undefined,
+      { message: "Nothing to change." },
+    );
+
+  app.patch(
+    "/api/demo/:token/config",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      if (!isDemoAdmin(req)) return res.status(403).json({ message: "Not allowed." });
+      const token = String(req.params.token || "");
+      if (!DEMO_TOKEN_RE.test(token)) return res.status(400).json({ message: "Bad token." });
+
+      const parsed = configPatchSchema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+      const { firstName, language, companyName, aiDisclosure, clientNiche, scenario: scenarioInput } = parsed.data;
+
+      const current = await getWebDemoConfig(token);
+      if (!current) return res.status(404).json({ message: "This demo has not been opened yet." });
+
+      // An omitted scenario keeps whatever the demo is already on, exactly
+      // like the `language` fallback just below — never the zod default,
+      // which would silently discard a "deciding" demo back to "inquired" on
+      // any patch (a Client switch, a language change) that didn't happen to
+      // repeat the scenario.
+      const scenario = (scenarioInput ?? current.scenario) as DemoScenario;
+
+      let replaceNiche: Record<string, unknown> | undefined;
+      // Which saved Client to (re)build the persona from: an explicit switch,
+      // or — when only the language changes — the Client this demo is already
+      // running, so opener_phrase/quote_subject/company_name etc. get
+      // re-picked in the new language instead of staying frozen in the old
+      // one. Only possible when the running persona actually came from the
+      // library (current.clientNiche set); a freeform/generated persona has
+      // no per-language slots to re-pick from, so its language field changes
+      // but the persona text does not.
+      const languageChanged = language !== undefined && language !== current.language;
+      const targetClientNiche = clientNiche || (languageChanged ? current.clientNiche : "");
+      if (targetClientNiche) {
+        // The language the persona is built in is the one being switched TO
+        // when both change in the same call, not the one already on the lead.
+        const lang = (language || current.language || "en") as DemoLang;
+        const row = await getDemoClient(targetClientNiche);
+        if (!row) {
+          // Only a hard failure for an explicit switch; a stale or renamed
+          // current.clientNiche on a language-only patch must not block a
+          // language change the admin never asked to combine with a Client swap.
+          if (clientNiche) return res.status(404).json({ message: `No saved Client named "${clientNiche}".` });
+        } else if (!clientSupportsLanguage(row, lang)) {
+          if (clientNiche) {
+            // Same two checks the mint path runs (see /api/demo/create-link).
+            // Their messages name the fix, so they are surfaced verbatim
+            // rather than flattened into a generic failure.
+            const have = clientLanguages(row).map((l) => l.toUpperCase()).join(", ");
+            return res.status(409).json({
+              message: `"${clientNiche}" has no ${lang.toUpperCase()} version — it only exists in ${have}. Add the ${lang.toUpperCase()} opener fields on the Clients tab, or switch this demo to ${have}.`,
+            });
+          }
+          // Language-only patch and the Client just doesn't have this
+          // language: let the language field change and leave the persona
+          // text as-is rather than blocking a change nobody asked to fail.
+        } else {
+          const ctx = demoClientToContext(row, lang, scenario);
+          if (ctx) {
+            // Remembered so the picker reopens showing this Client as current
+            // instead of falling back to "Campaign default". Inert to the
+            // engine: _overlay_demo_niche_onto_campaign copies an explicit key
+            // list onto the campaign dict, so a key it does not name is
+            // simply ignored.
+            (ctx as Record<string, unknown>).client_niche = row.niche;
+            // A language-only repick is not a Client switch: it is the same
+            // business, re-picked in a different language, so a company-name
+            // override typed into the panel earlier survives it. An explicit
+            // clientNiche switch intentionally does NOT carry this over — a
+            // different Client is a different business.
+            if (!clientNiche && current.companyName) ctx.company_name = current.companyName;
+            replaceNiche = ctx as Record<string, unknown>;
+          } else if (clientNiche) {
+            return res.status(409).json({
+              message: `"${clientNiche}" has no saved persona yet. Generate one for this niche instead.`,
+            });
+          }
+        }
+      }
+
+      const ok = await updateWebDemoConfig(token, {
+        firstName,
+        language,
+        companyName,
+        aiDisclosure,
+        replaceNiche,
+      });
+      if (!ok) return res.status(404).json({ message: "This demo has not been opened yet." });
+
+      // The updated config, so the panel re-syncs immediately instead of
+      // waiting on the next poll to discover what it just wrote.
+      res.json(await getWebDemoConfig(token));
+    }),
+  );
+
   // Express 4 optional param, not the Express 5 `{/*splat}` form: this repo is
   // on express ^4.21. Every suffix is a single segment, so one route covers all.
   app.all("/api/web-demo/:token/:suffix?", wrapAsync(async (req, res) => {
     const token = String(req.params.token || "");
-    if (!/^[A-Za-z0-9]{4,64}$/.test(token)) {
+    if (!DEMO_TOKEN_RE.test(token)) {
       return res.status(400).json({ code: "bad_token", message: "Invalid demo link." });
     }
     const segment = String(req.params.suffix || "");
@@ -627,8 +821,7 @@ export function registerDemoRoutes(app: Express): void {
       query = `?id=${id}`;
     }
 
-    const user = req.isAuthenticated() ? req.user : undefined;
-    const unlimited = !!user && (user.accountsId === 1 || user.role === "Owner" || user.role === "Admin");
+    const unlimited = isDemoAdmin(req);
 
     try {
       const upstream = await fetch(`${ENGINE_BASE}/web-demo/${token}${suffix}${query}`, {
@@ -653,6 +846,13 @@ export function registerDemoRoutes(app: Express): void {
         try {
           const body = JSON.parse(text);
           body.waLink = buildWhatsAppLink({ token });
+          // Whether to render the presenter panel at all. A prospect never
+          // receives the markup, rather than receiving it hidden: there is no
+          // query parameter, PIN or localStorage flag to leak in a screen
+          // recording. The flag decides rendering only; every write route
+          // re-runs isDemoAdmin server-side, so a forged `admin: true` in a
+          // devtools console buys nothing.
+          body.admin = unlimited;
           return res.status(upstream.status).json(body);
         } catch {
           // Fall through to the raw passthrough below: a state response we

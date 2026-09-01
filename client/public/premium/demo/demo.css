@@ -150,7 +150,7 @@ body {
   color: #5C5241;
   transition: color 400ms ease;
 }
-.track-step.on { color: var(--c); }
+.track-step.on, .track-step.done { color: var(--c); }
 /* The circle. Empty and outlined by default — every stage starts (and
    past ones settle back into) this same understated ring, so the live
    stage is the only thing the eye has to land on. */
@@ -498,6 +498,14 @@ body {
 }
 .ghost:hover:not(:disabled) { background: var(--surface); border-color: var(--mute-2); }
 .ghost:disabled { opacity: 0.4; cursor: default; }
+
+/* The scenario options carry a glyph each: their labels differ by one word
+   ("never"/"already"), which is not enough to tell apart at a glance in a
+   popover that is open for two seconds. Scoped to .restart-opt so the public
+   session's plain Restart .ghost keeps its text-only, left-aligned shape. */
+.restart-opt { display: flex; align-items: center; gap: 9px; }
+.restart-opt svg { flex: 0 0 auto; color: var(--d-mute-2); transition: color 150ms ease; }
+.restart-opt:hover:not(:disabled) svg { color: var(--wine); }
 .pop-rule { height: 1px; background: var(--d-line); margin: 13px 0 11px; }
 .pop-foot { font-size: 11.5px; line-height: 1.55; color: var(--d-mute-2); }
 .pop-foot a { color: var(--wine); text-decoration: underline; text-underline-offset: 2px; }
@@ -732,4 +740,144 @@ body {
   .restart-anchor { width: 100%; }
   .restart-btn { width: 100%; justify-content: center; height: 40px; }
   .restart-pop { left: 0; right: 0; width: auto; }
+}
+
+/* ── Presenter panel ──────────────────────────────────────────────────────
+   Gabriel-only chrome (gated by state.admin, set from the CRM session). The
+   panel is appended to <body>, not to #root, because render() rebuilds #root
+   on every poll and would destroy any field being typed into. See admin.js.
+
+   Left corner, mirroring .bump-btn on the right: anchored to .hdr rather than
+   placed in .hdr-inner, so the centred logo/tracker/client cluster keeps its
+   matching gutters. */
+.admin-toggle {
+  position: absolute; top: 50%; left: 14px; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--d-ink); opacity: 0.14;
+  transition: opacity 180ms ease, background 180ms ease;
+}
+.admin-toggle:hover, .admin-toggle:focus-visible,
+.admin-toggle[aria-expanded="true"] { opacity: 1; background: var(--paper); }
+
+.admin-panel {
+  position: fixed; top: 62px; left: 14px; z-index: 60;
+  width: 320px; max-height: calc(100vh - 80px);
+  display: flex; flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--d-line-2); border-radius: 14px;
+  box-shadow: 0 14px 38px -12px rgba(60, 45, 20, 0.32), 0 3px 10px -3px rgba(60, 45, 20, 0.14);
+  animation: pop 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.admin-panel[hidden] { display: none; }
+
+.ap-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 15px 10px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--d-mute-2); font-family: var(--d-mono);
+  border-bottom: 1px solid var(--d-line);
+}
+.ap-x {
+  background: none; border: none; cursor: pointer; color: var(--d-mute-2);
+  font-size: 19px; line-height: 1; padding: 0 2px;
+}
+.ap-x:hover { color: var(--d-ink); }
+
+.ap-body { padding: 12px 15px 14px; overflow-y: auto; }
+
+.ap-sec {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--d-mute-2); font-family: var(--d-mono);
+  margin: 14px 0 8px; padding-top: 10px; border-top: 1px solid var(--d-line);
+}
+.ap-body > .ap-sec:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+.ap-f { display: block; margin-bottom: 9px; }
+.ap-f > span {
+  display: block; margin-bottom: 4px;
+  font-size: 11px; font-weight: 600; color: var(--d-mute);
+}
+.ap-f input, .ap-f select {
+  width: 100%; height: 34px; padding: 0 9px;
+  border-radius: 8px; border: 1px solid var(--d-line);
+  background: var(--bg); color: var(--d-ink);
+  font-family: inherit; font-size: 13px;
+}
+/* 16px on touch: iOS Safari zooms the viewport on focus for anything smaller,
+   the same trap the composer already had to avoid. */
+@supports (-webkit-touch-callout: none) {
+  .ap-f input, .ap-f select { font-size: 16px; }
+}
+.ap-f input:focus, .ap-f select:focus { outline: 2px solid var(--wine-glow); outline-offset: -1px; }
+
+.ap-note {
+  margin: -4px 0 9px; font-size: 11px; line-height: 1.45; color: var(--d-mute-2);
+}
+
+.ap-row { display: flex; gap: 7px; }
+.ap-btn {
+  flex: 1 1 auto; padding: 9px 11px; border-radius: 8px;
+  background: var(--bg); border: 1px solid var(--d-line); color: var(--d-ink);
+  font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.ap-btn:hover { background: var(--surface); border-color: var(--mute-2); }
+.ap-primary {
+  width: 100%; margin-top: 4px;
+  background: var(--wine); border-color: var(--wine); color: var(--paper);
+}
+.ap-primary:hover { background: var(--wine-soft); border-color: var(--wine-soft); }
+
+.ap-out { margin-top: 11px; }
+.ap-link { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.ap-link > span {
+  flex: 0 0 58px; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--d-mute-2); font-family: var(--d-mono);
+}
+.ap-link input {
+  flex: 1 1 auto; min-width: 0; height: 30px; padding: 0 8px;
+  border-radius: 7px; border: 1px solid var(--d-line);
+  background: var(--bg); color: var(--d-mute); font-size: 11.5px; font-family: var(--d-mono);
+}
+.ap-link .ap-btn { flex: 0 0 auto; padding: 7px 10px; font-size: 11.5px; }
+.ap-open {
+  display: inline-block; margin-top: 4px;
+  font-size: 12px; color: var(--wine); text-decoration: underline; text-underline-offset: 2px;
+}
+.ap-warn {
+  margin-bottom: 8px; padding: 8px 10px; border-radius: 8px;
+  background: rgba(160, 110, 30, 0.10); border: 1px solid rgba(160, 110, 30, 0.28);
+  font-size: 11.5px; line-height: 1.5; color: var(--d-ink);
+}
+
+.ap-status {
+  padding: 9px 15px; min-height: 32px;
+  border-top: 1px solid var(--d-line);
+  font-size: 11.5px; color: var(--d-mute-2);
+}
+.ap-status.is-bad { color: #9A3B2E; }
+
+/* Below 1080px .hdr-inner wraps into two or three rows, so a button centred on
+   the header's full height lands on the middle row and sits on top of the
+   client pill — and at left:14px it overlaps the logo besides. Pin it to the
+   first row and open a gutter for it. The gutter is admin-only chrome on an
+   admin-only button, so the slight asymmetry it introduces is never seen by a
+   prospect. */
+@media (max-width: 1080px) {
+  .admin-toggle { top: 11px; transform: none; }
+  .hdr { padding-left: 52px; }
+}
+
+/* Bottom sheet on a phone: the controls belong under the thumb, not pinned to
+   the top corner, and a 320px drawer beside a 360px viewport is not a drawer. */
+@media (max-width: 700px) {
+  .admin-panel {
+    top: auto; left: 0; right: 0; bottom: 0;
+    width: auto; max-height: 82vh;
+    border-radius: 16px 16px 0 0; border-bottom: none;
+    animation: ap-sheet 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes ap-sheet { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
 }

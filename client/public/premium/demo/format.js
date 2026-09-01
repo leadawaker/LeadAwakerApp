@@ -79,8 +79,13 @@ export function signature(s) {
   // while something the page has to repaint did change: a voice memo whose
   // transcript arrives, or one interaction row replaced by another with the
   // same text. Without them that repaint waits for the AI's next reply.
+  // company, firstName and language are here for the presenter panel: renaming
+  // the company mid-demo changes none of the fields above, so without them the
+  // header pill would sit on the old name until the AI's next reply and a
+  // working edit would look like a broken one.
   if (!s) return "";
   var last = s.messages.length ? s.messages[s.messages.length - 1] : null;
   return [s.stage, s.done, s.turnsUsed, s.messages.length,
-          last ? last.text : "", last ? last.id : "", last ? last.kind : ""].join("|");
+          last ? last.text : "", last ? last.id : "", last ? last.kind : "",
+          s.company || "", s.firstName || "", s.language || ""].join("|");
 }

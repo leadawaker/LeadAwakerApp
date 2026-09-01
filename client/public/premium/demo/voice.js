@@ -62,6 +62,10 @@ var ticker = null;
 var startedAt = 0;
 var cancelled = false;
 var handlers = {};
+// True from the moment getUserMedia is asked for until it resolves or is
+// denied. A cancelRecording() in that window has no recorder to stop yet;
+// this is what the resolved promise checks before actually starting one.
+var pendingPermission = false;
 
 export function isRecording() {
   return recorder !== null;
@@ -82,11 +86,21 @@ function teardown() {
  * the visitor's next move is the same either way.
  */
 export function startRecording(on) {
-  if (recorder || !micAvailable()) return;
+  if (recorder || pendingPermission || !micAvailable()) return;
   handlers = on || {};
   cancelled = false;
+  pendingPermission = true;
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
+    pendingPermission = false;
+    // Cancelled while the prompt was still up (a restart, most likely).
+    // Starting to record into a conversation nobody asked to record into
+    // would be worse than the mic light blinking for a moment with nothing
+    // listening, so hand the stream straight back and fire nothing.
+    if (cancelled) {
+      s.getTracks().forEach(function (tr) { tr.stop(); });
+      return;
+    }
     stream = s;
     chunks = [];
     try {
@@ -127,6 +141,7 @@ export function startRecording(on) {
       if (seconds >= MAX_SECONDS) stopRecording();
     }, 1000);
   }).catch(function () {
+    pendingPermission = false;
     denied = true;
     teardown();
     if (handlers.fail) handlers.fail();
@@ -174,7 +189,11 @@ function element() {
   // re-render.
   el.addEventListener("timeupdate", function () { notify(); });
   el.addEventListener("loadedmetadata", function () { notify(); });
-  el.addEventListener("ended", function () { playingId = null; notify(); });
+  // Reset position on end, not just playing state: play() below only seeks
+  // to 0 when the src actually changes, so without this a finished memo's
+  // currentTime sits at its own end, and replaying it (same src) resumes
+  // there — no audible playback, `ended` fires again immediately.
+  el.addEventListener("ended", function () { playingId = null; el.currentTime = 0; notify(); });
   el.addEventListener("error", function () { playingId = null; notify(); });
   return el;
 }

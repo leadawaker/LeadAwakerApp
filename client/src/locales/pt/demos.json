@@ -1,0 +1,78 @@
+{
+  "title": "Demos",
+  "subtitle": "Todos os links de demo que você gerou, e até onde cada prospect chegou.",
+  "tabs": {
+    "sessions": "Sessões",
+    "new": "Nova demo"
+  },
+  "table": {
+    "prospect": "Prospect",
+    "company": "Empresa",
+    "client": "Client",
+    "language": "Idioma",
+    "mode": "Cenário",
+    "browser": "Navegador",
+    "whatsapp": "WhatsApp",
+    "created": "Enviado",
+    "actions": "Links"
+  },
+  "mode": {
+    "inquired": "Sem orçamento",
+    "deciding": "Já tem orçamento"
+  },
+  "status": {
+    "unopened": "Nunca abriu",
+    "opened": "Abriu",
+    "replies_one": "{{count}} resposta",
+    "replies_other": "{{count}} respostas",
+    "never": "—"
+  },
+  "actions": {
+    "open": "Abrir",
+    "copyBrowser": "Copiar link do navegador",
+    "copyWhatsapp": "Copiar link do WhatsApp",
+    "copied": "Copiado",
+    "refresh": "Atualizar"
+  },
+  "empty": {
+    "title": "Nenhuma demo ainda",
+    "body": "Gere uma na aba Nova demo, ou pelo painel de compartilhamento de uma campanha."
+  },
+  "error": {
+    "load": "Não foi possível carregar as sessões de demo."
+  },
+  "new": {
+    "heading": "Criar um link de demo",
+    "firstName": "Primeiro nome do prospect",
+    "firstNamePlaceholder": "Obrigatório",
+    "company": "A empresa dele",
+    "companyPlaceholder": "Opcional — a IA se apresenta com esse nome",
+    "client": "Client",
+    "clientNone": "Padrão da campanha",
+    "niche": "Ou descreva um novo nicho",
+    "nichePlaceholder": "Opcional — substitui o Client e gera uma nova persona",
+    "language": "Idioma",
+    "market": "Mercado",
+    "marketDefault": "Padrão",
+    "scenario": "O lead já tem orçamento?",
+    "disclosure": "Aviso de IA",
+    "disclosureDefault": "Padrão da campanha",
+    "campaign": "Campanha",
+    "universalCampaign": "Demo universal",
+    "submit": "Gerar link",
+    "submitting": "Gerando…",
+    "resultHeading": "Seu link",
+    "browserLink": "Navegador",
+    "whatsappLink": "WhatsApp",
+    "openIt": "Abrir",
+    "reused": "Criado a partir do Client salvo \"{{name}}\".",
+    "fallback": "O modelo de nicho não rodou, então este link tem uma persona genérica em vez do nicho que você pediu.",
+    "nameRequired": "O nome do prospect é obrigatório.",
+    "failed": "Não foi possível criar o link."
+  },
+  "disclosure": {
+    "off": "Desligado",
+    "opener": "Na abertura",
+    "second_message": "Segunda mensagem"
+  }
+}

@@ -108,7 +108,8 @@
       "leadResponded": "Lead Respondeu",
       "leadManualTakeover": "Intervencao Manual no Lead",
       "criticalAutomationFailure": "Falha Critica de Automacao",
-      "campaignFinished": "Campanha Concluida"
+      "campaignFinished": "Campanha Concluida",
+      "demoReplied": "Resposta na Demo"
     }
   },
   "hub": {

@@ -1,0 +1,78 @@
+{
+  "title": "Demos",
+  "subtitle": "Every demo link you have minted, and how far each prospect got.",
+  "tabs": {
+    "sessions": "Sessions",
+    "new": "New demo"
+  },
+  "table": {
+    "prospect": "Prospect",
+    "company": "Company",
+    "client": "Client",
+    "language": "Lang",
+    "mode": "Scenario",
+    "browser": "Browser",
+    "whatsapp": "WhatsApp",
+    "created": "Sent",
+    "actions": "Links"
+  },
+  "mode": {
+    "inquired": "No quote",
+    "deciding": "Has quote"
+  },
+  "status": {
+    "unopened": "Never opened",
+    "opened": "Opened",
+    "replies_one": "{{count}} reply",
+    "replies_other": "{{count}} replies",
+    "never": "—"
+  },
+  "actions": {
+    "open": "Open",
+    "copyBrowser": "Copy browser link",
+    "copyWhatsapp": "Copy WhatsApp link",
+    "copied": "Copied",
+    "refresh": "Refresh"
+  },
+  "empty": {
+    "title": "No demos yet",
+    "body": "Mint one from the New demo tab, or from a campaign's share panel."
+  },
+  "error": {
+    "load": "Could not load demo sessions."
+  },
+  "new": {
+    "heading": "Create a demo link",
+    "firstName": "Prospect's first name",
+    "firstNamePlaceholder": "Required",
+    "company": "Their company",
+    "companyPlaceholder": "Optional — the AI introduces itself in this name",
+    "client": "Client",
+    "clientNone": "Campaign default",
+    "niche": "Or describe a new niche",
+    "nichePlaceholder": "Optional — overrides the Client and generates a new persona",
+    "language": "Language",
+    "market": "Market",
+    "marketDefault": "Default",
+    "scenario": "Lead has a quote?",
+    "disclosure": "AI disclosure",
+    "disclosureDefault": "Campaign default",
+    "campaign": "Campaign",
+    "universalCampaign": "Universal demo",
+    "submit": "Generate link",
+    "submitting": "Generating…",
+    "resultHeading": "Your link",
+    "browserLink": "Browser",
+    "whatsappLink": "WhatsApp",
+    "openIt": "Open it",
+    "reused": "Built from the saved Client \"{{name}}\".",
+    "fallback": "The niche model did not run, so this link carries a generic persona rather than the niche you asked for.",
+    "nameRequired": "A prospect name is required.",
+    "failed": "Could not create the link."
+  },
+  "disclosure": {
+    "off": "Off",
+    "opener": "In the opener",
+    "second_message": "Second message"
+  }
+}

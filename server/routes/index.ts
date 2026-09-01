@@ -26,6 +26,7 @@ import { registerGmailRoutes } from "./gmail";
 import { registerCalendarRoutes } from "./calendar";
 import { registerReviewsRoutes } from "./reviews";
 import { startReviewPoller } from "../reviews/poller";
+import { startDemoReplyNotifier } from "../demo-reply-notifier";
 import { registerMessagingRoutes } from "./messaging";
 import { registerEmailSenderRoutes } from "./emailSender";
 import { registerMissedCallRoutes } from "./missedCall";
@@ -93,6 +94,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startAutomationFailureNotifier(); // automation failure check (5min)
   startCampaignFinishedNotifier();  // campaign finished check (10min)
   startReviewPoller();              // Reputation v2: Google review ingest + auto-post (20min)
+  startDemoReplyNotifier();         // a prospect replied to a demo for the first time (60s)
 
   return httpServer;
 }

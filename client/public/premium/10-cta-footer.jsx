@@ -202,27 +202,62 @@ function CTA() {
 
   const [contentRef, contentInView] = window.useInView();
 
+  /* ---- mobile photo band ----
+     The panel photo is width-driven (height: auto), so on a tall narrow card it
+     covers a horizontal band and leaves plain bone below it — the footer then
+     sits off the photo and the crop edge cuts through nothing. On mobile we
+     measure the footer block, pin a cover-fitted band of that height to the
+     bottom of the card, and move the crop line to the top of the band so the
+     diagonal reads the same as it does on desktop. */
+  const cardRef = React.useRef(null);
+  const footerRowRef = React.useRef(null);
+  const [mobileBand, setMobileBand] = React.useState(null);
+  React.useLayoutEffect(() => {
+    if (!isMobile) { setMobileBand(null); return; }
+    const measure = () => {
+      const card = cardRef.current;
+      if (!card) return;
+      const cardH = card.getBoundingClientRect().height;
+      if (!cardH) return;
+      const row = footerRowRef.current;
+      // No footer row while the calendar is open — fall back to the tuned crop.
+      const height = row
+        ? Math.round(card.getBoundingClientRect().bottom - row.getBoundingClientRect().top + 28)
+        : Math.round(cardH * (1 - bgAdj.cropTop / 100));
+      setMobileBand({ height, cropTop: Math.max(0, 100 - (height / cardH) * 100) });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (cardRef.current) ro.observe(cardRef.current);
+    if (footerRowRef.current) ro.observe(footerRowRef.current);
+    return () => ro.disconnect();
+  }, [isMobile, formState, locale, bgAdj.cropTop]);
+
 
   /* ---- styles ---- */
+  // White over the panel photo. A hard 2px outline is thicker than an 11px mono
+  // stem and fills the counters in, so contrast comes from a soft halo instead.
+  const footerInk = "#FFFFFF";
   const linkStyle = {
     fontFamily: "var(--mono)", fontSize: 11,
-    letterSpacing: "0.06em", color: "rgba(28,24,16,0.45)",
+    letterSpacing: "0.06em", color: footerInk,
     textDecoration: "none", lineHeight: 1.8, display: "block",
-    textShadow: "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,  2px 2px 0 #000",
+    textShadow: "0 1px 3px rgba(0,0,0,0.55), 0 0 10px rgba(0,0,0,0.40)",
   };
 
   return (
     <section id="contact" data-screen-label="06 Contact" style={{
       padding: isMobile ? "48px 18px 48px" : "80px 32px 64px",
     }}>
-      <div className="neu-raised-large" style={{
+      <div ref={cardRef} className="neu-raised-large" style={{
         maxWidth: 1176, margin: "0 auto", borderRadius: 20,
         padding: isMobile ? "28px 20px 12px" : "48px 56px 20px",
         position: "relative", overflow: "hidden",
       }}>
         {(() => {
-          const cropL = bgAdj.cropTop - (bgAdj.cropTilt ?? 0);
-          const cropR = bgAdj.cropTop + (bgAdj.cropTilt ?? 0);
+          const cropTop = mobileBand ? mobileBand.cropTop : bgAdj.cropTop;
+          const cropL = cropTop - (bgAdj.cropTilt ?? 0);
+          const cropR = cropTop + (bgAdj.cropTilt ?? 0);
           return (
             <>
               <div aria-hidden style={{
@@ -233,10 +268,17 @@ function CTA() {
                 <img
                   src="/premium/hero-images/pannels.webp"
                   style={{
-                    position: "absolute", top: "50%", left: "50%",
-                    width: "100%", height: "auto",
-                    transform: buildCtaBgTransform(bgAdj),
-                    transformOrigin: "0 0",
+                    position: "absolute",
+                    ...(mobileBand ? {
+                      left: 0, bottom: 0,
+                      width: "100%", height: mobileBand.height,
+                      objectFit: "cover",
+                    } : {
+                      top: "50%", left: "50%",
+                      width: "100%", height: "auto",
+                      transform: buildCtaBgTransform(bgAdj),
+                      transformOrigin: "0 0",
+                    }),
                     filter: `brightness(${bgAdj.brightness ?? 1})`,
                     pointerEvents: "none", userSelect: "none",
                   }}
@@ -377,7 +419,7 @@ function CTA() {
             </div>
 
             {/* Footer row: map+favicon left, terms center, copyright right */}
-            <div style={{
+            <div ref={footerRowRef} style={{
               marginTop: isMobile ? 24 : 32,
               display: "flex", alignItems: "flex-end", justifyContent: "space-between",
               gap: isMobile ? 20 : 20,
@@ -390,21 +432,21 @@ function CTA() {
                 <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" aria-label="Lead Awaker office, Den Bosch, Netherlands" style={{ textDecoration: "none" }}>
                   {window.MARKET === 'nl'
                     ? <NetherlandsMap />
-                    : <span style={{ ...linkStyle, color: "#FFFFFF", whiteSpace: "nowrap" }}>Den Bosch, Netherlands</span>}
+                    : <span style={{ ...linkStyle, color: footerInk, whiteSpace: "nowrap" }}>Den Bosch, Netherlands</span>}
                 </a>
                 <FooterMark size={44} />
               </div>
               {/* Terms + Privacy + the other site variant. Without this link a
                   kitchen company landing on the solar page has nowhere to go. */}
               <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18 }}>
-                <a href={window.SITE_VARIANT === 'home' ? '/' : '/home'} style={{ ...linkStyle, color: "#FFFFFF" }}>
+                <a href={window.SITE_VARIANT === 'home' ? '/' : '/home'} style={{ ...linkStyle, color: footerInk }}>
                   {t(window.SITE_VARIANT === 'home' ? 'cta.other_solar' : 'cta.other_home')}
                 </a>
-                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#FFFFFF" }}>{t('cta.terms')}</a>
-                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "#FFFFFF" }}>{t('cta.privacy')}</a>
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: footerInk }}>{t('cta.terms')}</a>
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: footerInk }}>{t('cta.privacy')}</a>
               </div>
               {/* Copyright */}
-              <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: "#FFFFFF", whiteSpace: "nowrap" }}>
+              <span style={{ ...linkStyle, display: "block", paddingBottom: 18, color: footerInk, whiteSpace: "nowrap" }}>
                 Lead Awaker 2026 · All rights reserved.
               </span>
             </div>

@@ -14,6 +14,7 @@ import { messagesHtml, PLAY_SVG, PAUSE_SVG } from "./chat.js";
 import { railAsideHtml, railInlineHtml } from "./recap.js";
 import { confetti } from "./confetti.js";
 import * as voice from "./voice.js";
+import * as admin from "./admin.js";
 
 "use strict";
 
@@ -59,10 +60,11 @@ var paintedRail = false;
 // permission prompt. While `recording` is true render() refuses to repaint
 // (see there), because a poll landing mid-sentence would otherwise rebuild the
 // bar, the timer and the running recorder's own buttons under the visitor's
-// thumb. `needsRender` remembers that a repaint was owed.
+// thumb. Nothing is lost by skipping that repaint: every path that ends
+// recording (onRecDone, onRecFail) calls paint()/render() itself once
+// `recording` is back to false, at which point it reads current `state`.
 var recording = false;
 var starting = false;
-var needsRender = false;
 // Audio by message id. Entries start as blob: URLs from the visitor's own
 // recording and are re-keyed onto the server's interaction id when the poll
 // brings it back (adoptVoice), so playing back a memo recorded in this tab
@@ -75,6 +77,22 @@ var voiceDur = {};
 // Recordings sent but not yet seen coming back, oldest first.
 var awaitingIds = [];
 var localSeq = 0;
+// Ids fetched from /audio (not recorded in this tab), oldest first, so the
+// oldest can be evicted once there are too many held at once — see
+// rememberFetchedAudio(). A recording made in this tab is not tracked here;
+// its blob: URL is cheap and cleared on restart regardless (clearVoice).
+var fetchedIds = [];
+var FETCHED_AUDIO_CAP = 8;
+
+// Each entry is a base64 data: URL, up to ~80KB apiece. Uncapped, replaying
+// many old memos back-to-back in one long session (a live demo, presenting
+// several) would hold megabytes of base64 in memory for the life of the tab.
+function rememberFetchedAudio(id) {
+  fetchedIds.push(id);
+  if (fetchedIds.length <= FETCHED_AUDIO_CAP) return;
+  var evictId = fetchedIds.shift();
+  delete voiceUrls[evictId];
+}
 
 var SEND_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
 
@@ -91,6 +109,23 @@ function api(path, opts) {
   });
 }
 
+// The glyph for one restart scenario. The two option labels differ by a single
+// word ("never got a quote" / "already has a quote"), so the icon is what tells
+// them apart at a glance. Keyed on the value the engine sends
+// (src/automations/demo_restart.py RESTART_OPTIONS); "deciding" is the alias
+// the presenter panel's select uses for the same quoted scenario. An unknown
+// value renders no icon rather than a wrong one.
+var SCENARIO_ICONS = {
+  inquired: "message-circle-question",
+  quoted: "receipt",
+  deciding: "receipt"
+};
+
+function scenarioIcon(value) {
+  var name = SCENARIO_ICONS[value];
+  return name ? icon(name, 15) : "";
+}
+
 // Everything routes through here, and it is a guard rather than the paint
 // itself: a poll that lands mid-recording must NOT rebuild the composer, since
 // that would replace the bar, the timer and the running recorder's own buttons
@@ -99,12 +134,11 @@ function api(path, opts) {
 // shape as setPop() below, which keeps the popover open across a poll for the
 // same reason.
 function render() {
-  if (recording) { needsRender = true; return; }
+  if (recording) return;
   paint();
 }
 
 function paint() {
-  needsRender = false;
   // Before anything reads a string: t() resolves against this, and the fatal
   // branch below runs when there is no state at all, where it must fall back to
   // the browser's language rather than to English.
@@ -147,6 +181,18 @@ function paint() {
 
   root.innerHTML =
     '<header class="hdr">' +
+      // Presenter-only, and absent (not hidden) for everyone else: s.admin is
+      // set server-side from the CRM session, so a prospect never receives this
+      // markup. ⋯ rather than ☰ because a hamburger promises navigation and
+      // there is none on this page. Anchored to .hdr rather than placed inside
+      // .hdr-inner, for the reason the .bump-btn comment gives: joining the
+      // centred cluster would off-centre it.
+      (s.admin
+        ? '<button class="admin-toggle" id="admin-toggle" title="Presenter settings" ' +
+            'aria-label="Presenter settings" aria-haspopup="dialog" aria-expanded="false">' +
+            icon("more-horizontal", 16) +
+          "</button>"
+        : "") +
       '<div class="hdr-inner">' +
         '<div class="hdr-logo"><img src="/premium/logo-v2.svg" alt="Lead Awaker" /></div>' +
         '<div class="hdr-div"></div>' +
@@ -212,7 +258,8 @@ function paint() {
                   (opts
                     ? opts.map(function (o) {
                         return '<button class="ghost restart-opt" data-scenario="' + esc(o.value) + '"' +
-                          (busy || restartsLeft <= 0 ? " disabled" : "") + ">" + esc(o.label) + "</button>";
+                          (busy || restartsLeft <= 0 ? " disabled" : "") + ">" +
+                          scenarioIcon(o.value) + "<span>" + esc(o.label) + "</span></button>";
                       }).join("")
                     : '<button class="ghost" id="restart"' + (busy || restartsLeft <= 0 ? " disabled" : "") + ">" +
                       esc(t("restart")) + "</button>") +
@@ -353,6 +400,10 @@ function wire() {
 
   if (toggle) toggle.addEventListener("click", function () { setPop(!popOpen); });
 
+  // The panel itself lives outside `root` and survives renders; only its
+  // trigger is repainted, so only the trigger is re-bound here.
+  admin.bindTrigger();
+
   var bump = document.getElementById("bump");
   if (bump) bump.addEventListener("click", doBump);
 
@@ -360,8 +411,10 @@ function wire() {
     ta.value = draft;
     ta.style.height = "auto";
     ta.style.height = Math.min(120, ta.scrollHeight) + "px";
-    // Never steal focus while the popover is open.
-    if (!state.done && !busy && !popOpen) ta.focus();
+    // Never steal focus while the popover or the presenter panel is open:
+    // a render landing while Gabriel is typing into a panel field would yank
+    // the caret into the composer mid-word.
+    if (!state.done && !busy && !popOpen && !admin.isOpen()) ta.focus();
     ta.addEventListener("input", function () {
       draft = ta.value;
       ta.style.height = "auto";
@@ -466,7 +519,12 @@ function onRecFail() {
 }
 
 function doSendVoice(blob, ms) {
-  if (!state || state.done) return;
+  // `recording` is already false here (onRecDone clears it before calling
+  // this), so render() actually paints instead of being suppressed. Without
+  // it, a session that ended (turn cap / DNC) while this recording was in
+  // flight left the composer stuck on a dead recording bar forever: nothing
+  // else was left to trigger the catch-up repaint.
+  if (!state || state.done) { render(); return; }
   // Same reason doSend bumps it: a poll fetched before this send would come
   // back without the memo and erase the bubble the visitor is looking at.
   epoch++;
@@ -506,6 +564,23 @@ function doSendVoice(blob, ms) {
   }).catch(function (err) {
     busy = false;
     pending = false;
+    // Nothing reached the server, so nothing about this recording should
+    // still be held: left in place, the optimistic bubble/blob would leak
+    // for the life of the tab, and the awaitingIds slot could misdirect a
+    // later adoptVoice match if the page ever recovered from the fatal
+    // screen handleError is about to show.
+    var msgs = state && state.messages;
+    if (msgs) {
+      for (var mi = msgs.length - 1; mi >= 0; mi--) {
+        if (msgs[mi].id === localId) { msgs.splice(mi, 1); break; }
+      }
+    }
+    URL.revokeObjectURL(url);
+    delete voiceUrls[localId];
+    delete voiceDur[localId];
+    for (var ai = awaitingIds.length - 1; ai >= 0; ai--) {
+      if (awaitingIds[ai].localId === localId) awaitingIds.splice(ai, 1);
+    }
     handleError(err);
   });
 }
@@ -516,9 +591,19 @@ function doSendVoice(blob, ms) {
 // network request at all.
 function adoptVoice(next) {
   if (!awaitingIds.length || !next || !next.messages) return;
+  // Only messages this tab has not already accounted for are eligible.
+  // voiceUrls/awaitingIds reset to empty on every page load, but the thread
+  // itself persists server-side, so "not already in voiceUrls" alone
+  // matches the FIRST unclaimed voice message in the whole history, not the
+  // one just recorded — wiring a brand-new recording's blob onto an old
+  // bubble the moment a second memo is sent after a reload.
+  var known = {};
+  if (state && state.messages) {
+    for (var k = 0; k < state.messages.length; k++) known[state.messages[k].id] = true;
+  }
   for (var i = 0; i < next.messages.length && awaitingIds.length; i++) {
     var m = next.messages[i];
-    if (m.kind !== "voice" || m.role !== "visitor" || voiceUrls[m.id]) continue;
+    if (m.kind !== "voice" || m.role !== "visitor" || known[m.id] || voiceUrls[m.id]) continue;
     var held = awaitingIds.shift();
     voiceUrls[m.id] = held.url;
     voiceDur[m.id] = held.seconds;
@@ -541,6 +626,7 @@ function clearVoice() {
   voiceUrls = {};
   voiceDur = {};
   awaitingIds = [];
+  fetchedIds = [];
 }
 
 // One <audio> for the page, so the play buttons are just paint. Delegated at
@@ -563,6 +649,7 @@ function togglePlay(id) {
   api("/audio?id=" + encodeURIComponent(id)).then(function (data) {
     if (!data || !data.dataUrl) return;
     voiceUrls[id] = data.dataUrl;
+    rememberFetchedAudio(id);
     voice.play(id, data.dataUrl);
   }).catch(function () {
     // A memo that will not play back is not worth taking the page down for;
@@ -582,35 +669,63 @@ voice.onPlayback(function () {
   paintPlayback();
 });
 
+// The id paintPlayback last painted as "on", so a change in which bubble is
+// playing patches only the two bubbles actually affected (the one that just
+// stopped, the one that just started) instead of re-querying and
+// re-toggling every voice bubble in the thread on every tick — a long demo
+// thread (several memos) otherwise pays that cost four times a second for
+// bubbles nobody is looking at.
+var paintedPlayId = null;
+
+function patchPlayer(mid, on, elapsed) {
+  var btn = document.querySelector('.vplay[data-mid="' + mid + '"]');
+  if (!btn) return;
+  var p = btn.closest(".vplayer");
+  var label = t(on ? "voicePause" : "voicePlay");
+  if (btn.getAttribute("aria-label") !== label) {
+    btn.innerHTML = on ? PAUSE_SVG : PLAY_SVG;
+    btn.setAttribute("aria-label", label);
+  }
+  var total = voiceDur[mid] || 0;
+  var at = on ? elapsed : 0;
+  var time = p && p.querySelector(".vtime");
+  if (time) time.textContent = mmss(at > 0 ? at : total);
+  var bars = p ? p.querySelectorAll(".vwave i") : [];
+  var played = total > 0 ? Math.round((at / total) * bars.length) : 0;
+  for (var i = 0; i < bars.length; i++) {
+    bars[i].classList.toggle("played", on && i < played);
+  }
+}
+
 function paintPlayback() {
   var pid = voice.playingMessage();
   var elapsed = voice.playedSeconds();
-  Array.prototype.forEach.call(document.querySelectorAll(".vplayer"), function (p) {
-    var btn = p.querySelector(".vplay");
-    if (!btn) return;
-    var mid = btn.getAttribute("data-mid");
-    var on = pid != null && String(pid) === mid;
-    var label = t(on ? "voicePause" : "voicePlay");
-    if (btn.getAttribute("aria-label") !== label) {
-      btn.innerHTML = on ? PAUSE_SVG : PLAY_SVG;
-      btn.setAttribute("aria-label", label);
-    }
-    var total = voiceDur[mid] || 0;
-    var at = on ? elapsed : 0;
-    var time = p.querySelector(".vtime");
-    if (time) time.textContent = mmss(at > 0 ? at : total);
-    var bars = p.querySelectorAll(".vwave i");
-    var played = total > 0 ? Math.round((at / total) * bars.length) : 0;
-    for (var i = 0; i < bars.length; i++) {
-      bars[i].classList.toggle("played", on && i < played);
-    }
-  });
+  if (paintedPlayId != null && String(paintedPlayId) !== String(pid)) {
+    patchPlayer(paintedPlayId, false, 0);
+  }
+  if (pid != null) patchPlayer(pid, true, elapsed);
+  paintedPlayId = pid;
 }
 
 // `scenario` is null for the plain replay (public sessions) and one of the
 // server-supplied values for the two-option restart on an invited link.
+// Returns the request promise so a caller can tell when the new conversation
+// is actually on screen: the presenter panel reports "Restarting…" and would
+// otherwise sit on that word forever. Callers that do not care ignore it, as
+// the restart popover's own buttons do.
 function doRestart(scenario) {
-  if (busy || !state) return;
+  if (busy || !state) return Promise.resolve();
+  // A recording (or a still-pending mic-permission prompt) belongs to the
+  // conversation being replaced. Left running, it either freezes the
+  // composer on a dead bar (render() stays suppressed by `recording`) or —
+  // if permission resolves after the restart completes — pops an uninvited
+  // recording bar into the fresh conversation. voice.cancelRecording() is
+  // safe to call in either phase.
+  if (recording || starting) {
+    voice.cancelRecording();
+    recording = false;
+    starting = false;
+  }
   busy = true;
   pending = false;
   var prevRecap = recap;   // snapshot so a failed restart can put the recap
@@ -625,7 +740,7 @@ function doRestart(scenario) {
   // the UI to the old scenario's messages.
   epoch++;
   render();
-  api("/restart", {
+  return api("/restart", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(scenario ? { scenario: scenario } : {})
@@ -666,10 +781,15 @@ function doBump() {
     state = next;
     lastSig = signature(next);
     render();
-    var btn = document.getElementById("bump");
-    if (btn) {
-      btn.classList.add("is-sent");
-      setTimeout(function () { btn.classList.remove("is-sent"); }, 1400);
+    // render() is a no-op while recording suppresses repaints, so the new
+    // message never actually appeared — flashing "sent" anyway told a
+    // presenter's audience the bump worked when nothing visibly happened.
+    if (!recording) {
+      var btn = document.getElementById("bump");
+      if (btn) {
+        btn.classList.add("is-sent");
+        setTimeout(function () { btn.classList.remove("is-sent"); }, 1400);
+      }
     }
     schedulePoll(4000);
   }).catch(function (err) {
@@ -790,6 +910,19 @@ if (window.visualViewport) {
 }
 
 // ---- boot -------------------------------------------------------------
+// The presenter panel talks to Express's own routes, not the engine proxy, so
+// it gets the raw token rather than main.js's API base. `reload` exists because
+// a live edit (a rename) changes nothing the poll's own signature watches on
+// its next tick; forcing a poll is what makes the header pill repaint at once.
+admin.init({
+  token: TOKEN,
+  getState: function () { return state; },
+  reload: function () { schedulePoll(150); },
+  // The scenario argument is the panel's quote/no-quote switch, and it is the
+  // same value the restart popover's two buttons send.
+  restart: function (scenario) { return doRestart(scenario); },
+});
+
 if (!TOKEN) {
   fatal = "errNoLink";
   render();

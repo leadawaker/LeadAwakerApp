@@ -1,0 +1,78 @@
+{
+  "title": "Demo's",
+  "subtitle": "Elke demolink die je hebt aangemaakt, en hoe ver elke prospect kwam.",
+  "tabs": {
+    "sessions": "Sessies",
+    "new": "Nieuwe demo"
+  },
+  "table": {
+    "prospect": "Prospect",
+    "company": "Bedrijf",
+    "client": "Client",
+    "language": "Taal",
+    "mode": "Scenario",
+    "browser": "Browser",
+    "whatsapp": "WhatsApp",
+    "created": "Verstuurd",
+    "actions": "Links"
+  },
+  "mode": {
+    "inquired": "Geen offerte",
+    "deciding": "Heeft offerte"
+  },
+  "status": {
+    "unopened": "Nooit geopend",
+    "opened": "Geopend",
+    "replies_one": "{{count}} reactie",
+    "replies_other": "{{count}} reacties",
+    "never": "—"
+  },
+  "actions": {
+    "open": "Openen",
+    "copyBrowser": "Browserlink kopiëren",
+    "copyWhatsapp": "WhatsApp-link kopiëren",
+    "copied": "Gekopieerd",
+    "refresh": "Vernieuwen"
+  },
+  "empty": {
+    "title": "Nog geen demo's",
+    "body": "Maak er een aan via het tabblad Nieuwe demo, of via het deelpaneel van een campagne."
+  },
+  "error": {
+    "load": "Kon de demosessies niet laden."
+  },
+  "new": {
+    "heading": "Maak een demolink",
+    "firstName": "Voornaam van de prospect",
+    "firstNamePlaceholder": "Verplicht",
+    "company": "Hun bedrijf",
+    "companyPlaceholder": "Optioneel — de AI stelt zich onder deze naam voor",
+    "client": "Client",
+    "clientNone": "Standaard van de campagne",
+    "niche": "Of beschrijf een nieuwe niche",
+    "nichePlaceholder": "Optioneel — overschrijft de Client en genereert een nieuwe persona",
+    "language": "Taal",
+    "market": "Markt",
+    "marketDefault": "Standaard",
+    "scenario": "Heeft de lead een offerte?",
+    "disclosure": "AI-vermelding",
+    "disclosureDefault": "Standaard van de campagne",
+    "campaign": "Campagne",
+    "universalCampaign": "Universele demo",
+    "submit": "Link genereren",
+    "submitting": "Genereren…",
+    "resultHeading": "Je link",
+    "browserLink": "Browser",
+    "whatsappLink": "WhatsApp",
+    "openIt": "Open hem",
+    "reused": "Gebouwd op de opgeslagen Client \"{{name}}\".",
+    "fallback": "Het nichemodel draaide niet, dus deze link heeft een algemene persona in plaats van de niche die je vroeg.",
+    "nameRequired": "Een naam van de prospect is verplicht.",
+    "failed": "Kon de link niet aanmaken."
+  },
+  "disclosure": {
+    "off": "Uit",
+    "opener": "In de opener",
+    "second_message": "Tweede bericht"
+  }
+}

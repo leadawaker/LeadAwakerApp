@@ -108,7 +108,8 @@
       "leadResponded": "Lead Gereageerd",
       "leadManualTakeover": "Handmatige Overname Lead",
       "criticalAutomationFailure": "Kritieke Automatiseringsfout",
-      "campaignFinished": "Campagne Voltooid"
+      "campaignFinished": "Campagne Voltooid",
+      "demoReplied": "Demo-reactie"
     }
   },
   "hub": {
