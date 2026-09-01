@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Phone, PhoneOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DEMO_COMPANY, SPEED_CHOICES } from "../useVoiceCall";
-import type { CallState, Floor, Turn, VoiceLang, VoiceOptions } from "../types";
+import { DEMO_COMPANY, MAX_CALL_MS, SPEED_CHOICES } from "../useVoiceCall";
+import type { CallState, EndedReason, Floor, Turn, VoiceLang, VoiceOptions } from "../types";
 
 const FIELD =
   "h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm";
@@ -18,7 +18,12 @@ function modelLabel(id: string) {
 const FLOOR_LABEL: Record<Floor, string> = {
   connecting: "Connecting",
   listening: "Listening",
-  speaking: "Emma is speaking",
+  speaking: "Speaking",
+};
+
+const ENDED_LABEL: Record<Exclude<EndedReason, null>, string> = {
+  time_limit: "Demo time is up",
+  dropped: "Call disconnected",
 };
 
 function CallTimer({ startedAt }: { startedAt: number | null }) {
@@ -29,10 +34,14 @@ function CallTimer({ startedAt }: { startedAt: number | null }) {
     return () => clearInterval(id);
   }, [startedAt]);
   if (!startedAt) return null;
-  const s = Math.max(0, Math.floor((now - startedAt) / 1000));
-  const mm = String(Math.floor(s / 60)).padStart(2, "0");
-  const ss = String(s % 60).padStart(2, "0");
-  return <span className="tabular-nums">{`${mm}:${ss}`}</span>;
+  const left = Math.max(0, Math.ceil((startedAt + MAX_CALL_MS - now) / 1000));
+  const mm = String(Math.floor(left / 60)).padStart(2, "0");
+  const ss = String(left % 60).padStart(2, "0");
+  return (
+    <span className={cn("tabular-nums", left <= 60 && "text-destructive")}>
+      {`${mm}:${ss} left`}
+    </span>
+  );
 }
 
 interface SetupProps {
@@ -52,12 +61,14 @@ interface SetupProps {
   onCall: () => void;
   busy: boolean;
   error: string | null;
+  /** A pre-configured share link: hide the setup, just offer the call. */
+  simple: boolean;
 }
 
 function Setup({
   language, companyName, callerNumber, model, voice, speed, options,
   onLanguage, onCompany, onCallerNumber, onModel, onVoice, onSpeed,
-  onCall, busy, error,
+  onCall, busy, error, simple,
 }: SetupProps) {
   return (
     // Scrolls rather than centring rigidly: opening the voice/model details
@@ -67,14 +78,17 @@ function Setup({
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
       <div className="m-auto flex w-full flex-col items-center text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
-        E
+        A
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight">Call Emma</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        {simple ? `Call ${companyName}` : "Call the receptionist"}
+      </h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
         An AI receptionist that answers the phone, handles the questions, and books the job.
+        {simple && " Have a real conversation — she picks up as soon as you call."}
       </p>
 
-      <div className="mt-6 w-full max-w-sm space-y-3.5 text-left">
+      <div className={cn("mt-6 w-full max-w-sm space-y-3.5 text-left", simple && "hidden")}>
         <div>
           <label htmlFor="vd-lang" className={LABEL}>Language</label>
           <select
@@ -121,7 +135,7 @@ function Setup({
         </div>
       </div>
 
-      <details className="mt-4 w-full max-w-sm text-left">
+      <details className={cn("mt-4 w-full max-w-sm text-left", simple && "hidden")}>
         <summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground">
           Voice &amp; model · {modelLabel(model)}, {voice}
         </summary>
@@ -180,8 +194,15 @@ function Setup({
         className="mt-6 inline-flex h-11 w-full max-w-sm items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
       >
         <Phone className="h-4 w-4" />
-        {busy ? "Connecting…" : "Call Emma"}
+        {busy ? "Connecting…" : `Call ${simple ? companyName : "now"}`}
       </button>
+
+      {simple && (
+        <p className="mt-3 max-w-sm text-xs text-muted-foreground">
+          Your browser will ask for the microphone. Demo calls end automatically after
+          five minutes.
+        </p>
+      )}
 
       {error && (
         <p className="mt-4 w-full max-w-sm rounded-[var(--r-surface)] bg-destructive/10 px-4 py-3 text-left text-sm text-destructive">
@@ -199,12 +220,13 @@ interface CallPanelProps extends SetupProps {
   turns: Turn[];
   company: string;
   startedAt: number | null;
+  endedReason: EndedReason;
   onHangup: () => void;
   onReset: () => void;
 }
 
 export function CallPanel(props: CallPanelProps) {
-  const { state, floor, turns, company, startedAt, onHangup, onReset } = props;
+  const { state, floor, turns, company, startedAt, endedReason, onHangup, onReset } = props;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -219,13 +241,17 @@ export function CallPanel(props: CallPanelProps) {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 border-b border-border bg-muted px-5 py-3.5">
         <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-          E
+          A
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold">{company}</div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {!ended && <span className="h-2 w-2 flex-none animate-pulse rounded-full bg-emerald-500" />}
-            <span>{ended ? "Call ended" : FLOOR_LABEL[floor]}</span>
+            <span>
+              {ended
+                ? (endedReason && ENDED_LABEL[endedReason]) || "Call ended"
+                : FLOOR_LABEL[floor]}
+            </span>
             {!ended && startedAt && (
               <>
                 <span aria-hidden>·</span>
@@ -261,10 +287,25 @@ export function CallPanel(props: CallPanelProps) {
               turn.pending && "opacity-70",
             )}
           >
-            {turn.text}
+            {turn.text || <TypingDots />}
           </div>
         ))}
       </div>
     </div>
+  );
+}
+
+/** A turn whose audio has happened but whose transcript is still in flight. */
+function TypingDots() {
+  return (
+    <span className="inline-flex items-center gap-1 py-1" aria-label="transcribing">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="h-1.5 w-1.5 animate-pulse rounded-full bg-current opacity-50"
+          style={{ animationDelay: `${i * 150}ms` }}
+        />
+      ))}
+    </span>
   );
 }

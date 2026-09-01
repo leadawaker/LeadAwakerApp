@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  Booking,
   CallSetup,
   CallState,
+  CallSummary,
   CrmReceipt,
+  EndedReason,
   Floor,
   Turn,
   VoiceLang,
@@ -60,7 +63,15 @@ interface RealtimeEvent {
   transcript?: string;
   name?: string;
   call_id?: string;
+  /** Identifies WHICH conversation item a transcript belongs to. */
+  item_id?: string;
+  item?: { id?: string; role?: string };
 }
+
+/** How long a demo call may run before it wraps itself up. */
+export const MAX_CALL_MS = 5 * 60 * 1000;
+/** She starts closing the conversation this long before the hard cut-off. */
+const WRAP_UP_MS = 40 * 1000;
 
 export function useVoiceCall() {
   const [state, setState] = useState<CallState>("idle");
@@ -72,6 +83,9 @@ export function useVoiceCall() {
   const [leadId, setLeadId] = useState<number | null>(null);
   const [company, setCompany] = useState(DEMO_COMPANY.en);
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [summary, setSummary] = useState<CallSummary | null>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [endedReason, setEndedReason] = useState<EndedReason>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const micRef = useRef<MediaStream | null>(null);
@@ -79,12 +93,23 @@ export function useVoiceCall() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const callIdRef = useRef<string>("");
   const callerNumberRef = useRef<string>("");
-  // Index of the bubble each side is still streaming into, so deltas append
-  // to one turn instead of spawning a turn per fragment.
+  const languageRef = useRef<VoiceLang>("en");
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Which bubble each side is still streaming into, so deltas append to one
+  // turn instead of spawning a turn per fragment.
   const openTurnRef = useRef<{ them: string | null; you: string | null }>({
     them: null,
     you: null,
   });
+  // Bubbles reserved by conversation-item id but not yet filled in.
+  //
+  // The caller's words are transcribed by a SEPARATE pass that runs alongside
+  // the model's own reply, so its `...transcription.completed` can land after
+  // the reply it prompted — the transcript then reads as two of Emma's turns
+  // stacked together with the caller's answer below them. Reserving the
+  // caller's slot the moment their audio is committed fixes the order at the
+  // point the turn actually happened, not the point its text came back.
+  const reservedRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
@@ -101,36 +126,71 @@ export function useVoiceCall() {
     };
   }, []);
 
+  /** Hold this turn's place in the transcript before its text exists. */
+  const reserveTurn = useCallback((side: "them" | "you", itemId?: string) => {
+    if (!itemId || reservedRef.current.has(itemId)) return;
+    const id = `${side}-${itemId}`;
+    reservedRef.current.set(itemId, id);
+    openTurnRef.current[side] = id;
+    setTurns((prev) => [...prev, { id, side, text: "", pending: true }]);
+  }, []);
+
+  /** Fill a reserved bubble, wherever it now sits in the transcript. */
+  const fillTurn = useCallback(
+    (side: "them" | "you", itemId: string | undefined, text: string) => {
+      const id = itemId && reservedRef.current.get(itemId);
+      if (!id) return false;
+      reservedRef.current.delete(itemId!);
+      if (openTurnRef.current[side] === id) openTurnRef.current[side] = null;
+      setTurns((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, text, pending: false } : t)),
+      );
+      return true;
+    },
+    [],
+  );
+
   const appendDelta = useCallback((side: "them" | "you", delta: string) => {
     if (!delta) return;
-    setTurns((prev) => {
-      const openId = openTurnRef.current[side];
-      if (openId) {
-        return prev.map((t) => (t.id === openId ? { ...t, text: t.text + delta } : t));
-      }
-      const id = `${side}-${Date.now()}-${Math.random()}`;
-      openTurnRef.current[side] = id;
-      return [...prev, { id, side, text: delta, pending: true }];
-    });
+    const openId = openTurnRef.current[side];
+    if (openId) {
+      setTurns((prev) =>
+        prev.map((t) => (t.id === openId ? { ...t, text: t.text + delta } : t)),
+      );
+      return;
+    }
+    // The id is claimed HERE, not inside the updater. React may invoke an
+    // updater more than once for the same logical update (it re-runs them when
+    // it rebases queued work), so a ref written inside one is written a
+    // different number of times than the state it is meant to track — which
+    // strands a bubble or spawns a second one.
+    const id = `${side}-${Date.now()}-${Math.random()}`;
+    openTurnRef.current[side] = id;
+    setTurns((prev) => [...prev, { id, side, text: delta, pending: true }]);
   }, []);
 
   const commitTurn = useCallback((side: "them" | "you", finalText?: string) => {
-    setTurns((prev) => {
-      const openId = openTurnRef.current[side];
-      if (!openId) {
-        if (!finalText) return prev;
-        return [
-          ...prev,
-          { id: `${side}-${Date.now()}`, side, text: finalText, pending: false },
-        ];
-      }
-      return prev.map((t) =>
-        t.id === openId
-          ? { ...t, text: finalText ?? t.text, pending: false }
-          : t,
-      );
-    });
+    const openId = openTurnRef.current[side];
     openTurnRef.current[side] = null;
+    setTurns((prev) => {
+      if (openId) {
+        return prev.map((t) =>
+          t.id === openId ? { ...t, text: finalText ?? t.text, pending: false } : t,
+        );
+      }
+      if (!finalText) return prev;
+      // No open bubble means no delta stream to fold into — the transcript
+      // arrived whole. Check it against what is already on screen: a `.done`
+      // seen twice for one turn would otherwise print the same words twice.
+      // Only the immediately preceding bubble counts, so the same short answer
+      // given again later in the call ("Yes.") still renders.
+      const last = prev[prev.length - 1];
+      if (last && last.side === side && last.text === finalText) return prev;
+      return [
+        ...prev,
+        { id: `${side}-${Date.now()}-${Math.random()}`, side, text: finalText, pending: false },
+      ];
+    });
   }, []);
 
   const relay = useCallback(async (event: RealtimeEvent) => {
@@ -143,6 +203,7 @@ export function useVoiceCall() {
           account_id: DEMO_ACCOUNT_ID,
           campaign_id: DEMO_CAMPAIGN_ID,
           phone: callerNumberRef.current || "web",
+          language: languageRef.current,
           event,
         }),
       });
@@ -151,6 +212,14 @@ export function useVoiceCall() {
       if (data.crm) {
         setReceipts((prev) => [...prev, data.crm as CrmReceipt]);
         if (data.crm.lead_id) setLeadId(data.crm.lead_id);
+        // Merge rather than replace: a later update that only carries a name
+        // must not wipe the interest recorded three turns ago.
+        if (data.crm.summary) {
+          setSummary((prev) => ({ ...(prev ?? {}), ...data.crm!.summary }));
+        }
+        if (data.crm.booked_slot) {
+          setBooking({ spoken: data.crm.booked_slot, iso: data.crm.booked_iso ?? null });
+        }
       }
       return data;
     } catch {
@@ -160,32 +229,32 @@ export function useVoiceCall() {
   }, []);
 
   /**
-   * A tool call stalls the session until it is answered, so every
-   * book_appointment call gets a result, including failures. Emma's prompt
-   * covers how to recover from each outcome out loud.
+   * Answer a tool call.
+   *
+   * An unanswered function call stalls the session until it times out, so
+   * EVERY call gets a result — including failures, and including the silent
+   * `update_call_summary` bookkeeping calls, which would otherwise freeze the
+   * conversation mid-sentence the first time she noted down an intent.
+   *
+   * `respond` is false for the summary tool: it is background note-taking, and
+   * asking for a fresh response after one would make her say something for no
+   * reason, in the middle of the caller's turn.
    */
-  const answerBookingCall = useCallback(
-    (fnCallId: string | undefined, receipt: CrmReceipt | null | undefined) => {
+  const answerTool = useCallback(
+    (fnCallId: string | undefined, output: unknown, respond: boolean) => {
       const channel = channelRef.current;
       if (!channel || channel.readyState !== "open" || !fnCallId) return;
-      const outcome = receipt?.booked_slot
-        ? { status: "booked", slot: receipt.booked_slot }
-        : {
-            status: "not_booked",
-            detail:
-              "The diary could not confirm this slot. Take it as a message and promise a callback.",
-          };
       channel.send(
         JSON.stringify({
           type: "conversation.item.create",
           item: {
             type: "function_call_output",
             call_id: fnCallId,
-            output: JSON.stringify(outcome),
+            output: JSON.stringify(output),
           },
         }),
       );
-      channel.send(JSON.stringify({ type: "response.create" }));
+      if (respond) channel.send(JSON.stringify({ type: "response.create" }));
     },
     [],
   );
@@ -193,18 +262,30 @@ export function useVoiceCall() {
   const handleEvent = useCallback(
     (event: RealtimeEvent) => {
       switch (event.type) {
+        // The caller stopped talking and their audio became a conversation
+        // item. Its transcription is still in flight, so claim the slot now.
+        case "input_audio_buffer.committed":
+          reserveTurn("you", event.item_id);
+          break;
+        case "response.output_item.added":
+          if (event.item?.role === "assistant") reserveTurn("them", event.item?.id);
+          break;
         case "response.output_audio_transcript.delta":
           setFloor("speaking");
           appendDelta("them", event.delta ?? "");
           break;
         case "response.output_audio_transcript.done":
-          commitTurn("them", event.transcript);
+          if (!fillTurn("them", event.item_id, event.transcript ?? "")) {
+            commitTurn("them", event.transcript);
+          }
           break;
         case "conversation.item.input_audio_transcription.delta":
           appendDelta("you", event.delta ?? "");
           break;
         case "conversation.item.input_audio_transcription.completed":
-          commitTurn("you", event.transcript);
+          if (!fillTurn("you", event.item_id, event.transcript ?? "")) {
+            commitTurn("you", event.transcript);
+          }
           break;
         case "input_audio_buffer.speech_started":
         case "response.done":
@@ -212,10 +293,12 @@ export function useVoiceCall() {
           break;
       }
     },
-    [appendDelta, commitTurn],
+    [appendDelta, commitTurn, fillTurn, reserveTurn],
   );
 
   const teardown = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
     micRef.current?.getTracks().forEach((t) => t.stop());
     micRef.current = null;
     try {
@@ -233,13 +316,18 @@ export function useVoiceCall() {
     if (audioRef.current) audioRef.current.srcObject = null;
   }, []);
 
-  const hangup = useCallback(() => {
-    teardown();
-    commitTurn("them");
-    commitTurn("you");
-    setState("ended");
-    setFloor("listening");
-  }, [teardown, commitTurn]);
+  const hangup = useCallback(
+    (reason: EndedReason = null) => {
+      teardown();
+      commitTurn("them");
+      commitTurn("you");
+      reservedRef.current.clear();
+      setEndedReason(reason);
+      setState("ended");
+      setFloor("listening");
+    },
+    [teardown, commitTurn],
+  );
 
   const reset = useCallback(() => {
     teardown();
@@ -248,7 +336,11 @@ export function useVoiceCall() {
     setLeadId(null);
     setStartedAt(null);
     setError(null);
+    setSummary(null);
+    setBooking(null);
+    setEndedReason(null);
     openTurnRef.current = { them: null, you: null };
+    reservedRef.current.clear();
     setState("idle");
   }, [teardown]);
 
@@ -258,7 +350,12 @@ export function useVoiceCall() {
       setTurns([]);
       setReceipts([]);
       setLeadId(null);
+      setSummary(null);
+      setBooking(null);
+      setEndedReason(null);
       openTurnRef.current = { them: null, you: null };
+      reservedRef.current.clear();
+      languageRef.current = setup.language;
 
       const companyName = setup.companyName.trim() || DEMO_COMPANY[setup.language];
       setCompany(companyName);
@@ -326,6 +423,27 @@ export function useVoiceCall() {
           setState("live");
           setFloor("listening");
           setStartedAt(Date.now());
+
+          // A shared demo link will be left open on somebody's desk with the
+          // mic live, so the call ends itself. She gets told to wrap up first,
+          // because a line that simply goes dead reads as a crash rather than
+          // a demo that finished.
+          timersRef.current.push(
+            setTimeout(() => {
+              const ch = channelRef.current;
+              if (!ch || ch.readyState !== "open") return;
+              ch.send(
+                JSON.stringify({
+                  type: "response.create",
+                  response: {
+                    instructions:
+                      "You have about thirty seconds left of this demo call. In ONE short sentence, warmly wrap up: say the demo is out of time, that everything discussed is already saved, and that a colleague will follow up. Do not start a new topic and do not ask a question.",
+                  },
+                }),
+              );
+            }, MAX_CALL_MS - WRAP_UP_MS),
+            setTimeout(() => hangup("time_limit"), MAX_CALL_MS),
+          );
         };
 
         channel.onmessage = (e) => {
@@ -335,17 +453,31 @@ export function useVoiceCall() {
           } catch {
             return;
           }
-          const isBooking =
-            event.type === "response.function_call_arguments.done" &&
-            event.name === "book_appointment";
+          const isTool = event.type === "response.function_call_arguments.done";
           void relay(event).then((result) => {
-            if (isBooking) answerBookingCall(event.call_id, result?.crm);
+            if (!isTool) return;
+            if (event.name === "book_appointment") {
+              const crm = result?.crm;
+              answerTool(
+                event.call_id,
+                crm?.booked_slot
+                  ? { status: "booked", slot: crm.booked_slot }
+                  : {
+                      status: "not_booked",
+                      detail:
+                        "The diary could not confirm this slot. Take it as a message and promise someone will ring them straight back.",
+                    },
+                true,
+              );
+            } else {
+              answerTool(event.call_id, { ok: true }, false);
+            }
           });
           handleEvent(event);
         };
 
         channel.onclose = () => {
-          if (pcRef.current) hangup();
+          if (pcRef.current) hangup("dropped");
         };
 
         const offer = await pc.createOffer();
@@ -370,7 +502,7 @@ export function useVoiceCall() {
         setError(err instanceof Error ? err.message : "Could not connect to Emma. Try again.");
       }
     },
-    [teardown, relay, handleEvent, hangup, answerBookingCall],
+    [teardown, relay, handleEvent, hangup, answerTool],
   );
 
   return {
@@ -383,6 +515,9 @@ export function useVoiceCall() {
     leadId,
     company,
     startedAt,
+    summary,
+    booking,
+    endedReason,
     audioRef,
     start,
     hangup,
