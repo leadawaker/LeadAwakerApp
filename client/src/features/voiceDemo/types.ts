@@ -22,12 +22,27 @@ export interface Turn {
  * The CRM panel renders these rather than reading CRM data back, so the demo
  * needs no authenticated read path.
  */
-/** What the model reports it has understood, via the `update_call_summary` tool. */
-export interface CallSummary {
-  intent?: CallIntent;
-  name?: string;
+/**
+ * One distinct thing the caller raised. `update_call_summary` sends a whole
+ * list at once, called once at the end of the call rather than live as she
+ * goes: a function call always ends the response item it interrupts, so
+ * calling it mid-conversation forced a pause she then narrated out loud
+ * ("let me just organise the note"), audible and meaningless to the caller.
+ * Calling it once, on a call that is already over, removes that pause. It
+ * also means a caller who changes their mind mid-call (asks about a quote,
+ * then decides to just leave a message) shows up as two items rather than
+ * one overwriting the other.
+ */
+export interface SummaryItem {
+  intent: CallIntent;
   interest?: string;
   notes?: string;
+}
+
+/** What the model reports it has understood, via the `update_call_summary` tool. */
+export interface CallSummary {
+  name?: string;
+  items: SummaryItem[];
 }
 
 export type CallIntent =
@@ -44,8 +59,19 @@ export interface Booking {
   iso: string | null;
 }
 
-/** Why a call is over — a hang-up says nothing, the other two need explaining. */
-export type EndedReason = null | "time_limit" | "dropped";
+/**
+ * Why a call is over. `null` is the caller pressing Hang up, which needs no
+ * explaining; every other ending happened on its own and has to say so, or the
+ * demo reads as having crashed.
+ */
+export type EndedReason =
+  | null
+  | "time_limit"
+  | "dropped"
+  /** She said goodbye and called `end_call`. */
+  | "completed"
+  /** Nobody answered for thirty seconds after she finished speaking. */
+  | "silence";
 
 export interface CrmReceipt {
   lead_id: number | null;

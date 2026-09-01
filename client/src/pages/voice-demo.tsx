@@ -86,8 +86,15 @@ export default function VoiceDemoPage() {
   };
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-background p-4 sm:p-8">
-      <div className="flex h-[min(80svh,760px)] w-full max-w-[1200px] overflow-hidden rounded-[var(--r-panel)] border border-border bg-card shadow-lg max-lg:h-auto max-lg:min-h-[80svh] max-lg:flex-col">
+    // Bone page ground, so the panels read as sheets sitting ON something.
+    // Three deliberate steps of elevation: bone page (#F5F1E8) -> muted panel
+    // -> white cards. `--bone` carries its own dark-mode value.
+    <div
+      className="flex min-h-svh flex-col items-center justify-center p-4 sm:p-8"
+      style={{ background: "var(--bone)" }}
+    >
+      <div className="flex h-[min(80svh,760px)] w-full max-w-[1200px] overflow-hidden rounded-[var(--r-panel)] border border-border shadow-lg max-lg:h-auto max-lg:min-h-[80svh] max-lg:flex-col"
+          style={{ background: "var(--card)" }}>
         <div className="flex min-h-0 flex-1 flex-col lg:w-1/2">
           <CallPanel
             state={call.state}

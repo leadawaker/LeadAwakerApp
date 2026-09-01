@@ -24,6 +24,8 @@ const FLOOR_LABEL: Record<Floor, string> = {
 const ENDED_LABEL: Record<Exclude<EndedReason, null>, string> = {
   time_limit: "Demo time is up",
   dropped: "Call disconnected",
+  completed: "Call finished",
+  silence: "Ended — no answer",
 };
 
 function CallTimer({ startedAt }: { startedAt: number | null }) {
@@ -85,7 +87,7 @@ function Setup({
       </h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
         An AI receptionist that answers the phone, handles the questions, and books the job.
-        {simple && " Have a real conversation — she picks up as soon as you call."}
+        {simple && " Have a real conversation — they pick up as soon as you call."}
       </p>
 
       <div className={cn("mt-6 w-full max-w-sm space-y-3.5 text-left", simple && "hidden")}>
@@ -114,7 +116,7 @@ function Setup({
             autoComplete="off"
             className={FIELD}
           />
-          <p className="mt-1 text-xs text-muted-foreground">She answers as this company.</p>
+          <p className="mt-1 text-xs text-muted-foreground">They answer as this company.</p>
         </div>
         <div>
           <label htmlFor="vd-phone" className={LABEL}>
@@ -273,7 +275,7 @@ export function CallPanel(props: CallPanelProps) {
       <div ref={scrollRef} className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-5">
         {turns.length === 0 && (
           <p className="m-auto max-w-[30ch] text-center text-sm text-muted-foreground">
-            Emma picks up in a moment. Everything either of you says appears here.
+            Alex picks up in a moment. Everything either of you says appears here.
           </p>
         )}
         {turns.map((turn) => (

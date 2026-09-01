@@ -1,4 +1,4 @@
-import { CalendarCheck, MessageSquare, Phone, Sparkles, UserPlus } from "lucide-react";
+import { CalendarCheck, Database, MessageSquare, Phone, Sparkles, UserPlus } from "lucide-react";
 import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
 
 /**
@@ -11,6 +11,14 @@ import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
  * lead, the counts, the appointment. Every figure corresponds to a write
  * acknowledged by `/voice/relay`; nothing is drawn optimistically.
  */
+
+/**
+ * White card surface. NOT the `bg-card` utility: `design-system.css` defines
+ * `--card` as a hex while `tokens.css` maps `--color-card` to
+ * `hsl(var(--card))`, so the utility resolves to `hsl(#FFFFFF)` — invalid, and
+ * painted as transparent. The raw variable is a valid colour in both themes.
+ */
+const CARD_BG = { background: "var(--card)" } as const;
 
 /** Reads as an outcome a business owner recognises, not an enum. */
 const INTENT_LABEL: Record<CallIntent, string> = {
@@ -51,11 +59,19 @@ export function CrmPanel({
   const outbound = logged.length - inbound;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden border-border max-lg:border-t lg:border-l">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-        <div>
+    // Warm near-white ground with white cards floating on it, header and
+    // footer included. `bg-muted` is the same token the call panel's header
+    // uses, so the two panels sit on one continuous surface — and it carries
+    // its own dark-mode value, so this does not become a light slab on a dark
+    // page the way a literal would.
+    <div className="flex flex-1 flex-col overflow-hidden border-border bg-muted max-lg:border-t lg:border-l">
+      <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full border border-border/60 text-muted-foreground" style={CARD_BG}>
+          <Database className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold">In the CRM</div>
-          <div className="text-xs text-muted-foreground">Written live, as she talks</div>
+          <div className="text-xs text-muted-foreground">Written live, as the call happens</div>
         </div>
         {live && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
@@ -73,39 +89,42 @@ export function CrmPanel({
           </p>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-[var(--r-surface)] border border-border/60 bg-card p-4">
+            <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
               <div className="mb-3 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 flex-none text-primary" />
                 <span className="text-sm font-semibold">What they called about</span>
               </div>
-              {summary?.intent || summary?.interest ? (
-                <div className="space-y-2.5">
-                  {summary.intent && (
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        INTENT_TONE[summary.intent] ?? "bg-muted text-muted-foreground"
-                      }`}
+              {summary?.items?.length ? (
+                <div className="space-y-3">
+                  {summary.items.map((item, i) => (
+                    <div
+                      key={i}
+                      className={i > 0 ? "space-y-1.5 border-t border-border/60 pt-3" : "space-y-1.5"}
                     >
-                      {INTENT_LABEL[summary.intent] ?? summary.intent}
-                    </span>
-                  )}
-                  {summary.interest && (
-                    <p className="text-sm font-medium">{summary.interest}</p>
-                  )}
-                  {summary.notes && (
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {summary.notes}
-                    </p>
-                  )}
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          INTENT_TONE[item.intent] ?? "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {INTENT_LABEL[item.intent] ?? item.intent}
+                      </span>
+                      {item.interest && <p className="text-sm font-medium">{item.interest}</p>}
+                      {item.notes && (
+                        <p className="text-sm leading-relaxed text-muted-foreground">{item.notes}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Working it out as they talk…
+                  {/* Written once, right at the end of the call — not live,
+                      so there is nothing to show until she wraps up. */}
+                  {live ? "Fills in once the call wraps up." : "Nothing recorded for this call."}
                 </p>
               )}
             </div>
 
-            <div className="rounded-[var(--r-surface)] border border-border/60 bg-card p-4">
+            <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
               <div className="mb-3 flex items-center gap-2">
                 <UserPlus className="h-4 w-4 flex-none text-primary" />
                 <span className="text-sm font-semibold">
@@ -126,7 +145,7 @@ export function CrmPanel({
               </dl>
             </div>
 
-            <div className="rounded-[var(--r-surface)] border border-border/60 bg-card p-4">
+            <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
               <div className="mb-3 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 flex-none text-primary" />
                 <span className="text-sm font-semibold">Conversation logged</span>
@@ -134,14 +153,14 @@ export function CrmPanel({
               <div className="grid grid-cols-3 gap-3 text-center">
                 <Stat label="Turns" value={logged.length} />
                 <Stat label="Caller" value={inbound} />
-                <Stat label="Alexis" value={outbound} />
+                <Stat label="Alex" value={outbound} />
               </div>
             </div>
 
             {booking ? (
               <BookedCard booking={booking} />
             ) : (
-              <div className="flex items-center gap-2.5 rounded-[var(--r-surface)] border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2.5 rounded-[var(--r-surface)] border border-dashed border-border px-4 py-3 text-sm text-muted-foreground" style={CARD_BG}>
                 <Phone className="h-4 w-4 flex-none" />
                 <span>No appointment booked yet</span>
               </div>
@@ -149,10 +168,6 @@ export function CrmPanel({
           </div>
         )}
       </div>
-
-      <p className="border-t border-border px-5 py-2.5 text-[11px] text-muted-foreground">
-        Every figure above is a real write to the CRM, confirmed by the server.
-      </p>
     </div>
   );
 }
