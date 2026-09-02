@@ -206,9 +206,6 @@ export default {
     "button": "Start on WhatsApp",
     "waLink": "YOUR_WHATSAPP_LINK"
   },
-  "templateOffer": {
-    "text": "Like this website? I've turned it into a customizable template for AI agencies. If you're interested, you can send me a DM in the Skool community."
-  },
   "testimonial": {
     "sectionLabel": "What our Partners say",
     "abdulla": {

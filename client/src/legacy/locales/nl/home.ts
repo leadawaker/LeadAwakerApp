@@ -206,9 +206,6 @@ export default {
     "button": "Chat op WhatsApp",
     "waLink": "YOUR_WHATSAPP_LINK"
   },
-  "templateOffer": {
-    "text": "Vind je deze website mooi? Ik heb hem omgebouwd tot een aanpasbare template voor AI-bureaus. Interesse? Stuur me een DM in de Skool-community."
-  },
   "testimonial": {
     "sectionLabel": "Wat onze partners zeggen",
     "abdulla": {
