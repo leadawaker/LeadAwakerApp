@@ -26,7 +26,8 @@ const i18n = createInstance();
 
 // Do NOT use initReactI18next here — it calls setI18n() globally and would
 // overwrite the CRM's i18n as the default for all useTranslation() calls.
-// I18nextProvider in LegacyRoute.tsx handles the React integration instead.
+// LegacyI18nProvider.tsx handles the React integration (and URL-driven
+// language switching) for the legacy routes instead.
 i18n
   .use(LanguageDetector)
   .init({
