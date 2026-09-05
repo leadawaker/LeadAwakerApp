@@ -138,6 +138,24 @@ window.TRANSLATIONS.nl = {
       },
     ],
   },
+  testimonials: {
+    eyebrow: "Ervaringen",
+    heading: "Wat onze partners zeggen.",
+    items: [
+      {
+        avatar: "/premium/assets/abdulla-dilimi-avatar.webp",
+        quote: "We gebruiken al een goed systeem, de techniek is niet het probleem. Gabriel haalde leads terug die we volledig uit het oog hadden verloren, en het voelde nooit geautomatiseerd, gewoon natuurlijke gesprekken.",
+        name: "Abdulla Dilimi",
+        role: "Growth Specialist",
+      },
+      {
+        avatar: "/premium/assets/diederik-vandelaarschot-avatar.webp",
+        quote: "Gabriel zette het niet gewoon op en liep weg. Hij begreep onze contacten en stemde de toon af, de resultaten spraken voor zich. Voelde meer als een consultant dan als een tool.",
+        name: "Diederik van de Laarschot",
+        role: "Medeoprichter, FusionCraft",
+      },
+    ],
+  },
   faq: {
     heading: "FAQ",
     items: [

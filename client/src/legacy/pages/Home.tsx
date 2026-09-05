@@ -18,7 +18,8 @@ import {
   Clock,
   Shield,
   Search,
-  Users
+  Users,
+  Star
 } from "lucide-react";
 import Chat3D from "../components/01-Chat3D";
 import PipelineChartSection from "../components/03-PipelineChartSection";
@@ -32,6 +33,8 @@ import { DottedSurface } from "../components/ui/dotted-surface";
 import { FallingPattern } from "../components/ui/falling-pattern";
 import profileImg from "../assets/profile.webp";
 import AboutSection from "../components/08-AboutSection";
+import abdullaImg from "../assets/testimonial-abdulla.webp";
+import diederikImg from "../assets/testimonial-diederik.webp";
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
@@ -461,6 +464,58 @@ export default function Home() {
 
       {/* About the Founder */}
       <AboutSection />
+
+      {/* Testimonials */}
+      <section className="py-32 bg-[var(--bg-secondary)] dark:bg-background">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground border border-border/60 rounded-full">
+              {t("testimonial.sectionLabel")}
+            </span>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {([
+              { key: "abdulla", img: abdullaImg },
+              { key: "diederik", img: diederikImg },
+            ] as const).map(({ key, img }, i) => (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 * i }}
+                className="bg-white dark:bg-card p-8 rounded-2xl border border-border flex flex-col"
+              >
+                <div className="flex items-center gap-4 mb-5">
+                  <img
+                    src={img}
+                    alt={t(`testimonial.${key}.name`)}
+                    className="w-20 h-20 rounded-full object-cover border border-border"
+                  />
+                  <div>
+                    <p className="font-bold text-foreground leading-tight">{t(`testimonial.${key}.name`)}</p>
+                    <p className="text-sm text-muted-foreground">{t(`testimonial.${key}.role`)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, s) => (
+                    <Star key={s} className="w-6 h-6 fill-[var(--brand-yellow)] text-[var(--brand-yellow)]" />
+                  ))}
+                </div>
+                <p className="text-foreground text-[17px] leading-relaxed flex-1">
+                  &ldquo;{t(`testimonial.${key}.quote`)}&rdquo;
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Bottom Demo CTA Section */}
       <section id="book-demo" className="py-32 bg-primary dark:bg-[var(--brand-navy-footer)] text-primary-foreground relative overflow-hidden scroll-mt-24">

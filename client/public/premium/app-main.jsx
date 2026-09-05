@@ -143,6 +143,7 @@ function App() {
       <Audit />
       <Demo />
       <About />
+      <Testimonials />
       <FAQ />
       <CTA textures={t.textures} />
 
