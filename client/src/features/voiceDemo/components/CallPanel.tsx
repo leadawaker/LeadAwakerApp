@@ -15,6 +15,21 @@ function modelLabel(id: string) {
   return base.replace("-mini", " mini").replace("-", " ");
 }
 
+/** Marin (female) and Cedar are the only two voices this demo offers. */
+function voiceAvatarSrc(voice: string) {
+  return voice === "marin" ? "/avatars/AI_Receptionist_2.png" : "/avatars/images.jpeg";
+}
+
+function VoiceAvatar({ voice, className }: { voice: string; className: string }) {
+  return (
+    <img
+      src={voiceAvatarSrc(voice)}
+      alt=""
+      className={cn(className, "rounded-full object-cover")}
+    />
+  );
+}
+
 const FLOOR_LABEL: Record<Floor, string> = {
   connecting: "Connecting",
   listening: "Listening",
@@ -79,9 +94,7 @@ function Setup({
     // centres it whenever there is room.
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
       <div className="m-auto flex w-full flex-col items-center text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
-        A
-      </div>
+      <VoiceAvatar voice={voice} className="mb-4 h-16 w-16 flex-none" />
       <h1 className="text-2xl font-semibold tracking-tight">
         {simple ? `Call ${companyName}` : "Call the receptionist"}
       </h1>
@@ -228,7 +241,7 @@ interface CallPanelProps extends SetupProps {
 }
 
 export function CallPanel(props: CallPanelProps) {
-  const { state, floor, turns, company, startedAt, endedReason, onHangup, onReset } = props;
+  const { state, floor, turns, company, voice, startedAt, endedReason, onHangup, onReset } = props;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -242,9 +255,7 @@ export function CallPanel(props: CallPanelProps) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 border-b border-border bg-muted px-5 py-3.5">
-        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-          A
-        </div>
+        <VoiceAvatar voice={voice} className="h-10 w-10 flex-none" />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold">{company}</div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

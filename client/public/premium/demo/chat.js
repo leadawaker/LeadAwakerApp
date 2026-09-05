@@ -111,7 +111,7 @@ export function messagesHtml(s, pending, voice) {
     out.push(
       '<div class="row ' + (mine ? "me" : "ai") + '">' +
         (mine ? "" : (showAv
-          ? '<div class="av">' + esc(initials(s.agent)) + "</div>"
+          ? '<div class="av"><img src="/avatars/images.jpeg" alt="' + esc(initials(s.agent)) + '" /></div>'
           : '<div class="av" style="visibility:hidden"></div>')) +
         '<div class="bub-wrap">' +
           '<div class="bub' + (isVoice ? " is-voice" : "") + fresh + '">' +
@@ -125,7 +125,7 @@ export function messagesHtml(s, pending, voice) {
   if (pending) {
     out.push(
       '<div class="row ai">' +
-        '<div class="av">' + esc(initials(s.agent)) + "</div>" +
+        '<div class="av"><img src="/avatars/images.jpeg" alt="' + esc(initials(s.agent)) + '" /></div>' +
         '<div class="bub-wrap"><div class="bub typing' + (paintedPending ? "" : " is-new") +
           '"><i></i><i></i><i></i></div></div>' +
       "</div>"
