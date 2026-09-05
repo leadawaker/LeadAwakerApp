@@ -62,16 +62,25 @@ const TEMPLATE_L = {
   // No leading {first_name}, deliberately: greeting someone by name and THEN
   // asking whether they are that person undercuts the question.
   body_en:
-    "Hi, {business} here. Are you the same {first_name} who reached out about your {project} a while back? We never did get a quote over to you.",
+    "Hi, {business} here. Are you the same {first_name} who reached out about your {project} a while back?",
   body_nl:
-    "Hoi, {business} hier. Ben jij dezelfde {first_name} die een tijd geleden contact opnam over je {project}? We hebben je toen nooit een offerte gestuurd.",
+    "Hoi, {business} hier. Ben jij dezelfde {first_name} die een tijd geleden contact opnam over je {project}?",
 };
 
 // Campaign 60's scoping opener. Same shape as template L plus {agent_name} and
 // {disclosure_clause}, matching the existing First_Message on that row.
+//
+// No comma before {disclosure_clause}: the clause supplies its own leading
+// punctuation (", the AI assistant at {company}" / " from {company}" — see
+// _DISCLOSURE_CLAUSE_ON/OFF in automations/_helpers.py), so "{agent_name},
+// {disclosure_clause}" would double up.
+//
+// No trailing "we never sent you a quote" sentence: it was a fixed claim
+// baked into every scoping opener regardless of whether it was true for the
+// lead, and read as a non sequitur. Dropped 2026-09-05.
 const CAMPAIGN_60_SCOPING = {
-  en: "Hi, this is {agent_name}, {disclosure_clause}. Are you the same {first_name} who reached out to us about your {project} a while back? We never did get a quote over to you.",
-  nl: "Hoi, dit is {agent_name}, {disclosure_clause}. Ben jij dezelfde {first_name} die een tijd geleden contact met ons opnam over je {project}? We hebben je toen nooit een offerte gestuurd.",
+  en: "Hi, this is {agent_name}{disclosure_clause}. Are you the same {first_name} who reached out to us about your {project} a while back?",
+  nl: "Hoi, dit is {agent_name}{disclosure_clause}. Ben jij dezelfde {first_name} die een tijd geleden contact met ons opnam over je {project}?",
 };
 
 async function main() {
