@@ -146,6 +146,9 @@ function App() {
       <Testimonials />
       <FAQ />
       <CTA textures={t.textures} />
+      {/* Fixed-position, so it sits outside the section flow. Renders itself
+          to null on /solar, where the LeadConnector widget owns that corner. */}
+      <ContactButton />
 
       {/* Floating tweaks toggle button — dev only, absent when tweaks-panel.jsx not loaded */}
       {!isMobile && TweaksPanel && <button

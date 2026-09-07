@@ -151,8 +151,17 @@ function Hero({ wineIntensity, textures }) {
               ...window.revealStyle(heroInView, { delay: window.stagger(1) }),
             }}>
               {t('hero.h1_line1')}<br />
-              {t('hero.h1_pre')}{" "}
-              <span className="italic" style={{ color: "var(--wine)" }}>{t('hero.h1_italic')}</span>
+              {window.SITE_VARIANT === 'main' ? (
+                <HighlightBar>
+                  {t('hero.h1_pre')}{" "}
+                  <span className="italic" style={{ color: "var(--wine)" }}>{t('hero.h1_italic')}</span>
+                </HighlightBar>
+              ) : (
+                <>
+                  {t('hero.h1_pre')}{" "}
+                  <span className="italic" style={{ color: "var(--wine)" }}>{t('hero.h1_italic')}</span>
+                </>
+              )}
             </h1>
 
              
@@ -206,6 +215,41 @@ function Hero({ wineIntensity, textures }) {
     </section>);
 }
 
+
+/* The /legacy hero's highlight band, minus its opening animation (legacy swept
+   it in with scaleX 0->1 on a 1.2s delay; here it's simply there) and in light
+   orange rather than the legacy brand yellow.
+
+   Legacy bled the band 400vw in both directions. That doesn't survive this
+   layout: the hero is a two-column grid, so a right-side bleed washes straight
+   across the conversation card. This one bleeds off the left edge of the
+   viewport only and fades out just past the last word (html/body already set
+   overflow-x: hidden in design-tokens.css, so the left bleed can't produce a
+   scrollbar). The whole line lives inside the band's container so the text
+   paints above it — with only the highlighted word wrapped, the absolutely
+   positioned band covered the words before it.
+
+   Legacy flipped the word to white on top of the bar; wine reads better on
+   light orange and keeps the hero on-palette. */
+const HIGHLIGHT_ORANGE = "#F6B26B";
+
+function HighlightBar({ children }) {
+  return (
+    <span style={{ position: "relative", display: "inline-block" }}>
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: "0.08em", bottom: "0.10em",
+          left: "-100vw", right: "-0.45em",
+          zIndex: 0,
+          background: `linear-gradient(to right, ${HIGHLIGHT_ORANGE} 0%, ${HIGHLIGHT_ORANGE} 88%, rgba(246,178,107,0) 100%)`,
+        }}
+      />
+      <span style={{ position: "relative", zIndex: 1 }}>{children}</span>
+    </span>
+  );
+}
 
 function Blobs() {
   return (

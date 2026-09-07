@@ -195,6 +195,19 @@ window.TRANSLATIONS.nl.chatMessages = {
 // zouden vallen bij een zonne-installateur; de rest valt terug op de
 // gedeelde copy. Zie de lookup-volgorde in config.jsx (I18nProvider).
 window.TRANSLATIONS.nl.variants = {
+  // Root. De CTA is hier het WhatsApp-gesprek, niet het auditformulier, dus
+  // de heroknop en de eyebrow beloven geen geschiktheidscheck meer. De badge
+  // is dienstgericht in plaats van branchegericht: root verkoopt nu over
+  // branches heen, dus "Verbouw & installatie" hoort alleen bij /home.
+  main: {
+    hero: {
+      badge: "Leadreactivatie · Nederland",
+      cta_primary: "Laten we praten",
+    },
+    cta: {
+      eyebrow: "Begin een gesprek",
+    },
+  },
   solar: {
     hero: {
       badge: "Zon & duurzaam · Nederland",

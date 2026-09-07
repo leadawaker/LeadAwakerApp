@@ -264,5 +264,16 @@ window.TRANSLATIONS.en = {
     other_home: "Home improvement",
     other_solar: "Solar installer?",
     cta_calc_note: "Values taken from your calculator. Adjust if needed.",
+    // Root's CTA, ported from the retired /legacy build's bottom section.
+    // Root closes on a WhatsApp conversation rather than the audit form the
+    // solar and home variants still use.
+    partners_title: "Only 5 Active Partners at a Time",
+    partners_quote: "We stay intentionally hands-on with every partner. This isn't a plug-and-play AI tool. The results come from understanding your sales process, where your leads come from, and how people actually buy from you.",
+    partners_meta: "I reply personally. If it's not a fit, I'll tell you fast.",
+    partners_btn: "Start on WhatsApp",
+  },
+  contact: {
+    wa_label: "Chat on WhatsApp",
+    wa_prefill: "Hi Gabriel, I found you through leadawaker.com and I'd like to talk about reactivating our leads.",
   },
 };

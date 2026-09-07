@@ -263,5 +263,16 @@ window.TRANSLATIONS.nl = {
     other_home: "Verbouw & installatie",
     other_solar: "Zonne-installateur?",
     cta_calc_note: "Waarden overgenomen uit de calculator. Pas aan indien nodig.",
+    // Root's CTA, overgenomen uit de oude /legacy-pagina. Root sluit af met
+    // een WhatsApp-gesprek in plaats van het auditformulier dat de solar- en
+    // home-varianten nog gebruiken.
+    partners_title: "Maximaal 5 actieve partners tegelijk",
+    partners_quote: "We werken bewust hands-on met elke partner. Dit is geen kant-en-klare AI-tool. De resultaten komen voort uit het begrijpen van jullie verkoopproces, waar jullie leads vandaan komen en hoe mensen echt bij jullie kopen.",
+    partners_meta: "Ik reageer persoonlijk. Als het niet past, zeg ik dat meteen.",
+    partners_btn: "Start op WhatsApp",
+  },
+  contact: {
+    wa_label: "Chat op WhatsApp",
+    wa_prefill: "Hoi Gabriel, ik kom via leadawaker.com en wil graag praten over het reactiveren van onze leads.",
   },
 };

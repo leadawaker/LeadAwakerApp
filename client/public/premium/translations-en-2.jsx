@@ -38,6 +38,20 @@ window.TRANSLATIONS.en.convUI = {
 // wrong for a solar installer are listed; everything else falls through to
 // the shared copy above. See the lookup order in config.jsx's I18nProvider.
 window.TRANSLATIONS.en.variants = {
+  // Root. Its CTA is the WhatsApp close, not the audit form, so the hero
+  // button no longer promises a qualification check, and the eyebrow no longer
+  // frames the section as a qualification check either. The badge is
+  // service-led rather than trade-led: root sells across industries now, so
+  // the shared "Home improvement" badge belongs to /home alone.
+  main: {
+    hero: {
+      badge: "Lead reactivation · Netherlands",
+      cta_primary: "Let's talk",
+    },
+    cta: {
+      eyebrow: "Start a conversation",
+    },
+  },
   solar: {
     hero: {
       badge: "Solar & renewables",

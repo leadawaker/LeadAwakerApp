@@ -74,12 +74,13 @@
 <script type="text/babel" src="/premium/09-faq.jsx"></script>
 <script type="text/babel" src="/premium/footer-mark.jsx"></script>
 <script type="text/babel" src="/premium/10-cta-footer.jsx"></script>
+<script type="text/babel" src="/premium/contact-button.jsx"></script>
 <script type="text/babel" src="/premium/app-main.jsx"></script>
 
 <script>
 // Auto-reload when files change
 (function() {
-  const filesToWatch = ['/premium/_motion.jsx', '/premium/app-main.jsx', '/premium/translations-en.jsx', '/premium/translations-nl.jsx', '/premium/translations-en-2.jsx', '/premium/translations-nl-2.jsx', '/premium/config.jsx', '/premium/section-layout.jsx', '/premium/conversation-card.jsx', '/premium/01-nav.jsx', '/premium/02-hero.jsx', '/premium/03-approach.jsx', '/premium/04-process.jsx', '/premium/05-pipeline.jsx', '/premium/06-audit.jsx', '/premium/07-demo.jsx', '/premium/08-about.jsx', '/premium/testimonials.jsx', '/premium/09-faq.jsx', '/premium/footer-mark.jsx', '/premium/10-cta-footer.jsx'];
+  const filesToWatch = ['/premium/_motion.jsx', '/premium/app-main.jsx', '/premium/translations-en.jsx', '/premium/translations-nl.jsx', '/premium/translations-en-2.jsx', '/premium/translations-nl-2.jsx', '/premium/config.jsx', '/premium/section-layout.jsx', '/premium/conversation-card.jsx', '/premium/01-nav.jsx', '/premium/02-hero.jsx', '/premium/03-approach.jsx', '/premium/04-process.jsx', '/premium/05-pipeline.jsx', '/premium/06-audit.jsx', '/premium/07-demo.jsx', '/premium/08-about.jsx', '/premium/testimonials.jsx', '/premium/09-faq.jsx', '/premium/footer-mark.jsx', '/premium/10-cta-footer.jsx', '/premium/contact-button.jsx'];
   let hashes = {};
 
   async function hashContent(text) {
@@ -134,6 +135,22 @@
 })();
 </script>
 
-<script src="https://widgets.leadconnectorhq.com/loader.js" data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js" data-widget-id="6a96f9f856bf87968255111a"></script>
+<!-- LeadConnector chat widget: /solar only. Every other variant gets the
+     WhatsApp contact button instead (contact-button.jsx), until the
+     self-built widget replaces both. This repeats the /solar path check in
+     plain JS rather than reading window.SITE_VARIANT, because config.jsx is
+     a text/babel script and hasn't been transpiled yet at this point. -->
+<script>
+(function () {
+  var q = new URLSearchParams(location.search).get('site');
+  var isSolar = q ? q === 'solar' : /\/solar\/?$/.test(location.pathname);
+  if (!isSolar) return;
+  var s = document.createElement('script');
+  s.src = 'https://widgets.leadconnectorhq.com/loader.js';
+  s.setAttribute('data-resources-url', 'https://widgets.leadconnectorhq.com/chat-widget/loader.js');
+  s.setAttribute('data-widget-id', '6a96f9f856bf87968255111a');
+  document.body.appendChild(s);
+})();
+</script>
 </body>
 </html>

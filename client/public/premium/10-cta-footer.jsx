@@ -202,18 +202,23 @@ function CTA() {
 
   const [contentRef, contentInView] = window.useInView();
 
-  /* ---- mobile photo band ----
+  /* ---- measured photo band ----
      The panel photo is width-driven (height: auto), so on a tall narrow card it
      covers a horizontal band and leaves plain bone below it — the footer then
      sits off the photo and the crop edge cuts through nothing. On mobile we
      measure the footer block, pin a cover-fitted band of that height to the
      bottom of the card, and move the crop line to the top of the band so the
-     diagonal reads the same as it does on desktop. */
+     diagonal reads the same as it does on desktop.
+
+     Root uses the same measured band on desktop: its CTA is the short WhatsApp
+     close rather than the tall qualifying form, so the tuned 45% crop lands
+     mid-copy and drops the meta line and button onto the dark photo. */
   const cardRef = React.useRef(null);
   const footerRowRef = React.useRef(null);
   const [mobileBand, setMobileBand] = React.useState(null);
+  const measuredBand = isMobile || window.SITE_VARIANT === 'main';
   React.useLayoutEffect(() => {
-    if (!isMobile) { setMobileBand(null); return; }
+    if (!measuredBand) { setMobileBand(null); return; }
     const measure = () => {
       const card = cardRef.current;
       if (!card) return;
@@ -231,7 +236,7 @@ function CTA() {
     if (cardRef.current) ro.observe(cardRef.current);
     if (footerRowRef.current) ro.observe(footerRowRef.current);
     return () => ro.disconnect();
-  }, [isMobile, formState, locale, bgAdj.cropTop]);
+  }, [measuredBand, isMobile, formState, locale, bgAdj.cropTop]);
 
 
   /* ---- styles ---- */
@@ -340,6 +345,12 @@ function CTA() {
           </div>
         ) : (
           <>
+            {/* Root closes on a WhatsApp conversation, not the audit form:
+                the bottom CTA ported from the retired /legacy build. Solar and
+                /home keep the qualifying form below. */}
+            {window.SITE_VARIANT === 'main' ? (
+              <PartnersCTA t={t} isMobile={isMobile} contentRef={contentRef} inView={contentInView} />
+            ) : (
             <div ref={contentRef} style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr",
@@ -417,6 +428,7 @@ function CTA() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Footer row: map+favicon left, terms center, copyright right */}
             <div ref={footerRowRef} style={{
@@ -461,6 +473,72 @@ function CTA() {
         <CTABgDebug adj={bgAdj} onUpdate={handleBgAdjUpdate} />
       )}
     </section>
+  );
+}
+
+/* Root's bottom CTA, ported from the retired /legacy build's #book-demo
+   section: scarcity headline, a quote behind a left accent rule, and a single
+   WhatsApp button. The legacy original had no working number (the waLink
+   string was still "YOUR_WHATSAPP_LINK"); this one goes to Gabriel's Dutch
+   mobile, the same number contact-button.jsx uses. */
+function PartnersCTA({ t, isMobile, contentRef, inView }) {
+  const href = `https://wa.me/${window.WA_NUMBER || "31684446349"}?text=${encodeURIComponent(t('contact.wa_prefill'))}`;
+  return (
+    <div ref={contentRef} style={{
+      maxWidth: 780, margin: "0 auto", textAlign: "center",
+      paddingTop: isMobile ? 8 : 24,
+      ...window.revealStyle(inView, { delay: 0 }),
+    }}>
+      <div className="eyebrow" style={{ color: "rgba(28,24,16,0.42)", marginBottom: isMobile ? 16 : 24 }}>
+        {t('cta.eyebrow')}
+      </div>
+
+      <h2 className="serif" style={{
+        margin: 0,
+        fontSize: isMobile ? "clamp(30px, 8vw, 42px)" : "clamp(40px, 4.4vw, 56px)",
+        lineHeight: 1.02, letterSpacing: "-0.025em",
+        color: "var(--ink)",
+        textShadow: "0 1px 0 rgba(0,0,0,0.12)",
+      }}>
+        {t('cta.partners_title')}
+      </h2>
+
+      {/* Left rule + quote, the one piece of the legacy layout worth keeping
+          literally: it reads as a personal note rather than sales copy. */}
+      <div style={{
+        margin: isMobile ? "24px 0 0" : "34px 0 0",
+        paddingLeft: isMobile ? 16 : 22,
+        borderLeft: "3px solid var(--wine)",
+        textAlign: "left",
+      }}>
+        <p style={{
+          margin: 0, fontFamily: "var(--sans)",
+          fontSize: isMobile ? 15.5 : 17.5, lineHeight: 1.6,
+          fontWeight: 500, color: "rgba(28,24,16,0.82)",
+        }}>
+          {t('cta.partners_quote')}
+        </p>
+        <p style={{
+          margin: "12px 0 0", fontFamily: "var(--sans)",
+          fontSize: isMobile ? 13.5 : 14.5, lineHeight: 1.5,
+          color: "rgba(28,24,16,0.55)",
+        }}>
+          {t('cta.partners_meta')}
+        </p>
+      </div>
+
+      <div style={{ marginTop: isMobile ? 26 : 36, display: "flex", justifyContent: "center" }}>
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-neu btn-wine"
+          style={{ justifyContent: "center", padding: "18px 34px", fontSize: 15, borderRadius: 8, textTransform: "none", letterSpacing: "0.01em" }}
+        >
+          {t('cta.partners_btn')} <ArrowSm />
+        </a>
+      </div>
+    </div>
   );
 }
 
